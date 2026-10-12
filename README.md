@@ -1,6 +1,6 @@
 # LogicLab
 
-An interactive formal-logic learning project, built as a public full-stack portfolio. This initial scaffold connects a React interface to a Node.js health endpoint. Classroom and practice features are planned in [the implementation plan](docs/initial-implementation-plan.md).
+An interactive formal-logic learning project, built as a public full-stack portfolio. The React shell connects to API health; the backend also supports creating, checking, and showing solutions for stateless truth-table practice. The exercise interface and classroom features are next. See the [implementation plan](docs/initial-implementation-plan.md) and [truth-table API](docs/truth-table-api.md).
 
 The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
 
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. The backend listens on port 3000; Vite proxies `/api` requests to it. The page reports whether the API is connected. The root development command builds the shared schema before starting all three workspace watchers.
+Open http://localhost:5173. The backend listens on port 3000; Vite proxies `/api` requests to it. The page reports whether the API is connected. The root development command builds the schema and logic engine before starting all four workspace watchers.
 
 ## Packages
 

@@ -5,3 +5,4 @@ export const healthResponseSchema = z.object({
   service: z.literal('logiclab-api'),
 });
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+export * from './truth-table';

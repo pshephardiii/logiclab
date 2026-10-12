@@ -1,6 +1,6 @@
 # Logic engine
 
-Pure TypeScript parsing, evaluation, and truth-table generation shared by browser and API code. API and UI integration follow next.
+Pure TypeScript parsing, evaluation, and truth-table generation. The API uses this package for stateless practice; UI integration follows next.
 
 ```ts
 import { parseFormula, evaluateFormula, generateTruthTable } from '@logiclab/logic-engine';
@@ -66,4 +66,4 @@ npm test -w @logiclab/logic-engine
 npm run build -w @logiclab/logic-engine
 ```
 
-Root `npm test`, `npm run typecheck`, and `npm run build` include this package. Build before consuming it from another workspace. API/UI integration and a root development watcher can be introduced when those apps depend on the engine.
+Root `npm test`, `npm run typecheck`, and `npm run build` include this package. Build before consuming it from another workspace. Root development builds and watches the engine alongside schema, API, and web.
