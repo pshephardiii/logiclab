@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "types": [
+      "node",
+      "jest"
+    ],
+    "outDir": "dist",
+    "isolatedModules": true
+  },
+  "include": [
+    "src",
+    "test"
+  ]
+}

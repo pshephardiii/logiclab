@@ -1,0 +1,26 @@
+{
+  "name": "logiclab",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "tools/*"
+  ],
+  "engines": {
+    "node": ">=24.9.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "predev": "npm run build -w @logiclab/schema",
+    "dev": "concurrently -k -n schema,api,web \"npm run dev -w @logiclab/schema\" \"npm run dev -w @logiclab/api\" \"npm run dev -w @logiclab/web\"",
+    "build": "npm run build -w @logiclab/schema && npm run build -w @logiclab/api && npm run build -w @logiclab/web",
+    "typecheck": "npm run build -w @logiclab/schema && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @logiclab/schema && npm run test -w @logiclab/api",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}
