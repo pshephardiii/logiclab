@@ -35,6 +35,7 @@ services/
 tools/
   schema/         Shared API contracts
   logic-engine/   Pure parser, evaluator, and truth-table generator
+  db/             PostgreSQL schema, client, and migrations
 docs/
 ```
 
@@ -46,12 +47,15 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 | `services/api` | `@logiclab/api` | Node.js + TypeScript API using Fastify; Jest tests |
 | `tools/schema` | `@logiclab/schema` | Shared Zod request/response schemas and inferred types |
 | `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
+| `tools/db` | `@logiclab/db` | MikroORM/PostgreSQL client, users schema, and SQL migrations |
 
 The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
 Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes the feature; shared UI components can be introduced when other features reuse them.
 
 ## Commands
+
+For persistence setup, see [local PostgreSQL and DBeaver](docs/local-database.md). After installing Docker/Compose and copying `.env.example` to `.env`, `npm run db:up` starts PostgreSQL and `npm run db:migrate` applies committed migrations. Existing truth-table practice does not require the database yet. `npm run db:test` uses a separately configured disposable test database; CI runs it with its own PostgreSQL service.
 
 ```sh
 npm run typecheck

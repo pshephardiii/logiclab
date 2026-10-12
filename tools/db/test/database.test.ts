@@ -1,0 +1,49 @@
+import { before, after, test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createDatabase, User, UserRole } from '../src/index.js';
+
+const url = process.env.TEST_DATABASE_URL;
+if (!url) throw new Error('Set TEST_DATABASE_URL to a disposable integration-test database.');
+const orm = await createDatabase(url);
+
+before(async () => {
+  await orm.migrator.up();
+  await orm.migrator.up();
+  assert.equal((await orm.migrator.getPending()).length, 0);
+});
+after(async () => { await orm.close(true); });
+
+test('persists and reloads a Cognito-linked entity through a forked EntityManager', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const user = em.create(User, { cognitoUserPoolId: 'test-pool', cognitoSubject: 'test-subject', role: UserRole.Student });
+    em.persist(user);
+    await em.flush();
+    em.clear();
+    const saved = await em.findOneOrFail(User, user.id);
+    assert.match(saved.id, /^[0-9a-f-]{36}$/);
+    assert.equal(saved.role, UserRole.Student);
+    assert(saved.createdAt instanceof Date);
+  } finally { await em.rollback(); }
+});
+
+test('rejects duplicate identities while permitting the same subject in another pool', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    em.persist(em.create(User, { cognitoUserPoolId: 'pool-one', cognitoSubject: 'same-subject', role: UserRole.Instructor }));
+    em.persist(em.create(User, { cognitoUserPoolId: 'pool-two', cognitoSubject: 'same-subject', role: UserRole.Instructor }));
+    await em.flush();
+    em.persist(em.create(User, { cognitoUserPoolId: 'pool-one', cognitoSubject: 'same-subject', role: UserRole.Instructor }));
+    await assert.rejects(em.flush(), /duplicate|unique/i);
+  } finally { await em.rollback(); }
+});
+
+test('database rejects an unsupported account role', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    await assert.rejects(em.execute("insert into users (cognito_user_pool_id, cognito_subject, role) values ('test-pool', 'test-role', 'admin')"), /invalid input value for enum/i);
+  } finally { await em.rollback(); }
+});

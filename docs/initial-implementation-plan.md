@@ -32,7 +32,7 @@ Local database direction: run PostgreSQL in Docker Compose and expose a local co
 
 ## Proposed architecture
 
-Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; ORM selection and Cognito integration details remain future decisions.
+Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; MikroORM/PostgreSQL is selected for persistence; Cognito integration details remain future decisions.
 
 ```text
 apps/web                 Student and instructor interface
@@ -89,6 +89,8 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
+First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Live container/migration validation remains pending in the local environment because Docker is not installed.
+
 Depends on: truth-table practice.
 
 - Integrate Cognito email/password signup, email confirmation/resend, login, logout, sessions, and password recovery/reset. Avoid account-enumeration responses.
@@ -105,7 +107,7 @@ Open implementation/design questions:
 - How will Cognito tokens/session cookies be handled, and how will app users and roles be provisioned consistently?
 - Which development user-pool/app-client configuration, region, and environment separation should we use?
 - How do invitation codes expire, get replaced, and communicate invalid or expired states?
-- Which ORM/migration tooling and concrete schema should support users, classes, and enrollments?
+- What concrete class/enrollment schema should follow the initial users migration? MikroORM/PostgreSQL is selected.
 - Which SES identity, delivery setup, and production-access steps are needed before public registration?
 - Should employers use isolated seeded accounts, a guest demo session, or self-registration?
 

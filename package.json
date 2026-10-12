@@ -14,10 +14,16 @@
   "scripts": {
     "predev": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine",
     "dev": "concurrently -k -n schema,engine,api,web \"npm run dev -w @logiclab/schema\" \"npm run dev -w @logiclab/logic-engine\" \"npm run dev -w @logiclab/api\" \"npm run dev -w @logiclab/web\"",
-    "build": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run build -w @logiclab/api && npm run build -w @logiclab/web",
+    "build": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run build -w @logiclab/db && npm run build -w @logiclab/api && npm run build -w @logiclab/web",
     "typecheck": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run typecheck --workspaces --if-present",
     "test": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run test -w @logiclab/logic-engine && npm run test -w @logiclab/api",
-    "check": "npm run typecheck && npm test && npm run build"
+    "check": "npm run typecheck && npm test && npm run build",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:generate": "npm run generate -w @logiclab/db",
+    "db:migrate": "npm run migrate -w @logiclab/db",
+    "db:test": "npm run test:integration -w @logiclab/db"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

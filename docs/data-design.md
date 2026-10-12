@@ -17,6 +17,8 @@ Library reuse does not imply a publicly shared library or permission to browse a
 
 ## Identity and classroom ownership
 
+The first classroom-access slice defines `users` in `tools/db`: generated UUID, Cognito pool ID/subject, one student/instructor role, and creation timestamp. The identity pair has a unique constraint. There are no local password/code fields. This foundation does not yet implement Cognito provisioning or account routes.
+
 Cognito manages email/password credentials, email confirmation, and password recovery. Keep application users, the separate student/instructor role, class ownership, and enrollments in PostgreSQL. Link an application user to their Cognito identity using a stable subject identifier scoped to the configured user pool rather than treating email as a permanent identity key. Passwords and reset/confirmation codes must not be copied into application tables.
 
 Initially, a class has one instructor owner and many student enrollments. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
@@ -67,6 +69,8 @@ Published set membership, ordering, and assignment settings also need change rul
 Engine/parser changes can also affect historical interpretation. Decide how to preserve reproducibility, such as retaining an engine/grammar version, before relying on saved definitions for graded work.
 
 ## Storage direction
+
+Use MikroORM with its PostgreSQL driver and committed TypeScript migrations containing explicit SQL. This replaces the starter plan’s Drizzle suggestion to match the maintainer’s familiarity. Entity definitions and migrations remain reviewable. See [Local Database](local-database.md) for setup and integration-test commands.
 
 Use PostgreSQL relational columns, foreign keys, and constraints for identity, ownership, relationships, status, and timestamps. Use validated `JSONB` for exercise-specific definitions and potentially answer payloads. Validate the payload shape by exercise type and format version; JSONB is not a substitute for validation or authorization.
 
