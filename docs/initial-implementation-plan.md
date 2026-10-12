@@ -2,6 +2,10 @@
 
 Status: proposed · October 12, 2026
 
+Product decisions: see [Product Direction](product-direction.md) for the agreed account roles, instructor preview, assigned-work privacy, truth-table interaction, exercise order, and future problem-set settings. Those decisions supersede any corresponding open questions below.
+
+Data direction: see [Data Design](data-design.md) for the reusable problem library, separate definitions and attempts, immutable problem versions, and proposed persistence model.
+
 Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/schema` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
 
 Source: `LogicLab_Get_Started_Plan.docx`, version 0.1. This plan translates the starter document into reviewable implementation branches. Its recommendations are planning inputs, not settled requirements or authorization to publish, provision services, or implement every feature. The workspace currently has no application code or Git repository.
@@ -23,6 +27,8 @@ Deliver a polished truth-table vertical slice before expanding into the complete
 5. Deliver a small browser-to-API truth-table flow with meaningful engine tests. Use it to validate notation, input behavior, feedback, and visual design.
 6. Add classroom workflows and persistence incrementally. Introduce migrations when the first persisted domain model is defined; avoid creating every suggested table upfront.
 7. Keep setup instructions, screenshots, decision records, and evidence of important tests current as branches land.
+
+Local database direction: run PostgreSQL in Docker Compose and expose a local connection for DBeaver. Document the host, port, database, development credentials, and volume/reset commands when persistence is introduced. The first truth-table slice can run without a database; retain database setup as foundation work before classroom persistence.
 
 ## Proposed architecture
 
@@ -67,6 +73,8 @@ Open product/design questions:
 ### 2. `002-feat-truth-table-practice` — The first usable vertical slice
 
 Depends on: foundation.
+
+Selected as the first feature branch after the scaffold. Begin with one formula, a documented grammar, and a deterministic truth table; then connect the engine to the API and browser. No accounts or database are required for this slice.
 
 - Define a small grammar for negation, conjunction, disjunction, and implication, with explicit precedence and associativity.
 - Implement parsing, evaluation, and truth-table generation in the pure engine package.

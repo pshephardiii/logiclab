@@ -2,6 +2,10 @@
 
 An interactive formal-logic learning project, built as a public full-stack portfolio. This initial scaffold connects a React interface to a Node.js health endpoint. Classroom and practice features are planned in [the implementation plan](docs/initial-implementation-plan.md).
 
+The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
+
+The storage model and reusable problem library are outlined in [Data Design](docs/data-design.md). Product Direction describes behavior, Data Design describes persistence, and the Implementation Plan describes delivery order.
+
 ## Local setup
 
 Use Node.js 24.9 or newer (see `.nvmrc`) and npm 10 or newer. If you use nvm, run `nvm install` and `nvm use` from the repository root.
