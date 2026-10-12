@@ -1,6 +1,12 @@
 # LogicLab
 
-An interactive formal-logic learning project, built as a public full-stack portfolio. This initial scaffold connects a React interface to a Node.js health endpoint. Classroom and practice features are planned in [the implementation plan](docs/initial-implementation-plan.md).
+An interactive formal-logic learning project, built as a public full-stack portfolio. The browser creates truth-table exercises through the API, lets students fill blank/T/F answer cells, checks answers, and shows solutions alongside their entries. See the [implementation plan](docs/initial-implementation-plan.md) and [truth-table API](docs/truth-table-api.md).
+
+The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
+
+The storage model and reusable problem library are outlined in [Data Design](docs/data-design.md). Product Direction describes behavior, Data Design describes persistence, and the Implementation Plan describes delivery order.
+
+See the [truth-table walkthrough, screenshots, and verification evidence](docs/truth-table-verification.md) for the completed first feature.
 
 ## Local setup
 
@@ -11,9 +17,11 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. The backend listens on port 3000; Vite proxies `/api` requests to it. The page reports whether the API is connected. The root development command builds the shared schema before starting all three workspace watchers.
+Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all four workspace watchers.
 
 ## Packages
+
+In practice, **Check answers** labels each answer correct, incorrect, or unanswered and summarizes the results. Editing an answer clears previous check feedback; **Show solution** displays expected values without replacing entries, and **Hide solution** removes them. Editing the formula or creating a new table clears answers, feedback, and solutions. Failed checking/solution requests preserve work and can be retried. This is independent practice, not an assignment or official grade.
 
 Browser applications live under `apps/`; backend services live under `services/`. Each has its own dependencies and build output. Shared contracts live under `tools/schema`. The workspace patterns `apps/*`, `services/*`, and `tools/*` automatically include new packages.
 
@@ -26,6 +34,7 @@ services/
   worker/         Future background worker (not created yet)
 tools/
   schema/         Shared API contracts
+  logic-engine/   Pure parser, evaluator, and truth-table generator
 docs/
 ```
 
@@ -36,8 +45,11 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 | `apps/web` | `@logiclab/web` | React + TypeScript, served and built with Vite |
 | `services/api` | `@logiclab/api` | Node.js + TypeScript API using Fastify; Jest tests |
 | `tools/schema` | `@logiclab/schema` | Shared Zod request/response schemas and inferred types |
+| `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
 
 The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
+
+Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes the feature; shared UI components can be introduced when other features reuse them.
 
 ## Commands
 
@@ -48,7 +60,7 @@ npm run build
 npm run check
 ```
 
-`check` runs type checking, backend Jest tests, and production builds. Tests use Fastify injection without opening a network port. Frontend testing is a later decision; Vite is its development/build tool.
+`check` runs type checking, engine/backend Jest tests, and production builds. Backend tests cover handlers directly and routes through Fastify injection without opening a network port. Browser smoke checks have been run locally; a frontend test suite and CI browser job remain follow-up work. Vite is the frontend development/build tool.
 
 Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's request-injection tooling. An experimental warning during tests is expected. The initial dependency audit reports 20 moderate findings in the Jest development dependency chain, originating in `sprintf-js`. No automatic downgrade was applied; revisit upstream fixes as dependencies evolve.
 

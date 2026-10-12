@@ -12,11 +12,11 @@
     "npm": ">=10"
   },
   "scripts": {
-    "predev": "npm run build -w @logiclab/schema",
-    "dev": "concurrently -k -n schema,api,web \"npm run dev -w @logiclab/schema\" \"npm run dev -w @logiclab/api\" \"npm run dev -w @logiclab/web\"",
-    "build": "npm run build -w @logiclab/schema && npm run build -w @logiclab/api && npm run build -w @logiclab/web",
-    "typecheck": "npm run build -w @logiclab/schema && npm run typecheck --workspaces --if-present",
-    "test": "npm run build -w @logiclab/schema && npm run test -w @logiclab/api",
+    "predev": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine",
+    "dev": "concurrently -k -n schema,engine,api,web \"npm run dev -w @logiclab/schema\" \"npm run dev -w @logiclab/logic-engine\" \"npm run dev -w @logiclab/api\" \"npm run dev -w @logiclab/web\"",
+    "build": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run build -w @logiclab/api && npm run build -w @logiclab/web",
+    "typecheck": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @logiclab/schema && npm run build -w @logiclab/logic-engine && npm run test -w @logiclab/logic-engine && npm run test -w @logiclab/api",
     "check": "npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {

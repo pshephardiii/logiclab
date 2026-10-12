@@ -1,7 +1,45 @@
  :root { font-family: system-ui, sans-serif; color: #162a36; background: #f4f7f6; font-synthesis: none; }
+* { box-sizing: border-box; }
 body { margin: 0; }
-main { max-width: 48rem; margin: 12vh auto; padding: 2rem; }
-.eyebrow { color: #176650; font-weight: 700; letter-spacing: .08em; }
-h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; }
+main { max-width: 72rem; margin: 4rem auto; padding: 0 1.5rem; }
+.eyebrow { color: #176650; font-size: .85rem; font-weight: 700; letter-spacing: .06em; }
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 1rem 0; }
+h2 { font-size: 1.2rem; margin: 0 0 1rem; }
 p { line-height: 1.6; }
-.status { padding: 1rem; border: 1px solid #b7c9c2; border-radius: .5rem; background: white; }
+.intro { max-width: 42rem; color: #465b65; margin-bottom: 2rem; }
+.panel { background: white; border: 1px solid #cbd8d3; border-radius: .75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+label { display: block; font-weight: 600; margin-bottom: .5rem; }
+.formula-entry { display: flex; gap: .75rem; }
+input, select, button { font: inherit; border-radius: .4rem; }
+input { flex: 1; min-width: 0; border: 1px solid #70858d; padding: .8rem; font-size: 1.1rem; }
+button { border: 0; background: #176650; color: white; padding: .8rem 1.2rem; font-weight: 600; cursor: pointer; }
+button:hover:not(:disabled) { background: #104b3b; }
+button:disabled { opacity: .6; cursor: default; }
+:focus-visible { outline: 3px solid #1976ba; outline-offset: 3px; }
+.help, .footnote { font-size: .9rem; color: #465b65; }
+.help { margin-bottom: 0; }
+.error { color: #9d2626; background: #fff2f2; padding: .75rem; border-left: 3px solid #9d2626; }
+.exercise-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.progress { color: #176650; font-size: .9rem; }
+.table-scroll { overflow-x: auto; margin-top: 1.25rem; border: 1px solid #d6e0dc; border-radius: .4rem; }
+table { border-collapse: collapse; width: 100%; text-align: center; }
+caption { text-align: left; padding: 1rem; font-weight: 600; background: #f8faf9; }
+th, td { border: 1px solid #d6e0dc; padding: .75rem; }
+thead th { background: #f4f7f6; }
+tbody th { color: #465b65; font-weight: 400; }
+.formula-label { display: block; white-space: nowrap; }
+.column-kind { display: block; color: #465b65; font-size: .75rem; font-weight: 400; margin-top: .3rem; }
+.final-column { background: #edf7f2; }
+.given-value { font-weight: 600; }
+select { min-width: 5.5rem; padding: .55rem; background: white; color: #162a36; border: 1px solid #70858d; cursor: pointer; }
+@media (max-width: 600px) { main { margin-top: 2rem; padding: 0 1rem; } .panel { padding: 1rem; } .formula-entry { flex-direction: column; } th, td { padding: .5rem; } }
+.practice-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+button.secondary { color: #176650; background: white; border: 1px solid #176650; }
+button.secondary:hover:not(:disabled) { background: #edf7f2; }
+.answer-cell { display: flex; flex-direction: column; gap: .4rem; align-items: center; }
+.cell-feedback, .solution-value { font-size: .8rem; white-space: nowrap; }
+.cell-feedback.correct { color: #176650; }
+.cell-feedback.incorrect { color: #9d2626; font-weight: 600; }
+.cell-feedback.unanswered { color: #465b65; }
+.solution-value { color: #162a36; border-top: 1px solid #cbd8d3; padding-top: .3rem; }
+.feedback-summary { font-weight: 600; }

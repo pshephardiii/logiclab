@@ -32,8 +32,40 @@ The initial implementation plan reserves `001` through `007` for its proposed br
 
 1. Start from an up-to-date `main` and create the numbered branch.
 2. Keep each branch focused on a reviewable outcome, including its relevant tests and documentation.
-3. Open a pull request to `main` explaining the resulting behavior and validation.
-4. Merge after CI passes and the change is reviewed; delete the merged branch when convenient.
+3. When the branch is ready to finish, prepare its PR description as a Markdown file in `.codex-local/pr/<branch-name>.md`. Replace `/` with `-` in filenames. This directory is ignored by Git and created locally as needed.
+4. Use the draft when opening a pull request to `main`, explaining the resulting behavior and validation.
+5. Merge after CI passes and the change is reviewed; delete the merged branch when convenient.
+
+## Local PR drafts
+
+Each draft describes the final branch scope, including a summary and list of changes. Record relevant validation and limitations. Feature branches also include a suggested next feature branch summary; non-feature branches may omit that section. The suggestion is planning guidance, not a branch automatically created or started.
+
+Example filename: `.codex-local/pr/002-feat-truth-table-practice.md`.
+
+```markdown
+# <Suggested PR title>
+
+## Summary
+
+<The problem addressed and resulting behavior.>
+
+## Updates / changes
+
+- <Concrete change and its purpose.>
+- <Another relevant change.>
+
+## Validation
+
+<Checks actually performed and any material limitations.>
+
+## Suggested next feature branch
+
+`003-feat-classroom-access`
+
+<Purpose, proposed scope, and dependencies for the next feature.>
+```
+
+Keep drafts current if scope changes. They remain local and are not automatically posted to GitHub. Since ignored files are absent from fresh clones, the tracked workflow here and in `AGENTS.md` provides the durable instructions and template.
 
 Example after the initial repository push:
 

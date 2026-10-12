@@ -1,10 +1,14 @@
 # LogicLab — Initial Implementation Plan
 
-Status: proposed · October 12, 2026
+Status: active plan; truth-table milestone implemented · October 12, 2026
+
+Product decisions: see [Product Direction](product-direction.md) for the agreed account roles, instructor preview, assigned-work privacy, truth-table interaction, exercise order, and future problem-set settings. Those decisions supersede any corresponding open questions below.
+
+Data direction: see [Data Design](data-design.md) for the reusable problem library, separate definitions and attempts, immutable problem versions, and proposed persistence model.
 
 Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/schema` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
 
-Source: `LogicLab_Get_Started_Plan.docx`, version 0.1. This plan translates the starter document into reviewable implementation branches. Its recommendations are planning inputs, not settled requirements or authorization to publish, provision services, or implement every feature. The workspace currently has no application code or Git repository.
+Source: `LogicLab_Get_Started_Plan.docx`, version 0.1. This plan translates the starter document into reviewable implementation branches. Its recommendations are planning inputs, not settled requirements or authorization to publish, provision services, or implement every feature. The repository now contains the scaffold and truth-table vertical slice; later milestones remain planned.
 
 ## Purpose and intended experience
 
@@ -24,18 +28,20 @@ Deliver a polished truth-table vertical slice before expanding into the complete
 6. Add classroom workflows and persistence incrementally. Introduce migrations when the first persisted domain model is defined; avoid creating every suggested table upfront.
 7. Keep setup instructions, screenshots, decision records, and evidence of important tests current as branches land.
 
+Local database direction: run PostgreSQL in Docker Compose and expose a local connection for DBeaver. Document the host, port, database, development credentials, and volume/reset commands when persistence is introduced. The first truth-table slice can run without a database; retain database setup as foundation work before classroom persistence.
+
 ## Proposed architecture
 
-Use pnpm workspaces and Turborepo; React, Vite, and TypeScript for the web app; Fastify for the API; PostgreSQL and Drizzle for persistence; and Zod for boundary validation. These are provisional choices from the starter document. Confirm current maintenance and compatibility when installing dependencies.
+Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; ORM and authentication selection remain future decisions.
 
 ```text
 apps/web                 Student and instructor interface
-services/api                 Modular REST API
-services/worker              Job execution entry point, introduced when needed
-packages/logic-engine    Pure parser, evaluator, and truth-table generator
-packages/contracts       Request/response schemas and shared types
+services/api             Modular REST API
+services/worker          Job execution entry point, introduced when needed
+tools/logic-engine    Pure parser, evaluator, and truth-table generator
+tools/schema             Request/response schemas and shared types
 packages/db              Schema, migrations, and seed data
-packages/config          Shared tooling configuration
+tsconfig.base.json       Current shared TypeScript configuration
 packages/payments        Provider boundary and simulator, introduced with billing
 infra                    Local services and deployment configuration
 docs                     Plan, architecture decisions, and portfolio evidence
@@ -45,7 +51,7 @@ Keep identity, classes, memberships, exercises, submissions, billing, event inge
 
 ## Preliminary branch plans
 
-Branch names follow [the numbered naming convention](branch-naming-conventions.md) and describe proposed units of work, not branches already created. The bootstrap is intended for the initial `main` commit; its proposed `001` branch can be used for remaining foundation work. Merge each into `main` after its acceptance checks pass. Create dependent branches from the updated `main`; split a branch further if it becomes difficult to review. Each branch should include its relevant documentation and tests.
+Branch names follow [the numbered naming convention](branch-naming-conventions.md). Branch `002-feat-truth-table-practice` is implemented; other entries describe proposed work. The bootstrap is intended for the initial `main` commit; its proposed `001` branch can be used for remaining foundation work. Merge each into `main` after its acceptance checks pass. Create dependent branches from the updated `main`; split a branch further if it becomes difficult to review. Each branch should include its relevant documentation and tests.
 
 ### 1. `001-chore-project-foundation` — A reproducible starting point
 
@@ -68,6 +74,8 @@ Open product/design questions:
 
 Depends on: foundation.
 
+Implemented as the first feature branch after the scaffold. Begin with one formula, a documented grammar, and a deterministic truth table; then connect the engine to the API and browser. No accounts or database are required for this slice.
+
 - Define a small grammar for negation, conjunction, disjunction, and implication, with explicit precedence and associativity.
 - Implement parsing, evaluation, and truth-table generation in the pure engine package.
 - Connect an API endpoint to an interactive practice screen with clear syntax errors and answer feedback.
@@ -75,13 +83,9 @@ Depends on: foundation.
 
 Done when: a visitor can enter or select a formula, complete a truth-table exercise, and receive deterministic feedback through the real API. The UI handles loading, empty, invalid, and error states and works with keyboard input.
 
-Open product/design questions:
+Implementation outcome: parser, evaluator, deterministic tables, independent-practice API, feature-based browser components, Check answers, and Show/Hide solution. See [verification and walkthrough](truth-table-verification.md) for evidence and remaining limitations.
 
-- Should learners fill every cell, only the final column, or selected intermediate expressions?
-- Which text aliases should be accepted alongside logical symbols, and how will users enter symbols?
-- Should feedback appear per cell, on submission, or after a limited number of attempts?
-- Should anonymous practice be available, and how much progress should it retain?
-- What formula complexity and variable count are appropriate for the first lesson?
+Resolved defaults: given variable columns; all distinct compound subexpressions as answer columns; symbols plus `! & | ->`; checking on request; solutions alongside entries; four variables, 256 characters, and 32 recursive nesting levels. Practice is currently anonymous and not persisted. Future assignment defaults, saved practice, and authentication remain in [Product Direction](product-direction.md).
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
@@ -96,7 +100,7 @@ Done when: an instructor can create a class, a student can join, and requests ca
 
 Open product/design questions:
 
-- Can anyone become an instructor, and can one person be both an instructor and student?
+- Can anyone sign up as an instructor? Accounts have separate student/instructor roles; instructor student-view is preview only.
 - Are organizations necessary now, or should the initial product use class ownership with organizations added later?
 - How do invitation codes expire, get replaced, and communicate invalid or expired states?
 - What account recovery or verification experience is necessary for a public demo?
