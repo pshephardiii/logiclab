@@ -89,7 +89,7 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
-First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Live container/migration validation remains pending in the local environment because Docker is not installed.
+First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
 
 Depends on: truth-table practice.
 

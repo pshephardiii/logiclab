@@ -5,6 +5,6 @@ export { User, UserRole, UserSchema } from './entities/User.js';
 export { databaseOptions } from './config.js';
 
 /** Caller closes the ORM on shutdown; use a forked EntityManager per request/job. */
-export async function createDatabase(connectionString: string) {
-  return MikroORM.init(databaseOptions(connectionString));
+export async function createDatabase(connectionString: string, options: { snapshotOnMigrate?: boolean } = {}) {
+  return MikroORM.init(databaseOptions(connectionString, options));
 }

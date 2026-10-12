@@ -7,3 +7,4 @@ coverage/
 .DS_Store
 *.tsbuildinfo
 .codex-local/
+tools/db/src/migrations/.snapshot-*_test.json

@@ -1,15 +1,29 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile, stat } from 'node:fs/promises';
 import { createDatabase, User, UserRole } from '../src/index.js';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url) throw new Error('Set TEST_DATABASE_URL to a disposable integration-test database.');
-const orm = await createDatabase(url);
+const orm = await createDatabase(url, { snapshotOnMigrate: false });
+const databaseName = decodeURIComponent(new URL(url).pathname.slice(1));
+const snapshotFile = new URL(`../src/migrations/.snapshot-${databaseName}.json`, import.meta.url);
+
+async function snapshotState() {
+  try {
+    return { content: await readFile(snapshotFile, 'utf8'), modified: (await stat(snapshotFile)).mtimeMs };
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
 
 before(async () => {
+  const snapshotBefore = await snapshotState();
   await orm.migrator.up();
   await orm.migrator.up();
   assert.equal((await orm.migrator.getPending()).length, 0);
+  assert.deepEqual(await snapshotState(), snapshotBefore, 'Test migrations must not create or rewrite snapshots.');
 });
 after(async () => { await orm.close(true); });
 

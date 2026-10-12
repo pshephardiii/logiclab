@@ -3,7 +3,7 @@ import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
 import { UserSchema } from './entities/User.js';
 
-export function databaseOptions(connectionString: string) {
+export function databaseOptions(connectionString: string, options: { snapshotOnMigrate?: boolean } = {}) {
   if (!connectionString) throw new Error('A database connection string is required.');
   return defineConfig({
     clientUrl: connectionString,
@@ -16,6 +16,7 @@ export function databaseOptions(connectionString: string) {
       glob: '!(*.d).{js,ts}',
       transactional: true,
       allOrNothing: true,
+      snapshotOnMigrate: options.snapshotOnMigrate ?? true,
     },
   });
 }
