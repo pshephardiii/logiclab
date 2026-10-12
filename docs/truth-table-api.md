@@ -73,4 +73,4 @@ Returns the complete table, including expected answers, for independent practice
 
 Validation and formula errors use `{ "error": { "code": "...", "message": "...", "position": 0 } }`; `position` appears only for formula parsing errors. Malformed JSON uses the same envelope. Fastify transport errors such as unsupported content types or oversized bodies retain Fastify's normal error handling.
 
-Root development builds and watches both shared packages before/alongside the API and web app. Individual API commands require built schema and engine packages. No frontend exercise screen is implemented in this slice.
+Root development builds and watches both shared packages before/alongside the API and web app. Individual API commands require built schema and engine packages. The browser now uses the exercise endpoint for formula entry and blank/T/F answer cells. Browser checking and solution display remain the next slice.

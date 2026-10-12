@@ -1,6 +1,6 @@
 # LogicLab
 
-An interactive formal-logic learning project, built as a public full-stack portfolio. The React shell connects to API health; the backend also supports creating, checking, and showing solutions for stateless truth-table practice. The exercise interface and classroom features are next. See the [implementation plan](docs/initial-implementation-plan.md) and [truth-table API](docs/truth-table-api.md).
+An interactive formal-logic learning project, built as a public full-stack portfolio. The browser creates truth-table exercises through the API and lets students fill blank/T/F answer cells. The backend also supports checking and showing solutions; those browser controls come in the next slice. See the [implementation plan](docs/initial-implementation-plan.md) and [truth-table API](docs/truth-table-api.md).
 
 The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
 
@@ -15,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. The backend listens on port 3000; Vite proxies `/api` requests to it. The page reports whether the API is connected. The root development command builds the schema and logic engine before starting all four workspace watchers.
+Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all four workspace watchers.
 
 ## Packages
 
@@ -44,6 +44,8 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 | `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
 
 The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
+
+Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes the feature; shared UI components can be introduced when other features reuse them.
 
 ## Commands
 
