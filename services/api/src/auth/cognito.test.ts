@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import { CognitoIdentityProviderClient, SignUpCommand, InitiateAuthCommand, AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, SignUpCommand, InitiateAuthCommand, AdminDeleteUserCommand, ConfirmSignUpCommand, ResendConfirmationCodeCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { createCognitoProvider } from './cognito';
 import { readAuthConfig } from './config';
 
@@ -31,4 +31,17 @@ test.each([{ ChallengeName: 'NEW_PASSWORD_REQUIRED' }, { AuthenticationResult: {
 test('identity uses Cognito-authoritative verification instead of client assertions', async () => {
   jest.spyOn(CognitoIdentityProviderClient.prototype, 'send').mockResolvedValue({ UserAttributes: [{ Name: 'sub', Value: 'subject' }, { Name: 'email_verified', Value: 'true' }] } as never);
   expect(await createCognitoProvider(config).identity('access')).toEqual({ subject: 'subject', verified: true });
+});
+
+test('confirmation/resend/recovery commands include the server client secret hash', async () => {
+  const send = jest.spyOn(CognitoIdentityProviderClient.prototype, 'send').mockResolvedValue({} as never);
+  const provider = createCognitoProvider(config);
+  await provider.confirm('person@example.com', '123456'); await provider.resend('person@example.com');
+  await provider.forgotPassword('person@example.com'); await provider.resetPassword('person@example.com', '654321', 'New-password1!');
+  const types = [ConfirmSignUpCommand, ResendConfirmationCodeCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand];
+  send.mock.calls.forEach(([command], index) => {
+    expect(command).toBeInstanceOf(types[index]);
+    expect((command as ConfirmSignUpCommand).input).toMatchObject({ Username: 'person@example.com', SecretHash: createHmac('sha256', 'secret').update('person@example.comclient').digest('base64') });
+  });
+  expect((send.mock.calls[3]![0] as ConfirmForgotPasswordCommand).input).toMatchObject({ Password: 'New-password1!', ConfirmationCode: '654321' });
 });

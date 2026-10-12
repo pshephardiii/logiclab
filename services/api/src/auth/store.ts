@@ -5,9 +5,9 @@ export async function createAuthStore(orm: Awaited<ReturnType<typeof createDatab
   const { User, AuthSession, UserRole } = await import('@logiclab/db');
   const appUser = (user: InstanceType<typeof User>): AppUser => ({ id: user.id, subject: user.cognitoSubject, role: user.role });
   return {
-    async createUser(subject, role) {
+    async createUser(subject, role, email) {
       const em = orm.em.fork();
-      const user = em.create(User, { cognitoUserPoolId: poolId, cognitoSubject: subject, role: role === 'student' ? UserRole.Student : UserRole.Instructor });
+      const user = em.create(User, { cognitoUserPoolId: poolId, cognitoSubject: subject, role: role === 'student' ? UserRole.Student : UserRole.Instructor, email });
       em.persist(user);
       await em.flush();
       return appUser(user);
@@ -35,5 +35,10 @@ export async function createAuthStore(orm: Awaited<ReturnType<typeof createDatab
       return { user: appUser(record.user), encryptedTokens: record.encryptedTokens, accessExpiresAt: record.accessExpiresAt, expiresAt: record.expiresAt };
     },
     async deleteSession(id) { await orm.em.fork().nativeDelete(AuthSession, id); },
+    async deleteSessionsForEmail(email) {
+      const em = orm.em.fork();
+      const user = await em.findOne(User, { cognitoUserPoolId: poolId, email });
+      if (user) await em.nativeDelete(AuthSession, { user: user.id });
+    },
   };
 }

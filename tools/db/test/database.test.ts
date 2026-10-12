@@ -75,3 +75,14 @@ test('persists a user-linked session and deleting the user cascades to sessions'
     assert.equal(await em.findOne(AuthSession, session.id), null);
   } finally { await em.rollback(); }
 });
+
+test('normalized recovery email is unique within a pool, while legacy users may omit it', async () => {
+  const em = orm.em.fork(); await em.begin();
+  try {
+    em.persist(em.create(User, { cognitoUserPoolId: 'email-pool', cognitoSubject: 'one', role: UserRole.Student, email: 'person@example.com' }));
+    em.persist(em.create(User, { cognitoUserPoolId: 'other-pool', cognitoSubject: 'two', role: UserRole.Student, email: 'person@example.com' }));
+    await em.flush();
+    em.persist(em.create(User, { cognitoUserPoolId: 'email-pool', cognitoSubject: 'three', role: UserRole.Student, email: 'person@example.com' }));
+    await assert.rejects(em.flush(), /duplicate|unique/i);
+  } finally { await em.rollback(); }
+});

@@ -11,9 +11,11 @@ function setup() {
   const provider: IdentityProvider = {
     signup: jest.fn(async () => 'subject'), deleteCreatedUser: jest.fn(async () => {}),
     login: jest.fn(async () => tokens), refresh: jest.fn(async () => ({ ...tokens, accessToken: 'new-access' })),
+    confirm: jest.fn(async () => {}), resend: jest.fn(async () => {}), forgotPassword: jest.fn(async () => {}), resetPassword: jest.fn(async () => {}),
     identity: jest.fn(async () => ({ subject: 'subject', verified: true })), revoke: jest.fn(async () => {}),
   };
   const store: AuthStore = {
+    deleteSessionsForEmail: jest.fn(async () => { sessions.clear(); }),
     createUser: jest.fn(async (subject, role) => ({ id: 'app-id', subject, role })), findUser: jest.fn(async () => user),
     saveSession: jest.fn(async (id, value) => { sessions.set(id, value); }),
     updateSession: jest.fn(async (id, value) => { if (!sessions.has(id)) return false; sessions.set(id, value); return true; }),
@@ -26,7 +28,7 @@ function setup() {
 test('signup persists the selected role against the new Cognito subject', async () => {
   const { service, store } = setup();
   expect(await service.signup('person@example.com', 'password', 'student')).toMatchObject({ subject: 'subject', role: 'student' });
-  expect(store.createUser).toHaveBeenCalledWith('subject', 'student');
+  expect(store.createUser).toHaveBeenCalledWith('subject', 'student', 'person@example.com');
 });
 test('Cognito rejection does not create a local user or delete an existing identity', async () => {
   const { service, provider, store } = setup();
@@ -108,4 +110,21 @@ test('secure configuration rejects production HTTP and permits localhost develop
   expect(readAuthConfig(env)?.secureCookies).toBe(false);
   expect(() => readAuthConfig({ ...env, NODE_ENV: 'production' })).toThrow('HTTPS');
   expect(readAuthConfig({ ...env, APP_ORIGIN: 'https://example.com', NODE_ENV: 'production' })?.secureCookies).toBe(true);
+});
+
+test('successful password reset invalidates all local sessions for the normalized email', async () => {
+  const { service, provider, store, sessions } = setup();
+  await service.login('person@example.com', 'password');
+  await service.resetPassword('person@example.com', '123456', 'New-password1!');
+  expect(provider.resetPassword).toHaveBeenCalledWith('person@example.com', '123456', 'New-password1!');
+  expect(store.deleteSessionsForEmail).toHaveBeenCalledWith('person@example.com');
+  expect(sessions.size).toBe(0);
+});
+
+test('invalid reset code leaves current local sessions intact', async () => {
+  const { service, provider, store, sessions } = setup();
+  await service.login('person@example.com', 'password');
+  jest.mocked(provider.resetPassword).mockRejectedValue(new Error('invalid code'));
+  await expect(service.resetPassword('person@example.com', '000000', 'New-password1!')).rejects.toThrow();
+  expect(store.deleteSessionsForEmail).not.toHaveBeenCalled(); expect(sessions.size).toBe(1);
 });

@@ -8,10 +8,15 @@ export interface IdentityProvider {
   refresh(subject: string, refreshToken: string): Promise<Tokens>;
   identity(accessToken: string): Promise<{ subject: string; verified: boolean }>;
   revoke(refreshToken: string): Promise<void>;
+  confirm(email: string, code: string): Promise<void>;
+  resend(email: string): Promise<void>;
+  forgotPassword(email: string): Promise<void>;
+  resetPassword(email: string, code: string, password: string): Promise<void>;
 }
 export type StoredSession = { user: AppUser; encryptedTokens: string; accessExpiresAt: Date; expiresAt: Date };
 export interface AuthStore {
-  createUser(subject: string, role: Role): Promise<AppUser>;
+  createUser(subject: string, role: Role, email: string): Promise<AppUser>;
+  deleteSessionsForEmail(email: string): Promise<void>;
   findUser(subject: string): Promise<AppUser | null>;
   saveSession(hash: string, session: StoredSession): Promise<void>;
   updateSession(hash: string, session: StoredSession): Promise<boolean>;

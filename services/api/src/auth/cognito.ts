@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 import {
   CognitoIdentityProviderClient, SignUpCommand, AdminDeleteUserCommand,
   InitiateAuthCommand, GetUserCommand, RevokeTokenCommand,
+  ConfirmSignUpCommand, ResendConfirmationCodeCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import type { AuthConfig } from './config';
 import type { IdentityProvider, Tokens } from './types';
@@ -42,6 +43,18 @@ export function createCognitoProvider(config: AuthConfig, client = new CognitoId
     },
     async revoke(refreshToken) {
       await client.send(new RevokeTokenCommand({ ClientId: config.COGNITO_CLIENT_ID, ClientSecret: config.COGNITO_CLIENT_SECRET, Token: refreshToken }));
+    },
+    async confirm(email, code) {
+      await client.send(new ConfirmSignUpCommand({ ClientId: config.COGNITO_CLIENT_ID, Username: email, SecretHash: secretHash(email), ConfirmationCode: code }));
+    },
+    async resend(email) {
+      await client.send(new ResendConfirmationCodeCommand({ ClientId: config.COGNITO_CLIENT_ID, Username: email, SecretHash: secretHash(email) }));
+    },
+    async forgotPassword(email) {
+      await client.send(new ForgotPasswordCommand({ ClientId: config.COGNITO_CLIENT_ID, Username: email, SecretHash: secretHash(email) }));
+    },
+    async resetPassword(email, code, password) {
+      await client.send(new ConfirmForgotPasswordCommand({ ClientId: config.COGNITO_CLIENT_ID, Username: email, SecretHash: secretHash(email), ConfirmationCode: code, Password: password }));
     },
   };
 }

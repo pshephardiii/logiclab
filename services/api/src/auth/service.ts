@@ -18,7 +18,7 @@ export function createAuthService(provider: IdentityProvider, store: AuthStore, 
     async signup(email: string, password: string, role: Role) {
       if (role !== 'student' && role !== 'instructor') throw new AuthError('ROLE_INVALID');
       const subject = await provider.signup(email, password);
-      try { return await store.createUser(subject, role); }
+      try { return await store.createUser(subject, role, email); }
       catch {
         try { await provider.deleteCreatedUser(subject); }
         catch { throw new AuthError('SIGNUP_RECONCILIATION_REQUIRED'); }
@@ -64,6 +64,13 @@ export function createAuthService(provider: IdentityProvider, store: AuthStore, 
       const session = await store.getSession(hash);
       await store.deleteSession(hash);
       if (session) await provider.revoke(decryptTokens(session.encryptedTokens, key, hash).refreshToken);
+    },
+    confirm: (email: string, code: string) => provider.confirm(email, code),
+    resend: (email: string) => provider.resend(email),
+    forgotPassword: (email: string) => provider.forgotPassword(email),
+    async resetPassword(email: string, code: string, password: string) {
+      await provider.resetPassword(email, code, password);
+      await store.deleteSessionsForEmail(email);
     },
   };
 }

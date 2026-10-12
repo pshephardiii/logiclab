@@ -1,10 +1,10 @@
 # Cognito development foundation
 
-## Current slice
+## Current implementation
 
 `infra/cognito/development.json` prepares a development email/password user pool and secret-bearing API app client in `us-east-1`. `services/api/src/auth/` contains validated configuration, a Cognito SDK adapter, signup provisioning, persistent sessions, cookie/origin helpers, and a factory that initializes these dependencies.
 
-This slice does not register public auth HTTP endpoints or add account screens. The existing server still serves anonymous practice. The next slice wires the foundation into auth routes, with input validation, rate limiting, safe error responses/logging, and confirmation/resend/recovery operations. AWS has not been provisioned or contacted in the mocked tests. Setting `AUTH_ENABLED=true` alone does not expose auth routes yet.
+The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. Account screens are still pending. Anonymous practice continues to work with auth disabled. AWS has not been provisioned or contacted in the mocked tests. See [Auth API](auth-api.md).
 
 ## Identity and signup
 
@@ -22,7 +22,7 @@ If local provisioning fails after Cognito creates an identity, attempt to delete
 - Logout deletes local state before attempting provider revocation. The future logout handler must clear the cookie even when AWS revocation fails.
 - Expired records are rejected/deleted when used; periodic cleanup is later work. Non-rotating refresh tokens are selected for this initial foundation; rotation can be added with concurrency handling later.
 
-Register `@fastify/cookie` before using cookie helpers and enforce `assertAuthOrigin` on auth mutations, including signup/login. Input schemas, origin enforcement, rate limiting, and credential/token redaction are required at the HTTP boundary before public use. Foundation helpers alone do not install that boundary.
+The auth route plugin registers cookie parsing, validates all mutation origins, and applies strict schemas and per-IP rate limits. The server installs request/cookie/body redaction; auth errors exclude raw SDK details. In-memory limits and real AWS behavior still require deployment verification.
 
 ## Local configuration
 
@@ -34,11 +34,11 @@ Generate the token encryption key in your own terminal:
 node -e 'console.log(require("node:crypto").randomBytes(32).toString("hex"))'
 ```
 
-Save it as `AUTH_TOKEN_KEY` in ignored `.env`; do not paste it into chat or commit it. App-client ID/pool ID come from the stack outputs; the client secret comes from Cognito's app-client settings. `createAuthFoundation` validates opt-in configuration and initializes PostgreSQL; it is ready to be called by the upcoming route plugin. The route/startup slice will also connect environment loading and shutdown cleanup.
+Save it as `AUTH_TOKEN_KEY` in ignored `.env`; do not paste it into chat or commit it. App-client ID/pool ID come from the stack outputs; the client secret comes from Cognito's app-client settings. `createAuthFoundation` validates opt-in configuration and initializes PostgreSQL during enabled API startup. Root `.env` is loaded by local API dev/start commands. The server closes PostgreSQL and the Cognito client during shutdown.
 
 ## AWS setup when live verification is needed
 
-The foundation can be reviewed without AWS. Once auth routes are ready, complete these steps together before live signup/confirmation/recovery tests:
+The foundation can be reviewed without AWS. Auth routes are ready for mocked tests. Complete these steps together before live signup/confirmation/recovery verification:
 
 1. Create/sign into your AWS account, enable root-account MFA, and configure a billing budget alert. Use an appropriately authorized development identity/profile rather than root access keys.
 2. Install AWS CLI v2 and configure a profile named `logiclab-dev`, preferably with temporary credentials through your account's SSO setup. Verify it with `aws sts get-caller-identity --profile logiclab-dev`; don't send credentials in chat.
@@ -55,7 +55,7 @@ The foundation can be reviewed without AWS. Once auth routes are ready, complete
    ```
 
 5. In CloudFormation, read the pool/client IDs from Outputs. In Cognito, open that app client and obtain its secret. Store all backend settings in ignored `.env`. Configure the backend development identity's narrowly scoped cleanup permission.
-6. Apply local migrations with `npm run db:migrate`, then enable auth once HTTP integration is implemented. Verify signup, role persistence, confirmation/resend, login, refresh, logout, and recovery against real email addresses you control.
+6. Apply local migrations with `npm run db:migrate`, then set `AUTH_ENABLED=true` and start the API. Verify signup, role persistence, confirmation/resend, login, refresh, logout, and recovery against real email addresses you control.
 
 The template uses Cognito's default email sender, which has a non-adjustable 50-email daily allowance per AWS account. Plan SES before broader public registration. The pool is retained when its CloudFormation stack is deleted; remove it separately only when you intend to delete its identities. MFA and institution SSO are out of this branch.
 
@@ -66,3 +66,7 @@ No deployment command above has been run by the assistant. AWS-side template val
 Auth tests use a mocked identity provider/SDK and real cookie serialization. Database integration tests apply the session migration and verify persistence and cascade behavior. CloudFormation JSON is parsed locally, but live CloudFormation validation requires an AWS profile. Mocked tests do not verify email delivery or IAM permissions.
 
 Verified locally: 127 engine/API Jest tests, workspace type checks and builds, four PostgreSQL integration tests, and a one-off compiled API-store/service check against PostgreSQL for signup role persistence, login, refresh, and logout with mocked Cognito. Applied the session migration to the local development database and updated its tracked snapshot. MikroORM's `migration:check` reports no remaining schema changes.
+
+HTTP slice verification: handler/route/security tests cover confirmation and recovery SDK wiring, cookie lifecycle, strict fields, origins, rate limits, account-neutral recovery errors, and password-reset session invalidation. A compiled Fastify flow passed against PostgreSQL with mocked Cognito. The new email migration is applied locally; account screens and live AWS tests remain pending.
+
+Current HTTP slice checks: `npm run check` passed 172 engine/API Jest tests, type checks, and builds. Five live database tests passed. MikroORM reports the schema is up to date. A compiled Fastify flow against PostgreSQL with mocked Cognito verified signup through recovery/reset and local session invalidation.

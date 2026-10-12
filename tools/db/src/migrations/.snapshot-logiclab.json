@@ -189,6 +189,23 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -248,6 +265,17 @@
           "constraint": true,
           "keyName": "users_pkey",
           "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "cognito_user_pool_id",
+            "email"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "users_pool_email_unique",
+          "primary": false,
           "unique": true
         }
       ],

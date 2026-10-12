@@ -72,7 +72,7 @@ After a root build, `npm start -w @logiclab/api` starts the compiled API and `np
 
 ## Deployment direction
 
-The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints and screens are not wired yet; existing anonymous practice continues to work without AWS. The guide records the provisioning steps for when live verification is needed.
+The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; account screens are not wired yet. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/auth-api.md) for contracts, cookies, recovery, and limits.
 
 Both applications will target AWS. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
 

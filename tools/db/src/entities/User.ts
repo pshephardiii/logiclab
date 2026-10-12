@@ -12,6 +12,7 @@ export class User {
   cognitoUserPoolId!: string;
   cognitoSubject!: string;
   role!: UserRole;
+  email?: string;
   createdAt = new Date();
 }
 
@@ -23,7 +24,11 @@ export const UserSchema = new EntitySchema<User>({
     cognitoUserPoolId: { type: 'text', fieldName: 'cognito_user_pool_id' },
     cognitoSubject: { type: 'text', fieldName: 'cognito_subject' },
     role: { enum: true, items: () => UserRole, nativeEnumName: 'user_role' },
+    email: { type: 'text', nullable: true },
     createdAt: { type: 'datetime', columnType: 'timestamptz', fieldName: 'created_at', defaultRaw: 'now()' },
   },
-  uniques: [{ name: 'users_cognito_identity_unique', properties: ['cognitoUserPoolId', 'cognitoSubject'] }],
+  uniques: [
+    { name: 'users_cognito_identity_unique', properties: ['cognitoUserPoolId', 'cognitoSubject'] },
+    { name: 'users_pool_email_unique', properties: ['cognitoUserPoolId', 'email'] },
+  ],
 });
