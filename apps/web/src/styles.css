@@ -33,3 +33,13 @@ tbody th { color: #465b65; font-weight: 400; }
 .given-value { font-weight: 600; }
 select { min-width: 5.5rem; padding: .55rem; background: white; color: #162a36; border: 1px solid #70858d; cursor: pointer; }
 @media (max-width: 600px) { main { margin-top: 2rem; padding: 0 1rem; } .panel { padding: 1rem; } .formula-entry { flex-direction: column; } th, td { padding: .5rem; } }
+.practice-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+button.secondary { color: #176650; background: white; border: 1px solid #176650; }
+button.secondary:hover:not(:disabled) { background: #edf7f2; }
+.answer-cell { display: flex; flex-direction: column; gap: .4rem; align-items: center; }
+.cell-feedback, .solution-value { font-size: .8rem; white-space: nowrap; }
+.cell-feedback.correct { color: #176650; }
+.cell-feedback.incorrect { color: #9d2626; font-weight: 600; }
+.cell-feedback.unanswered { color: #465b65; }
+.solution-value { color: #162a36; border-top: 1px solid #cbd8d3; padding-top: .3rem; }
+.feedback-summary { font-weight: 600; }

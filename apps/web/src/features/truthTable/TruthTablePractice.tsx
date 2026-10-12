@@ -14,6 +14,8 @@ export function TruthTablePractice() {
       <FormulaForm formula={practice.formula} loading={practice.loading} error={practice.error}
         inputRef={practice.inputRef} onFormulaChange={practice.changeFormula} onCreate={practice.createTable} />
       <ExercisePanel exercise={practice.exercise} formula={practice.formula} answers={practice.answers}
+        feedback={practice.feedback} solution={practice.solution} action={practice.action} actionError={practice.actionError}
+        onCheck={practice.check} onToggleSolution={practice.toggleSolution}
         loading={practice.loading} completed={practice.completed} total={practice.total} onAnswer={practice.changeAnswer} />
       <p className="footnote">Independent practice · Work stays in this page and is cleared on reload.</p>
     </main>
