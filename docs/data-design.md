@@ -17,13 +17,15 @@ Library reuse does not imply a publicly shared library or permission to browse a
 
 ## Identity and classroom ownership
 
-The first classroom-access slice defines `users` in `tools/db`: generated UUID, Cognito pool ID/subject, one student/instructor role, and creation timestamp. The identity pair has a unique constraint. There are no local password/code fields. This foundation does not yet implement Cognito provisioning or account routes.
+The auth foundation adds `auth_sessions`: a hashed opaque session ID, user foreign key, encrypted Cognito access/refresh tokens, and access/absolute expiry timestamps. Sessions cascade when their user is deleted. Credentials and plaintext tokens are not stored in application tables. Signup persists the chosen role as soon as Cognito returns its subject; login only reads that stored role. See [Cognito Development](cognito-development.md) for compensation and session behavior.
+
+The first classroom-access slice defines `users` in `tools/db`: generated UUID, Cognito pool ID/subject, one student/instructor role, and creation timestamp. The identity pair has a unique constraint. There are no local password/code fields. The auth service implements provisioning, but HTTP account routes are not registered yet.
 
 Cognito manages email/password credentials, email confirmation, and password recovery. Keep application users, the separate student/instructor role, class ownership, and enrollments in PostgreSQL. Link an application user to their Cognito identity using a stable subject identifier scoped to the configured user pool rather than treating email as a permanent identity key. Passwords and reset/confirmation codes must not be copied into application tables.
 
 Initially, a class has one instructor owner and many student enrollments. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
 
-Token/session handling and application-user provisioning must be specified before implementation. A browser-provided role or user ID is not sufficient authorization for an existing account.
+Token/session handling and provisioning are specified in the Cognito development guide; HTTP integration remains the next slice. A browser-provided role or user ID is not sufficient authorization for an existing account.
 
 ## Proposed records
 

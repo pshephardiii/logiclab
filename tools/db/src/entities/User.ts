@@ -8,7 +8,7 @@ export enum UserRole {
 
 export class User {
   [OptionalProps]?: 'id' | 'createdAt';
-  id = randomUUID();
+  id: string = randomUUID();
   cognitoUserPoolId!: string;
   cognitoSubject!: string;
   role!: UserRole;

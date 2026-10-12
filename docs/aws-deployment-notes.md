@@ -15,6 +15,8 @@ This is a deployment constraint, not a selected architecture or a verified price
 
 ## Selected authentication and email direction
 
+See [Cognito development setup](cognito-development.md) for the prepared CloudFormation template, backend session foundation, and provisioning walkthrough. Resources remain unprovisioned by this work.
+
 Use Amazon Cognito user pools for email/password signup, email confirmation/resend, login, and password recovery. Application roles, class ownership, and enrollments remain in PostgreSQL. MFA and institutional SSO are deferred. No Cognito resources have been provisioned as part of this documentation update.
 
 As checked October 12, 2026, Cognito Lite and Essentials include a 10,000 monthly active user allowance for direct/social sign-in, subject to AWS account/organization terms. This is an authentication allowance, not a free allowance for every related AWS service. Email delivery and optional features have separate cost considerations. Recheck [Cognito pricing](https://aws.amazon.com/cognito/pricing/) before provisioning.

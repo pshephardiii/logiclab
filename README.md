@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all four workspace watchers.
+Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all five workspace watchers.
 
 ## Packages
 
@@ -71,6 +71,8 @@ Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's
 After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared schema has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; they are not automatically loaded.
 
 ## Deployment direction
+
+The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints and screens are not wired yet; existing anonymous practice continues to work without AWS. The guide records the provisioning steps for when live verification is needed.
 
 Both applications will target AWS. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
 

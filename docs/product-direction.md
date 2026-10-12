@@ -27,6 +27,11 @@ Use Amazon Cognito for email/password authentication. Cognito owns credentials; 
 - Synthetic development/demo accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool.
 - Start with Cognito's default email sender for development and a controlled demo; configure SES before broader public registration. See [AWS deployment notes](aws-deployment-notes.md) for the sending limit and follow-up setup.
 - MFA and institutional SSO are deferred.
+- Use one development pool in `us-east-1`; keep production configuration separate later. Prepare version-controlled infrastructure before provisioning.
+- Browser signup/login screens call the API. An opaque HTTP-only cookie identifies a persistent backend session; Cognito tokens remain encrypted in PostgreSQL rather than browser storage. Initial session lifetime is seven days with no remember-me option yet.
+- Save the chosen role in the app user as soon as Cognito signup returns its subject, before email confirmation. Confirmation/login retain it; ordinary profile updates cannot change it. Compensate failed local provisioning and explicitly flag failures requiring reconciliation.
+
+See [Cognito Development](cognito-development.md) for the implemented foundation, remaining HTTP integration, and AWS setup walkthrough.
 
 ### Classroom membership defaults
 

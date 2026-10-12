@@ -89,6 +89,8 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
+Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Public HTTP routes/screens and AWS provisioning follow. See [Cognito development guide](cognito-development.md).
+
 First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
 
 Depends on: truth-table practice.
