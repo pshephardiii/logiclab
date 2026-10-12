@@ -22,7 +22,7 @@ Deliver a polished truth-table vertical slice before expanding into the complete
 
 1. Confirm the initial audience, learning objective, and smallest truth-table exercise experience. Sketch the student exercise screen and instructor assignment flow before building them.
 2. Choose a project license and public repository identity. Initialize Git locally, then prepare a concise README explaining the problem, proposed scope, and local setup. Creating the public remote is a separate publication step.
-3. Record initial architectural decisions: a modular monolith, a pure TypeScript logic engine, and simulated payments. Mark the authentication and deployment choices as unresolved.
+3. Record initial architectural decisions: a modular monolith, a pure TypeScript logic engine, and simulated payments. Authentication now uses Cognito email/password with confirmation and recovery; AWS application hosting remains unresolved.
 4. Bootstrap the workspace, frontend, API, shared configuration, contracts, and logic-engine package. Add a local Postgres service and a documented development command.
 5. Deliver a small browser-to-API truth-table flow with meaningful engine tests. Use it to validate notation, input behavior, feedback, and visual design.
 6. Add classroom workflows and persistence incrementally. Introduce migrations when the first persisted domain model is defined; avoid creating every suggested table upfront.
@@ -32,7 +32,7 @@ Local database direction: run PostgreSQL in Docker Compose and expose a local co
 
 ## Proposed architecture
 
-Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; ORM and authentication selection remain future decisions.
+Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; ORM selection and Cognito integration details remain future decisions.
 
 ```text
 apps/web                 Student and instructor interface
@@ -91,19 +91,22 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 Depends on: truth-table practice.
 
-- Select a maintained authentication approach and implement signup, login, logout, and sessions.
+- Integrate Cognito email/password signup, email confirmation/resend, login, logout, sessions, and password recovery/reset. Avoid account-enumeration responses.
 - Add instructor class creation, invitation codes, student enrollment, and role-specific navigation.
-- Introduce the necessary migrations and synthetic seed accounts. Enforce permissions on the server for each resource.
+- Add Docker PostgreSQL, DBeaver connection documentation, initial migrations, and synthetic application users linked to development Cognito identities. Enforce permissions on the server for each resource.
 - Test unauthorized access, cross-class access, and cross-organization isolation if organizations are introduced here.
 
 Done when: an instructor can create a class, a student can join, and requests cannot access another instructor's resources or instructor-only actions. Demo accounts can reproduce the flow.
 
-Open product/design questions:
+Agreed defaults: anyone can register as an instructor; separate student/instructor roles; one instructor owner per class; invitation-code enrollment; students may join multiple classes across instructors. Institutions, co-instructors, MFA, and SSO are deferred. Include email verification and password recovery now. Use Cognito's default email sender for development/controlled demo and SES before broader public registration.
 
-- Can anyone sign up as an instructor? Accounts have separate student/instructor roles; instructor student-view is preview only.
-- Are organizations necessary now, or should the initial product use class ownership with organizations added later?
+Open implementation/design questions:
+
+- How will Cognito tokens/session cookies be handled, and how will app users and roles be provisioned consistently?
+- Which development user-pool/app-client configuration, region, and environment separation should we use?
 - How do invitation codes expire, get replaced, and communicate invalid or expired states?
-- What account recovery or verification experience is necessary for a public demo?
+- Which ORM/migration tooling and concrete schema should support users, classes, and enrollments?
+- Which SES identity, delivery setup, and production-access steps are needed before public registration?
 - Should employers use isolated seeded accounts, a guest demo session, or self-registration?
 
 ### 4. `004-feat-assignments-and-progress` — A complete learning workflow

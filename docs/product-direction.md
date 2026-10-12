@@ -14,7 +14,26 @@ Build an interactive formal-logic learning platform as a public portfolio projec
 - Student and instructor accounts have distinct roles. An instructor account is not also a student account.
 - Instructors should eventually have a **Student view** mode to preview the learner experience. Preview does not enroll the instructor as a student or create student submissions.
 
-The exact signup flow, instructor eligibility, and preview interface remain to be designed.
+Anyone may register as an instructor in the initial version. Institutional approval and the detailed preview interface are deferred.
+
+### Authentication and account recovery
+
+Use Amazon Cognito for email/password authentication. Cognito owns credentials; the application owns roles and resource permissions. This is a selected implementation direction, not an already configured service.
+
+- Signup lets the user choose student or instructor and supply email/password, then confirm their email with a code. Include confirmation-code resend.
+- Normal authenticated access requires email confirmation.
+- Include login, logout, and forgot/reset password in the classroom-access branch. Recovery requests send an email code; users submit the code and a new password.
+- Recovery responses should not disclose whether an email has an account.
+- Synthetic development/demo accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool.
+- Start with Cognito's default email sender for development and a controlled demo; configure SES before broader public registration. See [AWS deployment notes](aws-deployment-notes.md) for the sending limit and follow-up setup.
+- MFA and institutional SSO are deferred.
+
+### Classroom membership defaults
+
+- Students join instructor-owned classes through invitation codes.
+- A student can join multiple classes, including those owned by different instructors.
+- Each class has one instructor owner initially; co-instructors are deferred.
+- Defer institution management and billing. Keep class ownership and enrollment explicit in the application.
 
 ## Assigned work and independent practice
 
@@ -23,7 +42,7 @@ The exact signup flow, instructor eligibility, and preview interface remain to b
 - Students can also create their own truth tables for independent practice.
 - Instructors can view submissions for their assignments. Independent student practice stays private from instructors.
 
-Classes and invitation codes remain proposals from the starter plan. Whether assignment targets are classes, individual students, or both has not been decided.
+Classes and invitation-code enrollment are agreed for the initial classroom workflow. Start with class-wide assignments when assignments are introduced; individual student targeting remains future scope.
 
 See [Data Design](data-design.md) for problem definitions, immutable versions, reuse, assignment policy, and student attempts.
 
@@ -84,7 +103,7 @@ Support two possible funding journeys. These are product directions to explore, 
 
 Keep payment ownership separate from instructor identity. One instructor account could teach both institution-funded and personally funded classes without acquiring a second account or a student role. A proposed model gives each class a funding source and checks the resulting entitlement rather than requiring the instructor to have personally paid.
 
-The simulated-payment milestone can demonstrate both journeys without real charges. Billing work remains outside the current truth-table slice.
+The simulated-payment milestone can demonstrate both journeys without real charges. Billing work remains outside the classroom-access branch.
 
 Open billing questions:
 
@@ -96,15 +115,15 @@ Open billing questions:
 - Can a class change funding sources, and how do we avoid duplicate coverage or charges during a transfer?
 - What pricing, limits, refund behavior, and expiration rules apply to each journey?
 
-## First implementation scope
+## Implementation scope
 
-The current branch, `002-feat-truth-table-practice`, should deliver the formula-to-table practice experience, deterministic checking, and a browser/API flow. It does not require accounts or database persistence yet.
+`002-feat-truth-table-practice` is merged and delivers anonymous formula-to-table practice, checking, and solutions without persistence.
 
-Account roles, assignment visibility, instructor preview, and configurable problem-set behavior are agreed product direction for later branches. Derivation checking follows the truth-table milestone.
+`003-feat-classroom-access` introduces Docker PostgreSQL/DBeaver setup, Cognito email/password authentication with confirmation and recovery, separate account roles, instructor-owned classes, invitation enrollment, and scoped access checks. Instructor Student view remains an eventual preview feature; it does not require dual-role enrollment. Problem libraries, assignments, grades, institutions, billing, and derivation checking remain later work.
 
 ## Questions still to resolve
 
-- How are students connected to instructors, and what can an instructor assign to a class versus an individual?
+- How do class invitation codes expire or get replaced, and how should enrollment errors be presented?
 - How should incomplete work affect final submission and grading? Practice checking already distinguishes unanswered cells from incorrect answers.
 - What are the exact practice/graded defaults, retry rules, grading rules, and deadline behavior?
 - Does viewing a solution affect an attempt or grade, and can solutions become available after a deadline?
@@ -115,4 +134,4 @@ Account roles, assignment visibility, instructor preview, and configurable probl
 
 Use React/TypeScript with Vite for the browser app, Node.js/TypeScript with Jest for backend tests, and the shared schema package for contracts. Keep browser apps under `apps/` and backend services under `services/` so an admin app or worker can be introduced later.
 
-Eventually run local PostgreSQL in Docker and document connecting DBeaver to it. Deploy frontend and backend to AWS using the cheapest viable configuration once runtime, database, and scheduling requirements are known. These choices do not add database or deployment work to the first truth-table slice.
+Eventually run local PostgreSQL in Docker and document connecting DBeaver to it. Deploy frontend and backend to AWS using the cheapest viable configuration once runtime, database, and scheduling requirements are known. The classroom-access branch adds local database setup and Cognito integration; frontend/backend AWS hosting remains separate deployment work.

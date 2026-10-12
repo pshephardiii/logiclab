@@ -15,6 +15,14 @@ This document records the agreed storage direction and reusable problem library.
 
 Library reuse does not imply a publicly shared library or permission to browse another instructor's problems. Library sharing and ownership transfer remain undecided.
 
+## Identity and classroom ownership
+
+Cognito manages email/password credentials, email confirmation, and password recovery. Keep application users, the separate student/instructor role, class ownership, and enrollments in PostgreSQL. Link an application user to their Cognito identity using a stable subject identifier scoped to the configured user pool rather than treating email as a permanent identity key. Passwords and reset/confirmation codes must not be copied into application tables.
+
+Initially, a class has one instructor owner and many student enrollments. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
+
+Token/session handling and application-user provisioning must be specified before implementation. A browser-provided role or user ID is not sufficient authorization for an existing account.
+
 ## Proposed records
 
 Names and fields below are provisional; introduce them as persistence is needed rather than creating every table upfront.
@@ -64,11 +72,11 @@ Use PostgreSQL relational columns, foreign keys, and constraints for identity, o
 
 Derivations will eventually need premises, a conclusion, and a proof-system identifier in their definitions, with proof lines in student answers. Their exact representation depends on the chosen axioms/rules and is deferred.
 
-Local PostgreSQL will run in Docker, with documented DBeaver connection settings. No migrations or database setup are required for the current truth-table vertical slice.
+Local PostgreSQL will run in Docker, with documented DBeaver connection settings. The completed truth-table slice required no persistence; the classroom-access branch introduces the initial database setup and migrations.
 
 ## Remaining decisions
 
-- Class versus individual assignment targets and the related membership model.
+- Invitation-code expiry/replacement, enrollment constraints, and the concrete identity/class schema. Initial assignment targeting is class-wide; individual targeting is deferred.
 - Library organization, search, sharing, copying, and archive/deletion behavior.
 - Published problem-set snapshots or versions, and allowed assignment-policy changes.
 - Stable expression/row/cell identifiers, grammar versions, and complexity limits.
