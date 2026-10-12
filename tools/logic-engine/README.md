@@ -1,12 +1,16 @@
 # Logic engine
 
-Pure TypeScript functionality shared by browser and API code. This step implements parsing only; evaluation and truth-table generation follow next.
+Pure TypeScript parsing, evaluation, and truth-table generation shared by browser and API code. API and UI integration follow next.
 
 ```ts
-import { parseFormula } from '@logiclab/logic-engine';
+import { parseFormula, evaluateFormula, generateTruthTable } from '@logiclab/logic-engine';
 
 const formula = parseFormula('!(P & Q) -> R');
 // A discriminated AST of variable, not, and binary nodes.
+const result = evaluateFormula(formula, { P: true, Q: true, R: false });
+// true: a false antecedent implies any conclusion.
+const table = generateTruthTable('!(P & Q) -> R');
+// Alphabetical given columns, intermediate expression columns, and eight rows.
 ```
 
 ## Grammar
@@ -26,7 +30,34 @@ Precedence is negation, conjunction, disjunction, implication. Conjunction/disju
 
 Initial bounds are exported in `FORMULA_LIMITS`: 256 UTF-16 code units (including whitespace), four distinct variables, and 32 levels of recursive grouping/negation/right-associated implication, combined along a parsing path. Repeated variable occurrences do not count as additional variables. These bounds keep the first practice experience small and guard recursive parsing; they can be revised explicitly later.
 
-The package has no runtime dependencies and does not access a database or network. AST types are read-only at the TypeScript boundary; runtime objects are not frozen. Stable table column identifiers and normalized display formatting will be designed with table generation, rather than exposing parser offsets as persistent identifiers.
+The package has no runtime dependencies and does not access a database or network. AST and table types are read-only at the TypeScript boundary; runtime objects are not frozen.
+
+## Evaluation
+
+`evaluateFormula` accepts a parser-produced AST and a mapping of variable names to booleans. Negation inverts its operand; conjunction requires both operands; disjunction requires either; implication is false only when the antecedent is true and the consequent is false.
+
+Every referenced variable must have its own boolean property in the mapping. Missing or non-boolean values throw `FormulaEvaluationError`, exposing `code` and `variable`. Both operands are evaluated, so short-circuiting cannot hide missing assignments. Extra variable values are allowed. Arbitrary external AST objects require validation before using this function; parse user input through `parseFormula` instead.
+
+## Truth tables and stable identifiers
+
+`generateTruthTable` accepts formula text and applies the parser's limits. It returns alphabetical `variables`, ordered `columns`, and `rows`:
+
+- Given columns come first; answer columns contain every distinct compound subexpression, with children before parents and the final formula last. Negations are compound expressions too.
+- Identical syntax structures share one column; logically equivalent but differently structured expressions remain separate. A lone variable still gets a final answer column distinct from its given column.
+- Labels normalize aliases to symbols and fully parenthesize binary expressions to preserve grouping.
+- Rows start with all T and end with all F; the first alphabetical variable changes slowest. Each row's `values` maps column IDs to boolean values.
+
+Identifiers use an explicit `v1` convention:
+
+```text
+var:v1:P                 Given column for P
+expr:v1:(P ∧ Q)          Answer column for a canonical expression
+row:v1:P=T;Q=F           Row for a named variable assignment
+```
+
+Column IDs depend on structure, not source offsets, whitespace, aliases, or redundant parentheses. They remain stable when the same expression is reused within another formula. Row IDs contain the complete variable assignment; a different variable set produces a different row ID. A cell is addressed by its row ID and column ID within a problem version. Any future change to canonicalization or identifier rules needs an explicit version change.
+
+**Generated tables include expected answers.** They are internal engine results, not a student API response contract. The future API must omit answer values when creating an exercise and disclose solutions/feedback only through the permitted workflow.
 
 From the repository root:
 
