@@ -4,7 +4,7 @@
 
 `infra/cognito/development.json` prepares a development email/password user pool and secret-bearing API app client in `us-east-1`. `services/api/src/auth/` contains validated configuration, a Cognito SDK adapter, signup provisioning, persistent sessions, cookie/origin helpers, and a factory that initializes these dependencies.
 
-The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. Account screens are still pending. Anonymous practice continues to work with auth disabled. AWS has not been provisioned or contacted in the mocked tests. See [Auth API](auth-api.md).
+The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. The web app includes signup, confirmation/resend, sign-in, recovery/reset, and sign-out screens. Anonymous practice continues to work with auth disabled. Automated tests mock Cognito; the developer has also provisioned the pool and verified core flows against AWS. See [Auth API](auth-api.md).
 
 ## Identity and signup
 
@@ -19,7 +19,7 @@ If local provisioning fails after Cognito creates an identity, attempt to delete
 - Initial duration: seven days, with 15-minute Cognito access tokens. Refresh does not extend absolute session lifetime. Remember-me and configurable durations are deferred.
 - Use a stable, private 32-byte `AUTH_TOKEN_KEY` across API restarts. Losing/rotating it invalidates token decryption; plan controlled session invalidation when rotating.
 - Refresh rechecks Cognito identity/email verification and loads the stored user. Update-only persistence avoids recreating a session deleted by concurrent logout.
-- Logout deletes local state before attempting provider revocation. The future logout handler must clear the cookie even when AWS revocation fails.
+- Logout deletes local state before attempting provider revocation. The logout handler clears the cookie even when AWS revocation fails.
 - Expired records are rejected/deleted when used; periodic cleanup is later work. Non-rotating refresh tokens are selected for this initial foundation; rotation can be added with concurrency handling later.
 
 The auth route plugin registers cookie parsing, validates all mutation origins, and applies strict schemas and per-IP rate limits. The server installs request/cookie/body redaction; auth errors exclude raw SDK details. In-memory limits and real AWS behavior still require deployment verification.
@@ -59,7 +59,7 @@ The foundation can be reviewed without AWS. Auth routes are ready for mocked tes
 
 The template uses Cognito's default email sender, which has a non-adjustable 50-email daily allowance per AWS account. Plan SES before broader public registration. The pool is retained when its CloudFormation stack is deleted; remove it separately only when you intend to delete its identities. MFA and institution SSO are out of this branch.
 
-No deployment command above has been run by the assistant. AWS-side template validation and real Cognito behavior are pending. See [AWS deployment notes](aws-deployment-notes.md) for costs/email constraints and [Cognito signup/secret-hash guidance](https://docs.aws.amazon.com/cognito/latest/developerguide/signing-up-users-in-your-app.html) for the email-only pool refresh hash rules.
+The developer validated the template, provisioned the development pool/client, and configured local backend settings. The assistant has not run the deployment command. See [AWS deployment notes](aws-deployment-notes.md) for costs/email constraints and [Cognito signup/secret-hash guidance](https://docs.aws.amazon.com/cognito/latest/developerguide/signing-up-users-in-your-app.html) for the email-only pool refresh hash rules.
 
 ## Verification
 
@@ -67,6 +67,14 @@ Auth tests use a mocked identity provider/SDK and real cookie serialization. Dat
 
 Verified locally: 127 engine/API Jest tests, workspace type checks and builds, four PostgreSQL integration tests, and a one-off compiled API-store/service check against PostgreSQL for signup role persistence, login, refresh, and logout with mocked Cognito. Applied the session migration to the local development database and updated its tracked snapshot. MikroORM's `migration:check` reports no remaining schema changes.
 
-HTTP slice verification: handler/route/security tests cover confirmation and recovery SDK wiring, cookie lifecycle, strict fields, origins, rate limits, account-neutral recovery errors, and password-reset session invalidation. A compiled Fastify flow passed against PostgreSQL with mocked Cognito. The new email migration is applied locally; account screens and live AWS tests remain pending.
+HTTP slice verification: handler/route/security tests cover confirmation and recovery SDK wiring, cookie lifecycle, strict fields, origins, rate limits, account-neutral recovery errors, and password-reset session invalidation. A compiled Fastify flow passed against PostgreSQL with mocked Cognito. The new email migration is applied locally; account screens are now implemented. Live verification is recorded below.
 
 Current HTTP slice checks: `npm run check` passed 172 engine/API Jest tests, type checks, and builds. Five live database tests passed. MikroORM reports the schema is up to date. A compiled Fastify flow against PostgreSQL with mocked Cognito verified signup through recovery/reset and local session invalidation.
+
+## Browser accounts and live verification
+
+Start PostgreSQL and the API with the configured root `.env`, then open http://localhost:5173. Use **Sign in / Create account** to choose a student/instructor role at signup, enter the emailed confirmation code, and sign in. **Resend code** is available on the confirmation screen. **Forgot password?** requests a reset code and leads to the new-password screen. Successful confirmation/reset returns to sign-in; neither automatically creates a session.
+
+The app restores account state through `GET /api/auth/session` on load. Cookies persist across reloads until expiry; passwords and Cognito tokens are not saved in local/session storage. Switching between Practice and Account preserves the mounted practice exercise, but reloading still clears practice work. Account requests use the same-origin Vite `/api` proxy; keep `APP_ORIGIN=http://localhost:5173` and open that exact origin for live development. Do not point the browser auth client at a separate API origin.
+
+Developer-reported live checks: signup email arrived, confirmation succeeded, login returned the same user ID/role, logout rejected subsequent session access, and password recovery/reset followed by login retained the same identity/role. Real resend and expired-access-token refresh still need verification. Browser account flows have been checked in Chrome with intercepted/mock responses, including signup role, confirmation/resend, failed-login retry and password clearing, login, reload session restoration, logout, recovery/reset, preserved practice input, empty browser storage, and a 390px layout. This temporary smoke check is local evidence, not a committed frontend regression suite.

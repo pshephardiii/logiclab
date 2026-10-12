@@ -41,6 +41,6 @@ Auth handlers log only sanitized operational categories, not SDK messages/stacks
 
 ## Validation and current scope
 
-Handler and injected-route tests cover registration, strict validation, role preservation, origin enforcement, cookies, recovery masking, errors, and rate limiting. A compiled HTTP flow has been exercised against PostgreSQL with mocked Cognito; real AWS email delivery and IAM behavior remain pending.
+Handler and injected-route tests cover registration, strict validation, role preservation, origin enforcement, cookies, recovery masking, errors, and rate limiting. A compiled HTTP flow has been exercised against PostgreSQL with mocked Cognito; the developer has additionally reported successful live signup/confirmation, login/logout, and recovery/reset checks. Live resend and token refresh remain to be checked.
 
-Account screens, classroom authorization, enrollment, and production deployment are later slices. See [Cognito setup](cognito-development.md) before live verification. Shared schemas are exported from `@logiclab/schema`; each auth endpoint follows the route/handler/handler-test/route-test directory convention.
+Account screens are implemented under `apps/web/src/features/auth`, with an API client, account-state hook, panel, and form component. Classroom authorization, enrollment, and production deployment are later slices. See [Cognito setup](cognito-development.md) before live verification. Shared schemas are exported from `@logiclab/schema`; each auth endpoint follows the route/handler/handler-test/route-test directory convention.

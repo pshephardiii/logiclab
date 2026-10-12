@@ -19,6 +19,8 @@ npm run dev
 
 Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all five workspace watchers.
 
+To use accounts, configure the backend following [Cognito development setup](docs/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work.
+
 ## Packages
 
 In practice, **Check answers** labels each answer correct, incorrect, or unanswered and summarizes the results. Editing an answer clears previous check feedback; **Show solution** displays expected values without replacing entries, and **Hide solution** removes them. Editing the formula or creating a new table clears answers, feedback, and solutions. Failed checking/solution requests preserve work and can be retried. This is independent practice, not an assignment or official grade.
@@ -51,7 +53,7 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 
 The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
-Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes the feature; shared UI components can be introduced when other features reuse them.
+Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes practice and account navigation. The auth feature owns its account form/panel, API client, and session-state hook; shared UI components can be introduced when other features reuse them.
 
 ## Commands
 
@@ -68,17 +70,17 @@ npm run check
 
 Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's request-injection tooling. An experimental warning during tests is expected. The initial dependency audit reports 20 moderate findings in the Jest development dependency chain, originating in `sprintf-js`. No automatic downgrade was applied; revisit upstream fixes as dependencies evolve.
 
-After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared schema has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; they are not automatically loaded.
+After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared schema has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; API dev/start loads the ignored root `.env`.
 
 ## Deployment direction
 
-The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; account screens are not wired yet. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/auth-api.md) for contracts, cookies, recovery, and limits.
+The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; the web app includes account screens and restores sessions through the API. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/auth-api.md) for contracts, cookies, recovery, and limits.
 
 Both applications will target AWS. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
 
 The production browser uses same-origin `/api` by default. Configure routing for that path to the backend. `VITE_API_URL` optionally sets an API origin at frontend build time; using a different origin will also require explicit backend CORS configuration. Never put secrets in `VITE_*` variables, which are visible in the browser.
 
-The lowest-cost viable AWS topology is still undecided. Compare static hosting, backend execution, database, traffic, logs, and scheduled work costs when those requirements are known. No AWS resources or accounts are configured by this scaffold. See [deployment planning](docs/aws-deployment-notes.md).
+The lowest-cost viable AWS topology is still undecided. Compare static hosting, backend execution, database, traffic, logs, and scheduled work costs when those requirements are known. A development Cognito pool has been provisioned; application hosting and the production database are still pending. See [deployment planning](docs/aws-deployment-notes.md).
 
 The public repository is [pshephardiii/logiclab](https://github.com/pshephardiii/logiclab). A complete demo release still needs a license choice and the features described in the implementation plan.
 

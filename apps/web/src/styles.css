@@ -43,3 +43,13 @@ button.secondary:hover:not(:disabled) { background: #edf7f2; }
 .cell-feedback.unanswered { color: #465b65; }
 .solution-value { color: #162a36; border-top: 1px solid #cbd8d3; padding-top: .3rem; }
 .feedback-summary { font-weight: 600; }
+.app-nav { max-width: 72rem; margin: 1rem auto 0; padding: 0 1.5rem; display: flex; justify-content: space-between; gap: 1rem; }
+button.text-button { color: #176650; background: transparent; padding: .5rem; }
+button.text-button:hover:not(:disabled) { background: #e3eee8; }
+button[aria-current="page"] { text-decoration: underline; text-underline-offset: .3em; }
+.account-page { max-width: 40rem; }
+.account-page h1 { font-size: 2rem; }
+.account-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.account-form input, .account-form select { display: block; width: 100%; margin-bottom: 1rem; }
+.account-form label { margin-top: 1rem; }
+.account-links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
