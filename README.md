@@ -30,6 +30,7 @@ services/
   worker/         Future background worker (not created yet)
 tools/
   schema/         Shared API contracts
+  logic-engine/   Pure logic parser; evaluation and tables follow
 docs/
 ```
 
@@ -40,6 +41,7 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 | `apps/web` | `@logiclab/web` | React + TypeScript, served and built with Vite |
 | `services/api` | `@logiclab/api` | Node.js + TypeScript API using Fastify; Jest tests |
 | `tools/schema` | `@logiclab/schema` | Shared Zod request/response schemas and inferred types |
+| `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript formula parser, with Jest tests |
 
 The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
