@@ -53,6 +53,8 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 
 The contracts package contains API contracts, not database migrations. Each domain file groups reusable shapes, request contracts, and response contracts, with inferred TypeScript types beside public schemas. `index.ts` only re-exports domain modules. Named type exports are conveniences; parsed values are already inferred from their Zod schemas. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
+Truth-table generation lives in `tools/logic-engine/src/truth-table/`: `truth-table.ts` orchestrates parsing and generation, `types.ts` declares the output shapes, and `helpers/` groups expression traversal/labels, column construction, and row evaluation. Helpers are implementation details; the root package exports retain the generator and its public types.
+
 Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes practice and account navigation. The auth feature owns its account form/panel, API client, and session-state hook; shared UI components can be introduced when other features reuse them.
 
 ## Commands

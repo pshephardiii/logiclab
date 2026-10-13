@@ -5,8 +5,8 @@ export {
 } from './parser';
 export { evaluateFormula, FormulaEvaluationError } from './evaluator';
 export type { VariableAssignment } from './evaluator';
-export { generateTruthTable } from './truth-table';
-export type { TruthTable, TruthTableColumn, TruthTableRow } from './truth-table';
+export { generateTruthTable } from './truth-table/truth-table';
+export type { TruthTable, TruthTableColumn, TruthTableRow } from './truth-table/types';
 export type {
   Formula,
   BinaryOperator,
