@@ -26,7 +26,7 @@ The number identifies a unit of work; it does not imply priority, release versio
 
 ## Assigning numbers
 
-The initial implementation plan reserves `001` through `007` for its proposed branches. The scaffold can be committed directly to `main` as the initial baseline; `001` then covers remaining foundation work. For additional work, choose the next unused number after checking the plan, existing branches, and pull request history. Do not reuse numbers from merged or abandoned work. If a planned branch is split, keep its original number for one part and assign fresh numbers to the other parts.
+The initial implementation plan reserves `001` through `008` for its proposed branches. The scaffold can be committed directly to `main` as the initial baseline; `001` then covers remaining foundation work. For additional work, choose the next unused number after checking the plan, existing branches, and pull request history. Do not reuse numbers from merged or abandoned work. If a planned branch is split, keep its original number for one part and assign fresh numbers to the other parts.
 
 ## Workflow
 
@@ -38,7 +38,7 @@ The initial implementation plan reserves `001` through `007` for its proposed br
 
 ## Local PR drafts
 
-Each draft describes the final branch scope, including a summary and list of changes. Record relevant validation and limitations. Feature branches also include a suggested next feature branch summary; non-feature branches may omit that section. The suggestion is planning guidance, not a branch automatically created or started.
+Each draft describes the final branch scope, including a summary and list of changes. Record relevant validation and limitations. Feature branches also include a suggested next branch summary (including a refactor branch when that is the agreed next step); non-feature branches may omit that section. The suggestion is planning guidance, not a branch automatically created or started.
 
 Example filename: `.codex-local/pr/002-feat-truth-table-practice.md`.
 
@@ -58,7 +58,7 @@ Example filename: `.codex-local/pr/002-feat-truth-table-practice.md`.
 
 <Checks actually performed and any material limitations.>
 
-## Suggested next feature branch
+## Suggested next branch
 
 `003-feat-classroom-access`
 

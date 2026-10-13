@@ -113,7 +113,18 @@ Open implementation/design questions:
 - Which SES identity, delivery setup, and production-access steps are needed before public registration?
 - Should employers use isolated seeded accounts, a guest demo session, or self-registration?
 
-### 4. `004-feat-assignments-and-progress` — A complete learning workflow
+### 4. `004-refactor-codebase` — Structure and maintainability
+
+Depends on: the completed classroom-access branch.
+
+- Review feature boundaries, shared frontend state, route composition, and backend route/handler/service/store responsibilities.
+- Reduce duplication in API clients, request handling, role guards, and class-list state where a common abstraction is justified.
+- Make naming and file organization consistent; preserve the API contracts, database mappings, user workflows, and permission boundaries.
+- Improve regression coverage where needed to prove behavior remains unchanged. Keep migration generation unchanged unless a concrete defect requires repair.
+
+Done when: the agreed restructuring is reviewable and existing behavior passes verification. Add no new product features or intended behavior changes. Decide the precise refactor slices after reviewing this branch; assignments remain subsequent work.
+
+### 5. `005-feat-assignments-and-progress` — A complete learning workflow
 
 Depends on: classroom access.
 
@@ -132,7 +143,7 @@ Open product/design questions:
 - Are late submissions rejected, accepted with a label, or controlled by the instructor?
 - Which timezone defines deadlines, and what student-level information should instructors see?
 
-### 5. `005-feat-simulated-billing-and-entitlements` — Reliable event-driven access
+### 6. `006-feat-simulated-billing-and-entitlements` — Reliable event-driven access
 
 Depends on: classroom access and the assignment entitlement rules.
 
@@ -151,7 +162,7 @@ Open product/design questions:
 - What access remains after cancellation, failed payment, or refund, especially for existing student work?
 - How should employers trigger and inspect failure scenarios without confusing the simulator with real commerce?
 
-### 6. `006-feat-durable-jobs-and-history` — Observable background work
+### 7. `007-feat-durable-jobs-and-history` — Observable background work
 
 Depends on: invitations, due dates, and billing state.
 
@@ -170,7 +181,7 @@ Open product/design questions:
 - Which reconciliation mismatches can be repaired automatically, and which should be flagged?
 - Is an in-app outbox enough for this release, or is real email worth its added setup?
 
-### 7. `007-chore-public-demo-and-portfolio` — An employer-ready release
+### 8. `008-chore-public-demo-and-portfolio` — An employer-ready release
 
 Depends on: the complete journey and the selected deployment model.
 
