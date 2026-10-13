@@ -1,7 +1,7 @@
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { AuthStore } from '../auth/types';
-import type { ClassroomStore } from '../classroom/store';
+import type { AuthStore } from '../application/auth/types';
+import type { ClassroomStore } from '../persistence/classroom/store';
 import { createDependencies } from './dependencies';
 
 const closeDatabase = jest.fn(async () => {});

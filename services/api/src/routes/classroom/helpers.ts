@@ -1,8 +1,8 @@
-import type { AppUser } from '../../auth/types';
+import type { AppUser } from '../../application/auth/types';
 import type { FastifyRequest } from 'fastify';
 import type { ClassroomContext } from './context';
-import { SESSION_COOKIE } from '../../auth/cookies';
-import { AuthError } from '../../auth/service';
+import { SESSION_COOKIE } from '../auth/cookies';
+import { AuthError } from '../../application/auth/service';
 
 export class ClassroomError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }

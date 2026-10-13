@@ -1,6 +1,6 @@
 import { createAuthService, AuthError } from './service';
 import { sessionHash, decryptTokens, encryptTokens } from './crypto';
-import { readAuthConfig } from './config';
+import { readAuthConfig } from '../../config/auth';
 import type { AuthStore, IdentityProvider, StoredSession } from './types';
 
 const key = 'ab'.repeat(32);

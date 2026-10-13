@@ -2,7 +2,7 @@ import { buildApp } from '../app';
 import { classroomFixture, classroom } from '../../test/classroom-fixture';
 import { sessionId } from '../../test/auth-fixture';
 import { truthTableRequestSchema } from '@logiclab/contracts';
-import { AuthError } from '../auth/service';
+import { AuthError } from '../application/auth/service';
 
 test('class schemas validate body, query and params with one authentication per request', async () => {
   const { context, service, classrooms, headers, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });

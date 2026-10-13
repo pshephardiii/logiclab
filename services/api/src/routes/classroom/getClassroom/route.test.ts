@@ -1,7 +1,7 @@
 import { buildApp } from '../../../app';
 import { classroomFixture, classroom } from '../../../../test/classroom-fixture';
 import { sessionId } from '../../../../test/auth-fixture';
-import { AuthError } from '../../../auth/service';
+import { AuthError } from '../../../application/auth/service';
 
 const url = `/api/classes/${classroom.id}`;
 test('registers GET with scoped response and no-store caching', async () => {

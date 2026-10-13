@@ -1,6 +1,6 @@
 import type { User as UserEntity } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { AuthStore, AppUser } from './types';
+import type { AuthStore, AppUser } from '../../application/auth/types';
 
 export async function createAuthStore(orm: Awaited<ReturnType<typeof createDatabase>>, poolId: string): Promise<AuthStore> {
   const { User, AuthSession, UserRole } = await import('@logiclab/db');

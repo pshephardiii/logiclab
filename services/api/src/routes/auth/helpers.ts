@@ -1,7 +1,7 @@
 import type { ZodType } from 'zod';
 import { authMessageResponseSchema, authUserResponseSchema } from '@logiclab/contracts';
-import { AuthError } from '../../auth/service';
-import type { AppUser } from '../../auth/types';
+import { AuthError } from '../../application/auth/service';
+import type { AppUser } from '../../application/auth/types';
 
 export function parseBody<T>(schema: ZodType<T>, body: unknown): T {
   const parsed = schema.safeParse(body);

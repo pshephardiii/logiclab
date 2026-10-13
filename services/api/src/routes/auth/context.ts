@@ -1,3 +1,3 @@
-import type { AuthConfig } from '../../auth/config';
-import type { createAuthService } from '../../auth/service';
+import type { AuthConfig } from '../../config/auth';
+import type { createAuthService } from '../../application/auth/service';
 export type AuthContext = { config: AuthConfig; service: ReturnType<typeof createAuthService> };

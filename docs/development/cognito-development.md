@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-`infra/cognito/development.json` prepares a development email/password user pool and secret-bearing API app client in `us-east-1`. `services/api/src/auth/` contains validated configuration, a Cognito SDK adapter, signup provisioning, persistent sessions, cookie/origin helpers, and a factory that initializes these dependencies.
+`infra/cognito/development.json` prepares a development email/password user pool and secret-bearing API app client in `us-east-1`. Backend responsibilities are separated: `application/auth/` contains signup/session behavior and supporting types/crypto; `integrations/cognito/` contains the AWS adapter; `persistence/auth/` and `persistence/classroom/` contain database stores; `config/auth.ts` validates settings; and `routes/auth/cookies.ts` handles cookies/origins. `bootstrap/dependencies.ts` constructs these dependencies and owns shared-resource cleanup. All paths are under `services/api/src/`.
 
 The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. The web app includes signup, confirmation/resend, sign-in, recovery/reset, and sign-out screens. Anonymous practice continues to work with auth disabled. Automated tests mock Cognito; the developer has also provisioned the pool and verified core flows against AWS. See [Auth API](../api/auth-api.md).
 

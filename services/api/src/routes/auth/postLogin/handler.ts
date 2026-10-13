@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
 import { loginRequestSchema } from '@logiclab/contracts';
 import { parseBody, publicUser } from '../helpers';
-import { SESSION_COOKIE, setSessionCookie } from '../../../auth/cookies';
+import { SESSION_COOKIE, setSessionCookie } from '../cookies';
 
 export function postLoginHandler(context: AuthContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {

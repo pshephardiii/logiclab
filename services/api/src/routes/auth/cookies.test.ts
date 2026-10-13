@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import { setSessionCookie, clearSessionCookie, assertAuthOrigin } from './cookies';
-import { readAuthConfig } from './config';
+import { readAuthConfig } from '../../config/auth';
 
 test('session cookies are HttpOnly, secure, scoped, and cleared with matching attributes', async () => {
   const config = readAuthConfig({ AUTH_ENABLED: 'true', AWS_REGION: 'us-east-1', COGNITO_USER_POOL_ID: 'us-east-1_test', COGNITO_CLIENT_ID: 'client', COGNITO_CLIENT_SECRET: 'secret', AUTH_TOKEN_KEY: 'ab'.repeat(32), APP_ORIGIN: 'https://example.com' })!;

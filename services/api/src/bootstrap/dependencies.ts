@@ -1,11 +1,11 @@
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { AuthConfig } from '../auth/config';
+import type { AuthConfig } from '../config/auth';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { readAuthConfig } from '../auth/config';
-import { createCognitoProvider } from '../auth/cognito';
-import { createAuthStore } from '../auth/store';
-import { createAuthService } from '../auth/service';
-import { createClassroomStore } from '../classroom/store';
+import { readAuthConfig } from '../config/auth';
+import { createCognitoProvider } from '../integrations/cognito/cognito';
+import { createAuthStore } from '../persistence/auth/store';
+import { createAuthService } from '../application/auth/service';
+import { createClassroomStore } from '../persistence/classroom/store';
 import type { AuthContext } from '../routes/auth/context';
 import type { ClassroomContext } from '../routes/classroom/context';
 

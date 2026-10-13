@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { CognitoIdentityProviderClient, SignUpCommand, InitiateAuthCommand, AdminDeleteUserCommand, ConfirmSignUpCommand, ResendConfirmationCodeCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { createCognitoProvider } from './cognito';
-import { readAuthConfig } from './config';
+import { readAuthConfig } from '../../config/auth';
 
 const config = readAuthConfig({ AUTH_ENABLED: 'true', AWS_REGION: 'us-east-1', COGNITO_USER_POOL_ID: 'us-east-1_test', COGNITO_CLIENT_ID: 'client', COGNITO_CLIENT_SECRET: 'secret', AUTH_TOKEN_KEY: 'ab'.repeat(32), APP_ORIGIN: 'http://localhost:5173' })!;
 afterEach(() => jest.restoreAllMocks());

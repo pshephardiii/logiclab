@@ -1,6 +1,6 @@
 # Codebase conventions
 
-These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope is `tools/`; add frontend and backend conventions as their refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
+These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/` and the agreed API module boundaries; extend frontend/backend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
 
 ## Tools: package responsibilities
 
@@ -81,3 +81,20 @@ Use existing behavior tests as the baseline. Add tests for material gaps or chan
 - MikroORM `migration:check` verifies entity mappings against the database.
 
 Keep documentation and import paths current when modules move. Report the checks actually run; local browser/concurrency evidence is distinct from committed tests and remote CI results.
+
+## API: module responsibilities
+
+Group code under `services/api/src` by responsibility, with domain subdirectories where needed:
+
+| Directory | Responsibility |
+| --- | --- |
+| `bootstrap/` | Construct shared resources and route dependencies; own initialization-failure and shutdown cleanup |
+| `application/auth/` | Coordinate auth operations through provider/store interfaces; keep supporting session crypto and domain types here |
+| `integrations/cognito/` | Translate application identity operations to AWS SDK calls |
+| `persistence/auth/`, `persistence/classroom/` | Implement database operations using MikroORM |
+| `config/` | Validate backend environment settings |
+| `routes/` | HTTP registration, route schemas, handlers, transport helpers, and group policies |
+
+Application behavior should depend on the capabilities described by interfaces, not SDK clients or HTTP objects. Integrations and stores implement those capabilities; bootstrap selects and constructs concrete implementations. Keep resource ownership at application composition, rather than making auth construct unrelated classroom persistence. `buildApp` accepts separate route-group contexts and performs registration without opening database/provider resources.
+
+Cookie/origin handling is HTTP-specific and belongs with auth routes. Session encryption supports application auth behavior; do not categorize every helper as an external integration. Colocate module tests; shared test fixtures stay under `services/api/test`. Do not create empty service/domain directories for symmetry—classroom currently has persistence and route coordination without a separate application service.

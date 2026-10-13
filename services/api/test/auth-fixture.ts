@@ -1,5 +1,5 @@
-import type { AppUser } from '../src/auth/types';
-import { readAuthConfig } from '../src/auth/config';
+import type { AppUser } from '../src/application/auth/types';
+import { readAuthConfig } from '../src/config/auth';
 import type { AuthContext } from '../src/routes/auth/context';
 
 export const authUser = { id: 'f7c46ac4-a994-4543-9548-ea080a70e0c0', subject: 'private-subject', role: 'instructor' as const };

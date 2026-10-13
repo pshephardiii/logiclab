@@ -4,9 +4,9 @@ import {
   InitiateAuthCommand, GetUserCommand, RevokeTokenCommand,
   ConfirmSignUpCommand, ResendConfirmationCodeCommand, ForgotPasswordCommand, ConfirmForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
-import type { AuthConfig } from './config';
-import type { IdentityProvider, Tokens } from './types';
-import { AuthError } from './service';
+import type { AuthConfig } from '../../config/auth';
+import type { IdentityProvider, Tokens } from '../../application/auth/types';
+import { AuthError } from '../../application/auth/service';
 
 export function createCognitoProvider(config: AuthConfig, client = new CognitoIdentityProviderClient({ region: config.AWS_REGION })) : IdentityProvider {
   const secretHash = (username: string) => createHmac('sha256', config.COGNITO_CLIENT_SECRET)

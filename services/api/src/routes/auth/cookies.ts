@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {} from '@fastify/cookie';
-import type { AuthConfig } from './config';
+import type { AuthConfig } from '../../config/auth';
 
 export const SESSION_COOKIE = 'logiclab_session';
 export function setSessionCookie(reply: FastifyReply, config: AuthConfig, id: string, maxAge: number) {
