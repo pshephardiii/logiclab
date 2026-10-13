@@ -1,19 +1,49 @@
 import { randomUUID } from 'node:crypto';
-import { defineEntity, p, type InferEntity } from '@mikro-orm/core';
+import { OptionalProps } from '@mikro-orm/core';
+import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
 import { User } from './User.js';
 
-export const Classroom = defineEntity({
-  name: 'Classroom',
-  tableName: 'classrooms',
-  properties: {
-    id: p.uuid().primary().onCreate(() => randomUUID()).defaultRaw('gen_random_uuid()'),
-    name: p.string().length(120),
-    owner: p.manyToOne(User).fieldName('owner_id').foreignKeyName('classrooms_owner_id_fkey').deleteRule('restrict'),
-    invitationHash: p.string().length(64).fieldName('invitation_hash').nullable().unique('classrooms_invitation_hash_unique'),
-    invitationExpiresAt: p.datetime().columnType('timestamptz').fieldName('invitation_expires_at').nullable(),
-    createdAt: p.datetime().columnType('timestamptz').fieldName('created_at').onCreate(() => new Date()).defaultRaw('now()'),
-  },
-  indexes: [{ name: 'classrooms_owner_id_index', properties: ['owner'] }],
-});
+@Entity({ tableName: 'classrooms' })
+@Index({ name: 'classrooms_owner_id_index', properties: ['owner'] })
+export class Classroom {
+  [OptionalProps]?: 'id' | 'createdAt';
 
-export type Classroom = InferEntity<typeof Classroom>;
+  @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
+  id: string = randomUUID();
+
+  @Property({ type: 'string', length: 120 })
+  name!: string;
+
+  @ManyToOne(() => User, {
+    fieldName: 'owner_id',
+    foreignKeyName: 'classrooms_owner_id_fkey',
+    deleteRule: 'restrict',
+  })
+  owner!: User;
+
+  @Property({
+    type: 'string',
+    length: 64,
+    fieldName: 'invitation_hash',
+    nullable: true,
+    unique: 'classrooms_invitation_hash_unique',
+  })
+  invitationHash?: string;
+
+  @Property({
+    type: 'datetime',
+    columnType: 'timestamptz',
+    fieldName: 'invitation_expires_at',
+    nullable: true,
+  })
+  invitationExpiresAt?: Date;
+
+  @Property({
+    type: 'datetime',
+    columnType: 'timestamptz',
+    fieldName: 'created_at',
+    defaultRaw: 'now()',
+    onCreate: () => new Date(),
+  })
+  createdAt = new Date();
+}

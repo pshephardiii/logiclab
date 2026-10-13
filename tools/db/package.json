@@ -17,8 +17,9 @@
   },
   "dependencies": {
     "@mikro-orm/core": "7.2.5",
-    "@mikro-orm/postgresql": "7.2.5",
-    "@mikro-orm/migrations": "7.2.5"
+    "@mikro-orm/decorators": "7.2.5",
+    "@mikro-orm/migrations": "7.2.5",
+    "@mikro-orm/postgresql": "7.2.5"
   },
   "devDependencies": {
     "@mikro-orm/cli": "7.2.5",
