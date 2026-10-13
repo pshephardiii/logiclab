@@ -34,7 +34,7 @@ Generate the token encryption key in your own terminal:
 node -e 'console.log(require("node:crypto").randomBytes(32).toString("hex"))'
 ```
 
-Save it as `AUTH_TOKEN_KEY` in ignored `.env`; do not paste it into chat or commit it. App-client ID/pool ID come from the stack outputs; the client secret comes from Cognito's app-client settings. `createAuthFoundation` validates opt-in configuration and initializes PostgreSQL during enabled API startup. Root `.env` is loaded by local API dev/start commands. The server closes PostgreSQL and the Cognito client during shutdown.
+Save it as `AUTH_TOKEN_KEY` in ignored `.env`; do not paste it into chat or commit it. App-client ID/pool ID come from the stack outputs; the client secret comes from Cognito's app-client settings. `createDependencies` in `services/api/src/bootstrap/dependencies.ts` validates opt-in configuration and initializes the shared PostgreSQL/Cognito resources during enabled API startup. It returns separate auth and classroom route contexts, with application-owned cleanup. Root `.env` is loaded by local API dev/start commands. The server closes PostgreSQL and the Cognito client during shutdown.
 
 ## AWS setup when live verification is needed
 

@@ -4,7 +4,7 @@ import { sessionId } from '../../../../test/auth-fixture';
 import { AuthError } from '../../../auth/service';
 const url = `/api/classes/${classroom.id}/invitation`;
 test('issues invitations with no-store and rejects unauthorized mutations', async () => {
-  const { context, classrooms, headers, service, user } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, classrooms, headers, service, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (extra: object = {}) => app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: {}, ...extra });
     expect((await send({ headers })).statusCode).toBe(401);
@@ -24,7 +24,7 @@ test('issues invitations with no-store and rejects unauthorized mutations', asyn
   } finally { await app.close(); }
 });
 test('rate-limits repeated invitation creation', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const send = () => app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: {} });
     for (let index = 0; index < 10; index++) expect((await send()).statusCode).toBe(200);

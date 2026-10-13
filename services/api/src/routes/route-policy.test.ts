@@ -5,7 +5,7 @@ import { truthTableRequestSchema } from '@logiclab/contracts';
 import { AuthError } from '../auth/service';
 
 test('class schemas validate body, query and params with one authentication per request', async () => {
-  const { context, service, classrooms, headers, user } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, service, classrooms, headers, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   const authenticated = { ...headers, cookie: `logiclab_session=${sessionId}` };
   try {
     const created = await app.inject({ method: 'POST', url: '/api/classes', headers: authenticated, payload: { name: '  Logic  ' } });
@@ -22,7 +22,7 @@ test('class schemas validate body, query and params with one authentication per 
 });
 
 test('class authorization still precedes field validation', async () => {
-  const { context, service, user, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, service, user, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const request = { method: 'GET' as const, url: '/api/classes/not-a-uuid' };
     expect((await app.inject(request)).statusCode).toBe(401);
@@ -36,7 +36,7 @@ test('class authorization still precedes field validation', async () => {
 });
 
 test('class response serialization cannot leak undeclared invitation fields', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   app.addHook('onRoute', route => {
     if (route.url === '/api/classes/:classId') route.handler = async () => ({ classroom: { ...classroom, invitationHash: 'private-hash' } });
   });
@@ -47,7 +47,7 @@ test('class response serialization cannot leak undeclared invitation fields', as
 });
 
 test('class reads and mutations retain defaults while practice and health remain unthrottled', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const created = await app.inject({ method: 'POST', url: '/api/classes', headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { name: 'Logic' } });
     expect(created.headers['x-ratelimit-limit']).toBe('10'); expect(Number(created.headers['x-ratelimit-reset'])).toBeGreaterThan(60);

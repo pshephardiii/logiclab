@@ -3,7 +3,7 @@ import { classroomFixture, classroom } from '../../../../test/classroom-fixture'
 import { sessionId } from '../../../../test/auth-fixture';
 const url = `/api/enrollments`;
 test('registers GET with no-store, session/role checks, and safe storage errors', async () => {
-  const { context, service, classrooms, user, headers } = classroomFixture();const app = buildApp({ auth: context });
+  const { context, service, classrooms, user, headers } = classroomFixture();const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (extra: object = {}) => app.inject({ method: 'GET', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` },  ...extra });
     expect((await send({ headers })).statusCode).toBe(401);

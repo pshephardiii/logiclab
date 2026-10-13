@@ -3,7 +3,7 @@ import { classroomFixture, classroom } from '../../../../test/classroom-fixture'
 import { sessionId } from '../../../../test/auth-fixture';
 const url = `/api/enrollments`;
 test('registers POST with no-store, session/role checks, and safe storage errors', async () => {
-  const { context, service, classrooms, user, headers } = classroomFixture();const app = buildApp({ auth: context });
+  const { context, service, classrooms, user, headers } = classroomFixture();const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (extra: object = {}) => app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { code: 'a'.repeat(32) }, ...extra });
     expect((await send({ headers })).statusCode).toBe(401);
@@ -15,7 +15,7 @@ test('registers POST with no-store, session/role checks, and safe storage errors
   } finally { await app.close(); }
 });
 test('requires exact origin and throttles redemption attempts', async () => {
-  const { context, service, user, headers } = classroomFixture();service.authenticate.mockResolvedValue({ ...user, role: 'student' });const app = buildApp({ auth: context });
+  const { context, service, user, headers } = classroomFixture();service.authenticate.mockResolvedValue({ ...user, role: 'student' });const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (extra: object = {}) => app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { code: 'a'.repeat(32) }, ...extra });
     expect((await send({ headers: { cookie: `logiclab_session=${sessionId}` } })).statusCode).toBe(403);

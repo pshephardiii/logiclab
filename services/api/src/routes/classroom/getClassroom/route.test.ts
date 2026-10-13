@@ -5,7 +5,7 @@ import { AuthError } from '../../../auth/service';
 
 const url = `/api/classes/${classroom.id}`;
 test('registers GET with scoped response and no-store caching', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const response = await app.inject({ method: 'GET', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` },  });
     expect(response.statusCode).toBe(200); expect(response.headers['cache-control']).toBe('no-store');
@@ -13,7 +13,7 @@ test('registers GET with scoped response and no-store caching', async () => {
   } finally { await app.close(); }
 });
 test('rejects anonymous, expired, and student sessions', async () => {
-  const { context, service, headers, user } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, service, headers, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (cookie?: string) => app.inject({ method: 'GET', url, headers: { ...headers, ...(cookie ? { cookie } : {}) },  });
     expect((await send()).statusCode).toBe(401);
@@ -26,14 +26,14 @@ test('rejects anonymous, expired, and student sessions', async () => {
 test('sanitizes storage outages', async () => {
   const { context, classrooms, headers } = classroomFixture();
   classrooms.findOwned.mockRejectedValue(new Error('private database details'));
-  const app = buildApp({ auth: context });
+  const app = buildApp({ auth: context, classroom: context });
   try {
     const response = await app.inject({ method: 'GET', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` },  });
     expect(response.statusCode).toBe(503); expect(response.body).not.toContain('private database');
   } finally { await app.close(); }
 });
 test('returns indistinguishable 404 responses for foreign and missing classes', async () => {
-  const { context, classrooms } = classroomFixture(); classrooms.findOwned.mockResolvedValue(null); const app = buildApp({ auth: context });
+  const { context, classrooms } = classroomFixture(); classrooms.findOwned.mockResolvedValue(null); const app = buildApp({ auth: context, classroom: context });
   try {
     const headers = { cookie: `logiclab_session=${sessionId}` };
     const foreign = await app.inject({ method: 'GET', url, headers });

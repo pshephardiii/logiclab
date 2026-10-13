@@ -5,7 +5,7 @@ import { AuthError } from '../../../auth/service';
 
 const url = `/api/classes`;
 test('registers POST with scoped response and no-store caching', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const response = await app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { name: 'Logic' }, });
     expect(response.statusCode).toBe(201); expect(response.headers['cache-control']).toBe('no-store');
@@ -13,7 +13,7 @@ test('registers POST with scoped response and no-store caching', async () => {
   } finally { await app.close(); }
 });
 test('rejects anonymous, expired, and student sessions', async () => {
-  const { context, service, headers, user } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context, service, headers, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     const send = (cookie?: string) => app.inject({ method: 'POST', url, headers: { ...headers, ...(cookie ? { cookie } : {}) }, payload: { name: 'Logic' }, });
     expect((await send()).statusCode).toBe(401);
@@ -26,14 +26,14 @@ test('rejects anonymous, expired, and student sessions', async () => {
 test('sanitizes storage outages', async () => {
   const { context, classrooms, headers } = classroomFixture();
   classrooms.create.mockRejectedValue(new Error('private database details'));
-  const app = buildApp({ auth: context });
+  const app = buildApp({ auth: context, classroom: context });
   try {
     const response = await app.inject({ method: 'POST', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { name: 'Logic' }, });
     expect(response.statusCode).toBe(503); expect(response.body).not.toContain('private database');
   } finally { await app.close(); }
 });
 test('rejects missing/wrong mutation origins and owner spoofing', async () => {
-  const { context } = classroomFixture(); const app = buildApp({ auth: context });
+  const { context } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
   try {
     for (const origin of [undefined, 'https://other.example']) {
       expect((await app.inject({ method: 'POST', url, headers: { cookie: `logiclab_session=${sessionId}`, ...(origin ? { origin } : {}) }, payload: { name: 'Logic' } })).statusCode).toBe(403);
