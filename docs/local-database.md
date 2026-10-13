@@ -58,6 +58,10 @@ Review and commit generated migration classes and snapshots under `tools/db/src/
 
 The replaced Drizzle migration was uncommitted and had not been run in this environment. If you already applied it elsewhere, use a fresh disposable database for this first MikroORM migration or plan an explicit migration-history baseline; do not apply both initial migrations to the same existing tables.
 
+## TypeScript projects
+
+The default `tools/db/tsconfig.json` includes source, tests, and ORM configuration for editor/type checking. `tsconfig.build.json` emits only source files to `dist`; build/watch scripts use it explicitly. `tsconfig.test.json` inherits the default project for the existing test type-check command. This keeps database tests in a configured NodeNext project when opened in the IDE.
+
 ## Integration tests
 
 Use a separate disposable test database:
