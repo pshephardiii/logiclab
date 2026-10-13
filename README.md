@@ -55,6 +55,8 @@ The contracts package contains API contracts, not database migrations. Each doma
 
 Formula parsing lives in `tools/logic-engine/src/parser/`: `parser.ts` checks length and coordinates tokenization/parsing, `tokenizer.ts` recognizes symbols and aliases, and `parse-tokens.ts` builds the expression tree by precedence. Types, errors, and limits have their own files. The parser index exposes the existing public API; tokenizer and token-parsing functions remain internal.
 
+`evaluator.ts` keeps expression dispatch and recursive evaluation together, with private helpers for validating variable values and applying binary operators. Both operands are evaluated before applying an operator, so short-circuiting cannot hide missing inputs.
+
 Truth-table generation lives in `tools/logic-engine/src/truth-table/`: `truth-table.ts` orchestrates parsing and generation, `types.ts` declares the output shapes, and `helpers/` groups expression traversal/labels, column construction, and row evaluation. Helpers are implementation details; the root package exports retain the generator and its public types.
 
 Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes practice and account navigation. The auth feature owns its account form/panel, API client, and session-state hook; shared UI components can be introduced when other features reuse them.
