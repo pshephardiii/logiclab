@@ -1,5 +1,5 @@
 import type { ZodType } from 'zod';
-import { authMessageResponseSchema, authUserResponseSchema } from '@logiclab/schema';
+import { authMessageResponseSchema, authUserResponseSchema } from '@logiclab/contracts';
 import { AuthError } from '../../auth/service';
 import type { AppUser } from '../../auth/types';
 

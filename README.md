@@ -19,13 +19,13 @@ npm run dev
 
 Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all five workspace watchers.
 
-To use accounts, configure the backend following [Cognito development setup](docs/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work.
+To use accounts, configure the backend following [Cognito development setup](docs/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work. Instructors can use **Classes** to create and list their own persistent classes; see [classroom API and local walkthrough](docs/classroom-api.md). Enrollment follows in the next slice.
 
 ## Packages
 
 In practice, **Check answers** labels each answer correct, incorrect, or unanswered and summarizes the results. Editing an answer clears previous check feedback; **Show solution** displays expected values without replacing entries, and **Hide solution** removes them. Editing the formula or creating a new table clears answers, feedback, and solutions. Failed checking/solution requests preserve work and can be retried. This is independent practice, not an assignment or official grade.
 
-Browser applications live under `apps/`; backend services live under `services/`. Each has its own dependencies and build output. Shared contracts live under `tools/schema`. The workspace patterns `apps/*`, `services/*`, and `tools/*` automatically include new packages.
+Browser applications live under `apps/`; backend services live under `services/`. Each has its own dependencies and build output. Shared contracts live under `tools/contracts`. The workspace patterns `apps/*`, `services/*`, and `tools/*` automatically include new packages.
 
 ```text
 apps/
@@ -35,23 +35,23 @@ services/
   api/            Node.js API
   worker/         Future background worker (not created yet)
 tools/
-  schema/         Shared API contracts
+  contracts/      Shared API contracts
   logic-engine/   Pure parser, evaluator, and truth-table generator
   db/             PostgreSQL schema, client, and migrations
 docs/
 ```
 
-An admin app can be added as `apps/admin` with package name `@logiclab/admin`, its own Vite configuration and development port, and a dependency on `@logiclab/schema`. It can deploy independently and use the same API. Root development/build scripts currently target the existing apps explicitly; add admin to those scripts when it is introduced. Server-side permissions will govern access to admin operations.
+An admin app can be added as `apps/admin` with package name `@logiclab/admin`, its own Vite configuration and development port, and a dependency on `@logiclab/contracts`. It can deploy independently and use the same API. Root development/build scripts currently target the existing apps explicitly; add admin to those scripts when it is introduced. Server-side permissions will govern access to admin operations.
 
 | Directory | Package | Purpose |
 | --- | --- | --- |
 | `apps/web` | `@logiclab/web` | React + TypeScript, served and built with Vite |
 | `services/api` | `@logiclab/api` | Node.js + TypeScript API using Fastify; Jest tests |
-| `tools/schema` | `@logiclab/schema` | Shared Zod request/response schemas and inferred types |
+| `tools/contracts` | `@logiclab/contracts` | Shared Zod request/response schemas and inferred types |
 | `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
 | `tools/db` | `@logiclab/db` | MikroORM/PostgreSQL client, users schema, and SQL migrations |
 
-The schema package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
+The contracts package contains API contracts, not database migrations. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
 Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes practice and account navigation. The auth feature owns its account form/panel, API client, and session-state hook; shared UI components can be introduced when other features reuse them.
 
@@ -70,7 +70,7 @@ npm run check
 
 Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's request-injection tooling. An experimental warning during tests is expected. The initial dependency audit reports 20 moderate findings in the Jest development dependency chain, originating in `sprintf-js`. No automatic downgrade was applied; revisit upstream fixes as dependencies evolve.
 
-After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared schema has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; API dev/start loads the ignored root `.env`.
+After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared contracts package has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; API dev/start loads the ignored root `.env`.
 
 ## Deployment direction
 
@@ -85,3 +85,11 @@ The lowest-cost viable AWS topology is still undecided. Compare static hosting, 
 The public repository is [pshephardiii/logiclab](https://github.com/pshephardiii/logiclab). A complete demo release still needs a license choice and the features described in the implementation plan.
 
 See [branch naming conventions](docs/branch-naming-conventions.md) for numbered work branches and [GitHub setup](docs/github-setup.md) for the initial publication steps.
+
+## Frontend routing
+
+React Router's declarative `BrowserRouter` supplies URL/history navigation. `App.tsx` composes account/practice providers, `components/Navigation`, and `routing/AppRoutes`. Routes are `/` (practice), `/account`, and `/classes` (instructor access); unmatched URLs show a not-found page. `InstructorRoute` waits for account checks, redirects anonymous users to `/account`, and shows an access message for students. API authorization remains authoritative. Signup/confirmation/recovery remain internal account steps for now.
+
+Practice state lives in its feature provider above the routes, preserving answers and feedback across navigation without keeping every page mounted. Reload clears practice work. Account/session state also survives route transitions. Production static hosting must serve `index.html` for non-file frontend paths such as `/account` and `/classes`, while keeping `/api` routed to the backend; Vite provides this fallback locally.
+
+Routing verification: a local Chrome smoke check with mocked auth/class responses and a generated truth-table exercise passed URL navigation, browser back/forward, preserved formula/answer state, delayed session restoration on direct class URLs, student denial, anonymous redirection, and unknown-route recovery. These are local checks; a CI browser regression suite remains follow-up work.

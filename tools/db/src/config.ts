@@ -1,14 +1,15 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
-import { UserSchema } from './entities/User.js';
-import { AuthSessionSchema } from './entities/AuthSession.js';
+import { Classroom } from './entities/Classroom.js';
+import { User } from './entities/User.js';
+import { AuthSession } from './entities/AuthSession.js';
 
 export function databaseOptions(connectionString: string, options: { snapshotOnMigrate?: boolean } = {}) {
   if (!connectionString) throw new Error('A database connection string is required.');
   return defineConfig({
     clientUrl: connectionString,
-    entities: [UserSchema, AuthSessionSchema],
+    entities: [User, AuthSession, Classroom],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },
     migrations: {

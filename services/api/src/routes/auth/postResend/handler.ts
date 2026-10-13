@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { emailRequestSchema } from '@logiclab/schema';
+import { emailRequestSchema } from '@logiclab/contracts';
 import { parseBody, message, errorName, hiddenAccountErrors } from '../helpers';
 
 export function postResendHandler(context: AuthContext) {

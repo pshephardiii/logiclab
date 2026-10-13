@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { resetPasswordRequestSchema } from '@logiclab/schema';
+import { resetPasswordRequestSchema } from '@logiclab/contracts';
 import { parseBody, message } from '../helpers';
 import { clearSessionCookie } from '../../../auth/cookies';
 

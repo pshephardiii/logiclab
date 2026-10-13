@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@logiclab/schema": "*",
+    "@logiclab/contracts": "*",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router": "^8.4.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",

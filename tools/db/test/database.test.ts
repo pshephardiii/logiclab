@@ -1,7 +1,7 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
-import { createDatabase, User, UserRole, AuthSession } from '../src/index.js';
+import { createDatabase, User, UserRole, AuthSession, Classroom } from '../src/index.js';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url) throw new Error('Set TEST_DATABASE_URL to a disposable integration-test database.');
@@ -84,5 +84,21 @@ test('normalized recovery email is unique within a pool, while legacy users may 
     await em.flush();
     em.persist(em.create(User, { cognitoUserPoolId: 'email-pool', cognitoSubject: 'three', role: UserRole.Student, email: 'person@example.com' }));
     await assert.rejects(em.flush(), /duplicate|unique/i);
+  } finally { await em.rollback(); }
+});
+
+test('persists classes, scopes owner queries, and protects classes from owner deletion', async () => {
+  const em = orm.em.fork(); await em.begin();
+  try {
+    const first = em.create(User, { cognitoUserPoolId: 'class-test', cognitoSubject: 'first', role: UserRole.Instructor });
+    const second = em.create(User, { cognitoUserPoolId: 'class-test', cognitoSubject: 'second', role: UserRole.Instructor });
+    const a = em.create(Classroom, { name: 'Logic', owner: first });
+    const b = em.create(Classroom, { name: 'Logic', owner: second });
+    em.persist([first, second, a, b]); await em.flush(); em.clear();
+    const owned = await em.find(Classroom, { owner: first.id });
+    assert.deepEqual(owned.map(row => row.id), [a.id]);
+    assert(owned[0]); assert.equal(owned[0].name, 'Logic'); assert(owned[0].createdAt instanceof Date);
+    assert.equal(await em.findOne(Classroom, { id: b.id, owner: first.id }), null);
+    await assert.rejects(em.nativeDelete(User, first.id), /foreign key|violates/i);
   } finally { await em.rollback(); }
 });

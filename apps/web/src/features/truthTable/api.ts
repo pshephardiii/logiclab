@@ -1,5 +1,5 @@
-import type { TruthTableCheckRequest } from '@logiclab/schema';
-import { truthTableErrorResponseSchema, truthTableExerciseResponseSchema, truthTableCheckResponseSchema, truthTableSolutionResponseSchema } from '@logiclab/schema';
+import type { TruthTableCheckRequest } from '@logiclab/contracts';
+import { truthTableErrorResponseSchema, truthTableExerciseResponseSchema, truthTableCheckResponseSchema, truthTableSolutionResponseSchema } from '@logiclab/contracts';
 
 export class PracticeApiError extends Error {
   constructor(message: string, public readonly position?: number) {

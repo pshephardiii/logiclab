@@ -25,9 +25,33 @@ The first classroom-access slice defines `users` in `tools/db`: generated UUID, 
 
 Cognito manages email/password credentials, email confirmation, and password recovery. Keep application users, the separate student/instructor role, class ownership, and enrollments in PostgreSQL. Link an application user to their Cognito identity using a stable subject identifier scoped to the configured user pool rather than treating email as a permanent identity key. Passwords and reset/confirmation codes must not be copied into application tables.
 
-Initially, a class has one instructor owner and many student enrollments. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
+`classrooms` now persists a UUID, trimmed name, instructor owner, and creation timestamp. Names may repeat, owner-scoped queries enforce access, and owner deletion is restricted while classes exist. See [instructor classes](classroom-api.md).
 
-Token/session handling and provisioning are specified in the Cognito development guide; HTTP integration is implemented; account screens remain the next slice. A browser-provided role or user ID is not sufficient authorization for an existing account.
+Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
+
+Token/session handling and provisioning are specified in the Cognito development guide; HTTP integration is implemented; account screens and instructor class creation/listing/detail are implemented. A browser-provided role or user ID is not sufficient authorization for an existing account.
+
+## Proposed institution model
+
+Plan relationships ahead of implementation, but introduce entities and migrations as their workflows enter scope. The following model is provisional; institution management and billing remain outside the current classroom-access branch. Finish invitations and student enrollment first.
+
+| Record or relationship | Proposed responsibility |
+| --- | --- |
+| Institution | An organization using the platform |
+| Institution membership | Links a user to an institution, with an institutional role and membership status; leaves room for multiple affiliations rather than a single institution ID on each user |
+| Classroom institution association | Optionally associates a classroom with an institution while retaining instructor ownership and supporting independently run classes |
+| Enrollment | Links a student to a classroom; classroom enrollment does not automatically imply institution membership |
+| Funding / entitlement | Records who funds access and what is covered, separately from institution affiliation and classroom ownership |
+
+An instructor could own both an institution-associated class and a personally funded class through the same account. Institutional administrator permissions would be distinct from the existing student/instructor account role. Institution affiliation alone should not grant funding coverage or access to classroom/student records; define explicit authorization and entitlement rules when these workflows are implemented.
+
+Open questions before implementation:
+
+- Can users belong to multiple institutions?
+- Who can create an institution, approve membership, and manage institutional administrator permissions?
+- Does an institution control associated classrooms, including transferring instructor ownership when an instructor leaves?
+- Is classroom enrollment sufficient for students, or must they also become institution members?
+- Can a classroom change institutions or funding sources, and how should its ownership, access, and history be preserved?
 
 ## Proposed records
 
@@ -93,3 +117,9 @@ Local PostgreSQL will run in Docker, with documented DBeaver connection settings
 - Data retention and how archived problems remain available to historical submissions.
 
 Resolve these when their workflows enter scope. Keep this document current as decisions become concrete; use separate architecture decision records only when a consequential choice needs its alternatives and rationale preserved.
+
+## Entity definitions and API contracts
+
+Database entities in `tools/db/src/entities` use MikroORM `defineEntity` property builders. Each file exports a runtime entity definition and a TypeScript type derived with `InferEntity<typeof Entity>`, avoiding a separate class property declaration. Relationships reference these definitions directly. UUIDs and creation timestamps use `onCreate` generators plus database defaults; existing column names, constraints, indexes, and deletion rules are preserved.
+
+`tools/contracts` separately defines Zod API request/response contracts. Those public shapes can omit persisted fields or serialize values differently (for example, dates become ISO strings). Changing entity definition style does not itself require a migration; MikroORM's schema check confirmed this conversion matches the existing database.

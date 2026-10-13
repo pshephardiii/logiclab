@@ -1,4 +1,4 @@
-import { authErrorResponseSchema, authMessageResponseSchema, authUserResponseSchema } from '@logiclab/schema';
+import { authErrorResponseSchema, authMessageResponseSchema, authUserResponseSchema } from '@logiclab/contracts';
 
 export type SignedInUser = { id: string; role: 'student' | 'instructor' };
 export class AccountApiError extends Error {

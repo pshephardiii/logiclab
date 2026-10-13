@@ -1,9 +1,10 @@
+import type { User as UserEntity } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { AuthStore, AppUser } from './types';
 
 export async function createAuthStore(orm: Awaited<ReturnType<typeof createDatabase>>, poolId: string): Promise<AuthStore> {
   const { User, AuthSession, UserRole } = await import('@logiclab/db');
-  const appUser = (user: InstanceType<typeof User>): AppUser => ({ id: user.id, subject: user.cognitoSubject, role: user.role });
+  const appUser = (user: UserEntity): AppUser => ({ id: user.id, subject: user.cognitoSubject, role: user.role });
   return {
     async createUser(subject, role, email) {
       const em = orm.em.fork();

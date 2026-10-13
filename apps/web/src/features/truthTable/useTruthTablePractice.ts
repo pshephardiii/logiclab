@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/schema';
+import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
 import { createExercise, checkAnswers, getSolution, PracticeApiError } from './api';
 import { cellKey } from './types';
 import type { Answers } from './types';

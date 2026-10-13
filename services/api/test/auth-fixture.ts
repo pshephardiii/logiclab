@@ -1,3 +1,4 @@
+import type { AppUser } from '../src/auth/types';
 import { readAuthConfig } from '../src/auth/config';
 import type { AuthContext } from '../src/routes/auth/context';
 
@@ -10,7 +11,7 @@ export function authFixture() {
   const service = {
     signup: jest.fn(async () => authUser),
     login: jest.fn(async () => ({ sessionId, maxAge: 604800, user: authUser })),
-    authenticate: jest.fn(async () => authUser), logout: jest.fn(async () => {}),
+    authenticate: jest.fn(async (): Promise<AppUser> => authUser), logout: jest.fn(async () => {}),
     confirm: jest.fn(async () => {}), resend: jest.fn(async () => {}),
     forgotPassword: jest.fn(async () => {}), resetPassword: jest.fn(async () => {}),
   };

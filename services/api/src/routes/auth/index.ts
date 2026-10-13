@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
-import { authErrorResponseSchema } from '@logiclab/schema';
+import { authErrorResponseSchema } from '@logiclab/contracts';
 import { AuthError } from '../../auth/service';
 import { assertAuthOrigin, clearSessionCookie } from '../../auth/cookies';
 import type { AuthContext } from './context';

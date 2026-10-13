@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { confirmationRequestSchema } from '@logiclab/schema';
+import { confirmationRequestSchema } from '@logiclab/contracts';
 import { parseBody, message } from '../helpers';
 
 export function postConfirmHandler(context: AuthContext) {

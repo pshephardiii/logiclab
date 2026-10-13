@@ -1,34 +1,26 @@
 import { randomUUID } from 'node:crypto';
-import { EntitySchema, OptionalProps } from '@mikro-orm/core';
+import { defineEntity, p, type InferEntity } from '@mikro-orm/core';
 
 export enum UserRole {
   Student = 'student',
   Instructor = 'instructor',
 }
 
-export class User {
-  [OptionalProps]?: 'id' | 'createdAt';
-  id: string = randomUUID();
-  cognitoUserPoolId!: string;
-  cognitoSubject!: string;
-  role!: UserRole;
-  email?: string;
-  createdAt = new Date();
-}
-
-export const UserSchema = new EntitySchema<User>({
-  class: User,
+export const User = defineEntity({
+  name: 'User',
   tableName: 'users',
   properties: {
-    id: { type: 'uuid', primary: true, defaultRaw: 'gen_random_uuid()' },
-    cognitoUserPoolId: { type: 'text', fieldName: 'cognito_user_pool_id' },
-    cognitoSubject: { type: 'text', fieldName: 'cognito_subject' },
-    role: { enum: true, items: () => UserRole, nativeEnumName: 'user_role' },
-    email: { type: 'text', nullable: true },
-    createdAt: { type: 'datetime', columnType: 'timestamptz', fieldName: 'created_at', defaultRaw: 'now()' },
+    id: p.uuid().primary().onCreate(() => randomUUID()).defaultRaw('gen_random_uuid()'),
+    cognitoUserPoolId: p.text().fieldName('cognito_user_pool_id'),
+    cognitoSubject: p.text().fieldName('cognito_subject'),
+    role: p.enum(() => UserRole).nativeEnumName('user_role'),
+    email: p.text().nullable(),
+    createdAt: p.datetime().columnType('timestamptz').fieldName('created_at').onCreate(() => new Date()).defaultRaw('now()'),
   },
   uniques: [
     { name: 'users_cognito_identity_unique', properties: ['cognitoUserPoolId', 'cognitoSubject'] },
     { name: 'users_pool_email_unique', properties: ['cognitoUserPoolId', 'email'] },
   ],
 });
+
+export type User = InferEntity<typeof User>;

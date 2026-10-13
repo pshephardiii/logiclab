@@ -2,7 +2,7 @@
 
 These public, stateless endpoints support independent practice. They do not store problems or attempts, authenticate users, enforce assignment policy, or produce official grades. Assignment workflows must later resolve a server-owned problem version and enforce its access, feedback, and solution policy; they must not trust a browser-supplied formula as assigned work.
 
-All endpoints use `POST` with `Content-Type: application/json`. Request and response schemas/types are exported from `@logiclab/schema`.
+All endpoints use `POST` with `Content-Type: application/json`. Request and response schemas/types are exported from `@logiclab/contracts`.
 
 ## Route organization
 

@@ -1,3 +1,4 @@
+import { createClassroomStore } from '../classroom/store';
 import { readAuthConfig } from './config';
 import { createCognitoProvider } from './cognito';
 import { createAuthStore } from './store';
@@ -14,7 +15,7 @@ export async function createAuthFoundation(env: NodeJS.ProcessEnv) {
   const client = new CognitoIdentityProviderClient({ region: config.AWS_REGION });
   try {
     const store = await createAuthStore(orm, config.COGNITO_USER_POOL_ID);
-    return { config, service: createAuthService(createCognitoProvider(config, client), store, config.AUTH_TOKEN_KEY), close: async () => {
+    return { config, classrooms: await createClassroomStore(orm), service: createAuthService(createCognitoProvider(config, client), store, config.AUTH_TOKEN_KEY), close: async () => {
       try { await orm.close(true); } finally { client.destroy(); }
     } };
   } catch (error) { client.destroy(); await orm.close(true); throw error; }

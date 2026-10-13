@@ -137,6 +137,6 @@ Open billing questions:
 
 ## Technical direction already agreed
 
-Use React/TypeScript with Vite for the browser app, Node.js/TypeScript with Jest for backend tests, and the shared schema package for contracts. Keep browser apps under `apps/` and backend services under `services/` so an admin app or worker can be introduced later.
+Use React/TypeScript with Vite for the browser app, Node.js/TypeScript with Jest for backend tests, and the shared contracts package for contracts. Keep browser apps under `apps/` and backend services under `services/` so an admin app or worker can be introduced later.
 
 Eventually run local PostgreSQL in Docker and document connecting DBeaver to it. Deploy frontend and backend to AWS using the cheapest viable configuration once runtime, database, and scheduling requirements are known. The classroom-access branch adds local database setup and Cognito integration; frontend/backend AWS hosting remains separate deployment work.

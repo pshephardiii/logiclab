@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { signupRequestSchema } from '@logiclab/schema';
+import { signupRequestSchema } from '@logiclab/contracts';
 import { parseBody, message, errorName } from '../helpers';
 
 export function postSignupHandler(context: AuthContext) {

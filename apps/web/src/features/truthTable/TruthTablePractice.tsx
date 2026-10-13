@@ -1,9 +1,9 @@
-import { useTruthTablePractice } from './useTruthTablePractice';
+import { usePracticeContext } from './PracticeProvider';
 import { FormulaForm } from './components/FormulaForm';
 import { ExercisePanel } from './components/ExercisePanel';
 
 export function TruthTablePractice() {
-  const practice = useTruthTablePractice();
+  const practice = usePracticeContext();
   return (
     <main>
       <header>

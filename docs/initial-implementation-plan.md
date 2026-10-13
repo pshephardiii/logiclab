@@ -6,7 +6,7 @@ Product decisions: see [Product Direction](product-direction.md) for the agreed 
 
 Data direction: see [Data Design](data-design.md) for the reusable problem library, separate definitions and attempts, immutable problem versions, and proposed persistence model.
 
-Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/schema` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
+Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/contracts` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
 
 Source: `LogicLab_Get_Started_Plan.docx`, version 0.1. This plan translates the starter document into reviewable implementation branches. Its recommendations are planning inputs, not settled requirements or authorization to publish, provision services, or implement every feature. The repository now contains the scaffold and truth-table vertical slice; later milestones remain planned.
 
@@ -39,7 +39,7 @@ apps/web                 Student and instructor interface
 services/api             Modular REST API
 services/worker          Job execution entry point, introduced when needed
 tools/logic-engine    Pure parser, evaluator, and truth-table generator
-tools/schema             Request/response schemas and shared types
+tools/contracts             Request/response schemas and shared types
 packages/db              Schema, migrations, and seed data
 tsconfig.base.json       Current shared TypeScript configuration
 packages/payments        Provider boundary and simulator, introduced with billing
@@ -89,7 +89,7 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
-Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Classroom creation/enrollment follows. See [Cognito development guide](cognito-development.md).
+Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation enrollment follows. See [instructor classes](classroom-api.md). See [Cognito development guide](cognito-development.md).
 
 First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
 
