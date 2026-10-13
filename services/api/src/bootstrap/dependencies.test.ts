@@ -6,9 +6,10 @@ import { createDependencies } from './dependencies';
 
 const closeDatabase = jest.fn(async () => {});
 const destroyClient = jest.fn();
+const sendCommand = jest.fn(async () => { throw new Error('Unexpected Cognito request during bootstrap'); });
 const orm = { close: closeDatabase } as unknown as Awaited<ReturnType<typeof createDatabase>>;
 const connect = jest.fn(async () => orm);
-const ClientConstructor = jest.fn(() => ({ destroy: destroyClient }) as unknown as CognitoIdentityProviderClient);
+const ClientConstructor = jest.fn(() => ({ destroy: destroyClient, send: sendCommand }) as unknown as CognitoIdentityProviderClient);
 const authStore = jest.fn(async () => ({} as AuthStore));
 const classroomStore = jest.fn(async () => ({} as ClassroomStore));
 const factories = { connectDatabase: connect, createClient: ClientConstructor, createAuthStore: authStore, createClassroomStore: classroomStore };
@@ -21,8 +22,9 @@ const env = {
 };
 beforeEach(() => {
   closeDatabase.mockReset().mockResolvedValue(undefined);
+  sendCommand.mockClear();
   destroyClient.mockReset();connect.mockReset().mockResolvedValue(orm);
-  ClientConstructor.mockReset().mockImplementation(() => ({ destroy: destroyClient }) as unknown as CognitoIdentityProviderClient);
+  ClientConstructor.mockReset().mockImplementation(() => ({ destroy: destroyClient, send: sendCommand }) as unknown as CognitoIdentityProviderClient);
   authStore.mockReset().mockResolvedValue({} as never);
   classroomStore.mockReset().mockResolvedValue({} as never);
 });
@@ -38,6 +40,7 @@ test('missing database settings fail before opening resources', async () => {
 test('constructs separate route dependencies using one database and auth service', async () => {
   const dependencies = await createDependencies(env, factories);expect(dependencies).not.toBeNull();
   expect(connect).toHaveBeenCalledTimes(1);
+  expect(sendCommand).not.toHaveBeenCalled();
   expect(authStore).toHaveBeenCalledWith(orm, env.COGNITO_USER_POOL_ID);
   expect(classroomStore).toHaveBeenCalledWith(orm);
   expect(dependencies!.classroom.service).toBe(dependencies!.auth.service);
