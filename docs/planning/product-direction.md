@@ -31,7 +31,7 @@ Use Amazon Cognito for email/password authentication. Cognito owns credentials; 
 - Browser signup/login screens call the API. An opaque HTTP-only cookie identifies a persistent backend session; Cognito tokens remain encrypted in PostgreSQL rather than browser storage. Initial session lifetime is seven days with no remember-me option yet.
 - Save the chosen role in the app user as soon as Cognito signup returns its subject, before email confirmation. Confirmation/login retain it; ordinary profile updates cannot change it. Compensate failed local provisioning and explicitly flag failures requiring reconciliation.
 
-See [Cognito Development](cognito-development.md) for the implemented foundation, remaining HTTP integration, and AWS setup walkthrough.
+See [Cognito Development](../development/cognito-development.md) for the implemented foundation, remaining HTTP integration, and AWS setup walkthrough.
 
 ### Classroom membership defaults
 

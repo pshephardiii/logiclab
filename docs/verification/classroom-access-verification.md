@@ -6,7 +6,7 @@ This branch adds separate student/instructor accounts, persistent sessions, inst
 
 ## Walkthrough
 
-Follow [local PostgreSQL/DBeaver setup](local-database.md) and [Cognito development setup](cognito-development.md), apply migrations, and run `npm run dev`. Open http://localhost:5173; the API loads backend settings from the ignored root `.env`. Use the exact configured origin for browser mutations.
+Follow [local PostgreSQL/DBeaver setup](../development/local-database.md) and [Cognito development setup](../development/cognito-development.md), apply migrations, and run `npm run dev`. Open http://localhost:5173; the API loads backend settings from the ignored root `.env`. Use the exact configured origin for browser mutations.
 
 1. Open **Sign in / Create account**, create an instructor account, and confirm its email. Sign in; the stored role is preserved.
 2. Open **Classes**, create a class, and select **Generate new invitation code**. Copy it before leaving the page. Generating again replaces the previous code, with a new seven-day expiry.
@@ -17,7 +17,7 @@ Follow [local PostgreSQL/DBeaver setup](local-database.md) and [Cognito developm
 7. Switch between account/classes and practice: formula, answers, and feedback survive navigation. Browser history and direct frontend URLs work. Reload clears practice, while the session is restored through the API.
 8. Try account recovery/reset and logout. Successful recovery invalidates local sessions; logout clears the browser cookie. Confirmation/reset returns to ordinary sign-in.
 
-Route guards guide the browser; backend session, role, owner, and enrollment checks enforce access. See [Auth API](auth-api.md) and [Classroom API](classroom-api.md) for contracts, limits, and edge cases. Student view for instructors remains a future preview feature, not dual-role enrollment.
+Route guards guide the browser; backend session, role, owner, and enrollment checks enforce access. See [Auth API](../api/auth-api.md) and [Classroom API](../api/classroom-api.md) for contracts, limits, and edge cases. Student view for instructors remains a future preview feature, not dual-role enrollment.
 
 ## Checks performed
 

@@ -51,7 +51,7 @@ Keep identity, classes, memberships, exercises, submissions, billing, event inge
 
 ## Preliminary branch plans
 
-Branch names follow [the numbered naming convention](branch-naming-conventions.md). Branch `002-feat-truth-table-practice` is implemented; other entries describe proposed work. The bootstrap is intended for the initial `main` commit; its proposed `001` branch can be used for remaining foundation work. Merge each into `main` after its acceptance checks pass. Create dependent branches from the updated `main`; split a branch further if it becomes difficult to review. Each branch should include its relevant documentation and tests.
+Branch names follow [the numbered naming convention](../conventions/branch-naming-conventions.md). Branch `002-feat-truth-table-practice` is implemented; other entries describe proposed work. The bootstrap is intended for the initial `main` commit; its proposed `001` branch can be used for remaining foundation work. Merge each into `main` after its acceptance checks pass. Create dependent branches from the updated `main`; split a branch further if it becomes difficult to review. Each branch should include its relevant documentation and tests.
 
 ### 1. `001-chore-project-foundation` — A reproducible starting point
 
@@ -83,13 +83,13 @@ Implemented as the first feature branch after the scaffold. Begin with one formu
 
 Done when: a visitor can enter or select a formula, complete a truth-table exercise, and receive deterministic feedback through the real API. The UI handles loading, empty, invalid, and error states and works with keyboard input.
 
-Implementation outcome: parser, evaluator, deterministic tables, independent-practice API, feature-based browser components, Check answers, and Show/Hide solution. See [verification and walkthrough](truth-table-verification.md) for evidence and remaining limitations.
+Implementation outcome: parser, evaluator, deterministic tables, independent-practice API, feature-based browser components, Check answers, and Show/Hide solution. See [verification and walkthrough](../verification/truth-table-verification.md) for evidence and remaining limitations.
 
 Resolved defaults: given variable columns; all distinct compound subexpressions as answer columns; symbols plus `! & | ->`; checking on request; solutions alongside entries; four variables, 256 characters, and 32 recursive nesting levels. Practice is currently anonymous and not persisted. Future assignment defaults, saved practice, and authentication remain in [Product Direction](product-direction.md).
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
-Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation generation and student redemption/enrollment are implemented, with scoped reads and duplicate/race handling. See [instructor classes](classroom-api.md). See [Cognito development guide](cognito-development.md).
+Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation generation and student redemption/enrollment are implemented, with scoped reads and duplicate/race handling. See [instructor classes](../api/classroom-api.md). See [Cognito development guide](../development/cognito-development.md).
 
 First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
 

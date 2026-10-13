@@ -1,6 +1,6 @@
 # Codebase conventions
 
-These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope is `tools/`; add frontend and backend conventions as their refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](product-direction.md) and [Data Design](data-design.md).
+These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope is `tools/`; add frontend and backend conventions as their refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
 
 ## Tools: package responsibilities
 
@@ -60,7 +60,7 @@ The DB package uses ESM/NodeNext and `.js` relative import specifiers in TypeScr
 
 Use a forked EntityManager per request/job and close the ORM on shutdown. Transactions, locks, constraints, and conflict handling must express persistence guarantees; changing file layout must preserve those guarantees.
 
-Commit migrations and application snapshots; keep applied migrations immutable. Generate/review migrations for actual schema changes. For entity-only refactors, run `migration:check` and verify no migration is needed. Integration-test migration runs disable snapshot generation; ignored test snapshots are not a reason to ignore application snapshots or source tests. See [Local Database](local-database.md).
+Commit migrations and application snapshots; keep applied migrations immutable. Generate/review migrations for actual schema changes. For entity-only refactors, run `migration:check` and verify no migration is needed. Integration-test migration runs disable snapshot generation; ignored test snapshots are not a reason to ignore application snapshots or source tests. See [Local Database](../development/local-database.md).
 
 ## Tools: logic-engine structure and invariants
 

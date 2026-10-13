@@ -4,7 +4,7 @@
 
 `infra/cognito/development.json` prepares a development email/password user pool and secret-bearing API app client in `us-east-1`. `services/api/src/auth/` contains validated configuration, a Cognito SDK adapter, signup provisioning, persistent sessions, cookie/origin helpers, and a factory that initializes these dependencies.
 
-The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. The web app includes signup, confirmation/resend, sign-in, recovery/reset, and sign-out screens. Anonymous practice continues to work with auth disabled. Automated tests mock Cognito; the developer has also provisioned the pool and verified core flows against AWS. See [Auth API](auth-api.md).
+The API now registers signup, confirmation/resend, login/session/logout, and password recovery/reset routes when `AUTH_ENABLED=true`. Input validation, origin checks, rate limiting, and sanitized error responses/logging are included. The web app includes signup, confirmation/resend, sign-in, recovery/reset, and sign-out screens. Anonymous practice continues to work with auth disabled. Automated tests mock Cognito; the developer has also provisioned the pool and verified core flows against AWS. See [Auth API](../api/auth-api.md).
 
 ## Identity and signup
 
@@ -59,7 +59,7 @@ The foundation can be reviewed without AWS. Auth routes are ready for mocked tes
 
 The template uses Cognito's default email sender, which has a non-adjustable 50-email daily allowance per AWS account. Plan SES before broader public registration. The pool is retained when its CloudFormation stack is deleted; remove it separately only when you intend to delete its identities. MFA and institution SSO are out of this branch.
 
-The developer validated the template, provisioned the development pool/client, and configured local backend settings. The assistant has not run the deployment command. See [AWS deployment notes](aws-deployment-notes.md) for costs/email constraints and [Cognito signup/secret-hash guidance](https://docs.aws.amazon.com/cognito/latest/developerguide/signing-up-users-in-your-app.html) for the email-only pool refresh hash rules.
+The developer validated the template, provisioned the development pool/client, and configured local backend settings. The assistant has not run the deployment command. See [AWS deployment notes](../planning/aws-deployment-notes.md) for costs/email constraints and [Cognito signup/secret-hash guidance](https://docs.aws.amazon.com/cognito/latest/developerguide/signing-up-users-in-your-app.html) for the email-only pool refresh hash rules.
 
 ## Verification
 
@@ -79,4 +79,4 @@ The app restores account state through `GET /api/auth/session` on load. Cookies 
 
 Developer-reported live checks: signup email arrived, confirmation succeeded, login returned the same user ID/role, logout rejected subsequent session access, and password recovery/reset followed by login retained the same identity/role. Real resend and expired-access-token refresh still need verification. Browser account flows have been checked in Chrome with intercepted/mock responses, including signup role, confirmation/resend, failed-login retry and password clearing, login, reload session restoration, logout, recovery/reset, preserved practice input, empty browser storage, and a 390px layout. This temporary smoke check is local evidence, not a committed frontend regression suite.
 
-Instructor class creation/listing/detail is now implemented; after signing in as an instructor, select **Classes**. See [classroom API and verification](classroom-api.md). Invitation generation and student redemption/enrollment are implemented.
+Instructor class creation/listing/detail is now implemented; after signing in as an instructor, select **Classes**. See [classroom API and verification](../api/classroom-api.md). Invitation generation and student redemption/enrollment are implemented.

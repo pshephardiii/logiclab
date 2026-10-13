@@ -1,14 +1,16 @@
 # LogicLab
 
-An interactive formal-logic learning project, built as a public full-stack portfolio. The browser creates truth-table exercises through the API, lets students fill blank/T/F answer cells, checks answers, and shows solutions alongside their entries. See the [implementation plan](docs/initial-implementation-plan.md) and [truth-table API](docs/truth-table-api.md).
+Browse the [documentation index](docs/README.md) for planning, setup, API reference, conventions, and verification.
 
-The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
+An interactive formal-logic learning project, built as a public full-stack portfolio. The browser creates truth-table exercises through the API, lets students fill blank/T/F answer cells, checks answers, and shows solutions alongside their entries. See the [implementation plan](docs/planning/initial-implementation-plan.md) and [truth-table API](docs/api/truth-table-api.md).
 
-[Codebase conventions](docs/codebase-conventions.md) records the agreed tools package boundaries, contract/entity style, module organization, and verification practices.
+The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/planning/product-direction.md).
 
-The storage model and reusable problem library are outlined in [Data Design](docs/data-design.md). Product Direction describes behavior, Data Design describes persistence, and the Implementation Plan describes delivery order.
+[Codebase conventions](docs/conventions/codebase-conventions.md) records the agreed tools package boundaries, contract/entity style, module organization, and verification practices.
 
-See the [truth-table walkthrough, screenshots, and verification evidence](docs/truth-table-verification.md) for the completed first feature, and the [classroom-access walkthrough and final verification](docs/classroom-access-verification.md) for accounts, classes, and enrollment.
+The storage model and reusable problem library are outlined in [Data Design](docs/planning/data-design.md). Product Direction describes behavior, Data Design describes persistence, and the Implementation Plan describes delivery order.
+
+See the [truth-table walkthrough, screenshots, and verification evidence](docs/verification/truth-table-verification.md) for the completed first feature, and the [classroom-access walkthrough and final verification](docs/verification/classroom-access-verification.md) for accounts, classes, and enrollment.
 
 ## Local setup
 
@@ -21,7 +23,7 @@ npm run dev
 
 Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all five workspace watchers.
 
-To use accounts, configure the backend following [Cognito development setup](docs/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work. Instructors can use **Classes** to create and list their own persistent classes; see [classroom API and local walkthrough](docs/classroom-api.md). Instructors can also generate or replace a seven-day invitation code; students can redeem it on **My classes** to join and view their enrolled classes.
+To use accounts, configure the backend following [Cognito development setup](docs/development/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work. Instructors can use **Classes** to create and list their own persistent classes; see [classroom API and local walkthrough](docs/api/classroom-api.md). Instructors can also generate or replace a seven-day invitation code; students can redeem it on **My classes** to join and view their enrolled classes.
 
 ## Packages
 
@@ -65,7 +67,7 @@ Frontend features own their UI and behavior under `apps/web/src/features/`. The 
 
 ## Commands
 
-For persistence setup, see [local PostgreSQL and DBeaver](docs/local-database.md). After installing Docker/Compose and copying `.env.example` to `.env`, `npm run db:up` starts PostgreSQL and `npm run db:migrate` applies committed migrations. Existing truth-table practice does not require the database yet. `npm run db:test` uses a separately configured disposable test database; CI runs it with its own PostgreSQL service.
+For persistence setup, see [local PostgreSQL and DBeaver](docs/development/local-database.md). After installing Docker/Compose and copying `.env.example` to `.env`, `npm run db:up` starts PostgreSQL and `npm run db:migrate` applies committed migrations. Existing truth-table practice does not require the database yet. `npm run db:test` uses a separately configured disposable test database; CI runs it with its own PostgreSQL service.
 
 ```sh
 npm run typecheck
@@ -82,17 +84,17 @@ After a root build, `npm start -w @logiclab/api` starts the compiled API and `np
 
 ## Deployment direction
 
-The [Cognito development foundation](docs/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; the web app includes account screens and restores sessions through the API. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/auth-api.md) for contracts, cookies, recovery, and limits.
+The [Cognito development foundation](docs/development/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; the web app includes account screens and restores sessions through the API. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/api/auth-api.md) for contracts, cookies, recovery, and limits.
 
 Both applications will target AWS. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
 
 The production browser uses same-origin `/api` by default. Configure routing for that path to the backend. `VITE_API_URL` optionally sets an API origin at frontend build time; using a different origin will also require explicit backend CORS configuration. Never put secrets in `VITE_*` variables, which are visible in the browser.
 
-The lowest-cost viable AWS topology is still undecided. Compare static hosting, backend execution, database, traffic, logs, and scheduled work costs when those requirements are known. A development Cognito pool has been provisioned; application hosting and the production database are still pending. See [deployment planning](docs/aws-deployment-notes.md).
+The lowest-cost viable AWS topology is still undecided. Compare static hosting, backend execution, database, traffic, logs, and scheduled work costs when those requirements are known. A development Cognito pool has been provisioned; application hosting and the production database are still pending. See [deployment planning](docs/planning/aws-deployment-notes.md).
 
 The public repository is [pshephardiii/logiclab](https://github.com/pshephardiii/logiclab). A complete demo release still needs a license choice and the features described in the implementation plan.
 
-See [branch naming conventions](docs/branch-naming-conventions.md) for numbered work branches and [GitHub setup](docs/github-setup.md) for the initial publication steps.
+See [branch naming conventions](docs/conventions/branch-naming-conventions.md) for numbered work branches and [GitHub setup](docs/development/github-setup.md) for the initial publication steps.
 
 ## Frontend routing
 

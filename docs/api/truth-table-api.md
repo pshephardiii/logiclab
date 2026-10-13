@@ -39,7 +39,7 @@ Jest discovers tests under both `src` and `test`; the production TypeScript buil
 { "formula": "P & Q" }
 ```
 
-Returns alphabetical variables, given and answer column metadata, and rows whose `values` contain **only given column values**. Answer cells are absent so the UI can initialize them as blank. IDs and ordering follow the [logic-engine conventions](../tools/logic-engine/README.md). Formula errors return HTTP 400 with a code, message, and zero-based character position.
+Returns alphabetical variables, given and answer column metadata, and rows whose `values` contain **only given column values**. Answer cells are absent so the UI can initialize them as blank. IDs and ordering follow the [logic-engine conventions](../../tools/logic-engine/README.md). Formula errors return HTTP 400 with a code, message, and zero-based character position.
 
 ## Check answers
 

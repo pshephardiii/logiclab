@@ -6,7 +6,7 @@ Branch: `002-feat-truth-table-practice` · Verified October 12, 2026
 
 A visitor enters a propositional formula, creates a table, fills blank/T/F answer cells, checks their answers, and reveals or hides a solution alongside their entries. Given variable values cannot be edited. Intermediate expressions appear before the final expression. Work is anonymous and stays in page memory.
 
-The parser supports single uppercase variables, parentheses, `¬ ∧ ∨ →`, and aliases `! & | ->`. Limits are four distinct variables, 256 characters, and 32 recursive nesting levels. Rows use alphabetical variables and run from all T to all F. See the [engine documentation](../tools/logic-engine/README.md) and [API contract](truth-table-api.md).
+The parser supports single uppercase variables, parentheses, `¬ ∧ ∨ →`, and aliases `! & | ->`. Limits are four distinct variables, 256 characters, and 32 recursive nesting levels. Rows use alphabetical variables and run from all T to all F. See the [engine documentation](../../tools/logic-engine/README.md) and [API contract](../api/truth-table-api.md).
 
 ## Reproduce the walkthrough
 

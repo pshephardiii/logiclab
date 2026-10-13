@@ -27,7 +27,7 @@ The cookie is host-only, HttpOnly, SameSite=Strict, scoped to `/api`, and Secure
 
 Successful password recovery must invalidate local sessions as well as update Cognito. The app stores normalized signup email for this lookup, unique per user pool. Email is optional for pre-existing synthetic users; live signup always records it. Email-changing flows are not implemented and must synchronize this mapping before being added.
 
-If password reset succeeds in Cognito but local session deletion fails, the operation returns 503 and needs operational reconciliation. These systems do not share a transaction. Do not promise that repeating an already-consumed reset code will repair that failure. Signup provisioning has its own explicit compensation/reconciliation behavior in the [Cognito guide](cognito-development.md).
+If password reset succeeds in Cognito but local session deletion fails, the operation returns 503 and needs operational reconciliation. These systems do not share a transaction. Do not promise that repeating an already-consumed reset code will repair that failure. Signup provisioning has its own explicit compensation/reconciliation behavior in the [Cognito guide](../development/cognito-development.md).
 
 Logout clears the cookie even when provider revocation fails; the response can still be 503 if cleanup did not fully complete. A failed login does not issue a new cookie. A successful login rotates the browser session and attempts to retire the prior session.
 
@@ -45,7 +45,7 @@ Auth handlers log only sanitized operational categories, not SDK messages/stacks
 
 Handler and injected-route tests cover registration, strict validation, role preservation, origin enforcement, cookies, recovery masking, errors, and rate limiting. A compiled HTTP flow has been exercised against PostgreSQL with mocked Cognito; the developer has additionally reported successful live signup/confirmation, login/logout, and recovery/reset checks. Live resend and token refresh remain to be checked.
 
-Account screens are implemented under `apps/web/src/features/auth`, with an API client, account-state hook, panel, and form component. Classroom ownership and student enrollment authorization are implemented; see [Classroom API](classroom-api.md). Production deployment remains future work. See [Cognito setup](cognito-development.md) before live verification. Shared schemas are exported from `@logiclab/contracts`; each auth endpoint follows the route/handler/handler-test/route-test directory convention.
+Account screens are implemented under `apps/web/src/features/auth`, with an API client, account-state hook, panel, and form component. Classroom ownership and student enrollment authorization are implemented; see [Classroom API](classroom-api.md). Production deployment remains future work. See [Cognito setup](../development/cognito-development.md) before live verification. Shared schemas are exported from `@logiclab/contracts`; each auth endpoint follows the route/handler/handler-test/route-test directory convention.
 
 ## Route schemas
 

@@ -15,7 +15,7 @@ This is a deployment constraint, not a selected architecture or a verified price
 
 ## Selected authentication and email direction
 
-See [Cognito development setup](cognito-development.md) for the prepared CloudFormation template, backend session foundation, and provisioning walkthrough. Resources remain unprovisioned by this work.
+See [Cognito development setup](../development/cognito-development.md) for the prepared CloudFormation template, backend session foundation, and provisioning walkthrough. Resources remain unprovisioned by this work.
 
 Use Amazon Cognito user pools for email/password signup, email confirmation/resend, login, and password recovery. Application roles, class ownership, and enrollments remain in PostgreSQL. MFA and institutional SSO are deferred. No Cognito resources have been provisioned as part of this documentation update.
 

@@ -33,4 +33,4 @@ Git needs a configured commit name/email and GitHub authentication. Use your exi
 
 See [GitHub's instructions for pushing local code](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github) for authentication and setup details.
 
-After pushing, check that `main` is the default branch and the Actions CI workflow passes. Continue development using [numbered work branches](branch-naming-conventions.md).
+After pushing, check that `main` is the default branch and the Actions CI workflow passes. Continue development using [numbered work branches](../conventions/branch-naming-conventions.md).

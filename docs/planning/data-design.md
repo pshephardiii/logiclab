@@ -19,13 +19,13 @@ Library reuse does not imply a publicly shared library or permission to browse a
 
 The HTTP auth slice adds nullable normalized email to `users`, unique within a Cognito pool. New signup saves it so successful password reset can delete all local sessions without trusting a user ID from the browser. Legacy synthetic users may omit email. Future email changes must keep this recovery lookup synchronized.
 
-The auth foundation adds `auth_sessions`: a hashed opaque session ID, user foreign key, encrypted Cognito access/refresh tokens, and access/absolute expiry timestamps. Sessions cascade when their user is deleted. Credentials and plaintext tokens are not stored in application tables. Signup persists the chosen role as soon as Cognito returns its subject; login only reads that stored role. See [Cognito Development](cognito-development.md) for compensation and session behavior.
+The auth foundation adds `auth_sessions`: a hashed opaque session ID, user foreign key, encrypted Cognito access/refresh tokens, and access/absolute expiry timestamps. Sessions cascade when their user is deleted. Credentials and plaintext tokens are not stored in application tables. Signup persists the chosen role as soon as Cognito returns its subject; login only reads that stored role. See [Cognito Development](../development/cognito-development.md) for compensation and session behavior.
 
 The first classroom-access slice defines `users` in `tools/db`: generated UUID, Cognito pool ID/subject, one student/instructor role, and creation timestamp. The identity pair has a unique constraint. There are no local password/code fields. The auth service implements provisioning, and HTTP account routes are now registered when auth is enabled.
 
 Cognito manages email/password credentials, email confirmation, and password recovery. Keep application users, the separate student/instructor role, class ownership, and enrollments in PostgreSQL. Link an application user to their Cognito identity using a stable subject identifier scoped to the configured user pool rather than treating email as a permanent identity key. Passwords and reset/confirmation codes must not be copied into application tables.
 
-`classrooms` now persists a UUID, trimmed name, instructor owner, and creation timestamp. Names may repeat, owner-scoped queries enforce access, and owner deletion is restricted while classes exist. See [instructor classes](classroom-api.md).
+`classrooms` now persists a UUID, trimmed name, instructor owner, and creation timestamp. Names may repeat, owner-scoped queries enforce access, and owner deletion is restricted while classes exist. See [instructor classes](../api/classroom-api.md).
 
 Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred. Invitation generation now uses one reusable code per class, a seven-day expiry, hash-only storage, and owner-controlled replacement; student redemption/enrollment is implemented with an enrollment unique constraint and a classroom row lock that serializes redemption against invitation replacement.
 
@@ -100,7 +100,7 @@ Engine/parser changes can also affect historical interpretation. Decide how to p
 
 ## Storage direction
 
-Use MikroORM with its PostgreSQL driver and committed TypeScript migrations containing explicit SQL. This replaces the starter plan’s Drizzle suggestion to match the maintainer’s familiarity. Entity definitions and migrations remain reviewable. See [Local Database](local-database.md) for setup and integration-test commands.
+Use MikroORM with its PostgreSQL driver and committed TypeScript migrations containing explicit SQL. This replaces the starter plan’s Drizzle suggestion to match the maintainer’s familiarity. Entity definitions and migrations remain reviewable. See [Local Database](../development/local-database.md) for setup and integration-test commands.
 
 Use PostgreSQL relational columns, foreign keys, and constraints for identity, ownership, relationships, status, and timestamps. Use validated `JSONB` for exercise-specific definitions and potentially answer payloads. Validate the payload shape by exercise type and format version; JSONB is not a substitute for validation or authorization.
 
