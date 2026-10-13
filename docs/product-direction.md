@@ -128,7 +128,7 @@ Open billing questions:
 
 ## Questions still to resolve
 
-- How do class invitation codes expire or get replaced, and how should enrollment errors be presented?
+- Invitation generation uses one reusable code per class with a seven-day expiry; instructors replace it to invalidate the old code. Student redemption/enrollment and its error behavior are the next slice.
 - How should incomplete work affect final submission and grading? Practice checking already distinguishes unanswered cells from incorrect answers.
 - What are the exact practice/graded defaults, retry rules, grading rules, and deadline behavior?
 - Does viewing a solution affect an attempt or grade, and can solutions become available after a deadline?

@@ -102,3 +102,23 @@ test('persists classes, scopes owner queries, and protects classes from owner de
     await assert.rejects(em.nativeDelete(User, first.id), /foreign key|violates/i);
   } finally { await em.rollback(); }
 });
+
+
+test('invitation rotation replaces the hash/expiry and rejects duplicate hashes', async () => {
+  const em = orm.em.fork(); await em.begin();
+  try {
+    const owner = em.create(User, { cognitoUserPoolId: 'invite-test', cognitoSubject: 'owner', role: UserRole.Instructor });
+    const first = em.create(Classroom, { name: 'First', owner });
+    const second = em.create(Classroom, { name: 'Second', owner });
+    em.persist([owner, first, second]); await em.flush();
+    const expiry = new Date('2026-10-20T12:00:00Z');
+    assert.equal(await em.nativeUpdate(Classroom, { id: first.id, owner: owner.id }, { invitationHash: 'a'.repeat(64), invitationExpiresAt: expiry }), 1);
+    assert.equal(await em.nativeUpdate(Classroom, { id: first.id, owner: second.id }, { invitationHash: 'b'.repeat(64) }), 0);
+    assert.equal(await em.nativeUpdate(Classroom, { id: first.id, owner: owner.id }, { invitationHash: 'c'.repeat(64), invitationExpiresAt: expiry }), 1);
+    em.clear();
+    assert.equal(await em.findOne(Classroom, { invitationHash: 'a'.repeat(64) }), null);
+    const saved = await em.findOneOrFail(Classroom, first.id);
+    assert.equal(saved.invitationHash, 'c'.repeat(64)); assert.equal(saved.invitationExpiresAt?.toISOString(), expiry.toISOString());
+    await assert.rejects(em.nativeUpdate(Classroom, second.id, { invitationHash: 'c'.repeat(64) }), /duplicate|unique/i);
+  } finally { await em.rollback(); }
+});

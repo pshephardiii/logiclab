@@ -6,6 +6,7 @@ import { AuthError } from '../../auth/service';
 import { assertAuthOrigin, clearSessionCookie } from '../../auth/cookies';
 import { ClassroomError } from './helpers';
 import type { ClassroomContext } from './context';
+import { postInvitationRoute } from './postInvitation/route';
 import { postClassroomRoute } from './postClassroom/route';
 import { getClassroomsRoute } from './getClassrooms/route';
 import { getClassroomRoute } from './getClassroom/route';
@@ -29,6 +30,7 @@ export async function classroomRoutes(app: FastifyInstance, context: ClassroomCo
     if (status === 503) request.log.warn({ code }, 'Classroom operation unavailable');
     return reply.code(status).send(authErrorResponseSchema.parse({ error: { code, message } }));
   });
+  app.register(postInvitationRoute, context);
   app.register(postClassroomRoute, context);
   app.register(getClassroomsRoute, context);
   app.register(getClassroomRoute, context);

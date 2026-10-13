@@ -27,7 +27,7 @@ Cognito manages email/password credentials, email confirmation, and password rec
 
 `classrooms` now persists a UUID, trimmed name, instructor owner, and creation timestamp. Names may repeat, owner-scoped queries enforce access, and owner deletion is restricted while classes exist. See [instructor classes](classroom-api.md).
 
-Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred; exact columns and the invitation lifecycle remain to be designed.
+Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred. Invitation generation now uses one reusable code per class, a seven-day expiry, hash-only storage, and owner-controlled replacement; student redemption/enrollment follows.
 
 Token/session handling and provisioning are specified in the Cognito development guide; HTTP integration is implemented; account screens and instructor class creation/listing/detail are implemented. A browser-provided role or user ID is not sufficient authorization for an existing account.
 
@@ -108,7 +108,7 @@ Local PostgreSQL will run in Docker, with documented DBeaver connection settings
 
 ## Remaining decisions
 
-- Invitation-code expiry/replacement, enrollment constraints, and the concrete identity/class schema. Initial assignment targeting is class-wide; individual targeting is deferred.
+- Enrollment constraints, invitation redemption concurrency, and the concrete enrollment schema. Initial assignment targeting is class-wide; individual targeting is deferred.
 - Library organization, search, sharing, copying, and archive/deletion behavior.
 - Published problem-set snapshots or versions, and allowed assignment-policy changes.
 - Stable expression/row/cell identifiers, grammar versions, and complexity limits.

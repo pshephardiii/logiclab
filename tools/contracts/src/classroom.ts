@@ -10,3 +10,8 @@ export const classroomListQuerySchema = z.strictObject({
 export const classroomParamsSchema = z.strictObject({ classId: z.uuid() });
 export const classroomListResponseSchema = z.strictObject({ classrooms: z.array(classroomSchema), nextOffset: z.number().int().nonnegative().nullable() });
 export type ClassroomSummary = z.infer<typeof classroomSchema>;
+
+export const invitationResponseSchema = z.strictObject({ invitation: z.strictObject({
+  code: z.string().regex(/^[A-Za-z0-9_-]{32}$/), expiresAt: z.iso.datetime(),
+}) });
+export type ClassroomInvitation = z.infer<typeof invitationResponseSchema>['invitation'];

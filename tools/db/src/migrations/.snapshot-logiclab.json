@@ -172,6 +172,40 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "invitation_expires_at": {
+          "name": "invitation_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "invitation_hash": {
+          "name": "invitation_hash",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "name": {
           "name": "name",
           "type": "varchar(120)",
@@ -208,6 +242,16 @@
         }
       },
       "indexes": [
+        {
+          "columnNames": [
+            "invitation_hash"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "classrooms_invitation_hash_unique",
+          "primary": false,
+          "unique": true
+        },
         {
           "columnNames": [
             "owner_id"
@@ -354,7 +398,7 @@
             "student",
             "instructor"
           ],
-          "mappedType": "unknown",
+          "mappedType": "enum",
           "nativeEnumName": "user_role"
         }
       },

@@ -207,3 +207,7 @@ If scope grows, release the polished logic-practice experience first and keep cl
 - Public artifacts contain no secrets, real payment credentials, or real student/customer data.
 
 Implementation dates and hosting commitments remain open. Sequence work by completed, reviewable behavior rather than committing to a calendar before the early product decisions are settled.
+
+## Next branch scope
+
+After finishing `003-feat-classroom-access` (including student invitation redemption/enrollment and final verification), the agreed next branch is `004-refactor-codebase`. Focus solely on structure, consistency, and maintainability, with no new features or intended behavior changes. Include this direction in the classroom-access branch's local PR draft.
