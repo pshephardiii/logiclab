@@ -1,6 +1,6 @@
 # Codebase conventions
 
-These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/` and the agreed API module boundaries; extend frontend/backend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
+These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/` and `services/api/src`; extend frontend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
 
 ## Tools: package responsibilities
 
@@ -100,3 +100,40 @@ Application behavior should depend on the capabilities described by interfaces, 
 Cookie/origin handling is HTTP-specific and belongs with auth routes. Session encryption supports application auth behavior; do not categorize every helper as an external integration. Colocate module tests; shared test fixtures stay under `services/api/test`. Do not create empty service/domain directories for symmetry—classroom currently has persistence and route coordination without a separate application service.
 
 For a provider with several operations, keep its factory focused on assembling the application interface. Cognito uses `wrapper.ts` for SDK request dispatch and client-secret hashing, and `methods/` for individual operations. Login and refresh share authentication-response handling in `methods/authenticate.ts`. The methods index exports provider operations; methods import supporting files directly. Bootstrap retains ownership of the injected SDK client's shutdown.
+
+## API: routes and handlers
+
+Organize routes by domain and then operation, following the existing `routes/<domain>/<operation>/` layout (for example, `routes/classroom/postClassroom/`). Domain and operation directory names currently use camelCase. Each operation contains:
+
+- `route.ts`: a named route-schema object and Fastify registration connecting the method, URL, schema, and handler.
+- `handler.ts`: request handling, calls to application/store capabilities, and HTTP response construction.
+- `route.test.ts`: HTTP-level checks through Fastify injection, including validation, status codes, and applicable group policies.
+- `handler.test.ts`: direct checks of meaningful handler behavior and dependency interactions where these add coverage beyond registration tests.
+
+A single-endpoint group such as health can keep these files directly in its domain directory. Do not add tests solely to repeat implementation details.
+
+Compose route schemas from `@logiclab/contracts`, with `summary`, `description`, applicable `body`/`querystring`/`params`, and responses keyed by status. Use `satisfies` with the appropriate route-schema type. Keep reusable response mappings in the group's `schemas.ts`; shared contracts continue to define the actual request/response data shapes.
+
+Use the group's `index.ts` as its registration entry point. Install Zod compilers, plugins, hooks, and error handling within the relevant Fastify scope. Put repeated setup in `routes/setup.ts`; keep endpoint-specific overrides explicit. Install rate-limit defaults before the rate-limit plugin so its registration hook sees the final configuration. Do not apply authenticated-route policies to anonymous practice through an incidental global refactor.
+
+## API: contexts, helpers, and behavior
+
+Use a domain's `context.ts` to describe the dependencies its routes receive. Construct those dependencies in bootstrap and pass them into registration and handler factories. Handlers should use the supplied capabilities rather than initialize SDK clients or database connections.
+
+Keep shared transport concerns in the route group: cookies, origin checks, request parsing, role checks, and response/error helpers. A cohesive `helpers.ts` is sufficient until distinct responsibilities justify splitting it. Use descriptive filenames or a helper directory when extracting; avoid an unrelated general utilities collection. Local indexes can simplify imports, while files within a group import their supporting modules directly to avoid circular dependencies.
+
+Keep reusable application workflows in `application/<domain>/`, provider-specific requests in `integrations/<provider>/`, and database operations in `persistence/<domain>/`. Add an application layer when there is a workflow to coordinate; do not require every simple route/store call to pass through an otherwise empty service. Keep SDK response interpretation in the integration and persistence guarantees in the store.
+
+## API: security and lifecycle invariants
+
+Preserve authentication, role checks, owner/enrollment scoping, and transaction/lock behavior when moving code. Classroom authorization currently runs before field validation and reuses the authenticated user within the request. Refactors must preserve that ordering and avoid redundant authentication.
+
+Keep HTTP error mapping scoped to the route group and preserve public status codes and response shapes. Sanitize operational responses and logs; do not expose credentials, session tokens, invitation codes, request bodies, or raw provider error details. Keep cookie handling, mutation-origin checks, cache headers, and rate limits explicit where they apply.
+
+Bootstrap owns shared resource construction and cleanup, including partial initialization failures. `app.ts` composes HTTP registration; `server.ts` connects startup/shutdown to the constructed dependencies. SDK operation files and request handlers do not close shared resources.
+
+## API: verification
+
+Colocate tests with the module they cover; keep reusable fixtures and invocation helpers in `services/api/test`. Use injected dependencies and mocked SDK calls for deterministic unit/route checks. Bootstrap tests should verify resource ownership and failure cleanup without making external requests.
+
+Use existing behavior tests to validate structural changes, adding coverage for material gaps rather than every new file. Run `npm run check` for API code refactors; run database integration/schema checks when persistence mappings or guarantees are involved. Live Cognito checks are separate, intentional verification steps and must not be implied by passing mocked tests. Documentation-only changes need relevant link and whitespace checks.
