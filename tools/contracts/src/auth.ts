@@ -11,3 +11,14 @@ export const emptyAuthRequestSchema = z.strictObject({});
 export const authMessageResponseSchema = z.strictObject({ message: z.string() });
 export const authUserResponseSchema = z.strictObject({ user: z.strictObject({ id: z.uuid(), role: z.enum(['student', 'instructor']) }) });
 export const authErrorResponseSchema = z.strictObject({ error: z.strictObject({ code: z.string(), message: z.string() }) });
+
+// Public data types are inferred from the same runtime contracts.
+export type SignupRequest = z.infer<typeof signupRequestSchema>;
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type EmailRequest = z.infer<typeof emailRequestSchema>;
+export type ConfirmationRequest = z.infer<typeof confirmationRequestSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
+export type EmptyAuthRequest = z.infer<typeof emptyAuthRequestSchema>;
+export type AuthMessageResponse = z.infer<typeof authMessageResponseSchema>;
+export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
+export type AuthErrorResponse = z.infer<typeof authErrorResponseSchema>;

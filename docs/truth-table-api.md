@@ -74,3 +74,7 @@ Returns the complete table, including expected answers, for independent practice
 Validation and formula errors use `{ "error": { "code": "...", "message": "...", "position": 0 } }`; `position` appears only for formula parsing errors. Malformed JSON uses the same envelope. Fastify transport errors such as unsupported content types or oversized bodies retain Fastify's normal error handling.
 
 Root development builds and watches both shared packages before/alongside the API and web app. Individual API commands require built schema and engine packages. The browser uses all three endpoints: creating an exercise, checking entered answers (including blanks), and showing/hiding solutions alongside preserved student entries. Editing answers clears check feedback; editing the formula clears the entire exercise. Pending requests are canceled on edits so stale results cannot overwrite current work.
+
+## Route schemas
+
+Exercise, check, and solution route files declare summary/description, Zod body contracts, and 200/400 response contracts. The public practice group installs the same Zod compiler setup as other groups, retaining the existing invalid-input issue messages, parser position errors, and normal Fastify handling of unexpected errors. Defensive handler parsing remains. Practice has no rate limiter in this refactor; centralized auth/classroom limits do not apply to it.

@@ -33,7 +33,9 @@ Logout clears the cookie even when provider revocation fails; the response can s
 
 ## Limits and logging
 
-Auth mutations are limited to 10 requests per route/IP per 15 minutes; session lookup is limited to 60 per IP per minute. Buckets are in process memory, so restarts reset them and multiple API replicas do not share limits. Configure a shared limiter or an appropriate AWS perimeter before scaling/public abuse exposure. The API does not trust arbitrary forwarded IP headers; proxy deployment requires an explicit trusted-proxy decision.
+Auth mutations are limited to 10 requests per route/IP per 15 minutes; session lookup is limited to 60 per IP per minute. The auth group sets these route defaults in an `onRoute` hook registered before the limiter: GET/HEAD routes use 60 per minute, and mutations use 10 per 15 minutes. Endpoint files omit repeated rate-limit config. Explicit route overrides merge with the method defaults; `rateLimit: false` is respected when deliberately configured. Each route retains its own bucket, and this policy stays scoped to auth.
+
+Buckets are in process memory, so restarts reset them and multiple API replicas do not share limits. Configure a shared limiter or an appropriate AWS perimeter before scaling/public abuse exposure. The API does not trust arbitrary forwarded IP headers; proxy deployment requires an explicit trusted-proxy decision.
 
 Recovery/resend responses omit existence/delivery details and mask account-specific provider errors. This is not a constant-time enumeration guarantee. Cognito is configured with user-existence-error prevention. AWS delivery quotas still apply.
 
@@ -44,3 +46,11 @@ Auth handlers log only sanitized operational categories, not SDK messages/stacks
 Handler and injected-route tests cover registration, strict validation, role preservation, origin enforcement, cookies, recovery masking, errors, and rate limiting. A compiled HTTP flow has been exercised against PostgreSQL with mocked Cognito; the developer has additionally reported successful live signup/confirmation, login/logout, and recovery/reset checks. Live resend and token refresh remain to be checked.
 
 Account screens are implemented under `apps/web/src/features/auth`, with an API client, account-state hook, panel, and form component. Classroom ownership and student enrollment authorization are implemented; see [Classroom API](classroom-api.md). Production deployment remains future work. See [Cognito setup](cognito-development.md) before live verification. Shared schemas are exported from `@logiclab/contracts`; each auth endpoint follows the route/handler/handler-test/route-test directory convention.
+
+## Route schemas
+
+Auth endpoint `route.ts` files now export route-schema objects with `summary`, `description`, Zod `body` contracts where applicable, and `response` contracts keyed by HTTP status. Shared data validators and inferred request/response types remain in `tools/contracts/src/auth.ts`; Fastify-specific assembly remains on the backend. Auth has no query-string or path-parameter contracts to declare.
+
+`authRoutes` installs `fastify-type-provider-zod` validator/serializer compilers through the shared `routes/setup.ts` helper inside its encapsulated plugin. Request validation normalizes email before handlers run; strict response validation prevents undeclared fields from being serialized. Validation failures retain the existing sanitized 400 shape; serialization failures retain the auth-unavailable 503 shape. Optional empty logout bodies (omitted, null, or `{}`) retain their existing behavior. Origin checks, rate limits, cookies, and operation logic are unchanged.
+
+Defensive handler parsing and public-response helpers remain so direct handler tests/callers retain their validation guarantees. Classroom/enrollment, truth-table, and health routes now use the same route-schema pattern. This refactor does not generate an OpenAPI document/UI. Summary/description are endpoint metadata ready for later documentation integration. Regression tests separately prove route-boundary normalization, invalid-input rejection, response-field leak prevention, and optional-body compatibility, alongside the existing auth/security tests.

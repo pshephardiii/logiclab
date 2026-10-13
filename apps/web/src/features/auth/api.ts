@@ -1,6 +1,7 @@
+import type { AuthUserResponse } from '@logiclab/contracts';
 import { authErrorResponseSchema, authMessageResponseSchema, authUserResponseSchema } from '@logiclab/contracts';
 
-export type SignedInUser = { id: string; role: 'student' | 'instructor' };
+export type SignedInUser = AuthUserResponse['user'];
 export class AccountApiError extends Error {
   constructor(message: string, public readonly status: number) { super(message); }
 }

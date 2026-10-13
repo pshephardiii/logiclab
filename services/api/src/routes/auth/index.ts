@@ -1,3 +1,4 @@
+import { installZodSchemas, installRateLimitDefaults } from '../setup';
 import type { FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
@@ -16,7 +17,9 @@ import { postForgotPasswordRoute } from './postForgotPassword/route';
 import { postResetPasswordRoute } from './postResetPassword/route';
 
 export async function authRoutes(app: FastifyInstance, context: AuthContext) {
+  installZodSchemas(app);
   await app.register(cookie);
+  installRateLimitDefaults(app);
   await app.register(rateLimit, { global: true, max: 60, timeWindow: '1 minute',
     keyGenerator: request => request.ip,
   });
@@ -30,7 +33,7 @@ export async function authRoutes(app: FastifyInstance, context: AuthContext) {
     const authCode = error instanceof AuthError ? error.code : '';
     if (error instanceof Error && error.message === 'AUTH_ORIGIN_REJECTED') {
       status = 403; code = 'ORIGIN_REJECTED'; text = 'This request origin is not allowed.';
-    } else if (authCode === 'INVALID_REQUEST') {
+    } else if (authCode === 'INVALID_REQUEST' || error instanceof Error && 'validation' in error) {
       status = 400; code = 'INVALID_REQUEST'; text = 'Check the supplied fields and try again.';
     } else if (request.routeOptions.url === '/api/auth/reset-password' && ['UserNotFoundException', 'NotAuthorizedException', 'CodeMismatchException', 'ExpiredCodeException', 'InvalidPasswordException', 'InvalidParameterException', 'PasswordHistoryPolicyViolationException'].includes(name)) {
       status = 400; code = 'CONFIRMATION_FAILED'; text = 'Check your code and password, or request a new code.';

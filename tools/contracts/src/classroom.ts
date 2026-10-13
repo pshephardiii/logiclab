@@ -17,3 +17,10 @@ export const invitationResponseSchema = z.strictObject({ invitation: z.strictObj
 export type ClassroomInvitation = z.infer<typeof invitationResponseSchema>['invitation'];
 
 export const joinClassroomRequestSchema = z.strictObject({ code: z.string().trim().regex(/^[A-Za-z0-9_-]{32}$/) });
+
+export type CreateClassroomRequest = z.infer<typeof createClassroomRequestSchema>;
+export type ClassroomResponse = z.infer<typeof classroomResponseSchema>;
+export type ClassroomListQuery = z.infer<typeof classroomListQuerySchema>;
+export type ClassroomParams = z.infer<typeof classroomParamsSchema>;
+export type ClassroomListResponse = z.infer<typeof classroomListResponseSchema>;
+export type JoinClassroomRequest = z.infer<typeof joinClassroomRequestSchema>;
