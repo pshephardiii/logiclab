@@ -6,7 +6,7 @@ Product decisions: see [Product Direction](product-direction.md) for the agreed 
 
 Data direction: see [Data Design](data-design.md) for the reusable problem library, separate definitions and attempts, immutable problem versions, and proposed persistence model.
 
-Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/schema` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
+Setup update: the initial scaffold uses npm workspaces with `apps/web` (React/TypeScript + Vite), `services/api` (Node.js/TypeScript + Fastify, tested with Jest), and `tools/contracts` (shared Zod contracts). Both applications will eventually deploy to AWS; the cheapest viable topology remains to be evaluated. These confirmed setup choices supersede the pnpm/Turborepo and directory suggestions below. See the root README for current commands and structure.
 
 Source: `LogicLab_Get_Started_Plan.docx`, version 0.1. This plan translates the starter document into reviewable implementation branches. Its recommendations are planning inputs, not settled requirements or authorization to publish, provision services, or implement every feature. The repository now contains the scaffold and truth-table vertical slice; later milestones remain planned.
 
@@ -22,7 +22,7 @@ Deliver a polished truth-table vertical slice before expanding into the complete
 
 1. Confirm the initial audience, learning objective, and smallest truth-table exercise experience. Sketch the student exercise screen and instructor assignment flow before building them.
 2. Choose a project license and public repository identity. Initialize Git locally, then prepare a concise README explaining the problem, proposed scope, and local setup. Creating the public remote is a separate publication step.
-3. Record initial architectural decisions: a modular monolith, a pure TypeScript logic engine, and simulated payments. Mark the authentication and deployment choices as unresolved.
+3. Record initial architectural decisions: a modular monolith, a pure TypeScript logic engine, and simulated payments. Authentication now uses Cognito email/password with confirmation and recovery; AWS application hosting remains unresolved.
 4. Bootstrap the workspace, frontend, API, shared configuration, contracts, and logic-engine package. Add a local Postgres service and a documented development command.
 5. Deliver a small browser-to-API truth-table flow with meaningful engine tests. Use it to validate notation, input behavior, feedback, and visual design.
 6. Add classroom workflows and persistence incrementally. Introduce migrations when the first persisted domain model is defined; avoid creating every suggested table upfront.
@@ -32,14 +32,14 @@ Local database direction: run PostgreSQL in Docker Compose and expose a local co
 
 ## Proposed architecture
 
-Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; ORM and authentication selection remain future decisions.
+Use npm workspaces; React, Vite, and TypeScript for the web app; Fastify for the API; Jest for engine/backend tests; and Zod for boundary validation. PostgreSQL in Docker with DBeaver access is planned; MikroORM/PostgreSQL is selected for persistence; Cognito integration details remain future decisions.
 
 ```text
 apps/web                 Student and instructor interface
 services/api             Modular REST API
 services/worker          Job execution entry point, introduced when needed
 tools/logic-engine    Pure parser, evaluator, and truth-table generator
-tools/schema             Request/response schemas and shared types
+tools/contracts             Request/response schemas and shared types
 packages/db              Schema, migrations, and seed data
 tsconfig.base.json       Current shared TypeScript configuration
 packages/payments        Provider boundary and simulator, introduced with billing
@@ -89,24 +89,42 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
+Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation generation and student redemption/enrollment are implemented, with scoped reads and duplicate/race handling. See [instructor classes](classroom-api.md). See [Cognito development guide](cognito-development.md).
+
+First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
+
 Depends on: truth-table practice.
 
-- Select a maintained authentication approach and implement signup, login, logout, and sessions.
+- Integrate Cognito email/password signup, email confirmation/resend, login, logout, sessions, and password recovery/reset. Avoid account-enumeration responses.
 - Add instructor class creation, invitation codes, student enrollment, and role-specific navigation.
-- Introduce the necessary migrations and synthetic seed accounts. Enforce permissions on the server for each resource.
+- Add Docker PostgreSQL, DBeaver connection documentation, initial migrations, and synthetic application users linked to development Cognito identities. Enforce permissions on the server for each resource.
 - Test unauthorized access, cross-class access, and cross-organization isolation if organizations are introduced here.
 
 Done when: an instructor can create a class, a student can join, and requests cannot access another instructor's resources or instructor-only actions. Demo accounts can reproduce the flow.
 
-Open product/design questions:
+Agreed defaults: anyone can register as an instructor; separate student/instructor roles; one instructor owner per class; invitation-code enrollment; students may join multiple classes across instructors. Institutions, co-instructors, MFA, and SSO are deferred. Include email verification and password recovery now. Use Cognito's default email sender for development/controlled demo and SES before broader public registration.
 
-- Can anyone sign up as an instructor? Accounts have separate student/instructor roles; instructor student-view is preview only.
-- Are organizations necessary now, or should the initial product use class ownership with organizations added later?
+Open implementation/design questions:
+
+- How will Cognito tokens/session cookies be handled, and how will app users and roles be provisioned consistently?
+- Which development user-pool/app-client configuration, region, and environment separation should we use?
 - How do invitation codes expire, get replaced, and communicate invalid or expired states?
-- What account recovery or verification experience is necessary for a public demo?
+- How should future class archival and enrollment removal interact with retained work? The class/enrollment schema is implemented with MikroORM/PostgreSQL.
+- Which SES identity, delivery setup, and production-access steps are needed before public registration?
 - Should employers use isolated seeded accounts, a guest demo session, or self-registration?
 
-### 4. `004-feat-assignments-and-progress` — A complete learning workflow
+### 4. `004-refactor-codebase` — Structure and maintainability
+
+Depends on: the completed classroom-access branch.
+
+- Review feature boundaries, shared frontend state, route composition, and backend route/handler/service/store responsibilities.
+- Reduce duplication in API clients, request handling, role guards, and class-list state where a common abstraction is justified.
+- Make naming and file organization consistent; preserve the API contracts, database mappings, user workflows, and permission boundaries.
+- Improve regression coverage where needed to prove behavior remains unchanged. Keep migration generation unchanged unless a concrete defect requires repair.
+
+Done when: the agreed restructuring is reviewable and existing behavior passes verification. Add no new product features or intended behavior changes. Decide the precise refactor slices after reviewing this branch; assignments remain subsequent work.
+
+### 5. `005-feat-assignments-and-progress` — A complete learning workflow
 
 Depends on: classroom access.
 
@@ -125,7 +143,7 @@ Open product/design questions:
 - Are late submissions rejected, accepted with a label, or controlled by the instructor?
 - Which timezone defines deadlines, and what student-level information should instructors see?
 
-### 5. `005-feat-simulated-billing-and-entitlements` — Reliable event-driven access
+### 6. `006-feat-simulated-billing-and-entitlements` — Reliable event-driven access
 
 Depends on: classroom access and the assignment entitlement rules.
 
@@ -144,7 +162,7 @@ Open product/design questions:
 - What access remains after cancellation, failed payment, or refund, especially for existing student work?
 - How should employers trigger and inspect failure scenarios without confusing the simulator with real commerce?
 
-### 6. `006-feat-durable-jobs-and-history` — Observable background work
+### 7. `007-feat-durable-jobs-and-history` — Observable background work
 
 Depends on: invitations, due dates, and billing state.
 
@@ -163,7 +181,7 @@ Open product/design questions:
 - Which reconciliation mismatches can be repaired automatically, and which should be flagged?
 - Is an in-app outbox enough for this release, or is real email worth its added setup?
 
-### 7. `007-chore-public-demo-and-portfolio` — An employer-ready release
+### 8. `008-chore-public-demo-and-portfolio` — An employer-ready release
 
 Depends on: the complete journey and the selected deployment model.
 
@@ -200,3 +218,7 @@ If scope grows, release the polished logic-practice experience first and keep cl
 - Public artifacts contain no secrets, real payment credentials, or real student/customer data.
 
 Implementation dates and hosting commitments remain open. Sequence work by completed, reviewable behavior rather than committing to a calendar before the early product decisions are settled.
+
+## Next branch scope
+
+After finishing `003-feat-classroom-access` (including student invitation redemption/enrollment and final verification), the agreed next branch is `004-refactor-codebase`. Focus solely on structure, consistency, and maintainability, with no new features or intended behavior changes. Include this direction in the classroom-access branch's local PR draft.

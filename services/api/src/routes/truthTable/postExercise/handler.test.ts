@@ -1,6 +1,6 @@
 import { postExerciseHandler } from './handler';
 import { invokeHandler } from '../../../../test/invoke-handler';
-import { truthTableExerciseResponseSchema, truthTableErrorResponseSchema } from '@logiclab/schema';
+import { truthTableExerciseResponseSchema, truthTableErrorResponseSchema } from '@logiclab/contracts';
 
 const invoke = (body: unknown) => invokeHandler(postExerciseHandler, body);
 const columnId = 'expr:v1:(P ∧ Q)';

@@ -1,4 +1,4 @@
-import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/schema';
+import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
 
 import { cellKey } from '../types';
 import type { Answers } from '../types';

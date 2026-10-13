@@ -1,5 +1,5 @@
 import { buildApp } from '../src/app';
-import { healthResponseSchema } from '@logiclab/schema';
+import { healthResponseSchema } from '@logiclab/contracts';
 
 const app = buildApp();
 afterAll(async () => { await app.close(); });

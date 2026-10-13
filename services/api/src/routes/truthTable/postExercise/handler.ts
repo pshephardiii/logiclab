@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import { truthTableRequestSchema, truthTableExerciseResponseSchema } from '@logiclab/schema';
+import { truthTableRequestSchema, truthTableExerciseResponseSchema } from '@logiclab/contracts';
 import { badRequest } from '../errors';
 
 export async function postExerciseHandler(request: FastifyRequest, reply: FastifyReply) {

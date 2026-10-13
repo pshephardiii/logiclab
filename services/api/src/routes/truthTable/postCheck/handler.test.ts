@@ -1,6 +1,6 @@
 import { postCheckHandler } from './handler';
 import { invokeHandler } from '../../../../test/invoke-handler';
-import { truthTableCheckResponseSchema, truthTableErrorResponseSchema } from '@logiclab/schema';
+import { truthTableCheckResponseSchema, truthTableErrorResponseSchema } from '@logiclab/contracts';
 
 const invoke = (body: unknown) => invokeHandler(postCheckHandler, body);
 const rowId = 'row:v1:P=T;Q=T';

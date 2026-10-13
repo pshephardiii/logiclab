@@ -1,5 +1,5 @@
 {
-  "name": "@logiclab/schema",
+  "name": "@logiclab/contracts",
   "version": "0.1.0",
   "private": true,
   "main": "dist/index.js",

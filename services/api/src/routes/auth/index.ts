@@ -1,0 +1,54 @@
+import type { FastifyInstance } from 'fastify';
+import cookie from '@fastify/cookie';
+import rateLimit from '@fastify/rate-limit';
+import { authErrorResponseSchema } from '@logiclab/contracts';
+import { AuthError } from '../../auth/service';
+import { assertAuthOrigin, clearSessionCookie } from '../../auth/cookies';
+import type { AuthContext } from './context';
+import { errorName } from './helpers';
+import { postSignupRoute } from './postSignup/route';
+import { postConfirmRoute } from './postConfirm/route';
+import { postResendRoute } from './postResend/route';
+import { postLoginRoute } from './postLogin/route';
+import { getSessionRoute } from './getSession/route';
+import { postLogoutRoute } from './postLogout/route';
+import { postForgotPasswordRoute } from './postForgotPassword/route';
+import { postResetPasswordRoute } from './postResetPassword/route';
+
+export async function authRoutes(app: FastifyInstance, context: AuthContext) {
+  await app.register(cookie);
+  await app.register(rateLimit, { global: true, max: 60, timeWindow: '1 minute',
+    keyGenerator: request => request.ip,
+  });
+  app.addHook('onRequest', async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    if (request.method !== 'GET') assertAuthOrigin(request, context.config);
+  });
+  app.setErrorHandler((error, request, reply) => {
+    let status = 503; let code = 'AUTH_UNAVAILABLE'; let text = 'Authentication is temporarily unavailable. Please try again.';
+    const name = errorName(error);
+    const authCode = error instanceof AuthError ? error.code : '';
+    if (error instanceof Error && error.message === 'AUTH_ORIGIN_REJECTED') {
+      status = 403; code = 'ORIGIN_REJECTED'; text = 'This request origin is not allowed.';
+    } else if (authCode === 'INVALID_REQUEST') {
+      status = 400; code = 'INVALID_REQUEST'; text = 'Check the supplied fields and try again.';
+    } else if (request.routeOptions.url === '/api/auth/reset-password' && ['UserNotFoundException', 'NotAuthorizedException', 'CodeMismatchException', 'ExpiredCodeException', 'InvalidPasswordException', 'InvalidParameterException', 'PasswordHistoryPolicyViolationException'].includes(name)) {
+      status = 400; code = 'CONFIRMATION_FAILED'; text = 'Check your code and password, or request a new code.';
+    } else if (authCode.startsWith('SESSION_') || ['EMAIL_NOT_VERIFIED', 'ACCOUNT_NOT_PROVISIONED'].includes(authCode) || name === 'NotAuthorizedException' || name === 'UserNotFoundException' || name === 'UserNotConfirmedException') {
+      status = 401; code = 'AUTH_REQUIRED'; text = 'Sign in with a confirmed account or check your credentials.';
+    } else if (['CodeMismatchException', 'ExpiredCodeException', 'InvalidPasswordException', 'InvalidParameterException', 'PasswordHistoryPolicyViolationException'].includes(name)) {
+      status = 400; code = 'CONFIRMATION_FAILED'; text = 'Check your code and password, or request a new code.';
+    } else if (name === 'TooManyRequestsException' || name === 'LimitExceededException' || (error instanceof Error && 'statusCode' in error && error.statusCode === 429)) {
+      status = 429; code = 'RATE_LIMITED'; text = 'Too many requests. Please try again later.';
+    } else if (error instanceof Error && 'statusCode' in error && typeof error.statusCode === 'number' && [400, 413, 415].includes(error.statusCode)) {
+      status = error.statusCode; code = 'INVALID_REQUEST'; text = 'Provide a valid, bounded JSON request.';
+    }
+    if (status === 401 && request.routeOptions.url === '/api/auth/session') clearSessionCookie(reply, context.config);
+    // Do not log SDK error messages/stacks, request bodies, email addresses, or tokens.
+    if (status === 503) request.log.warn({ code: authCode === 'SIGNUP_RECONCILIATION_REQUIRED' ? authCode : code }, 'Authentication operation unavailable');
+    return reply.code(status).send(authErrorResponseSchema.parse({ error: { code, message: text } }));
+  });
+  for (const register of [postSignupRoute, postConfirmRoute, postResendRoute, postLoginRoute, getSessionRoute, postLogoutRoute, postForgotPasswordRoute, postResetPasswordRoute]) {
+    app.register(register, context);
+  }
+}

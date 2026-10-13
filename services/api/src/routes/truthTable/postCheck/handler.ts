@@ -1,8 +1,8 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import { truthTableCheckRequestSchema, truthTableCheckResponseSchema } from '@logiclab/schema';
+import { truthTableCheckRequestSchema, truthTableCheckResponseSchema } from '@logiclab/contracts';
 import { badRequest } from '../errors';
-import type { TruthTableCheckResponse } from '@logiclab/schema';
+import type { TruthTableCheckResponse } from '@logiclab/contracts';
 
 export async function postCheckHandler(request: FastifyRequest, reply: FastifyReply) {
   const parsed = truthTableCheckRequestSchema.safeParse(request.body);

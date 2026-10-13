@@ -1,5 +1,5 @@
 import { buildApp } from '../../../app';
-import { truthTableErrorResponseSchema , truthTableExerciseResponseSchema, truthTableSolutionResponseSchema, truthTableCheckResponseSchema } from '@logiclab/schema';
+import { truthTableErrorResponseSchema , truthTableExerciseResponseSchema, truthTableSolutionResponseSchema, truthTableCheckResponseSchema } from '@logiclab/contracts';
 
 const app = buildApp();
 afterAll(async () => { await app.close(); });

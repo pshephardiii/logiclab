@@ -1,6 +1,6 @@
 import { postSolutionHandler } from './handler';
 import { invokeHandler } from '../../../../test/invoke-handler';
-import { truthTableSolutionResponseSchema, truthTableErrorResponseSchema } from '@logiclab/schema';
+import { truthTableSolutionResponseSchema, truthTableErrorResponseSchema } from '@logiclab/contracts';
 
 const invoke = (body: unknown) => invokeHandler(postSolutionHandler, body);
 const columnId = 'expr:v1:(P ∧ Q)';
