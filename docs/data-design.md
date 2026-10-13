@@ -27,7 +27,9 @@ Cognito manages email/password credentials, email confirmation, and password rec
 
 `classrooms` now persists a UUID, trimmed name, instructor owner, and creation timestamp. Names may repeat, owner-scoped queries enforce access, and owner deletion is restricted while classes exist. See [instructor classes](classroom-api.md).
 
-Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred. Invitation generation now uses one reusable code per class, a seven-day expiry, hash-only storage, and owner-controlled replacement; student redemption/enrollment follows.
+Initially, a class has one instructor owner and many student enrollments. Single-instructor ownership is an initial constraint, not a permanent requirement for future institution management. A student can enroll in multiple classes across instructors, using invitation codes. Enforce ownership and enrollment on the server. Institutional membership and co-instructor records are deferred. Invitation generation now uses one reusable code per class, a seven-day expiry, hash-only storage, and owner-controlled replacement; student redemption/enrollment is implemented with an enrollment unique constraint and a classroom row lock that serializes redemption against invitation replacement.
+
+`enrollments` links a classroom and student, with UUID/timestamp, a unique class/student pair, and foreign keys that cascade on class/user deletion. The API enforces student role and scopes reads to that student. Reusable invitation redemption checks hash/expiry under a class row lock, and conflict-ignore insertion makes concurrent duplicate joins safe. No membership removal workflow is implemented yet.
 
 Token/session handling and provisioning are specified in the Cognito development guide; HTTP integration is implemented; account screens and instructor class creation/listing/detail are implemented. A browser-provided role or user ID is not sufficient authorization for an existing account.
 
@@ -108,7 +110,7 @@ Local PostgreSQL will run in Docker, with documented DBeaver connection settings
 
 ## Remaining decisions
 
-- Enrollment constraints, invitation redemption concurrency, and the concrete enrollment schema. Initial assignment targeting is class-wide; individual targeting is deferred.
+- Enrollment removal/withdrawal and its effects on retained student work. Initial assignment targeting is class-wide; individual targeting is deferred.
 - Library organization, search, sharing, copying, and archive/deletion behavior.
 - Published problem-set snapshots or versions, and allowed assignment-policy changes.
 - Stable expression/row/cell identifiers, grammar versions, and complexity limits.

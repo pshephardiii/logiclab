@@ -11,3 +11,5 @@ export async function createDatabase(connectionString: string, options: { snapsh
 }
 
 export { Classroom } from './entities/Classroom.js';
+export { Enrollment } from './entities/Enrollment.js';
+export { LockMode } from '@mikro-orm/core';

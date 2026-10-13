@@ -1,7 +1,7 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
-import { createDatabase, User, UserRole, AuthSession, Classroom } from '../src/index.js';
+import { createDatabase, User, UserRole, AuthSession, Classroom, Enrollment } from '../src/index.js';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url) throw new Error('Set TEST_DATABASE_URL to a disposable integration-test database.');
@@ -120,5 +120,26 @@ test('invitation rotation replaces the hash/expiry and rejects duplicate hashes'
     const saved = await em.findOneOrFail(Classroom, first.id);
     assert.equal(saved.invitationHash, 'c'.repeat(64)); assert.equal(saved.invitationExpiresAt?.toISOString(), expiry.toISOString());
     await assert.rejects(em.nativeUpdate(Classroom, second.id, { invitationHash: 'c'.repeat(64) }), /duplicate|unique/i);
+  } finally { await em.rollback(); }
+});
+
+test('enrollment supports multiple classes, isolates students, and preserves membership after invitation replacement', async () => {
+  const em = orm.em.fork();await em.begin();
+  try {
+    const owner = em.create(User, { cognitoUserPoolId: 'enroll-test', cognitoSubject: 'owner', role: UserRole.Instructor });
+    const student = em.create(User, { cognitoUserPoolId: 'enroll-test', cognitoSubject: 'student', role: UserRole.Student });
+    const other = em.create(User, { cognitoUserPoolId: 'enroll-test', cognitoSubject: 'other', role: UserRole.Student });
+    const anotherOwner = em.create(User, { cognitoUserPoolId: 'enroll-test', cognitoSubject: 'another-owner', role: UserRole.Instructor });
+    const first = em.create(Classroom, { name: 'First', owner });const second = em.create(Classroom, { name: 'Second', owner: anotherOwner });
+    em.persist([owner, anotherOwner, student, other, first, second]);await em.flush();
+    await em.upsert(Enrollment, { classroom: first, student }, { onConflictFields: ['classroom', 'student'], onConflictAction: 'ignore' });
+    await em.upsert(Enrollment, { classroom: first, student }, { onConflictFields: ['classroom', 'student'], onConflictAction: 'ignore' });
+    await em.upsert(Enrollment, { classroom: second, student }, { onConflictFields: ['classroom', 'student'], onConflictAction: 'ignore' });
+    assert.equal(await em.count(Enrollment, { student: student.id }), 2);
+    assert.equal(await em.count(Enrollment, { student: other.id }), 0);
+    await em.nativeUpdate(Classroom, first.id, { invitationHash: 'e'.repeat(64), invitationExpiresAt: new Date() });
+    assert.equal(await em.count(Enrollment, { student: student.id, classroom: first.id }), 1);
+    assert.equal(await em.findOne(Enrollment, { student: other.id, classroom: first.id }), null);
+    await em.nativeDelete(User, student.id);em.clear();assert.equal(await em.count(Enrollment, { student: student.id }), 0);
   } finally { await em.rollback(); }
 });

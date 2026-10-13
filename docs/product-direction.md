@@ -128,7 +128,7 @@ Open billing questions:
 
 ## Questions still to resolve
 
-- Invitation generation uses one reusable code per class with a seven-day expiry; instructors replace it to invalidate the old code. Student redemption/enrollment and its error behavior are the next slice.
+- Invitation generation uses one reusable code per class with a seven-day expiry; instructors replace it to invalidate the old code. Student redemption/enrollment is implemented: reusable codes, safe duplicate joins, and one generic error for unknown/expired/replaced codes. Existing enrollment survives code replacement.
 - How should incomplete work affect final submission and grading? Practice checking already distinguishes unanswered cells from incorrect answers.
 - What are the exact practice/graded defaults, retry rules, grading rules, and deadline behavior?
 - Does viewing a solution affect an attempt or grade, and can solutions become available after a deadline?

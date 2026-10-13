@@ -4,6 +4,9 @@ export const classroom = { id: 'fcba1f3e-7c83-4d9e-a319-8e6393ae21f1', name: 'In
 export function classroomFixture() {
   const auth = authFixture();
   const classrooms = {
+    join: jest.fn(async (): Promise<typeof classroom | null> => classroom),
+    listEnrolled: jest.fn(async () => [classroom]),
+    findEnrolled: jest.fn(async (): Promise<typeof classroom | null> => classroom),
     replaceInvitation: jest.fn(async () => true),
     create: jest.fn(async () => classroom), list: jest.fn(async () => [classroom]), findOwned: jest.fn(async (): Promise<typeof classroom | null> => classroom),
   };

@@ -15,3 +15,5 @@ export const invitationResponseSchema = z.strictObject({ invitation: z.strictObj
   code: z.string().regex(/^[A-Za-z0-9_-]{32}$/), expiresAt: z.iso.datetime(),
 }) });
 export type ClassroomInvitation = z.infer<typeof invitationResponseSchema>['invitation'];
+
+export const joinClassroomRequestSchema = z.strictObject({ code: z.string().trim().regex(/^[A-Za-z0-9_-]{32}$/) });

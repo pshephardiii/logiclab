@@ -6,5 +6,6 @@ export function Navigation() {
     <NavLink to="/" end>Practice</NavLink>
     <NavLink to="/account">{user ? `Account · ${user.role}` : 'Sign in / Create account'}</NavLink>
     {user?.role === 'instructor' && <NavLink to="/classes">Classes</NavLink>}
+    {user?.role === 'student' && <NavLink to="/enrollments">My classes</NavLink>}
   </nav>;
 }

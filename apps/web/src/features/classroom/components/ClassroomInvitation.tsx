@@ -19,7 +19,7 @@ export function ClassroomInvitation({ classId, className }: { classId: string; c
     } finally { if (!controller.signal.aborted) setBusy(false); }
   }
   return <section aria-label={`Invitation for ${className}`}>
-    <p className="help">Generating a code replaces any previous code for this class. It expires after seven days. Student enrollment is not available yet.</p>
+    <p className="help">Generating a code replaces any previous code for this class. It expires after seven days. Share it with students so they can join this class.</p>
     <button className="secondary" disabled={busy} onClick={() => void generate()}>{busy ? 'Generating…' : 'Generate new invitation code'}</button>
     {error && <p role="alert" className="error">{error}</p>}
     {invitation && <div role="status">

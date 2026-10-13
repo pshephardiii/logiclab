@@ -89,7 +89,7 @@ Resolved defaults: given variable columns; all distinct compound subexpressions 
 
 ### 3. `003-feat-classroom-access` — Users, classes, and scoped permissions
 
-Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation enrollment follows. See [instructor classes](classroom-api.md). See [Cognito development guide](cognito-development.md).
+Auth foundation slice: development CloudFormation template, Cognito adapter, role-preserving signup provisioning/cleanup, encrypted persistent sessions, and cookie/origin helpers. Auth HTTP routes now include strict validation, origin checks, cookies, rate limiting, and confirmation/recovery operations. Account screens now support signup, confirmation/resend, login, recovery/reset, logout, and session restoration. The developer provisioned Cognito and verified core live flows; resend and token refresh remain to verify. Instructor class creation/listing/detail and its frontend screen are implemented with scoped access checks. Invitation generation and student redemption/enrollment are implemented, with scoped reads and duplicate/race handling. See [instructor classes](classroom-api.md). See [Cognito development guide](cognito-development.md).
 
 First slice: Docker PostgreSQL configuration, the `tools/db` MikroORM workspace, initial users migration, DBeaver instructions, and CI database tests. Docker is configured locally; the migration and three database integration checks passed against a fresh disposable PostgreSQL database.
 
@@ -109,7 +109,7 @@ Open implementation/design questions:
 - How will Cognito tokens/session cookies be handled, and how will app users and roles be provisioned consistently?
 - Which development user-pool/app-client configuration, region, and environment separation should we use?
 - How do invitation codes expire, get replaced, and communicate invalid or expired states?
-- What concrete class/enrollment schema should follow the initial users migration? MikroORM/PostgreSQL is selected.
+- How should future class archival and enrollment removal interact with retained work? The class/enrollment schema is implemented with MikroORM/PostgreSQL.
 - Which SES identity, delivery setup, and production-access steps are needed before public registration?
 - Should employers use isolated seeded accounts, a guest demo session, or self-registration?
 

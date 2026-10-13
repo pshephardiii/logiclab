@@ -1,3 +1,6 @@
+import { getEnrollmentRoute } from './getEnrollment/route';
+import { getEnrollmentsRoute } from './getEnrollments/route';
+import { postEnrollmentRoute } from './postEnrollment/route';
 import type { FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit from '@fastify/rate-limit';
@@ -30,6 +33,9 @@ export async function classroomRoutes(app: FastifyInstance, context: ClassroomCo
     if (status === 503) request.log.warn({ code }, 'Classroom operation unavailable');
     return reply.code(status).send(authErrorResponseSchema.parse({ error: { code, message } }));
   });
+  app.register(postEnrollmentRoute, context);
+  app.register(getEnrollmentsRoute, context);
+  app.register(getEnrollmentRoute, context);
   app.register(postInvitationRoute, context);
   app.register(postClassroomRoute, context);
   app.register(getClassroomsRoute, context);

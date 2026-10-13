@@ -1,3 +1,5 @@
+import { StudentRoute } from './StudentRoute';
+import { StudentClasses } from '../features/classroom/StudentClasses';
 import { Route, Routes, Link } from 'react-router';
 import { TruthTablePractice } from '../features/truthTable/TruthTablePractice';
 import { AccountPanel } from '../features/auth/AccountPanel';
@@ -11,6 +13,9 @@ export function AppRoutes() {
     <Route path="/account" element={<AccountPanel account={account} />} />
     <Route element={<InstructorRoute />}>
       <Route path="/classes" element={<Classrooms key={account.user?.id} />} />
+    </Route>
+    <Route element={<StudentRoute />}>
+      <Route path="/enrollments" element={<StudentClasses key={account.user?.id} />} />
     </Route>
     <Route path="*" element={<main><h1>Page not found</h1><Link to="/">Return to practice</Link></main>} />
   </Routes>;
