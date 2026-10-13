@@ -4,6 +4,8 @@ An interactive formal-logic learning project, built as a public full-stack portf
 
 The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/product-direction.md).
 
+[Codebase conventions](docs/codebase-conventions.md) records the agreed tools package boundaries, contract/entity style, module organization, and verification practices.
+
 The storage model and reusable problem library are outlined in [Data Design](docs/data-design.md). Product Direction describes behavior, Data Design describes persistence, and the Implementation Plan describes delivery order.
 
 See the [truth-table walkthrough, screenshots, and verification evidence](docs/truth-table-verification.md) for the completed first feature, and the [classroom-access walkthrough and final verification](docs/classroom-access-verification.md) for accounts, classes, and enrollment.
