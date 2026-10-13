@@ -1,5 +1,5 @@
 import { evaluateFormula } from '../../evaluator';
-import type { Formula } from '../../parser';
+import type { Formula } from '../../parser/types';
 import type { TruthTableRow } from '../types';
 import { variableColumnId } from './columns';
 

@@ -1,4 +1,4 @@
-import type { Formula } from '../../parser';
+import type { Formula } from '../../parser/types';
 
 /** Collect distinct expressions in child-before-parent order. */
 export function collectTableExpressions(formula: Formula) {

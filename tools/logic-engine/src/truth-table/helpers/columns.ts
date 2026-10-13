@@ -1,4 +1,4 @@
-import type { Formula } from '../../parser';
+import type { Formula } from '../../parser/types';
 import type { TruthTableColumn } from '../types';
 import { canonicalExpression } from './expressions';
 

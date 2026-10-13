@@ -1,4 +1,4 @@
-import type { Formula } from './parser';
+import type { Formula } from './parser/types';
 
 export type VariableAssignment = Readonly<Record<string, boolean>>;
 

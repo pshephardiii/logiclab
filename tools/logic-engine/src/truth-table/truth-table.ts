@@ -1,4 +1,4 @@
-import { parseFormula } from '../parser';
+import { parseFormula } from '../parser/index';
 import type { TruthTable } from './types';
 import { collectTableExpressions, expressionColumnId, createColumns, createRows } from './helpers';
 
