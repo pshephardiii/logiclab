@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { useAccount } from './useAccount';
+import { useAccount } from './hooks/useAccount';
 const AccountContext = createContext<ReturnType<typeof useAccount> | null>(null);
 export function AccountProvider({ children }: { children: ReactNode }) {
   const account = useAccount();

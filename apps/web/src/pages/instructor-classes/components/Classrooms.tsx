@@ -1,7 +1,7 @@
 import { ClassroomPanel } from '../../../features/classroom/components/ClassroomPanel';
 import { ClassroomInvitation } from './ClassroomInvitation';
 import { ClassroomForm } from './ClassroomForm';
-import { useClassrooms } from '../useClassrooms';
+import { useClassrooms } from '../hooks/useClassrooms';
 
 export function Classrooms() {
   const state = useClassrooms();

@@ -1,6 +1,6 @@
 import { ClassroomPanel } from '../../../features/classroom/components/ClassroomPanel';
 import { JoinClassForm } from './JoinClassForm';
-import { useStudentClasses } from '../useStudentClasses';
+import { useStudentClasses } from '../hooks/useStudentClasses';
 
 export function StudentClasses() {
   const state = useStudentClasses();

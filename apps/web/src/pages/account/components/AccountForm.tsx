@@ -1,4 +1,4 @@
-import type { AccountView } from '../../../features/auth/useAccount';
+import type { AccountView } from '../../../features/auth/hooks/useAccount';
 
 type Props = {
   view: AccountView; email: string; busy: boolean;

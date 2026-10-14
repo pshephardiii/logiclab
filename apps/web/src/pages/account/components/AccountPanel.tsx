@@ -1,5 +1,5 @@
 import { AccountForm } from './AccountForm';
-import type { useAccount, AccountView } from '../../../features/auth/useAccount';
+import type { useAccount, AccountView } from '../../../features/auth/hooks/useAccount';
 
 type Props = { account: ReturnType<typeof useAccount> };
 const headings: Record<AccountView, string> = {

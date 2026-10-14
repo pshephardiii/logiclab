@@ -1,9 +1,9 @@
-import { submittedAnswers } from './helpers/submitted-answers';
+import { submittedAnswers } from '../helpers/submitted-answers';
 import { useEffect, useRef, useState } from 'react';
 import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
-import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../../api/truth-tables/api';
-import { cellKey } from './types';
-import type { Answers } from './types';
+import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../../../api/truth-tables/api';
+import { cellKey } from '../types';
+import type { Answers } from '../types';
 
 export function useTruthTablePractice() {
   const [formula, setFormula] = useState('(P ∧ Q) → R');

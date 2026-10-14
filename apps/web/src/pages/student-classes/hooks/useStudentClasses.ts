@@ -1,10 +1,10 @@
-import { appendClassroomPage } from '../../features/classroom/helpers/classroom-pages';
+import { appendClassroomPage } from '../../../features/classroom/helpers/classroom-pages';
 import { useEffect, useRef, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
-import { AccountApiError } from '../../api/errors';
-import { createClassroom, listClassrooms } from '../../api/classrooms/api';
+import { AccountApiError } from '../../../api/errors';
+import { joinClassroom, listEnrollments } from '../../../api/enrollments/api';
 
-export function useClassrooms() {
+export function useStudentClasses() {
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [busy, setBusy] = useState(true);
@@ -12,23 +12,24 @@ export function useClassrooms() {
   const [notice, setNotice] = useState<string | null>(null);
   const pending = useRef<AbortController | null>(null);
 
-  async function createClass(name: string, signal: AbortSignal) {
-    const classroom = await createClassroom(name, signal);
+  async function joinClass(code: string, signal: AbortSignal) {
+    const classroom = await joinClassroom(code, signal);
     if (signal.aborted) return;
     // Show the committed result without requiring another request.
-    setClassrooms(current => [classroom, ...current]);
-    setNextOffset(current => current === null ? null : current + 1);
-    setNotice(`Created ${classroom.name}.`);
+    setClassrooms(current => [classroom, ...current.filter(row => row.id !== classroom.id)]);
+    // Joining may already exist; reload before requesting further offset pages.
+    setNextOffset(null);
+    setNotice(`You are enrolled in ${classroom.name}. Reload classes to see your complete list.`);
   }
 
   async function loadClasses(append: boolean, signal: AbortSignal) {
-    const result = await listClassrooms(signal, append ? nextOffset ?? 0 : 0);
+    const result = await listEnrollments(signal, append ? nextOffset ?? 0 : 0);
     if (signal.aborted) return;
     setClassrooms(current => append ? appendClassroomPage(current, result.classrooms) : result.classrooms);
     setNextOffset(result.nextOffset);
   }
 
-  async function run(action: 'list' | 'more' | 'create', name?: string): Promise<boolean> {
+  async function run(action: 'list' | 'more' | 'join', code?: string): Promise<boolean> {
     pending.current?.abort();
     const controller = new AbortController();
     pending.current = controller;
@@ -36,7 +37,7 @@ export function useClassrooms() {
     setError(null);
     setNotice(null);
     try {
-      if (action === 'create') await createClass(name!, controller.signal);
+      if (action === 'join') await joinClass(code!, controller.signal);
       else await loadClasses(action === 'more', controller.signal);
       if (controller.signal.aborted) return false;
       return true;

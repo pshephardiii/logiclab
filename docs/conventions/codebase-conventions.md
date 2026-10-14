@@ -164,7 +164,7 @@ Keep table composition in `TruthTable` and answer-input rendering in its sibling
 
 ## Web: state-hook readability
 
-Keep domain state and request lifecycles visible in each hook. Use named operations for session restoration, account transitions/logout reconciliation, class mutations, and page loading. Extract pure answer serialization and classroom-page merging into focused feature helpers; do not combine unrelated workflows into a generic state hook.
+Keep hooks in a local `hooks/` directory within their owning page or feature. Reserve a root hooks directory for behavior shared across unrelated features if that need arises. Keep domain state and request lifecycles visible in each hook. Use named operations for session restoration, account transitions/logout reconciliation, class mutations, and page loading. Extract pure answer serialization and classroom-page merging into focused feature helpers; do not combine unrelated workflows into a generic state hook.
 
 Abort prior requests before starting replacements and on unmount. Guard success, error, and final loading updates with the operation's abort signal. Preserve formula/answer-edit invalidation, solution/answer retention, signup/recovery transitions, logout reconciliation, and the different instructor-create/student-join pagination rules. Keep hook return interfaces stable during internal refactors.
 

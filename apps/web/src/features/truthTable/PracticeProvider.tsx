@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { useTruthTablePractice } from './useTruthTablePractice';
+import { useTruthTablePractice } from './hooks/useTruthTablePractice';
 const PracticeContext = createContext<ReturnType<typeof useTruthTablePractice> | null>(null);
 export function PracticeProvider({ children }: { children: ReactNode }) {
   const practice = useTruthTablePractice();
