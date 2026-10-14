@@ -1,6 +1,14 @@
 # Codebase conventions
 
-These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/`, `services/api/src`, and the agreed frontend routing/page boundaries; extend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
+These conventions record the structure and readability decisions from `004-refactor-codebase`. They cover shared tools, API modules, frontend ownership, readability, formatting, and regression tests; extend them when new decisions are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
+
+## General: ownership and refactor scope
+
+Group code by responsibility and actual consumers. Keep page-specific UI and hooks with their page, shared domain behavior with its feature, transport with API clients, and external integrations separate from application workflows. Shared modules must not import the page or orchestration code that consumes them. Use explicit props, callbacks, and dependency interfaces to connect those boundaries.
+
+Extract a component/helper when it is reused or isolates a meaningful responsibility. Keep small cohesive modules together; line count alone does not justify another directory, a helper per function, or a generic framework. Prefer named stages and descriptive inputs to nested implementation details. Local helper barrels are useful when they simplify imports; internal files import one another directly to avoid cycles.
+
+Keep structural refactors separate from product changes and broad mechanical formatting where practical. Preserve public contracts, exports, error precedence, authorization, state-reset/cancellation behavior, and persistence guarantees. Update imports, comments, documentation, and relevant behavior tests together. Filename conventions follow the owning area: React components/pages and hooks retain names such as `AccountForm.tsx` and `useAccount.ts`; API domain/operation directories retain the existing camelCase layout.
 
 ## Tools: package responsibilities
 
@@ -76,7 +84,7 @@ Keep expected-answer generation separate from disclosure policy: callers decide 
 
 Use existing behavior tests as the baseline. Add tests for material gaps or changed guarantees, rather than tests that only mirror helper implementation. A refactor should preserve public exports and intended behavior.
 
-- `npm run check` verifies workspace types, engine/API tests, and production builds.
+- `npm run check` verifies workspace types, engine/API Jest tests, frontend Vitest tests, and production builds.
 - `npm run db:test` verifies real PostgreSQL behavior using a separate disposable database.
 - MikroORM `migration:check` verifies entity mappings against the database.
 
@@ -116,13 +124,21 @@ Compose route schemas from `@logiclab/contracts`, with `summary`, `description`,
 
 Use the group's `index.ts` as its registration entry point. Install Zod compilers, plugins, hooks, and error handling within the relevant Fastify scope. Put repeated setup in `routes/setup.ts`; keep endpoint-specific overrides explicit. Install rate-limit defaults before the rate-limit plugin so its registration hook sees the final configuration. Do not apply authenticated-route policies to anonymous practice through an incidental global refactor.
 
+Classroom/enrollment list handlers share response slicing and next-offset calculation through `routes/classroom/pagination.ts`. Keep role authorization and scoped store calls explicit in each handler; fetch `limit + 1` rows so the helper can identify a following page without a count query.
+
+Auth/classroom groups apply `routes/account-http.ts` directly to their existing Fastify scope for Zod compilers, cookies, rate-limit defaults, cache headers, and origin checks. Apply shared policy before registering endpoints, preserving plugin/hook ordering. Group-specific limiter options stay explicit; authorization and error mapping remain in each group. This setup does not authenticate users and is not installed on anonymous practice routes.
+
 ## API: contexts, helpers, and behavior
 
 Use a domain's `context.ts` to describe the dependencies its routes receive. Construct those dependencies in bootstrap and pass them into registration and handler factories. Handlers should use the supplied capabilities rather than initialize SDK clients or database connections.
 
-Keep shared transport concerns in the route group: cookies, origin checks, request parsing, role checks, and response/error helpers. A cohesive `helpers.ts` is sufficient until distinct responsibilities justify splitting it. Use descriptive filenames or a helper directory when extracting; avoid an unrelated general utilities collection. Local indexes can simplify imports, while files within a group import their supporting modules directly to avoid circular dependencies.
+Keep domain-specific transport concerns in the route group: cookies, role checks, and response/error policy. Put transport capabilities used by multiple groups in focused modules under `routes/`. A cohesive `helpers.ts` is sufficient until distinct responsibilities justify splitting it. Use descriptive filenames or a helper directory when extracting; avoid an unrelated general utilities collection. Local indexes can simplify imports, while files within a group import their supporting modules directly to avoid circular dependencies.
 
 Keep reusable application workflows in `application/<domain>/`, provider-specific requests in `integrations/<provider>/`, and database operations in `persistence/<domain>/`. Add an application layer when there is a workflow to coordinate; do not require every simple route/store call to pass through an otherwise empty service. Keep SDK response interpretation in the integration and persistence guarantees in the store.
+
+Place cross-domain request parsing and error inspection in `routes/helpers/`: `parseRequest` validates bodies, queries, and path parameters; `errorName` safely inspects thrown errors. Auth response construction belongs in `routes/auth/responses.ts`, and account-discovery suppression policy in `routes/auth/errors.ts`. Parsing currently preserves `AuthError('INVALID_REQUEST')` for compatibility with both groups' error mapping.
+
+Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers.
 
 ## API: security and lifecycle invariants
 
@@ -148,11 +164,23 @@ Keep page-specific subcomponents beside their page, optionally in a local `compo
 
 Place single-page forms, panels, and orchestration hooks under that page's directory. Account panels/forms live in `pages/account/components/`; class management and invitation controls live in `pages/instructor-classes/`; enrollment forms and orchestration live in `pages/student-classes/`. Shared account/session state remains in features; API clients live under `api/`. Shared components must not import page components: `ClassroomList` accepts an optional `renderActions` callback so the instructor page supplies invitation controls while the student page reuses the list without them.
 
+Keep table composition in `TruthTable` and answer-input rendering in its sibling `AnswerCell`. Pass the cell label, value, feedback status/ID, expected value, and change callback explicitly; the cell does not own practice state or API requests. Preserve blank/T/F behavior and accessible feedback associations when extracting interactive components.
+
+`ClassroomPanel` shares the instructor/student class-page presentation: headings, notices/errors, reload/loading states, and the paginated list. Pages supply their form as children and optional per-class actions. Keep page-specific hooks and mutations outside this presentation component.
+
+For readable JSX, move multi-step submission/click logic into named event handlers. Keep simple value-setting callbacks inline. Format complex element props and nested conditional markup across lines, and name substantial display expressions before rendering. Preserve form validation, async success/failure cleanup, accessible attributes, and visible text during readability changes.
+
+Password fields belong beside the account form so constraints, autocomplete, and help text remain cohesive.
+
 ## Web: API clients
 
 Group domain clients under `src/api/auth/`, `classrooms/`, `enrollments/`, and `truth-tables/`. Each domain's `api.ts` exposes named operations and selects response contracts and domain error messages. `api/http-client.ts` handles base URLs, JSON request encoding, same-origin credentials, response decoding, and abort signals. `api/account-request.ts` applies shared account/class error handling with domain fallback messages and optional overrides. Error types and parsing belong in `api/errors.ts`, so classroom code does not depend on the auth client.
 
 Keep domain differences explicit: authentication maps a missing service to its existing message and session 401 to a signed-out state; practice preserves formula-error positions and unexpected-response messages. Account/class requests tolerate malformed JSON as null, while practice retains JSON parse failures. Do not add retries or change cancellation, authentication, or response semantics during transport extraction.
+
+Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
+
+API clients are plain asynchronous functions, not React hooks. Hooks call them and own UI state. Keep request transport, successful-response validation, domain error mapping, and UI transitions separately understandable. Infer validated response types from schemas rather than casting untrusted JSON.
 
 ## Web: style ownership
 
@@ -160,21 +188,15 @@ Keep resets, typography, and base form controls in `styles/global.css`, and reus
 
 Keep account-specific form/link styling beside the account page and truth-table styling beside the truth-table feature, imported by their composition components. Put responsive rules beside the selectors they modify. These remain ordinary global CSS stylesheets; use descriptive selectors and account for cascade order. Split by actual ownership rather than creating empty stylesheets for every page.
 
-Keep table composition in `TruthTable` and answer-input rendering in its sibling `AnswerCell`. Pass the cell label, value, feedback status/ID, expected value, and change callback explicitly; the cell does not own practice state or API requests. Preserve blank/T/F behavior and accessible feedback associations when extracting interactive components.
-
 ## Web: state-hook readability
 
 Keep hooks in a local `hooks/` directory within their owning page or feature. Reserve a root hooks directory for behavior shared across unrelated features if that need arises. Keep domain state and request lifecycles visible in each hook. Use named operations for session restoration, account transitions/logout reconciliation, class mutations, and page loading. Extract pure answer serialization and classroom-page merging into focused feature helpers; do not combine unrelated workflows into a generic state hook.
 
 Abort prior requests before starting replacements and on unmount. Guard success, error, and final loading updates with the operation's abort signal. Preserve formula/answer-edit invalidation, solution/answer retention, signup/recovery transitions, logout reconciliation, and the different instructor-create/student-join pagination rules. Keep hook return interfaces stable during internal refactors.
 
-`ClassroomPanel` shares the instructor/student class-page presentation: headings, notices/errors, reload/loading states, and the paginated list. Pages supply their form as children and optional per-class actions. Keep page-specific hooks and mutations outside this presentation component.
-
-Classroom/enrollment list handlers share response slicing and next-offset calculation through `routes/classroom/pagination.ts`. Keep role authorization and scoped store calls explicit in each handler; fetch `limit + 1` rows so the helper can identify a following page without a count query.
-
-Auth/classroom groups apply `routes/account-http.ts` directly to their existing Fastify scope for Zod compilers, cookies, rate-limit defaults, cache headers, and origin checks. Apply shared policy before registering endpoints, preserving plugin/hook ordering. Group-specific limiter options stay explicit; authorization and error mapping remain in each group. This setup does not authenticate users and is not installed on anonymous practice routes.
-
 Use `src/hooks/useAbortableRequest.ts` for the request lifecycle shared across unrelated workflows: starting a replacement aborts the previous request, explicit cancellation supports edits, and unmount aborts pending work. The returned callbacks are stable. Each consumer still owns loading/error/success state and explicit `signal.aborted` guards; the helper does not run domain operations or prescribe their state transitions.
+
+Use `void` when an event/effect intentionally ignores an asynchronous operation's result, provided rejection handling remains explicit in the operation or caller. `void` neither catches errors nor cancels work. Preserve returned success flags where forms use them to clear input only after success, and preserve password cleanup after submission settles.
 
 ## Explanatory comments
 
@@ -182,24 +204,20 @@ Add brief documentation above exported hooks and substantial components when the
 
 Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.
 
-For readable JSX, move multi-step submission/click logic into named event handlers. Keep simple value-setting callbacks inline. Format complex element props and nested conditional markup across lines, and name substantial display expressions before rendering. Preserve form validation, async success/failure cleanup, accessible attributes, and visible text during readability changes.
-
-Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
-
-Place cross-domain request parsing and error inspection in `routes/helpers/`: `parseRequest` validates bodies, queries, and path parameters; `errorName` safely inspects thrown errors. Auth response construction belongs in `routes/auth/responses.ts`, and account-discovery suppression policy in `routes/auth/errors.ts`. Parsing currently preserves `AuthError('INVALID_REQUEST')` for compatibility with both groups' error mapping.
-
 ## Repository formatting
 
 Use the pinned root Prettier dependency and `.prettierrc.json` for consistent formatting: two-space indentation, single quotes in JavaScript/TypeScript, semicolons, trailing commas, LF endings, and a 100-column target. Markdown prose wrapping is preserved. Run `npm run format` to apply formatting and `npm run format:check` to verify it; CI runs the latter before functional checks.
 
 The committed VS Code settings enable format-on-save with the recommended Prettier extension. Other editors should use the same repository configuration and installed version. Generated output, dependencies, local secrets/drafts, the lockfile, and immutable database migration history are excluded by `.prettierignore`. Review formatter changes separately from behavior changes. Formatting complements named handlers and focused helpers; it does not replace clear structure.
 
-Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers. Password fields belong beside the account form so constraints, autocomplete, and help text remain cohesive. Use braces for multiline conditional branches; Prettier does not add them automatically.
-
 Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between top-level functions, classes, and type/interface declarations, and between distinct stages within substantial functions. Keep related imports and small related declarations together. Prettier preserves these boundaries but does not create them automatically.
+
+Use braces for multiline conditional branches; Prettier does not add them automatically.
 
 ## Committed regression coverage
 
 Frontend behavior tests use Vitest with jsdom and React Testing Library, colocated with the code they exercise. Shared DOM cleanup lives in `apps/web/test/setup.ts`. `npm run check` includes frontend tests; `npm run test:watch -w @logiclab/web` runs them interactively. These tests cover DOM behavior and async lifecycle guarantees, not real-browser rendering or live Cognito.
 
 `npm run db:test` runs the DB package's migration/entity tests followed by the API's real PostgreSQL enrollment suite. API database tests live in `services/api/test/integration/`, run with Node's test runner, and are excluded from Jest. They require a disposable database ending in `_test`, use synthetic identity/session data, and clean up their records. The enrollment race test observes a PostgreSQL lock wait before committing replacement instead of assuming a fixed delay proves serialization.
+
+Test observable guarantees rather than file boundaries: role guards, request replacement/unmount cleanup (including StrictMode), late-response rejection, HTTP versus schema error handling, form input retention, and accessible feedback. Prefer deferred promises to arbitrary delays in asynchronous tests. Add pagination tests for empty, partially full, exactly full final, and following pages. Keep existing handler/service tests when they already exercise extracted helpers; remove tests only when their behavior is obsolete or duplicated without useful coverage.
