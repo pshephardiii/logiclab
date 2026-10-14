@@ -5,5 +5,9 @@ import { useAccountContext } from '../../features/auth/AccountProvider';
 
 export function AccountPage() {
   const account = useAccountContext();
-  return <Page className="account-page"><AccountPanel account={account} /></Page>;
+  return (
+    <Page className="account-page">
+      <AccountPanel account={account} />
+    </Page>
+  );
 }

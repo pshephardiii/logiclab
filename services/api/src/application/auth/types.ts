@@ -13,7 +13,12 @@ export interface IdentityProvider {
   forgotPassword(email: string): Promise<void>;
   resetPassword(email: string, code: string, password: string): Promise<void>;
 }
-export type StoredSession = { user: AppUser; encryptedTokens: string; accessExpiresAt: Date; expiresAt: Date };
+export type StoredSession = {
+  user: AppUser;
+  encryptedTokens: string;
+  accessExpiresAt: Date;
+  expiresAt: Date;
+};
 export interface AuthStore {
   createUser(subject: string, role: Role, email: string): Promise<AppUser>;
   deleteSessionsForEmail(email: string): Promise<void>;

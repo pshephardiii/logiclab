@@ -25,7 +25,10 @@ export const createClassroomRequestSchema = z.strictObject({
 export type CreateClassroomRequest = z.infer<typeof createClassroomRequestSchema>;
 
 export const joinClassroomRequestSchema = z.strictObject({
-  code: z.string().trim().regex(/^[A-Za-z0-9_-]{32}$/),
+  code: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{32}$/),
 });
 export type JoinClassroomRequest = z.infer<typeof joinClassroomRequestSchema>;
 

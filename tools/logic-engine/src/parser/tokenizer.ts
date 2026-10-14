@@ -29,7 +29,8 @@ export function tokenize(source: string): Token[] {
     const kind = /^[A-Z]$/.test(text) ? 'variable' : symbols[text];
     if (!kind) {
       throw new FormulaParseError(
-        'INVALID_CHARACTER', position,
+        'INVALID_CHARACTER',
+        position,
         `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!, ∧/&, ∨/|, →/->, or parentheses`,
       );
     }

@@ -1,12 +1,10 @@
 import { z } from 'zod';
 
 // Reusable field and data shapes.
-const emailSchema = z.string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email().max(254));
+const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254));
 
-const newPasswordSchema = z.string()
+const newPasswordSchema = z
+  .string()
   .min(12)
   .max(128)
   .regex(/[a-z]/)

@@ -21,7 +21,7 @@ export function JoinClassForm({ busy, onJoin }: Props) {
         <input
           id="join-code"
           value={code}
-          onChange={event => setCode(event.target.value)}
+          onChange={(event) => setCode(event.target.value)}
           required
           maxLength={128}
           disabled={busy}
@@ -29,7 +29,9 @@ export function JoinClassForm({ busy, onJoin }: Props) {
           spellCheck={false}
           aria-describedby="join-help"
         />
-        <button type="submit" disabled={busy || !code.trim()}>Join class</button>
+        <button type="submit" disabled={busy || !code.trim()}>
+          Join class
+        </button>
       </div>
       <p id="join-help" className="help">
         Paste the current code from your instructor. You can join more than one class.

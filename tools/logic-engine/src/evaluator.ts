@@ -9,9 +9,11 @@ export class FormulaEvaluationError extends Error {
     public readonly code: 'MISSING_VARIABLE' | 'INVALID_VARIABLE_VALUE',
     public readonly variable: string,
   ) {
-    super(code === 'MISSING_VARIABLE'
-      ? `No truth value supplied for ${variable}.`
-      : `Truth value for ${variable} must be a boolean.`);
+    super(
+      code === 'MISSING_VARIABLE'
+        ? `No truth value supplied for ${variable}.`
+        : `Truth value for ${variable} must be a boolean.`,
+    );
   }
 }
 

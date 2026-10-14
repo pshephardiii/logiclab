@@ -8,7 +8,10 @@ export enum UserRole {
 }
 
 @Entity({ tableName: 'users' })
-@Unique({ name: 'users_cognito_identity_unique', properties: ['cognitoUserPoolId', 'cognitoSubject'] })
+@Unique({
+  name: 'users_cognito_identity_unique',
+  properties: ['cognitoUserPoolId', 'cognitoSubject'],
+})
 @Unique({ name: 'users_pool_email_unique', properties: ['cognitoUserPoolId', 'email'] })
 export class User {
   [OptionalProps]?: 'id' | 'createdAt';

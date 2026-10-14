@@ -21,16 +21,18 @@ export function useStudentClasses() {
     const classroom = await joinClassroom(code, signal);
     if (signal.aborted) return;
     // Show the committed result without requiring another request.
-    setClassrooms(current => [classroom, ...current.filter(row => row.id !== classroom.id)]);
+    setClassrooms((current) => [classroom, ...current.filter((row) => row.id !== classroom.id)]);
     // Joining may already exist; reload before requesting further offset pages.
     setNextOffset(null);
     setNotice(`You are enrolled in ${classroom.name}. Reload classes to see your complete list.`);
   }
 
   async function loadClasses(append: boolean, signal: AbortSignal) {
-    const result = await listEnrollments(signal, append ? nextOffset ?? 0 : 0);
+    const result = await listEnrollments(signal, append ? (nextOffset ?? 0) : 0);
     if (signal.aborted) return;
-    setClassrooms(current => append ? appendClassroomPage(current, result.classrooms) : result.classrooms);
+    setClassrooms((current) =>
+      append ? appendClassroomPage(current, result.classrooms) : result.classrooms,
+    );
     setNextOffset(result.nextOffset);
   }
 
@@ -45,7 +47,12 @@ export function useStudentClasses() {
       if (signal.aborted) return false;
       return true;
     } catch (caught) {
-      if (!signal.aborted) setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
+      if (!signal.aborted)
+        setError(
+          caught instanceof AccountApiError
+            ? caught.message
+            : 'Could not complete the request. Please try again.',
+        );
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);

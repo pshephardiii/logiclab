@@ -1,4 +1,21 @@
-.account-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
-.account-form input, .account-form select { display: block; width: 100%; margin-bottom: 1rem; }
-.account-form label { margin-top: 1rem; }
-.account-links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+.account-form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.account-form input,
+.account-form select {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.account-form label {
+  margin-top: 1rem;
+}
+.account-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}

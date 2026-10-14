@@ -23,10 +23,13 @@
     "db:logs": "docker compose logs -f postgres",
     "db:generate": "npm run generate -w @logiclab/db",
     "db:migrate": "npm run migrate -w @logiclab/db",
-    "db:test": "npm run test:integration -w @logiclab/db"
+    "db:test": "npm run test:integration -w @logiclab/db",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "prettier": "3.9.10",
     "typescript": "^5.9.3"
   }
 }

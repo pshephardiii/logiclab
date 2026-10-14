@@ -18,9 +18,11 @@ export function Classrooms() {
       nextOffset={state.nextOffset}
       onReload={() => void state.run('list')}
       onMore={() => void state.run('more')}
-      renderActions={classroom => <ClassroomInvitation classId={classroom.id} className={classroom.name} />}
+      renderActions={(classroom) => (
+        <ClassroomInvitation classId={classroom.id} className={classroom.name} />
+      )}
     >
-      <ClassroomForm busy={state.busy} onCreate={name => state.run('create', name)} />
+      <ClassroomForm busy={state.busy} onCreate={(name) => state.run('create', name)} />
     </ClassroomPanel>
   );
 }

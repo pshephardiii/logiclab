@@ -13,5 +13,10 @@ export const getClassroomSchema = {
 } satisfies RouteSchema;
 
 export async function getClassroomRoute(app: FastifyInstance, context: ClassroomContext) {
-  app.route({ method: 'GET', url: '/api/classes/:classId', schema: getClassroomSchema, handler: getClassroomHandler(context) });
+  app.route({
+    method: 'GET',
+    url: '/api/classes/:classId',
+    schema: getClassroomSchema,
+    handler: getClassroomHandler(context),
+  });
 }

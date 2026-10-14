@@ -16,5 +16,7 @@ export function decryptTokens(value: string, key: string, session: string): Toke
   const decipher = createDecipheriv('aes-256-gcm', Buffer.from(key, 'hex'), buffer.subarray(0, 12));
   decipher.setAAD(Buffer.from(session));
   decipher.setAuthTag(buffer.subarray(12, 28));
-  return JSON.parse(Buffer.concat([decipher.update(buffer.subarray(28)), decipher.final()]).toString());
+  return JSON.parse(
+    Buffer.concat([decipher.update(buffer.subarray(28)), decipher.final()]).toString(),
+  );
 }

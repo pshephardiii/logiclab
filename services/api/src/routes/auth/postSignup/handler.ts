@@ -11,8 +11,13 @@ import { errorName } from '../../helpers/errors';
 export function postSignupHandler(context: AuthContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password, role } = parseRequest(signupRequestSchema, request.body);
-    try { await context.service.signup(email, password, role); }
-    catch (error) { if (errorName(error) !== 'UsernameExistsException') throw error; }
-    return reply.code(202).send(message('If signup can proceed, check your email for a confirmation code.'));
+    try {
+      await context.service.signup(email, password, role);
+    } catch (error) {
+      if (errorName(error) !== 'UsernameExistsException') throw error;
+    }
+    return reply
+      .code(202)
+      .send(message('If signup can proceed, check your email for a confirmation code.'));
   };
 }

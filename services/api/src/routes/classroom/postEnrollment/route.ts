@@ -12,5 +12,10 @@ export const postEnrollmentSchema = {
 } satisfies RouteSchema;
 
 export async function postEnrollmentRoute(app: FastifyInstance, context: ClassroomContext) {
-  app.route({ method: 'POST', url: '/api/enrollments', schema: postEnrollmentSchema, handler: postEnrollmentHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/enrollments',
+    schema: postEnrollmentSchema,
+    handler: postEnrollmentHandler(context),
+  });
 }

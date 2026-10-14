@@ -41,14 +41,21 @@ function createRow(
   };
 }
 
-function variableValueForRow(rowIndex: number, variableIndex: number, variableCount: number): boolean {
+function variableValueForRow(
+  rowIndex: number,
+  variableIndex: number,
+  variableCount: number,
+): boolean {
   // First variable changes slowest. Zero bits represent T, so all-T comes first.
   const bitPosition = variableCount - variableIndex - 1;
   const bitIsSet = (rowIndex & (1 << bitPosition)) !== 0;
   return !bitIsSet;
 }
 
-function rowId(variables: readonly string[], assignment: Readonly<Record<string, boolean>>): string {
-  const entries = variables.map(name => `${name}=${assignment[name] ? 'T' : 'F'}`);
+function rowId(
+  variables: readonly string[],
+  assignment: Readonly<Record<string, boolean>>,
+): string {
+  const entries = variables.map((name) => `${name}=${assignment[name] ? 'T' : 'F'}`);
   return `row:v1:${entries.join(';')}`;
 }

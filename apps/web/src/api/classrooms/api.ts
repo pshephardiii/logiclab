@@ -1,4 +1,8 @@
-import { invitationResponseSchema, classroomListResponseSchema, classroomResponseSchema } from '@logiclab/contracts';
+import {
+  invitationResponseSchema,
+  classroomListResponseSchema,
+  classroomResponseSchema,
+} from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
 
 const classRequestOptions = { fallback: 'Could not load classes. Please try again.' };

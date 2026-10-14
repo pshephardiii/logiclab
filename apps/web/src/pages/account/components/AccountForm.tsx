@@ -9,8 +9,11 @@ type Props = {
   onResend: (email: string) => Promise<void>;
 };
 const titles: Record<AccountView, string> = {
-  login: 'Sign in', signup: 'Create account', confirm: 'Confirm email',
-  'forgot-password': 'Send reset code', 'reset-password': 'Reset password',
+  login: 'Sign in',
+  signup: 'Create account',
+  confirm: 'Confirm email',
+  'forgot-password': 'Send reset code',
+  'reset-password': 'Reset password',
 };
 
 /**
@@ -51,44 +54,59 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
           maxLength={254}
           autoComplete="email"
         />
-        {view === 'signup' && <>
-          <label htmlFor="account-role">Account role</label>
-          <select id="account-role" name="role" defaultValue="student">
-            <option value="student">Student</option>
-            <option value="instructor">Instructor</option>
-          </select>
-          <p className="help">Choose your role when creating your account. An instructor preview does not create a student account.</p>
-        </>}
-        {needsCode && <>
-          <label htmlFor="account-code">Email code</label>
-          <input
-            id="account-code"
-            name="code"
-            inputMode="numeric"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            required
-            autoComplete="one-time-code"
-          />
-        </>}
-        {needsPassword && <>
-          <label htmlFor="account-password">{newPassword ? 'New password' : 'Password'}</label>
-          <input
-            id="account-password"
-            name="password"
-            type="password"
-            required
-            minLength={newPassword ? 12 : 1}
-            maxLength={128}
-            autoComplete={newPassword ? 'new-password' : 'current-password'}
-            aria-describedby={newPassword ? 'password-help' : undefined}
-          />
-          {newPassword && <p id="password-help" className="help">Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.</p>}
-        </>}
+        {view === 'signup' && (
+          <>
+            <label htmlFor="account-role">Account role</label>
+            <select id="account-role" name="role" defaultValue="student">
+              <option value="student">Student</option>
+              <option value="instructor">Instructor</option>
+            </select>
+            <p className="help">
+              Choose your role when creating your account. An instructor preview does not create a
+              student account.
+            </p>
+          </>
+        )}
+        {needsCode && (
+          <>
+            <label htmlFor="account-code">Email code</label>
+            <input
+              id="account-code"
+              name="code"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
+              autoComplete="one-time-code"
+            />
+          </>
+        )}
+        {needsPassword && (
+          <>
+            <label htmlFor="account-password">{newPassword ? 'New password' : 'Password'}</label>
+            <input
+              id="account-password"
+              name="password"
+              type="password"
+              required
+              minLength={newPassword ? 12 : 1}
+              maxLength={128}
+              autoComplete={newPassword ? 'new-password' : 'current-password'}
+              aria-describedby={newPassword ? 'password-help' : undefined}
+            />
+            {newPassword && (
+              <p id="password-help" className="help">
+                Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.
+              </p>
+            )}
+          </>
+        )}
         <div className="action-row">
           <button type="submit">{busy ? 'Please wait…' : titles[view]}</button>
           {view === 'confirm' && (
-            <button type="button" className="secondary" onClick={handleResend}>Resend code</button>
+            <button type="button" className="secondary" onClick={handleResend}>
+              Resend code
+            </button>
           )}
         </div>
       </fieldset>

@@ -12,5 +12,10 @@ export const postConfirmSchema = {
 } satisfies AuthRouteSchema;
 
 export async function postConfirmRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'POST', url: '/api/auth/confirm', schema: postConfirmSchema, handler: postConfirmHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/auth/confirm',
+    schema: postConfirmSchema,
+    handler: postConfirmHandler(context),
+  });
 }

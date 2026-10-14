@@ -17,7 +17,8 @@ export function parseFormula(source: string): Formula {
 function checkLength(source: string): void {
   if (source.length > FORMULA_LIMITS.maxLength) {
     throw new FormulaParseError(
-      'FORMULA_TOO_LONG', FORMULA_LIMITS.maxLength,
+      'FORMULA_TOO_LONG',
+      FORMULA_LIMITS.maxLength,
       `Formula must be at most ${FORMULA_LIMITS.maxLength} characters`,
     );
   }

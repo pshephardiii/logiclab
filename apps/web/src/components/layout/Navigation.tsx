@@ -9,8 +9,9 @@ import { navigationRoutes } from '../../routing/route-definitions';
  */
 export function Navigation() {
   const { user } = useAccountContext();
-  const visibleRoutes = navigationRoutes.filter(route =>
-    !route.access || (user && route.access.allowedRoles.includes(user.role)));
+  const visibleRoutes = navigationRoutes.filter(
+    (route) => !route.access || (user && route.access.allowedRoles.includes(user.role)),
+  );
 
   return (
     <nav className="app-nav" aria-label="Main navigation">

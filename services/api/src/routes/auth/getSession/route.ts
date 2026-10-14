@@ -11,5 +11,10 @@ export const getSessionSchema = {
 } satisfies AuthRouteSchema;
 
 export async function getSessionRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'GET', url: '/api/auth/session', schema: getSessionSchema, handler: getSessionHandler(context) });
+  app.route({
+    method: 'GET',
+    url: '/api/auth/session',
+    schema: getSessionSchema,
+    handler: getSessionHandler(context),
+  });
 }

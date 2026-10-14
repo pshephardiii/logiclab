@@ -10,11 +10,11 @@ The instructor class slice persists classes and exposes owner-scoped creation, l
 
 These routes register when authentication and database dependencies are enabled. They use the existing HttpOnly session cookie, return `Cache-Control: no-store`, and expose no owner email or Cognito identifier.
 
-| Method/path | Input | Response |
-| --- | --- | --- |
-| `POST /api/classes` | JSON `{ "name": "Introduction to logic" }` | 201 `{ "classroom": { "id", "name", "createdAt" } }` |
-| `GET /api/classes` | Optional `limit` (1–50, default 20), `offset` (0–100000, default 0) | `{ "classrooms": [...], "nextOffset": number or null }` |
-| `GET /api/classes/:classId` | UUID | `{ "classroom": { "id", "name", "createdAt" } }` |
+| Method/path                 | Input                                                               | Response                                                |
+| --------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------- |
+| `POST /api/classes`         | JSON `{ "name": "Introduction to logic" }`                          | 201 `{ "classroom": { "id", "name", "createdAt" } }`    |
+| `GET /api/classes`          | Optional `limit` (1–50, default 20), `offset` (0–100000, default 0) | `{ "classrooms": [...], "nextOffset": number or null }` |
+| `GET /api/classes/:classId` | UUID                                                                | `{ "classroom": { "id", "name", "createdAt" } }`        |
 
 Creation requires the exact configured `Origin`, JSON, and an authenticated session whose stored role is instructor. Anonymous/expired sessions return 401; students return 403. Unknown request fields, invalid names, pagination, or UUIDs return 400. Detail lookup includes both ID and owner in the database query; foreign and missing classes both return the same 404. Storage/provider errors return sanitized 503 responses. Creation has a per-IP limit of 10 requests per 15 minutes; reads allow 60 per minute, using the current in-process limiter.
 
@@ -42,11 +42,11 @@ Invitation slice verification: `npm run check` passed 207 engine/API tests, type
 
 ## Student enrollment
 
-| Method/path | Input | Response |
-| --- | --- | --- |
-| `POST /api/enrollments` | JSON `{ "code": "32-character invitation" }` | 200 public classroom summary, including for an existing enrollment with a current valid code |
-| `GET /api/enrollments` | Same bounded `limit`/`offset` query as class listing | Paginated classroom summaries scoped to the signed-in student |
-| `GET /api/enrollments/:classId` | UUID | Public summary only when that student is enrolled; otherwise the same 404 as a missing class |
+| Method/path                     | Input                                                | Response                                                                                     |
+| ------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `POST /api/enrollments`         | JSON `{ "code": "32-character invitation" }`         | 200 public classroom summary, including for an existing enrollment with a current valid code |
+| `GET /api/enrollments`          | Same bounded `limit`/`offset` query as class listing | Paginated classroom summaries scoped to the signed-in student                                |
+| `GET /api/enrollments/:classId` | UUID                                                 | Public summary only when that student is enrolled; otherwise the same 404 as a missing class |
 
 All enrollment endpoints require a student session; instructor accounts cannot enroll. The POST requires the exact configured Origin and is limited to 10 attempts per route/IP per 15 minutes. Reads allow 60 per minute. Input is strict; the server derives student identity from the session. Codes are trimmed, case-sensitive base64url values. Unknown, expired, and replaced well-formed codes return the same `INVITATION_INVALID` 400 without exposing class details. A malformed code returns the existing request-validation error. Responses are `no-store` and exclude ownership, invitation hashes/codes, and other students' identities.
 

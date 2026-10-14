@@ -10,10 +10,12 @@ export async function postExerciseHandler(request: FastifyRequest, reply: Fastif
   const parsed = truthTableRequestSchema.safeParse(request.body);
   if (!parsed.success) return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
   const table = generateTruthTable(parsed.data.formula);
-  const givenIds = new Set(table.columns.filter(column => column.kind === 'given').map(column => column.id));
+  const givenIds = new Set(
+    table.columns.filter((column) => column.kind === 'given').map((column) => column.id),
+  );
   return truthTableExerciseResponseSchema.parse({
     ...table,
-    rows: table.rows.map(row => ({
+    rows: table.rows.map((row) => ({
       id: row.id,
       values: Object.fromEntries(Object.entries(row.values).filter(([id]) => givenIds.has(id))),
     })),

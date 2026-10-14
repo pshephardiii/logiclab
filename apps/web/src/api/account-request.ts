@@ -12,12 +12,15 @@ type AccountRequestOptions<T> = {
 /**
  * Applies shared account/class HTTP error parsing with caller-supplied fallback messages and overrides.
  */
-export function requestAccountJson<T>(path: string, {
-  schema, signal, body, fallback, errorOverride,
-}: AccountRequestOptions<T>): Promise<T> {
+export function requestAccountJson<T>(
+  path: string,
+  { schema, signal, body, fallback, errorOverride }: AccountRequestOptions<T>,
+): Promise<T> {
   return requestValidatedJson(path, {
-    schema, signal, body,
-    error: (status, payload) => errorOverride?.(status, payload)
-      ?? accountApiError(status, payload, fallback),
+    schema,
+    signal,
+    body,
+    error: (status, payload) =>
+      errorOverride?.(status, payload) ?? accountApiError(status, payload, fallback),
   });
 }

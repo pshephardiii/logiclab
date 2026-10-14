@@ -5,39 +5,71 @@ import { AuthError } from '../../../application/auth/service';
 
 const url = `/api/classes/${classroom.id}`;
 test('registers GET with scoped response and no-store caching', async () => {
-  const { context, headers } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
+  const { context, headers } = classroomFixture();
+  const app = buildApp({ auth: context, classroom: context });
   try {
-    const response = await app.inject({ method: 'GET', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` },  });
-    expect(response.statusCode).toBe(200); expect(response.headers['cache-control']).toBe('no-store');
-    expect(response.body).not.toContain('private-subject'); expect(response.body).not.toContain('ownerId');
-  } finally { await app.close(); }
+    const response = await app.inject({
+      method: 'GET',
+      url,
+      headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.body).not.toContain('private-subject');
+    expect(response.body).not.toContain('ownerId');
+  } finally {
+    await app.close();
+  }
 });
 test('rejects anonymous, expired, and student sessions', async () => {
-  const { context, service, headers, user } = classroomFixture(); const app = buildApp({ auth: context, classroom: context });
+  const { context, service, headers, user } = classroomFixture();
+  const app = buildApp({ auth: context, classroom: context });
   try {
-    const send = (cookie?: string) => app.inject({ method: 'GET', url, headers: { ...headers, ...(cookie ? { cookie } : {}) },  });
+    const send = (cookie?: string) =>
+      app.inject({ method: 'GET', url, headers: { ...headers, ...(cookie ? { cookie } : {}) } });
     expect((await send()).statusCode).toBe(401);
     service.authenticate.mockRejectedValueOnce(new AuthError('SESSION_EXPIRED'));
-    const expired = await send(`logiclab_session=${sessionId}`); expect(expired.statusCode).toBe(401); expect(expired.headers['set-cookie']).toBeDefined();
+    const expired = await send(`logiclab_session=${sessionId}`);
+    expect(expired.statusCode).toBe(401);
+    expect(expired.headers['set-cookie']).toBeDefined();
     service.authenticate.mockResolvedValue({ ...user, role: 'student' });
     expect((await send(`logiclab_session=${sessionId}`)).statusCode).toBe(403);
-  } finally { await app.close(); }
+  } finally {
+    await app.close();
+  }
 });
 test('sanitizes storage outages', async () => {
   const { context, classrooms, headers } = classroomFixture();
   classrooms.findOwned.mockRejectedValue(new Error('private database details'));
   const app = buildApp({ auth: context, classroom: context });
   try {
-    const response = await app.inject({ method: 'GET', url, headers: { ...headers, cookie: `logiclab_session=${sessionId}` },  });
-    expect(response.statusCode).toBe(503); expect(response.body).not.toContain('private database');
-  } finally { await app.close(); }
+    const response = await app.inject({
+      method: 'GET',
+      url,
+      headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+    });
+    expect(response.statusCode).toBe(503);
+    expect(response.body).not.toContain('private database');
+  } finally {
+    await app.close();
+  }
 });
 test('returns indistinguishable 404 responses for foreign and missing classes', async () => {
-  const { context, classrooms } = classroomFixture(); classrooms.findOwned.mockResolvedValue(null); const app = buildApp({ auth: context, classroom: context });
+  const { context, classrooms } = classroomFixture();
+  classrooms.findOwned.mockResolvedValue(null);
+  const app = buildApp({ auth: context, classroom: context });
   try {
     const headers = { cookie: `logiclab_session=${sessionId}` };
     const foreign = await app.inject({ method: 'GET', url, headers });
-    const missing = await app.inject({ method: 'GET', url: '/api/classes/a08a4c77-a9de-4e46-8bb4-3163aa350414', headers });
-    expect(foreign.statusCode).toBe(404); expect(missing.statusCode).toBe(404); expect(foreign.json()).toEqual(missing.json());
-  } finally { await app.close(); }
+    const missing = await app.inject({
+      method: 'GET',
+      url: '/api/classes/a08a4c77-a9de-4e46-8bb4-3163aa350414',
+      headers,
+    });
+    expect(foreign.statusCode).toBe(404);
+    expect(missing.statusCode).toBe(404);
+    expect(foreign.json()).toEqual(missing.json());
+  } finally {
+    await app.close();
+  }
 });

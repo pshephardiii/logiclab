@@ -11,7 +11,8 @@ export function parseTokens(tokens: readonly Token[]): Formula {
   function checkDepth(depth: number): void {
     if (depth > FORMULA_LIMITS.maxNesting) {
       throw new FormulaParseError(
-        'NESTING_LIMIT', current().position,
+        'NESTING_LIMIT',
+        current().position,
         `Formula exceeds ${FORMULA_LIMITS.maxNesting} nested groups, negations, or implications`,
       );
     }
@@ -59,7 +60,8 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     if (token.kind === 'open') return parseGroup(depth, token);
     if (token.kind === 'variable') return parseVariable(token);
     throw new FormulaParseError(
-      'EXPECTED_EXPRESSION', token.position,
+      'EXPECTED_EXPRESSION',
+      token.position,
       'Expected a variable, negation, or parenthesized expression',
     );
   }
@@ -69,7 +71,8 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     const expression = parseImplication(depth + 1);
     if (current().kind !== 'close') {
       throw new FormulaParseError(
-        'EXPECTED_CLOSING_PAREN', current().position,
+        'EXPECTED_CLOSING_PAREN',
+        current().position,
         `Expected ')' to close '(' at character ${openingToken.position + 1}`,
       );
     }
@@ -81,7 +84,8 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     variables.add(token.text);
     if (variables.size > FORMULA_LIMITS.maxVariables) {
       throw new FormulaParseError(
-        'VARIABLE_LIMIT', token.position,
+        'VARIABLE_LIMIT',
+        token.position,
         `Use at most ${FORMULA_LIMITS.maxVariables} distinct variables`,
       );
     }
@@ -92,7 +96,8 @@ export function parseTokens(tokens: readonly Token[]): Formula {
   const expression = parseImplication(0);
   if (current().kind !== 'end') {
     throw new FormulaParseError(
-      'UNEXPECTED_TOKEN', current().position,
+      'UNEXPECTED_TOKEN',
+      current().position,
       `Unexpected ${JSON.stringify(current().text)}; expected an operator or end of formula`,
     );
   }

@@ -1,6 +1,28 @@
-.app-nav { max-width: 72rem; margin: 1rem auto 0; padding: 0 1.5rem; display: flex; justify-content: space-between; gap: 1rem; }
-[aria-current="page"] { text-decoration: underline; text-underline-offset: .3em; }
-.app-nav { flex-wrap: wrap; }
-.app-nav a { color: #176650; padding: .5rem; font-weight: 600; text-decoration: none; border-radius: .4rem; }
-.app-nav a:hover { background: #e3eee8; }
-.app-nav a[aria-current="page"] { text-decoration: underline; }
+.app-nav {
+  max-width: 72rem;
+  margin: 1rem auto 0;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+.app-nav {
+  flex-wrap: wrap;
+}
+.app-nav a {
+  color: #176650;
+  padding: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0.4rem;
+}
+.app-nav a:hover {
+  background: #e3eee8;
+}
+.app-nav a[aria-current='page'] {
+  text-decoration: underline;
+}

@@ -1,9 +1,17 @@
 import { requestValidatedJson, type ResponseSchema } from '../validated-request';
 import type { TruthTableCheckRequest } from '@logiclab/contracts';
-import { truthTableErrorResponseSchema, truthTableExerciseResponseSchema, truthTableCheckResponseSchema, truthTableSolutionResponseSchema } from '@logiclab/contracts';
+import {
+  truthTableErrorResponseSchema,
+  truthTableExerciseResponseSchema,
+  truthTableCheckResponseSchema,
+  truthTableSolutionResponseSchema,
+} from '@logiclab/contracts';
 
 export class PracticeApiError extends Error {
-  constructor(message: string, public readonly position?: number) {
+  constructor(
+    message: string,
+    public readonly position?: number,
+  ) {
     super(message);
     this.name = 'PracticeApiError';
   }
@@ -12,8 +20,11 @@ export class PracticeApiError extends Error {
 function post<T>(route: string, payload: unknown, signal: AbortSignal, schema: ResponseSchema<T>) {
   return requestValidatedJson(`/api/truth-tables/${route}`, {
     schema,
-    validationError: () => new PracticeApiError('The API returned an unexpected response. Please try again.'),
-    body: payload, signal, invalidJson: 'throw',
+    validationError: () =>
+      new PracticeApiError('The API returned an unexpected response. Please try again.'),
+    body: payload,
+    signal,
+    invalidJson: 'throw',
     error: (_status, body) => {
       const parsed = truthTableErrorResponseSchema.safeParse(body);
       return parsed.success

@@ -12,5 +12,10 @@ export const postSignupSchema = {
 } satisfies AuthRouteSchema;
 
 export async function postSignupRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'POST', url: '/api/auth/signup', schema: postSignupSchema, handler: postSignupHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/auth/signup',
+    schema: postSignupSchema,
+    handler: postSignupHandler(context),
+  });
 }

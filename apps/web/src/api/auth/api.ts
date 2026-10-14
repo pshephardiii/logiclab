@@ -7,9 +7,13 @@ export type SignedInUser = AuthUserResponse['user'];
 
 const authRequestOptions = {
   fallback: 'The request could not be completed. Please try again.',
-  errorOverride: (status: number) => status === 404
-    ? new AccountApiError('Account access is currently unavailable. You can still practice.', status)
-    : undefined,
+  errorOverride: (status: number) =>
+    status === 404
+      ? new AccountApiError(
+          'Account access is currently unavailable. You can still practice.',
+          status,
+        )
+      : undefined,
 };
 
 export async function loadSession(signal: AbortSignal): Promise<SignedInUser | null> {
@@ -36,7 +40,11 @@ export async function login(body: Record<string, string>, signal: AbortSignal) {
   return response.user;
 }
 
-export async function accountAction(path: string, body: Record<string, string>, signal: AbortSignal) {
+export async function accountAction(
+  path: string,
+  body: Record<string, string>,
+  signal: AbortSignal,
+) {
   const response = await requestAccountJson(`/api/auth/${path}`, {
     schema: authMessageResponseSchema,
     ...authRequestOptions,

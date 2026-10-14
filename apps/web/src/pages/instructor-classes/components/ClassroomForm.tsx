@@ -21,12 +21,14 @@ export function ClassroomForm({ busy, onCreate }: Props) {
         <input
           id="class-name"
           value={name}
-          onChange={event => setName(event.target.value)}
+          onChange={(event) => setName(event.target.value)}
           required
           maxLength={120}
           disabled={busy}
         />
-        <button type="submit" disabled={busy || !name.trim()}>Create class</button>
+        <button type="submit" disabled={busy || !name.trim()}>
+          Create class
+        </button>
       </div>
     </form>
   );

@@ -12,19 +12,33 @@ async function start() {
   try {
     const dependencies = await createDependencies(process.env);
     closeDependencies = dependencies?.close;
-    app = buildApp({ logger: true, ...(dependencies ? { auth: dependencies.auth, classroom: dependencies.classroom } : {}) });
-    app.addHook('onClose', async () => { await closeDependencies?.(); });
+    app = buildApp({
+      logger: true,
+      ...(dependencies ? { auth: dependencies.auth, classroom: dependencies.classroom } : {}),
+    });
+    app.addHook('onClose', async () => {
+      await closeDependencies?.();
+    });
     await app.listen({ port, host });
   } catch (error) {
-    console.error(error instanceof Error && error.message.startsWith('Invalid auth configuration:') ? error.message : 'API startup failed. Check configuration and database connectivity.');
-    if (app) await app.close(); else await closeDependencies?.();
+    console.error(
+      error instanceof Error && error.message.startsWith('Invalid auth configuration:')
+        ? error.message
+        : 'API startup failed. Check configuration and database connectivity.',
+    );
+    if (app) await app.close();
+    else await closeDependencies?.();
     process.exitCode = 1;
   }
 }
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, async () => {
-    try { await app?.close(); }
-    catch { console.error('API shutdown failed.'); process.exitCode = 1; }
+    try {
+      await app?.close();
+    } catch {
+      console.error('API shutdown failed.');
+      process.exitCode = 1;
+    }
   });
 }
 void start();

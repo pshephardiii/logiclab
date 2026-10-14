@@ -4,13 +4,8 @@
     "module": "Node16",
     "moduleResolution": "Node16",
     "isolatedModules": true,
-    "types": [
-      "jest"
-    ],
+    "types": ["jest"],
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "test"
-  ]
+  "include": ["src", "test"]
 }

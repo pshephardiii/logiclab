@@ -21,15 +21,17 @@ export function useClassrooms() {
     const classroom = await createClassroom(name, signal);
     if (signal.aborted) return;
     // Show the committed result without requiring another request.
-    setClassrooms(current => [classroom, ...current]);
-    setNextOffset(current => current === null ? null : current + 1);
+    setClassrooms((current) => [classroom, ...current]);
+    setNextOffset((current) => (current === null ? null : current + 1));
     setNotice(`Created ${classroom.name}.`);
   }
 
   async function loadClasses(append: boolean, signal: AbortSignal) {
-    const result = await listClassrooms(signal, append ? nextOffset ?? 0 : 0);
+    const result = await listClassrooms(signal, append ? (nextOffset ?? 0) : 0);
     if (signal.aborted) return;
-    setClassrooms(current => append ? appendClassroomPage(current, result.classrooms) : result.classrooms);
+    setClassrooms((current) =>
+      append ? appendClassroomPage(current, result.classrooms) : result.classrooms,
+    );
     setNextOffset(result.nextOffset);
   }
 
@@ -44,7 +46,12 @@ export function useClassrooms() {
       if (signal.aborted) return false;
       return true;
     } catch (caught) {
-      if (!signal.aborted) setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
+      if (!signal.aborted)
+        setError(
+          caught instanceof AccountApiError
+            ? caught.message
+            : 'Could not complete the request. Please try again.',
+        );
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);

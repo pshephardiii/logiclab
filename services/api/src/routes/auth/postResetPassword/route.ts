@@ -12,5 +12,10 @@ export const postResetPasswordSchema = {
 } satisfies AuthRouteSchema;
 
 export async function postResetPasswordRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'POST', url: '/api/auth/reset-password', schema: postResetPasswordSchema, handler: postResetPasswordHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/auth/reset-password',
+    schema: postResetPasswordSchema,
+    handler: postResetPasswordHandler(context),
+  });
 }

@@ -24,18 +24,36 @@ type Props = {
  * Pages supply their own form, state, and optional per-class actions.
  */
 export function ClassroomPanel({
-  headingId, eyebrow, title, listTitle, busy, error, notice,
-  classrooms, nextOffset, onReload, onMore, children, renderActions, emptyMessage,
+  headingId,
+  eyebrow,
+  title,
+  listTitle,
+  busy,
+  error,
+  notice,
+  classrooms,
+  nextOffset,
+  onReload,
+  onMore,
+  children,
+  renderActions,
+  emptyMessage,
 }: Props) {
   return (
     <section className="panel" aria-labelledby={headingId} aria-busy={busy}>
       <p className="eyebrow">{eyebrow}</p>
       <h1 id={headingId}>{title}</h1>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
       {notice && <p role="status">{notice}</p>}
       {children}
       <h2>{listTitle}</h2>
-      <button className="text-button" disabled={busy} onClick={onReload}>Reload classes</button>
+      <button className="text-button" disabled={busy} onClick={onReload}>
+        Reload classes
+      </button>
       {busy && <p role="status">Loading…</p>}
       <ClassroomList
         classrooms={classrooms}

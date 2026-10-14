@@ -12,5 +12,10 @@ export const postResendSchema = {
 } satisfies AuthRouteSchema;
 
 export async function postResendRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'POST', url: '/api/auth/resend', schema: postResendSchema, handler: postResendHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/auth/resend',
+    schema: postResendSchema,
+    handler: postResendHandler(context),
+  });
 }

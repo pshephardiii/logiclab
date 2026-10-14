@@ -22,14 +22,18 @@ type DependencyFactories = {
   createClassroomStore: typeof createClassroomStore;
 };
 const defaultFactories: DependencyFactories = {
-  connectDatabase: async connectionString => (await import('@logiclab/db')).createDatabase(connectionString),
-  createClient: config => new CognitoIdentityProviderClient({ region: config.AWS_REGION }),
+  connectDatabase: async (connectionString) =>
+    (await import('@logiclab/db')).createDatabase(connectionString),
+  createClient: (config) => new CognitoIdentityProviderClient({ region: config.AWS_REGION }),
   createAuthStore,
   createClassroomStore,
 };
 
 /** Application composition owns shared resources; auth-disabled practice needs none. */
-export async function createDependencies(env: NodeJS.ProcessEnv, factories: DependencyFactories = defaultFactories): Promise<ApplicationDependencies | null> {
+export async function createDependencies(
+  env: NodeJS.ProcessEnv,
+  factories: DependencyFactories = defaultFactories,
+): Promise<ApplicationDependencies | null> {
   const config = readAuthConfig(env);
   if (!config) return null;
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required when auth is enabled.');
@@ -39,18 +43,30 @@ export async function createDependencies(env: NodeJS.ProcessEnv, factories: Depe
   try {
     client = factories.createClient(config);
     const store = await factories.createAuthStore(orm, config.COGNITO_USER_POOL_ID);
-    const service = createAuthService(createCognitoProvider(config, client), store, config.AUTH_TOKEN_KEY);
+    const service = createAuthService(
+      createCognitoProvider(config, client),
+      store,
+      config.AUTH_TOKEN_KEY,
+    );
     const classrooms = await factories.createClassroomStore(orm);
 
     return {
       auth: { config, service },
       classroom: { config, service, classrooms },
       close: async () => {
-        try { await orm.close(true); } finally { client?.destroy(); }
+        try {
+          await orm.close(true);
+        } finally {
+          client?.destroy();
+        }
       },
     };
   } catch (error) {
-    try { await orm.close(true); } finally { client?.destroy(); }
+    try {
+      await orm.close(true);
+    } finally {
+      client?.destroy();
+    }
     throw error;
   }
 }

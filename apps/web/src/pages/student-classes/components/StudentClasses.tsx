@@ -19,7 +19,7 @@ export function StudentClasses() {
       onMore={() => void state.run('more')}
       emptyMessage="You have not joined any classes yet."
     >
-      <JoinClassForm busy={state.busy} onJoin={code => state.run('join', code)} />
+      <JoinClassForm busy={state.busy} onJoin={(code) => state.run('join', code)} />
     </ClassroomPanel>
   );
 }

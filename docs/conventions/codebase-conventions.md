@@ -4,11 +4,11 @@ These conventions record the structure and readability decisions from `004-refac
 
 ## Tools: package responsibilities
 
-| Package | Responsibility | Keep outside it |
-| --- | --- | --- |
-| `tools/contracts` | Zod API data contracts and inferred TypeScript types shared by consumers | Database entities, Fastify registration/configuration, endpoint execution |
-| `tools/db` | MikroORM entity mappings, database configuration/client, migrations | API contracts, authentication-provider calls, HTTP handling |
-| `tools/logic-engine` | Pure parsing, evaluation, and deterministic truth-table generation | Database access, network requests, account/assignment policy, React state |
+| Package              | Responsibility                                                           | Keep outside it                                                           |
+| -------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `tools/contracts`    | Zod API data contracts and inferred TypeScript types shared by consumers | Database entities, Fastify registration/configuration, endpoint execution |
+| `tools/db`           | MikroORM entity mappings, database configuration/client, migrations      | API contracts, authentication-provider calls, HTTP handling               |
+| `tools/logic-engine` | Pure parsing, evaluation, and deterministic truth-table generation       | Database access, network requests, account/assignment policy, React state |
 
 Keep dependencies directed toward these shared capabilities. Tools must not import application or service implementation modules. Consumers import the supported API through `@logiclab/contracts`, `@logiclab/db`, or `@logiclab/logic-engine`, rather than reaching into their source directories.
 
@@ -86,14 +86,14 @@ Keep documentation and import paths current when modules move. Report the checks
 
 Group code under `services/api/src` by responsibility, with domain subdirectories where needed:
 
-| Directory | Responsibility |
-| --- | --- |
-| `bootstrap/` | Construct shared resources and route dependencies; own initialization-failure and shutdown cleanup |
-| `application/auth/` | Coordinate auth operations through provider/store interfaces; keep supporting session crypto and domain types here |
-| `integrations/cognito/` | Translate application identity operations to AWS SDK calls |
-| `persistence/auth/`, `persistence/classroom/` | Implement database operations using MikroORM |
-| `config/` | Validate backend environment settings |
-| `routes/` | HTTP registration, route schemas, handlers, transport helpers, and group policies |
+| Directory                                     | Responsibility                                                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `bootstrap/`                                  | Construct shared resources and route dependencies; own initialization-failure and shutdown cleanup                 |
+| `application/auth/`                           | Coordinate auth operations through provider/store interfaces; keep supporting session crypto and domain types here |
+| `integrations/cognito/`                       | Translate application identity operations to AWS SDK calls                                                         |
+| `persistence/auth/`, `persistence/classroom/` | Implement database operations using MikroORM                                                                       |
+| `config/`                                     | Validate backend environment settings                                                                              |
+| `routes/`                                     | HTTP registration, route schemas, handlers, transport helpers, and group policies                                  |
 
 Application behavior should depend on the capabilities described by interfaces, not SDK clients or HTTP objects. Integrations and stores implement those capabilities; bootstrap selects and constructs concrete implementations. Keep resource ownership at application composition, rather than making auth construct unrelated classroom persistence. `buildApp` accepts separate route-group contexts and performs registration without opening database/provider resources.
 
@@ -187,3 +187,9 @@ For readable JSX, move multi-step submission/click logic into named event handle
 Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
 
 Place cross-domain request parsing and error inspection in `routes/helpers/`: `parseRequest` validates bodies, queries, and path parameters; `errorName` safely inspects thrown errors. Auth response construction belongs in `routes/auth/responses.ts`, and account-discovery suppression policy in `routes/auth/errors.ts`. Parsing currently preserves `AuthError('INVALID_REQUEST')` for compatibility with both groups' error mapping.
+
+## Repository formatting
+
+Use the pinned root Prettier dependency and `.prettierrc.json` for consistent formatting: two-space indentation, single quotes in JavaScript/TypeScript, semicolons, trailing commas, LF endings, and a 100-column target. Markdown prose wrapping is preserved. Run `npm run format` to apply formatting and `npm run format:check` to verify it; CI runs the latter before functional checks.
+
+The committed VS Code settings enable format-on-save with the recommended Prettier extension. Other editors should use the same repository configuration and installed version. Generated output, dependencies, local secrets/drafts, the lockfile, and immutable database migration history are excluded by `.prettierignore`. Review formatter changes separately from behavior changes. Formatting complements named handlers and focused helpers; it does not replace clear structure.

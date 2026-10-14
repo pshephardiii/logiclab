@@ -26,7 +26,8 @@ export function useAccount() {
         const currentUser = await loadSession(signal);
         if (!signal.aborted) setUser(currentUser);
       } catch {
-        if (!signal.aborted) setError('Could not check your account. Try signing in, or continue practicing.');
+        if (!signal.aborted)
+          setError('Could not check your account. Try signing in, or continue practicing.');
       } finally {
         if (!signal.aborted) setBusy(false);
       }
@@ -78,7 +79,11 @@ export function useAccount() {
       }
     } catch (caught) {
       if (!signal.aborted) {
-        setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
+        setError(
+          caught instanceof AccountApiError
+            ? caught.message
+            : 'Could not complete the request. Please try again.',
+        );
         if (action === 'logout') await reconcileLogout(signal);
       }
     } finally {

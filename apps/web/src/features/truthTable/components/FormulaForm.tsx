@@ -12,7 +12,14 @@ type Props = {
 /**
  * Collects a formula and displays generation errors; the practice hook owns formula state and requests.
  */
-export function FormulaForm({ formula, loading, error, inputRef, onFormulaChange, onCreate }: Props) {
+export function FormulaForm({
+  formula,
+  loading,
+  error,
+  inputRef,
+  onFormulaChange,
+  onCreate,
+}: Props) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void onCreate();
@@ -29,7 +36,7 @@ export function FormulaForm({ formula, loading, error, inputRef, onFormulaChange
             id="formula"
             name="formula"
             value={formula}
-            onChange={event => onFormulaChange(event.target.value)}
+            onChange={(event) => onFormulaChange(event.target.value)}
             required
             maxLength={256}
             autoComplete="off"
@@ -37,10 +44,19 @@ export function FormulaForm({ formula, loading, error, inputRef, onFormulaChange
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'formula-help formula-error' : 'formula-help'}
           />
-          <button type="submit" disabled={loading || formula.trim().length === 0}>{loading ? 'Creating…' : 'Create table'}</button>
+          <button type="submit" disabled={loading || formula.trim().length === 0}>
+            {loading ? 'Creating…' : 'Create table'}
+          </button>
         </div>
-        <p id="formula-help" className="help">Use up to four uppercase variables. Operators: ¬ or !, ∧ or &amp;, ∨ or |, → or -&gt;. Parentheses control grouping. Editing the formula clears the current table and answers.</p>
-        {error && <p id="formula-error" className="error" role="alert">{error}</p>}
+        <p id="formula-help" className="help">
+          Use up to four uppercase variables. Operators: ¬ or !, ∧ or &amp;, ∨ or |, → or -&gt;.
+          Parentheses control grouping. Editing the formula clears the current table and answers.
+        </p>
+        {error && (
+          <p id="formula-error" className="error" role="alert">
+            {error}
+          </p>
+        )}
       </form>
     </section>
   );

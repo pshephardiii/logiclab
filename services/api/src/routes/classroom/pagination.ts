@@ -1,5 +1,9 @@
 import { classroomListResponseSchema } from '@logiclab/contracts';
-import type { ClassroomSummary, ClassroomListQuery, ClassroomListResponse } from '@logiclab/contracts';
+import type {
+  ClassroomSummary,
+  ClassroomListQuery,
+  ClassroomListResponse,
+} from '@logiclab/contracts';
 
 /** Callers fetch limit + 1 rows to detect a following page without a count query. */
 export function classroomPage(

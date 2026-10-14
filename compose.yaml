@@ -7,11 +7,11 @@ services:
       POSTGRES_USER: logiclab
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-logiclab_local}
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U logiclab -d logiclab"]
+      test: ['CMD-SHELL', 'pg_isready -U logiclab -d logiclab']
       interval: 5s
       timeout: 5s
       retries: 12

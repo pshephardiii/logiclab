@@ -20,7 +20,9 @@ export function AnswerCell({ label, value, status, expected, feedbackId, onChang
         aria-describedby={status ? feedbackId : undefined}
         aria-invalid={status === 'incorrect'}
         value={value == null ? '' : value ? 'T' : 'F'}
-        onChange={event => onChange(event.target.value === '' ? null : event.target.value === 'T')}
+        onChange={(event) =>
+          onChange(event.target.value === '' ? null : event.target.value === 'T')
+        }
       >
         <option value="">Blank</option>
         <option value="T">T</option>

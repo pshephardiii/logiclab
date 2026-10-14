@@ -30,12 +30,12 @@ Local-only defaults are database/user `logiclab`, password `logiclab_local`, and
 
 Create a new PostgreSQL connection with these settings:
 
-| Setting | Default |
-| --- | --- |
-| Host | `127.0.0.1` |
-| Port | `5432` (or your `POSTGRES_PORT`) |
-| Database | `logiclab` |
-| Username | `logiclab` |
+| Setting  | Default                                        |
+| -------- | ---------------------------------------------- |
+| Host     | `127.0.0.1`                                    |
+| Port     | `5432` (or your `POSTGRES_PORT`)               |
+| Database | `logiclab`                                     |
+| Username | `logiclab`                                     |
 | Password | `logiclab_local` (or your `POSTGRES_PASSWORD`) |
 
 Allow DBeaver to download its PostgreSQL driver if prompted, select **Test Connection**, then finish. After migrating, refresh the schema navigator: application tables are in `public`; MikroORM tracks applied migrations in `mikro_orm_migrations`. DBeaver changes do not create source-controlled migrations; make schema changes in `tools/db/src/entities/User.ts`.

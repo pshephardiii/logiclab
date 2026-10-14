@@ -47,13 +47,13 @@ docs/
 
 An admin app can be added as `apps/admin` with package name `@logiclab/admin`, its own Vite configuration and development port, and a dependency on `@logiclab/contracts`. It can deploy independently and use the same API. Root development/build scripts currently target the existing apps explicitly; add admin to those scripts when it is introduced. Server-side permissions will govern access to admin operations.
 
-| Directory | Package | Purpose |
-| --- | --- | --- |
-| `apps/web` | `@logiclab/web` | React + TypeScript, served and built with Vite |
-| `services/api` | `@logiclab/api` | Node.js + TypeScript API using Fastify; Jest tests |
-| `tools/contracts` | `@logiclab/contracts` | Shared Zod request/response schemas and inferred types |
+| Directory            | Package                  | Purpose                                                              |
+| -------------------- | ------------------------ | -------------------------------------------------------------------- |
+| `apps/web`           | `@logiclab/web`          | React + TypeScript, served and built with Vite                       |
+| `services/api`       | `@logiclab/api`          | Node.js + TypeScript API using Fastify; Jest tests                   |
+| `tools/contracts`    | `@logiclab/contracts`    | Shared Zod request/response schemas and inferred types               |
 | `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
-| `tools/db` | `@logiclab/db` | MikroORM/PostgreSQL client, users schema, and SQL migrations |
+| `tools/db`           | `@logiclab/db`           | MikroORM/PostgreSQL client, users schema, and SQL migrations         |
 
 The contracts package contains API contracts, not database migrations. Each domain file groups reusable shapes, request contracts, and response contracts, with inferred TypeScript types beside public schemas. `index.ts` only re-exports domain modules. Named type exports are conveniences; parsed values are already inferred from their Zod schemas. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 

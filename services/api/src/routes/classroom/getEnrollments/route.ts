@@ -12,5 +12,10 @@ export const getEnrollmentsSchema = {
 } satisfies RouteSchema;
 
 export async function getEnrollmentsRoute(app: FastifyInstance, context: ClassroomContext) {
-  app.route({ method: 'GET', url: '/api/enrollments', schema: getEnrollmentsSchema, handler: getEnrollmentsHandler(context) });
+  app.route({
+    method: 'GET',
+    url: '/api/enrollments',
+    schema: getEnrollmentsSchema,
+    handler: getEnrollmentsHandler(context),
+  });
 }

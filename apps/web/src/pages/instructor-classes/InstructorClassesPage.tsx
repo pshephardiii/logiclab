@@ -4,5 +4,9 @@ import { useAccountContext } from '../../features/auth/AccountProvider';
 
 export function InstructorClassesPage() {
   const account = useAccountContext();
-  return <Page className="account-page"><Classrooms key={account.user?.id} /></Page>;
+  return (
+    <Page className="account-page">
+      <Classrooms key={account.user?.id} />
+    </Page>
+  );
 }

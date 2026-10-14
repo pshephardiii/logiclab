@@ -1,8 +1,17 @@
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { submittedAnswers } from '../helpers/submitted-answers';
 import { useRef, useState } from 'react';
-import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
-import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../../../api/truth-tables/api';
+import type {
+  TruthTableExerciseResponse,
+  TruthTableCheckResponse,
+  TruthTableSolutionResponse,
+} from '@logiclab/contracts';
+import {
+  createExercise,
+  checkAnswers,
+  getSolution,
+  PracticeApiError,
+} from '../../../api/truth-tables/api';
 import { cellKey } from '../types';
 import type { Answers } from '../types';
 
@@ -52,7 +61,11 @@ export function useTruthTablePractice() {
       if (!signal.aborted) setExercise(result);
     } catch (caught) {
       if (signal.aborted) return;
-      setError(caught instanceof PracticeApiError ? caught.message : 'Unable to reach the practice API. Check your connection and try again.');
+      setError(
+        caught instanceof PracticeApiError
+          ? caught.message
+          : 'Unable to reach the practice API. Check your connection and try again.',
+      );
       inputRef.current?.focus();
       if (caught instanceof PracticeApiError && caught.position !== undefined) {
         inputRef.current?.setSelectionRange(caught.position, caught.position + 1);
@@ -62,14 +75,16 @@ export function useTruthTablePractice() {
     }
   }
 
-  const total = exercise ? exercise.rows.length * exercise.columns.filter(column => column.kind === 'answer').length : 0;
-  const completed = Object.values(answers).filter(value => value != null).length;
+  const total = exercise
+    ? exercise.rows.length * exercise.columns.filter((column) => column.kind === 'answer').length
+    : 0;
+  const completed = Object.values(answers).filter((value) => value != null).length;
   function changeAnswer(rowId: string, columnId: string, value: boolean | null) {
     cancelRequest();
     setAction(null);
     setActionError(null);
     setFeedback(null);
-    setAnswers(previous => ({ ...previous, [cellKey(rowId, columnId)]: value }));
+    setAnswers((previous) => ({ ...previous, [cellKey(rowId, columnId)]: value }));
   }
 
   async function runAction(kind: 'check' | 'solution') {
@@ -80,14 +95,22 @@ export function useTruthTablePractice() {
     if (kind === 'check') setFeedback(null);
     try {
       if (kind === 'check') {
-        const result = await checkAnswers({ formula, answers: submittedAnswers(exercise, answers) }, signal);
+        const result = await checkAnswers(
+          { formula, answers: submittedAnswers(exercise, answers) },
+          signal,
+        );
         if (!signal.aborted) setFeedback(result);
       } else {
         const result = await getSolution(formula, signal);
         if (!signal.aborted) setSolution(result);
       }
     } catch (caught) {
-      if (!signal.aborted) setActionError(caught instanceof PracticeApiError ? caught.message : 'Unable to reach the practice API. Please try again.');
+      if (!signal.aborted)
+        setActionError(
+          caught instanceof PracticeApiError
+            ? caught.message
+            : 'Unable to reach the practice API. Please try again.',
+        );
     } finally {
       if (!signal.aborted) setAction(null);
     }
@@ -103,8 +126,22 @@ export function useTruthTablePractice() {
   }
 
   return {
-    feedback, solution, action, actionError, check, toggleSolution,
-    formula, exercise, answers, loading, error, inputRef, total, completed,
-    changeFormula, createTable, changeAnswer,
+    feedback,
+    solution,
+    action,
+    actionError,
+    check,
+    toggleSolution,
+    formula,
+    exercise,
+    answers,
+    loading,
+    error,
+    inputRef,
+    total,
+    completed,
+    changeFormula,
+    createTable,
+    changeAnswer,
   };
 }

@@ -2,13 +2,13 @@
 
 Start with the repository [README](../README.md) for local commands and project structure. Documentation is grouped by purpose:
 
-| Directory | Contents |
-| --- | --- |
-| [planning/](planning/) | Product direction, proposed data model, delivery roadmap, and AWS deployment direction |
-| [development/](development/) | Local PostgreSQL/DBeaver, Cognito configuration, and GitHub setup |
-| [api/](api/) | Authentication, classes/enrollment, and truth-table endpoint contracts |
-| [conventions/](conventions/) | Codebase structure/style and numbered branch workflow |
-| [verification/](verification/) | Feature walkthroughs, checks performed, limitations, and supporting images |
+| Directory                      | Contents                                                                               |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| [planning/](planning/)         | Product direction, proposed data model, delivery roadmap, and AWS deployment direction |
+| [development/](development/)   | Local PostgreSQL/DBeaver, Cognito configuration, and GitHub setup                      |
+| [api/](api/)                   | Authentication, classes/enrollment, and truth-table endpoint contracts                 |
+| [conventions/](conventions/)   | Codebase structure/style and numbered branch workflow                                  |
+| [verification/](verification/) | Feature walkthroughs, checks performed, limitations, and supporting images             |
 
 ## Planning
 

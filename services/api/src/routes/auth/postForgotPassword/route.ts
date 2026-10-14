@@ -12,5 +12,10 @@ export const postForgotPasswordSchema = {
 } satisfies AuthRouteSchema;
 
 export async function postForgotPasswordRoute(app: FastifyInstance, context: AuthContext) {
-  app.route({ method: 'POST', url: '/api/auth/forgot-password', schema: postForgotPasswordSchema, handler: postForgotPasswordHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/auth/forgot-password',
+    schema: postForgotPasswordSchema,
+    handler: postForgotPasswordHandler(context),
+  });
 }

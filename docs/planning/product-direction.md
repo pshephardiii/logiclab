@@ -68,11 +68,11 @@ For a derivation exercise, the intended interaction is to add proof lines one at
 For `P ∧ Q`, the student completes the final column:
 
 | P (given) | Q (given) | P ∧ Q (answer) |
-| --- | --- | --- |
-| T | T | Blank |
-| T | F | Blank |
-| F | T | Blank |
-| F | F | Blank |
+| --------- | --------- | -------------- |
+| T         | T         | Blank          |
+| T         | F         | Blank          |
+| F         | T         | Blank          |
+| F         | F         | Blank          |
 
 For `(P ∧ Q) → R`, the student also completes `P ∧ Q` alongside the final expression. The initial default is to include every distinct compound subexpression, ordered from inner expressions to the final formula.
 
@@ -89,11 +89,11 @@ For `(P ∧ Q) → R`, the student also completes `P ∧ Q` alongside the final 
 
 Introduce these settings with instructor assignments, separately from the logic engine:
 
-| Setting | Intended choices |
-| --- | --- |
-| Purpose | Practice or graded |
+| Setting         | Intended choices                                  |
+| --------------- | ------------------------------------------------- |
+| Purpose         | Practice or graded                                |
 | Feedback timing | Immediately after an entry, or only on submission |
-| Solution access | Allow or disable **Show solution** |
+| Solution access | Allow or disable **Show solution**                |
 
 Practice and graded presets should provide sensible defaults while letting instructors adjust the settings. Exact preset values are not yet settled. Independent practice can default to immediate feedback and solution access.
 

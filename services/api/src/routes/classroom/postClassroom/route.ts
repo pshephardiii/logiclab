@@ -13,5 +13,10 @@ export const postClassroomSchema = {
 } satisfies RouteSchema;
 
 export async function postClassroomRoute(app: FastifyInstance, context: ClassroomContext) {
-  app.route({ method: 'POST', url: '/api/classes', schema: postClassroomSchema, handler: postClassroomHandler(context) });
+  app.route({
+    method: 'POST',
+    url: '/api/classes',
+    schema: postClassroomSchema,
+    handler: postClassroomHandler(context),
+  });
 }

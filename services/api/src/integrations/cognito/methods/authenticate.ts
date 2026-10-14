@@ -12,11 +12,13 @@ export async function authenticate(
   parameters: Record<string, string>,
   previousRefresh?: string,
 ): Promise<Tokens> {
-  const result = await cognito.send(new InitiateAuthCommand({
-    ClientId: cognito.clientId,
-    AuthFlow: flow,
-    AuthParameters: parameters,
-  }));
+  const result = await cognito.send(
+    new InitiateAuthCommand({
+      ClientId: cognito.clientId,
+      AuthFlow: flow,
+      AuthParameters: parameters,
+    }),
+  );
   if (result.ChallengeName) throw new AuthError('AUTH_CHALLENGE_UNSUPPORTED');
 
   const auth = result.AuthenticationResult;

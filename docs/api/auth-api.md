@@ -6,16 +6,16 @@ Enable with backend `AUTH_ENABLED=true` and the settings in `.env.example`, afte
 
 All POST requests require JSON and an `Origin` header equal to `APP_ORIGIN`. All auth responses use `Cache-Control: no-store`. Input objects reject unknown fields.
 
-| Method/path under `/api/auth` | Body | Result |
-| --- | --- | --- |
-| `POST /signup` | `email`, `password`, `role` | 202 account-neutral confirmation instructions; role saved during provisioning |
-| `POST /confirm` | `email`, `code` | Email confirmation, followed by normal login |
-| `POST /resend` | `email` | 202 account-neutral resend instructions |
-| `POST /login` | `email`, `password` | Public user ID/role and opaque HttpOnly cookie |
-| `GET /session` | None; session cookie | Public user ID/role; automatic token refresh when required |
-| `POST /logout` | `{}` or no body | Deletes local session and clears cookie, attempts Cognito revocation |
-| `POST /forgot-password` | `email` | 202 account-neutral recovery instructions |
-| `POST /reset-password` | `email`, `code`, `password` | Resets Cognito password, deletes that user's local sessions, clears browser cookie |
+| Method/path under `/api/auth` | Body                        | Result                                                                             |
+| ----------------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| `POST /signup`                | `email`, `password`, `role` | 202 account-neutral confirmation instructions; role saved during provisioning      |
+| `POST /confirm`               | `email`, `code`             | Email confirmation, followed by normal login                                       |
+| `POST /resend`                | `email`                     | 202 account-neutral resend instructions                                            |
+| `POST /login`                 | `email`, `password`         | Public user ID/role and opaque HttpOnly cookie                                     |
+| `GET /session`                | None; session cookie        | Public user ID/role; automatic token refresh when required                         |
+| `POST /logout`                | `{}` or no body             | Deletes local session and clears cookie, attempts Cognito revocation               |
+| `POST /forgot-password`       | `email`                     | 202 account-neutral recovery instructions                                          |
+| `POST /reset-password`        | `email`, `code`, `password` | Resets Cognito password, deletes that user's local sessions, clears browser cookie |
 
 Emails are trimmed and lowercased. Confirmation codes are six digits. New passwords use 12–128 characters and include upper/lowercase, a digit, and a symbol; login accepts existing passwords without transforming them. Roles are strictly student/instructor on signup and cannot be supplied at login.
 

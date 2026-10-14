@@ -12,14 +12,16 @@ test.each([
   expect(evaluateFormula(parseFormula('P -> Q'), { P, Q })).toBe(implies);
 });
 
-test.each([true, false])('evaluates variable and negation for P=%s', P => {
+test.each([true, false])('evaluates variable and negation for P=%s', (P) => {
   expect(evaluateFormula(parseFormula('P'), { P })).toBe(P);
   expect(evaluateFormula(parseFormula('!P'), { P })).toBe(!P);
   expect(evaluateFormula(parseFormula('!!P'), { P })).toBe(P);
 });
 
 test('evaluates nested formulas with repeated variables', () => {
-  expect(evaluateFormula(parseFormula('!(P & Q) -> (P | R)'), { P: false, Q: true, R: false })).toBe(false);
+  expect(
+    evaluateFormula(parseFormula('!(P & Q) -> (P | R)'), { P: false, Q: true, R: false }),
+  ).toBe(false);
 });
 
 test('evaluates implication according to parsed associativity', () => {
@@ -29,7 +31,9 @@ test('evaluates implication according to parsed associativity', () => {
 });
 
 test.each([
-  ['P & Q', false], ['P | Q', true], ['P -> Q', false],
+  ['P & Q', false],
+  ['P | Q', true],
+  ['P -> Q', false],
 ])('does not hide a missing variable behind short-circuiting in %s', (source, P) => {
   expect(() => evaluateFormula(parseFormula(source), { P })).toThrow(FormulaEvaluationError);
   expect(() => evaluateFormula(parseFormula(source), { P })).toThrow(
@@ -44,7 +48,7 @@ test('rejects inherited variable values', () => {
   );
 });
 
-test.each([undefined, null, 'F', 0, 1])('rejects non-boolean value %j at runtime', value => {
+test.each([undefined, null, 'F', 0, 1])('rejects non-boolean value %j at runtime', (value) => {
   const assignment = { P: value } as unknown as VariableAssignment;
   expect(() => evaluateFormula(parseFormula('P'), assignment)).toThrow(
     expect.objectContaining({ code: 'INVALID_VARIABLE_VALUE', variable: 'P' }),

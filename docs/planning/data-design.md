@@ -37,13 +37,13 @@ Token/session handling and provisioning are specified in the Cognito development
 
 Plan relationships ahead of implementation, but introduce entities and migrations as their workflows enter scope. The following model is provisional; institution management and billing remain outside the current classroom-access branch. Finish invitations and student enrollment first.
 
-| Record or relationship | Proposed responsibility |
-| --- | --- |
-| Institution | An organization using the platform |
-| Institution membership | Links a user to an institution, with an institutional role and membership status; leaves room for multiple affiliations rather than a single institution ID on each user |
-| Classroom institution association | Optionally associates a classroom with an institution while retaining instructor ownership and supporting independently run classes |
-| Enrollment | Links a student to a classroom; classroom enrollment does not automatically imply institution membership |
-| Funding / entitlement | Records who funds access and what is covered, separately from institution affiliation and classroom ownership |
+| Record or relationship            | Proposed responsibility                                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Institution                       | An organization using the platform                                                                                                                                       |
+| Institution membership            | Links a user to an institution, with an institutional role and membership status; leaves room for multiple affiliations rather than a single institution ID on each user |
+| Classroom institution association | Optionally associates a classroom with an institution while retaining instructor ownership and supporting independently run classes                                      |
+| Enrollment                        | Links a student to a classroom; classroom enrollment does not automatically imply institution membership                                                                 |
+| Funding / entitlement             | Records who funds access and what is covered, separately from institution affiliation and classroom ownership                                                            |
 
 An instructor could own both an institution-associated class and a personally funded class through the same account. Institutional administrator permissions would be distinct from the existing student/instructor account role. Institution affiliation alone should not grant funding coverage or access to classroom/student records; define explicit authorization and entitlement rules when these workflows are implemented.
 
@@ -59,14 +59,14 @@ Open questions before implementation:
 
 Names and fields below are provisional; introduce them as persistence is needed rather than creating every table upfront.
 
-| Record | Responsibility |
-| --- | --- |
-| Problem | Stable identity, creator/owner, title, exercise type, and current version reference |
-| Problem version | Immutable exercise definition and its definition-format version |
-| Problem set | Instructor-owned collection of problems |
-| Problem-set item | Reference to a specific problem version, with its position in the set |
-| Assignment | Problem set, recipients, dates, and practice/graded, feedback, and solution-access policy |
-| Attempt | Student work against a particular problem version, with assignment context when applicable, status, timestamps, and grading result |
+| Record           | Responsibility                                                                                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Problem          | Stable identity, creator/owner, title, exercise type, and current version reference                                                |
+| Problem version  | Immutable exercise definition and its definition-format version                                                                    |
+| Problem set      | Instructor-owned collection of problems                                                                                            |
+| Problem-set item | Reference to a specific problem version, with its position in the set                                                              |
+| Assignment       | Problem set, recipients, dates, and practice/graded, feedback, and solution-access policy                                          |
+| Attempt          | Student work against a particular problem version, with assignment context when applicable, status, timestamps, and grading result |
 
 A problem has multiple versions. Multiple set items can reference the same version, enabling reuse. Attempts must retain enough context to identify the assigned item when a problem appears more than once or is reused across assignments; a problem ID alone is insufficient.
 

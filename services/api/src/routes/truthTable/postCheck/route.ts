@@ -1,4 +1,8 @@
-import { truthTableCheckRequestSchema, truthTableCheckResponseSchema, truthTableErrorResponseSchema } from '@logiclab/contracts';
+import {
+  truthTableCheckRequestSchema,
+  truthTableCheckResponseSchema,
+  truthTableErrorResponseSchema,
+} from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
 import type { FastifyInstance } from 'fastify';
 import { postCheckHandler } from './handler';

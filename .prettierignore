@@ -1,0 +1,9 @@
+node_modules/
+**/dist/
+coverage/
+.codex-local/
+.env
+.env.*
+package-lock.json
+# Generated database snapshots and immutable migration history.
+tools/db/src/migrations/

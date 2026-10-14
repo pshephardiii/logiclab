@@ -1,17 +1,13 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import type { TruthTable, TruthTableColumn } from '@logiclab/logic-engine';
-import {
-  truthTableCheckRequestSchema,
-  truthTableCheckResponseSchema,
-} from '@logiclab/contracts';
+import { truthTableCheckRequestSchema, truthTableCheckResponseSchema } from '@logiclab/contracts';
 import type { TruthTableCheckRequest, TruthTableCheckResponse } from '@logiclab/contracts';
 import { badRequest } from '../errors';
 
 type AnswerIndex = Map<string, boolean | null>;
 type IndexedAnswers =
-  | { success: true; answers: AnswerIndex }
-  | { success: false; code: string; message: string };
+  { success: true; answers: AnswerIndex } | { success: false; code: string; message: string };
 
 /**
  * Checks submitted cells against a regenerated table, rejecting invalid/duplicate IDs and distinguishing blanks.
@@ -23,7 +19,7 @@ export async function postCheckHandler(request: FastifyRequest, reply: FastifyRe
   }
 
   const table = generateTruthTable(parsed.data.formula);
-  const answerColumns = table.columns.filter(column => column.kind === 'answer');
+  const answerColumns = table.columns.filter((column) => column.kind === 'answer');
   const indexed = indexSubmittedAnswers(table, answerColumns, parsed.data.answers);
   if (!indexed.success) {
     return badRequest(reply, indexed.code, indexed.message);
@@ -43,8 +39,8 @@ function indexSubmittedAnswers(
   answerColumns: readonly TruthTableColumn[],
   submitted: TruthTableCheckRequest['answers'],
 ): IndexedAnswers {
-  const rowIds = new Set(table.rows.map(row => row.id));
-  const columnIds = new Set(answerColumns.map(column => column.id));
+  const rowIds = new Set(table.rows.map((row) => row.id));
+  const columnIds = new Set(answerColumns.map((column) => column.id));
   const answers: AnswerIndex = new Map();
 
   for (const answer of submitted) {
