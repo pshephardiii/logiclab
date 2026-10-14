@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifySchema } from 'fastify';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 
 export type RouteSchema = FastifySchema & { summary: string; description: string };
+
 /**
  * Installs runtime request validation and response serialization within the supplied Fastify scope.
  */
@@ -9,6 +10,7 @@ export function installZodSchemas(app: FastifyInstance) {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 }
+
 /** Install before @fastify/rate-limit so its onRoute hook sees the final config. */
 export function installRateLimitDefaults(app: FastifyInstance) {
   app.addHook('onRoute', (route) => {

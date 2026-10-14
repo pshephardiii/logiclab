@@ -9,6 +9,7 @@ type Props = {
   onSubmit: (fields: Record<string, string>) => Promise<void>;
   onResend: (email: string) => Promise<void>;
 };
+
 const titles: Record<AccountView, string> = {
   login: 'Sign in',
   signup: 'Create account',

@@ -2,6 +2,7 @@ import { healthHandler } from './handler';
 import type { FastifyInstance } from 'fastify';
 import { healthResponseSchema } from '@logiclab/contracts';
 import { installZodSchemas, type RouteSchema } from '../setup';
+
 export const healthSchema = {
   summary: 'Check API health',
   description: 'Report API process availability; this does not check external dependencies.',

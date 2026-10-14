@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
+
 type Props = {
   classrooms: ClassroomSummary[];
   busy: boolean;
@@ -8,6 +9,7 @@ type Props = {
   nextOffset: number | null;
   onMore: () => void;
 };
+
 /**
  * Renders class summaries and pagination, with optional page-supplied actions for each class.
  */

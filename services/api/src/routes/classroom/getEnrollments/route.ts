@@ -4,6 +4,7 @@ import { classroomErrorResponses } from '../schemas';
 import type { FastifyInstance } from 'fastify';
 import type { ClassroomContext } from '../context';
 import { getEnrollmentsHandler } from './handler';
+
 export const getEnrollmentsSchema = {
   summary: 'List enrolled classes',
   description: 'Read a paginated list scoped to the signed-in student.',

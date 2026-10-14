@@ -4,6 +4,7 @@ import { classroomErrorResponses } from '../schemas';
 import type { FastifyInstance } from 'fastify';
 import type { ClassroomContext } from '../context';
 import { getEnrollmentHandler } from './handler';
+
 export const getEnrollmentSchema = {
   summary: 'Read an enrolled class',
   description: 'Read a class only when the signed-in student is enrolled.',

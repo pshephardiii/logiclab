@@ -2,6 +2,7 @@ import type { RouteSchema } from '../setup';
 import { authErrorResponseSchema } from '@logiclab/contracts';
 
 export type AuthRouteSchema = RouteSchema;
+
 export const authErrorResponses = {
   400: authErrorResponseSchema,
   401: authErrorResponseSchema,

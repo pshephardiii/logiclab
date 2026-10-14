@@ -6,6 +6,7 @@ import type { TruthTableCheckRequest, TruthTableCheckResponse } from '@logiclab/
 import { badRequest } from '../errors';
 
 type AnswerIndex = Map<string, boolean | null>;
+
 type IndexedAnswers =
   { success: true; answers: AnswerIndex } | { success: false; code: string; message: string };
 

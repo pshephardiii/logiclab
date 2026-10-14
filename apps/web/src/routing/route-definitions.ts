@@ -1,6 +1,7 @@
 import type { AuthUserResponse } from '@logiclab/contracts';
 
 export type AccountUser = AuthUserResponse['user'];
+
 export type AccountRole = AccountUser['role'];
 
 export interface RouteAccess {

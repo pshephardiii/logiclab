@@ -4,6 +4,7 @@ import { classroomListQuerySchema } from '@logiclab/contracts';
 import type { ClassroomContext } from '../context';
 import { student } from '../helpers';
 import { parseRequest } from '../../helpers/parse-request';
+
 export function getEnrollmentsHandler(context: ClassroomContext) {
   return async (request: FastifyRequest) => {
     const user = await student(request, context);

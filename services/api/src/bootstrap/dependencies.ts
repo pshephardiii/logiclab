@@ -21,6 +21,7 @@ type DependencyFactories = {
   createAuthStore: typeof createAuthStore;
   createClassroomStore: typeof createClassroomStore;
 };
+
 const defaultFactories: DependencyFactories = {
   connectDatabase: async (connectionString) =>
     (await import('@logiclab/db')).createDatabase(connectionString),

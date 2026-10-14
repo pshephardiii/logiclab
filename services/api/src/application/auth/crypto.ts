@@ -11,6 +11,7 @@ export function encryptTokens(tokens: Tokens, key: string, session: string): str
   const ciphertext = Buffer.concat([cipher.update(JSON.stringify(tokens)), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString('base64url');
 }
+
 export function decryptTokens(value: string, key: string, session: string): Tokens {
   const buffer = Buffer.from(value, 'base64url');
   const decipher = createDecipheriv('aes-256-gcm', Buffer.from(key, 'hex'), buffer.subarray(0, 12));

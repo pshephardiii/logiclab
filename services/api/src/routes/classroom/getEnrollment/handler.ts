@@ -3,6 +3,7 @@ import { classroomParamsSchema, classroomResponseSchema } from '@logiclab/contra
 import type { ClassroomContext } from '../context';
 import { student, ClassroomError } from '../helpers';
 import { parseRequest } from '../../helpers/parse-request';
+
 export function getEnrollmentHandler(context: ClassroomContext) {
   return async (request: FastifyRequest) => {
     const user = await student(request, context);

@@ -13,6 +13,7 @@ export class ClassroomError extends Error {
     super(message);
   }
 }
+
 /**
  * Requires an instructor session, reusing the user already authenticated by the group hook.
  */

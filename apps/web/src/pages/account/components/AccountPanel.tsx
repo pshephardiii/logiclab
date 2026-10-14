@@ -2,6 +2,7 @@ import { AccountForm } from './AccountForm';
 import type { useAccount, AccountView } from '../../../features/auth/hooks/useAccount';
 
 type Props = { account: ReturnType<typeof useAccount> };
+
 const headings: Record<AccountView, string> = {
   login: 'Welcome back',
   signup: 'Join LogicLab',

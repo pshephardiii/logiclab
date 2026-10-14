@@ -37,9 +37,11 @@ function post<T>(route: string, payload: unknown, signal: AbortSignal, schema: R
 export async function createExercise(formula: string, signal: AbortSignal) {
   return post('exercise', { formula }, signal, truthTableExerciseResponseSchema);
 }
+
 export async function checkAnswers(payload: TruthTableCheckRequest, signal: AbortSignal) {
   return post('check', payload, signal, truthTableCheckResponseSchema);
 }
+
 export async function getSolution(formula: string, signal: AbortSignal) {
   return post('solution', { formula }, signal, truthTableSolutionResponseSchema);
 }

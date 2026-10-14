@@ -8,6 +8,7 @@ import { classroomErrorResponses } from '../schemas';
 import type { FastifyInstance } from 'fastify';
 import type { ClassroomContext } from '../context';
 import { postInvitationHandler } from './handler';
+
 export const postInvitationSchema = {
   summary: 'Replace a class invitation',
   description: 'Issue a seven-day invitation, invalidating its predecessor.',

@@ -4,6 +4,7 @@ import { classroomErrorResponses } from '../schemas';
 import type { FastifyInstance } from 'fastify';
 import type { ClassroomContext } from '../context';
 import { postEnrollmentHandler } from './handler';
+
 export const postEnrollmentSchema = {
   summary: 'Join a class',
   description: 'Redeem a current invitation as a student; duplicate enrollment is safe.',

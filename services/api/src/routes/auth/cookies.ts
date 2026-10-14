@@ -17,6 +17,7 @@ export function setSessionCookie(
     maxAge,
   });
 }
+
 export function clearSessionCookie(reply: FastifyReply, config: AuthConfig) {
   reply.clearCookie(SESSION_COOKIE, {
     httpOnly: true,
@@ -25,6 +26,7 @@ export function clearSessionCookie(reply: FastifyReply, config: AuthConfig) {
     path: '/api',
   });
 }
+
 /** Call on browser auth mutations, including signup/login, to prevent cross-origin requests. */
 export function assertAuthOrigin(request: FastifyRequest, config: AuthConfig) {
   if (request.headers.origin !== config.APP_ORIGIN) throw new Error('AUTH_ORIGIN_REJECTED');

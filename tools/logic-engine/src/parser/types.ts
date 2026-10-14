@@ -21,4 +21,5 @@ export type FormulaErrorCode =
   | 'VARIABLE_LIMIT';
 
 export type TokenKind = 'variable' | 'not' | BinaryOperator | 'open' | 'close' | 'end';
+
 export type Token = { kind: TokenKind; text: string; position: number };

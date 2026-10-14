@@ -1,6 +1,9 @@
 export type Role = 'student' | 'instructor';
+
 export type AppUser = { id: string; subject: string; role: Role };
+
 export type Tokens = { accessToken: string; refreshToken: string; expiresIn: number };
+
 export interface IdentityProvider {
   signup(email: string, password: string): Promise<string>;
   deleteCreatedUser(subject: string): Promise<void>;
@@ -13,12 +16,14 @@ export interface IdentityProvider {
   forgotPassword(email: string): Promise<void>;
   resetPassword(email: string, code: string, password: string): Promise<void>;
 }
+
 export type StoredSession = {
   user: AppUser;
   encryptedTokens: string;
   accessExpiresAt: Date;
   expiresAt: Date;
 };
+
 export interface AuthStore {
   createUser(subject: string, role: Role, email: string): Promise<AppUser>;
   deleteSessionsForEmail(email: string): Promise<void>;

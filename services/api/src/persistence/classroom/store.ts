@@ -18,6 +18,7 @@ export interface ClassroomStore {
   ): Promise<boolean>;
   findOwned(ownerId: string, classId: string): Promise<ClassroomSummary | null>;
 }
+
 /**
  * Implements owner-scoped classes and student-scoped enrollment reads.
  * Invitation redemption uses a transaction and row lock to serialize against code replacement.

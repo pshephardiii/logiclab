@@ -1,4 +1,5 @@
 import { authErrorResponseSchema } from '@logiclab/contracts';
+
 export const classroomErrorResponses = {
   400: authErrorResponseSchema,
   401: authErrorResponseSchema,
