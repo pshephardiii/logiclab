@@ -14,8 +14,12 @@ const authRequestOptions = {
 
 export async function loadSession(signal: AbortSignal): Promise<SignedInUser | null> {
   try {
-    const payload = await requestAccountJson('/api/auth/session', { ...authRequestOptions, signal });
-    return authUserResponseSchema.parse(payload).user;
+    const response = await requestAccountJson('/api/auth/session', {
+      schema: authUserResponseSchema,
+      ...authRequestOptions,
+      signal,
+    });
+    return response.user;
   } catch (error) {
     if (error instanceof AccountApiError && error.status === 401) return null;
     throw error;
@@ -23,11 +27,21 @@ export async function loadSession(signal: AbortSignal): Promise<SignedInUser | n
 }
 
 export async function login(body: Record<string, string>, signal: AbortSignal) {
-  const payload = await requestAccountJson('/api/auth/login', { ...authRequestOptions, signal, body });
-  return authUserResponseSchema.parse(payload).user;
+  const response = await requestAccountJson('/api/auth/login', {
+    schema: authUserResponseSchema,
+    ...authRequestOptions,
+    signal,
+    body,
+  });
+  return response.user;
 }
 
 export async function accountAction(path: string, body: Record<string, string>, signal: AbortSignal) {
-  const payload = await requestAccountJson(`/api/auth/${path}`, { ...authRequestOptions, signal, body });
-  return authMessageResponseSchema.parse(payload).message;
+  const response = await requestAccountJson(`/api/auth/${path}`, {
+    schema: authMessageResponseSchema,
+    ...authRequestOptions,
+    signal,
+    body,
+  });
+  return response.message;
 }

@@ -1,4 +1,4 @@
-type RequestOptions = {
+export type RequestOptions = {
   signal: AbortSignal;
   body?: unknown;
   invalidJson?: 'throw' | 'null';

@@ -1,4 +1,4 @@
-import { requestJson } from '../http-client';
+import { requestValidatedJson, type ResponseSchema } from '../validated-request';
 import type { TruthTableCheckRequest } from '@logiclab/contracts';
 import { truthTableErrorResponseSchema, truthTableExerciseResponseSchema, truthTableCheckResponseSchema, truthTableSolutionResponseSchema } from '@logiclab/contracts';
 
@@ -9,8 +9,10 @@ export class PracticeApiError extends Error {
   }
 }
 
-function post(route: string, payload: unknown, signal: AbortSignal) {
-  return requestJson(`/api/truth-tables/${route}`, {
+function post<T>(route: string, payload: unknown, signal: AbortSignal, schema: ResponseSchema<T>) {
+  return requestValidatedJson(`/api/truth-tables/${route}`, {
+    schema,
+    validationError: () => new PracticeApiError('The API returned an unexpected response. Please try again.'),
     body: payload, signal, invalidJson: 'throw',
     error: (_status, body) => {
       const parsed = truthTableErrorResponseSchema.safeParse(body);
@@ -21,17 +23,12 @@ function post(route: string, payload: unknown, signal: AbortSignal) {
   });
 }
 
-function validateResponse<T>(schema: { parse: (body: unknown) => T }, body: unknown): T {
-  try { return schema.parse(body); }
-  catch { throw new PracticeApiError('The API returned an unexpected response. Please try again.'); }
-}
-
 export async function createExercise(formula: string, signal: AbortSignal) {
-  return validateResponse(truthTableExerciseResponseSchema, await post('exercise', { formula }, signal));
+  return post('exercise', { formula }, signal, truthTableExerciseResponseSchema);
 }
 export async function checkAnswers(payload: TruthTableCheckRequest, signal: AbortSignal) {
-  return validateResponse(truthTableCheckResponseSchema, await post('check', payload, signal));
+  return post('check', payload, signal, truthTableCheckResponseSchema);
 }
 export async function getSolution(formula: string, signal: AbortSignal) {
-  return validateResponse(truthTableSolutionResponseSchema, await post('solution', { formula }, signal));
+  return post('solution', { formula }, signal, truthTableSolutionResponseSchema);
 }

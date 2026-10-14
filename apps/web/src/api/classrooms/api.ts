@@ -4,22 +4,30 @@ import { requestAccountJson } from '../account-request';
 const classRequestOptions = { fallback: 'Could not load classes. Please try again.' };
 
 export async function listClassrooms(signal: AbortSignal, offset = 0) {
-  const payload = await requestAccountJson(`/api/classes?offset=${offset}`, {
-    ...classRequestOptions, signal,
+  const response = await requestAccountJson(`/api/classes?offset=${offset}`, {
+    schema: classroomListResponseSchema,
+    ...classRequestOptions,
+    signal,
   });
-  return classroomListResponseSchema.parse(payload);
+  return response;
 }
 
 export async function createClassroom(name: string, signal: AbortSignal) {
-  const payload = await requestAccountJson('/api/classes', {
-    ...classRequestOptions, signal, body: { name },
+  const response = await requestAccountJson('/api/classes', {
+    schema: classroomResponseSchema,
+    ...classRequestOptions,
+    signal,
+    body: { name },
   });
-  return classroomResponseSchema.parse(payload).classroom;
+  return response.classroom;
 }
 
 export async function replaceInvitation(classId: string, signal: AbortSignal) {
-  const payload = await requestAccountJson(`/api/classes/${classId}/invitation`, {
-    signal, body: {}, fallback: 'Could not create the invitation. Please try again.',
+  const response = await requestAccountJson(`/api/classes/${classId}/invitation`, {
+    schema: invitationResponseSchema,
+    signal,
+    body: {},
+    fallback: 'Could not create the invitation. Please try again.',
   });
-  return invitationResponseSchema.parse(payload).invitation;
+  return response.invitation;
 }

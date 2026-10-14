@@ -1,7 +1,8 @@
-import { requestJson } from './http-client';
+import { requestValidatedJson, type ResponseSchema } from './validated-request';
 import { accountApiError } from './errors';
 
-type AccountRequestOptions = {
+type AccountRequestOptions<T> = {
+  schema: ResponseSchema<T>;
   signal: AbortSignal;
   body?: unknown;
   fallback: string;
@@ -11,11 +12,11 @@ type AccountRequestOptions = {
 /**
  * Applies shared account/class HTTP error parsing with caller-supplied fallback messages and overrides.
  */
-export function requestAccountJson(path: string, {
-  signal, body, fallback, errorOverride,
-}: AccountRequestOptions): Promise<unknown> {
-  return requestJson(path, {
-    signal, body,
+export function requestAccountJson<T>(path: string, {
+  schema, signal, body, fallback, errorOverride,
+}: AccountRequestOptions<T>): Promise<T> {
+  return requestValidatedJson(path, {
+    schema, signal, body,
     error: (status, payload) => errorOverride?.(status, payload)
       ?? accountApiError(status, payload, fallback),
   });

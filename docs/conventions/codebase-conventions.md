@@ -150,7 +150,7 @@ Place single-page forms, panels, and orchestration hooks under that page's direc
 
 ## Web: API clients
 
-Group domain clients under `src/api/auth/`, `classrooms/`, `enrollments/`, and `truth-tables/`. Each domain's `api.ts` exposes named operations and owns contract validation and domain error messages. `api/http-client.ts` handles base URLs, JSON request encoding, same-origin credentials, response decoding, and abort signals. `api/account-request.ts` applies shared account/class error handling with domain fallback messages and optional overrides. Error types and parsing belong in `api/errors.ts`, so classroom code does not depend on the auth client.
+Group domain clients under `src/api/auth/`, `classrooms/`, `enrollments/`, and `truth-tables/`. Each domain's `api.ts` exposes named operations and selects response contracts and domain error messages. `api/http-client.ts` handles base URLs, JSON request encoding, same-origin credentials, response decoding, and abort signals. `api/account-request.ts` applies shared account/class error handling with domain fallback messages and optional overrides. Error types and parsing belong in `api/errors.ts`, so classroom code does not depend on the auth client.
 
 Keep domain differences explicit: authentication maps a missing service to its existing message and session 401 to a signed-out state; practice preserves formula-error positions and unexpected-response messages. Account/class requests tolerate malformed JSON as null, while practice retains JSON parse failures. Do not add retries or change cancellation, authentication, or response semantics during transport extraction.
 
@@ -183,3 +183,5 @@ Add brief documentation above exported hooks and substantial components when the
 Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.
 
 For readable JSX, move multi-step submission/click logic into named event handlers. Keep simple value-setting callbacks inline. Format complex element props and nested conditional markup across lines, and name substantial display expressions before rendering. Preserve form validation, async success/failure cleanup, accessible attributes, and visible text during readability changes.
+
+Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
