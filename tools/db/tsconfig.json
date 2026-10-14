@@ -3,14 +3,11 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"],
+    "noEmit": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src", "test", "mikro-orm.config.ts"]
 }

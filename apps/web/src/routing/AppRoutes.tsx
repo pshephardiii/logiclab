@@ -1,22 +1,29 @@
-import { StudentRoute } from './StudentRoute';
-import { StudentClasses } from '../features/classroom/StudentClasses';
-import { Route, Routes, Link } from 'react-router';
-import { TruthTablePractice } from '../features/truthTable/TruthTablePractice';
-import { AccountPanel } from '../features/auth/AccountPanel';
-import { useAccountContext } from '../features/auth/AccountProvider';
-import { Classrooms } from '../features/classroom/Classrooms';
-import { InstructorRoute } from './InstructorRoute';
+import { Route, Routes } from 'react-router';
+import { PracticePage } from '../pages/practice/PracticePage';
+import { AccountPage } from '../pages/account/AccountPage';
+import { InstructorClassesPage } from '../pages/instructor-classes/InstructorClassesPage';
+import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage';
+import { NotFoundPage } from '../pages/not-found/NotFoundPage';
+import { ProtectedRoute } from './ProtectedRoute';
+import { routeDefinitions } from './route-definitions';
+
+/**
+ * Connects route metadata to page components and their role guards.
+ */
 export function AppRoutes() {
-  const account = useAccountContext();
-  return <Routes>
-    <Route path="/" element={<TruthTablePractice />} />
-    <Route path="/account" element={<AccountPanel account={account} />} />
-    <Route element={<InstructorRoute />}>
-      <Route path="/classes" element={<Classrooms key={account.user?.id} />} />
-    </Route>
-    <Route element={<StudentRoute />}>
-      <Route path="/enrollments" element={<StudentClasses key={account.user?.id} />} />
-    </Route>
-    <Route path="*" element={<main><h1>Page not found</h1><Link to="/">Return to practice</Link></main>} />
-  </Routes>;
+  const { practice, account, instructorClasses, studentClasses } = routeDefinitions;
+
+  return (
+    <Routes>
+      <Route path={practice.path} element={<PracticePage />} />
+      <Route path={account.path} element={<AccountPage />} />
+      <Route element={<ProtectedRoute {...instructorClasses.access} />}>
+        <Route path={instructorClasses.path} element={<InstructorClassesPage />} />
+      </Route>
+      <Route element={<ProtectedRoute {...studentClasses.access} />}>
+        <Route path={studentClasses.path} element={<StudentClassesPage />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
 }

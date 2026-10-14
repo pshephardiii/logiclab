@@ -8,21 +8,23 @@
     "typecheck": "tsc --noEmit",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js",
-    "test:watch": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
+    "test:watch": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch",
+    "test:integration": "npm run build -w @logiclab/contracts && npm run build -w @logiclab/logic-engine && npm run build -w @logiclab/db && node --env-file-if-exists=../../.env --import tsx --test test/integration/*.test.ts"
   },
   "dependencies": {
-    "@logiclab/contracts": "*",
-    "fastify": "^5.6.0",
-    "@logiclab/logic-engine": "*",
-    "@logiclab/db": "*",
     "@aws-sdk/client-cognito-identity-provider": "^3.0.0",
     "@fastify/cookie": "^11.0.0",
-    "zod": "^4.1.0",
-    "@fastify/rate-limit": "^10.0.0"
+    "@fastify/rate-limit": "^10.0.0",
+    "@logiclab/contracts": "*",
+    "@logiclab/db": "*",
+    "@logiclab/logic-engine": "*",
+    "fastify": "^5.6.0",
+    "fastify-type-provider-zod": "^6.1.0",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
     "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.0",
     "jest": "^30.0.0",
     "ts-jest": "^29.4.0",
     "tsx": "^4.20.0"

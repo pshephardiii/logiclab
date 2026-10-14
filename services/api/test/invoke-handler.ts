@@ -12,12 +12,28 @@ export async function invokeHandler(
   const setCookies: { name: string; value: string }[] = [];
   const clearedCookies: string[] = [];
   const reply = {
-    code(status: number) { statusCode = status; return reply; },
-    send(payload: unknown) { sent = true; sentBody = payload; return reply; },
-    setCookie(name: string, value: string) { setCookies.push({ name, value }); return reply; },
-    clearCookie(name: string) { clearedCookies.push(name); return reply; },
+    code(status: number) {
+      statusCode = status;
+      return reply;
+    },
+    send(payload: unknown) {
+      sent = true;
+      sentBody = payload;
+      return reply;
+    },
+    setCookie(name: string, value: string) {
+      setCookies.push({ name, value });
+      return reply;
+    },
+    clearCookie(name: string) {
+      clearedCookies.push(name);
+      return reply;
+    },
   };
   // Deliberately minimal HTTP doubles; real Fastify behavior is tested through injection.
-  const result = await handler({ body, cookies, log: { warn: jest.fn() } } as unknown as FastifyRequest, reply as unknown as FastifyReply);
+  const result = await handler(
+    { body, cookies, log: { warn: jest.fn() } } as unknown as FastifyRequest,
+    reply as unknown as FastifyReply,
+  );
   return { statusCode, body: sent ? sentBody : result, setCookies, clearedCookies };
 }

@@ -8,17 +8,18 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "generate": "node --env-file-if-exists=../../.env --import tsx ../../node_modules/@mikro-orm/cli/cli.js migration:create --config mikro-orm.config.ts",
     "migrate": "node --env-file-if-exists=../../.env --import tsx ../../node_modules/@mikro-orm/cli/cli.js migration:up --config mikro-orm.config.ts",
     "test:integration": "node --env-file-if-exists=../../.env --import tsx --test test/database.test.ts",
-    "dev": "tsc --watch"
+    "dev": "tsc -p tsconfig.build.json --watch"
   },
   "dependencies": {
     "@mikro-orm/core": "7.2.5",
-    "@mikro-orm/postgresql": "7.2.5",
-    "@mikro-orm/migrations": "7.2.5"
+    "@mikro-orm/decorators": "7.2.5",
+    "@mikro-orm/migrations": "7.2.5",
+    "@mikro-orm/postgresql": "7.2.5"
   },
   "devDependencies": {
     "@mikro-orm/cli": "7.2.5",

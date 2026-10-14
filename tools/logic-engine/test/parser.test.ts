@@ -3,8 +3,12 @@ import type { Formula, BinaryOperator, FormulaErrorCode } from '../src';
 
 const variable = (name: string): Formula => ({ type: 'variable', name });
 const not = (operand: Formula): Formula => ({ type: 'not', operand });
-const binary = (operator: BinaryOperator, left: Formula, right: Formula): Formula =>
-  ({ type: 'binary', operator, left, right });
+const binary = (operator: BinaryOperator, left: Formula, right: Formula): Formula => ({
+  type: 'binary',
+  operator,
+  left,
+  right,
+});
 const p = variable('P');
 const q = variable('Q');
 const r = variable('R');
@@ -14,16 +18,16 @@ test('parses a variable and ignores surrounding whitespace', () => {
 });
 
 test.each([
-  ['¬P', '!P'], ['P ∧ Q', 'P & Q'],
-  ['P ∨ Q', 'P | Q'], ['P → Q', 'P -> Q'],
+  ['¬P', '!P'],
+  ['P ∧ Q', 'P & Q'],
+  ['P ∨ Q', 'P | Q'],
+  ['P → Q', 'P -> Q'],
 ])('symbol form %s matches alias %s', (symbol, alias) => {
   expect(parseFormula(symbol)).toEqual(parseFormula(alias));
 });
 
 test('supports mixing aliases and symbols', () => {
-  expect(parseFormula('!(P ∧ Q) -> R')).toEqual(
-    binary('implies', not(binary('and', p, q)), r),
-  );
+  expect(parseFormula('!(P ∧ Q) -> R')).toEqual(binary('implies', not(binary('and', p, q)), r));
 });
 
 test('negation binds more tightly than conjunction', () => {
@@ -46,7 +50,9 @@ test('implication associates right', () => {
 
 test.each(['and', 'or'] as const)('%s associates left', (operator) => {
   const symbol = operator === 'and' ? '&' : '|';
-  expect(parseFormula(`P ${symbol} Q ${symbol} R`)).toEqual(binary(operator, binary(operator, p, q), r));
+  expect(parseFormula(`P ${symbol} Q ${symbol} R`)).toEqual(
+    binary(operator, binary(operator, p, q), r),
+  );
 });
 
 test('parentheses override precedence and implication associativity', () => {
@@ -101,9 +107,12 @@ test('accepts four distinct variables but rejects a fifth', () => {
 });
 
 test.each(['groups', 'negations', 'implications'])('bounds recursive nesting for %s', (kind) => {
-  const make = (count: number) => kind === 'groups'
-    ? '('.repeat(count) + 'P' + ')'.repeat(count)
-    : kind === 'negations' ? '!'.repeat(count) + 'P' : 'P -> '.repeat(count) + 'P';
+  const make = (count: number) =>
+    kind === 'groups'
+      ? '('.repeat(count) + 'P' + ')'.repeat(count)
+      : kind === 'negations'
+        ? '!'.repeat(count) + 'P'
+        : 'P -> '.repeat(count) + 'P';
   expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting))).not.toThrow();
   expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting + 1))).toThrow(
     expect.objectContaining({ code: 'NESTING_LIMIT' }),

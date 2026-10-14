@@ -2,18 +2,35 @@ import { buildApp } from '../../../app';
 import { authFixture, password, sessionId } from '../../../../test/auth-fixture';
 
 test('registers POST /api/auth/confirm', async () => {
-  const { context, headers } = authFixture(); const app = buildApp({ auth: context });
+  const { context, headers } = authFixture();
+  const app = buildApp({ auth: context });
   try {
-    const response = await app.inject({ method: 'POST', url: '/api/auth/confirm', headers: { ...headers, cookie: `logiclab_session=${sessionId}` }, payload: { email: 'person@example.com', code: '123456' } });
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/confirm',
+      headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+      payload: { email: 'person@example.com', code: '123456' },
+    });
     expect(response.statusCode).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
-  } finally { await app.close(); }
+  } finally {
+    await app.close();
+  }
 });
 
 test('rejects cross-origin requests before provider calls', async () => {
-  const { context, service } = authFixture(); const app = buildApp({ auth: context });
+  const { context, service } = authFixture();
+  const app = buildApp({ auth: context });
   try {
-    const response = await app.inject({ method: 'POST', url: '/api/auth/confirm', headers: { origin: 'https://attacker.example' }, payload: { email: 'person@example.com', code: '123456' } });
-    expect(response.statusCode).toBe(403); expect(service.confirm).not.toHaveBeenCalled();
-  } finally { await app.close(); }
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/auth/confirm',
+      headers: { origin: 'https://attacker.example' },
+      payload: { email: 'person@example.com', code: '123456' },
+    });
+    expect(response.statusCode).toBe(403);
+    expect(service.confirm).not.toHaveBeenCalled();
+  } finally {
+    await app.close();
+  }
 });

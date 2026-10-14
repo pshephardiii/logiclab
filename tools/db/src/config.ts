@@ -6,7 +6,10 @@ import { Classroom } from './entities/Classroom.js';
 import { User } from './entities/User.js';
 import { AuthSession } from './entities/AuthSession.js';
 
-export function databaseOptions(connectionString: string, options: { snapshotOnMigrate?: boolean } = {}) {
+export function databaseOptions(
+  connectionString: string,
+  options: { snapshotOnMigrate?: boolean } = {},
+) {
   if (!connectionString) throw new Error('A database connection string is required.');
   return defineConfig({
     clientUrl: connectionString,

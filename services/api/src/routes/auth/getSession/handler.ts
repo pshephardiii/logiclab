@@ -1,8 +1,8 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { publicUser } from '../helpers';
-import { SESSION_COOKIE } from '../../../auth/cookies';
-import { AuthError } from '../../../auth/service';
+import { publicUser } from '../responses';
+import { SESSION_COOKIE } from '../cookies';
+import { AuthError } from '../../../application/auth/service';
 
 export function getSessionHandler(context: AuthContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {

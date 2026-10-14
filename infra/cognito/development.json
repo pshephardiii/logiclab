@@ -9,12 +9,8 @@
       "Properties": {
         "UserPoolName": "logiclab-development",
         "UserPoolTier": "LITE",
-        "UsernameAttributes": [
-          "email"
-        ],
-        "AutoVerifiedAttributes": [
-          "email"
-        ],
+        "UsernameAttributes": ["email"],
+        "AutoVerifiedAttributes": ["email"],
         "UsernameConfiguration": {
           "CaseSensitive": false
         },
@@ -58,10 +54,7 @@
         },
         "GenerateSecret": true,
         "PreventUserExistenceErrors": "ENABLED",
-        "ExplicitAuthFlows": [
-          "ALLOW_USER_PASSWORD_AUTH",
-          "ALLOW_REFRESH_TOKEN_AUTH"
-        ],
+        "ExplicitAuthFlows": ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
         "EnableTokenRevocation": true,
         "AccessTokenValidity": 15,
         "IdTokenValidity": 15,
@@ -71,13 +64,8 @@
           "IdToken": "minutes",
           "RefreshToken": "days"
         },
-        "ReadAttributes": [
-          "email",
-          "email_verified"
-        ],
-        "WriteAttributes": [
-          "email"
-        ]
+        "ReadAttributes": ["email", "email_verified"],
+        "WriteAttributes": ["email"]
       }
     }
   },

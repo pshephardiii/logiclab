@@ -1,16 +1,25 @@
-import { defineEntity, p, type InferEntity } from '@mikro-orm/core';
+import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
 import { User } from './User.js';
 
-export const AuthSession = defineEntity({
-  name: 'AuthSession',
-  tableName: 'auth_sessions',
-  properties: {
-    id: p.string().length(64).primary(), // Hash of the opaque cookie; never the raw session ID.
-    user: p.manyToOne(User).fieldName('user_id').foreignKeyName('auth_sessions_user_id_fkey').deleteRule('cascade'),
-    encryptedTokens: p.text().fieldName('encrypted_tokens'),
-    accessExpiresAt: p.datetime().columnType('timestamptz').fieldName('access_expires_at'),
-    expiresAt: p.datetime().columnType('timestamptz').fieldName('expires_at').index(),
-  },
-});
+@Entity({ tableName: 'auth_sessions' })
+export class AuthSession {
+  // Hash of the opaque cookie; never the raw session ID.
+  @PrimaryKey({ type: 'string', length: 64 })
+  id!: string;
 
-export type AuthSession = InferEntity<typeof AuthSession>;
+  @ManyToOne(() => User, {
+    fieldName: 'user_id',
+    foreignKeyName: 'auth_sessions_user_id_fkey',
+    deleteRule: 'cascade',
+  })
+  user!: User;
+
+  @Property({ type: 'text', fieldName: 'encrypted_tokens' })
+  encryptedTokens!: string;
+
+  @Property({ type: 'datetime', columnType: 'timestamptz', fieldName: 'access_expires_at' })
+  accessExpiresAt!: Date;
+
+  @Property({ type: 'datetime', columnType: 'timestamptz', fieldName: 'expires_at', index: true })
+  expiresAt!: Date;
+}
