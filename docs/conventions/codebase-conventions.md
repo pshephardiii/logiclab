@@ -1,6 +1,6 @@
 # Codebase conventions
 
-These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/` and `services/api/src`; extend frontend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
+These conventions record the structure and readability decisions from `004-refactor-codebase`. The current scope covers `tools/`, `services/api/src`, and the agreed frontend routing/page boundaries; extend conventions as further refactors are agreed. Product behavior and conceptual persistence decisions belong in [Product Direction](../planning/product-direction.md) and [Data Design](../planning/data-design.md).
 
 ## Tools: package responsibilities
 
@@ -137,3 +137,13 @@ Bootstrap owns shared resource construction and cleanup, including partial initi
 Colocate tests with the module they cover; keep reusable fixtures and invocation helpers in `services/api/test`. Use injected dependencies and mocked SDK calls for deterministic unit/route checks. Bootstrap tests should verify resource ownership and failure cleanup without making external requests.
 
 Use existing behavior tests to validate structural changes, adding coverage for material gaps rather than every new file. Run `npm run check` for API code refactors; run database integration/schema checks when persistence mappings or guarantees are involved. Live Cognito checks are separate, intentional verification steps and must not be implied by passing mocked tests. Documentation-only changes need relevant link and whitespace checks.
+
+## Web: routing and page composition
+
+Keep paths, navigation labels, and role-access metadata in `routing/route-definitions.ts`. `Navigation` renders links from those definitions; `ProtectedRoute` handles account loading, anonymous redirects, and role denial. `AppRoutes` maps paths to page components. Navigation visibility complements the guard and backend authorization.
+
+Put each navigable page in its own directory under `pages/`, including the not-found page. Pages compose feature components inside `components/layout/Page`, which owns the shared header/navigation, single main landmark, and footer. Loading and access-denied views also use that layout. Features must not introduce additional main landmarks.
+
+Keep page-specific subcomponents beside their page, optionally in a local `components/` directory when useful. Reusable feature components, state hooks, and API clients remain in `features/`; a page directory does not require duplicating them. Keep persistent account/practice providers above routing in `App`, and preserve account-keyed resets for class components when users change.
+
+Place single-page forms, panels, and orchestration hooks under that page's directory. Account panels/forms live in `pages/account/components/`; class management and invitation controls live in `pages/instructor-classes/`; enrollment forms and orchestration live in `pages/student-classes/`. Shared account/session state and API clients remain in features. Shared components must not import page components: `ClassroomList` accepts an optional `renderActions` callback so the instructor page supplies invitation controls while the student page reuses the list without them.

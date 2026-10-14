@@ -1,29 +1,26 @@
-import { Route, Routes, Link } from 'react-router';
-import { TruthTablePractice } from '../features/truthTable/TruthTablePractice';
-import { AccountPanel } from '../features/auth/AccountPanel';
-import { useAccountContext } from '../features/auth/AccountProvider';
-import { Classrooms } from '../features/classroom/Classrooms';
-import { StudentClasses } from '../features/classroom/StudentClasses';
+import { Route, Routes } from 'react-router';
+import { PracticePage } from '../pages/practice/PracticePage';
+import { AccountPage } from '../pages/account/AccountPage';
+import { InstructorClassesPage } from '../pages/instructor-classes/InstructorClassesPage';
+import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage';
+import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { routeDefinitions } from './route-definitions';
 
 export function AppRoutes() {
-  const account = useAccountContext();
-  const { practice, instructorClasses, studentClasses } = routeDefinitions;
+  const { practice, account, instructorClasses, studentClasses } = routeDefinitions;
 
   return (
     <Routes>
-      <Route path={practice.path} element={<TruthTablePractice />} />
-      <Route path={routeDefinitions.account.path} element={<AccountPanel account={account} />} />
+      <Route path={practice.path} element={<PracticePage />} />
+      <Route path={account.path} element={<AccountPage />} />
       <Route element={<ProtectedRoute {...instructorClasses.access} />}>
-        <Route path={instructorClasses.path} element={<Classrooms key={account.user?.id} />} />
+        <Route path={instructorClasses.path} element={<InstructorClassesPage />} />
       </Route>
       <Route element={<ProtectedRoute {...studentClasses.access} />}>
-        <Route path={studentClasses.path} element={<StudentClasses key={account.user?.id} />} />
+        <Route path={studentClasses.path} element={<StudentClassesPage />} />
       </Route>
-      <Route path="*" element={
-        <main><h1>Page not found</h1><Link to={practice.path}>Return to practice</Link></main>
-      } />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

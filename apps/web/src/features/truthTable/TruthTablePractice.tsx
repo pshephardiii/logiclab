@@ -5,7 +5,7 @@ import { ExercisePanel } from './components/ExercisePanel';
 export function TruthTablePractice() {
   const practice = usePracticeContext();
   return (
-    <main>
+    <>
       <header>
         <p className="eyebrow">LogicLab / Independent practice</p>
         <h1>Work through the logic.</h1>
@@ -18,6 +18,6 @@ export function TruthTablePractice() {
         onCheck={practice.check} onToggleSolution={practice.toggleSolution}
         loading={practice.loading} completed={practice.completed} total={practice.total} onAnswer={practice.changeAnswer} />
       <p className="footnote">Independent practice · Work stays in this page and is cleared on reload.</p>
-    </main>
+    </>
   );
 }

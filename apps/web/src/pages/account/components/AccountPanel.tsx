@@ -1,5 +1,5 @@
-import { AccountForm } from './components/AccountForm';
-import type { useAccount, AccountView } from './useAccount';
+import { AccountForm } from './AccountForm';
+import type { useAccount, AccountView } from '../../../features/auth/useAccount';
 
 type Props = { account: ReturnType<typeof useAccount> };
 const headings: Record<AccountView, string> = {
@@ -9,7 +9,7 @@ const headings: Record<AccountView, string> = {
 
 export function AccountPanel({ account }: Props) {
   return (
-    <main className="account-page">
+    <>
       <section className="panel" aria-labelledby="account-heading" aria-busy={account.busy}>
         <p className="eyebrow">LogicLab / Your account</p>
         <h1 id="account-heading">{account.user ? 'You’re signed in' : headings[account.view]}</h1>
@@ -31,6 +31,6 @@ export function AccountPanel({ account }: Props) {
           </div>
         </>}
       </section>
-    </main>
+    </>
   );
 }

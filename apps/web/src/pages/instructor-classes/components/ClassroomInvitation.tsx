@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ClassroomInvitation as Invitation } from '@logiclab/contracts';
-import { replaceInvitation } from '../api';
-import { AccountApiError } from '../../auth/api';
+import { replaceInvitation } from '../../../features/classroom/api';
+import { AccountApiError } from '../../../features/auth/api';
 export function ClassroomInvitation({ classId, className }: { classId: string; className: string }) {
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [busy, setBusy] = useState(false);
