@@ -4,7 +4,7 @@ import { authErrorResponseSchema } from '@logiclab/contracts';
 import { AuthError } from '../../application/auth/service';
 import { clearSessionCookie } from './cookies';
 import type { AuthContext } from './context';
-import { errorName } from './helpers';
+import { errorName } from '../helpers/errors';
 import { postSignupRoute } from './postSignup/route';
 import { postConfirmRoute } from './postConfirm/route';
 import { postResendRoute } from './postResend/route';

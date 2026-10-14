@@ -3,13 +3,13 @@ import type { FastifyRequest } from 'fastify';
 import { classroomParamsSchema, emptyAuthRequestSchema, invitationResponseSchema } from '@logiclab/contracts';
 import type { ClassroomContext } from '../context';
 import { instructor, ClassroomError } from '../helpers';
-import { parseBody } from '../../auth/helpers';
+import { parseRequest } from '../../helpers/parse-request';
 
 export function postInvitationHandler(context: ClassroomContext, now = () => Date.now()) {
   return async (request: FastifyRequest) => {
     const user = await instructor(request, context);
-    const { classId } = parseBody(classroomParamsSchema, request.params);
-    parseBody(emptyAuthRequestSchema, request.body ?? {});
+    const { classId } = parseRequest(classroomParamsSchema, request.params);
+    parseRequest(emptyAuthRequestSchema, request.body ?? {});
     const code = randomBytes(24).toString('base64url');
     const hash = createHash('sha256').update(code).digest('hex');
     const expiresAt = new Date(now() + 7 * 24 * 60 * 60 * 1000);

@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthContext } from '../context';
-import { publicUser } from '../helpers';
+import { publicUser } from '../responses';
 import { SESSION_COOKIE } from '../cookies';
 import { AuthError } from '../../../application/auth/service';
 
