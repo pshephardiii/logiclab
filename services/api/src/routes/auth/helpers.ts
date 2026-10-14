@@ -3,6 +3,9 @@ import { authMessageResponseSchema, authUserResponseSchema } from '@logiclab/con
 import { AuthError } from '../../application/auth/service';
 import type { AppUser } from '../../application/auth/types';
 
+/**
+ * Validates handler input defensively, mapping invalid fields to the account request error contract.
+ */
 export function parseBody<T>(schema: ZodType<T>, body: unknown): T {
   const parsed = schema.safeParse(body);
   if (!parsed.success) throw new AuthError('INVALID_REQUEST');

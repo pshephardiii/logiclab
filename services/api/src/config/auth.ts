@@ -15,6 +15,9 @@ const configSchema = z.object({
 });
 export type AuthConfig = z.infer<typeof configSchema> & { secureCookies: boolean };
 
+/**
+ * Validates enabled-auth settings and derives cookie policy; returns null when auth is disabled.
+ */
 export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig | null {
   if (env.AUTH_ENABLED === undefined || env.AUTH_ENABLED === 'false') return null;
   if (env.AUTH_ENABLED !== 'true') throw new Error('AUTH_ENABLED must be true or false.');

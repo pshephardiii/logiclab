@@ -14,6 +14,9 @@ import { postClassroomRoute } from './postClassroom/route';
 import { getClassroomsRoute } from './getClassrooms/route';
 import { getClassroomRoute } from './getClassroom/route';
 
+/**
+ * Registers class/enrollment endpoints with role checks before field validation and scoped error mapping.
+ */
 export async function classroomRoutes(app: FastifyInstance, context: ClassroomContext) {
   app.decorateRequest('classroomUser', null);
   await installAccountHttpPolicy(app, context.config);

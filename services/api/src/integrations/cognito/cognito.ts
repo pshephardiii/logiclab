@@ -7,6 +7,9 @@ import {
   confirm, resend, forgotPassword, resetPassword,
 } from './methods';
 
+/**
+ * Assembles the application identity interface from Cognito operations using one shared SDK wrapper.
+ */
 export function createCognitoProvider(config: AuthConfig, client?: CognitoIdentityProviderClient): IdentityProvider {
   const cognito = createCognitoWrapper(config, client);
   return {

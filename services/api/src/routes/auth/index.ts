@@ -14,6 +14,9 @@ import { postLogoutRoute } from './postLogout/route';
 import { postForgotPasswordRoute } from './postForgotPassword/route';
 import { postResetPasswordRoute } from './postResetPassword/route';
 
+/**
+ * Registers account endpoints with scoped HTTP policy and sanitized authentication error responses.
+ */
 export async function authRoutes(app: FastifyInstance, context: AuthContext) {
   await installAccountHttpPolicy(app, context.config, {
     global: true,

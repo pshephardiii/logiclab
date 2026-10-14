@@ -11,6 +11,10 @@ export interface ClassroomStore {
   replaceInvitation(ownerId: string, classId: string, hash: string, expiresAt: Date): Promise<boolean>;
   findOwned(ownerId: string, classId: string): Promise<ClassroomSummary | null>;
 }
+/**
+ * Implements owner-scoped classes and student-scoped enrollment reads.
+ * Invitation redemption uses a transaction and row lock to serialize against code replacement.
+ */
 export async function createClassroomStore(orm: Awaited<ReturnType<typeof createDatabase>>): Promise<ClassroomStore> {
   const { Classroom, User, Enrollment, LockMode } = await import('@logiclab/db');
   const summary = (value: ClassroomEntity): ClassroomSummary => ({ id: value.id, name: value.name, createdAt: value.createdAt.toISOString() });

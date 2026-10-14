@@ -7,6 +7,9 @@ import { AuthError } from '../../application/auth/service';
 export class ClassroomError extends Error {
   constructor(public readonly status: number, public readonly code: string, message: string) { super(message); }
 }
+/**
+ * Requires an instructor session, reusing the user already authenticated by the group hook.
+ */
 export async function instructor(request: FastifyRequest, context: ClassroomContext) {
   const user = await classroomUser(request, context);
   if (user.role !== 'instructor') throw new ClassroomError(403, 'INSTRUCTOR_REQUIRED', 'An instructor account is required.');

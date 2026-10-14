@@ -7,6 +7,7 @@ let closeDependencies: (() => Promise<void>) | undefined;
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? '0.0.0.0';
 
+/** Connects application startup/shutdown to dependency creation and shared-resource cleanup. */
 async function start() {
   try {
     const dependencies = await createDependencies(process.env);

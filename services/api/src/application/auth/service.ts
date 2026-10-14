@@ -6,6 +6,10 @@ export class AuthError extends Error {
 }
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 
+/**
+ * Coordinates identity-provider operations with application users and encrypted server sessions.
+ * Owns signup compensation, verified-account checks, token refresh, and local session invalidation.
+ */
 export function createAuthService(provider: IdentityProvider, store: AuthStore, key: string, now = () => Date.now()) {
   async function verifiedUser(tokens: Tokens) {
     const identity = await provider.identity(tokens.accessToken);

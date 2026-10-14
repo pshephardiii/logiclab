@@ -2,6 +2,9 @@ import { createHmac } from 'node:crypto';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import type { AuthConfig } from '../../config/auth';
 
+/**
+ * Shares typed SDK dispatch and client-secret hashing; resource cleanup belongs to bootstrap.
+ */
 export function createCognitoWrapper(
   config: AuthConfig,
   client = new CognitoIdentityProviderClient({ region: config.AWS_REGION }),

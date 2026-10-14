@@ -3,6 +3,9 @@ import type { CognitoWrapper } from '../wrapper';
 import type { Tokens } from '../../../application/auth/types';
 import { AuthError } from '../../../application/auth/service';
 
+/**
+ * Validates login/refresh results and retains the previous refresh token when no replacement is returned.
+ */
 export async function authenticate(
   cognito: CognitoWrapper,
   flow: 'USER_PASSWORD_AUTH' | 'REFRESH_TOKEN_AUTH',

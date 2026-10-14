@@ -4,6 +4,9 @@ import { truthTableCheckRequestSchema, truthTableCheckResponseSchema } from '@lo
 import { badRequest } from '../errors';
 import type { TruthTableCheckResponse } from '@logiclab/contracts';
 
+/**
+ * Checks submitted cells against a regenerated table, rejecting invalid/duplicate IDs and distinguishing blanks.
+ */
 export async function postCheckHandler(request: FastifyRequest, reply: FastifyReply) {
   const parsed = truthTableCheckRequestSchema.safeParse(request.body);
   if (!parsed.success) return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
