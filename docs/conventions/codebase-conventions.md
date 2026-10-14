@@ -156,7 +156,7 @@ Keep domain differences explicit: authentication maps a missing service to its e
 
 ## Web: style ownership
 
-Keep resets, typography, and base form controls in `styles/global.css`, and reusable panels, messages, form rows, and action rows in `styles/shared-ui.css`. Import these once from `main.tsx`. Layout styles live beside layout components; the navigation component imports its layout stylesheet. Shared compact-page sizing belongs to the page layout because account and both class pages use it.
+Keep resets, typography, and base form controls in `styles/global.css`, and reusable panels, messages, form rows, and action rows in `styles/shared-ui.css`. Import these once from `main.tsx`. Layout styles live beside layout components; `Navigation.tsx` lives beside `Header`, `Page`, and `Footer` in `components/layout/` and imports its sibling stylesheet. Shared compact-page sizing belongs to the page layout because account and both class pages use it.
 
 Keep account-specific form/link styling beside the account page and truth-table styling beside the truth-table feature, imported by their composition components. Put responsive rules beside the selectors they modify. These remain ordinary global CSS stylesheets; use descriptive selectors and account for cascade order. Split by actual ownership rather than creating empty stylesheets for every page.
 

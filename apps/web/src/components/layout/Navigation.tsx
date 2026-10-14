@@ -1,7 +1,7 @@
-import './layout/navigation.css';
+import './navigation.css';
 import { NavLink } from 'react-router';
-import { useAccountContext } from '../features/auth/AccountProvider';
-import { navigationRoutes } from '../routing/route-definitions';
+import { useAccountContext } from '../../features/auth/AccountProvider';
+import { navigationRoutes } from '../../routing/route-definitions';
 
 export function Navigation() {
   const { user } = useAccountContext();
