@@ -197,3 +197,9 @@ The committed VS Code settings enable format-on-save with the recommended Pretti
 Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers. Password fields belong beside the account form so constraints, autocomplete, and help text remain cohesive. Use braces for multiline conditional branches; Prettier does not add them automatically.
 
 Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between top-level functions, classes, and type/interface declarations, and between distinct stages within substantial functions. Keep related imports and small related declarations together. Prettier preserves these boundaries but does not create them automatically.
+
+## Committed regression coverage
+
+Frontend behavior tests use Vitest with jsdom and React Testing Library, colocated with the code they exercise. Shared DOM cleanup lives in `apps/web/test/setup.ts`. `npm run check` includes frontend tests; `npm run test:watch -w @logiclab/web` runs them interactively. These tests cover DOM behavior and async lifecycle guarantees, not real-browser rendering or live Cognito.
+
+`npm run db:test` runs the DB package's migration/entity tests followed by the API's real PostgreSQL enrollment suite. API database tests live in `services/api/test/integration/`, run with Node's test runner, and are excluded from Jest. They require a disposable database ending in `_test`, use synthetic identity/session data, and clean up their records. The enrollment race test observes a PostgreSQL lock wait before committing replacement instead of assuming a fixed delay proves serialization.

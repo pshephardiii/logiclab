@@ -1,5 +1,4 @@
 import type { FastifyRequest } from 'fastify';
-import { createHash } from 'node:crypto';
 import { classroomFixture, classroom } from '../../../../test/classroom-fixture';
 import { sessionId } from '../../../../test/auth-fixture';
 import { getEnrollmentsHandler } from './handler';
@@ -40,4 +39,14 @@ test('paginates enrolled classes and rejects user filters', async () => {
   await expect(
     getEnrollmentsHandler(context)(request({ query: { studentId: user.id } })),
   ).rejects.toThrow('INVALID_REQUEST');
+});
+
+test.each([0, 1, 2])('final page with %i rows has no next offset', async (count) => {
+  const { context, classrooms, user } = fixture();
+  const rows = Array.from({ length: count }, () => classroom);
+  classrooms.listEnrolled.mockResolvedValue(rows);
+  expect(
+    await getEnrollmentsHandler(context)(request({ query: { limit: '2', offset: '4' } })),
+  ).toEqual({ classrooms: rows, nextOffset: null });
+  expect(classrooms.listEnrolled).toHaveBeenCalledWith(user.id, 3, 4);
 });

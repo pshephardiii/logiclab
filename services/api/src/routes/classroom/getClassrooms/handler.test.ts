@@ -1,4 +1,4 @@
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { classroomFixture, classroom } from '../../../../test/classroom-fixture';
 import { sessionId } from '../../../../test/auth-fixture';
 import { getClassroomsHandler } from './handler';
@@ -48,4 +48,14 @@ test('requires a session and instructor role before storage access', async () =>
   expect(classrooms.create).not.toHaveBeenCalled();
   expect(classrooms.list).not.toHaveBeenCalled();
   expect(classrooms.findOwned).not.toHaveBeenCalled();
+});
+
+test.each([0, 1, 2])('final page with %i rows has no next offset', async (count) => {
+  const { context, classrooms, user } = classroomFixture();
+  const rows = Array.from({ length: count }, () => classroom);
+  classrooms.list.mockResolvedValue(rows);
+  expect(
+    await getClassroomsHandler(context)(request({ query: { limit: '2', offset: '4' } })),
+  ).toEqual({ classrooms: rows, nextOffset: null });
+  expect(classrooms.list).toHaveBeenCalledWith(user.id, 3, 4);
 });
