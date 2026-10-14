@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
-import { AccountApiError } from '../../features/auth/api';
-import { createClassroom, listClassrooms } from '../../features/classroom/api';
+import { AccountApiError } from '../../api/errors';
+import { createClassroom, listClassrooms } from '../../api/classrooms/api';
 
 export function useClassrooms() {
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);

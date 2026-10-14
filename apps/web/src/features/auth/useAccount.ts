@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccountApiError, accountAction, loadSession, login } from './api';
-import type { SignedInUser } from './api';
+import { AccountApiError } from '../../api/errors';
+import { accountAction, loadSession, login } from '../../api/auth/api';
+import type { SignedInUser } from '../../api/auth/api';
 
 export type AccountView = 'login' | 'signup' | 'confirm' | 'forgot-password' | 'reset-password';
 
