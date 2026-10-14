@@ -161,3 +161,9 @@ Keep resets, typography, and base form controls in `styles/global.css`, and reus
 Keep account-specific form/link styling beside the account page and truth-table styling beside the truth-table feature, imported by their composition components. Put responsive rules beside the selectors they modify. These remain ordinary global CSS stylesheets; use descriptive selectors and account for cascade order. Split by actual ownership rather than creating empty stylesheets for every page.
 
 Keep table composition in `TruthTable` and answer-input rendering in its sibling `AnswerCell`. Pass the cell label, value, feedback status/ID, expected value, and change callback explicitly; the cell does not own practice state or API requests. Preserve blank/T/F behavior and accessible feedback associations when extracting interactive components.
+
+## Web: state-hook readability
+
+Keep domain state and request lifecycles visible in each hook. Use named operations for session restoration, account transitions/logout reconciliation, class mutations, and page loading. Extract pure answer serialization and classroom-page merging into focused feature helpers; do not combine unrelated workflows into a generic state hook.
+
+Abort prior requests before starting replacements and on unmount. Guard success, error, and final loading updates with the operation's abort signal. Preserve formula/answer-edit invalidation, solution/answer retention, signup/recovery transitions, logout reconciliation, and the different instructor-create/student-join pagination rules. Keep hook return interfaces stable during internal refactors.

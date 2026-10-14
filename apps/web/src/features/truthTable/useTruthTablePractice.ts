@@ -1,3 +1,4 @@
+import { submittedAnswers } from './helpers/submitted-answers';
 import { useEffect, useRef, useState } from 'react';
 import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
 import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../../api/truth-tables/api';
@@ -18,18 +19,37 @@ export function useTruthTablePractice() {
   const requestRef = useRef<AbortController | null>(null);
   useEffect(() => () => requestRef.current?.abort(), []);
 
-  function changeFormula(value: string) {
-    requestRef.current?.abort();
-    setFeedback(null); setSolution(null); setAction(null); setActionError(null);
-    setFormula(value); setExercise(null); setAnswers({}); setError(null); setLoading(false);
-  }
-
-  async function createTable() {
+  function startRequest() {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setFeedback(null); setSolution(null); setAction(null); setActionError(null);
-    setLoading(true); setError(null); setExercise(null); setAnswers({});
+    return controller;
+  }
+
+  function resetFeedback() {
+    setFeedback(null);
+    setSolution(null);
+    setAction(null);
+    setActionError(null);
+  }
+
+  function changeFormula(value: string) {
+    requestRef.current?.abort();
+    resetFeedback();
+    setFormula(value);
+    setExercise(null);
+    setAnswers({});
+    setError(null);
+    setLoading(false);
+  }
+
+  async function createTable() {
+    const controller = startRequest();
+    resetFeedback();
+    setLoading(true);
+    setError(null);
+    setExercise(null);
+    setAnswers({});
     try {
       const result = await createExercise(formula, controller.signal);
       if (!controller.signal.aborted) setExercise(result);
@@ -49,22 +69,21 @@ export function useTruthTablePractice() {
   const completed = Object.values(answers).filter(value => value != null).length;
   function changeAnswer(rowId: string, columnId: string, value: boolean | null) {
     requestRef.current?.abort();
-    setAction(null); setActionError(null); setFeedback(null);
+    setAction(null);
+    setActionError(null);
+    setFeedback(null);
     setAnswers(previous => ({ ...previous, [cellKey(rowId, columnId)]: value }));
   }
 
   async function runAction(kind: 'check' | 'solution') {
     if (!exercise) return;
-    requestRef.current?.abort();
-    const controller = new AbortController();
-    requestRef.current = controller;
-    setAction(kind); setActionError(null);
+    const controller = startRequest();
+    setAction(kind);
+    setActionError(null);
     if (kind === 'check') setFeedback(null);
     try {
       if (kind === 'check') {
-        const submitted = exercise.rows.flatMap(row => exercise.columns.filter(column => column.kind === 'answer')
-          .map(column => ({ rowId: row.id, columnId: column.id, value: answers[cellKey(row.id, column.id)] ?? null })));
-        const result = await checkAnswers({ formula, answers: submitted }, controller.signal);
+        const result = await checkAnswers({ formula, answers: submittedAnswers(exercise, answers) }, controller.signal);
         if (!controller.signal.aborted) setFeedback(result);
       } else {
         const result = await getSolution(formula, controller.signal);
@@ -82,5 +101,13 @@ export function useTruthTablePractice() {
     else void runAction('solution');
   }
 
-  return { feedback, solution, action, actionError, check: () => runAction('check'), toggleSolution, formula, exercise, answers, loading, error, inputRef, total, completed, changeFormula, createTable, changeAnswer };
+  function check() {
+    return runAction('check');
+  }
+
+  return {
+    feedback, solution, action, actionError, check, toggleSolution,
+    formula, exercise, answers, loading, error, inputRef, total, completed,
+    changeFormula, createTable, changeAnswer,
+  };
 }

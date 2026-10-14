@@ -15,20 +15,56 @@ export function useAccount() {
   const requestRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController(); requestRef.current = controller;
-    void loadSession(controller.signal).then(value => {
-      if (!controller.signal.aborted) setUser(value);
-    }).catch(() => {
-      if (!controller.signal.aborted) setError('Could not check your account. Try signing in, or continue practicing.');
-    }).finally(() => { if (!controller.signal.aborted) setBusy(false); });
+    const controller = new AbortController();
+    requestRef.current = controller;
+    async function restoreSession() {
+      try {
+        const currentUser = await loadSession(controller.signal);
+        if (!controller.signal.aborted) setUser(currentUser);
+      } catch {
+        if (!controller.signal.aborted) setError('Could not check your account. Try signing in, or continue practicing.');
+      } finally {
+        if (!controller.signal.aborted) setBusy(false);
+      }
+    }
+    void restoreSession();
     return () => requestRef.current?.abort();
   }, []);
 
-  function navigate(next: AccountView) { setView(next); setError(null); setNotice(null); }
+  function navigate(next: AccountView) {
+    setView(next);
+    setError(null);
+    setNotice(null);
+  }
+
+  function applyAccountAction(action: AccountView | 'resend' | 'logout', message: string) {
+    setNotice(message);
+    if (action === 'signup') setView('confirm');
+    if (action === 'confirm') setView('login');
+    if (action === 'forgot-password') setView('reset-password');
+    if (action === 'reset-password' || action === 'logout') {
+      setUser(null);
+      setView('login');
+    }
+  }
+
+  async function reconcileLogout(signal: AbortSignal) {
+    // Logout clears the browser cookie even when provider cleanup fails.
+    try {
+      const currentUser = await loadSession(signal);
+      if (!signal.aborted) setUser(currentUser);
+    } catch {
+      if (!signal.aborted) setUser(null);
+    }
+  }
 
   async function run(action: AccountView | 'resend' | 'logout', fields: Record<string, string>) {
-    requestRef.current?.abort(); const controller = new AbortController(); requestRef.current = controller;
-    setBusy(true); setError(null); setNotice(null);
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
     if (fields.email) setEmail(fields.email.trim().toLowerCase());
     try {
       if (action === 'login') {
@@ -37,24 +73,16 @@ export function useAccount() {
       } else {
         const message = await accountAction(action, fields, controller.signal);
         if (controller.signal.aborted) return;
-        setNotice(message);
-        if (action === 'signup') setView('confirm');
-        if (action === 'confirm') setView('login');
-        if (action === 'forgot-password') setView('reset-password');
-        if (action === 'reset-password' || action === 'logout') { setUser(null); setView('login'); }
+        applyAccountAction(action, message);
       }
     } catch (caught) {
       if (!controller.signal.aborted) {
         setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
-        // Logout clears the browser cookie even when provider cleanup fails.
-        if (action === 'logout') {
-          try {
-            const currentUser = await loadSession(controller.signal);
-            if (!controller.signal.aborted) setUser(currentUser);
-          } catch { if (!controller.signal.aborted) setUser(null); }
-        }
+        if (action === 'logout') await reconcileLogout(controller.signal);
       }
-    } finally { if (!controller.signal.aborted) setBusy(false); }
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
   }
   return { user, view, email, busy, error, notice, navigate, run };
 }
