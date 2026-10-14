@@ -181,3 +181,5 @@ Use `src/hooks/useAbortableRequest.ts` for the request lifecycle shared across u
 Add brief documentation above exported hooks and substantial components when their responsibility or behavior is not obvious from the name. Describe what they own, what callers supply, and important lifecycle behavior. Use inline comments to explain invariants and decisions such as cancellation guards, pagination adjustments, authorization ordering, and transaction locks.
 
 Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.
+
+For readable JSX, move multi-step submission/click logic into named event handlers. Keep simple value-setting callbacks inline. Format complex element props and nested conditional markup across lines, and name substantial display expressions before rendering. Preserve form validation, async success/failure cleanup, accessible attributes, and visible text during readability changes.
