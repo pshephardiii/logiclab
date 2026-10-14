@@ -1,3 +1,4 @@
+import { AnswerCell } from './AnswerCell';
 import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
 
 import { cellKey } from '../types';
@@ -41,14 +42,14 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
                 return (
                   <td key={column.id} className={column.isFinal ? 'final-column' : undefined}>
                     {column.kind === 'given' ? <span className="given-value">{row.values[column.id] ? 'T' : 'F'}</span> : (
-                      <div className="answer-cell"><select aria-describedby={status ? feedbackId : undefined} aria-invalid={status === 'incorrect'} aria-label={`Row ${index + 1}, ${given}: ${column.label}`}
-                        value={value == null ? '' : value ? 'T' : 'F'}
-                        onChange={event => onAnswer(row.id, column.id, event.target.value === '' ? null : event.target.value === 'T')}>
-                        <option value="">Blank</option><option value="T">T</option><option value="F">F</option>
-                      </select>
-                      {status && <span id={feedbackId} className={`cell-feedback ${status}`}>{status === 'correct' ? 'Correct' : status === 'incorrect' ? 'Incorrect' : 'Unanswered'}</span>}
-                      {typeof expected === 'boolean' && <span className="solution-value">Solution: {expected ? 'T' : 'F'}</span>}
-                      </div>
+                      <AnswerCell
+                        label={`Row ${index + 1}, ${given}: ${column.label}`}
+                        value={value}
+                        status={status}
+                        expected={expected}
+                        feedbackId={feedbackId}
+                        onChange={answer => onAnswer(row.id, column.id, answer)}
+                      />
                     )}
                   </td>
                 );
