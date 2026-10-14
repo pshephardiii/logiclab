@@ -1,5 +1,5 @@
 import { encryptTokens, decryptTokens, newSessionId, sessionHash } from './crypto';
-import type { AuthStore, IdentityProvider, Role, Tokens } from './types';
+import type { AuthStore, IdentityProvider, Role, Tokens, StoredSession } from './types';
 
 export class AuthError extends Error {
   constructor(public readonly code: string) {
@@ -26,6 +26,21 @@ export function createAuthService(
     if (!user) throw new AuthError('ACCOUNT_NOT_PROVISIONED');
     return user;
   }
+  async function refreshSession(hash: string, session: StoredSession) {
+    const previous = decryptTokens(session.encryptedTokens, key, hash);
+    const tokens = await provider.refresh(session.user.subject, previous.refreshToken);
+    const user = await verifiedUser(tokens);
+    if (user.id !== session.user.id) throw new AuthError('SESSION_INVALID');
+    const updated = await store.updateSession(hash, {
+      ...session,
+      user,
+      encryptedTokens: encryptTokens(tokens, key, hash),
+      accessExpiresAt: new Date(now() + tokens.expiresIn * 1000),
+    });
+    if (!updated) throw new AuthError('SESSION_INVALID');
+    return user;
+  }
+
   return {
     async signup(email: string, password: string, role: Role) {
       if (role !== 'student' && role !== 'instructor') throw new AuthError('ROLE_INVALID');
@@ -64,18 +79,7 @@ export function createAuthService(
         throw new AuthError('SESSION_EXPIRED');
       }
       if (session.accessExpiresAt.getTime() <= now()) {
-        const previous = decryptTokens(session.encryptedTokens, key, hash);
-        const tokens = await provider.refresh(session.user.subject, previous.refreshToken);
-        const user = await verifiedUser(tokens);
-        if (user.id !== session.user.id) throw new AuthError('SESSION_INVALID');
-        const updated = await store.updateSession(hash, {
-          ...session,
-          user,
-          encryptedTokens: encryptTokens(tokens, key, hash),
-          accessExpiresAt: new Date(now() + tokens.expiresIn * 1000),
-        });
-        if (!updated) throw new AuthError('SESSION_INVALID');
-        return user;
+        return refreshSession(hash, session);
       }
       return session.user;
     },
@@ -83,8 +87,9 @@ export function createAuthService(
       const hash = sessionHash(id);
       const session = await store.getSession(hash);
       await store.deleteSession(hash);
-      if (session)
+      if (session) {
         await provider.revoke(decryptTokens(session.encryptedTokens, key, hash).refreshToken);
+      }
     },
     confirm: (email: string, code: string) => provider.confirm(email, code),
     resend: (email: string) => provider.resend(email),

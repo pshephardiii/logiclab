@@ -26,8 +26,9 @@ async function start() {
         ? error.message
         : 'API startup failed. Check configuration and database connectivity.',
     );
-    if (app) await app.close();
-    else await closeDependencies?.();
+    if (app) {
+      await app.close();
+    } else await closeDependencies?.();
     process.exitCode = 1;
   }
 }

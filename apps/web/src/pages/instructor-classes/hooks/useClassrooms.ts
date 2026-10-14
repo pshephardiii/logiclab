@@ -41,17 +41,19 @@ export function useClassrooms() {
     setError(null);
     setNotice(null);
     try {
-      if (action === 'create') await createClass(name!, signal);
-      else await loadClasses(action === 'more', signal);
+      if (action === 'create') {
+        await createClass(name!, signal);
+      } else await loadClasses(action === 'more', signal);
       if (signal.aborted) return false;
       return true;
     } catch (caught) {
-      if (!signal.aborted)
+      if (!signal.aborted) {
         setError(
           caught instanceof AccountApiError
             ? caught.message
             : 'Could not complete the request. Please try again.',
         );
+      }
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);

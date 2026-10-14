@@ -31,28 +31,45 @@ export async function createClassroomStore(
     name: value.name,
     createdAt: value.createdAt.toISOString(),
   });
+  type TransactionManager = typeof orm.em;
+
+  async function lockInvitedClassroom(em: TransactionManager, hash: string) {
+    // Keep the lock through enrollment insertion to serialize against invitation replacement.
+    return em.findOne(
+      Classroom,
+      { invitationHash: hash },
+      { lockMode: LockMode.PESSIMISTIC_WRITE },
+    );
+  }
+
+  function invitationIsActive(classroom: ClassroomEntity | null): classroom is ClassroomEntity {
+    if (!classroom?.invitationExpiresAt) {
+      return false;
+    }
+    return !(classroom.invitationExpiresAt.getTime() <= Date.now());
+  }
+
+  async function ensureEnrollment(
+    em: TransactionManager,
+    classroom: ClassroomEntity,
+    studentId: string,
+  ) {
+    await em.upsert(
+      Enrollment,
+      { classroom, student: em.getReference(User, studentId) },
+      {
+        onConflictFields: ['classroom', 'student'],
+        onConflictAction: 'ignore',
+      },
+    );
+  }
+
   return {
     async join(studentId, hash) {
       return orm.em.fork().transactional(async (em) => {
-        // PostgreSQL FOR UPDATE serializes redemption with invitation replacement.
-        const classroom = await em.findOne(
-          Classroom,
-          { invitationHash: hash },
-          { lockMode: LockMode.PESSIMISTIC_WRITE },
-        );
-        if (
-          !classroom?.invitationExpiresAt ||
-          classroom.invitationExpiresAt.getTime() <= Date.now()
-        )
-          return null;
-        await em.upsert(
-          Enrollment,
-          { classroom, student: em.getReference(User, studentId) },
-          {
-            onConflictFields: ['classroom', 'student'],
-            onConflictAction: 'ignore',
-          },
-        );
+        const classroom = await lockInvitedClassroom(em, hash);
+        if (!invitationIsActive(classroom)) return null;
+        await ensureEnrollment(em, classroom, studentId);
         return summary(classroom);
       });
     },

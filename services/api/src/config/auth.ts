@@ -28,10 +28,11 @@ export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig | null {
   if (env.AUTH_ENABLED === undefined || env.AUTH_ENABLED === 'false') return null;
   if (env.AUTH_ENABLED !== 'true') throw new Error('AUTH_ENABLED must be true or false.');
   const parsed = configSchema.safeParse(env);
-  if (!parsed.success)
+  if (!parsed.success) {
     throw new Error(
       `Invalid auth configuration: ${parsed.error.issues.map((issue) => issue.path.join('.')).join(', ')}`,
     );
+  }
   const secureCookies = new URL(parsed.data.APP_ORIGIN).protocol === 'https:';
   if (
     !secureCookies &&

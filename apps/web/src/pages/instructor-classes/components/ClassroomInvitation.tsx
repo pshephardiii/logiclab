@@ -29,12 +29,13 @@ export function ClassroomInvitation({
       const result = await replaceInvitation(classId, controller.signal);
       if (!controller.signal.aborted) setInvitation(result);
     } catch (caught) {
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted) {
         setError(
           caught instanceof AccountApiError
             ? caught.message
             : 'Could not create the invitation. Please try again.',
         );
+      }
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }

@@ -26,8 +26,9 @@ export function useAccount() {
         const currentUser = await loadSession(signal);
         if (!signal.aborted) setUser(currentUser);
       } catch {
-        if (!signal.aborted)
+        if (!signal.aborted) {
           setError('Could not check your account. Try signing in, or continue practicing.');
+        }
       } finally {
         if (!signal.aborted) setBusy(false);
       }

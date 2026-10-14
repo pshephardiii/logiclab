@@ -105,20 +105,22 @@ export function useTruthTablePractice() {
         if (!signal.aborted) setSolution(result);
       }
     } catch (caught) {
-      if (!signal.aborted)
+      if (!signal.aborted) {
         setActionError(
           caught instanceof PracticeApiError
             ? caught.message
             : 'Unable to reach the practice API. Please try again.',
         );
+      }
     } finally {
       if (!signal.aborted) setAction(null);
     }
   }
 
   function toggleSolution() {
-    if (solution) setSolution(null);
-    else void runAction('solution');
+    if (solution) {
+      setSolution(null);
+    } else void runAction('solution');
   }
 
   function check() {

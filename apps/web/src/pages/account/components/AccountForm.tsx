@@ -1,3 +1,4 @@
+import { PasswordFields } from './PasswordFields';
 import type { FormEvent, MouseEvent } from 'react';
 import type { AccountView } from '../../../features/auth/hooks/useAccount';
 
@@ -81,26 +82,7 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
             />
           </>
         )}
-        {needsPassword && (
-          <>
-            <label htmlFor="account-password">{newPassword ? 'New password' : 'Password'}</label>
-            <input
-              id="account-password"
-              name="password"
-              type="password"
-              required
-              minLength={newPassword ? 12 : 1}
-              maxLength={128}
-              autoComplete={newPassword ? 'new-password' : 'current-password'}
-              aria-describedby={newPassword ? 'password-help' : undefined}
-            />
-            {newPassword && (
-              <p id="password-help" className="help">
-                Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.
-              </p>
-            )}
-          </>
-        )}
+        {needsPassword && <PasswordFields newPassword={newPassword} />}
         <div className="action-row">
           <button type="submit">{busy ? 'Please wait…' : titles[view]}</button>
           {view === 'confirm' && (
