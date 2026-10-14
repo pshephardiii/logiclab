@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-/** Manage one pending request per hook instance; callers own state and abort guards. */
+/**
+ * Manages one pending request per instance, canceling it on replacement or unmount.
+ * Callers own state updates and must check the returned signal before applying results.
+ */
 export function useAbortableRequest() {
   const pending = useRef<AbortController | null>(null);
 

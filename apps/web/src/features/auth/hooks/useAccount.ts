@@ -6,6 +6,10 @@ import type { SignedInUser } from '../../../api/auth/api';
 
 export type AccountView = 'login' | 'signup' | 'confirm' | 'forgot-password' | 'reset-password';
 
+/**
+ * Manages session restoration and account-form workflows for the shared account provider.
+ * Keeps recovery/signup transitions and logout reconciliation alongside request state.
+ */
 export function useAccount() {
   const [user, setUser] = useState<SignedInUser | null>(null);
   const [view, setView] = useState<AccountView>('login');

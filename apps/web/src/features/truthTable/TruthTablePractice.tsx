@@ -3,6 +3,9 @@ import { usePracticeContext } from './PracticeProvider';
 import { FormulaForm } from './components/FormulaForm';
 import { ExercisePanel } from './components/ExercisePanel';
 
+/**
+ * Composes formula entry and exercise controls using navigation-persistent practice state.
+ */
 export function TruthTablePractice() {
   const practice = usePracticeContext();
   return (

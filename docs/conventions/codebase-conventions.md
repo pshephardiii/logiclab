@@ -175,3 +175,9 @@ Classroom/enrollment list handlers share response slicing and next-offset calcul
 Auth/classroom groups apply `routes/account-http.ts` directly to their existing Fastify scope for Zod compilers, cookies, rate-limit defaults, cache headers, and origin checks. Apply shared policy before registering endpoints, preserving plugin/hook ordering. Group-specific limiter options stay explicit; authorization and error mapping remain in each group. This setup does not authenticate users and is not installed on anonymous practice routes.
 
 Use `src/hooks/useAbortableRequest.ts` for the request lifecycle shared across unrelated workflows: starting a replacement aborts the previous request, explicit cancellation supports edits, and unmount aborts pending work. The returned callbacks are stable. Each consumer still owns loading/error/success state and explicit `signal.aborted` guards; the helper does not run domain operations or prescribe their state transitions.
+
+## Explanatory comments
+
+Add brief documentation above exported hooks and substantial components when their responsibility or behavior is not obvious from the name. Describe what they own, what callers supply, and important lifecycle behavior. Use inline comments to explain invariants and decisions such as cancellation guards, pagination adjustments, authorization ordering, and transaction locks.
+
+Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.

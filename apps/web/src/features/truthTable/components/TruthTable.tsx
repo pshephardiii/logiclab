@@ -13,6 +13,10 @@ type Props = {
   onAnswer: (rowId: string, columnId: string, value: boolean | null) => void;
 };
 
+/**
+ * Composes deterministic rows and columns, with fixed given values and editable answer cells.
+ * Associates check results and solution values with structural row/column IDs.
+ */
 export function TruthTable({ exercise, formula, answers, onAnswer, feedback, solution }: Props) {
   const statuses = new Map(feedback?.cells.map(cell => [cellKey(cell.rowId, cell.columnId), cell.status]));
   const solutionRows = new Map(solution?.rows.map(row => [row.id, row.values]));

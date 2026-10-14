@@ -18,6 +18,9 @@ type Props = {
   onAnswer: (rowId: string, columnId: string, value: boolean | null) => void;
 };
 
+/**
+ * Presents exercise progress, check/solution controls, request feedback, and the truth table.
+ */
 export function ExercisePanel({ exercise, formula, answers, loading, completed, total, onAnswer, feedback, solution, action, actionError, onCheck, onToggleSolution }: Props) {
   return (
     <section className="panel" aria-labelledby="exercise-heading" aria-busy={loading || action !== null}>

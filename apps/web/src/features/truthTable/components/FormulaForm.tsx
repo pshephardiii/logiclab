@@ -9,6 +9,9 @@ type Props = {
   onCreate: () => Promise<void>;
 };
 
+/**
+ * Collects a formula and displays generation errors; the practice hook owns formula state and requests.
+ */
 export function FormulaForm({ formula, loading, error, inputRef, onFormulaChange, onCreate }: Props) {
   return (
     <section className="panel" aria-labelledby="formula-heading">

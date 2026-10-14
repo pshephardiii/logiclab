@@ -7,6 +7,9 @@ const headings: Record<AccountView, string> = {
   'forgot-password': 'Recover your account', 'reset-password': 'Choose a new password',
 };
 
+/**
+ * Composes account status, workflow navigation, and forms from provider-owned state.
+ */
 export function AccountPanel({ account }: Props) {
   return (
     <>

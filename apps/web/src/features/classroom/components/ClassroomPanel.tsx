@@ -19,6 +19,10 @@ type Props = {
   emptyMessage?: string;
 };
 
+/**
+ * Shares class-page headings, request messages, reload controls, and list presentation.
+ * Pages supply their own form, state, and optional per-class actions.
+ */
 export function ClassroomPanel({
   headingId, eyebrow, title, listTitle, busy, error, notice,
   classrooms, nextOffset, onReload, onMore, children, renderActions, emptyMessage,

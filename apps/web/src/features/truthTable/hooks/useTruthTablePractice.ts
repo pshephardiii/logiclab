@@ -6,6 +6,10 @@ import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../
 import { cellKey } from '../types';
 import type { Answers } from '../types';
 
+/**
+ * Owns the current formula, exercise, answers, checking feedback, and solution visibility.
+ * Edits cancel pending work so superseded responses cannot restore stale exercise state.
+ */
 export function useTruthTablePractice() {
   const [formula, setFormula] = useState('(P ∧ Q) → R');
   const [exercise, setExercise] = useState<TruthTableExerciseResponse | null>(null);

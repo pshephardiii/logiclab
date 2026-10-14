@@ -1,6 +1,9 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useTruthTablePractice } from './hooks/useTruthTablePractice';
 const PracticeContext = createContext<ReturnType<typeof useTruthTablePractice> | null>(null);
+/**
+ * Keeps practice state above routing so answers survive navigation between pages.
+ */
 export function PracticeProvider({ children }: { children: ReactNode }) {
   const practice = useTruthTablePractice();
   return <PracticeContext.Provider value={practice}>{children}</PracticeContext.Provider>;

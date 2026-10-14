@@ -5,6 +5,10 @@ import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
 import { createClassroom, listClassrooms } from '../../../api/classrooms/api';
 
+/**
+ * Manages the instructor's owned-class list, creation, and offset pagination.
+ * Shows successful creations immediately and reports success so callers can decide when to clear input.
+ */
 export function useClassrooms() {
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);

@@ -7,6 +7,9 @@ import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { routeDefinitions } from './route-definitions';
 
+/**
+ * Connects route metadata to page components and their role guards.
+ */
 export function AppRoutes() {
   const { practice, account, instructorClasses, studentClasses } = routeDefinitions;
 

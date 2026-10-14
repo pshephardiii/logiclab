@@ -3,6 +3,10 @@ import { NavLink } from 'react-router';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 import { navigationRoutes } from '../../routing/route-definitions';
 
+/**
+ * Renders route-defined links visible to the current account role.
+ * Access enforcement remains in route guards and the backend.
+ */
 export function Navigation() {
   const { user } = useAccountContext();
   const visibleRoutes = navigationRoutes.filter(route =>

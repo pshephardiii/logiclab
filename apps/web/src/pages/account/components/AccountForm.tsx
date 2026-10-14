@@ -10,6 +10,10 @@ const titles: Record<AccountView, string> = {
   'forgot-password': 'Send reset code', 'reset-password': 'Reset password',
 };
 
+/**
+ * Renders fields for the selected account workflow and delegates submission to its caller.
+ * Password fields are cleared after each submitted request settles.
+ */
 export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
   const needsPassword = ['login', 'signup', 'reset-password'].includes(view);
   const newPassword = view !== 'login';

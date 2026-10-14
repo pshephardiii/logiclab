@@ -9,6 +9,9 @@ type Props = {
   onChange: (value: boolean | null) => void;
 };
 
+/**
+ * Renders a controlled blank/T/F input with accessible feedback and an optional solution value.
+ */
 export function AnswerCell({ label, value, status, expected, feedbackId, onChange }: Props) {
   return (
     <div className="answer-cell">

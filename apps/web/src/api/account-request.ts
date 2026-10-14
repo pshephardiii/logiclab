@@ -8,6 +8,9 @@ type AccountRequestOptions = {
   errorOverride?: (status: number, payload: unknown) => Error | undefined;
 };
 
+/**
+ * Applies shared account/class HTTP error parsing with caller-supplied fallback messages and overrides.
+ */
 export function requestAccountJson(path: string, {
   signal, body, fallback, errorOverride,
 }: AccountRequestOptions): Promise<unknown> {

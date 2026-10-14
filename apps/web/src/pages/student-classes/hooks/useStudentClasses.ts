@@ -5,6 +5,10 @@ import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
 import { joinClassroom, listEnrollments } from '../../../api/enrollments/api';
 
+/**
+ * Manages student enrollment and paginated class listings.
+ * Successful joins update the list immediately; reloading restores complete pagination.
+ */
 export function useStudentClasses() {
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);

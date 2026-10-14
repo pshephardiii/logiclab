@@ -5,6 +5,9 @@ type RequestOptions = {
   error: (status: number, payload: unknown) => Error;
 };
 
+/**
+ * Sends abortable JSON requests; callers supply HTTP error mapping and validate successful payloads.
+ */
 export async function requestJson(path: string, {
   signal, body, invalidJson = 'null', error,
 }: RequestOptions): Promise<unknown> {

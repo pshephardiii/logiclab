@@ -3,6 +3,10 @@ import { Page } from '../components/layout/Page';
 import { useAccountContext } from '../features/auth/AccountProvider';
 import { routeDefinitions, type RouteAccess } from './route-definitions';
 
+/**
+ * Waits for account restoration, redirects signed-out visitors, and checks allowed roles.
+ * Authorized child pages render through the routing outlet.
+ */
 export function ProtectedRoute({ allowedRoles, deniedTitle, deniedMessage }: RouteAccess) {
   const { user, busy } = useAccountContext();
 
