@@ -169,3 +169,5 @@ Keep domain state and request lifecycles visible in each hook. Use named operati
 Abort prior requests before starting replacements and on unmount. Guard success, error, and final loading updates with the operation's abort signal. Preserve formula/answer-edit invalidation, solution/answer retention, signup/recovery transitions, logout reconciliation, and the different instructor-create/student-join pagination rules. Keep hook return interfaces stable during internal refactors.
 
 `ClassroomPanel` shares the instructor/student class-page presentation: headings, notices/errors, reload/loading states, and the paginated list. Pages supply their form as children and optional per-class actions. Keep page-specific hooks and mutations outside this presentation component.
+
+Classroom/enrollment list handlers share response slicing and next-offset calculation through `routes/classroom/pagination.ts`. Keep role authorization and scoped store calls explicit in each handler; fetch `limit + 1` rows so the helper can identify a following page without a count query.
