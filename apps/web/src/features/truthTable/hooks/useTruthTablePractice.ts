@@ -1,5 +1,6 @@
+import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { submittedAnswers } from '../helpers/submitted-answers';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { TruthTableExerciseResponse, TruthTableCheckResponse, TruthTableSolutionResponse } from '@logiclab/contracts';
 import { createExercise, checkAnswers, getSolution, PracticeApiError } from '../../../api/truth-tables/api';
 import { cellKey } from '../types';
@@ -16,15 +17,7 @@ export function useTruthTablePractice() {
   const [action, setAction] = useState<'check' | 'solution' | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const requestRef = useRef<AbortController | null>(null);
-  useEffect(() => () => requestRef.current?.abort(), []);
-
-  function startRequest() {
-    requestRef.current?.abort();
-    const controller = new AbortController();
-    requestRef.current = controller;
-    return controller;
-  }
+  const { startRequest, cancelRequest } = useAbortableRequest();
 
   function resetFeedback() {
     setFeedback(null);
@@ -34,7 +27,7 @@ export function useTruthTablePractice() {
   }
 
   function changeFormula(value: string) {
-    requestRef.current?.abort();
+    cancelRequest();
     resetFeedback();
     setFormula(value);
     setExercise(null);
@@ -44,31 +37,31 @@ export function useTruthTablePractice() {
   }
 
   async function createTable() {
-    const controller = startRequest();
+    const signal = startRequest();
     resetFeedback();
     setLoading(true);
     setError(null);
     setExercise(null);
     setAnswers({});
     try {
-      const result = await createExercise(formula, controller.signal);
-      if (!controller.signal.aborted) setExercise(result);
+      const result = await createExercise(formula, signal);
+      if (!signal.aborted) setExercise(result);
     } catch (caught) {
-      if (controller.signal.aborted) return;
+      if (signal.aborted) return;
       setError(caught instanceof PracticeApiError ? caught.message : 'Unable to reach the practice API. Check your connection and try again.');
       inputRef.current?.focus();
       if (caught instanceof PracticeApiError && caught.position !== undefined) {
         inputRef.current?.setSelectionRange(caught.position, caught.position + 1);
       }
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      if (!signal.aborted) setLoading(false);
     }
   }
 
   const total = exercise ? exercise.rows.length * exercise.columns.filter(column => column.kind === 'answer').length : 0;
   const completed = Object.values(answers).filter(value => value != null).length;
   function changeAnswer(rowId: string, columnId: string, value: boolean | null) {
-    requestRef.current?.abort();
+    cancelRequest();
     setAction(null);
     setActionError(null);
     setFeedback(null);
@@ -77,22 +70,22 @@ export function useTruthTablePractice() {
 
   async function runAction(kind: 'check' | 'solution') {
     if (!exercise) return;
-    const controller = startRequest();
+    const signal = startRequest();
     setAction(kind);
     setActionError(null);
     if (kind === 'check') setFeedback(null);
     try {
       if (kind === 'check') {
-        const result = await checkAnswers({ formula, answers: submittedAnswers(exercise, answers) }, controller.signal);
-        if (!controller.signal.aborted) setFeedback(result);
+        const result = await checkAnswers({ formula, answers: submittedAnswers(exercise, answers) }, signal);
+        if (!signal.aborted) setFeedback(result);
       } else {
-        const result = await getSolution(formula, controller.signal);
-        if (!controller.signal.aborted) setSolution(result);
+        const result = await getSolution(formula, signal);
+        if (!signal.aborted) setSolution(result);
       }
     } catch (caught) {
-      if (!controller.signal.aborted) setActionError(caught instanceof PracticeApiError ? caught.message : 'Unable to reach the practice API. Please try again.');
+      if (!signal.aborted) setActionError(caught instanceof PracticeApiError ? caught.message : 'Unable to reach the practice API. Please try again.');
     } finally {
-      if (!controller.signal.aborted) setAction(null);
+      if (!signal.aborted) setAction(null);
     }
   }
 

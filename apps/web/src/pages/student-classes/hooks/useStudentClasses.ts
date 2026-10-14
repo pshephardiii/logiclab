@@ -1,5 +1,6 @@
+import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { appendClassroomPage } from '../../../features/classroom/helpers/classroom-pages';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
 import { joinClassroom, listEnrollments } from '../../../api/enrollments/api';
@@ -10,7 +11,7 @@ export function useStudentClasses() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const pending = useRef<AbortController | null>(null);
+  const { startRequest } = useAbortableRequest();
 
   async function joinClass(code: string, signal: AbortSignal) {
     const classroom = await joinClassroom(code, signal);
@@ -30,27 +31,24 @@ export function useStudentClasses() {
   }
 
   async function run(action: 'list' | 'more' | 'join', code?: string): Promise<boolean> {
-    pending.current?.abort();
-    const controller = new AbortController();
-    pending.current = controller;
+    const signal = startRequest();
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
-      if (action === 'join') await joinClass(code!, controller.signal);
-      else await loadClasses(action === 'more', controller.signal);
-      if (controller.signal.aborted) return false;
+      if (action === 'join') await joinClass(code!, signal);
+      else await loadClasses(action === 'more', signal);
+      if (signal.aborted) return false;
       return true;
     } catch (caught) {
-      if (!controller.signal.aborted) setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
+      if (!signal.aborted) setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
       return false;
     } finally {
-      if (!controller.signal.aborted) setBusy(false);
+      if (!signal.aborted) setBusy(false);
     }
   }
   useEffect(() => {
     void run('list');
-    return () => pending.current?.abort();
   }, []);
   return { classrooms, nextOffset, busy, error, notice, run };
 }

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
+import { useEffect, useState } from 'react';
 import { AccountApiError } from '../../../api/errors';
 import { accountAction, loadSession, login } from '../../../api/auth/api';
 import type { SignedInUser } from '../../../api/auth/api';
@@ -12,24 +13,22 @@ export function useAccount() {
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const requestRef = useRef<AbortController | null>(null);
+  const { startRequest } = useAbortableRequest();
 
   useEffect(() => {
-    const controller = new AbortController();
-    requestRef.current = controller;
+    const signal = startRequest();
     async function restoreSession() {
       try {
-        const currentUser = await loadSession(controller.signal);
-        if (!controller.signal.aborted) setUser(currentUser);
+        const currentUser = await loadSession(signal);
+        if (!signal.aborted) setUser(currentUser);
       } catch {
-        if (!controller.signal.aborted) setError('Could not check your account. Try signing in, or continue practicing.');
+        if (!signal.aborted) setError('Could not check your account. Try signing in, or continue practicing.');
       } finally {
-        if (!controller.signal.aborted) setBusy(false);
+        if (!signal.aborted) setBusy(false);
       }
     }
     void restoreSession();
-    return () => requestRef.current?.abort();
-  }, []);
+  }, [startRequest]);
 
   function navigate(next: AccountView) {
     setView(next);
@@ -59,29 +58,27 @@ export function useAccount() {
   }
 
   async function run(action: AccountView | 'resend' | 'logout', fields: Record<string, string>) {
-    requestRef.current?.abort();
-    const controller = new AbortController();
-    requestRef.current = controller;
+    const signal = startRequest();
     setBusy(true);
     setError(null);
     setNotice(null);
     if (fields.email) setEmail(fields.email.trim().toLowerCase());
     try {
       if (action === 'login') {
-        const result = await login(fields, controller.signal);
-        if (!controller.signal.aborted) setUser(result);
+        const result = await login(fields, signal);
+        if (!signal.aborted) setUser(result);
       } else {
-        const message = await accountAction(action, fields, controller.signal);
-        if (controller.signal.aborted) return;
+        const message = await accountAction(action, fields, signal);
+        if (signal.aborted) return;
         applyAccountAction(action, message);
       }
     } catch (caught) {
-      if (!controller.signal.aborted) {
+      if (!signal.aborted) {
         setError(caught instanceof AccountApiError ? caught.message : 'Could not complete the request. Please try again.');
-        if (action === 'logout') await reconcileLogout(controller.signal);
+        if (action === 'logout') await reconcileLogout(signal);
       }
     } finally {
-      if (!controller.signal.aborted) setBusy(false);
+      if (!signal.aborted) setBusy(false);
     }
   }
   return { user, view, email, busy, error, notice, navigate, run };
