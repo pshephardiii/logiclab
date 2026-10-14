@@ -1,10 +1,8 @@
-import { installZodSchemas, installRateLimitDefaults } from '../setup';
+import { installAccountHttpPolicy } from '../account-http';
 import type { FastifyInstance } from 'fastify';
-import cookie from '@fastify/cookie';
-import rateLimit from '@fastify/rate-limit';
 import { authErrorResponseSchema } from '@logiclab/contracts';
 import { AuthError } from '../../application/auth/service';
-import { assertAuthOrigin, clearSessionCookie } from './cookies';
+import { clearSessionCookie } from './cookies';
 import type { AuthContext } from './context';
 import { errorName } from './helpers';
 import { postSignupRoute } from './postSignup/route';
@@ -17,15 +15,9 @@ import { postForgotPasswordRoute } from './postForgotPassword/route';
 import { postResetPasswordRoute } from './postResetPassword/route';
 
 export async function authRoutes(app: FastifyInstance, context: AuthContext) {
-  installZodSchemas(app);
-  await app.register(cookie);
-  installRateLimitDefaults(app);
-  await app.register(rateLimit, { global: true, max: 60, timeWindow: '1 minute',
+  await installAccountHttpPolicy(app, context.config, {
+    global: true,
     keyGenerator: request => request.ip,
-  });
-  app.addHook('onRequest', async (request, reply) => {
-    reply.header('Cache-Control', 'no-store');
-    if (request.method !== 'GET') assertAuthOrigin(request, context.config);
   });
   app.setErrorHandler((error, request, reply) => {
     let status = 503; let code = 'AUTH_UNAVAILABLE'; let text = 'Authentication is temporarily unavailable. Please try again.';

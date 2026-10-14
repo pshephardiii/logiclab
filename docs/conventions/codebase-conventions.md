@@ -171,3 +171,5 @@ Abort prior requests before starting replacements and on unmount. Guard success,
 `ClassroomPanel` shares the instructor/student class-page presentation: headings, notices/errors, reload/loading states, and the paginated list. Pages supply their form as children and optional per-class actions. Keep page-specific hooks and mutations outside this presentation component.
 
 Classroom/enrollment list handlers share response slicing and next-offset calculation through `routes/classroom/pagination.ts`. Keep role authorization and scoped store calls explicit in each handler; fetch `limit + 1` rows so the helper can identify a following page without a count query.
+
+Auth/classroom groups apply `routes/account-http.ts` directly to their existing Fastify scope for Zod compilers, cookies, rate-limit defaults, cache headers, and origin checks. Apply shared policy before registering endpoints, preserving plugin/hook ordering. Group-specific limiter options stay explicit; authorization and error mapping remain in each group. This setup does not authenticate users and is not installed on anonymous practice routes.

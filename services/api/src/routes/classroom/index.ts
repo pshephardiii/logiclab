@@ -1,14 +1,12 @@
-import { installZodSchemas, installRateLimitDefaults } from '../setup';
+import { installAccountHttpPolicy } from '../account-http';
 import { instructor, student } from './helpers';
 import { getEnrollmentRoute } from './getEnrollment/route';
 import { getEnrollmentsRoute } from './getEnrollments/route';
 import { postEnrollmentRoute } from './postEnrollment/route';
 import type { FastifyInstance } from 'fastify';
-import cookie from '@fastify/cookie';
-import rateLimit from '@fastify/rate-limit';
 import { authErrorResponseSchema } from '@logiclab/contracts';
 import { AuthError } from '../../application/auth/service';
-import { assertAuthOrigin, clearSessionCookie } from '../auth/cookies';
+import { clearSessionCookie } from '../auth/cookies';
 import { ClassroomError } from './helpers';
 import type { ClassroomContext } from './context';
 import { postInvitationRoute } from './postInvitation/route';
@@ -17,15 +15,8 @@ import { getClassroomsRoute } from './getClassrooms/route';
 import { getClassroomRoute } from './getClassroom/route';
 
 export async function classroomRoutes(app: FastifyInstance, context: ClassroomContext) {
-  installZodSchemas(app);
   app.decorateRequest('classroomUser', null);
-  await app.register(cookie);
-  installRateLimitDefaults(app);
-  await app.register(rateLimit, { max: 60, timeWindow: '1 minute' });
-  app.addHook('onRequest', async (request, reply) => {
-    reply.header('Cache-Control', 'no-store');
-    if (request.method !== 'GET') assertAuthOrigin(request, context.config);
-  });
+  await installAccountHttpPolicy(app, context.config);
   // Preserve authorization-before-field-validation, without authenticating twice.
   app.addHook('preValidation', async request => {
     const authorize = request.routeOptions.url?.startsWith('/api/enrollments') ? student : instructor;
