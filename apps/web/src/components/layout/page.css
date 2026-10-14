@@ -1,0 +1,4 @@
+main { max-width: 72rem; margin: 4rem auto; padding: 0 1.5rem; }
+@media (max-width: 600px) { main { margin-top: 2rem; padding: 0 1rem; } }
+.account-page { max-width: 40rem; }
+.account-page h1 { font-size: 2rem; }

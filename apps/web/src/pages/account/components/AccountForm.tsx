@@ -43,7 +43,7 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
             autoComplete={newPassword ? 'new-password' : 'current-password'} aria-describedby={newPassword ? 'password-help' : undefined} />
           {newPassword && <p id="password-help" className="help">Use at least 12 characters, including uppercase, lowercase, a number, and a symbol.</p>}
         </>}
-        <div className="practice-actions">
+        <div className="action-row">
           <button type="submit">{busy ? 'Please wait…' : titles[view]}</button>
           {view === 'confirm' && <button type="button" className="secondary" onClick={event => {
             const form = event.currentTarget.form!;

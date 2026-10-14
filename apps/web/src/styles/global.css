@@ -1,0 +1,14 @@
+:root { font-family: system-ui, sans-serif; color: #162a36; background: #f4f7f6; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; margin: 1rem 0; }
+h2 { font-size: 1.2rem; margin: 0 0 1rem; }
+p { line-height: 1.6; }
+label { display: block; font-weight: 600; margin-bottom: .5rem; }
+input, select, button { font: inherit; border-radius: .4rem; }
+input { flex: 1; min-width: 0; border: 1px solid #70858d; padding: .8rem; font-size: 1.1rem; }
+button { border: 0; background: #176650; color: white; padding: .8rem 1.2rem; font-weight: 600; cursor: pointer; }
+button:hover:not(:disabled) { background: #104b3b; }
+button:disabled { opacity: .6; cursor: default; }
+:focus-visible { outline: 3px solid #1976ba; outline-offset: 3px; }
+select { min-width: 5.5rem; padding: .55rem; background: white; color: #162a36; border: 1px solid #70858d; cursor: pointer; }

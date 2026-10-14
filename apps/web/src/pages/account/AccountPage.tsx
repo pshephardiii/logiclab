@@ -1,3 +1,4 @@
+import './account.css';
 import { Page } from '../../components/layout/Page';
 import { AccountPanel } from './components/AccountPanel';
 import { useAccountContext } from '../../features/auth/AccountProvider';

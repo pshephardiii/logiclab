@@ -26,7 +26,7 @@ export function ExercisePanel({ exercise, formula, answers, loading, completed, 
         {exercise && <span className="progress">{completed} / {total} cells filled</span>}
       </div>
       <p role="status" className="help">{loading ? 'Creating your exercise…' : exercise ? 'Table ready. Given values are fixed; choose T or F for each answer.' : 'Enter a formula above and select Create table to start.'}</p>
-      {exercise && <div className="practice-actions">
+      {exercise && <div className="action-row">
         <button disabled={action !== null} onClick={() => void onCheck()}>{action === 'check' ? 'Checking…' : 'Check answers'}</button>
         <button className="secondary" disabled={action !== null} onClick={onToggleSolution}>{action === 'solution' ? 'Loading solution…' : solution ? 'Hide solution' : 'Show solution'}</button>
       </div>}

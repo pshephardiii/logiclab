@@ -6,7 +6,7 @@ export function ClassroomForm({ busy, onCreate }: Props) {
     event.preventDefault(); void onCreate(name).then(created => { if (created) setName(''); });
   }}>
     <label htmlFor="class-name">Class name</label>
-    <div className="formula-entry">
+    <div className="form-row">
       <input id="class-name" value={name} onChange={event => setName(event.target.value)} required maxLength={120} disabled={busy} />
       <button disabled={busy || !name.trim()} type="submit">Create class</button>
     </div>

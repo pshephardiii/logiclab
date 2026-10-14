@@ -153,3 +153,9 @@ Place single-page forms, panels, and orchestration hooks under that page's direc
 Group domain clients under `src/api/auth/`, `classrooms/`, `enrollments/`, and `truth-tables/`. Each domain's `api.ts` exposes named operations and owns contract validation and domain error messages. `api/http-client.ts` handles base URLs, JSON request encoding, same-origin credentials, response decoding, and abort signals. `api/account-request.ts` applies shared account/class error handling with domain fallback messages and optional overrides. Error types and parsing belong in `api/errors.ts`, so classroom code does not depend on the auth client.
 
 Keep domain differences explicit: authentication maps a missing service to its existing message and session 401 to a signed-out state; practice preserves formula-error positions and unexpected-response messages. Account/class requests tolerate malformed JSON as null, while practice retains JSON parse failures. Do not add retries or change cancellation, authentication, or response semantics during transport extraction.
+
+## Web: style ownership
+
+Keep resets, typography, and base form controls in `styles/global.css`, and reusable panels, messages, form rows, and action rows in `styles/shared-ui.css`. Import these once from `main.tsx`. Layout styles live beside layout components; the navigation component imports its layout stylesheet. Shared compact-page sizing belongs to the page layout because account and both class pages use it.
+
+Keep account-specific form/link styling beside the account page and truth-table styling beside the truth-table feature, imported by their composition components. Put responsive rules beside the selectors they modify. These remain ordinary global CSS stylesheets; use descriptive selectors and account for cascade order. Split by actual ownership rather than creating empty stylesheets for every page.

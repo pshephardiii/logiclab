@@ -15,7 +15,7 @@ export function FormulaForm({ formula, loading, error, inputRef, onFormulaChange
       <h2 id="formula-heading">Choose a formula</h2>
       <form onSubmit={event => { event.preventDefault(); void onCreate(); }}>
         <label htmlFor="formula">Propositional formula</label>
-        <div className="formula-entry">
+        <div className="form-row">
           <input ref={inputRef} id="formula" name="formula" value={formula}
             onChange={event => onFormulaChange(event.target.value)} required maxLength={256}
             autoComplete="off" spellCheck={false} aria-invalid={Boolean(error)}

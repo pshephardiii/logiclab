@@ -1,3 +1,4 @@
+import './layout/navigation.css';
 import { NavLink } from 'react-router';
 import { useAccountContext } from '../features/auth/AccountProvider';
 import { navigationRoutes } from '../routing/route-definitions';

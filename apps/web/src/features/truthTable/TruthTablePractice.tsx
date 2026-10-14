@@ -1,3 +1,4 @@
+import './truth-table.css';
 import { usePracticeContext } from './PracticeProvider';
 import { FormulaForm } from './components/FormulaForm';
 import { ExercisePanel } from './components/ExercisePanel';
