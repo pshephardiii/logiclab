@@ -92,3 +92,22 @@ test('practice preserves formula positions and remaps only invalid successful re
     new PracticeApiError('The API returned an unexpected response. Please try again.'),
   );
 });
+
+test('explicit PATCH requests retain JSON encoding, credentials, and validation', async () => {
+  const fetch = vi.fn().mockResolvedValue(new Response('{"name":"Logic"}'));
+  vi.stubGlobal('fetch', fetch);
+  await requestValidatedJson('/api/example', {
+    ...options,
+    method: 'PATCH',
+    body: { name: 'Logic' },
+  });
+  expect(fetch).toHaveBeenCalledWith(
+    '/api/example',
+    expect.objectContaining({
+      method: 'PATCH',
+      credentials: 'same-origin',
+      body: '{"name":"Logic"}',
+      signal: options.signal,
+    }),
+  );
+});

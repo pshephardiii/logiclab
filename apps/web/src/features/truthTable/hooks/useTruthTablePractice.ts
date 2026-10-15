@@ -19,8 +19,8 @@ import type { Answers } from '../types';
  * Owns the current formula, exercise, answers, checking feedback, and solution visibility.
  * Edits cancel pending work so superseded responses cannot restore stale exercise state.
  */
-export function useTruthTablePractice() {
-  const [formula, setFormula] = useState('(P ∧ Q) → R');
+export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
+  const [formula, setFormula] = useState(initialFormula);
   const [exercise, setExercise] = useState<TruthTableExerciseResponse | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
   const [loading, setLoading] = useState(false);

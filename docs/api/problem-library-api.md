@@ -1,6 +1,6 @@
 # Private problem-library API
 
-These endpoints manage instructor-owned truth-table drafts, immutable published versions, and archive/restore actions. Classroom sharing and the library UI are subsequent slices. Publishing does not grant students access.
+These endpoints manage instructor-owned truth-table drafts, immutable published versions, and archive/restore actions. The instructor library UI is available at `/library`; classroom sharing is deferred. Publishing does not grant students access.
 
 All operations require an instructor session. Ownership comes from the authenticated application user; clients cannot supply owner or classroom identifiers. Authorization runs before request-field validation. Foreign and missing IDs both return `404 PROBLEM_NOT_FOUND`. Responses use `Cache-Control: no-store`; mutations require the configured exact `Origin`. Account-route read/mutation rate limits apply.
 
@@ -56,3 +56,15 @@ POST actions require an empty JSON object (`{}`). Publish copies the current tit
 History lists return `{ versions, nextOffset }`, using the same pagination bounds as draft lists. Missing or foreign versions return `404 PROBLEM_VERSION_NOT_FOUND`. Archived problems retain owner-only history access; publishing an archived problem returns `409 PROBLEM_ARCHIVED`. Archive and restore are idempotent, and repeated archiving preserves the original archive timestamp.
 
 Publish, edit, and archive/restore transactions lock the same parent problem row. Concurrent publications receive distinct sequential version numbers; snapshots reflect committed draft content, and publication checks archive state after acquiring the lock. Database triggers reject changes or deletion of published versions. PostgreSQL integration tests exercise simultaneous publications and publication waiting behind edit/archive transactions in a disposable schema, without bypassing immutability protections.
+
+## Instructor library page
+
+Sign in as an instructor and choose **Problem library** in navigation. Create a title, optional instructions, and a formula, then select **Save draft**. Select a problem from the list to edit it; failed saves retain entered fields. Switching problems or choosing **New problem** discards unsaved edits. Reloading the browser reloads persisted library data; editor selection and unsaved input are not persisted.
+
+Save edits before selecting **Publish saved draft**. Publication and archive controls are disabled while the form differs from the saved draft. Published versions show their own title, instructions, formula, and timestamp, with separate preview controls. A publication error can mean the server committed before the response was lost: reload history before deciding to publish again. The client never automatically retries publication.
+
+**Preview draft** uses the current editor formula, including unsaved content. **Preview version** uses the immutable snapshot formula. Previews use the existing practice table, answer checking, and solution display, with state independent of the Practice page. Close/reopen a preview to start fresh. Nothing is assigned to students, and preview answers are not saved.
+
+Use **Archive problem** to remove a saved problem from active listing; choose **Archived** or **All** to find it again. Archived drafts are read-only and retain version previews/history. **Restore problem** makes the draft editable and publishable. Problem lists and history load additional pages explicitly; failed loads can be retried through the reload controls.
+
+Frontend regression tests cover create/edit failure retention, saved publication, uncertain publication failures, archive/restore, pagination, stale-response cancellation, role-aware navigation, and preview-state isolation. These DOM/hook checks do not replace the final real-browser and live-session walkthrough.

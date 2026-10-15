@@ -1,6 +1,7 @@
 export type RequestOptions = {
   signal: AbortSignal;
   body?: unknown;
+  method?: 'GET' | 'POST' | 'PATCH';
   invalidJson?: 'throw' | 'null';
   error: (status: number, payload: unknown) => Error;
 };
@@ -10,11 +11,11 @@ export type RequestOptions = {
  */
 export async function requestJson(
   path: string,
-  { signal, body, invalidJson = 'null', error }: RequestOptions,
+  { signal, body, method, invalidJson = 'null', error }: RequestOptions,
 ): Promise<unknown> {
   const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
   const response = await fetch(`${base}${path}`, {
-    method: body === undefined ? 'GET' : 'POST',
+    method: method ?? (body === undefined ? 'GET' : 'POST'),
     credentials: 'same-origin',
     signal,
     ...(body === undefined
