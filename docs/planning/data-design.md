@@ -125,3 +125,23 @@ Resolve these when their workflows enter scope. Keep this document current as de
 Database entities in `tools/db/src/entities` are TypeScript classes using MikroORM standard ES decorators from `@mikro-orm/decorators/es`. Properties carry their mapping through `@PrimaryKey`, `@Property`, `@Enum`, and `@ManyToOne`; class decorators name tables, indexes, and unique constraints. Classes supply both runtime entities and TypeScript types, without separate EntitySchema property maps or inferred-type exports. Scalar types and relationship targets are explicit, so discovery needs neither reflection metadata nor legacy TypeScript decorator flags. Generated UUID/timestamp properties are optional during ORM creation via `OptionalProps`; instance initializers, `onCreate` generators, and database defaults preserve creation behavior. Existing column names, constraints, indexes, and deletion rules are preserved.
 
 `tools/contracts` separately defines Zod API request/response contracts. Those public shapes can omit persisted fields or serialize values differently (for example, dates become ISO strings). Changing entity definition style does not itself require a migration; MikroORM's schema check confirmed this conversion matches the existing database.
+
+## Problem-library decisions (005)
+
+`Problem` belongs to an instructor user and stores mutable draft title, optional instructions, and an exercise definition. `ProblemVersion` belongs to the stable problem and snapshots those content fields at publication with a per-problem version number and publication timestamp. Publishing creates a new record; edits never rewrite published content. There is no current-version foreign key in the initial foundation; version ordering identifies publication history.
+
+Use format-versioned JSONB for the exercise definition, initially `{ type: 'truth_table', definitionVersion: 1, formula: string }`. Given values and correct answers remain derived by the logic engine. API validation will enforce syntax and complexity limits; entity typing alone does not validate JSON received from clients.
+
+Archive is a reversible timestamp on the problem, rather than deletion or a published-content status. Preserve immutable versions and future assignment references. The library is initially private to its owner. Later classroom sharing/assignments reference a selected published version; publishing alone does not expose it to students. Problems do not contain a classroom ID, enabling reuse across classes. Student practice remains unsaved.
+
+The persistence foundation protects published rows against updates and deletion in PostgreSQL, preserves the parent through restrictive foreign keys, and enforces unique positive version numbers per problem. Creating versions atomically and enforcing instructor-only library access belong to the following API slices.
+
+Register publication immutability with MikroORM's `@Trigger` as well as migration SQL. A schema-drift integration test protects this metadata: future schema generation must not propose dropping the trigger.
+
+### Multiple exercise types
+
+Keep one `Problem` entity and one `ProblemVersion` entity across truth tables and future derivation exercises. Ownership, draft editing, publication history, and archiving are shared responsibilities. Exercise-specific authored content belongs in the JSONB `definition`, not in truth-table-specific columns on the parent entities.
+
+`ProblemDefinition` currently permits only truth tables because those are the implemented exercise type. When derivations enter scope, extend it into a union discriminated by `type`, with a corresponding runtime validator for each variant and supported definition-format version. Derivations will likely need premises, a conclusion, and a proof-system identifier; exact fields and rules remain deferred. Do not add placeholder entities or accept unsupported definition types in advance.
+
+Student proof lines, truth-table entries, and grading results belong to future attempts/submissions, not authored definitions. Published snapshots retain their original type, format version, and content even as support for additional exercise types is introduced.

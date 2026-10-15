@@ -124,9 +124,29 @@ Depends on: the completed classroom-access branch.
 
 Done when: the agreed restructuring is reviewable and existing behavior passes verification. Add no new product features or intended behavior changes. Decide the precise refactor slices after reviewing this branch; assignments remain subsequent work.
 
-### 5. `005-feat-assignments-and-progress` — A complete learning workflow
+### 5. `005-feat-problem-library` — Reusable instructor-authored problems
 
-Depends on: classroom access.
+Depends on: completed classroom access and codebase refactoring.
+
+Build a private instructor-owned truth-table library. Problems are independent of classrooms: later sharing/assignment records connect specific published versions to classes. Publishing does not grant student access. Classroom practice sharing, assignments, grading, derivations, and student-saved personal problems are deferred.
+
+Commit-sized slices:
+
+1. **Persistence foundation (implemented):** mutable `Problem` drafts, immutable `ProblemVersion` snapshots, ownership, archive timestamps, migrations, and database behavior tests.
+2. **Private library API:** shared contracts, owner-scoped create/list/detail/update operations, formula validation using the existing engine, and authorization tests.
+3. **Publishing and archiving:** atomic version numbering/snapshot creation, published-version reads, archive/restore operations, and concurrency/history tests. Archived drafts cannot be edited/published until restored; archived records remain readable to their owner.
+4. **Instructor library pages:** navigation, create/edit forms, draft and version views, preview using existing truth-table components, archive/restore controls, and regression tests.
+5. **Verification/documentation:** end-to-end workflow checks and a local PR draft.
+
+Agreed content: title, optional instructions, truth-table formula, and instructor owner. Drafts remain mutable after publishing; each publication creates a new immutable content snapshot. Archive hides the problem from the active library without deleting its versions or future classroom references. No classroom ID belongs directly on a reusable problem.
+
+Remaining implementation questions: when to treat republishing unchanged content as a new version, and whether the UI offers preview for drafts as well as published versions. Recommended defaults: explicit publish creates a new version, and both forms support preview. Saved definitions use an explicit data-format version; historical engine/grammar compatibility remains a requirement before graded assignments.
+
+Done when: instructors can manage only their own library, publish and retain stable snapshots, preview tables, archive/restore problems, and retain data after reloads. Students receive no new library access in this branch.
+
+### 6. `006-feat-assignments-and-progress` — A complete learning workflow
+
+Depends on: classroom access and the reusable problem library.
 
 - Let instructors compose a small exercise set, publish an assignment, and set a due date.
 - Persist submissions, grade on the server, and show student progress and an instructor overview.
@@ -143,7 +163,7 @@ Open product/design questions:
 - Are late submissions rejected, accepted with a label, or controlled by the instructor?
 - Which timezone defines deadlines, and what student-level information should instructors see?
 
-### 6. `006-feat-simulated-billing-and-entitlements` — Reliable event-driven access
+### 7. `007-feat-simulated-billing-and-entitlements` — Reliable event-driven access
 
 Depends on: classroom access and the assignment entitlement rules.
 
@@ -162,7 +182,7 @@ Open product/design questions:
 - What access remains after cancellation, failed payment, or refund, especially for existing student work?
 - How should employers trigger and inspect failure scenarios without confusing the simulator with real commerce?
 
-### 7. `007-feat-durable-jobs-and-history` — Observable background work
+### 8. `008-feat-durable-jobs-and-history` — Observable background work
 
 Depends on: invitations, due dates, and billing state.
 
@@ -181,7 +201,7 @@ Open product/design questions:
 - Which reconciliation mismatches can be repaired automatically, and which should be flagged?
 - Is an in-app outbox enough for this release, or is real email worth its added setup?
 
-### 8. `008-chore-public-demo-and-portfolio` — An employer-ready release
+### 9. `009-chore-public-demo-and-portfolio` — An employer-ready release
 
 Depends on: the complete journey and the selected deployment model.
 
@@ -222,3 +242,7 @@ Implementation dates and hosting commitments remain open. Sequence work by compl
 ## Next branch scope
 
 After finishing `003-feat-classroom-access` (including student invitation redemption/enrollment and final verification), the agreed next branch is `004-refactor-codebase`. Focus solely on structure, consistency, and maintainability, with no new features or intended behavior changes. Include this direction in the classroom-access branch's local PR draft.
+
+### Current branch status
+
+`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The next slice introduces owner-scoped private-library contracts/API; no library pages or new student access exist yet.

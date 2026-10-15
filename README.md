@@ -115,3 +115,7 @@ Application resource construction lives in `services/api/src/bootstrap/dependenc
 `npm run check` runs workspace type checks, engine/API Jest tests, frontend Vitest tests, and production builds. Frontend tests use jsdom and React Testing Library; run them alone with `npm run test -w @logiclab/web` or interactively with `npm run test:watch -w @logiclab/web`.
 
 With local PostgreSQL running and `TEST_DATABASE_URL` set, `npm run db:test` runs migration/entity checks and the API enrollment integration suite, including duplicate joins, scoped access, and invitation replacement locking. The API suite uses synthetic sessions and makes no Cognito requests. These tests run in the existing CI jobs; they complement real-browser and live-provider checks.
+
+### Problem-library foundation
+
+The current feature branch introduces instructor-owned mutable problem drafts and immutable publication snapshots in PostgreSQL. Archive/restore preserves version history. This is persistence groundwork; private-library API routes and instructor pages are the next slices. Apply new migrations with `npm run db:migrate` on an existing checkout. See [the implementation plan](docs/planning/initial-implementation-plan.md) for scope.

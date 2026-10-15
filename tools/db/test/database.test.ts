@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
@@ -8,6 +9,8 @@ import {
   AuthSession,
   Classroom,
   Enrollment,
+  Problem,
+  ProblemVersion,
 } from '../src/index.js';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -318,4 +321,116 @@ test('enrollment supports multiple classes, isolates students, and preserves mem
   } finally {
     await em.rollback();
   }
+});
+
+async function problemFixture(em: typeof orm.em) {
+  const owner = em.create(User, {
+    cognitoUserPoolId: 'problem-library-test',
+    cognitoSubject: randomUUID(),
+    role: UserRole.Instructor,
+  });
+  const problem = em.create(Problem, {
+    owner,
+    title: 'Conjunction',
+    instructions: 'Complete the table.',
+    definition: { type: 'truth_table', definitionVersion: 1, formula: 'P & Q' },
+  });
+  const published = em.create(ProblemVersion, {
+    problem,
+    version: 1,
+    title: problem.title,
+    instructions: problem.instructions,
+    definition: structuredClone(problem.definition),
+  });
+  em.persist([owner, problem, published]);
+  await em.flush();
+  return { owner, problem, published };
+}
+
+test('draft editing and archive/restore preserve immutable publication history', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { problem, published } = await problemFixture(em);
+    const problemId = problem.id,
+      versionId = published.id;
+    problem.title = 'Revised conjunction';
+    problem.definition = { type: 'truth_table', definitionVersion: 1, formula: 'Q & R' };
+    problem.archivedAt = new Date();
+    await em.flush();
+    em.clear();
+    const saved = await em.findOneOrFail(Problem, problemId);
+    const snapshot = await em.findOneOrFail(ProblemVersion, versionId);
+    assert.equal(saved.title, 'Revised conjunction');
+    assert(saved.archivedAt instanceof Date);
+    assert.equal(snapshot.title, 'Conjunction');
+    assert.equal(snapshot.definition.formula, 'P & Q');
+    assert(snapshot.publishedAt instanceof Date);
+    saved.archivedAt = undefined;
+    await em.flush();
+    em.clear();
+    assert.equal((await em.findOneOrFail(Problem, problemId)).archivedAt, null);
+    assert.equal(await em.count(ProblemVersion, { problem: problemId }), 1);
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const operation of ['update', 'delete'] as const) {
+  test(`database rejects published-version ${operation}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { published } = await problemFixture(em);
+      await assert.rejects(
+        operation === 'update'
+          ? em.nativeUpdate(ProblemVersion, published.id, { title: 'Changed snapshot' })
+          : em.nativeDelete(ProblemVersion, published.id),
+        /Published problem versions are immutable/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const version of [0, 1]) {
+  test(`database rejects ${version === 0 ? 'non-positive' : 'duplicate'} publication versions`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { problem } = await problemFixture(em);
+      em.persist(
+        em.create(ProblemVersion, {
+          problem,
+          version,
+          title: 'Another version',
+          definition: problem.definition,
+        }),
+      );
+      await assert.rejects(
+        em.flush(),
+        version === 0
+          ? /problem_versions_positive_version/
+          : /problem_versions_problem_version_unique/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+test('published history prevents deleting its parent problem', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { problem } = await problemFixture(em);
+    await assert.rejects(em.nativeDelete(Problem, problem.id), /problem_versions_problem_id_fkey/);
+  } finally {
+    await em.rollback();
+  }
+});
+
+test('migrated schema retains the immutable-version trigger without pending changes', async () => {
+  assert.equal((await orm.schema.getUpdateSchemaSQL({ wrap: false })).trim(), '');
 });

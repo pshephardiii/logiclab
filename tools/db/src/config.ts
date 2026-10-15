@@ -1,3 +1,5 @@
+import { Problem } from './entities/Problem.js';
+import { ProblemVersion } from './entities/ProblemVersion.js';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
@@ -13,7 +15,7 @@ export function databaseOptions(
   if (!connectionString) throw new Error('A database connection string is required.');
   return defineConfig({
     clientUrl: connectionString,
-    entities: [User, AuthSession, Classroom, Enrollment],
+    entities: [User, AuthSession, Classroom, Enrollment, Problem, ProblemVersion],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },
     migrations: {

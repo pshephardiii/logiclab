@@ -16,3 +16,7 @@ export async function createDatabase(
 export { Classroom } from './entities/Classroom.js';
 export { Enrollment } from './entities/Enrollment.js';
 export { LockMode } from '@mikro-orm/core';
+
+export { Problem } from './entities/Problem.js';
+export { ProblemVersion } from './entities/ProblemVersion.js';
+export type { ProblemDefinition } from './types/problem-definition.js';
