@@ -1,3 +1,4 @@
+import type { ProblemStore } from '../persistence/problem/store';
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { AuthStore } from '../application/auth/types';
@@ -16,11 +17,13 @@ const ClientConstructor = jest.fn(
 );
 const authStore = jest.fn(async () => ({}) as AuthStore);
 const classroomStore = jest.fn(async () => ({}) as ClassroomStore);
+const problemStore = jest.fn(async () => ({}) as ProblemStore);
 const factories = {
   connectDatabase: connect,
   createClient: ClientConstructor,
   createAuthStore: authStore,
   createClassroomStore: classroomStore,
+  createProblemStore: problemStore,
 };
 
 const env = {
@@ -42,6 +45,7 @@ beforeEach(() => {
     () =>
       ({ destroy: destroyClient, send: sendCommand }) as unknown as CognitoIdentityProviderClient,
   );
+  problemStore.mockReset().mockResolvedValue({} as never);
   authStore.mockReset().mockResolvedValue({} as never);
   classroomStore.mockReset().mockResolvedValue({} as never);
 });
@@ -64,6 +68,8 @@ test('constructs separate route dependencies using one database and auth service
   expect(sendCommand).not.toHaveBeenCalled();
   expect(authStore).toHaveBeenCalledWith(orm, env.COGNITO_USER_POOL_ID);
   expect(classroomStore).toHaveBeenCalledWith(orm);
+  expect(problemStore).toHaveBeenCalledWith(orm);
+  expect(dependencies!.problem.service).toBe(dependencies!.auth.service);
   expect(dependencies!.classroom.service).toBe(dependencies!.auth.service);
   expect(dependencies!.auth).not.toHaveProperty('classrooms');
   await dependencies!.close();
@@ -88,4 +94,11 @@ test('client construction failure still closes the already-open database', async
   });
   await expect(createDependencies(env, factories)).rejects.toThrow('Client failed');
   expect(closeDatabase).toHaveBeenCalledWith(true);
+});
+
+test('problem-store initialization failure closes the shared database and provider client', async () => {
+  problemStore.mockRejectedValueOnce(new Error('Problem store failed'));
+  await expect(createDependencies(env, factories)).rejects.toThrow('Problem store failed');
+  expect(closeDatabase).toHaveBeenCalledWith(true);
+  expect(destroyClient).toHaveBeenCalledTimes(1);
 });

@@ -133,7 +133,7 @@ Build a private instructor-owned truth-table library. Problems are independent o
 Commit-sized slices:
 
 1. **Persistence foundation (implemented):** mutable `Problem` drafts, immutable `ProblemVersion` snapshots, ownership, archive timestamps, migrations, and database behavior tests.
-2. **Private library API:** shared contracts, owner-scoped create/list/detail/update operations, formula validation using the existing engine, and authorization tests.
+2. **Private library API (implemented):** shared contracts, owner-scoped create/list/detail/update operations, formula validation using the existing engine, and authorization tests.
 3. **Publishing and archiving:** atomic version numbering/snapshot creation, published-version reads, archive/restore operations, and concurrency/history tests. Archived drafts cannot be edited/published until restored; archived records remain readable to their owner.
 4. **Instructor library pages:** navigation, create/edit forms, draft and version views, preview using existing truth-table components, archive/restore controls, and regression tests.
 5. **Verification/documentation:** end-to-end workflow checks and a local PR draft.
@@ -245,4 +245,4 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 ### Current branch status
 
-`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The next slice introduces owner-scoped private-library contracts/API; no library pages or new student access exist yet.
+`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The second slice adds owner-scoped private-library contracts/API, formula validation, and access/persistence tests. Publishing/archive actions are next; no library pages or new student access exist yet.

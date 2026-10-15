@@ -1,3 +1,5 @@
+import { createProblemStore } from '../persistence/problem/store';
+import type { ProblemContext } from '../routes/problem/context';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { AuthConfig } from '../config/auth';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
@@ -12,6 +14,7 @@ import type { ClassroomContext } from '../routes/classroom/context';
 export type ApplicationDependencies = {
   auth: AuthContext;
   classroom: ClassroomContext;
+  problem: ProblemContext;
   close: () => Promise<void>;
 };
 
@@ -20,6 +23,7 @@ type DependencyFactories = {
   createClient: (config: AuthConfig) => CognitoIdentityProviderClient;
   createAuthStore: typeof createAuthStore;
   createClassroomStore: typeof createClassroomStore;
+  createProblemStore: typeof createProblemStore;
 };
 
 const defaultFactories: DependencyFactories = {
@@ -28,6 +32,7 @@ const defaultFactories: DependencyFactories = {
   createClient: (config) => new CognitoIdentityProviderClient({ region: config.AWS_REGION }),
   createAuthStore,
   createClassroomStore,
+  createProblemStore,
 };
 
 /** Application composition owns shared resources; auth-disabled practice needs none. */
@@ -51,7 +56,9 @@ export async function createDependencies(
     );
     const classrooms = await factories.createClassroomStore(orm);
 
+    const problems = await factories.createProblemStore(orm);
     return {
+      problem: { config, service, problems },
       auth: { config, service },
       classroom: { config, service, classrooms },
       close: async () => {

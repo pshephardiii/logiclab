@@ -1,3 +1,5 @@
+import { problemRoutes } from './routes/problem';
+import type { ProblemContext } from './routes/problem/context';
 import { classroomRoutes } from './routes/classroom';
 import type { ClassroomContext } from './routes/classroom/context';
 import Fastify from 'fastify';
@@ -10,7 +12,12 @@ import type { AuthContext } from './routes/auth/context';
  * Composes HTTP route groups from supplied dependencies without opening external resources.
  */
 export function buildApp(
-  options: { logger?: boolean; auth?: AuthContext; classroom?: ClassroomContext } = {},
+  options: {
+    logger?: boolean;
+    auth?: AuthContext;
+    classroom?: ClassroomContext;
+    problem?: ProblemContext;
+  } = {},
 ) {
   const app = Fastify({
     logger: options.logger
@@ -26,6 +33,7 @@ export function buildApp(
   });
   if (options.auth) app.register(authRoutes, options.auth);
   if (options.classroom) app.register(classroomRoutes, options.classroom);
+  if (options.problem) app.register(problemRoutes, options.problem);
   app.register(truthTableRoutes);
   app.register(healthRoute);
   return app;

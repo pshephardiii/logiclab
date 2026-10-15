@@ -28,6 +28,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Authentication](api/auth-api.md)
 - [Classes, invitations, and enrollment](api/classroom-api.md)
 - [Truth-table practice](api/truth-table-api.md)
+- [Private problem library](api/problem-library-api.md)
 
 ## Conventions
 
