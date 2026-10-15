@@ -41,6 +41,15 @@ export const routeDefinitions = {
       deniedMessage: 'Classes are currently managed through instructor accounts.',
     },
   },
+  problemLibrary: {
+    path: '/library',
+    navigation: { label: 'Problem library' },
+    access: {
+      allowedRoles: ['instructor'],
+      deniedTitle: 'Instructor access required',
+      deniedMessage: 'Problem libraries require an instructor account.',
+    },
+  },
   studentClasses: {
     path: '/enrollments',
     navigation: { label: 'My classes' },

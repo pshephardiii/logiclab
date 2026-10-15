@@ -1,5 +1,11 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "prettier.requireConfig": true
+  "prettier.requireConfig": true,
+  "files.exclude": {
+    "**/dist": true
+  },
+  "search.exclude": {
+    "**/dist": true
+  }
 }

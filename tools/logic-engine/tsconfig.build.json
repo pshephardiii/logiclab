@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "declaration": true,
-    "types": []
+    "types": [],
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src"],
   "exclude": ["test"]

@@ -46,3 +46,18 @@ test('answer edits abort a pending check and ignore its late result', async () =
   expect(hook.result.current.action).toBeNull();
   expect(hook.result.current.completed).toBe(1);
 });
+
+test('preview formulas and answers stay independent of the practice session', async () => {
+  vi.mocked(createExercise).mockResolvedValue(exercise);
+  const practice = renderHook(() => useTruthTablePractice());
+  const preview = renderHook(() => useTruthTablePractice('P'));
+  expect(preview.result.current.formula).toBe('P');
+  expect(practice.result.current.formula).toBe('(P ∧ Q) → R');
+  await act(async () => {
+    await preview.result.current.createTable();
+  });
+  act(() => preview.result.current.changeAnswer('row:v1:P=T', 'expr:v1:P', true));
+  expect(preview.result.current.completed).toBe(1);
+  expect(practice.result.current.exercise).toBeNull();
+  expect(practice.result.current.answers).toEqual({});
+});

@@ -8,7 +8,7 @@ export { databaseOptions } from './config.js';
 /** Caller closes the ORM on shutdown; use a forked EntityManager per request/job. */
 export async function createDatabase(
   connectionString: string,
-  options: { snapshotOnMigrate?: boolean } = {},
+  options: { snapshotOnMigrate?: boolean; schema?: string } = {},
 ) {
   return MikroORM.init(databaseOptions(connectionString, options));
 }
@@ -16,3 +16,7 @@ export async function createDatabase(
 export { Classroom } from './entities/Classroom.js';
 export { Enrollment } from './entities/Enrollment.js';
 export { LockMode } from '@mikro-orm/core';
+
+export { Problem } from './entities/Problem.js';
+export { ProblemVersion } from './entities/ProblemVersion.js';
+export type { ProblemDefinition } from './types/problem-definition.js';

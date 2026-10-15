@@ -28,6 +28,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Authentication](api/auth-api.md)
 - [Classes, invitations, and enrollment](api/classroom-api.md)
 - [Truth-table practice](api/truth-table-api.md)
+- [Private problem library](api/problem-library-api.md)
 
 ## Conventions
 
@@ -38,5 +39,6 @@ Start with the repository [README](../README.md) for local commands and project 
 
 - [Truth-table walkthrough and evidence](verification/truth-table-verification.md)
 - [Classroom-access walkthrough and evidence](verification/classroom-access-verification.md)
+- [Problem-library walkthrough and evidence](verification/problem-library-verification.md)
 
 Keep new documents in the most relevant group and add them to this index. Product decisions belong in planning, implementation/setup guidance in development or API reference, reusable engineering rules in conventions, and dated validation evidence in verification. Local PR drafts remain in the ignored `.codex-local/pr/` directory.

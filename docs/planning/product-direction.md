@@ -140,3 +140,9 @@ Open billing questions:
 Use React/TypeScript with Vite for the browser app, Node.js/TypeScript with Jest for backend tests, and the shared contracts package for contracts. Keep browser apps under `apps/` and backend services under `services/` so an admin app or worker can be introduced later.
 
 Eventually run local PostgreSQL in Docker and document connecting DBeaver to it. Deploy frontend and backend to AWS using the cheapest viable configuration once runtime, database, and scheduling requirements are known. The classroom-access branch adds local database setup and Cognito integration; frontend/backend AWS hosting remains separate deployment work.
+
+## Initial instructor problem library
+
+The next feature is a private, reusable truth-table library owned by instructor users. Save title, optional instructions, and formula as a mutable draft; publication creates an immutable version. Instructors can archive and restore problems without deleting publication history. A problem is independent of any classroom.
+
+Classroom sharing will later make a selected published version available through enrollment-scoped access; publishing itself does not grant student access. Sharing, assignments/submissions/grades, other exercise types, and saved student-created problems remain outside this branch. Anonymous independent practice continues unchanged.

@@ -1,0 +1,25 @@
+.problem-list,
+.problem-versions {
+  padding-left: 1.5rem;
+}
+.problem-versions li {
+  margin-bottom: 1.5rem;
+  overflow-wrap: anywhere;
+}
+.problem-list button {
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+#problem-instructions {
+  display: block;
+  width: 100%;
+  min-height: 6rem;
+  margin-bottom: 1rem;
+  font: inherit;
+}
+.problem-editor fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+}

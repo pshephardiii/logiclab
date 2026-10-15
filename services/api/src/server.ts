@@ -14,7 +14,13 @@ async function start() {
     closeDependencies = dependencies?.close;
     app = buildApp({
       logger: true,
-      ...(dependencies ? { auth: dependencies.auth, classroom: dependencies.classroom } : {}),
+      ...(dependencies
+        ? {
+            auth: dependencies.auth,
+            classroom: dependencies.classroom,
+            problem: dependencies.problem,
+          }
+        : {}),
     });
     app.addHook('onClose', async () => {
       await closeDependencies?.();
