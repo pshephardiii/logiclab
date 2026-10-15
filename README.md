@@ -118,4 +118,4 @@ With local PostgreSQL running and `TEST_DATABASE_URL` set, `npm run db:test` run
 
 ### Problem-library foundation
 
-The current feature branch introduces instructor-owned mutable problem drafts and immutable publication snapshots in PostgreSQL. Archive/restore preserves version history. Private-library draft API routes are implemented; publishing/archive actions and instructor pages are the next slices. See [the library API](docs/api/problem-library-api.md). Apply new migrations with `npm run db:migrate` on an existing checkout. See [the implementation plan](docs/planning/initial-implementation-plan.md) for scope.
+The current feature branch introduces instructor-owned mutable problem drafts and immutable publication snapshots in PostgreSQL. Archive/restore preserves version history. Private-library draft, publishing, version-history, and archive/restore API routes are implemented; instructor pages are the next slice. See [the library API](docs/api/problem-library-api.md). Apply new migrations with `npm run db:migrate` on an existing checkout. See [the implementation plan](docs/planning/initial-implementation-plan.md) for scope.

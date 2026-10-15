@@ -16,5 +16,5 @@ test.each([0, 1, 2, 3])('lists bounded owner-scoped pages with %i fetched rows',
     problems: Array.from({ length: Math.min(count, 2) }, () => problem),
     nextOffset: count > 2 ? 6 : null,
   });
-  expect(problems.list).toHaveBeenCalledWith(user.id, 3, 4);
+  expect(problems.list).toHaveBeenCalledWith(user.id, 3, 4, 'active');
 });

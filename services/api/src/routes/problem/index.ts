@@ -1,3 +1,8 @@
+import { postProblemVersionRoute } from './postProblemVersion/route';
+import { getProblemVersionsRoute } from './getProblemVersions/route';
+import { getProblemVersionRoute } from './getProblemVersion/route';
+import { postProblemArchiveRoute } from './postProblemArchive/route';
+import { postProblemRestoreRoute } from './postProblemRestore/route';
 import type { FastifyInstance } from 'fastify';
 import { problemErrorResponseSchema } from '@logiclab/contracts';
 import { installAccountHttpPolicy } from '../account-http';
@@ -38,4 +43,9 @@ export async function problemRoutes(app: FastifyInstance, context: ProblemContex
   app.register(getProblemsRoute, context);
   app.register(getProblemRoute, context);
   app.register(patchProblemRoute, context);
+  app.register(postProblemVersionRoute, context);
+  app.register(getProblemVersionsRoute, context);
+  app.register(getProblemVersionRoute, context);
+  app.register(postProblemArchiveRoute, context);
+  app.register(postProblemRestoreRoute, context);
 }

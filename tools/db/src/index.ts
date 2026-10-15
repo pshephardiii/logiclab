@@ -8,7 +8,7 @@ export { databaseOptions } from './config.js';
 /** Caller closes the ORM on shutdown; use a forked EntityManager per request/job. */
 export async function createDatabase(
   connectionString: string,
-  options: { snapshotOnMigrate?: boolean } = {},
+  options: { snapshotOnMigrate?: boolean; schema?: string } = {},
 ) {
   return MikroORM.init(databaseOptions(connectionString, options));
 }

@@ -10,11 +10,12 @@ import { AuthSession } from './entities/AuthSession.js';
 
 export function databaseOptions(
   connectionString: string,
-  options: { snapshotOnMigrate?: boolean } = {},
+  options: { snapshotOnMigrate?: boolean; schema?: string } = {},
 ) {
   if (!connectionString) throw new Error('A database connection string is required.');
   return defineConfig({
     clientUrl: connectionString,
+    ...(options.schema ? { schema: options.schema } : {}),
     entities: [User, AuthSession, Classroom, Enrollment, Problem, ProblemVersion],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },

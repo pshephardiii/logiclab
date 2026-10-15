@@ -134,13 +134,13 @@ Commit-sized slices:
 
 1. **Persistence foundation (implemented):** mutable `Problem` drafts, immutable `ProblemVersion` snapshots, ownership, archive timestamps, migrations, and database behavior tests.
 2. **Private library API (implemented):** shared contracts, owner-scoped create/list/detail/update operations, formula validation using the existing engine, and authorization tests.
-3. **Publishing and archiving:** atomic version numbering/snapshot creation, published-version reads, archive/restore operations, and concurrency/history tests. Archived drafts cannot be edited/published until restored; archived records remain readable to their owner.
+3. **Publishing and archiving (implemented):** atomic version numbering/snapshot creation, published-version reads, archive/restore operations, and concurrency/history tests. Archived drafts cannot be edited/published until restored; archived records remain readable to their owner.
 4. **Instructor library pages:** navigation, create/edit forms, draft and version views, preview using existing truth-table components, archive/restore controls, and regression tests.
 5. **Verification/documentation:** end-to-end workflow checks and a local PR draft.
 
 Agreed content: title, optional instructions, truth-table formula, and instructor owner. Drafts remain mutable after publishing; each publication creates a new immutable content snapshot. Archive hides the problem from the active library without deleting its versions or future classroom references. No classroom ID belongs directly on a reusable problem.
 
-Remaining implementation questions: when to treat republishing unchanged content as a new version, and whether the UI offers preview for drafts as well as published versions. Recommended defaults: explicit publish creates a new version, and both forms support preview. Saved definitions use an explicit data-format version; historical engine/grammar compatibility remains a requirement before graded assignments.
+Publishing uses the recommended default: each explicit publish creates a new version, even for unchanged content. The planned UI default is preview for both drafts and published versions. Saved definitions use an explicit data-format version; historical engine/grammar compatibility remains a requirement before graded assignments.
 
 Done when: instructors can manage only their own library, publish and retain stable snapshots, preview tables, archive/restore problems, and retain data after reloads. Students receive no new library access in this branch.
 
@@ -245,4 +245,4 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 ### Current branch status
 
-`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The second slice adds owner-scoped private-library contracts/API, formula validation, and access/persistence tests. Publishing/archive actions are next; no library pages or new student access exist yet.
+`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The second slice adds owner-scoped private-library contracts/API, formula validation, and access/persistence tests. The third slice adds publishing, owner-scoped version history, archive/restore, archive filters, and concurrency checks. Instructor library pages are next; no new student access exists yet.
