@@ -101,3 +101,5 @@ permissions. The database test command applies it to the configured disposable
 test database; this does not migrate your development database.
 
 Billing plans add `billing_plans` and a required `class_purchases.plan_id` reference. Run `npm run db:migrate` for this addition too. Existing purchases receive retired historical plans preserving their terms; no active catalog plans are seeded yet.
+
+The checkout request-ID migration adds a unique `(payer_id, request_id)` key and backfills old purchases with their existing purchase IDs. Run `npm run db:migrate` before enabling billing HTTP routes.

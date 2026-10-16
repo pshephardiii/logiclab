@@ -13,6 +13,7 @@ export interface ClassPurchaseFields {
   capability: ClassCapability;
   provider: BillingProvider;
   checkoutReference: string;
+  requestId: string;
   status: PurchaseStatus;
   amountMinor: number;
   currency: string;

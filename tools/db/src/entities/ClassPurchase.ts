@@ -29,6 +29,7 @@ import { PurchaseStatus } from '../types/class-purchase/enums.ts';
   name: 'class_purchases_provider_checkout_unique',
   properties: ['provider', 'checkoutReference'],
 })
+@Unique({ name: 'class_purchases_payer_request_unique', properties: ['payer', 'requestId'] })
 @Index({ name: 'class_purchases_classroom_index', properties: ['classroom'] })
 @Check({
   name: 'class_purchases_status_check',
@@ -70,6 +71,9 @@ export class ClassPurchase implements ClassPurchaseFields {
 
   @Property({ type: 'string', fieldName: 'provider', length: 32 })
   provider!: BillingProvider;
+
+  @Property({ type: 'uuid', fieldName: 'request_id' })
+  requestId!: string;
 
   @Property({ type: 'string', fieldName: 'checkout_reference', length: 255 })
   checkoutReference!: string;

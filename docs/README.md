@@ -32,6 +32,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Private problem library](api/problem-library-api.md)
 - [Instructor assignments](api/assignment-api.md)
 - [Student assignment work](api/student-work-api.md)
+- [Simulated billing](api/billing-api.md)
 
 ## Conventions
 

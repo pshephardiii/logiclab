@@ -1,4 +1,5 @@
 import {
+  billingErrorResponseSchema,
   authErrorResponseSchema,
   studentWorkErrorResponseSchema,
   assignmentErrorResponseSchema,
@@ -42,5 +43,10 @@ export const truthTableErrorResponses = errorResponses(truthTableErrorResponseSc
 
 export const studentWorkErrorResponses = errorResponses(
   studentWorkErrorResponseSchema,
+  [400, 401, 403, 404, 409, 413, 415, 429, 503],
+);
+
+export const billingErrorResponses = errorResponses(
+  billingErrorResponseSchema,
   [400, 401, 403, 404, 409, 413, 415, 429, 503],
 );

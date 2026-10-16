@@ -1,6 +1,6 @@
 # Simulated billing development
 
-The provider adapter is local code with no external payment SDK, network calls, card data, or real charges. This slice adds no HTTP endpoints, checkout persistence, grants, or publication enforcement. Institution subscriptions remain future work.
+The provider adapter is local code with no external payment SDK, network calls, card data, or real charges. Owned checkout persistence, signed webhook processing, and simulator controls are now implemented; see the [billing API](../api/billing-api.md). Publication enforcement remains the next slice. Institution subscriptions remain future work.
 
 ## Boundaries
 
@@ -9,9 +9,9 @@ The provider adapter is local code with no external payment SDK, network calls, 
 - `integrations/payments/simulator/create-checkout.ts` produces an opaque checkout reference and a notice explicitly stating no real payment is required. Terms are copied, so later mutation cannot change the returned session.
 - `integrations/payments/simulator/wrapper.ts` owns HMAC-SHA256 signing and constant-time signature comparison.
 - `integrations/payments/simulator/events.ts` constructs, signs, and validates strict versioned events. Success maps to `paid`; failure to `failed`; refund to `refunded`.
-- `config/billing.ts` provides opt-in configuration validation. Bootstrap wiring and HTTP use are upcoming; setting these variables alone does not expose any routes or activate billing.
+- `config/billing.ts` provides opt-in configuration validation. Bootstrap wires billing routes when enabled auth, migrated PostgreSQL, and the dedicated signing key are configured. Billing is disabled by default.
 
-The checkout application will persist the reference and purchased-term snapshot before returning a session. It must verify class ownership, choose the plan on the server, and handle uncertain outcomes without automatic duplicate purchases. Catalog seeding/configuration is deferred to that wiring; no active plans are seeded by this slice.
+The checkout application persists the reference and purchased-term snapshot before returning a session, checks ownership, and uses a payer-scoped request ID for retry safety. Catalog seeding is still deferred; create an active one-time plan locally as described in the API guide.
 
 ## Signing and retries
 
@@ -19,7 +19,7 @@ Signatures use `t=<unix seconds>,v1=<hex HMAC>` over `<timestamp>.<exact body by
 
 Event bodies include a version, event ID, checkout source reference, positive source sequence, outcome, and occurrence time. Strict validation rejects unsupported versions, extra fields, and malformed values after verifying the signature. A delivery retry reuses the original event body/ID but may receive a fresh delivery signature. Occurrence time and delivery time are deliberately separate.
 
-Signature verification does **not** deduplicate events or authorize state changes by itself. The next slice must resolve the purchase, validate transitions and event timing, enforce monotonic source sequences under a lock, and atomically write the receipt and resulting state/grant changes. Trusted simulator controls must assign sequences; browsers must not choose source sequences or timestamps. A valid repeated delivery is expected at this boundary and must be handled idempotently by persistence.
+Signature verification does **not** deduplicate events or authorize state changes by itself. The application now resolves the purchase, validates transitions and event timing, preserves a source-sequence high-water mark under a lock, and atomically writes receipts and state/grant changes. Refunds are terminal even if delivered out of order; older non-refund events cannot restore coverage. Trusted simulator controls must assign sequences; browsers must not choose source sequences or timestamps. A valid repeated delivery is expected at this boundary and must be handled idempotently by persistence.
 
 ## Verification
 

@@ -1,3 +1,5 @@
+import { billingRoutes } from './routes/billing';
+import type { BillingContext } from './routes/billing/context';
 import { studentWorkRoutes } from './routes/studentWork';
 import type { StudentWorkContext } from './routes/studentWork/context';
 import { assignmentRoutes } from './routes/assignment';
@@ -23,6 +25,7 @@ export function buildApp(
     problem?: ProblemContext;
     assignment?: AssignmentContext;
     studentWork?: StudentWorkContext;
+    billing?: BillingContext;
   } = {},
 ) {
   const app = Fastify({
@@ -31,12 +34,14 @@ export function buildApp(
           redact: [
             'req.headers.cookie',
             'req.headers.authorization',
+            'req.headers["x-logiclab-signature"]',
             'req.body',
             'res.headers["set-cookie"]',
           ],
         }
       : false,
   });
+  if (options.billing) app.register(billingRoutes, options.billing);
   if (options.auth) app.register(authRoutes, options.auth);
   if (options.classroom) app.register(classroomRoutes, options.classroom);
   if (options.studentWork) app.register(studentWorkRoutes, options.studentWork);
