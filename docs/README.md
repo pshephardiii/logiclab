@@ -21,6 +21,7 @@ Start with the repository [README](../README.md) for local commands and project 
 
 - [Local database and DBeaver](development/local-database.md)
 - [Cognito development](development/cognito-development.md)
+- [Simulated billing development](development/simulated-billing.md)
 - [GitHub setup](development/github-setup.md)
 
 ## API reference

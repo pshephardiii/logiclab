@@ -172,8 +172,8 @@ Scope: individual instructor **one-time payments per class**, simulated with no 
 Commit-sized slices:
 
 1. **Persistence foundation (implemented):** shared billing plans, plan-linked class purchases with purchased-term snapshots, capability grants, and provider event receipts; exact field interfaces/enums; additive migration/snapshot and database constraints/retention tests. No checkout, webhook, or publication enforcement yet.
-2. **Provider simulator:** provider boundary, server-owned checkout terms, signed events, and clearly labeled no-charge scenarios.
-3. **Transactional event processing:** signature verification, purchase transitions, atomic grant/receipt writes, duplicate protection, source ordering, refund behavior, and retries.
+2. **Provider simulator (implemented):** provider boundary, server-selected plan-term snapshots, local checkout sessions, signed success/failure/refund events, strict verification, and clearly labeled no-charge notices. This is an adapter foundation; HTTP endpoints, persisted checkout creation, and scenario controls follow with application wiring. See [simulator development](../development/simulated-billing.md).
+3. **Transactional event processing:** wire owned checkout creation/persistence and signed webhook/scenario endpoints, purchase transitions, atomic grant/receipt writes, duplicate protection, source ordering, refund behavior, and retries.
 4. **Publication entitlement enforcement:** require active class coverage for new publication, preserving existing work and checking access independently of funding type.
 5. **Instructor billing UI:** class plan status, simulated checkout, success/failure/refund scenarios, and clear teaching-period/access explanations.
 6. **Verification/documentation:** lifecycle/concurrency checks, browser walkthrough, and ignored local PR draft.
