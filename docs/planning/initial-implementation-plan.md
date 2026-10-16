@@ -156,7 +156,7 @@ Commit-sized slices:
 
 1. **Persistence foundation (implemented):** assignment and ordered-item entities, independent policy defaults, additive migration/snapshot, and database constraint/retention tests. No student work or HTTP endpoints yet.
 2. **Instructor assignment API (implemented):** scoped draft authoring, ordered item replacement, transactional publication/archiving, ownership validation, and published-content locks.
-3. **Instructor assignment pages:** class-scoped authoring and publication controls using the library's immutable versions.
+3. **Instructor assignment pages (implemented):** class-scoped authoring and publication controls using the library's immutable versions.
 4. **Student attempts/submission:** enrollment-scoped assignment reads, saved incomplete answers, one final submission, server evaluation, and backend feedback/solution policy.
 5. **Student/instructor pages:** completion workflow, persisted state after reload, and assigned submission review.
 6. **Final verification/documentation:** authorization/lifecycle/concurrency checks, browser walkthrough, and local PR draft.
@@ -249,4 +249,4 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 ### Assignment branch status
 
-Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. The second slice adds scoped instructor assignment authoring, pinned ordered occurrences, transactional publication/content locks, archive/restore, and route/PostgreSQL tests. See the [assignment API](../api/assignment-api.md). The next slice is instructor assignment pages; student reads, attempts, and submissions are not implemented yet.
+Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. The second slice adds scoped instructor assignment authoring, pinned ordered occurrences, transactional publication/content locks, archive/restore, and route/PostgreSQL tests. See the [assignment API](../api/assignment-api.md). The third slice adds instructor-only `/assignments` navigation, class selection, ordered published-version selection, draft authoring, publication, archive/restore, pagination/retries, and frontend regression coverage. A local synthetic-session Chrome/PostgreSQL walkthrough passed desktop/mobile workflows. Student reads, attempts, and submissions are not implemented yet; enrollment-scoped saved work and final submission are next.

@@ -1,6 +1,6 @@
 # Instructor assignment API
 
-This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Student reads, attempts, submissions, feedback enforcement, and UI follow in subsequent slices. Publishing currently records the locked assignment; it introduces no student endpoint by itself.
+This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Student reads, attempts, submissions, feedback enforcement, and student UI follow in subsequent slices. Publishing currently records the locked assignment; it introduces no student endpoint by itself.
 
 Authorization runs before request-field validation and reuses the authenticated user within the request. Foreign and missing classrooms/assignments both return 404. Mutations require the configured exact `Origin`; responses use `Cache-Control: no-store`. Shared account-route rate limits and cookie handling apply.
 
@@ -50,3 +50,19 @@ All draft writes, publication, and archive transitions lock the parent assignmen
 Errors use `{ error: { code, message } }`. Validation returns 400; missing/expired sessions 401; wrong roles/origins 403; absent/foreign assignments/classes `404 ASSIGNMENT_NOT_FOUND`; absent/foreign selected versions `404 PROBLEM_VERSION_NOT_FOUND`; published edits `409 ASSIGNMENT_PUBLISHED`; archived edits/publication `409 ASSIGNMENT_ARCHIVED`; empty publication `409 ASSIGNMENT_EMPTY`. Transport errors preserve 400/413/415, rate limits return 429, and operational failures return sanitized `503 ASSIGNMENT_UNAVAILABLE`.
 
 Run `npm run check` and `npm run db:test`. Colocated handler/route tests cover normalization, omission semantics, authorization ordering, origin policy, pagination, and error sanitization. The real PostgreSQL workflow additionally checks ownership, pinned snapshots, distinct occurrences, atomic rollback, publication idempotency, and publication/edit/archive lock races in an isolated disposable schema. No AWS calls are required. No new migration is introduced by this API slice; apply the preceding assignment-foundation migration with `npm run db:migrate` on existing development checkouts.
+
+## Instructor pages
+
+Sign in as an instructor and choose **Assignments**. Select an owned class; **Load more classes** exposes later pages. If no class exists, follow **Manage classes** to create one. Class selection and unsaved editor state are local to the page and reset on reload/navigation; saved assignments remain in PostgreSQL.
+
+Create a draft with title, optional instructions, and the solution-access checkbox (off by default). Graded assessment and feedback on submission are currently fixed. Choose a library problem, then add a specific published version. Library problems and publications have separate pagination/retry controls; unpublished problems show guidance to publish first. Retained publications of archived problems remain selectable.
+
+The ordered item list displays snapshot titles, versions, instructions, and formulas. Repeated versions are separate occurrences. **Move up**, **Move down**, and **Remove** update the local order; additions stop at 50 items. Empty drafts can be saved, but cannot be published. Failed saves retain input and ordering. Metadata-only edits omit item replacement so existing occurrence IDs survive.
+
+Select an assignment from the paginated class list to load its full saved contents. A failed detail read shows **Retry assignment**, rather than incorrectly offering creation in place of the selected record. Switching assignments/classes or choosing **New assignment** discards unsaved edits, as the page notice explains. Class/account changes unmount the workspace and abort pending reads/writes; aborted responses cannot populate a different class's editor.
+
+Save changes before publishing or archiving; these controls are disabled while edits are unsaved. Publication uses saved content, is idempotent, and locks both the form and item controls. **Archive assignment** retains content; use the **Archived**/**All** filter to find it after reload. Restoring a draft allows editing; restoring a publication retains its content/policy lock. **Reload saved assignment** discards local changes and rereads the server.
+
+This slice exposes no student assignment screen or submission behavior. The stored solution setting prepares that later workflow; the instructor UI explicitly indicates this boundary.
+
+Local verification for this UI slice: `npm run check` passed 382 tests (71 engine, 272 API, 39 frontend), type checks, and production builds. A temporary Chrome/Playwright walkthrough used Vite, real Fastify routes and PostgreSQL in an isolated test schema with synthetic instructor/student identities: ordering/repeats/removal, solution policy, item-ID retention on metadata edits, publication, archive/restore/reload, class reset, student role denial, and 1280px/390px layouts without document overflow passed. Local screenshots/script remain ignored under `.codex-local/verification/`. No live Cognito/AWS or remote CI checks were performed; browser evidence is not a committed CI regression suite. Existing bundle-size and test-tool warnings remain.

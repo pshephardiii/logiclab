@@ -66,6 +66,9 @@ test.each([null, 'student', 'instructor'] as const)(
     expect(Boolean(screen.queryByRole('link', { name: 'Problem library' }))).toBe(
       role === 'instructor',
     );
+    expect(Boolean(screen.queryByRole('link', { name: 'Assignments' }))).toBe(
+      role === 'instructor',
+    );
     expect(Boolean(screen.queryByRole('link', { name: 'My classes' }))).toBe(role === 'student');
   },
 );
