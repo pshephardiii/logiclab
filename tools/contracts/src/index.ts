@@ -8,3 +8,5 @@ export * from './problem';
 export * from './assignment';
 
 export * from './student-work';
+
+export * from './submission-review';

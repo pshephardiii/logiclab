@@ -26,6 +26,16 @@ export const assignmentSummary = summary;
 export function assignmentFixture() {
   const auth = authFixture();
   const assignments = {
+    listSubmissions: jest.fn<
+      ReturnType<AssignmentStore['listSubmissions']>,
+      Parameters<AssignmentStore['listSubmissions']>
+    >(async () => []),
+    findSubmission: jest.fn<
+      ReturnType<AssignmentStore['findSubmission']>,
+      Parameters<AssignmentStore['findSubmission']>
+    >(async () => {
+      throw new Error('No fixture submission');
+    }),
     create: jest.fn<ReturnType<AssignmentStore['create']>, Parameters<AssignmentStore['create']>>(
       async () => assignment,
     ),

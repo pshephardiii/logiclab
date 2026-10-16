@@ -1,6 +1,6 @@
 # Student assignment work API
 
-Students can read published work for enrolled classes, save incomplete answers, make one final submission, and access official feedback/solutions according to assignment policy. This slice supplies the backend; student screens and instructor submission review follow separately. No deadlines, late-work rules, repeated final submissions, immediate feedback, or completion-only assessment are implemented.
+Students can read published work for enrolled classes, save incomplete answers, make one final submission, and access official feedback/solutions according to assignment policy. Students use the **Assigned work** page at `/work`; instructors review final submissions through their **Assignments** page. No deadlines, late-work rules, repeated final submissions, immediate feedback, or completion-only assessment are implemented.
 
 All routes require a student session. Authentication/role checks precede field validation. Assignment, item, enrollment, and attempt scope is established on the server; no student ID, formula, expected answer, or grade is accepted from the client. Foreign/missing, unpublished, archived, or unenrolled work returns the same 404. Responses use `Cache-Control: no-store`; mutations require the exact configured Origin.
 
@@ -47,7 +47,7 @@ Anonymous practice still permits independent formula analysis. Assignment policy
 
 ## Access, retention, and concurrency
 
-Archiving hides assignments and blocks all student work endpoints, including reads and solution access. Existing answers/results remain retained; restore re-enables access for currently enrolled students. Enrollment removal blocks further access without deleting attempts. Assignment/student foreign keys restrict deletion while work exists. Instructor review access will use separate owner-scoped endpoints, not these student routes.
+Archiving hides assignments and blocks all student work endpoints, including reads and solution access. Existing answers/results remain retained; restore re-enables access for currently enrolled students. Enrollment removal blocks further access without deleting attempts. Assignment/student foreign keys restrict deletion while work exists. Instructor review uses separate owner-scoped [submission endpoints](assignment-api.md#final-submission-review), never these student routes or unsubmitted attempts.
 
 Assignment and enrollment rows are held with shared locks during a work operation, excluding archive/removal until it finishes. Each write locks this student's attempt; different students can save concurrently. First-write upsert plus the unique key prevents duplicate attempts; refreshed row locks and revision checks prevent lost updates. Save-versus-submit races yield one winner and a conflict for the other. Submitted-row triggers retain the final record independently of HTTP handling.
 
@@ -55,4 +55,16 @@ Answer saves allow 120 requests/minute per IP; other route limits retain the sha
 
 ## Setup and verification
 
-Apply the new attempt migration using `npm run db:migrate` on existing development databases. `npm run check` covers type checking, pure practice/assignment evaluation behavior, route/handler validation, authorization, response serialization, and production builds. `npm run db:test` verifies migrations/schema alignment, attempt uniqueness, revision/result constraints, retention and immutability, plus the real student-work workflow in an isolated disposable schema. Concurrency checks observe PostgreSQL lock waits and verify that one locked attempt does not block another student's saves. These checks use synthetic identities without Cognito/AWS requests; browser verification belongs to the upcoming student-page slice.
+Apply the new attempt migration using `npm run db:migrate` on existing development databases. `npm run check` covers type checking, pure practice/assignment evaluation behavior, route/handler validation, authorization, response serialization, and production builds. `npm run db:test` verifies migrations/schema alignment, attempt uniqueness, revision/result constraints, retention and immutability, plus the real student-work workflow in an isolated disposable schema. Concurrency checks observe PostgreSQL lock waits and verify that one locked attempt does not block another student's saves. These checks use synthetic identities without Cognito/AWS requests; the student/instructor page walkthrough uses Chrome with real routes/store/PostgreSQL and synthetic identities.
+
+## Student completion page
+
+Sign in as a student and choose **Assigned work**. Select an enrolled class, load published assignments (both lists support pagination/retry), then select an assignment. Choose an item using **Problem** or **Previous/Next problem**. Repeated formulas retain separate answer state because occurrence IDs are distinct.
+
+Changes remain local until **Save problem** succeeds. Save every edited item before final submission; saving one does not discard unsaved edits in another. Failed saves and revision conflicts preserve local inputs. **Reload saved work (discard unsaved edits)** explicitly reloads the server's current revision and answers. Changing classes, assignments, accounts, or pages discards unsaved changes and cancels pending requests so late responses cannot populate another workspace. No work or tokens are persisted in local/session storage.
+
+Final submission requires a checked acknowledgment that work cannot be edited. Blank cells may be submitted and count as unanswered. After confirmation, answers become read-only and the stored result appears, with correctness shown separately from completion. Reloads restore those saved answers/results without requesting new grading. **Show assigned solution** appears only for enabled solution access after submission, requests the protected endpoint, and preserves the student's entries when shown/hidden. No public practice checking/solution endpoints are called by the assignment workflow.
+
+An uncertain submission failure can be resolved by reloading saved work to see whether the final result was recorded. Submission requests are idempotent, and the UI does not automatically retry them. Student work state remains independent of the Practice page.
+
+Local verification for the completion/review slice includes DOM/hook regression tests for save failures, stale revisions, per-occurrence dirty state, final confirmation, readonly restoration, solution gating, pagination/retry, and late-response cancellation. A local Chrome walkthrough against real Fastify routes/PostgreSQL verifies student save/reload/submission/solutions, instructor final-only review, draft privacy, cross-owner rejection, and desktop/mobile layouts without document overflow. Scripts and screenshots remain ignored under `.codex-local/verification/`. No live Cognito, remote CI, alternate browser, or screen-reader audit is implied.

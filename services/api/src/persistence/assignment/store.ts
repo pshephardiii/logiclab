@@ -1,3 +1,7 @@
+import {
+  createSubmissionReviewStore,
+  type SubmissionReviewStore,
+} from '../submission-review/store';
 import { assignmentSummary } from './summary';
 import type { createDatabase, Assignment as AssignmentEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -12,7 +16,7 @@ import type {
 import { AssignmentOperationError } from '../../application/assignment/errors';
 import { publishedProblemVersion } from '../problem/version-response';
 
-export interface AssignmentStore {
+export interface AssignmentStore extends SubmissionReviewStore {
   create(
     ownerId: string,
     classId: string,
@@ -103,7 +107,9 @@ export async function createAssignmentStore(
     );
   }
 
+  const reviews = await createSubmissionReviewStore(orm);
   return {
+    ...reviews,
     async create(ownerId, classId, input) {
       return orm.em.fork().transactional(async (em) => {
         const classroom = await ownedClass(em, ownerId, classId);

@@ -1,0 +1,152 @@
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, expect, test, vi } from 'vitest';
+import * as api from '../../../api/student-work/api';
+import {
+  work,
+  saved,
+  submitted,
+  itemA,
+  itemB,
+  solution,
+} from '../../../../test/assignment-work-fixture';
+import { AssignedAttempt } from './AssignedAttempt';
+
+vi.mock('../../../api/student-work/api', () => ({
+  readAssignedWork: vi.fn(),
+  saveAssignedAnswers: vi.fn(),
+  submitAssignedWork: vi.fn(),
+  readAssignedSolution: vi.fn(),
+}));
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: work, attempt: null });
+  vi.mocked(api.saveAssignedAnswers).mockResolvedValue(saved);
+  vi.mocked(api.submitAssignedWork).mockResolvedValue(submitted);
+  vi.mocked(api.readAssignedSolution).mockResolvedValue(solution);
+});
+function cells() {
+  return within(screen.getByRole('group', { name: 'Truth-table answers' })).getAllByRole(
+    'combobox',
+  );
+}
+async function open() {
+  const user = userEvent.setup();
+  const view = render(<AssignedAttempt assignmentId={work.id} />);
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  return { user, ...view };
+}
+
+test('saves false and blanks, retains failed input, and requires saved work plus final confirmation', async () => {
+  const { user } = await open();
+  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+  await user.selectOptions(cells()[0]!, 'F');
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+  expect(
+    screen.getByLabelText('I understand submission is final and cannot be edited.'),
+  ).toBeDisabled();
+  vi.mocked(api.saveAssignedAnswers)
+    .mockRejectedValueOnce(new Error('Stale revision; reload.'))
+    .mockResolvedValueOnce(saved);
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Stale revision');
+  expect(cells()[0]).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 1 saved.');
+  expect(api.saveAssignedAnswers).toHaveBeenLastCalledWith(
+    work.id,
+    { revision: 0, itemId: itemA, answers: saved.answers[itemA] },
+    expect.any(AbortSignal),
+  );
+  expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+  await user.click(screen.getByLabelText('I understand submission is final and cannot be edited.'));
+  await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+  await screen.findByText('Final submission recorded.');
+  expect(api.submitAssignedWork).toHaveBeenCalledWith(work.id, 1, expect.any(AbortSignal));
+  expect(cells()[0]).toBeDisabled();
+  expect(cells()[0]).toHaveValue('F');
+  expect(screen.getByText('Incorrect', { exact: true })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+  expect(api.readAssignedSolution).not.toHaveBeenCalled();
+});
+
+test('repeated problems keep separate edits and saving one does not clear another dirty occurrence', async () => {
+  const { user } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  expect(cells()[0]).toHaveValue('');
+  await user.selectOptions(cells()[0]!, 'T');
+  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  expect(cells()[0]).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 1 saved.');
+  expect(screen.getByText('Unsaved changes in 1 problem(s).')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  expect(cells()[0]).toHaveValue('T');
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+});
+
+test('reloading restores saved answers and official results without public rechecking', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: work, attempt: submitted });
+  await open();
+  expect(cells()[0]).toHaveValue('F');
+  expect(cells()[0]).toBeDisabled();
+  expect(screen.getByText('Incorrect', { exact: true })).toBeInTheDocument();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test('enabled solutions are fetched only after final submission and preserve saved entries', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, allowSolutions: true },
+    attempt: submitted,
+  });
+  const { user } = await open();
+  expect(api.readAssignedSolution).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  await screen.findByRole('button', { name: 'Hide assigned solution' });
+  expect(api.readAssignedSolution).toHaveBeenCalledWith(work.id, itemA, expect.any(AbortSignal));
+  expect(cells()[0]).toHaveValue('F');
+  expect(screen.getByText('Solution: T')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  expect(screen.queryByText('Solution: T')).not.toBeInTheDocument();
+});
+
+test('switching assignments aborts pending saves and ignores their late result', async () => {
+  let resolve!: (value: typeof saved) => void;
+  vi.mocked(api.saveAssignedAnswers).mockImplementation(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const { user, unmount } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  const signal = vi.mocked(api.saveAssignedAnswers).mock.calls[0]![2];
+  unmount();
+  expect(signal.aborted).toBe(true);
+  render(<AssignedAttempt assignmentId="new-assignment" />);
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  await act(async () => resolve(saved));
+  expect(cells()[0]).toHaveValue('');
+  expect(screen.queryByText('Problem 1 saved.')).not.toBeInTheDocument();
+});
+
+test('a reverted blank clears dirty state and an unconfirmed submission can be checked by reload', async () => {
+  const { user } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.selectOptions(cells()[0]!, '');
+  expect(screen.queryByText('Unsaved changes in 1 problem(s).')).not.toBeInTheDocument();
+  vi.mocked(api.submitAssignedWork).mockRejectedValueOnce(new Error('Connection lost'));
+  await user.click(screen.getByLabelText('I understand submission is final and cannot be edited.'));
+  await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Connection lost');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: work, attempt: submitted });
+  await user.click(
+    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
+  );
+  await waitFor(() => expect(cells()[0]).toBeDisabled());
+  expect(api.submitAssignedWork).toHaveBeenCalledTimes(1);
+});

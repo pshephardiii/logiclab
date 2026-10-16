@@ -1,3 +1,4 @@
+import { SubmissionReview } from './SubmissionReview';
 import { useState } from 'react';
 import type { AssignmentListQuery } from '@logiclab/contracts';
 import { useAssignments } from '../hooks/useAssignments';
@@ -109,7 +110,9 @@ export function ClassAssignments({ classId }: Props) {
                   is required.
                 </p>
               )}
-              <p className="help">Student access to assignments is not available yet.</p>
+              <p className="help">
+                Published, active assignments are available to enrolled students.
+              </p>
               <div className="action-row">
                 {!state.selected.publishedAt && (
                   <button
@@ -140,6 +143,9 @@ export function ClassAssignments({ classId }: Props) {
                 </button>
               </div>
             </section>
+          )}
+          {state.selected?.publishedAt && (
+            <SubmissionReview key={state.selected.id} assignmentId={state.selected.id} />
           )}
         </>
       )}

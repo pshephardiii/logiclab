@@ -1,3 +1,5 @@
+import { getAssignmentSubmissionRoute } from './getAssignmentSubmission/route';
+import { getAssignmentSubmissionsRoute } from './getAssignmentSubmissions/route';
 import { postAssignmentRoute } from './postAssignment/route';
 import { getAssignmentsRoute } from './getAssignments/route';
 import { getAssignmentRoute } from './getAssignment/route';
@@ -31,6 +33,8 @@ export async function assignmentRoutes(app: FastifyInstance, context: Assignment
       }),
     );
   });
+  app.register(getAssignmentSubmissionsRoute, context);
+  app.register(getAssignmentSubmissionRoute, context);
   app.register(postAssignmentRoute, context);
   app.register(getAssignmentsRoute, context);
   app.register(getAssignmentRoute, context);

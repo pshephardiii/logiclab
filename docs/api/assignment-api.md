@@ -1,6 +1,6 @@
 # Instructor assignment API
 
-This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Enrollment-scoped student reads, saved attempts, final submission, and feedback/solution enforcement are implemented in the [student-work API](student-work-api.md); student UI follows in the next slice. Publishing records the locked assignment and makes it eligible for the separate enrollment-scoped student endpoints.
+This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Enrollment-scoped student reads, saved attempts, final submission, and feedback/solution enforcement are implemented in the [student-work API](student-work-api.md); student completion UI is available at `/work`. Publishing records the locked assignment and makes it eligible for the separate enrollment-scoped student endpoints.
 
 Authorization runs before request-field validation and reuses the authenticated user within the request. Foreign and missing classrooms/assignments both return 404. Mutations require the configured exact `Origin`; responses use `Cache-Control: no-store`. Shared account-route rate limits and cookie handling apply.
 
@@ -63,6 +63,19 @@ Select an assignment from the paginated class list to load its full saved conten
 
 Save changes before publishing or archiving; these controls are disabled while edits are unsaved. Publication uses saved content, is idempotent, and locks both the form and item controls. **Archive assignment** retains content; use the **Archived**/**All** filter to find it after reload. Restoring a draft allows editing; restoring a publication retains its content/policy lock. **Reload saved assignment** discards local changes and rereads the server.
 
-Student assignment screens remain upcoming. The student-work API now enforces the saved solution setting, releasing enabled solutions only after final submission; the instructor page currently warns that student screens are not available yet.
+Students use **Assigned work** at `/work`. The student-work API enforces the saved solution setting and releases enabled solutions only after final submission. The instructor page links publication to enrolled student access.
 
-Local verification for this UI slice: `npm run check` passed 382 tests (71 engine, 272 API, 39 frontend), type checks, and production builds. A temporary Chrome/Playwright walkthrough used Vite, real Fastify routes and PostgreSQL in an isolated test schema with synthetic instructor/student identities: ordering/repeats/removal, solution policy, item-ID retention on metadata edits, publication, archive/restore/reload, class reset, student role denial, and 1280px/390px layouts without document overflow passed. Local screenshots/script remain ignored under `.codex-local/verification/`. No live Cognito/AWS or remote CI checks were performed; browser evidence is not a committed CI regression suite. Existing bundle-size and test-tool warnings remain.
+Local verification for the initial instructor-authoring UI slice: `npm run check` passed 382 tests (71 engine, 272 API, 39 frontend), type checks, and production builds. A temporary Chrome/Playwright walkthrough used Vite, real Fastify routes and PostgreSQL in an isolated test schema with synthetic instructor/student identities: ordering/repeats/removal, solution policy, item-ID retention on metadata edits, publication, archive/restore/reload, class reset, student role denial, and 1280px/390px layouts without document overflow passed. Local screenshots/script remain ignored under `.codex-local/verification/`. No live Cognito/AWS or remote CI checks were performed; browser evidence is not a committed CI regression suite. Existing bundle-size and test-tool warnings remain.
+
+## Final submission review
+
+| Method | Path                                                       | Behavior                                                                      |
+| ------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/api/assignments/:assignmentId/submissions`               | List final-submission summaries for an owned assignment                       |
+| GET    | `/api/assignments/:assignmentId/submissions/:submissionId` | Read a final submission, saved answers, pinned exercises, and frozen feedback |
+
+Review requires the same instructor session and ownership through the assignment classroom. Foreign/missing assignments/submissions and unsubmitted attempt IDs return 404. There is no endpoint for instructors to inspect students' unfinished answers. Archived assignments and retained submissions from withdrawn students remain reviewable by the owning instructor.
+
+List queries accept `limit=1..50` (default 20) and nonnegative `offset` (default 0), ordered by submission time descending with ID tie-breaking. Responses contain `{ submissions, nextOffset }`; each summary contains its ID, student ID/email (nullable email), submission timestamp, and frozen grading counts. No Cognito/session fields are exposed. Detail returns `{ submission, assignment, attempt }`, with given-only exercises and the retained final attempt/result. No regrading or draft-answer read occurs.
+
+In the instructor **Assignments** page, select a published assignment to see **Final submissions**. Reload the list for new submissions, select a student to review read-only answers and feedback, and use **Submitted problem** to move between occurrences. List/detail failures support retries and subsequent pages load explicitly. Incomplete students are omitted, so this list is not a live draft-progress roster.

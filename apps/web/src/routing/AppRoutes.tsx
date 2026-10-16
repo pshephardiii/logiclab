@@ -1,3 +1,4 @@
+import { StudentWorkPage } from '../pages/student-work/StudentWorkPage';
 import { InstructorAssignmentsPage } from '../pages/instructor-assignments/InstructorAssignmentsPage';
 import { ProblemLibraryPage } from '../pages/problem-library/ProblemLibraryPage';
 import { Route, Routes } from 'react-router';
@@ -20,6 +21,7 @@ export function AppRoutes() {
     studentClasses,
     problemLibrary,
     instructorAssignments,
+    studentWork,
   } = routeDefinitions;
 
   return (
@@ -37,6 +39,9 @@ export function AppRoutes() {
       </Route>
       <Route element={<ProtectedRoute {...instructorAssignments.access} />}>
         <Route path={instructorAssignments.path} element={<InstructorAssignmentsPage />} />
+      </Route>
+      <Route element={<ProtectedRoute {...studentWork.access} />}>
+        <Route path={studentWork.path} element={<StudentWorkPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

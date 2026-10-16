@@ -82,7 +82,10 @@ test(
         }),
       },
     } as unknown as AuthContext;
-    const app = buildApp({ studentWork: { ...context, studentWork: store } });
+    const app = buildApp({
+      studentWork: { ...context, studentWork: store },
+      assignment: { ...context, assignments },
+    });
     let address = 1;
     const request = (method: 'GET' | 'PATCH' | 'POST', path: string, payload?: object) =>
       app.inject({
@@ -165,6 +168,18 @@ test(
       const firstSave = await save(0);
       assert.equal(firstSave.statusCode, 200, firstSave.body);
       let attempt = firstSave.json().attempt;
+      active = owner;
+      const reviewPath = `/api/assignments/${assignment.id}/submissions`;
+      assert.deepEqual((await request('GET', reviewPath)).json(), {
+        submissions: [],
+        nextOffset: null,
+      });
+      assert.equal(
+        (await request('GET', `${reviewPath}/${attempt.id}`)).statusCode,
+        404,
+        'Draft attempt IDs are not reviewable.',
+      );
+      active = student;
       assert.equal(attempt.revision, 1);
       assert.equal(attempt.result, null);
       assert.equal(attempt.submittedAt, null);
@@ -206,6 +221,28 @@ test(
         total: 4,
       });
       assert.equal(submitted.result.items.length, 2);
+      active = owner;
+      const finalReview = await request('GET', `${reviewPath}/${submitted.id}`);
+      assert.equal(finalReview.statusCode, 200, finalReview.body);
+      assert.deepEqual(finalReview.json().attempt, submitted);
+      assert(!Object.hasOwn(finalReview.json().submission.student, 'cognitoSubject'));
+      assert.equal(
+        (await request('GET', `/api/assignments/${draft.id}/submissions/${submitted.id}`))
+          .statusCode,
+        404,
+      );
+      const foreignInstructor = em.create(User, {
+        cognitoUserPoolId: schema,
+        cognitoSubject: 'foreign-instructor',
+        role: UserRole.Instructor,
+      });
+      em.persist(foreignInstructor);
+      await em.flush();
+      active = foreignInstructor;
+      assert.equal((await request('GET', reviewPath)).statusCode, 404);
+      assert.equal((await request('GET', `${reviewPath}/${submitted.id}`)).statusCode, 404);
+      active = student;
+
       assert.equal(submitted.result.items[0].feedback.cells[0].status, 'incorrect');
       assert.equal(submitted.result.items[0].feedback.cells[1].status, 'unanswered');
       assert(!final.body.includes('expected'));
@@ -374,10 +411,26 @@ test(
       } finally {
         if (archiveLock.isInTransaction()) await archiveLock.rollback();
       }
+      await assignments.setArchived(owner.id, assignment.id, true);
+      active = owner;
+      assert.equal(
+        (await request('GET', `${reviewPath}/${submitted.id}`)).statusCode,
+        200,
+        'Archived submissions remain reviewable.',
+      );
+      active = student;
+      await assignments.setArchived(owner.id, assignment.id, false);
+      assert.equal((await store.read(student.id, assignment.id)).attempt!.id, submitted.id);
       await em.fork().nativeDelete(Enrollment, { student: student.id, classroom: classroom.id });
       await assert.rejects(
         store.read(student.id, assignment.id),
         (error: any) => error.reason === 'not_found',
+      );
+      active = owner;
+      assert.equal(
+        (await request('GET', `${reviewPath}/${submitted.id}`)).statusCode,
+        200,
+        'Withdrawal retains instructor review access.',
       );
       assert.equal(
         await em.fork().count(AssignmentAttempt, { id: submitted.id }),

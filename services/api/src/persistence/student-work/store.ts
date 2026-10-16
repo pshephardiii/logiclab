@@ -1,3 +1,5 @@
+import { attemptResponse } from './attempt-response';
+import { assignmentExercises } from '../assignment/exercise-response';
 import { truthTableSolutionResponseSchema } from '@logiclab/contracts';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -13,7 +15,6 @@ import type {
 import { generateTruthTable } from '@logiclab/logic-engine';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { validateAnswers, evaluateSubmission } from '../../application/student-work/evaluation';
-import { exerciseResponse } from '../../application/truth-table/exercise';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -31,16 +32,6 @@ export interface StudentWorkStore {
     itemId: string,
   ): Promise<StudentSolutionResponse>;
 }
-function attemptResponse(attempt: AttemptEntity): StudentAttempt {
-  return {
-    id: attempt.id,
-    revision: attempt.revision,
-    answers: attempt.answers,
-    submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    result: attempt.submittedAt ? (attempt.result ?? null) : null,
-  };
-}
-
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
 export async function createStudentWorkStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
@@ -120,19 +111,7 @@ export async function createStudentWorkStore(
           student: studentId,
         });
         return {
-          assignment: {
-            ...assignmentSummary(assignment),
-            items: assigned.map((item) => ({
-              id: item.id,
-              position: item.position,
-              title: item.problemVersion.title,
-              instructions: item.problemVersion.instructions ?? null,
-              formula: item.problemVersion.definition.formula,
-              exercise: exerciseResponse(
-                generateTruthTable(item.problemVersion.definition.formula),
-              ),
-            })),
-          },
+          assignment: assignmentExercises(assignment, assigned),
           attempt: attempt ? attemptResponse(attempt) : null,
         };
       });

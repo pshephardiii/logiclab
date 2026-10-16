@@ -1,0 +1,24 @@
+.assigned-item fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.assigned-item h2,
+.assigned-item code {
+  overflow-wrap: anywhere;
+}
+.assignment-choice {
+  max-width: 100%;
+  width: 100%;
+}
+.final-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.final-confirmation input {
+  flex: none;
+  width: auto;
+  margin-top: 0.3rem;
+}

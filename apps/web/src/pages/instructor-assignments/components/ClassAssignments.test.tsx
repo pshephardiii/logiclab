@@ -1,3 +1,4 @@
+import * as reviews from '../../../api/submission-review/api';
 import { MemoryRouter } from 'react-router';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -12,6 +13,10 @@ import * as api from '../../../api/assignments/api';
 import * as library from '../../../api/problems/api';
 import { ClassAssignments } from './ClassAssignments';
 
+vi.mock('../../../api/submission-review/api', () => ({
+  listSubmissions: vi.fn(),
+  readSubmission: vi.fn(),
+}));
 vi.mock('../../../api/assignments/api', () => ({
   listAssignments: vi.fn(),
   getAssignment: vi.fn(),
@@ -63,6 +68,7 @@ const assignment: AssignmentDetail = {
 const { items, ...summary } = assignment;
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(reviews.listSubmissions).mockResolvedValue({ submissions: [], nextOffset: null });
   vi.mocked(api.listAssignments).mockResolvedValue({ assignments: [summary], nextOffset: null });
   vi.mocked(api.getAssignment).mockResolvedValue(assignment);
   vi.mocked(library.listProblems).mockResolvedValue({ problems: [problem], nextOffset: null });
