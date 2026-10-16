@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { assignmentParamsSchema, assignmentResponseSchema } from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
 import type { AssignmentContext } from '../context';
-import { assignmentErrorResponses } from '../schemas';
+import { assignmentErrorResponses } from '../../error-responses';
 import { getAssignmentHandler } from './handler';
 
 export const getAssignmentSchema = {

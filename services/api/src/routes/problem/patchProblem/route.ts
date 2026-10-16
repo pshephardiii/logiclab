@@ -6,7 +6,7 @@ import {
 import type { FastifyInstance } from 'fastify';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
-import { problemErrorResponses } from '../schemas';
+import { problemErrorResponses } from '../../error-responses';
 import { patchProblemHandler } from './handler';
 
 export const patchProblemSchema = {

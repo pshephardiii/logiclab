@@ -6,7 +6,7 @@ import {
 } from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
 import type { AssignmentContext } from '../context';
-import { assignmentErrorResponses } from '../schemas';
+import { assignmentErrorResponses } from '../../error-responses';
 import { postAssignmentPublishHandler } from './handler';
 
 export const postAssignmentPublishSchema = {

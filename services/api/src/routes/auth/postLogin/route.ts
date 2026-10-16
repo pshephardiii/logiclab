@@ -1,5 +1,6 @@
 import { loginRequestSchema, authUserResponseSchema } from '@logiclab/contracts';
-import { authErrorResponses, type AuthRouteSchema } from '../schemas';
+import { authErrorResponses } from '../../error-responses';
+import type { RouteSchema } from '../../setup';
 import type { FastifyInstance } from 'fastify';
 import type { AuthContext } from '../context';
 import { postLoginHandler } from './handler';
@@ -9,7 +10,7 @@ export const postLoginSchema = {
   description: 'Create an opaque cookie session and return the stored public user ID and role.',
   body: loginRequestSchema,
   response: { 200: authUserResponseSchema, ...authErrorResponses },
-} satisfies AuthRouteSchema;
+} satisfies RouteSchema;
 
 export async function postLoginRoute(app: FastifyInstance, context: AuthContext) {
   app.route({

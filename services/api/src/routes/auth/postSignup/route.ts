@@ -1,5 +1,6 @@
 import { signupRequestSchema, authMessageResponseSchema } from '@logiclab/contracts';
-import { authErrorResponses, type AuthRouteSchema } from '../schemas';
+import { authErrorResponses } from '../../error-responses';
+import type { RouteSchema } from '../../setup';
 import type { FastifyInstance } from 'fastify';
 import type { AuthContext } from '../context';
 import { postSignupHandler } from './handler';
@@ -9,7 +10,7 @@ export const postSignupSchema = {
   description: 'Register a student or instructor and request email confirmation.',
   body: signupRequestSchema,
   response: { 202: authMessageResponseSchema, ...authErrorResponses },
-} satisfies AuthRouteSchema;
+} satisfies RouteSchema;
 
 export async function postSignupRoute(app: FastifyInstance, context: AuthContext) {
   app.route({

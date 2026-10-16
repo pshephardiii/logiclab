@@ -172,6 +172,8 @@ Keep reusable application workflows in `application/<domain>/`, provider-specifi
 
 Place cross-domain request parsing and error inspection in `routes/helpers/`: `parseRequest` validates bodies, queries, and path parameters; `errorName` safely inspects thrown errors. Auth response construction belongs in `routes/auth/responses.ts`, and account-discovery suppression policy in `routes/auth/errors.ts`. Parsing currently preserves `AuthError('INVALID_REQUEST')` for compatibility with both groups' error mapping.
 
+Keep status-to-error-contract mappings together in `routes/error-responses.ts`. Routes import their named group mapping directly and keep success responses local. Preserve the group-specific status codes and contracts, including optional parser positions; shared mappings do not install error handlers, authorization, or rate limits. Import `RouteSchema` from `routes/setup.ts` rather than introducing domain aliases or `schemas.ts` files that only repeat error status maps.
+
 Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers.
 
 ## API: security and lifecycle invariants
