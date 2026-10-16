@@ -1,8 +1,5 @@
-import type {
-  createDatabase,
-  Problem as ProblemEntity,
-  ProblemVersion as VersionEntity,
-} from '@logiclab/db' with {
+import { publishedProblemVersion } from './version-response';
+import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type {
@@ -62,18 +59,6 @@ function draft(problem: ProblemEntity): ProblemDraft {
   };
 }
 
-function publication(value: VersionEntity): PublishedProblemVersion {
-  return {
-    id: value.id,
-    problemId: value.problem.id,
-    version: value.version,
-    title: value.title,
-    instructions: value.instructions ?? null,
-    definition: value.definition,
-    publishedAt: value.publishedAt.toISOString(),
-  };
-}
-
 /** Every query scopes ownership; updates lock the row before checking archive state. */
 export async function createProblemStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
@@ -108,7 +93,7 @@ export async function createProblemStore(
         });
         em.persist(version);
         await em.flush();
-        return { status: 'published' as const, version: publication(version) };
+        return { status: 'published' as const, version: publishedProblemVersion(version) };
       });
     },
     async setArchived(ownerId, problemId, archived) {
@@ -130,13 +115,13 @@ export async function createProblemStore(
         { problem: { id: problemId, owner: ownerId } },
         { limit, offset, orderBy: { version: 'DESC' } },
       );
-      return versions.map(publication);
+      return versions.map(publishedProblemVersion);
     },
     async findVersion(ownerId, problemId, version) {
       const value = await orm.em
         .fork()
         .findOne(ProblemVersion, { problem: { id: problemId, owner: ownerId }, version });
-      return value ? publication(value) : null;
+      return value ? publishedProblemVersion(value) : null;
     },
     async create(ownerId, input) {
       const em = orm.em.fork();

@@ -29,6 +29,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Classes, invitations, and enrollment](api/classroom-api.md)
 - [Truth-table practice](api/truth-table-api.md)
 - [Private problem library](api/problem-library-api.md)
+- [Instructor assignments](api/assignment-api.md)
 
 ## Conventions
 

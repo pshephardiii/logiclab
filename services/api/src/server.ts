@@ -19,6 +19,7 @@ async function start() {
             auth: dependencies.auth,
             classroom: dependencies.classroom,
             problem: dependencies.problem,
+            assignment: dependencies.assignment,
           }
         : {}),
     });

@@ -1,3 +1,5 @@
+import { assignmentRoutes } from './routes/assignment';
+import type { AssignmentContext } from './routes/assignment/context';
 import { problemRoutes } from './routes/problem';
 import type { ProblemContext } from './routes/problem/context';
 import { classroomRoutes } from './routes/classroom';
@@ -17,6 +19,7 @@ export function buildApp(
     auth?: AuthContext;
     classroom?: ClassroomContext;
     problem?: ProblemContext;
+    assignment?: AssignmentContext;
   } = {},
 ) {
   const app = Fastify({
@@ -33,6 +36,7 @@ export function buildApp(
   });
   if (options.auth) app.register(authRoutes, options.auth);
   if (options.classroom) app.register(classroomRoutes, options.classroom);
+  if (options.assignment) app.register(assignmentRoutes, options.assignment);
   if (options.problem) app.register(problemRoutes, options.problem);
   app.register(truthTableRoutes);
   app.register(healthRoute);

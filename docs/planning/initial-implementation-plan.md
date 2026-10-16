@@ -155,7 +155,7 @@ Keep assessment, feedback timing, and solution access independent. Future comple
 Commit-sized slices:
 
 1. **Persistence foundation (implemented):** assignment and ordered-item entities, independent policy defaults, additive migration/snapshot, and database constraint/retention tests. No student work or HTTP endpoints yet.
-2. **Instructor assignment API:** scoped draft authoring, ordered item replacement, transactional publication/archiving, ownership validation, and published-content locks.
+2. **Instructor assignment API (implemented):** scoped draft authoring, ordered item replacement, transactional publication/archiving, ownership validation, and published-content locks.
 3. **Instructor assignment pages:** class-scoped authoring and publication controls using the library's immutable versions.
 4. **Student attempts/submission:** enrollment-scoped assignment reads, saved incomplete answers, one final submission, server evaluation, and backend feedback/solution policy.
 5. **Student/instructor pages:** completion workflow, persisted state after reload, and assigned submission review.
@@ -249,4 +249,4 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 ### Assignment branch status
 
-Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. Assignment routes, publication locks, pages, attempts, and submissions are not implemented yet. The next slice is the instructor assignment API.
+Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. The second slice adds scoped instructor assignment authoring, pinned ordered occurrences, transactional publication/content locks, archive/restore, and route/PostgreSQL tests. See the [assignment API](../api/assignment-api.md). The next slice is instructor assignment pages; student reads, attempts, and submissions are not implemented yet.
