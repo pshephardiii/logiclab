@@ -1,5 +1,5 @@
-import type { AssessmentMode, FeedbackTiming } from './enums.js';
-import type { Classroom } from '../../entities/Classroom.js';
+import type { AssessmentMode, FeedbackTiming } from './enums.ts';
+import type { Classroom } from '../../entities/Classroom.ts';
 
 /** Readable Assignment shape; the decorated entity is checked against it in both directions. */
 export interface AssignmentFields {

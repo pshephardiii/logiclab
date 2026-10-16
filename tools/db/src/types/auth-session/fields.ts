@@ -1,4 +1,4 @@
-import type { User } from '../../entities/User.js';
+import type { User } from '../../entities/User.ts';
 
 /** Readable field reference checked against the decorated AuthSession entity. */
 export interface AuthSessionFields {

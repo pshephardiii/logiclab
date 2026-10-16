@@ -33,6 +33,16 @@ Keep dependencies directed toward these shared capabilities. Tools must not impo
 
 A directory's `index.ts` defines its intended import surface. The package root exports supported operations and types; internal helper/stage exports need not be exposed there. This is a convention, not an enforced package subpath restriction.
 
+## Tools: database source imports
+
+Inside `tools/db`, use explicit `.ts` extensions for relative TypeScript imports and re-exports, including type-only imports, tests, and `mikro-orm.config.ts`. These paths name the source files contributors edit. Continue importing other workspace packages through their package names.
+
+`tools/db/tsconfig.json` enables TypeScript's `rewriteRelativeImportExtensions`; the build configuration inherits it and emits runnable `.js` paths. Do not hand-edit output, add runtime aliases, or import workspace `src` files across package boundaries. Package entry points remain `dist/index.js` and `dist/index.d.ts`. Declaration files can retain `.ts` specifiers, which TypeScript resolves to corresponding declarations; declaration maps provide navigation to sources.
+
+This convention is scoped to the database package. Existing extensionless imports in the other packages follow their current compiler/bundler setup. Keep existing migrations unchanged; new relative TypeScript imports in future migration source should use `.ts`. Rewriting covers relative import/export paths, not package aliases or arbitrary computed paths. Filesystem locations such as `new URL('./migrations', import.meta.url)` retain their actual runtime directory names.
+
+When changing TypeScript or build tools, verify workspace consumers, native Node loading of built database output, declaration/source-map resolution, source execution through `tsx`, and MikroORM commands. The standard checks are `npm run check` and `npm run db:test`; the latter applies migrations to the disposable test database. CLI `migration:list` provides a read-only configuration-loading check. Database metadata and migrations are unaffected by this import convention.
+
 ## Tools: readable entity shapes and related types
 
 Every entity has a compact `...Fields` interface. The decorated class uses `implements` plus `Assert<SameEntityFields<Entity, Fields>>` to reject extra/missing application members, type changes, and optionality changes. Keep interfaces and assertions beside their owning domain/class; do not duplicate database decorator metadata in the interfaces.

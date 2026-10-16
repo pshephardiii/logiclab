@@ -1,4 +1,4 @@
-import type { UserRole } from './enums.js';
+import type { UserRole } from './enums.ts';
 
 /** Readable field reference checked against the decorated User entity. */
 export interface UserFields {

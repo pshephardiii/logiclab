@@ -1,4 +1,4 @@
-import { databaseOptions } from './src/config.js';
+import { databaseOptions } from './src/config.ts';
 
 if (!process.env.DATABASE_URL)
   throw new Error('Set DATABASE_URL before running database commands.');

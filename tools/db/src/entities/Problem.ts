@@ -1,10 +1,10 @@
-import type { ProblemFields } from '../types/problem/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { ProblemFields } from '../types/problem/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { User } from './User.js';
-import type { ProblemDefinition } from '../types/problem/definition.js';
+import { User } from './User.ts';
+import type { ProblemDefinition } from '../types/problem/definition.ts';
 
 /** Stable instructor-owned identity with mutable draft content and reversible archiving. */
 @Entity({ tableName: 'problems' })

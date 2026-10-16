@@ -1,5 +1,5 @@
-import type { Assignment } from '../../entities/Assignment.js';
-import type { ProblemVersion } from '../../entities/ProblemVersion.js';
+import type { Assignment } from '../../entities/Assignment.ts';
+import type { ProblemVersion } from '../../entities/ProblemVersion.ts';
 
 /** Readable field reference checked against the decorated AssignmentItem entity. */
 export interface AssignmentItemFields {

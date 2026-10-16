@@ -1,10 +1,10 @@
-import type { EnrollmentFields } from '../types/enrollment/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { EnrollmentFields } from '../types/enrollment/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, ManyToOne, PrimaryKey, Property, Unique } from '@mikro-orm/decorators/es';
-import { User } from './User.js';
-import { Classroom } from './Classroom.js';
+import { User } from './User.ts';
+import { Classroom } from './Classroom.ts';
 
 @Entity({ tableName: 'enrollments' })
 @Unique({ name: 'enrollments_classroom_student_unique', properties: ['classroom', 'student'] })

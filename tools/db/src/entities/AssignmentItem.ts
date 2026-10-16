@@ -1,10 +1,10 @@
-import type { AssignmentItemFields } from '../types/assignment-item/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { AssignmentItemFields } from '../types/assignment-item/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Check, Unique, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { Assignment } from './Assignment.js';
-import { ProblemVersion } from './ProblemVersion.js';
+import { Assignment } from './Assignment.ts';
+import { ProblemVersion } from './ProblemVersion.ts';
 
 /** Stable occurrence ID for future student work, including repeated versions in a set. */
 @Entity({ tableName: 'assignment_items' })

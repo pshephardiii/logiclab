@@ -1,5 +1,5 @@
-import type { ProblemVersionFields } from '../types/problem-version/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { ProblemVersionFields } from '../types/problem-version/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import {
@@ -11,8 +11,8 @@ import {
   Check,
   Trigger,
 } from '@mikro-orm/decorators/es';
-import { Problem } from './Problem.js';
-import type { ProblemDefinition } from '../types/problem/definition.js';
+import { Problem } from './Problem.ts';
+import type { ProblemDefinition } from '../types/problem/definition.ts';
 
 /** Publication snapshot; PostgreSQL migration triggers reject updates and deletion. */
 @Entity({ tableName: 'problem_versions' })

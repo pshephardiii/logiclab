@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, Check, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { AssessmentMode, FeedbackTiming } from '../types/assignment/enums.js';
-import { Classroom } from './Classroom.js';
-import type { AssignmentFields } from '../types/assignment/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import { AssessmentMode, FeedbackTiming } from '../types/assignment/enums.ts';
+import { Classroom } from './Classroom.ts';
+import type { AssignmentFields } from '../types/assignment/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 
 /** Class-owned assignment; publication locks will be enforced by the assignment workflow. */
 @Entity({ tableName: 'assignments' })

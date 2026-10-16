@@ -1,5 +1,5 @@
-import type { User } from '../../entities/User.js';
-import type { ProblemDefinition } from './definition.js';
+import type { User } from '../../entities/User.ts';
+import type { ProblemDefinition } from './definition.ts';
 
 /** Readable field reference checked against the decorated Problem entity. */
 export interface ProblemFields {

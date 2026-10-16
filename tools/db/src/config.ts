@@ -1,14 +1,14 @@
-import { Assignment } from './entities/Assignment.js';
-import { AssignmentItem } from './entities/AssignmentItem.js';
-import { Problem } from './entities/Problem.js';
-import { ProblemVersion } from './entities/ProblemVersion.js';
+import { Assignment } from './entities/Assignment.ts';
+import { AssignmentItem } from './entities/AssignmentItem.ts';
+import { Problem } from './entities/Problem.ts';
+import { ProblemVersion } from './entities/ProblemVersion.ts';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
-import { Enrollment } from './entities/Enrollment.js';
-import { Classroom } from './entities/Classroom.js';
-import { User } from './entities/User.js';
-import { AuthSession } from './entities/AuthSession.js';
+import { Enrollment } from './entities/Enrollment.ts';
+import { Classroom } from './entities/Classroom.ts';
+import { User } from './entities/User.ts';
+import { AuthSession } from './entities/AuthSession.ts';
 
 export function databaseOptions(
   connectionString: string,

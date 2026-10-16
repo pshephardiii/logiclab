@@ -1,9 +1,9 @@
-import type { ProblemType } from '../src/types/problem/enums.js';
-import type { ProblemDefinition } from '../src/types/problem/definition.js';
+import type { ProblemType } from '../src/types/problem/enums.ts';
+import type { ProblemDefinition } from '../src/types/problem/definition.ts';
 import type { OptionalProps } from '@mikro-orm/core';
-import type { Assert, SameEntityFields } from '../src/types/shared/entity-fields.js';
-import type { Assignment } from '../src/entities/Assignment.js';
-import type { AssignmentFields } from '../src/types/assignment/fields.js';
+import type { Assert, SameEntityFields } from '../src/types/shared/entity-fields.ts';
+import type { Assignment } from '../src/entities/Assignment.ts';
+import type { AssignmentFields } from '../src/types/assignment/fields.ts';
 
 // These assertions run under tsc, not the runtime test runner. Each expected error
 // must remain an error, or TypeScript rejects the unused @ts-expect-error directive.

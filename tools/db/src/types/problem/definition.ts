@@ -1,4 +1,4 @@
-import type { ProblemType } from './enums.js';
+import type { ProblemType } from './enums.ts';
 
 /**
  * Authored content shared by Problem drafts and ProblemVersion snapshots.

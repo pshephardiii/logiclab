@@ -1,7 +1,7 @@
-import type { AuthSessionFields } from '../types/auth-session/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { AuthSessionFields } from '../types/auth-session/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { User } from './User.js';
+import { User } from './User.ts';
 
 @Entity({ tableName: 'auth_sessions' })
 export class AuthSession implements AuthSessionFields {

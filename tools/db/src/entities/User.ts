@@ -1,13 +1,13 @@
-import type { UserFields } from '../types/user/fields.js';
-import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
+import type { UserFields } from '../types/user/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Enum, PrimaryKey, Property, Unique } from '@mikro-orm/decorators/es';
 
-import { UserRole } from '../types/user/enums.js';
+import { UserRole } from '../types/user/enums.ts';
 
 // Preserve the existing entity-module export for current consumers.
-export { UserRole } from '../types/user/enums.js';
+export { UserRole } from '../types/user/enums.ts';
 
 @Entity({ tableName: 'users' })
 @Unique({

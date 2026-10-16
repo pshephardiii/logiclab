@@ -1,5 +1,5 @@
-import type { User } from '../../entities/User.js';
-import type { Classroom } from '../../entities/Classroom.js';
+import type { User } from '../../entities/User.ts';
+import type { Classroom } from '../../entities/Classroom.ts';
 
 /** Readable field reference checked against the decorated Enrollment entity. */
 export interface EnrollmentFields {
