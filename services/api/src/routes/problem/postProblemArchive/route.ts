@@ -6,7 +6,7 @@ import {
 } from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
-import { problemErrorResponses } from '../schemas';
+import { problemErrorResponses } from '../../error-responses';
 import { postProblemArchiveHandler } from './handler';
 
 export const postProblemArchiveSchema = {

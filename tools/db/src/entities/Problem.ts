@@ -1,13 +1,15 @@
+import type { ProblemFields } from '../types/problem/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { User } from './User.js';
-import type { ProblemDefinition } from '../types/problem-definition.js';
+import { User } from './User.ts';
+import type { ProblemDefinition } from '../types/problem/definition.ts';
 
 /** Stable instructor-owned identity with mutable draft content and reversible archiving. */
 @Entity({ tableName: 'problems' })
 @Index({ name: 'problems_owner_id_index', properties: ['owner'] })
-export class Problem {
+export class Problem implements ProblemFields {
   [OptionalProps]?: 'id' | 'createdAt' | 'updatedAt';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
@@ -56,3 +58,6 @@ export class Problem {
   })
   updatedAt = new Date();
 }
+
+// Keep the readable field reference exact, excluding ORM creation metadata.
+type ProblemFieldsCheck = Assert<SameEntityFields<Problem, ProblemFields>>;

@@ -144,24 +144,24 @@ Publishing uses the recommended default: each explicit publish creates a new ver
 
 Done when: instructors can manage only their own library, publish and retain stable snapshots, preview tables, archive/restore problems, and retain data after reloads. Students receive no new library access in this branch.
 
-### 6. `006-feat-assignments-and-progress` — A complete learning workflow
+### 6. `006-feat-assignments-and-progress` — Assign work and review submissions
 
 Depends on: classroom access and the reusable problem library.
 
-- Let instructors compose a small exercise set, publish an assignment, and set a due date.
-- Persist submissions, grade on the server, and show student progress and an instructor overview.
-- Define allowed assignment/submission transitions and audit meaningful instructor changes.
-- Test grading, access, deadline boundaries, and repeated submission behavior.
+Agreed defaults: one class per assignment; title, optional instructions, and ordered published problem versions; immutable content/policy after publication; reversible archiving; mutable saved student work followed by one final submission; feedback on submission; instructor-controlled solution access off by default. Deadlines and late-work rules are deferred.
 
-Done when: the instructor-to-student-to-progress journey works end to end, saved work survives reloads, and invalid transitions are rejected with useful messages.
+Keep assessment, feedback timing, and solution access independent. Future completion-only/ungraded work and immediate wrong-answer feedback are documented directions, not implemented modes. See [Product Direction](product-direction.md) and [Data Design](data-design.md).
 
-Open product/design questions:
+Commit-sized slices:
 
-- Are exercises authored as formulas, selected from a catalog, or generated from difficulty settings?
-- Are retries unlimited, and does progress show the latest, best, or first score?
-- Are partially completed answers saved, and can an assignment change after students start?
-- Are late submissions rejected, accepted with a label, or controlled by the instructor?
-- Which timezone defines deadlines, and what student-level information should instructors see?
+1. **Persistence foundation (implemented):** assignment and ordered-item entities, independent policy defaults, additive migration/snapshot, and database constraint/retention tests. No student work or HTTP endpoints yet.
+2. **Instructor assignment API (implemented):** scoped draft authoring, ordered item replacement, transactional publication/archiving, ownership validation, and published-content locks.
+3. **Instructor assignment pages (implemented):** class-scoped authoring and publication controls using the library's immutable versions.
+4. **Student attempts/submission (implemented):** enrollment-scoped assignment reads, saved incomplete answers, one final submission, server evaluation, and backend feedback/solution policy.
+5. **Student/instructor pages (implemented):** completion workflow, persisted state after reload, and assigned submission review.
+6. **Final verification/documentation (completed):** authorization/lifecycle/concurrency checks, browser walkthrough, and local PR draft.
+
+Done when: instructors assign pinned content to enrolled students, students save and submit work, instructors review scoped results, and invalid transitions/access are rejected. Student work uses one revisioned attempt per student/assignment, item-keyed answers, a frozen final evaluation, and solution release only after submission when enabled; do not expand into instant feedback or completion-only grading in this branch.
 
 ### 7. `007-feat-simulated-billing-and-entitlements` — Reliable event-driven access
 
@@ -243,6 +243,10 @@ Implementation dates and hosting commitments remain open. Sequence work by compl
 
 After finishing `003-feat-classroom-access` (including student invitation redemption/enrollment and final verification), the agreed next branch is `004-refactor-codebase`. Focus solely on structure, consistency, and maintainability, with no new features or intended behavior changes. Include this direction in the classroom-access branch's local PR draft.
 
-### Current branch status
+### Completed problem-library branch
 
-`004-refactor-codebase` is merged. Work is now on `005-feat-problem-library`. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The second slice adds owner-scoped private-library contracts/API, formula validation, and access/persistence tests. The third slice adds publishing, owner-scoped version history, archive/restore, archive filters, and concurrency checks. The fourth slice adds the instructor library page, saved-draft publication, paginated history, isolated previews, and archive/restore controls. Final local verification is complete and the ignored PR draft is prepared. See [verification evidence](../verification/problem-library-verification.md) for checks and limits. No new student access exists.
+`004-refactor-codebase` and `005-feat-problem-library` are complete. The first slice adds problem/version entities, additive migrations and a snapshot, publication immutability checks, and persistence tests. Local development/test databases have the migration applied. The second slice adds owner-scoped private-library contracts/API, formula validation, and access/persistence tests. The third slice adds publishing, owner-scoped version history, archive/restore, archive filters, and concurrency checks. The fourth slice adds the instructor library page, saved-draft publication, paginated history, isolated previews, and archive/restore controls. Final local verification is complete and the ignored PR draft is prepared. See [verification evidence](../verification/problem-library-verification.md) for checks and limits. No new student access exists.
+
+### Assignment branch status
+
+Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. The second slice adds scoped instructor assignment authoring, pinned ordered occurrences, transactional publication/content locks, archive/restore, and route/PostgreSQL tests. See the [assignment API](../api/assignment-api.md). The third slice adds instructor-only `/assignments` navigation, class selection, ordered published-version selection, draft authoring, publication, archive/restore, pagination/retries, and frontend regression coverage. A local synthetic-session Chrome/PostgreSQL walkthrough passed desktop/mobile workflows. The fourth slice adds enrollment-scoped student reads, revisioned per-item saves, one immutable final submission/result, after-submission feedback and optional solutions, retention, and concurrency tests. See the [student-work API](../api/student-work-api.md). The fifth slice adds `/work` for student completion, explicit per-item saving and final confirmation, read-only result restoration and protected solutions, plus final-only instructor submission review and owner-scoped review endpoints. Automated and synthetic-session Chrome/PostgreSQL checks passed desktop/mobile workflows. Final branch verification/documentation is complete and the ignored local PR draft is prepared. See [verification evidence](../verification/assignments-and-progress-verification.md) for checks and limitations.

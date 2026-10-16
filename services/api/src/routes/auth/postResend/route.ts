@@ -1,5 +1,6 @@
 import { emailRequestSchema, authMessageResponseSchema } from '@logiclab/contracts';
-import { authErrorResponses, type AuthRouteSchema } from '../schemas';
+import { authErrorResponses } from '../../error-responses';
+import type { RouteSchema } from '../../setup';
 import type { FastifyInstance } from 'fastify';
 import type { AuthContext } from '../context';
 import { postResendHandler } from './handler';
@@ -9,7 +10,7 @@ export const postResendSchema = {
   description: 'Return account-neutral instructions for requesting another confirmation code.',
   body: emailRequestSchema,
   response: { 202: authMessageResponseSchema, ...authErrorResponses },
-} satisfies AuthRouteSchema;
+} satisfies RouteSchema;
 
 export async function postResendRoute(app: FastifyInstance, context: AuthContext) {
   app.route({

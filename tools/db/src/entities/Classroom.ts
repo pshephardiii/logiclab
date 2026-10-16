@@ -1,11 +1,13 @@
+import type { ClassroomFields } from '../types/classroom/fields.ts';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
-import { User } from './User.js';
+import { User } from './User.ts';
 
 @Entity({ tableName: 'classrooms' })
 @Index({ name: 'classrooms_owner_id_index', properties: ['owner'] })
-export class Classroom {
+export class Classroom implements ClassroomFields {
   [OptionalProps]?: 'id' | 'createdAt';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
@@ -47,3 +49,6 @@ export class Classroom {
   })
   createdAt = new Date();
 }
+
+// Keep the readable field reference exact, excluding ORM creation metadata.
+type ClassroomFieldsCheck = Assert<SameEntityFields<Classroom, ClassroomFields>>;

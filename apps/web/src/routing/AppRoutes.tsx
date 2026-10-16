@@ -1,3 +1,5 @@
+import { StudentWorkPage } from '../pages/student-work/StudentWorkPage';
+import { InstructorAssignmentsPage } from '../pages/instructor-assignments/InstructorAssignmentsPage';
 import { ProblemLibraryPage } from '../pages/problem-library/ProblemLibraryPage';
 import { Route, Routes } from 'react-router';
 import { PracticePage } from '../pages/practice/PracticePage';
@@ -12,7 +14,15 @@ import { routeDefinitions } from './route-definitions';
  * Connects route metadata to page components and their role guards.
  */
 export function AppRoutes() {
-  const { practice, account, instructorClasses, studentClasses, problemLibrary } = routeDefinitions;
+  const {
+    practice,
+    account,
+    instructorClasses,
+    studentClasses,
+    problemLibrary,
+    instructorAssignments,
+    studentWork,
+  } = routeDefinitions;
 
   return (
     <Routes>
@@ -26,6 +36,12 @@ export function AppRoutes() {
       </Route>
       <Route element={<ProtectedRoute {...problemLibrary.access} />}>
         <Route path={problemLibrary.path} element={<ProblemLibraryPage />} />
+      </Route>
+      <Route element={<ProtectedRoute {...instructorAssignments.access} />}>
+        <Route path={instructorAssignments.path} element={<InstructorAssignmentsPage />} />
+      </Route>
+      <Route element={<ProtectedRoute {...studentWork.access} />}>
+        <Route path={studentWork.path} element={<StudentWorkPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

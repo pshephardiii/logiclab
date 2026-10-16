@@ -2,7 +2,7 @@ import { createProblemRequestSchema, problemResponseSchema } from '@logiclab/con
 import type { FastifyInstance } from 'fastify';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
-import { problemErrorResponses } from '../schemas';
+import { problemErrorResponses } from '../../error-responses';
 import { postProblemHandler } from './handler';
 
 export const postProblemSchema = {

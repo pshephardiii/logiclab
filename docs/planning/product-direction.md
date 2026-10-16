@@ -146,3 +146,15 @@ Eventually run local PostgreSQL in Docker and document connecting DBeaver to it.
 The next feature is a private, reusable truth-table library owned by instructor users. Save title, optional instructions, and formula as a mutable draft; publication creates an immutable version. Instructors can archive and restore problems without deleting publication history. A problem is independent of any classroom.
 
 Classroom sharing will later make a selected published version available through enrollment-scoped access; publishing itself does not grant student access. Sharing, assignments/submissions/grades, other exercise types, and saved student-created problems remain outside this branch. Anonymous independent practice continues unchanged.
+
+## Assignments: agreed first workflow
+
+`006-feat-assignments-and-progress` connects classrooms to published library versions. An instructor creates a draft assignment for one owned class, with a title, optional instructions, and an ordered list of published problem versions. Publication exposes it to enrolled students and locks content, ordering, and policies; archiving preserves its history. Editing library drafts never changes assigned content. No deadlines, late-work rules, individual targeting, or reusable problem-set entity are needed initially.
+
+Students save incomplete work as a mutable attempt, then make one final submission. Initial feedback arrives on submission. Solution access is an independent instructor setting, off by default, and must be enforced by the API. Submission results and completion are separate concepts: an incorrect submitted exercise can still be completed.
+
+Future assignment policy has three independent dimensions: assessment (`graded`, completion only, or ungraded practice), feedback timing (on submission or immediately after input), and solution access (whether, and eventually when, solutions are available). Later branches may combine completion-only or ungraded exercises with immediate wrong-answer feedback. Do not implement those modes now, conflate feedback timing with grading, or use one practice/graded boolean to control all behavior. Initial persisted assessment/feedback choices support only `graded` and `on_submission`; later modes require deliberate contract/policy changes.
+
+Account and enrollment checks, feedback, grading, and solution policy apply on the backend. Anonymous practice remains a separate public workflow; users can independently analyze formulas, so assignment settings govern official feedback/solutions rather than preventing outside calculation.
+
+The student-work API now implements revisioned saved attempts and one immutable final submission per assignment/student. Blank work may be submitted and counts as unanswered; completion is separate from correctness. For this first workflow, enabled solutions release only after final submission. Archived assignments are hidden from students, retain all work, and become accessible again after restore if enrollment remains active. Future immediate feedback and alternate assessment modes remain deferred. See [student work](../api/student-work-api.md).

@@ -94,7 +94,7 @@ An attempt stores the student's T/F entries, preserving blanks distinctly from f
 
 When an instructor edits a problem, existing assignments and attempts continue to reference their original version. New work can select the new version. Updating a library problem must not silently update every set that reuses it.
 
-Published set membership, ordering, and assignment settings also need change rules so student work remains interpretable. Whether to snapshot published sets or introduce set versions is still open. Define those rules before implementing assignments.
+Published set membership, ordering, and assignment settings also need change rules so student work remains interpretable. For the initial assignment workflow, use assignment-owned ordered items referencing immutable problem versions. Lock assignment content, ordering, and policy on publication; reusable problem sets and set versioning are deferred.
 
 Engine/parser changes can also affect historical interpretation. Decide how to preserve reproducibility, such as retaining an engine/grammar version, before relying on saved definitions for graded work.
 
@@ -112,7 +112,7 @@ Local PostgreSQL will run in Docker, with documented DBeaver connection settings
 
 - Enrollment removal/withdrawal and its effects on retained student work. Initial assignment targeting is class-wide; individual targeting is deferred.
 - Library organization, search, sharing, copying, and archive/deletion behavior.
-- Published problem-set snapshots or versions, and allowed assignment-policy changes.
+- Reusable problem-set snapshots or versions. Initial assignment content, order, and policies are locked on publication.
 - Stable expression/row/cell identifiers, grammar versions, and complexity limits.
 - Attempt counts, autosave, submission finality, retries, grading, and retained grading evidence.
 - Whether independent practice is persisted, and whether anonymous practice exists.
@@ -145,3 +145,17 @@ Keep one `Problem` entity and one `ProblemVersion` entity across truth tables an
 `ProblemDefinition` currently permits only truth tables because those are the implemented exercise type. When derivations enter scope, extend it into a union discriminated by `type`, with a corresponding runtime validator for each variant and supported definition-format version. Derivations will likely need premises, a conclusion, and a proof-system identifier; exact fields and rules remain deferred. Do not add placeholder entities or accept unsupported definition types in advance.
 
 Student proof lines, truth-table entries, and grading results belong to future attempts/submissions, not authored definitions. Published snapshots retain their original type, format version, and content even as support for additional exercise types is introduced.
+
+## Assignment foundation (`006`)
+
+Use `Assignment` for a title, optional instructions, one classroom reference, independent assessment/feedback/solution settings, publication/archive timestamps, and creation/update timestamps. Ownership comes through the classroom instructor rather than a second independently mutable owner ID. Lifecycle derives from timestamps: unpublished is draft, published is content-locked, and archived is retained/hidden. No duplicate status field is necessary.
+
+`AssignmentItem` identifies one ordered occurrence of a published `ProblemVersion` within an assignment. Positions are positive and unique per assignment; repeated versions are permitted at different positions. Future attempts reference the item ID so repeated problems do not collide. Restrict deletion of referenced classrooms, assignments, and problem versions. Publishing must verify that the instructor owns the classroom and selected library problems, and that at least one item exists. These cross-record authorization/publication rules are enforced by the transactional assignment store; foreign keys alone do not establish ownership or freeze published content.
+
+The first slice introduced these records and migrations. The second slice adds instructor authoring, publication, and archive/restore API operations. It stores separate `assessmentMode` (`graded` initially), `feedbackTiming` (`on_submission` initially), and `allowSolutions` (false by default). Unsupported assessment/feedback modes are rejected in PostgreSQL; future modes are not implemented merely by loosening a TypeScript type. Draft item lists can repeat versions and may contain up to 50 items; publication requires a nonempty list. Publishing and archive/restore are idempotent. Archived drafts are read-only until restored; restored publications remain content/policy-locked. Grading results, completion state, saved answers, and final submission lifecycle remain subsequent slices. Do not store generated expected answers in assignment records or expose library-only solution routes as assignment authorization.
+
+## Saved attempts and final submissions (`006`)
+
+`AssignmentAttempt` is unique per assignment/student. It stores revisioned JSON answers keyed by assignment-item UUID, preserving false versus blank null, plus a nullable final submission timestamp and frozen evaluation result. Saving replaces one item's entries and preserves other occurrences. There is no separate draft/submitted status column: the timestamp marks the lifecycle transition. Attempt fields/types live under `types/assignment-attempt/` and use the same exact-shape checks as other entities.
+
+Final submission stores version-tagged cell feedback and counts rather than recomputing official results on reads. A timestamp/result consistency constraint and immutable-submission trigger protect the retained record; assignment/student references restrict deletion. Revoking enrollment does not delete saved work. Revision checks reject stale writes, and shared assignment/enrollment locks plus per-student attempt locks serialize lifecycle changes without serializing all students' saves. Solutions are separately gated by assignment policy and final submission. Student completion UI is now available. Instructor review reads only final submissions scoped through assignment/classroom ownership, retains access after archiving/withdrawal, and never exposes unsubmitted attempt answers.

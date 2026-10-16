@@ -33,6 +33,41 @@ Keep dependencies directed toward these shared capabilities. Tools must not impo
 
 A directory's `index.ts` defines its intended import surface. The package root exports supported operations and types; internal helper/stage exports need not be exposed there. This is a convention, not an enforced package subpath restriction.
 
+## Tools: database source imports
+
+Inside `tools/db`, use explicit `.ts` extensions for relative TypeScript imports and re-exports, including type-only imports, tests, and `mikro-orm.config.ts`. These paths name the source files contributors edit. Continue importing other workspace packages through their package names.
+
+`tools/db/tsconfig.json` enables TypeScript's `rewriteRelativeImportExtensions`; the build configuration inherits it and emits runnable `.js` paths. Do not hand-edit output, add runtime aliases, or import workspace `src` files across package boundaries. Package entry points remain `dist/index.js` and `dist/index.d.ts`. Declaration files can retain `.ts` specifiers, which TypeScript resolves to corresponding declarations; declaration maps provide navigation to sources.
+
+This convention is scoped to the database package. Existing extensionless imports in the other packages follow their current compiler/bundler setup. Keep existing migrations unchanged; new relative TypeScript imports in future migration source should use `.ts`. Rewriting covers relative import/export paths, not package aliases or arbitrary computed paths. Filesystem locations such as `new URL('./migrations', import.meta.url)` retain their actual runtime directory names.
+
+When changing TypeScript or build tools, verify workspace consumers, native Node loading of built database output, declaration/source-map resolution, source execution through `tsx`, and MikroORM commands. The standard checks are `npm run check` and `npm run db:test`; the latter applies migrations to the disposable test database. CLI `migration:list` provides a read-only configuration-loading check. Database metadata and migrations are unaffected by this import convention.
+
+## Tools: readable entity shapes and related types
+
+Every entity has a compact `...Fields` interface. The decorated class uses `implements` plus `Assert<SameEntityFields<Entity, Fields>>` to reject extra/missing application members, type changes, and optionality changes. Keep interfaces and assertions beside their owning domain/class; do not duplicate database decorator metadata in the interfaces.
+
+Use one directory per entity under `tools/db/src/types/`:
+
+| Directory             | Contents                                                    |
+| --------------------- | ----------------------------------------------------------- |
+| `assignment/`         | Assignment fields and assessment/feedback enums             |
+| `assignment-attempt/` | Attempt fields, saved answer types, and frozen result types |
+| `assignment-item/`    | Assignment-item fields                                      |
+| `classroom/`          | Classroom fields                                            |
+| `enrollment/`         | Enrollment fields                                           |
+| `problem/`            | Problem fields, authored definition, problem-type enum      |
+| `problem-version/`    | Problem-version fields                                      |
+| `user/`               | User fields and role enum                                   |
+| `auth-session/`       | Session fields                                              |
+| `shared/`             | Exact-shape assertion helpers used across entities          |
+
+Use `fields.ts` within each entity directory, even when entities are closely related. Shared authored content stays in `problem/definition.ts`, imported by both problem and problem-version fields rather than duplicated. Keep discrete supported values in domain `enums.ts` files; do not invent enums for free text, IDs, booleans, or definition-format version numbers. Keep serialized enum values stable. Adding an enum member does not implement its behavior: update database constraints and application policy deliberately.
+
+Problem definition discriminants derive their string literal type from `ProblemType` so structurally typed API contracts remain assignable without casts or a dependency from contracts into the database package. `UserRole`, `AssessmentMode`, `FeedbackTiming`, `ProblemType`, and field interfaces are available through `@logiclab/db`. Preserve the existing `UserRole` entity-module re-export for current internal consumers. Relationships use entity types through type-only imports; field references are not API response contracts.
+
+The exact-shape helper excludes only MikroORM's `[OptionalProps]` creation metadata; methods are not silently excluded. If methods or other metadata are introduced, decide their treatment explicitly. Compile-time regression cases in `tools/db/test/entity-fields.typecheck.ts` run through the database type check. Expected-error assertions prove that drift is rejected. These interfaces/assertions do not provide runtime validation; migration/schema and integration tests still verify decorators, defaults, nullability, and database constraints.
+
 ## Tools: API contracts
 
 Keep one contract file per domain until its size warrants a domain directory. Group each file in this order:
@@ -138,6 +173,8 @@ Keep reusable application workflows in `application/<domain>/`, provider-specifi
 
 Place cross-domain request parsing and error inspection in `routes/helpers/`: `parseRequest` validates bodies, queries, and path parameters; `errorName` safely inspects thrown errors. Auth response construction belongs in `routes/auth/responses.ts`, and account-discovery suppression policy in `routes/auth/errors.ts`. Parsing currently preserves `AuthError('INVALID_REQUEST')` for compatibility with both groups' error mapping.
 
+Keep status-to-error-contract mappings together in `routes/error-responses.ts`. Routes import their named group mapping directly and keep success responses local. Preserve the group-specific status codes and contracts, including optional parser positions; shared mappings do not install error handlers, authorization, or rate limits. Import `RouteSchema` from `routes/setup.ts` rather than introducing domain aliases or `schemas.ts` files that only repeat error status maps.
+
 Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers.
 
 ## API: security and lifecycle invariants
@@ -227,3 +264,9 @@ Integration-test commands must build every imported workspace dependency on a fr
 Enable `declarationMap` in declaration-emitting shared-package builds (`logic-engine`, `contracts`, and `db`). Generated `.d.ts.map` files connect package declarations to workspace sources for IDE navigation without bypassing package imports. Rebuild/watch the package after source changes; edit `src/` rather than generated `dist/` files. These maps support local workspace navigation while sources are present; packaged distribution would need to include or otherwise expose those sources. Application packages do not need declaration maps unless they begin exporting declaration files to consumers.
 
 Shared-package builds also emit JavaScript source maps (`sourceMap`) for debugger navigation from compiled JavaScript to TypeScript; declaration maps serve editor definition navigation instead. Use a source-map-aware debugger/runtime when debugging built code. VS Code hides `dist/` from explorer and search to reduce generated-file clutter; this does not change module resolution, builds, or the ability to open generated files explicitly.
+
+## Assignment work and review UI
+
+Keep student completion orchestration in `pages/student-work/` and instructor review controls with `pages/instructor-assignments/`. Share assigned table rendering, answer normalization, and result presentation through `features/assignment/`; the practice provider remains independent. Shared `features/classroom/components/ClassSelection.tsx` presentation and `features/classroom/hooks/useClassChoices.ts` accept an owned/enrolled-class API loader so student pages do not import instructor page internals.
+
+Unsaved answers and the server baseline remain separate. Compare normalized blank/false values by assignment-item ID, preserve other items when saving one, and require explicit final confirmation only after all edits are saved. Render official feedback from the retained result rather than calling public practice checks. Read-only tables and solution buttons reflect policy, while backend role/enrollment/ownership/submission checks remain authoritative. Instructor review reads final submissions only, never private drafts.

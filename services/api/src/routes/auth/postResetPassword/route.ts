@@ -1,5 +1,6 @@
 import { resetPasswordRequestSchema, authMessageResponseSchema } from '@logiclab/contracts';
-import { authErrorResponses, type AuthRouteSchema } from '../schemas';
+import { authErrorResponses } from '../../error-responses';
+import type { RouteSchema } from '../../setup';
 import type { FastifyInstance } from 'fastify';
 import type { AuthContext } from '../context';
 import { postResetPasswordHandler } from './handler';
@@ -9,7 +10,7 @@ export const postResetPasswordSchema = {
   description: 'Consume a reset code, change the password, and invalidate local sessions.',
   body: resetPasswordRequestSchema,
   response: { 200: authMessageResponseSchema, ...authErrorResponses },
-} satisfies AuthRouteSchema;
+} satisfies RouteSchema;
 
 export async function postResetPasswordRoute(app: FastifyInstance, context: AuthContext) {
   app.route({

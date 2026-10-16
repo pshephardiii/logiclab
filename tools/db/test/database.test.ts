@@ -11,7 +11,12 @@ import {
   Enrollment,
   Problem,
   ProblemVersion,
-} from '../src/index.js';
+  Assignment,
+  AssignmentItem,
+  AssignmentAttempt,
+  AssessmentMode,
+  FeedbackTiming,
+} from '../src/index.ts';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url) throw new Error('Set TEST_DATABASE_URL to a disposable integration-test database.');
@@ -434,3 +439,273 @@ test('published history prevents deleting its parent problem', async () => {
 test('migrated schema retains the immutable-version trigger without pending changes', async () => {
   assert.equal((await orm.schema.getUpdateSchemaSQL({ wrap: false })).trim(), '');
 });
+
+async function assignmentFixture(em: typeof orm.em) {
+  const { owner, problem, published } = await problemFixture(em);
+  const classroom = em.create(Classroom, { owner, name: 'Assignment class' });
+  const assignment = em.create(Assignment, { classroom, title: 'First assignment' });
+  em.persist([classroom, assignment]);
+  await em.flush();
+  return { classroom, assignment, problem, published };
+}
+
+test('assignment SQL defaults keep assessment, feedback, and solutions independent', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { classroom } = await assignmentFixture(em);
+    const [row] = await em
+      .getConnection()
+      .execute<{ id: string }[]>(
+        'insert into assignments (classroom_id, title) values (?, ?) returning id',
+        [classroom.id, 'SQL defaults'],
+        'all',
+        em.getTransactionContext(),
+      );
+    const saved = await em.findOneOrFail(Assignment, row!.id);
+    assert.equal(saved.assessmentMode, AssessmentMode.Graded);
+    assert.equal(saved.feedbackTiming, FeedbackTiming.OnSubmission);
+    assert.equal(saved.allowSolutions, false);
+    assert.equal(saved.publishedAt ?? null, null);
+    assert.equal(saved.archivedAt ?? null, null);
+    assert(saved.createdAt instanceof Date);
+    assert(saved.updatedAt instanceof Date);
+    saved.allowSolutions = true;
+    await em.flush();
+    em.clear();
+    const reloaded = await em.findOneOrFail(Assignment, saved.id);
+    assert.equal(reloaded.allowSolutions, true);
+    assert.equal(reloaded.assessmentMode, AssessmentMode.Graded);
+    assert.equal(reloaded.feedbackTiming, FeedbackTiming.OnSubmission);
+  } finally {
+    await em.rollback();
+  }
+});
+
+test('ordered assignment occurrences retain pinned content after library edits and archiving', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { assignment, problem, published } = await assignmentFixture(em);
+    const first = em.create(AssignmentItem, { assignment, problemVersion: published, position: 1 });
+    const second = em.create(AssignmentItem, {
+      assignment,
+      problemVersion: published,
+      position: 2,
+    });
+    em.persist([second, first]);
+    await em.flush();
+    assert.notEqual(first.id, second.id);
+    problem.title = 'Changed draft';
+    problem.definition = { ...problem.definition, formula: 'Q' };
+    problem.archivedAt = new Date();
+    assignment.publishedAt = new Date();
+    assignment.archivedAt = new Date();
+    await em.flush();
+    em.clear();
+    const items = await em.find(
+      AssignmentItem,
+      { assignment: assignment.id },
+      { orderBy: { position: 'ASC' }, populate: ['problemVersion', 'assignment.classroom.owner'] },
+    );
+    assert.deepEqual(
+      items.map((item) => item.position),
+      [1, 2],
+    );
+    assert.equal(items[0]!.problemVersion.title, 'Conjunction');
+    assert.equal(items[1]!.problemVersion.definition.formula, 'P & Q');
+    assert.equal(items[0]!.assignment.classroom.owner.role, UserRole.Instructor);
+    assert(items[0]!.assignment.publishedAt instanceof Date);
+    assert(items[0]!.assignment.archivedAt instanceof Date);
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const invalid of ['duplicate', 'zero', 'negative'] as const) {
+  test(`assignment items reject ${invalid} positions`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { assignment, published } = await assignmentFixture(em);
+      em.persist(em.create(AssignmentItem, { assignment, problemVersion: published, position: 1 }));
+      await em.flush();
+      em.persist(
+        em.create(AssignmentItem, {
+          assignment,
+          problemVersion: published,
+          position: invalid === 'duplicate' ? 1 : invalid === 'zero' ? 0 : -1,
+        }),
+      );
+      await assert.rejects(
+        em.flush(),
+        invalid === 'duplicate'
+          ? /assignment_items_assignment_position_unique/
+          : /assignment_items_positive_position/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const field of ['assessment_mode', 'feedback_timing'] as const) {
+  test(`unsupported assignment ${field} is rejected by PostgreSQL`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { assignment } = await assignmentFixture(em);
+      await assert.rejects(
+        em
+          .getConnection()
+          .execute(
+            `update assignments set ${field} = ? where id = ?`,
+            ['unsupported', assignment.id],
+            'run',
+            em.getTransactionContext(),
+          ),
+        field === 'assessment_mode'
+          ? /assignments_assessment_mode_check/
+          : /assignments_feedback_timing_check/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const target of ['classroom', 'assignment', 'version'] as const) {
+  test(`assignment references prevent deleting ${target} history`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { classroom, assignment, published } = await assignmentFixture(em);
+      em.persist(em.create(AssignmentItem, { assignment, problemVersion: published, position: 1 }));
+      await em.flush();
+      if (target === 'classroom')
+        await assert.rejects(
+          em.nativeDelete(Classroom, classroom.id),
+          /assignments_classroom_id_fkey/,
+        );
+      if (target === 'assignment')
+        await assert.rejects(
+          em.nativeDelete(Assignment, assignment.id),
+          /assignment_items_assignment_id_fkey/,
+        );
+      // Immutable version protection remains active even when referenced by assignment items.
+      if (target === 'version')
+        await assert.rejects(em.nativeDelete(ProblemVersion, published.id), /immutable/);
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+async function attemptFixture(em: typeof orm.em) {
+  const { assignment } = await assignmentFixture(em);
+  const student = em.create(User, {
+    cognitoUserPoolId: 'attempt-test',
+    cognitoSubject: randomUUID(),
+    role: UserRole.Student,
+  });
+  const attempt = em.create(AssignmentAttempt, { assignment, student });
+  em.persist([student, attempt]);
+  await em.flush();
+  return { assignment, student, attempt };
+}
+
+test('saved attempts preserve blank/false values, reload defaults, and allow draft deletion', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { attempt } = await attemptFixture(em);
+    assert.equal(attempt.revision, 0);
+    assert.deepEqual(attempt.answers, {});
+    attempt.answers = {
+      [randomUUID()]: [
+        { rowId: 'row', columnId: 'column', value: false },
+        { rowId: 'other', columnId: 'column', value: null },
+      ],
+    };
+    await em.flush();
+    em.clear();
+    const saved = await em.findOneOrFail(AssignmentAttempt, attempt.id);
+    assert.deepEqual(saved.answers, attempt.answers);
+    assert.equal(saved.result ?? null, null);
+    assert.equal(saved.submittedAt ?? null, null);
+    assert.equal(await em.nativeDelete(AssignmentAttempt, saved.id), 1);
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const invalid of ['duplicate', 'negative_revision', 'unpaired_result'] as const) {
+  test(`attempt constraints reject ${invalid}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { assignment, student, attempt } = await attemptFixture(em);
+      if (invalid === 'duplicate') {
+        em.persist(em.create(AssignmentAttempt, { assignment, student }));
+        await assert.rejects(em.flush(), /assignment_attempts_assignment_student_unique/);
+      } else if (invalid === 'negative_revision') {
+        await assert.rejects(
+          em.nativeUpdate(AssignmentAttempt, attempt.id, { revision: -1 }),
+          /assignment_attempts_revision_nonnegative/,
+        );
+      } else {
+        await assert.rejects(
+          em.nativeUpdate(AssignmentAttempt, attempt.id, { submittedAt: new Date() }),
+          /assignment_attempts_submission_result_check/,
+        );
+      }
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const operation of ['update', 'delete'] as const) {
+  test(`submitted attempts reject ${operation} at the database boundary`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { attempt } = await attemptFixture(em);
+      attempt.result = {
+        gradingVersion: 'truth_table_v1',
+        items: [],
+        summary: { correct: 0, incorrect: 0, unanswered: 0, total: 0 },
+      };
+      attempt.submittedAt = new Date();
+      await em.flush();
+      await assert.rejects(
+        operation === 'update'
+          ? em.nativeUpdate(AssignmentAttempt, attempt.id, { answers: {} })
+          : em.nativeDelete(AssignmentAttempt, attempt.id),
+        /Submitted attempts are immutable/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const parent of ['assignment', 'student'] as const) {
+  test(`attempt work restricts deleting its ${parent}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { assignment, student } = await attemptFixture(em);
+      await assert.rejects(
+        parent === 'assignment'
+          ? em.nativeDelete(Assignment, assignment.id)
+          : em.nativeDelete(User, student.id),
+        parent === 'assignment'
+          ? /assignment_attempts_assignment_id_fkey/
+          : /assignment_attempts_student_id_fkey/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}

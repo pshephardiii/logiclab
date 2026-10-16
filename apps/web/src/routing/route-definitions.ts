@@ -50,6 +50,24 @@ export const routeDefinitions = {
       deniedMessage: 'Problem libraries require an instructor account.',
     },
   },
+  instructorAssignments: {
+    path: '/assignments',
+    navigation: { label: 'Assignments' },
+    access: {
+      allowedRoles: ['instructor'],
+      deniedTitle: 'Instructor access required',
+      deniedMessage: 'Assignment authoring requires an instructor account.',
+    },
+  },
+  studentWork: {
+    path: '/work',
+    navigation: { label: 'Assigned work' },
+    access: {
+      allowedRoles: ['student'],
+      deniedTitle: 'Student access required',
+      deniedMessage: 'Assigned work requires a student account.',
+    },
+  },
   studentClasses: {
     path: '/enrollments',
     navigation: { label: 'My classes' },

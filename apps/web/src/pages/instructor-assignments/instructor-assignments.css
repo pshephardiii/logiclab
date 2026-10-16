@@ -1,0 +1,40 @@
+.assignment-editor fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.assignment-editor textarea {
+  display: block;
+  width: 100%;
+  min-height: 6rem;
+  font: inherit;
+  margin-bottom: 1rem;
+}
+.assignment-editor h4,
+.assignment-editor code {
+  overflow-wrap: anywhere;
+}
+.assignment-editor input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+.assignment-solution-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.assignment-items {
+  padding-left: 1.5rem;
+}
+.assignment-items li {
+  margin-bottom: 1.25rem;
+}
+
+#assignment-library-problem {
+  width: 100%;
+  max-width: 100%;
+}
+.assignment-editor input:not([type='checkbox']) {
+  width: 100%;
+  margin-bottom: 1rem;
+}

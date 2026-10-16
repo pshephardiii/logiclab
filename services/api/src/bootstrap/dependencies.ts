@@ -1,3 +1,7 @@
+import { createStudentWorkStore } from '../persistence/student-work/store';
+import type { StudentWorkContext } from '../routes/studentWork/context';
+import { createAssignmentStore } from '../persistence/assignment/store';
+import type { AssignmentContext } from '../routes/assignment/context';
 import { createProblemStore } from '../persistence/problem/store';
 import type { ProblemContext } from '../routes/problem/context';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
@@ -15,6 +19,8 @@ export type ApplicationDependencies = {
   auth: AuthContext;
   classroom: ClassroomContext;
   problem: ProblemContext;
+  assignment: AssignmentContext;
+  studentWork: StudentWorkContext;
   close: () => Promise<void>;
 };
 
@@ -24,6 +30,8 @@ type DependencyFactories = {
   createAuthStore: typeof createAuthStore;
   createClassroomStore: typeof createClassroomStore;
   createProblemStore: typeof createProblemStore;
+  createAssignmentStore: typeof createAssignmentStore;
+  createStudentWorkStore: typeof createStudentWorkStore;
 };
 
 const defaultFactories: DependencyFactories = {
@@ -33,6 +41,8 @@ const defaultFactories: DependencyFactories = {
   createAuthStore,
   createClassroomStore,
   createProblemStore,
+  createAssignmentStore,
+  createStudentWorkStore,
 };
 
 /** Application composition owns shared resources; auth-disabled practice needs none. */
@@ -57,7 +67,11 @@ export async function createDependencies(
     const classrooms = await factories.createClassroomStore(orm);
 
     const problems = await factories.createProblemStore(orm);
+    const assignments = await factories.createAssignmentStore(orm);
+    const studentWork = await factories.createStudentWorkStore(orm);
     return {
+      studentWork: { config, service, studentWork },
+      assignment: { config, service, assignments },
       problem: { config, service, problems },
       auth: { config, service },
       classroom: { config, service, classrooms },

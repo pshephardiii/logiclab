@@ -1,6 +1,6 @@
 import { createClassroomRequestSchema, classroomResponseSchema } from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
-import { classroomErrorResponses } from '../schemas';
+import { classroomErrorResponses } from '../../error-responses';
 import type { FastifyInstance } from 'fastify';
 import type { ClassroomContext } from '../context';
 import { postClassroomHandler } from './handler';

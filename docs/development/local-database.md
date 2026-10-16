@@ -88,3 +88,7 @@ npm run db:down
 Stopping preserves data. For an intentional reset of all local databases, **including the test database**, use `docker compose down --volumes`, then start and migrate again. This deletes the named volume; do not use it to troubleshoot a connection without intending to erase local data.
 
 If startup fails, confirm Docker is running and port 5432 is free. Choose another `POSTGRES_PORT` and update both URLs/DBeaver when necessary. If login fails after changing credentials, account for the existing volume's original password. AWS database provisioning, backups, and production TLS/credentials are outside this local slice.
+
+## Navigating database source
+
+Relative imports in `tools/db` explicitly name `.ts` source files, including the MikroORM config and tests. TypeScript's `rewriteRelativeImportExtensions` emits `.js` imports for the compiled package; consumers still import `@logiclab/db`. No extra runtime loader is required for built code. Development/migration commands continue using the existing `tsx` setup. Declaration and JavaScript source maps remain enabled for editor/debugger navigation. See [codebase conventions](../conventions/codebase-conventions.md) for the scope and verification guidance.
