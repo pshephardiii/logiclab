@@ -176,7 +176,7 @@ Commit-sized slices:
 3. **Transactional event processing (implemented):** owned idempotent checkout persistence, signed raw-body webhook and owned simulator controls, atomic receipt/grant writes, duplicate/hash conflict detection, source ordering, terminal refunds, rollback/retry coverage, and opt-in bootstrap. See [billing API](../api/billing-api.md).
 4. **Publication entitlement enforcement (implemented):** new publication requires a currently valid class capability grant, independently of funding type and billing-route configuration. Class locks serialize the decision with refunds. Existing publications, student work, review, and archive/restore remain available.
 5. **Instructor billing UI (implemented):** instructor-only `/billing`, paginated active plan/history reads, class coverage snapshots, retry-safe checkout intents, explicit success/failure/refund controls, loading/error/reload states, and a repeatable local demo-plan seed. No real charges or institution subscriptions.
-6. **Verification/documentation:** lifecycle/concurrency checks, browser walkthrough, and ignored local PR draft.
+6. **Verification/documentation (completed):** lifecycle/concurrency and retained-work checks, Chrome desktop/mobile walkthrough, public [verification evidence](../verification/simulated-billing-verification.md), and ignored local PR draft.
 
 Done when: a verified simulated payment activates class coverage, expiration/refund prevents new publication while retaining existing work, and duplicate/out-of-order delivery cannot incorrectly grant or restore access. Browser success cannot authorize access. A future subscription can issue/renew grants without rewriting assignment authorization.
 

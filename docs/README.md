@@ -45,5 +45,6 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Classroom-access walkthrough and evidence](verification/classroom-access-verification.md)
 - [Problem-library walkthrough and evidence](verification/problem-library-verification.md)
 - [Assignments and progress walkthrough and evidence](verification/assignments-and-progress-verification.md)
+- [Simulated billing walkthrough and evidence](verification/simulated-billing-verification.md)
 
 Keep new documents in the most relevant group and add them to this index. Product decisions belong in planning, implementation/setup guidance in development or API reference, reusable engineering rules in conventions, and dated validation evidence in verification. Local PR drafts remain in the ignored `.codex-local/pr/` directory.

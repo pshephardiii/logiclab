@@ -52,6 +52,12 @@ export function ClassBilling({ classId }: { classId: string }) {
                 </option>
               ))}
             </select>
+            {selected && (
+              <p>
+                {formatPrice(selected.amountMinor, selected.currency)} for {selected.coverageDays}{' '}
+                days of publishing coverage for this class.
+              </p>
+            )}
             {!state.plans.length && (
               <p>No active class plans. Seed the local demo plan to get started.</p>
             )}
