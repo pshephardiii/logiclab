@@ -165,22 +165,24 @@ Done when: instructors assign pinned content to enrolled students, students save
 
 ### 7. `007-feat-simulated-billing-and-entitlements` — Reliable event-driven access
 
-Depends on: classroom access and the assignment entitlement rules.
+Depends on: classroom access and assignments/submissions. Current branch: `007-feat-simulated-billing-and-entitlements`.
 
-- Define a payment-provider interface and simulator with a clearly labeled no-charge checkout.
-- Add signed webhook ingestion, unique event IDs, transactional entitlement updates, and visible plan status.
-- Define payment and entitlement transitions, including failure, refund, duplicate events, and out-of-order delivery.
-- Test signature rejection, replay safety, rollback/retry behavior, and the rule that browser checkout success cannot itself grant access.
+Scope: individual instructor **one-time payments per class**, simulated with no real charges. Institution subscriptions remain a future branch. Unlock new assignment publication; keep existing published work and student/instructor access after expiration or refund. Start with a configurable 180-day period from verified payment; pricing is demo configuration, not a commercial decision. See [agreed billing direction](product-direction.md#agreed-individual-class-simulator-scope).
 
-Done when: simulated checkout changes the chosen entitlement through a verified server-side event; failures and refunds produce the agreed access behavior; repeated delivery has no duplicate effect.
+Commit-sized slices:
 
-Open product/design questions:
+1. **Persistence foundation (implemented):** separate class purchases, capability grants, and provider event receipts; exact field interfaces/enums; additive migration/snapshot and database constraints/retention tests. No checkout, webhook, or publication enforcement yet.
+2. **Provider simulator:** provider boundary, server-owned checkout terms, signed events, and clearly labeled no-charge scenarios.
+3. **Transactional event processing:** signature verification, purchase transitions, atomic grant/receipt writes, duplicate protection, source ordering, refund behavior, and retries.
+4. **Publication entitlement enforcement:** require active class coverage for new publication, preserving existing work and checking access independently of funding type.
+5. **Instructor billing UI:** class plan status, simulated checkout, success/failure/refund scenarios, and clear teaching-period/access explanations.
+6. **Verification/documentation:** lifecycle/concurrency checks, browser walkthrough, and ignored local PR draft.
 
-- What useful capability is paid: class size, assignment count, or another feature?
-- Does a plan belong to a class, instructor, or organization? Can this choice stay simple for the demo?
-- Is the first model a one-time upgrade or subscription, and which lifecycle states actually need implementation?
-- What access remains after cancellation, failed payment, or refund, especially for existing student work?
-- How should employers trigger and inspect failure scenarios without confusing the simulator with real commerce?
+Done when: a verified simulated payment activates class coverage, expiration/refund prevents new publication while retaining existing work, and duplicate/out-of-order delivery cannot incorrectly grant or restore access. Browser success cannot authorize access. A future subscription can issue/renew grants without rewriting assignment authorization.
+
+Next model addition agreed: `BillingPlan`, referenced by individual `ClassPurchase` records with purchased-term snapshots. It is not implemented yet. A later institution/subscription branch will add `Institution`, `InstitutionMembership`, and institution-owned `Subscription` records referencing the same plans and supplying class entitlements. Membership is separate from instructor class ownership and funding coverage. Recurring payment processing and institution management remain outside branch 007.
+
+Open later product questions: real pricing, commercial duration/refund rules, repeat-course handling, and institution subscription allocation/membership/renewal. These do not authorize implementing real charges or institution management in this branch.
 
 ### 8. `008-feat-durable-jobs-and-history` — Observable background work
 

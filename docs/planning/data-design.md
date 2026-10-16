@@ -159,3 +159,31 @@ The first slice introduced these records and migrations. The second slice adds i
 `AssignmentAttempt` is unique per assignment/student. It stores revisioned JSON answers keyed by assignment-item UUID, preserving false versus blank null, plus a nullable final submission timestamp and frozen evaluation result. Saving replaces one item's entries and preserves other occurrences. There is no separate draft/submitted status column: the timestamp marks the lifecycle transition. Attempt fields/types live under `types/assignment-attempt/` and use the same exact-shape checks as other entities.
 
 Final submission stores version-tagged cell feedback and counts rather than recomputing official results on reads. A timestamp/result consistency constraint and immutable-submission trigger protect the retained record; assignment/student references restrict deletion. Revoking enrollment does not delete saved work. Revision checks reject stale writes, and shared assignment/enrollment locks plus per-student attempt locks serialize lifecycle changes without serializing all students' saves. Solutions are separately gated by assignment policy and final submission. Student completion UI is now available. Instructor review reads only final submissions scoped through assignment/classroom ownership, retains access after archiving/withdrawal, and never exposes unsubmitted attempt answers.
+
+## Billing persistence foundation
+
+Branch `007-feat-simulated-billing-and-entitlements` starts with three separate records:
+
+- **ClassPurchase:** class, paying user, provider/checkout reference, pending/paid/failed/refunded status, immutable checkout terms (amount in minor units, currency, coverage days), and last applied source-event sequence. Provider plus checkout reference is unique. Payer identity is separate from class ownership; the purchase API must authorize the current owner.
+- **ClassEntitlement:** class, capability, provider, source kind/reference, start/end instants, and optional revocation instant. The initial source kind is `class_purchase`; the initial capability is `publish_assignments`. Multiple grants may coexist. One source can issue one grant per class/capability. Publication will depend on valid coverage, without depending on purchase status or funding type.
+- **PaymentEvent:** provider-scoped unique event ID, source reference, positive sequence, SHA-256 payload hash, and processed timestamp. This is a committed processing receipt, inserted in the same transaction as effects (including accepted stale-event no-ops). A rolled-back operation must not leave a successful receipt. Raw payment payloads and payment credentials are not stored.
+
+All three billing records use the shared `BillingProvider` enum in `tools/db/src/types/billing/enums.ts`, currently supporting only `simulator`, with matching database check constraints. Future providers require an explicit enum/constraint migration.
+
+Source references are provider identifiers, not foreign keys to one particular funding entity. The initial processor must resolve and validate the matching purchase/class before issuing a grant. A future subscription processor can resolve a subscription source without changing publication's grant check. New source enum values and database check constraints will be added with that workflow, rather than treating speculative subscription coverage as supported now.
+
+A valid grant covers `startsAt <= now < endsAt` and is not revoked. Class access is the union of valid grants for the required capability. Refund revokes its source's grant only. Expiration needs no destructive cleanup. Financial records and grants restrict parent deletion; archived classes and student work are retained. Existing publication and student-work permissions are unchanged in the persistence slice; enforcement follows verified-event processing in a later slice.
+
+Unique constraints support event deduplication and grant idempotency. They do not implement signature validation, event ordering, ownership, or atomic effects by themselves; those are upcoming application responsibilities. Pending purchases do not automatically create grants. Existing classes receive no silent backfill grant; when publication enforcement is introduced, their existing published work remains available and new publication requires coverage.
+
+### Planned institution subscription entities (not implemented)
+
+Introduce these entities together in a future institution/subscription branch:
+
+- **Institution:** a university or other organization that sponsors access.
+- **InstitutionMembership:** links instructor users to an institution, with membership status and an institutional role. One institution can have many instructors; the model should allow multiple affiliations per instructor.
+- **Subscription:** belongs to an institution and references a shared `BillingPlan`; records the provider subscription identity, renewal periods, and cancellation/payment lifecycle. Its coverage is allocated to classes through `ClassEntitlement` grants.
+
+The intended relationships are `Institution -> Subscription -> BillingPlan`, `Institution -> InstitutionMembership -> User`, and `Subscription -> ClassEntitlement -> Classroom`. An instructor still owns the classroom. Membership, classroom ownership, and funded coverage are independent: membership alone neither funds a class nor permits access to another instructor's class or student records. Allocation limits and institutional administrator permissions remain open design decisions.
+
+A shared **BillingPlan** is agreed as the next model addition in the current individual-payment branch, but is not implemented yet. It will describe the billing model (one-time or recurring) and plan terms. `ClassPurchase` will reference its plan while preserving purchased terms; a later institution-owned `Subscription` will also reference a plan. Supporting a plan's recurring billing model does not implement subscription checkout, renewals, or institutional access in this branch.

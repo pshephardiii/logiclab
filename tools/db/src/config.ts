@@ -1,3 +1,6 @@
+import { ClassPurchase } from './entities/ClassPurchase.ts';
+import { ClassEntitlement } from './entities/ClassEntitlement.ts';
+import { PaymentEvent } from './entities/PaymentEvent.ts';
 import { AssignmentAttempt } from './entities/AssignmentAttempt.ts';
 import { Assignment } from './entities/Assignment.ts';
 import { AssignmentItem } from './entities/AssignmentItem.ts';
@@ -29,6 +32,9 @@ export function databaseOptions(
       Assignment,
       AssignmentItem,
       AssignmentAttempt,
+      ClassPurchase,
+      ClassEntitlement,
+      PaymentEvent,
     ],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },

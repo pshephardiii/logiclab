@@ -92,3 +92,10 @@ If startup fails, confirm Docker is running and port 5432 is free. Choose anothe
 ## Navigating database source
 
 Relative imports in `tools/db` explicitly name `.ts` source files, including the MikroORM config and tests. TypeScript's `rewriteRelativeImportExtensions` emits `.js` imports for the compiled package; consumers still import `@logiclab/db`. No extra runtime loader is required for built code. Development/migration commands continue using the existing `tsx` setup. Declaration and JavaScript source maps remain enabled for editor/debugger navigation. See [codebase conventions](../conventions/codebase-conventions.md) for the scope and verification guidance.
+
+The billing foundation adds `class_purchases`, `class_entitlements`, and
+`payment_events`. Run `npm run db:migrate` in existing development checkouts before
+using the upcoming simulated-billing workflow. The migration is additive: it does
+not charge anyone, create coverage for existing classes, or change publication
+permissions. The database test command applies it to the configured disposable
+test database; this does not migrate your development database.
