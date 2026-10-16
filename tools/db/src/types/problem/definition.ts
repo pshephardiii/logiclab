@@ -1,3 +1,5 @@
+import type { ProblemType } from './enums.js';
+
 /**
  * Authored content shared by Problem drafts and ProblemVersion snapshots.
  * This first slice supports truth tables only. Add future exercise definitions as
@@ -6,7 +8,7 @@
  * Expected answers and student attempts are separate from this authored definition.
  */
 export type ProblemDefinition = {
-  type: 'truth_table';
+  type: `${ProblemType.TruthTable}`;
   definitionVersion: 1;
   formula: string;
 };

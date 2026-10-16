@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, Check, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
+import { AssessmentMode, FeedbackTiming } from '../types/assignment/enums.js';
 import { Classroom } from './Classroom.js';
+import type { AssignmentFields } from '../types/assignment/fields.js';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
 
 /** Class-owned assignment; publication locks will be enforced by the assignment workflow. */
 @Entity({ tableName: 'assignments' })
@@ -11,7 +14,7 @@ import { Classroom } from './Classroom.js';
   name: 'assignments_feedback_timing_check',
   expression: "feedback_timing in ('on_submission')",
 })
-export class Assignment {
+export class Assignment implements AssignmentFields {
   [OptionalProps]?:
     'id' | 'assessmentMode' | 'feedbackTiming' | 'allowSolutions' | 'createdAt' | 'updatedAt';
 
@@ -31,11 +34,21 @@ export class Assignment {
   @Property({ type: 'text', nullable: true })
   instructions?: string;
 
-  @Property({ type: 'string', length: 32, fieldName: 'assessment_mode', default: 'graded' })
-  assessmentMode: 'graded' = 'graded';
+  @Property({
+    type: 'string',
+    length: 32,
+    fieldName: 'assessment_mode',
+    default: AssessmentMode.Graded,
+  })
+  assessmentMode: AssessmentMode = AssessmentMode.Graded;
 
-  @Property({ type: 'string', length: 32, fieldName: 'feedback_timing', default: 'on_submission' })
-  feedbackTiming: 'on_submission' = 'on_submission';
+  @Property({
+    type: 'string',
+    length: 32,
+    fieldName: 'feedback_timing',
+    default: FeedbackTiming.OnSubmission,
+  })
+  feedbackTiming: FeedbackTiming = FeedbackTiming.OnSubmission;
 
   @Property({ type: 'boolean', fieldName: 'allow_solutions', default: false })
   allowSolutions = false;
@@ -75,3 +88,7 @@ export class Assignment {
   })
   updatedAt = new Date();
 }
+
+// Fail compilation for extra/missing fields, changed types, or changed optionality.
+// This validates the TypeScript shape; migration/schema tests validate decorators.
+type AssignmentFieldsCheck = Assert<SameEntityFields<Assignment, AssignmentFields>>;

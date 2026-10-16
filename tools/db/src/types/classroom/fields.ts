@@ -1,0 +1,11 @@
+import type { User } from '../../entities/User.js';
+
+/** Readable field reference checked against the decorated Classroom entity. */
+export interface ClassroomFields {
+  id: string;
+  name: string;
+  owner: User;
+  invitationHash?: string;
+  invitationExpiresAt?: Date;
+  createdAt: Date;
+}

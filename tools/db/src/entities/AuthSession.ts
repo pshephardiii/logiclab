@@ -1,8 +1,10 @@
+import type { AuthSessionFields } from '../types/auth-session/fields.js';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
 import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
 import { User } from './User.js';
 
 @Entity({ tableName: 'auth_sessions' })
-export class AuthSession {
+export class AuthSession implements AuthSessionFields {
   // Hash of the opaque cookie; never the raw session ID.
   @PrimaryKey({ type: 'string', length: 64 })
   id!: string;
@@ -23,3 +25,6 @@ export class AuthSession {
   @Property({ type: 'datetime', columnType: 'timestamptz', fieldName: 'expires_at', index: true })
   expiresAt!: Date;
 }
+
+// Keep the readable field reference exact, excluding ORM creation metadata.
+type AuthSessionFieldsCheck = Assert<SameEntityFields<AuthSession, AuthSessionFields>>;

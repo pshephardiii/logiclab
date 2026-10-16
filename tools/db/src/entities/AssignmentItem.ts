@@ -1,3 +1,5 @@
+import type { AssignmentItemFields } from '../types/assignment-item/fields.js';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Check, Unique, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
@@ -11,7 +13,7 @@ import { ProblemVersion } from './ProblemVersion.js';
   properties: ['assignment', 'position'],
 })
 @Check({ name: 'assignment_items_positive_position', expression: 'position > 0' })
-export class AssignmentItem {
+export class AssignmentItem implements AssignmentItemFields {
   [OptionalProps]?: 'id';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
@@ -34,3 +36,6 @@ export class AssignmentItem {
   @Property({ type: 'integer' })
   position!: number;
 }
+
+// Keep the readable field reference exact, excluding ORM creation metadata.
+type AssignmentItemFieldsCheck = Assert<SameEntityFields<AssignmentItem, AssignmentItemFields>>;

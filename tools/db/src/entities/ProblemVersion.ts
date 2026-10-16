@@ -1,3 +1,5 @@
+import type { ProblemVersionFields } from '../types/problem-version/fields.js';
+import type { Assert, SameEntityFields } from '../types/shared/entity-fields.js';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import {
@@ -10,7 +12,7 @@ import {
   Trigger,
 } from '@mikro-orm/decorators/es';
 import { Problem } from './Problem.js';
-import type { ProblemDefinition } from '../types/problem-definition.js';
+import type { ProblemDefinition } from '../types/problem/definition.js';
 
 /** Publication snapshot; PostgreSQL migration triggers reject updates and deletion. */
 @Entity({ tableName: 'problem_versions' })
@@ -22,7 +24,7 @@ import type { ProblemDefinition } from '../types/problem-definition.js';
 })
 @Check({ name: 'problem_versions_positive_version', expression: 'version > 0' })
 @Unique({ name: 'problem_versions_problem_version_unique', properties: ['problem', 'version'] })
-export class ProblemVersion {
+export class ProblemVersion implements ProblemVersionFields {
   [OptionalProps]?: 'id' | 'publishedAt';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
@@ -56,3 +58,6 @@ export class ProblemVersion {
   })
   publishedAt = new Date();
 }
+
+// Keep the readable field reference exact, excluding ORM creation metadata.
+type ProblemVersionFieldsCheck = Assert<SameEntityFields<ProblemVersion, ProblemVersionFields>>;

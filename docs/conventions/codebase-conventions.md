@@ -33,6 +33,30 @@ Keep dependencies directed toward these shared capabilities. Tools must not impo
 
 A directory's `index.ts` defines its intended import surface. The package root exports supported operations and types; internal helper/stage exports need not be exposed there. This is a convention, not an enforced package subpath restriction.
 
+## Tools: readable entity shapes and related types
+
+Every entity has a compact `...Fields` interface. The decorated class uses `implements` plus `Assert<SameEntityFields<Entity, Fields>>` to reject extra/missing application members, type changes, and optionality changes. Keep interfaces and assertions beside their owning domain/class; do not duplicate database decorator metadata in the interfaces.
+
+Use one directory per entity under `tools/db/src/types/`:
+
+| Directory          | Contents                                               |
+| ------------------ | ------------------------------------------------------ |
+| `assignment/`      | Assignment fields and assessment/feedback enums        |
+| `assignment-item/` | Assignment-item fields                                 |
+| `classroom/`       | Classroom fields                                       |
+| `enrollment/`      | Enrollment fields                                      |
+| `problem/`         | Problem fields, authored definition, problem-type enum |
+| `problem-version/` | Problem-version fields                                 |
+| `user/`            | User fields and role enum                              |
+| `auth-session/`    | Session fields                                         |
+| `shared/`          | Exact-shape assertion helpers used across entities     |
+
+Use `fields.ts` within each entity directory, even when entities are closely related. Shared authored content stays in `problem/definition.ts`, imported by both problem and problem-version fields rather than duplicated. Keep discrete supported values in domain `enums.ts` files; do not invent enums for free text, IDs, booleans, or definition-format version numbers. Keep serialized enum values stable. Adding an enum member does not implement its behavior: update database constraints and application policy deliberately.
+
+Problem definition discriminants derive their string literal type from `ProblemType` so structurally typed API contracts remain assignable without casts or a dependency from contracts into the database package. `UserRole`, `AssessmentMode`, `FeedbackTiming`, `ProblemType`, and field interfaces are available through `@logiclab/db`. Preserve the existing `UserRole` entity-module re-export for current internal consumers. Relationships use entity types through type-only imports; field references are not API response contracts.
+
+The exact-shape helper excludes only MikroORM's `[OptionalProps]` creation metadata; methods are not silently excluded. If methods or other metadata are introduced, decide their treatment explicitly. Compile-time regression cases in `tools/db/test/entity-fields.typecheck.ts` run through the database type check. Expected-error assertions prove that drift is rejected. These interfaces/assertions do not provide runtime validation; migration/schema and integration tests still verify decorators, defaults, nullability, and database constraints.
+
 ## Tools: API contracts
 
 Keep one contract file per domain until its size warrants a domain directory. Group each file in this order:

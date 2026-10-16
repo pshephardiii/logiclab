@@ -13,6 +13,8 @@ import {
   ProblemVersion,
   Assignment,
   AssignmentItem,
+  AssessmentMode,
+  FeedbackTiming,
 } from '../src/index.js';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -460,8 +462,8 @@ test('assignment SQL defaults keep assessment, feedback, and solutions independe
         em.getTransactionContext(),
       );
     const saved = await em.findOneOrFail(Assignment, row!.id);
-    assert.equal(saved.assessmentMode, 'graded');
-    assert.equal(saved.feedbackTiming, 'on_submission');
+    assert.equal(saved.assessmentMode, AssessmentMode.Graded);
+    assert.equal(saved.feedbackTiming, FeedbackTiming.OnSubmission);
     assert.equal(saved.allowSolutions, false);
     assert.equal(saved.publishedAt ?? null, null);
     assert.equal(saved.archivedAt ?? null, null);
@@ -472,8 +474,8 @@ test('assignment SQL defaults keep assessment, feedback, and solutions independe
     em.clear();
     const reloaded = await em.findOneOrFail(Assignment, saved.id);
     assert.equal(reloaded.allowSolutions, true);
-    assert.equal(reloaded.assessmentMode, 'graded');
-    assert.equal(reloaded.feedbackTiming, 'on_submission');
+    assert.equal(reloaded.assessmentMode, AssessmentMode.Graded);
+    assert.equal(reloaded.feedbackTiming, FeedbackTiming.OnSubmission);
   } finally {
     await em.rollback();
   }
