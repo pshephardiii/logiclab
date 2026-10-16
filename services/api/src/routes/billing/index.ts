@@ -1,3 +1,5 @@
+import { getPlansRoute } from './getPlans/route';
+import { getClassBillingRoute } from './getClassBilling/route';
 import type { FastifyInstance } from 'fastify';
 import type { BillingContext } from './context';
 import { installAccountHttpPolicy } from '../account-http';
@@ -15,6 +17,8 @@ export async function billingRoutes(app: FastifyInstance, context: BillingContex
     account.addHook('preValidation', async (request) => {
       await billingInstructor(request, context);
     });
+    account.register(getPlansRoute, context);
+    account.register(getClassBillingRoute, context);
     account.register(postCheckoutRoute, context);
     account.register(postSimulationRoute, context);
   });

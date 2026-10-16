@@ -11,7 +11,7 @@ The provider adapter is local code with no external payment SDK, network calls, 
 - `integrations/payments/simulator/events.ts` constructs, signs, and validates strict versioned events. Success maps to `paid`; failure to `failed`; refund to `refunded`.
 - `config/billing.ts` provides opt-in configuration validation. Bootstrap wires billing routes when enabled auth, migrated PostgreSQL, and the dedicated signing key are configured. Billing is disabled by default.
 
-The checkout application persists the reference and purchased-term snapshot before returning a session, checks ownership, and uses a payer-scoped request ID for retry safety. Catalog seeding is still deferred; create an active one-time plan locally as described in the API guide.
+The checkout application persists the reference and purchased-term snapshot before returning a session, checks ownership, and uses a payer-scoped request ID for retry safety. Run `npm run billing:seed` from the repository root after migration for a repeatable local demo plan. It preserves existing edits or retirement; the [billing API guide](../api/billing-api.md#instructor-billing-reads-and-ui) describes setup and the `/billing` page.
 
 ## Signing and retries
 

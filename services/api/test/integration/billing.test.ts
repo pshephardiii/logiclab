@@ -88,6 +88,15 @@ test(
         billing.checkout(owner.id, foreignClass.id, { planId: plan.id, requestId: randomUUID() }),
         /not_found/,
       );
+      assert.equal((await billing.plans({ limit: 1, offset: 0 })).plans[0]!.id, plan.id);
+      await assert.rejects(
+        billing.readClass(owner.id, foreignClass.id, { limit: 20, offset: 0 }),
+        /not_found/,
+      );
+      assert.equal(
+        (await billing.readClass(owner.id, classroom.id, { limit: 20, offset: 0 })).coverage.active,
+        false,
+      );
       const requestId = randomUUID();
       const [first, retry] = await Promise.all([checkout(requestId), checkout(requestId)]);
       assert.equal(first.purchase.id, retry.purchase.id);
@@ -133,6 +142,14 @@ test(
       );
       assert.equal((await billing.webhook(latePaid.body, latePaid.signature)).result, 'ignored');
       await billing.simulate(owner.id, purchase.id, 'paid');
+      const refundedStatus = await billing.readClass(owner.id, classroom.id, {
+        limit: 1,
+        offset: 0,
+      });
+      assert.equal(refundedStatus.coverage.active, false);
+      assert.equal(refundedStatus.purchases[0]!.status, 'refunded');
+      assert(!JSON.stringify(refundedStatus).includes(purchase.checkoutReference));
+      assert(!JSON.stringify(refundedStatus).includes('requestId'));
       const retained = await em.fork().findOneOrFail(ClassEntitlement, grant.id);
       assert(retained.revokedAt);
       assert.equal((await em.fork().findOneOrFail(ClassPurchase, purchase.id)).status, 'refunded');
@@ -213,6 +230,12 @@ test(
         'applied',
       );
 
+      const historyPage = await billing.readClass(owner.id, classroom.id, { limit: 1, offset: 0 });
+      assert.equal(historyPage.purchases.length, 1);
+      assert.equal(historyPage.nextOffset, 1);
+      const nextHistory = await billing.readClass(owner.id, classroom.id, { limit: 1, offset: 1 });
+      assert.notEqual(historyPage.purchases[0]!.id, nextHistory.purchases[0]!.id);
+      assert.equal(historyPage.coverage.active, true);
       // HTTP policy and the raw body parser must work through real Fastify registration.
       const routeKey = randomUUID();
       const created = await app.inject({

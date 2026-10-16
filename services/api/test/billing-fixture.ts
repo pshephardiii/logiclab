@@ -22,6 +22,25 @@ export const checkoutResponse = {
 export function billingFixture() {
   const auth = authFixture();
   const billing = {
+    plans: jest.fn(async () => ({
+      plans: [
+        {
+          id: planId,
+          name: 'Class period',
+          amountMinor: 2500,
+          currency: 'USD',
+          coverageDays: 180,
+          capability: 'publish_assignments' as const,
+        },
+      ],
+      nextOffset: null,
+    })),
+    readClass: jest.fn(async () => ({
+      classId,
+      coverage: { active: false, endsAt: null },
+      purchases: [],
+      nextOffset: null,
+    })),
     checkout: jest.fn(async () => checkoutResponse),
     simulate: jest.fn(async () => ({ result: 'applied' as const })),
     webhook: jest.fn(async () => ({ result: 'applied' as const })),

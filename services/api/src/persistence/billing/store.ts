@@ -1,3 +1,5 @@
+import { purchaseResponse } from './purchase-response';
+import { createBillingReadStore, type BillingReadStore } from './read-store';
 import type { createDatabase, ClassPurchase as PurchaseEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -11,7 +13,7 @@ import { purchaseTerms } from '../../application/billing/purchase-terms';
 import { BillingError } from '../../application/billing/errors';
 
 export type VerifiedDelivery = { event: PaymentEvent; hash: string };
-export interface BillingStore {
+export interface BillingStore extends BillingReadStore {
   checkout(
     ownerId: string,
     classId: string,
@@ -25,23 +27,6 @@ export interface BillingStore {
     makeDelivery: (reference: string, sequence: number) => VerifiedDelivery,
   ): Promise<{ result: 'applied' | 'ignored' | 'duplicate' }>;
 }
-function response(purchase: PurchaseEntity): PurchaseResponse {
-  return {
-    purchase: {
-      id: purchase.id,
-      classId: purchase.classroom.id,
-      planId: purchase.plan.id,
-      status: purchase.status,
-      amountMinor: purchase.amountMinor,
-      currency: purchase.currency,
-      coverageDays: purchase.coverageDays,
-      capability: purchase.capability,
-    },
-    mode: 'simulated',
-    notice: 'Simulated checkout only. No real payment or payment details required.',
-  };
-}
-
 /** Purchase row locks serialize event effects; receipts and coverage commit or roll back together. */
 export async function createBillingStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
@@ -125,7 +110,9 @@ export async function createBillingStore(
     await em.flush();
     return { result: ignored ? ('ignored' as const) : ('applied' as const) };
   }
+  const reads = await createBillingReadStore(orm);
   return {
+    ...reads,
     checkout(ownerId, classId, input, provider) {
       return orm.em.fork().transactional(async (em) => {
         // Serialize a user's idempotency keys across classes, then verify current class ownership.
@@ -149,7 +136,7 @@ export async function createBillingStore(
         if (existing) {
           if (existing.classroom.id !== classId || existing.plan.id !== input.planId)
             throw new BillingError('request_conflict');
-          return response(existing);
+          return purchaseResponse(existing);
         }
         const plan = await em.findOne(
           BillingPlan,
@@ -177,7 +164,7 @@ export async function createBillingStore(
         });
         em.persist(purchase);
         await em.flush();
-        return response(purchase);
+        return purchaseResponse(purchase);
       });
     },
     process(delivery) {

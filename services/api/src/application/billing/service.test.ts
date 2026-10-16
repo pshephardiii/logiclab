@@ -11,6 +11,8 @@ import { randomUUID } from 'node:crypto';
 const config = { signingSecret: 'ab'.repeat(32) };
 function fixture() {
   const store = {
+    plans: jest.fn(async () => ({ plans: [], nextOffset: null })),
+    readClass: jest.fn(),
     checkout: jest.fn(),
     process: jest.fn(async () => ({ result: 'applied' as const })),
     simulate: jest.fn(),

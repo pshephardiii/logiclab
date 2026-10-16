@@ -103,3 +103,5 @@ test database; this does not migrate your development database.
 Billing plans add `billing_plans` and a required `class_purchases.plan_id` reference. Run `npm run db:migrate` for this addition too. Existing purchases receive retired historical plans preserving their terms; no active catalog plans are seeded yet.
 
 The checkout request-ID migration adds a unique `(payer_id, request_id)` key and backfills old purchases with their existing purchase IDs. Run `npm run db:migrate` before enabling billing HTTP routes.
+
+After migrations, `npm run billing:seed` from the repository root creates the local simulated class plan (USD 25.00 for 180 days). The command preserves existing plan edits/retirement and does not create purchases or coverage. Enable the simulator API separately, then use the instructor `/billing` page.

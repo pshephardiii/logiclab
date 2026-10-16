@@ -1102,3 +1102,23 @@ test('BillingPlan migration preserves purchases created before plans existed', a
     await em.rollback();
   }
 });
+
+test('demo plan seeding is repeatable and preserves edited or retired catalog terms', async () => {
+  const { seedDemoBillingPlan } = await import('../src/seeds/billing-plan.ts');
+  // Use a separate schema because the seed owns its transaction and a stable catalog ID.
+  const schema = `seed_${randomUUID().replaceAll('-', '')}`;
+  const isolated = await createDatabase(url!, { schema, snapshotOnMigrate: false });
+  try {
+    await isolated.schema.create();
+    const id = await seedDemoBillingPlan(isolated);
+    await isolated.em.fork().nativeUpdate(BillingPlan, id, { active: false, amountMinor: 9999 });
+    assert.equal(await seedDemoBillingPlan(isolated), id);
+    const plan = await isolated.em.fork().findOneOrFail(BillingPlan, id);
+    assert.equal(plan.active, false);
+    assert.equal(plan.amountMinor, 9999);
+    assert.equal(await isolated.em.fork().count(BillingPlan, {}), 1);
+  } finally {
+    await isolated.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);
+    await isolated.close(true);
+  }
+});

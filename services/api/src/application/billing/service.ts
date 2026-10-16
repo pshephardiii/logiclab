@@ -25,6 +25,8 @@ export function createBillingService(
     }
   }
   return {
+    plans: store.plans,
+    readClass: store.readClass,
     checkout: (ownerId: string, classId: string, input: Parameters<BillingStore['checkout']>[2]) =>
       store.checkout(ownerId, classId, input, provider),
     webhook: async (body: string, signature: string) => store.process(verify(body, signature)),
