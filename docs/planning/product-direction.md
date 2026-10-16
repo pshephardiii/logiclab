@@ -124,7 +124,7 @@ Checkout must be clearly labeled simulated. Signed server events own state chang
 
 A later branch will introduce `Institution`, `InstitutionMembership`, and institution-owned `Subscription` entities. An institution can have multiple instructor members; memberships should allow instructors to have multiple institutional affiliations. Subscriptions will reference the shared `BillingPlan` and supply class capability grants. Class ownership stays with the instructor, and neither membership nor funding grants access to unrelated class/student records.
 
-These entities and their management, renewal, cancellation, and coverage-allocation workflows are explicitly deferred. The current branch will add the shared `BillingPlan` for individual purchases and preserve purchase-term snapshots; that plan entity is agreed but not implemented yet. Institution subscriptions will reuse the plan and entitlement boundaries later.
+These entities and their management, renewal, cancellation, and coverage-allocation workflows are explicitly deferred. The current branch now includes the shared `BillingPlan` for individual purchases and preserves purchase-term snapshots. Plans distinguish one-time and recurring terms; recurring checkout and subscription management are not implemented. Institution subscriptions will reuse the plan and entitlement boundaries later.
 
 Open billing questions:
 

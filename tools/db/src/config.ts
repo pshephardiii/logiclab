@@ -1,3 +1,4 @@
+import { BillingPlan } from './entities/BillingPlan.ts';
 import { ClassPurchase } from './entities/ClassPurchase.ts';
 import { ClassEntitlement } from './entities/ClassEntitlement.ts';
 import { PaymentEvent } from './entities/PaymentEvent.ts';
@@ -32,6 +33,7 @@ export function databaseOptions(
       Assignment,
       AssignmentItem,
       AssignmentAttempt,
+      BillingPlan,
       ClassPurchase,
       ClassEntitlement,
       PaymentEvent,

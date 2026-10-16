@@ -1,3 +1,5 @@
+import { BillingPlan } from './BillingPlan.ts';
+import { ClassCapability } from '../types/class-entitlement/enums.ts';
 import { BillingProvider } from '../types/billing/enums.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
@@ -18,6 +20,10 @@ import { PurchaseStatus } from '../types/class-purchase/enums.ts';
 
 /** One checkout purchase; access decisions belong to ClassEntitlement, not payment status. */
 @Entity({ tableName: 'class_purchases' })
+@Check({
+  name: 'class_purchases_capability_check',
+  expression: "capability in ('publish_assignments')",
+})
 @Check({ name: 'class_purchases_provider_check', expression: "provider in ('simulator')" })
 @Unique({
   name: 'class_purchases_provider_checkout_unique',
@@ -33,7 +39,7 @@ import { PurchaseStatus } from '../types/class-purchase/enums.ts';
 @Check({ name: 'class_purchases_sequence_check', expression: 'last_event_sequence >= 0' })
 @Check({ name: 'class_purchases_currency_check', expression: "currency ~ '^[A-Z]{3}$'" })
 export class ClassPurchase implements ClassPurchaseFields {
-  [OptionalProps]?: 'id' | 'status' | 'lastEventSequence' | 'createdAt';
+  [OptionalProps]?: 'id' | 'status' | 'lastEventSequence' | 'createdAt' | 'capability';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
   id: string = randomUUID();
@@ -51,6 +57,16 @@ export class ClassPurchase implements ClassPurchaseFields {
     deleteRule: 'restrict',
   })
   payer!: User;
+
+  @ManyToOne(() => BillingPlan, {
+    fieldName: 'plan_id',
+    foreignKeyName: 'class_purchases_plan_id_fkey',
+    deleteRule: 'restrict',
+  })
+  plan!: BillingPlan;
+
+  @Property({ type: 'string', length: 32, default: ClassCapability.PublishAssignments })
+  capability: ClassCapability = ClassCapability.PublishAssignments;
 
   @Property({ type: 'string', fieldName: 'provider', length: 32 })
   provider!: BillingProvider;

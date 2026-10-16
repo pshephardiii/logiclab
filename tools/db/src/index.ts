@@ -58,3 +58,7 @@ export { PurchaseStatus } from './types/class-purchase/enums.ts';
 export { EntitlementSource, ClassCapability } from './types/class-entitlement/enums.ts';
 
 export { BillingProvider } from './types/billing/enums.ts';
+
+export { BillingPlan } from './entities/BillingPlan.ts';
+export type { BillingPlanFields } from './types/billing-plan/fields.ts';
+export { BillingModel, BillingInterval } from './types/billing-plan/enums.ts';

@@ -171,7 +171,7 @@ Scope: individual instructor **one-time payments per class**, simulated with no 
 
 Commit-sized slices:
 
-1. **Persistence foundation (implemented):** separate class purchases, capability grants, and provider event receipts; exact field interfaces/enums; additive migration/snapshot and database constraints/retention tests. No checkout, webhook, or publication enforcement yet.
+1. **Persistence foundation (implemented):** shared billing plans, plan-linked class purchases with purchased-term snapshots, capability grants, and provider event receipts; exact field interfaces/enums; additive migration/snapshot and database constraints/retention tests. No checkout, webhook, or publication enforcement yet.
 2. **Provider simulator:** provider boundary, server-owned checkout terms, signed events, and clearly labeled no-charge scenarios.
 3. **Transactional event processing:** signature verification, purchase transitions, atomic grant/receipt writes, duplicate protection, source ordering, refund behavior, and retries.
 4. **Publication entitlement enforcement:** require active class coverage for new publication, preserving existing work and checking access independently of funding type.
@@ -180,7 +180,7 @@ Commit-sized slices:
 
 Done when: a verified simulated payment activates class coverage, expiration/refund prevents new publication while retaining existing work, and duplicate/out-of-order delivery cannot incorrectly grant or restore access. Browser success cannot authorize access. A future subscription can issue/renew grants without rewriting assignment authorization.
 
-Next model addition agreed: `BillingPlan`, referenced by individual `ClassPurchase` records with purchased-term snapshots. It is not implemented yet. A later institution/subscription branch will add `Institution`, `InstitutionMembership`, and institution-owned `Subscription` records referencing the same plans and supplying class entitlements. Membership is separate from instructor class ownership and funding coverage. Recurring payment processing and institution management remain outside branch 007.
+`BillingPlan` is implemented and referenced by individual `ClassPurchase` records with purchased-term snapshots. It supports one-time or recurring catalog terms; checkout will only allow active one-time plans in this branch. A later institution/subscription branch will add `Institution`, `InstitutionMembership`, and institution-owned `Subscription` records referencing the same plans and supplying class entitlements. Membership is separate from instructor class ownership and funding coverage. Recurring payment processing and institution management remain outside branch 007.
 
 Open later product questions: real pricing, commercial duration/refund rules, repeat-course handling, and institution subscription allocation/membership/renewal. These do not authorize implementing real charges or institution management in this branch.
 

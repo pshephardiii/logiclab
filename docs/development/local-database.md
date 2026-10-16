@@ -99,3 +99,5 @@ using the upcoming simulated-billing workflow. The migration is additive: it doe
 not charge anyone, create coverage for existing classes, or change publication
 permissions. The database test command applies it to the configured disposable
 test database; this does not migrate your development database.
+
+Billing plans add `billing_plans` and a required `class_purchases.plan_id` reference. Run `npm run db:migrate` for this addition too. Existing purchases receive retired historical plans preserving their terms; no active catalog plans are seeded yet.
