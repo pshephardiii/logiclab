@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { SubmissionReview } from './SubmissionReview';
 import { useState } from 'react';
 import type { AssignmentListQuery } from '@logiclab/contracts';
@@ -16,7 +17,10 @@ export function ClassAssignments({ classId }: Props) {
   }
   return (
     <>
-      <p className="help">Switching classes, assignments, or pages discards unsaved edits.</p>
+      <p className="help">
+        Switching classes, assignments, or pages discards unsaved edits. New publication requires
+        coverage; <Link to="/billing">manage simulated class billing</Link>.
+      </p>
       {state.error && (
         <p role="alert" className="error">
           {state.error}

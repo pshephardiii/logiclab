@@ -16,6 +16,7 @@ async function start() {
       logger: true,
       ...(dependencies
         ? {
+            billing: dependencies.billing,
             auth: dependencies.auth,
             classroom: dependencies.classroom,
             problem: dependencies.problem,

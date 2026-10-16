@@ -16,6 +16,16 @@ import {
   AssignmentAttempt,
   AssessmentMode,
   FeedbackTiming,
+  ClassPurchase,
+  BillingPlan,
+  BillingModel,
+  BillingInterval,
+  ClassEntitlement,
+  PaymentEvent,
+  PurchaseStatus,
+  BillingProvider,
+  EntitlementSource,
+  ClassCapability,
 } from '../src/index.ts';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -709,3 +719,406 @@ for (const parent of ['assignment', 'student'] as const) {
     }
   });
 }
+
+async function billingFixture(em: typeof orm.em) {
+  const owner = em.create(User, {
+    cognitoUserPoolId: 'billing-test',
+    cognitoSubject: randomUUID(),
+    role: UserRole.Instructor,
+  });
+  const classroom = em.create(Classroom, { owner, name: 'Funded class' });
+  const plan = em.create(BillingPlan, {
+    name: 'Class teaching period',
+    billingModel: BillingModel.OneTime,
+    amountMinor: 2500,
+    currency: 'USD',
+    coverageDays: 180,
+    capability: ClassCapability.PublishAssignments,
+  });
+  const reference = randomUUID();
+  const purchase = em.create(ClassPurchase, {
+    classroom,
+    payer: owner,
+    plan,
+    provider: BillingProvider.Simulator,
+    checkoutReference: reference,
+    requestId: randomUUID(),
+    amountMinor: 2500,
+    currency: 'USD',
+    coverageDays: 180,
+  });
+  const grant = em.create(ClassEntitlement, {
+    classroom,
+    source: EntitlementSource.ClassPurchase,
+    provider: BillingProvider.Simulator,
+    sourceReference: reference,
+    startsAt: new Date('2026-01-01T00:00:00Z'),
+    endsAt: new Date('2026-06-30T00:00:00Z'),
+  });
+  const receipt = em.create(PaymentEvent, {
+    provider: BillingProvider.Simulator,
+    eventId: randomUUID(),
+    sourceReference: reference,
+    sequence: 1,
+    payloadHash: 'a'.repeat(64),
+  });
+  em.persist([owner, classroom, plan, purchase, grant, receipt]);
+  await em.flush();
+  return { owner, classroom, plan, purchase, grant, receipt };
+}
+
+test('billing records preserve purchase terms, independent grants, and provider-scoped receipts', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { purchase, grant, receipt } = await billingFixture(em);
+    em.clear();
+    const saved = await em.findOneOrFail(ClassPurchase, purchase.id);
+    assert.equal(saved.status, PurchaseStatus.Pending);
+    assert.equal(saved.amountMinor, 2500);
+    assert.equal(saved.currency, 'USD');
+    assert.equal(saved.coverageDays, 180);
+    assert.equal(saved.lastEventSequence, 0);
+    const coverage = await em.findOneOrFail(ClassEntitlement, grant.id);
+    assert.equal(coverage.capability, ClassCapability.PublishAssignments);
+    assert.equal(coverage.revokedAt ?? null, null);
+    assert.equal(coverage.endsAt.toISOString(), '2026-06-30T00:00:00.000Z');
+    assert.equal(saved.provider, BillingProvider.Simulator);
+    assert.equal(
+      (await em.findOneOrFail(PaymentEvent, receipt.id)).provider,
+      BillingProvider.Simulator,
+    );
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const duplicate of ['checkout', 'grant', 'event'] as const) {
+  test(`billing rejects duplicate ${duplicate} identities`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { owner, classroom, purchase, grant, receipt } = await billingFixture(em);
+      if (duplicate === 'checkout') {
+        em.persist(
+          em.create(ClassPurchase, {
+            classroom,
+            payer: owner,
+            plan: purchase.plan,
+            provider: purchase.provider,
+            checkoutReference: purchase.checkoutReference,
+            requestId: randomUUID(),
+            amountMinor: 2500,
+            currency: 'USD',
+            coverageDays: 180,
+          }),
+        );
+      } else if (duplicate === 'grant') {
+        em.persist(
+          em.create(ClassEntitlement, {
+            classroom,
+            source: grant.source,
+            provider: grant.provider,
+            sourceReference: grant.sourceReference,
+            startsAt: grant.startsAt,
+            endsAt: grant.endsAt,
+          }),
+        );
+      } else {
+        em.persist(
+          em.create(PaymentEvent, {
+            provider: receipt.provider,
+            eventId: receipt.eventId,
+            sourceReference: receipt.sourceReference,
+            sequence: 2,
+            payloadHash: 'c'.repeat(64),
+          }),
+        );
+      }
+      await assert.rejects(
+        em.flush(),
+        duplicate === 'checkout'
+          ? /class_purchases_provider_checkout_unique/
+          : duplicate === 'grant'
+            ? /class_entitlements_source_unique/
+            : /payment_events_provider_event_unique/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const invalid of [
+  'amount',
+  'currency',
+  'duration',
+  'purchase_sequence',
+  'period',
+  'event_sequence',
+  'hash',
+] as const) {
+  test(`billing database constraints reject invalid ${invalid}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { purchase, grant, receipt } = await billingFixture(em);
+      const operations = {
+        amount: () => em.nativeUpdate(ClassPurchase, purchase.id, { amountMinor: -1 }),
+        currency: () => em.nativeUpdate(ClassPurchase, purchase.id, { currency: 'usd' }),
+        duration: () => em.nativeUpdate(ClassPurchase, purchase.id, { coverageDays: 0 }),
+        purchase_sequence: () =>
+          em.nativeUpdate(ClassPurchase, purchase.id, { lastEventSequence: -1 }),
+        period: () => em.nativeUpdate(ClassEntitlement, grant.id, { endsAt: grant.startsAt }),
+        event_sequence: () => em.nativeUpdate(PaymentEvent, receipt.id, { sequence: 0 }),
+        hash: () => em.nativeUpdate(PaymentEvent, receipt.id, { payloadHash: 'invalid' }),
+      };
+      const constraint = {
+        amount: 'class_purchases_amount_check',
+        currency: 'class_purchases_currency_check',
+        duration: 'class_purchases_coverage_check',
+        purchase_sequence: 'class_purchases_sequence_check',
+        period: 'class_entitlements_period_check',
+        event_sequence: 'payment_events_sequence_check',
+        hash: 'payment_events_hash_check',
+      };
+      await assert.rejects(operations[invalid](), new RegExp(constraint[invalid]));
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+test('distinct funding grants coexist and revoking one does not erase another', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { classroom, grant } = await billingFixture(em);
+    const replacement = em.create(ClassEntitlement, {
+      classroom,
+      source: grant.source,
+      provider: grant.provider,
+      sourceReference: randomUUID(),
+      startsAt: grant.startsAt,
+      endsAt: grant.endsAt,
+    });
+    em.persist(replacement);
+    grant.revokedAt = new Date();
+    await em.flush();
+    em.clear();
+    const active = await em.find(ClassEntitlement, { classroom: classroom.id, revokedAt: null });
+    assert.deepEqual(
+      active.map((row) => row.id),
+      [replacement.id],
+    );
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const parent of ['classroom', 'payer'] as const) {
+  test(`billing retains records when deleting their ${parent}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { classroom, owner } = await billingFixture(em);
+      await assert.rejects(
+        parent === 'classroom'
+          ? em.nativeDelete(Classroom, classroom.id)
+          : em.nativeDelete(User, owner.id),
+        /_fkey/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const record of ['purchase', 'grant', 'receipt'] as const) {
+  test(`billing rejects unsupported provider on ${record}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { purchase, grant, receipt } = await billingFixture(em);
+      const unsupported = 'unsupported' as BillingProvider;
+      const operation =
+        record === 'purchase'
+          ? em.nativeUpdate(ClassPurchase, purchase.id, { provider: unsupported })
+          : record === 'grant'
+            ? em.nativeUpdate(ClassEntitlement, grant.id, { provider: unsupported })
+            : em.nativeUpdate(PaymentEvent, receipt.id, { provider: unsupported });
+      const table =
+        record === 'purchase'
+          ? 'class_purchases'
+          : record === 'grant'
+            ? 'class_entitlements'
+            : 'payment_events';
+      await assert.rejects(operation, new RegExp(`${table}_provider_check`));
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+test('editing or retiring a plan preserves purchased terms and prevents deleting referenced plans', async () => {
+  const em = orm.em.fork();
+  await em.begin();
+  try {
+    const { plan, purchase } = await billingFixture(em);
+    plan.amountMinor = 5000;
+    plan.coverageDays = 90;
+    plan.active = false;
+    await em.flush();
+    em.clear();
+    const saved = await em.findOneOrFail(ClassPurchase, purchase.id, { populate: ['plan'] });
+    assert.equal(saved.plan.id, plan.id);
+    assert.equal(saved.plan.active, false);
+    assert.equal(saved.amountMinor, 2500);
+    assert.equal(saved.coverageDays, 180);
+    assert.equal(saved.capability, ClassCapability.PublishAssignments);
+    await assert.rejects(em.nativeDelete(BillingPlan, plan.id), /class_purchases_plan_id_fkey/);
+  } finally {
+    await em.rollback();
+  }
+});
+
+for (const interval of [BillingInterval.Month, BillingInterval.Year]) {
+  test(`catalog stores a future recurring ${interval} plan without creating subscriptions or grants`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const plan = em.create(BillingPlan, {
+        name: 'Future institution plan',
+        billingModel: BillingModel.Recurring,
+        amountMinor: 10000,
+        currency: 'USD',
+        billingInterval: interval,
+        capability: ClassCapability.PublishAssignments,
+      });
+      em.persist(plan);
+      await em.flush();
+      em.clear();
+      const saved = await em.findOneOrFail(BillingPlan, plan.id);
+      assert.equal(saved.billingModel, BillingModel.Recurring);
+      assert.equal(saved.billingInterval, interval);
+      assert.equal(saved.coverageDays ?? null, null);
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+for (const invalid of [
+  'missing_duration',
+  'negative_duration',
+  'one_time_interval',
+  'recurring_duration',
+  'missing_interval',
+  'invalid_interval',
+  'amount',
+  'currency',
+] as const) {
+  test(`billing plan constraints reject ${invalid}`, async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const { plan } = await billingFixture(em);
+      const edits = {
+        missing_duration: { coverageDays: null },
+        negative_duration: { coverageDays: 0 },
+        one_time_interval: { billingInterval: BillingInterval.Month },
+        recurring_duration: {
+          billingModel: BillingModel.Recurring,
+          billingInterval: BillingInterval.Month,
+        },
+        missing_interval: { billingModel: BillingModel.Recurring, coverageDays: null },
+        invalid_interval: {
+          billingModel: BillingModel.Recurring,
+          coverageDays: null,
+          billingInterval: 'week' as BillingInterval,
+        },
+        amount: { amountMinor: -1 },
+        currency: { currency: 'usd' },
+      };
+      await assert.rejects(
+        em.nativeUpdate(BillingPlan, plan.id, edits[invalid]),
+        invalid === 'amount'
+          ? /billing_plans_amount_check/
+          : invalid === 'currency'
+            ? /billing_plans_currency_check/
+            : /billing_plans_terms_check/,
+      );
+    } finally {
+      await em.rollback();
+    }
+  });
+}
+
+test('BillingPlan migration preserves purchases created before plans existed', async () => {
+  const { Migration20261016190233 } = await import('../src/migrations/Migration20261016190233.ts');
+  const em = orm.em.fork();
+  const schema = `billing_upgrade_${randomUUID().replaceAll('-', '')}`;
+  await em.begin();
+  try {
+    await em.execute(`create schema "${schema}"`);
+    await em.execute(`set local search_path to "${schema}"`);
+    // Model the columns used by the upgrade before plan_id/capability existed.
+    await em.execute(
+      'create table class_purchases (id uuid primary key, amount_minor int not null, currency varchar(3) not null, coverage_days int not null, created_at timestamptz not null)',
+    );
+    const id = randomUUID();
+    await em.execute('insert into class_purchases values (?, ?, ?, ?, ?)', [
+      id,
+      3200,
+      'USD',
+      120,
+      new Date('2026-01-01T00:00:00Z'),
+    ]);
+    const migration = new Migration20261016190233(orm.driver, orm.config);
+    await migration.up();
+    for (const query of migration.getQueries()) await em.execute(query);
+    const rows = await em.execute<
+      {
+        plan_id: string;
+        amount_minor: number;
+        coverage_days: number;
+        active: boolean;
+        billing_model: string;
+      }[]
+    >(
+      'select p.plan_id, p.amount_minor, p.coverage_days, b.active, b.billing_model from class_purchases p join billing_plans b on b.id = p.plan_id',
+    );
+    assert.deepEqual(rows, [
+      {
+        plan_id: id,
+        amount_minor: 3200,
+        coverage_days: 120,
+        active: false,
+        billing_model: 'one_time',
+      },
+    ]);
+  } finally {
+    // The temporary schema and all upgrade fixtures are rolled back together.
+    await em.rollback();
+  }
+});
+
+test('demo plan seeding is repeatable and preserves edited or retired catalog terms', async () => {
+  const { seedDemoBillingPlan } = await import('../src/seeds/billing-plan.ts');
+  // Use a separate schema because the seed owns its transaction and a stable catalog ID.
+  const schema = `seed_${randomUUID().replaceAll('-', '')}`;
+  const isolated = await createDatabase(url!, { schema, snapshotOnMigrate: false });
+  try {
+    await isolated.schema.create();
+    const id = await seedDemoBillingPlan(isolated);
+    await isolated.em.fork().nativeUpdate(BillingPlan, id, { active: false, amountMinor: 9999 });
+    assert.equal(await seedDemoBillingPlan(isolated), id);
+    const plan = await isolated.em.fork().findOneOrFail(BillingPlan, id);
+    assert.equal(plan.active, false);
+    assert.equal(plan.amountMinor, 9999);
+    assert.equal(await isolated.em.fork().count(BillingPlan, {}), 1);
+  } finally {
+    await isolated.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);
+    await isolated.close(true);
+  }
+});

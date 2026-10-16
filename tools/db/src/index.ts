@@ -44,3 +44,21 @@ export type {
   AttemptAnswers,
   SubmissionResult,
 } from './types/assignment-attempt/work.ts';
+
+export { ClassPurchase } from './entities/ClassPurchase.ts';
+export type { ClassPurchaseFields } from './types/class-purchase/fields.ts';
+
+export { ClassEntitlement } from './entities/ClassEntitlement.ts';
+export type { ClassEntitlementFields } from './types/class-entitlement/fields.ts';
+
+export { PaymentEvent } from './entities/PaymentEvent.ts';
+export type { PaymentEventFields } from './types/payment-event/fields.ts';
+
+export { PurchaseStatus } from './types/class-purchase/enums.ts';
+export { EntitlementSource, ClassCapability } from './types/class-entitlement/enums.ts';
+
+export { BillingProvider } from './types/billing/enums.ts';
+
+export { BillingPlan } from './entities/BillingPlan.ts';
+export type { BillingPlanFields } from './types/billing-plan/fields.ts';
+export { BillingModel, BillingInterval } from './types/billing-plan/enums.ts';

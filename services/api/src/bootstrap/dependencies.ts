@@ -1,3 +1,8 @@
+import { readBillingConfig } from '../config/billing';
+import { createBillingStore } from '../persistence/billing/store';
+import { createBillingService } from '../application/billing/service';
+import { createSimulatorProvider } from '../integrations/payments/simulator/provider';
+import type { BillingContext } from '../routes/billing/context';
 import { createStudentWorkStore } from '../persistence/student-work/store';
 import type { StudentWorkContext } from '../routes/studentWork/context';
 import { createAssignmentStore } from '../persistence/assignment/store';
@@ -16,6 +21,7 @@ import type { AuthContext } from '../routes/auth/context';
 import type { ClassroomContext } from '../routes/classroom/context';
 
 export type ApplicationDependencies = {
+  billing?: BillingContext;
   auth: AuthContext;
   classroom: ClassroomContext;
   problem: ProblemContext;
@@ -32,6 +38,7 @@ type DependencyFactories = {
   createProblemStore: typeof createProblemStore;
   createAssignmentStore: typeof createAssignmentStore;
   createStudentWorkStore: typeof createStudentWorkStore;
+  createBillingStore?: typeof createBillingStore;
 };
 
 const defaultFactories: DependencyFactories = {
@@ -43,6 +50,7 @@ const defaultFactories: DependencyFactories = {
   createProblemStore,
   createAssignmentStore,
   createStudentWorkStore,
+  createBillingStore,
 };
 
 /** Application composition owns shared resources; auth-disabled practice needs none. */
@@ -51,7 +59,11 @@ export async function createDependencies(
   factories: DependencyFactories = defaultFactories,
 ): Promise<ApplicationDependencies | null> {
   const config = readAuthConfig(env);
-  if (!config) return null;
+  const billingConfig = readBillingConfig(env);
+  if (!config) {
+    if (billingConfig) throw new Error('Billing requires authentication.');
+    return null;
+  }
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required when auth is enabled.');
 
   const orm = await factories.connectDatabase(env.DATABASE_URL);
@@ -69,7 +81,15 @@ export async function createDependencies(
     const problems = await factories.createProblemStore(orm);
     const assignments = await factories.createAssignmentStore(orm);
     const studentWork = await factories.createStudentWorkStore(orm);
+    const billing = billingConfig
+      ? createBillingService(
+          await (factories.createBillingStore ?? createBillingStore)(orm),
+          createSimulatorProvider(billingConfig),
+          billingConfig,
+        )
+      : undefined;
     return {
+      ...(billing ? { billing: { config, service, billing } } : {}),
       studentWork: { config, service, studentWork },
       assignment: { config, service, assignments },
       problem: { config, service, problems },

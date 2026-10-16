@@ -25,7 +25,8 @@
     "db:migrate": "npm run migrate -w @logiclab/db",
     "db:test": "npm run test:integration -w @logiclab/db && npm run test:integration -w @logiclab/api",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "billing:seed": "npm run seed:billing -w @logiclab/db"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

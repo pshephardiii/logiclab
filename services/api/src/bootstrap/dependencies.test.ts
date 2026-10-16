@@ -128,3 +128,39 @@ test('student-work initialization failure closes shared resources', async () => 
   expect(closeDatabase).toHaveBeenCalledWith(true);
   expect(destroyClient).toHaveBeenCalledTimes(1);
 });
+
+test('enabled billing requires auth and a valid dedicated key before allocation', async () => {
+  await expect(createDependencies({ ...env, BILLING_ENABLED: 'true' }, factories)).rejects.toThrow(
+    'BILLING_SIMULATOR_SIGNING_SECRET',
+  );
+  await expect(
+    createDependencies(
+      {
+        AUTH_ENABLED: 'false',
+        BILLING_ENABLED: 'true',
+        BILLING_SIMULATOR_SIGNING_SECRET: 'ab'.repeat(32),
+      },
+      factories,
+    ),
+  ).rejects.toThrow('Billing requires authentication');
+  expect(connect).not.toHaveBeenCalled();
+});
+
+test('billing shares resources and initialization failure closes them', async () => {
+  const billingStore = jest.fn(async () => ({}) as never);
+  const dependencies = await createDependencies(
+    { ...env, BILLING_ENABLED: 'true', BILLING_SIMULATOR_SIGNING_SECRET: 'cd'.repeat(32) },
+    { ...factories, createBillingStore: billingStore },
+  );
+  expect(billingStore).toHaveBeenCalledWith(orm);
+  expect(dependencies!.billing!.service).toBe(dependencies!.auth.service);
+  await dependencies!.close();
+  billingStore.mockRejectedValueOnce(new Error('Billing initialization failed'));
+  await expect(
+    createDependencies(
+      { ...env, BILLING_ENABLED: 'true', BILLING_SIMULATOR_SIGNING_SECRET: 'cd'.repeat(32) },
+      { ...factories, createBillingStore: billingStore },
+    ),
+  ).rejects.toThrow('Billing initialization failed');
+  expect(closeDatabase).toHaveBeenCalledTimes(2);
+});

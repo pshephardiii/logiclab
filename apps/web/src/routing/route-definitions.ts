@@ -59,6 +59,15 @@ export const routeDefinitions = {
       deniedMessage: 'Assignment authoring requires an instructor account.',
     },
   },
+  instructorBilling: {
+    path: '/billing',
+    navigation: { label: 'Billing (simulated)' },
+    access: {
+      allowedRoles: ['instructor'],
+      deniedTitle: 'Instructor access required',
+      deniedMessage: 'Class billing requires an instructor account.',
+    },
+  },
   studentWork: {
     path: '/work',
     navigation: { label: 'Assigned work' },

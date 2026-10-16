@@ -101,22 +101,38 @@ The first truth-table slice uses **Check answers** and **Show solution**. Instru
 
 ## Proposed billing journeys
 
-Support two possible funding journeys. These are product directions to explore, not finalized pricing or entitlement rules.
+Support two funding journeys. The current billing branch implements only simulated individual instructor payments; institution subscriptions remain a future branch. Real prices and payment collection are not decided.
 
 - **Institution-sponsored access:** an institution pays through a subscription, and associated instructors can use the covered platform features without paying personally. The subscription could cover an allowance of instructor seats or active classes; the billing unit and limits remain open.
-- **Self-funded instructor access:** an independent instructor pays for their own use, potentially through a fee per class. A class fee covering a defined teaching period, such as a semester or course run, is the proposed starting model rather than an indefinite purchase.
+- **Self-funded instructor access:** an independent instructor makes a one-time purchase per class for a defined teaching period. This is not a recurring subscription.
 
 Keep payment ownership separate from instructor identity. One instructor account could teach both institution-funded and personally funded classes without acquiring a second account or a student role. A proposed model gives each class a funding source and checks the resulting entitlement rather than requiring the instructor to have personally paid.
 
-The simulated-payment milestone can demonstrate both journeys without real charges. Billing work remains outside the classroom-access branch.
+### Agreed individual-class simulator scope
+
+`007-feat-simulated-billing-and-entitlements` covers only instructor-funded, one-time class purchases with no real charges. A purchase unlocks **new assignment publication for that class**. Anonymous practice, problem-library authoring, and draft assignment authoring remain free. Only the owning instructor can initiate a class purchase.
+
+Use a configurable **180-day teaching period** as the initial simulator default, measured from verified successful payment. This duration is an implementation default, not finalized commercial pricing. Snapshot duration, currency, and amount in minor units on checkout creation; a later configuration change must not alter an existing purchase's terms. Activation uses the verified success time, not a browser redirect. Access is active from the start instant inclusive until the end instant exclusive.
+
+Failure or abandoned checkout grants no access. A refund revokes only coverage from that purchase; expiry ends that coverage naturally. Existing published assignments, student saves/submissions, results, and instructor review remain accessible under existing ownership/enrollment rules. Neither expiry nor refund deletes work. An independently valid grant can still authorize publication after another grant is revoked. A subsequent purchase supplies a new period rather than silently restarting an old purchase. Automatic renewal, recurring cancellation, and proration are out of scope.
+
+Keep **payment records**, **event receipts**, and **class capability grants** separate. Assignment publication will ask whether the class has a valid capability grant, not whether its instructor owns a paid one-time purchase. A future institution subscription can issue/renew class grants through the same access boundary. Its provider integration, subscription lifecycle, membership, and funding allocation require their own implementation; do not invent institution entities now.
+
+Checkout must be clearly labeled simulated. Signed server events own state changes, with provider-scoped event IDs, payload hashes, monotonic source event sequences, atomic receipt/effect writes, and replay/out-of-order tests. Browser checkout success cannot grant access. The simulator will expose success, failure, refund, duplicate, and out-of-order scenarios without requesting payment details.
+
+### Future institution subscriptions
+
+A later branch will introduce `Institution`, `InstitutionMembership`, and institution-owned `Subscription` entities. An institution can have multiple instructor members; memberships should allow instructors to have multiple institutional affiliations. Subscriptions will reference the shared `BillingPlan` and supply class capability grants. Class ownership stays with the instructor, and neither membership nor funding grants access to unrelated class/student records.
+
+These entities and their management, renewal, cancellation, and coverage-allocation workflows are explicitly deferred. The current branch now includes the shared `BillingPlan` for individual purchases and preserves purchase-term snapshots. Plans distinguish one-time and recurring terms; recurring checkout and subscription management are not implemented. Institution subscriptions will reuse the plan and entitlement boundaries later.
 
 Open billing questions:
 
 - What does an institutional subscription cover, and is its allowance measured by instructor seats, active classes, or another unit?
 - Who manages institutional membership and billing, and what happens to classes and access when an instructor leaves?
-- What counts as a billable class, how long does a class purchase last, and how are renewals or repeat course runs handled?
+- What real price and teaching-period duration should replace the simulator defaults, and should repeat course runs use a new class?
 - What happens when an institutional subscription expires, is canceled, or fails payment?
-- Do students and instructors retain access to completed work after class funding ends?
+- For future institution funding, what additional access or allocation rules are needed beyond the agreed retention of existing work?
 - Can a class change funding sources, and how do we avoid duplicate coverage or charges during a transfer?
 - What pricing, limits, refund behavior, and expiration rules apply to each journey?
 

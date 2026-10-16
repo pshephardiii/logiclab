@@ -11,7 +11,8 @@ import { postAssignmentPublishHandler } from './handler';
 
 export const postAssignmentPublishSchema = {
   summary: 'Publish an assignment',
-  description: 'Instructor-only authoring; student assignment access is introduced separately.',
+  description:
+    'Publish new work with active class coverage; retained publications remain accessible without coverage.',
   params: assignmentParamsSchema,
   body: assignmentActionRequestSchema,
   response: { 200: assignmentResponseSchema, ...assignmentErrorResponses },

@@ -1,3 +1,4 @@
+import { hasClassCapability } from '../billing/class-coverage';
 import {
   createSubmissionReviewStore,
   type SubmissionReviewStore,
@@ -45,6 +46,7 @@ export async function createAssignmentStore(
     LockMode,
     AssessmentMode,
     FeedbackTiming,
+    ClassCapability,
   } = await import('@logiclab/db');
   type Manager = typeof orm.em;
 
@@ -175,6 +177,15 @@ export async function createAssignmentStore(
             ownerId,
             items.map((item) => item.problemVersion.id),
           );
+          if (
+            !(await hasClassCapability(
+              em,
+              assignment.classroom.id,
+              ClassCapability.PublishAssignments,
+            ))
+          ) {
+            throw new AssignmentOperationError('coverage_required');
+          }
           assignment.publishedAt = new Date();
           await em.flush();
         }

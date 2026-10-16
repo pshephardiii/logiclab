@@ -32,8 +32,18 @@ test(
   'student work preserves private drafts, freezes final results, enforces policy, and serializes concurrent saves/submission',
   { timeout: 30_000 },
   async () => {
-    const { createDatabase, User, UserRole, Classroom, Enrollment, Assignment, AssignmentAttempt } =
-      await import('@logiclab/db');
+    const {
+      createDatabase,
+      User,
+      UserRole,
+      Classroom,
+      ClassEntitlement,
+      EntitlementSource,
+      BillingProvider,
+      Enrollment,
+      Assignment,
+      AssignmentAttempt,
+    } = await import('@logiclab/db');
     const schema = `student_work_${randomUUID().replaceAll('-', '')}`;
     const orm = await createDatabase(url, { schema, snapshotOnMigrate: false });
     const assignments = await createAssignmentStore(orm);
@@ -99,6 +109,18 @@ test(
       await orm.schema.create();
       em.persist([owner, student, other, outsider, classroom, otherClass]);
       await em.flush();
+      em.persist(
+        em.create(ClassEntitlement, {
+          classroom,
+          provider: BillingProvider.Simulator,
+          source: EntitlementSource.ClassPurchase,
+          sourceReference: randomUUID(),
+          startsAt: new Date(Date.now() - 60_000),
+          endsAt: new Date(Date.now() + 86_400_000),
+        }),
+      );
+      await em.flush();
+
       em.persist([
         em.create(Enrollment, { classroom, student }),
         em.create(Enrollment, { classroom, student: other }),
@@ -411,6 +433,19 @@ test(
       } finally {
         if (archiveLock.isInTransaction()) await archiveLock.rollback();
       }
+      // Funding loss only blocks new publication, never ongoing work on published assignments.
+      await em
+        .fork()
+        .nativeUpdate(ClassEntitlement, { classroom: classroom.id }, { revokedAt: new Date() });
+      assert.equal((await store.read(student.id, assignment.id)).attempt!.id, submitted.id);
+      const retainedSave = await store.save(other.id, barrier.id, {
+        revision: 1,
+        itemId: barrierItem,
+        answers: correct,
+      });
+      assert.equal(retainedSave.revision, 2);
+      assert((await store.submit(other.id, barrier.id, 2)).submittedAt);
+      assert((await store.solution(student.id, allowed.id, allowed.items[0]!.id)).solution);
       await assignments.setArchived(owner.id, assignment.id, true);
       active = owner;
       assert.equal(

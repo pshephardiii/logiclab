@@ -1,3 +1,4 @@
+import { InstructorBillingPage } from '../pages/instructor-billing/InstructorBillingPage';
 import { StudentWorkPage } from '../pages/student-work/StudentWorkPage';
 import { InstructorAssignmentsPage } from '../pages/instructor-assignments/InstructorAssignmentsPage';
 import { ProblemLibraryPage } from '../pages/problem-library/ProblemLibraryPage';
@@ -22,6 +23,7 @@ export function AppRoutes() {
     problemLibrary,
     instructorAssignments,
     studentWork,
+    instructorBilling,
   } = routeDefinitions;
 
   return (
@@ -42,6 +44,9 @@ export function AppRoutes() {
       </Route>
       <Route element={<ProtectedRoute {...studentWork.access} />}>
         <Route path={studentWork.path} element={<StudentWorkPage />} />
+      </Route>
+      <Route element={<ProtectedRoute {...instructorBilling.access} />}>
+        <Route path={instructorBilling.path} element={<InstructorBillingPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
