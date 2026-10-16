@@ -1,5 +1,6 @@
 import {
   authErrorResponseSchema,
+  studentWorkErrorResponseSchema,
   assignmentErrorResponseSchema,
   problemErrorResponseSchema,
   truthTableErrorResponseSchema,
@@ -38,3 +39,8 @@ export const assignmentErrorResponses = errorResponses(
 
 // Public practice has no account policy; preserve its existing declared response statuses.
 export const truthTableErrorResponses = errorResponses(truthTableErrorResponseSchema, [400]);
+
+export const studentWorkErrorResponses = errorResponses(
+  studentWorkErrorResponseSchema,
+  [400, 401, 403, 404, 409, 413, 415, 429, 503],
+);

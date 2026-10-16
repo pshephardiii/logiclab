@@ -1,6 +1,6 @@
 # Instructor assignment API
 
-This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Student reads, attempts, submissions, feedback enforcement, and student UI follow in subsequent slices. Publishing currently records the locked assignment; it introduces no student endpoint by itself.
+This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Enrollment-scoped student reads, saved attempts, final submission, and feedback/solution enforcement are implemented in the [student-work API](student-work-api.md); student UI follows in the next slice. Publishing records the locked assignment and makes it eligible for the separate enrollment-scoped student endpoints.
 
 Authorization runs before request-field validation and reuses the authenticated user within the request. Foreign and missing classrooms/assignments both return 404. Mutations require the configured exact `Origin`; responses use `Cache-Control: no-store`. Shared account-route rate limits and cookie handling apply.
 
@@ -63,6 +63,6 @@ Select an assignment from the paginated class list to load its full saved conten
 
 Save changes before publishing or archiving; these controls are disabled while edits are unsaved. Publication uses saved content, is idempotent, and locks both the form and item controls. **Archive assignment** retains content; use the **Archived**/**All** filter to find it after reload. Restoring a draft allows editing; restoring a publication retains its content/policy lock. **Reload saved assignment** discards local changes and rereads the server.
 
-This slice exposes no student assignment screen or submission behavior. The stored solution setting prepares that later workflow; the instructor UI explicitly indicates this boundary.
+Student assignment screens remain upcoming. The student-work API now enforces the saved solution setting, releasing enabled solutions only after final submission; the instructor page currently warns that student screens are not available yet.
 
 Local verification for this UI slice: `npm run check` passed 382 tests (71 engine, 272 API, 39 frontend), type checks, and production builds. A temporary Chrome/Playwright walkthrough used Vite, real Fastify routes and PostgreSQL in an isolated test schema with synthetic instructor/student identities: ordering/repeats/removal, solution policy, item-ID retention on metadata edits, publication, archive/restore/reload, class reset, student role denial, and 1280px/390px layouts without document overflow passed. Local screenshots/script remain ignored under `.codex-local/verification/`. No live Cognito/AWS or remote CI checks were performed; browser evidence is not a committed CI regression suite. Existing bundle-size and test-tool warnings remain.

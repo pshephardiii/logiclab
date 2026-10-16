@@ -20,6 +20,7 @@ async function start() {
             classroom: dependencies.classroom,
             problem: dependencies.problem,
             assignment: dependencies.assignment,
+            studentWork: dependencies.studentWork,
           }
         : {}),
     });

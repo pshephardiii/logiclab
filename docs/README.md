@@ -30,6 +30,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Truth-table practice](api/truth-table-api.md)
 - [Private problem library](api/problem-library-api.md)
 - [Instructor assignments](api/assignment-api.md)
+- [Student assignment work](api/student-work-api.md)
 
 ## Conventions
 

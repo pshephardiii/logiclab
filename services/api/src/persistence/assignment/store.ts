@@ -1,3 +1,4 @@
+import { assignmentSummary } from './summary';
 import type { createDatabase, Assignment as AssignmentEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -26,22 +27,6 @@ export interface AssignmentStore {
   ): Promise<AssignmentDetail>;
   publish(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
   setArchived(ownerId: string, assignmentId: string, archived: boolean): Promise<AssignmentDetail>;
-}
-
-function summary(assignment: AssignmentEntity): AssignmentSummary {
-  return {
-    id: assignment.id,
-    classId: assignment.classroom.id,
-    title: assignment.title,
-    instructions: assignment.instructions ?? null,
-    assessmentMode: assignment.assessmentMode,
-    feedbackTiming: assignment.feedbackTiming,
-    allowSolutions: assignment.allowSolutions,
-    publishedAt: assignment.publishedAt?.toISOString() ?? null,
-    archivedAt: assignment.archivedAt?.toISOString() ?? null,
-    createdAt: assignment.createdAt.toISOString(),
-    updatedAt: assignment.updatedAt.toISOString(),
-  };
 }
 
 /** Parent-row locks serialize every draft mutation with publication and archive transitions. */
@@ -90,7 +75,7 @@ export async function createAssignmentStore(
       { orderBy: { position: 'ASC' }, populate: ['problemVersion.problem'] },
     );
     return {
-      ...summary(assignment),
+      ...assignmentSummary(assignment),
       items: items.map((item) => ({
         id: item.id,
         position: item.position,
@@ -150,7 +135,7 @@ export async function createAssignmentStore(
         },
         { limit: query.limit, offset: query.offset, orderBy: { createdAt: 'DESC', id: 'DESC' } },
       );
-      return assignments.map(summary);
+      return assignments.map(assignmentSummary);
     },
     async findOwned(ownerId, assignmentId) {
       const em = orm.em.fork();

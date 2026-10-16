@@ -1,3 +1,4 @@
+import { AssignmentAttempt } from './entities/AssignmentAttempt.ts';
 import { Assignment } from './entities/Assignment.ts';
 import { AssignmentItem } from './entities/AssignmentItem.ts';
 import { Problem } from './entities/Problem.ts';
@@ -27,6 +28,7 @@ export function databaseOptions(
       ProblemVersion,
       Assignment,
       AssignmentItem,
+      AssignmentAttempt,
     ],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },

@@ -36,3 +36,11 @@ export type { EnrollmentFields } from './types/enrollment/fields.ts';
 export type { ProblemFields } from './types/problem/fields.ts';
 export type { ProblemVersionFields } from './types/problem-version/fields.ts';
 export type { AssignmentItemFields } from './types/assignment-item/fields.ts';
+
+export { AssignmentAttempt } from './entities/AssignmentAttempt.ts';
+export type { AssignmentAttemptFields } from './types/assignment-attempt/fields.ts';
+export type {
+  AttemptAnswer,
+  AttemptAnswers,
+  SubmissionResult,
+} from './types/assignment-attempt/work.ts';

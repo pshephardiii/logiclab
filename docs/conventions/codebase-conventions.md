@@ -49,17 +49,18 @@ Every entity has a compact `...Fields` interface. The decorated class uses `impl
 
 Use one directory per entity under `tools/db/src/types/`:
 
-| Directory          | Contents                                               |
-| ------------------ | ------------------------------------------------------ |
-| `assignment/`      | Assignment fields and assessment/feedback enums        |
-| `assignment-item/` | Assignment-item fields                                 |
-| `classroom/`       | Classroom fields                                       |
-| `enrollment/`      | Enrollment fields                                      |
-| `problem/`         | Problem fields, authored definition, problem-type enum |
-| `problem-version/` | Problem-version fields                                 |
-| `user/`            | User fields and role enum                              |
-| `auth-session/`    | Session fields                                         |
-| `shared/`          | Exact-shape assertion helpers used across entities     |
+| Directory             | Contents                                                    |
+| --------------------- | ----------------------------------------------------------- |
+| `assignment/`         | Assignment fields and assessment/feedback enums             |
+| `assignment-attempt/` | Attempt fields, saved answer types, and frozen result types |
+| `assignment-item/`    | Assignment-item fields                                      |
+| `classroom/`          | Classroom fields                                            |
+| `enrollment/`         | Enrollment fields                                           |
+| `problem/`            | Problem fields, authored definition, problem-type enum      |
+| `problem-version/`    | Problem-version fields                                      |
+| `user/`               | User fields and role enum                                   |
+| `auth-session/`       | Session fields                                              |
+| `shared/`             | Exact-shape assertion helpers used across entities          |
 
 Use `fields.ts` within each entity directory, even when entities are closely related. Shared authored content stays in `problem/definition.ts`, imported by both problem and problem-version fields rather than duplicated. Keep discrete supported values in domain `enums.ts` files; do not invent enums for free text, IDs, booleans, or definition-format version numbers. Keep serialized enum values stable. Adding an enum member does not implement its behavior: update database constraints and application policy deliberately.
 
