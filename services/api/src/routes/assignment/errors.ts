@@ -11,6 +11,12 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  coverage_required: {
+    status: 409,
+    code: 'CLASS_COVERAGE_REQUIRED',
+    message:
+      'Active class coverage is required to publish a new assignment. Existing published work remains available.',
+  },
   not_found: {
     status: 404,
     code: 'ASSIGNMENT_NOT_FOUND',

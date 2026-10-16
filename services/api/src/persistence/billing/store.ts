@@ -59,6 +59,10 @@ export async function createBillingStore(
   } = await import('@logiclab/db');
   type Manager = typeof orm.em;
   async function apply(em: Manager, purchase: PurchaseEntity, delivery: VerifiedDelivery) {
+    // Publication holds this class lock in shared mode until its transaction commits.
+    await em.findOneOrFail(Classroom, purchase.classroom.id, {
+      lockMode: LockMode.PESSIMISTIC_WRITE,
+    });
     const { event, hash } = delivery;
     const existing = await em.findOne(Receipt, {
       provider: BillingProvider.Simulator,

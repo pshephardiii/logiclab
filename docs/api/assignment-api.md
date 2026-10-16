@@ -79,3 +79,9 @@ Review requires the same instructor session and ownership through the assignment
 List queries accept `limit=1..50` (default 20) and nonnegative `offset` (default 0), ordered by submission time descending with ID tie-breaking. Responses contain `{ submissions, nextOffset }`; each summary contains its ID, student ID/email (nullable email), submission timestamp, and frozen grading counts. No Cognito/session fields are exposed. Detail returns `{ submission, assignment, attempt }`, with given-only exercises and the retained final attempt/result. No regrading or draft-answer read occurs.
 
 In the instructor **Assignments** page, select a published assignment to see **Final submissions**. Reload the list for new submissions, select a student to review read-only answers and feedback, and use **Submitted problem** to move between occurrences. List/detail failures support retries and subsequent pages load explicitly. Incomplete students are omitted, so this list is not a live draft-progress roster.
+
+## Class coverage for new publication
+
+Publishing a draft now requires an unrevoked `publish_assignments` grant for that class with `startsAt <= now < endsAt`. Without coverage, the API returns 409 `CLASS_COVERAGE_REQUIRED` and preserves the draft. This policy applies even when billing endpoints are disabled. Grants can eventually come from individual purchases or institution subscriptions; publication does not inspect funding source or purchase status. See [billing access and concurrency](billing-api.md#publication-access-and-refund-concurrency).
+
+Existing published assignments, student work, and instructor review remain available under normal authorization rules after funding loss. Repeated publication requests for an already-published active assignment and archive/restore require no new coverage. New drafts remain editable without payment.

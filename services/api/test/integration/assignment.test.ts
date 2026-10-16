@@ -31,8 +31,17 @@ test(
   'instructor assignment authoring pins content, scopes access, and serializes publication with edits and archives',
   { timeout: 30_000 },
   async () => {
-    const { createDatabase, User, UserRole, Classroom, Assignment, AssignmentItem } =
-      await import('@logiclab/db');
+    const {
+      createDatabase,
+      User,
+      UserRole,
+      Classroom,
+      ClassEntitlement,
+      EntitlementSource,
+      BillingProvider,
+      Assignment,
+      AssignmentItem,
+    } = await import('@logiclab/db');
     const schema = `assignment_${randomUUID().replaceAll('-', '')}`;
     const orm = await createDatabase(url, { schema, snapshotOnMigrate: false });
     const store = await createAssignmentStore(orm);
@@ -83,6 +92,18 @@ test(
       const otherClass = em.create(Classroom, { owner: other, name: 'Foreign class' });
       em.persist([owner, other, classroom, otherClass]);
       await em.flush();
+      em.persist(
+        em.create(ClassEntitlement, {
+          classroom,
+          provider: BillingProvider.Simulator,
+          source: EntitlementSource.ClassPurchase,
+          sourceReference: randomUUID(),
+          startsAt: new Date(Date.now() - 60_000),
+          endsAt: new Date(Date.now() + 86_400_000),
+        }),
+      );
+      await em.flush();
+
       async function versionFor(ownerId: string, formula: string) {
         const problem = await problems.create(ownerId, {
           title: formula,

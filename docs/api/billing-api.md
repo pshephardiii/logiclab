@@ -1,6 +1,6 @@
 # Simulated billing API
 
-Billing routes are opt-in: set `BILLING_ENABLED=true` with a dedicated `BILLING_SIMULATOR_SIGNING_SECRET` (64 hex characters), enabled auth, and a migrated database. No real payment provider is contacted. Responses identify checkout as simulated. Publication enforcement and the billing UI are later slices.
+Billing routes are opt-in: set `BILLING_ENABLED=true` with a dedicated `BILLING_SIMULATOR_SIGNING_SECRET` (64 hex characters), enabled auth, and a migrated database. No real payment provider is contacted. Responses identify checkout as simulated. New assignment publication now requires active class coverage. The billing UI remains a later slice.
 
 | Method | Path                                          | Access                                                         | Purpose                                          |
 | ------ | --------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
@@ -44,4 +44,12 @@ Unknown source references return 404. Occurrence times before checkout creation 
 
 There is no plan-management UI or automatic plan seed yet. For local development, create an active one-time `BillingPlan` through DBeaver using the migration-defined fields (for example, USD 2500 minor units, 180 coverage days, capability `publish_assignments`). This is demo configuration, not commercial pricing. The next UI slice will provide plan/status selection and setup guidance.
 
-Run `npm run db:migrate` for the checkout request-ID migration. Existing purchases receive a unique historical request ID without changing their terms. Billing stays disabled until configured. This slice does not restrict assignment publication: active-grant enforcement follows separately, preserving existing published work and student submissions.
+Run `npm run db:migrate` for the checkout request-ID migration. Existing purchases receive a unique historical request ID without changing their terms. Billing stays disabled until configured. New assignment publication requires a current `publish_assignments` grant even when billing HTTP routes are disabled. Disabling `BILLING_ENABLED` disables checkout/control/webhook endpoints, not the publication policy. Without billing configured, existing classes can still author drafts and use previously published work; new publication needs an existing valid grant or configured simulated checkout.
+
+## Publication access and refund concurrency
+
+Publication checks only class capability grants, without consulting purchase status, provider, source kind, or current plan settings. This is the boundary future institution subscriptions will reuse. A grant must match the class and capability, be unrevoked, and satisfy `startsAt <= now < endsAt`. Any matching valid grant is sufficient. No active grant returns HTTP 409 with code `CLASS_COVERAGE_REQUIRED`, leaving the draft unchanged.
+
+The publication transaction holds a shared class-row lock; payment effects take that class lock exclusively. A refund that commits first is visible to the publication check. If publication wins, it commits as retained published work before refund revokes coverage for subsequent publication. Time is checked after lock acquisition. Future subscription allocation/revocation writers must follow the same locking protocol. Expiration is checked from timestamps without waiting for a cleanup job.
+
+Coverage is required only for the first publication transition. Repeating a publish request for an existing active publication remains idempotent after coverage ends. Existing ownership/enrollment/assignment policies still control reads, saves, submissions, solutions, and instructor review. Archive/restore does not republish or require new coverage; restoring a published assignment preserves its original content and policy lock. Draft authoring and the independent problem library remain free. No grant is silently backfilled for existing classes.

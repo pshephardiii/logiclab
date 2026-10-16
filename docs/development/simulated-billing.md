@@ -1,6 +1,6 @@
 # Simulated billing development
 
-The provider adapter is local code with no external payment SDK, network calls, card data, or real charges. Owned checkout persistence, signed webhook processing, and simulator controls are now implemented; see the [billing API](../api/billing-api.md). Publication enforcement remains the next slice. Institution subscriptions remain future work.
+The provider adapter is local code with no external payment SDK, network calls, card data, or real charges. Owned checkout persistence, signed webhook processing, and simulator controls are now implemented; see the [billing API](../api/billing-api.md). New assignment publication now requires active class coverage; disabling billing endpoints does not bypass that check. Existing published work remains available. Institution subscriptions remain future work.
 
 ## Boundaries
 
