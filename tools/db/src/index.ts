@@ -20,3 +20,6 @@ export { LockMode } from '@mikro-orm/core';
 export { Problem } from './entities/Problem.js';
 export { ProblemVersion } from './entities/ProblemVersion.js';
 export type { ProblemDefinition } from './types/problem-definition.js';
+
+export { Assignment } from './entities/Assignment.js';
+export { AssignmentItem } from './entities/AssignmentItem.js';

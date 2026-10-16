@@ -1,3 +1,5 @@
+import { Assignment } from './entities/Assignment.js';
+import { AssignmentItem } from './entities/AssignmentItem.js';
 import { Problem } from './entities/Problem.js';
 import { ProblemVersion } from './entities/ProblemVersion.js';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +18,16 @@ export function databaseOptions(
   return defineConfig({
     clientUrl: connectionString,
     ...(options.schema ? { schema: options.schema } : {}),
-    entities: [User, AuthSession, Classroom, Enrollment, Problem, ProblemVersion],
+    entities: [
+      User,
+      AuthSession,
+      Classroom,
+      Enrollment,
+      Problem,
+      ProblemVersion,
+      Assignment,
+      AssignmentItem,
+    ],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },
     migrations: {
