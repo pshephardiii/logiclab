@@ -6,7 +6,7 @@ Branch `008-feat-durable-jobs-and-history` builds operator-only, report-only bil
 
 Authoritative history lives in PostgreSQL. A command will print job/run IDs, status, records checked, finding counts, and a way to inspect individual findings. Logs provide diagnostics without payment credentials, signing secrets, raw webhook payloads, or unsanitized exception text.
 
-Persistence, reusable scheduler/worker cycles, and the report-only reconciliation handler are implemented. CLI commands are next. `bootstrap/jobs.ts` composes the real handler with the registry/store for operator use; API startup never invokes it or activates automation. The bare registry still allows metadata-only construction for tests; execution without an injected handler records `HANDLER_UNAVAILABLE`.
+Persistence, reusable scheduler/worker cycles, and the report-only reconciliation handler are implemented. The operator CLI is implemented; see [commands and automation](../development/operator-jobs.md). `bootstrap/jobs.ts` composes the real handler with the registry/store for operator use; API startup never invokes it or activates automation. The bare registry still allows metadata-only construction for tests; execution without an injected handler records `HANDLER_UNAVAILABLE`.
 
 ## Recurrence, execution, and retry
 
@@ -48,7 +48,7 @@ Billing reconciliation currently has a 45-second execution timeout within a 60-s
 
 Handler exceptions persist only `HANDLER_FAILED`, without raw exception details. Missing handlers use `HANDLER_UNAVAILABLE`. Invalid results use `INVALID_RESULT`; result counts must fit nonnegative database integers, finding identifiers/kinds must be valid, and a result is capped at 1,000 findings. The reconciliation handler enforces scan/report bounds and fails explicitly rather than silently discarding findings.
 
-Successful finalization commits findings, deduplicated finding count, run result, and terminal job state together. A database failure rolls back these changes, propagates to the caller, and leaves the lease for subsequent recovery. No external side effects are claimed to be exactly once. These functions are callable library entry points only for now; operator commands follow in the CLI slice. No job routes, polling loop, timer-based automation, or AWS resources are installed.
+Successful finalization commits findings, deduplicated finding count, run result, and terminal job state together. A database failure rolls back these changes, propagates to the caller, and leaves the lease for subsequent recovery. No external side effects are claimed to be exactly once. These functions also power the operator CLI, with setup/toggle, enqueue, cycle, list/inspect, and finding commands. No job routes, polling loop, timer-based automation, or AWS resources are installed.
 
 ## Reconciliation reports
 
@@ -81,3 +81,5 @@ The handler returns data only. The existing lease-fenced finalizer atomically pe
 ## Deferred work
 
 Automatic repair, real email, notifications/outbox delivery, assignment due dates/reminders, administrative web interfaces, institutions/subscriptions, production trigger selection, and long-term history cleanup remain outside this branch. A future repair mechanism needs explicit policy and audit controls. A future admin UI needs server-side administrative authorization, not instructor ownership filtering.
+
+The operator CLI preserves schedule timing on enable/pause and serializes toggles against scheduler advancement. It exposes no interval-edit command yet. Connection lifecycle and safe error output are handled separately from command dispatch; help/invalid arguments require no database connection. Worker JSON includes job IDs/attempts and inspection commands; inspect includes durable run IDs and finding counts. See the [CLI guide](../development/operator-jobs.md) for pagination, exit codes, and compiled automation entry points.
