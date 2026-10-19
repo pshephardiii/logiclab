@@ -186,22 +186,21 @@ Open later product questions: real pricing, commercial duration/refund rules, re
 
 ### 8. `008-feat-durable-jobs-and-history` — Observable background work
 
-Depends on: invitations, due dates, and billing state.
+Depends on: simulated billing and its coverage model. No assignment deadline feature is required.
 
-- Add durable scheduling/outbox records for reminders, invitation expiry, and payment reconciliation.
-- Implement bounded retries, safe concurrent claiming, and idempotent execution across restarts.
-- Record reminder delivery in an outbox initially; expose useful job status through logs or a small instructor/demo view.
-- Test retry, concurrent execution, restart recovery, and reconciliation of inconsistent state.
+Agreed scope: **operator-only, report-only billing reconciliation**, with durable schedules, jobs, execution attempts, and findings. The job inspects billing across the platform; instructors do not trigger it or see operational findings by default. No public job endpoints, instructor job page, admin account role/UI, repairs, email, notification outbox, or assignment reminders in this branch.
 
-Done when: representative jobs run predictably, retry without duplicate effects, and leave inspectable outcomes. Scheduler triggers alone must not be treated as durable execution.
+Commit-sized slices:
 
-Open product/design questions:
+1. **Persistence foundation (implemented):** disabled-by-default interval schedules, distinct scheduled/manual jobs, lease and retry fields, execution history, structured findings, enum/field interfaces, additive migration/snapshot, and database constraint/retention tests. No scheduling or execution yet.
+2. **Scheduler and worker cycles:** per-job registry/setup defaults (hourly reconciliation initially), persisted schedule overrides preserved by repeated setup, bounded scheduler enqueueing with unique occurrence identities, atomic claims, lease tokens, execution outside claim transactions, bounded retries, expired-lease recovery, and stale-worker fencing. Separate reusable cycle functions and CLI entry points; no always-on process or AWS resource required.
+3. **Billing reconciliation:** inspect purchase/grant mismatches without repairs, atomically persist results and deduplicated findings, and provide idempotent behavior across attempt retries.
+4. **Operator CLI and automation wiring:** manual enqueue, scheduler/worker cycles, and run/finding inspection commands with useful summaries. External automation can call the same cycle commands later; automatic execution remains disabled by default.
+5. **Verification/documentation:** concurrent claims/schedulers, crash/restart recovery, retry exhaustion, operator history, reconciliation findings, and ignored PR draft.
 
-- When should reminders fire, for whom, and how should duplicates or already-completed assignments be suppressed?
-- What job history helps an employer understand the system, and who may view it?
-- Should the demo include a controlled way to advance time or trigger jobs?
-- Which reconciliation mismatches can be repaired automatically, and which should be flagged?
-- Is an in-app outbox enough for this release, or is real email worth its added setup?
+Done when: reconciliation can be manually enqueued or scheduled, executes reliably across retries/restarts, records inspectable database-backed findings, and changes no billing/access state. CLI prints a summary and job/run identifiers; logs are diagnostic rather than the authoritative history. Build automation-ready cycles now, without enabling automatic execution. See [background-job design](background-jobs.md).
+
+Later decisions: production trigger/hosting, longer-term retention, automated repair policy, notifications, and an authorized admin UI for schedule enablement/interval changes. That UI needs backend permissions, per-job interval bounds, audit history, and a defined `nextRunAt` recalculation policy; queued jobs remain unchanged. Institution subscriptions remain separate work.
 
 ### 9. `009-chore-public-demo-and-portfolio` — An employer-ready release
 
@@ -252,3 +251,7 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 ### Assignment branch status
 
 Work is now on `006-feat-assignments-and-progress`. The first slice adds assignment/item entities, an additive migration and snapshot, independent policy defaults, and ten new database tests. The test database has the migration applied; existing development checkouts should run `npm run db:migrate`. The second slice adds scoped instructor assignment authoring, pinned ordered occurrences, transactional publication/content locks, archive/restore, and route/PostgreSQL tests. See the [assignment API](../api/assignment-api.md). The third slice adds instructor-only `/assignments` navigation, class selection, ordered published-version selection, draft authoring, publication, archive/restore, pagination/retries, and frontend regression coverage. A local synthetic-session Chrome/PostgreSQL walkthrough passed desktop/mobile workflows. The fourth slice adds enrollment-scoped student reads, revisioned per-item saves, one immutable final submission/result, after-submission feedback and optional solutions, retention, and concurrency tests. See the [student-work API](../api/student-work-api.md). The fifth slice adds `/work` for student completion, explicit per-item saving and final confirmation, read-only result restoration and protected solutions, plus final-only instructor submission review and owner-scoped review endpoints. Automated and synthetic-session Chrome/PostgreSQL checks passed desktop/mobile workflows. Final branch verification/documentation is complete and the ignored local PR draft is prepared. See [verification evidence](../verification/assignments-and-progress-verification.md) for checks and limitations.
+
+### Current durable-jobs branch
+
+`007-feat-simulated-billing-and-entitlements` is complete; see [billing verification](../verification/simulated-billing-verification.md). Work is now on `008-feat-durable-jobs-and-history`, starting with job persistence. The automation runner, scheduler cycles, reconciliation handler, and operator commands are subsequent slices. Existing development checkouts should apply the additive migration with `npm run db:migrate`; no schedules or jobs are seeded or started by this slice.

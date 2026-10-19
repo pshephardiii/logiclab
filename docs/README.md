@@ -15,6 +15,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
 - [Data design](planning/data-design.md)
+- [Background jobs and reconciliation design](planning/background-jobs.md)
 - [AWS deployment notes](planning/aws-deployment-notes.md)
 
 ## Development setup
