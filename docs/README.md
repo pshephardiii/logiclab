@@ -15,6 +15,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
 - [Data design](planning/data-design.md)
+- [Background jobs and reconciliation design](planning/background-jobs.md)
 - [AWS deployment notes](planning/aws-deployment-notes.md)
 
 ## Development setup
@@ -22,6 +23,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Local database and DBeaver](development/local-database.md)
 - [Cognito development](development/cognito-development.md)
 - [Simulated billing development](development/simulated-billing.md)
+- [Operator jobs CLI](development/operator-jobs.md)
 - [GitHub setup](development/github-setup.md)
 
 ## API reference
@@ -46,5 +48,6 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Problem-library walkthrough and evidence](verification/problem-library-verification.md)
 - [Assignments and progress walkthrough and evidence](verification/assignments-and-progress-verification.md)
 - [Simulated billing walkthrough and evidence](verification/simulated-billing-verification.md)
+- [Durable jobs and reconciliation evidence](verification/durable-jobs-verification.md)
 
 Keep new documents in the most relevant group and add them to this index. Product decisions belong in planning, implementation/setup guidance in development or API reference, reusable engineering rules in conventions, and dated validation evidence in verification. Local PR drafts remain in the ignored `.codex-local/pr/` directory.

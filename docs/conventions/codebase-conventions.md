@@ -103,6 +103,8 @@ The DB package uses ESM/NodeNext and `.js` relative import specifiers in TypeScr
 
 Use a forked EntityManager per request/job and close the ORM on shutdown. Transactions, locks, constraints, and conflict handling must express persistence guarantees; changing file layout must preserve those guarantees.
 
+For durable jobs, keep pure cadence, occurrence identity, retry-budget/backoff, and handler-result validation policies in `application/jobs/`. Pass timestamps into policies rather than reading a clock there. Keep database time sampling, due-row selection, locks, lease fencing, and atomic run/finding updates in `persistence/jobs/`; evaluate decisions against the locked state inside the transaction.
+
 Commit migrations and application snapshots; keep applied migrations immutable. Generate/review migrations for actual schema changes. For entity-only refactors, run `migration:check` and verify no migration is needed. Integration-test migration runs disable snapshot generation; ignored test snapshots are not a reason to ignore application snapshots or source tests. See [Local Database](../development/local-database.md).
 
 ## Tools: logic-engine structure and invariants

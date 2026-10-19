@@ -62,3 +62,19 @@ export { BillingProvider } from './types/billing/enums.ts';
 export { BillingPlan } from './entities/BillingPlan.ts';
 export type { BillingPlanFields } from './types/billing-plan/fields.ts';
 export { BillingModel, BillingInterval } from './types/billing-plan/enums.ts';
+
+export { JobSchedule } from './entities/JobSchedule.ts';
+export type { JobScheduleFields } from './types/job-schedule/fields.ts';
+
+export { DurableJob } from './entities/DurableJob.ts';
+export type { DurableJobFields } from './types/durable-job/fields.ts';
+
+export { JobRun } from './entities/JobRun.ts';
+export type { JobRunFields } from './types/job-run/fields.ts';
+
+export { ReconciliationFinding } from './entities/ReconciliationFinding.ts';
+export type { ReconciliationFindingFields } from './types/reconciliation-finding/fields.ts';
+export { JobType } from './types/job-schedule/enums.ts';
+export { JobStatus } from './types/durable-job/enums.ts';
+export { JobRunStatus } from './types/job-run/enums.ts';
+export { FindingKind } from './types/reconciliation-finding/enums.ts';

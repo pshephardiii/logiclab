@@ -105,3 +105,5 @@ Billing plans add `billing_plans` and a required `class_purchases.plan_id` refer
 The checkout request-ID migration adds a unique `(payer_id, request_id)` key and backfills old purchases with their existing purchase IDs. Run `npm run db:migrate` before enabling billing HTTP routes.
 
 After migrations, `npm run billing:seed` from the repository root creates the local simulated class plan (USD 25.00 for 180 days). The command preserves existing plan edits/retirement and does not create purchases or coverage. Enable the simulator API separately, then use the instructor `/billing` page.
+
+The durable-jobs foundation adds `job_schedules`, `durable_jobs`, `job_runs`, and `reconciliation_findings`. Apply with `npm run db:migrate` from the repository root. This migration adds storage only: it neither seeds/enables schedules nor starts a worker or reconciliation.

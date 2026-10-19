@@ -1,3 +1,7 @@
+import { JobSchedule } from './entities/JobSchedule.ts';
+import { DurableJob } from './entities/DurableJob.ts';
+import { JobRun } from './entities/JobRun.ts';
+import { ReconciliationFinding } from './entities/ReconciliationFinding.ts';
 import { BillingPlan } from './entities/BillingPlan.ts';
 import { ClassPurchase } from './entities/ClassPurchase.ts';
 import { ClassEntitlement } from './entities/ClassEntitlement.ts';
@@ -37,6 +41,10 @@ export function databaseOptions(
       ClassPurchase,
       ClassEntitlement,
       PaymentEvent,
+      JobSchedule,
+      DurableJob,
+      JobRun,
+      ReconciliationFinding,
     ],
     extensions: [Migrator],
     pool: { min: 0, max: 5 },
