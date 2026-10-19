@@ -6,7 +6,7 @@ Branch `008-feat-durable-jobs-and-history` builds operator-only, report-only bil
 
 Authoritative history lives in PostgreSQL. A command will print job/run IDs, status, records checked, finding counts, and a way to inspect individual findings. Logs provide diagnostics without payment credentials, signing secrets, raw webhook payloads, or unsanitized exception text.
 
-The persistence slice is implemented. Scheduler/worker cycles, reconciliation execution, and CLI commands are upcoming. No schedules, jobs, automation, or repairs are activated now.
+Persistence and reusable scheduler/worker cycles are implemented. Reconciliation execution and CLI commands are upcoming. No schedules or automation are activated by API startup. The default registry has policy metadata but no reconciliation handler yet; execution without an injected handler records `HANDLER_UNAVAILABLE` and follows the retry budget.
 
 ## Recurrence, execution, and retry
 
@@ -25,7 +25,7 @@ Expose separate CLI commands for manual enqueue, scheduler cycle, worker cycle, 
 
 ## Per-job defaults and future schedule administration
 
-The upcoming job registry will associate each job type with its handler and setup defaults: recommended interval, attempt budget, lease duration, and retry policy. Defaults are specific to the job type, not one universal interval for every job. Billing reconciliation initially recommends an hourly interval (3,600 seconds). The three-attempt, 60-second-lease, and 30-second initial retry values above are its starting policy, rather than requirements for every future job type.
+The job registry associates each job type with its injected handler and setup defaults: recommended interval, attempt budget, lease duration, and retry policy. Defaults are specific to the job type, not one universal interval for every job. Billing reconciliation initially recommends an hourly interval (3,600 seconds). The three-attempt, 60-second-lease, and 30-second initial retry values above are its starting policy, rather than requirements for every future job type.
 
 Schedule setup copies the type-specific defaults into a new, disabled schedule. Subsequent scheduler cycles use the persisted `intervalSeconds`, `nextRunAt`, and attempt limit. Re-running setup must preserve operator edits rather than overwrite them from code. Each enqueued job snapshots its attempt budget. Manual jobs need no recurring schedule. Scheduler/worker invocation frequency belongs to deployment/automation configuration and is independent of each job's recurrence interval.
 
@@ -33,7 +33,22 @@ A future backend-connected admin interface may enable/pause schedules and update
 
 Schedule edits must lock the schedule row and serialize with scheduler advancement. Interval changes need an explicit rule for recalculating `nextRunAt` (for example, reset from the change time versus preserve the next occurrence); that policy remains to be decided before edit endpoints are implemented. Already queued/running jobs and their snapshotted retry budgets must remain unchanged. Pausing recurrence should stop new scheduled occurrences, without implicitly canceling existing work.
 
-The current schema supports persisted schedule configuration. Registry/setup behavior, permission checks, audit records, and administrative endpoints/UI are not implemented in the persistence slice. Add audit persistence with the future management workflow rather than inventing an admin identity model now.
+The current schema supports persisted schedule configuration. Registry metadata and idempotent disabled schedule setup are now implemented. Permission checks, audit records, and administrative endpoints/UI are deferred. Add audit persistence with the future management workflow rather than inventing an admin identity model now.
+
+## Implemented cycle boundaries
+
+- `services/api/src/application/jobs/registry.ts` owns per-type interval, lease, timeout, and retry defaults. An injected handler is required for useful execution; there is no success placeholder.
+- `application/jobs/cycles.ts` exposes `runSchedulerCycle` and `runWorkerCycle`. A scheduler batch defaults to 20 schedules; a worker cycle recovers up to its limit and executes up to ten jobs sequentially by default. Both accept limits from 1 to 100 and return counts. Worker counts distinguish successful completion, retry, exhausted failure, and stale finalization.
+- `persistence/jobs/schedules.ts` provides idempotent disabled schedule setup, manual enqueue, and due-occurrence insertion/advancement. Manual deduplication keys apply within a job type. Concurrent setup preserves existing enabled state, cadence, next time, and attempt budget.
+- `persistence/jobs/executions.ts` claims rows with PostgreSQL `FOR UPDATE SKIP LOCKED`, creates attempt records, recovers expired leases, and finalizes results under the job lock and current unexpired token. Database time is sampled after waiting for the finalization lock.
+
+Each due schedule creates at most one occurrence per scheduler cycle. Its existing `nextRunAt` identifies that occurrence; advancement skips missed slots to the first future interval aligned to the original cadence. This intentionally coalesces an outage backlog instead of promising execution of every missed interval. Recurrence does not enforce one active execution per job type; separate occurrences can run concurrently and handlers must tolerate that.
+
+Billing reconciliation currently has a 45-second execution timeout within a 60-second lease. The worker aborts the handler signal at timeout and records `EXECUTION_TIMEOUT` if the lease still belongs to it. JavaScript cannot forcibly terminate a handler promise: handlers must honor cancellation and must return report data rather than write findings directly. A late resolution cannot finalize twice. Longer tasks will need bounded partitioning or separately designed lease extension.
+
+Handler exceptions persist only `HANDLER_FAILED`, without raw exception details. Missing handlers use `HANDLER_UNAVAILABLE`. Invalid results use `INVALID_RESULT`; result counts must fit nonnegative database integers, finding identifiers/kinds must be valid, and a result is capped at 1,000 findings. The upcoming reconciliation handler must bound its scan/report deliberately rather than silently discard findings.
+
+Successful finalization commits findings, deduplicated finding count, run result, and terminal job state together. A database failure rolls back these changes, propagates to the caller, and leaves the lease for subsequent recovery. No external side effects are claimed to be exactly once. These functions are callable library entry points only for now; operator commands follow in the CLI slice. No job routes, polling loop, timer-based automation, or AWS resources are installed.
 
 ## Reconciliation reports
 
