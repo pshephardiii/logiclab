@@ -1,3 +1,4 @@
+import { JobExecutionError } from './errors';
 import type { JobStore } from '../../persistence/jobs/types';
 import type { JobClaim, JobDefinition, JobOutcome, JobRegistry } from './types';
 
@@ -23,7 +24,10 @@ async function execute(claim: JobClaim, definition: JobDefinition): Promise<JobO
       )
       .then(
         (result) => ({ ok: true as const, result }),
-        () => ({ ok: false as const, code: 'HANDLER_FAILED' as const }),
+        (error) => ({
+          ok: false as const,
+          code: error instanceof JobExecutionError ? error.code : ('HANDLER_FAILED' as const),
+        }),
       );
     const deadline = new Promise<JobOutcome>((resolve) => {
       timer = setTimeout(() => {

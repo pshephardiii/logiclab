@@ -6,7 +6,7 @@ Branch `008-feat-durable-jobs-and-history` builds operator-only, report-only bil
 
 Authoritative history lives in PostgreSQL. A command will print job/run IDs, status, records checked, finding counts, and a way to inspect individual findings. Logs provide diagnostics without payment credentials, signing secrets, raw webhook payloads, or unsanitized exception text.
 
-Persistence and reusable scheduler/worker cycles are implemented. Reconciliation execution and CLI commands are upcoming. No schedules or automation are activated by API startup. The default registry has policy metadata but no reconciliation handler yet; execution without an injected handler records `HANDLER_UNAVAILABLE` and follows the retry budget.
+Persistence, reusable scheduler/worker cycles, and the report-only reconciliation handler are implemented. CLI commands are next. `bootstrap/jobs.ts` composes the real handler with the registry/store for operator use; API startup never invokes it or activates automation. The bare registry still allows metadata-only construction for tests; execution without an injected handler records `HANDLER_UNAVAILABLE`.
 
 ## Recurrence, execution, and retry
 
@@ -46,7 +46,7 @@ Each due schedule creates at most one occurrence per scheduler cycle. Its existi
 
 Billing reconciliation currently has a 45-second execution timeout within a 60-second lease. The worker aborts the handler signal at timeout and records `EXECUTION_TIMEOUT` if the lease still belongs to it. JavaScript cannot forcibly terminate a handler promise: handlers must honor cancellation and must return report data rather than write findings directly. A late resolution cannot finalize twice. Longer tasks will need bounded partitioning or separately designed lease extension.
 
-Handler exceptions persist only `HANDLER_FAILED`, without raw exception details. Missing handlers use `HANDLER_UNAVAILABLE`. Invalid results use `INVALID_RESULT`; result counts must fit nonnegative database integers, finding identifiers/kinds must be valid, and a result is capped at 1,000 findings. The upcoming reconciliation handler must bound its scan/report deliberately rather than silently discard findings.
+Handler exceptions persist only `HANDLER_FAILED`, without raw exception details. Missing handlers use `HANDLER_UNAVAILABLE`. Invalid results use `INVALID_RESULT`; result counts must fit nonnegative database integers, finding identifiers/kinds must be valid, and a result is capped at 1,000 findings. The reconciliation handler enforces scan/report bounds and fails explicitly rather than silently discarding findings.
 
 Successful finalization commits findings, deduplicated finding count, run result, and terminal job state together. A database failure rolls back these changes, propagates to the caller, and leaves the lease for subsequent recovery. No external side effects are claimed to be exactly once. These functions are callable library entry points only for now; operator commands follow in the CLI slice. No job routes, polling loop, timer-based automation, or AWS resources are installed.
 
@@ -58,9 +58,25 @@ Initial finding kinds:
 - A paid purchase is missing its expected grant.
 - A purchase's grant does not match the purchased capability, class, or period.
 
-The handler must distinguish legitimate expiration from missing/revoked coverage, use each purchase's saved terms rather than current catalog terms, and avoid reporting artifacts of an in-progress payment transaction. It should inspect a consistent view or take appropriate locks, with bounded scans and documented snapshot semantics. Grant source references must be resolved through provider/source identity. Final discrepancy predicates are to be implemented and tested in the handler slice.
+The handler must distinguish legitimate expiration from missing/revoked coverage, use each purchase's saved terms rather than current catalog terms, and avoid reporting artifacts of an in-progress payment transaction. It should inspect a consistent view or take appropriate locks, with bounded scans and documented snapshot semantics. Grant source references must be resolved through provider/source identity. The predicates below are implemented and tested.
 
 A finding records job ID, kind, related purchase/class IDs, optional grant ID, and detection time. The same kind/purchase is recorded once per job, even after retries; later independent runs may report the same unresolved issue. Findings are audit evidence, not repair instructions. Successful execution can contain findings; operational failure is a distinct result.
+
+## Implemented report semantics and limits
+
+The reader uses one PostgreSQL **repeatable-read, read-only** transaction and one database `asOf` timestamp. Purchases are scanned by UUID keyset in batches of 200; grants are joined logically by provider, source kind `class_purchase`, and purchase checkout reference. No class/instructor ownership filter applies. A payment committed between batches remains outside the original snapshot, so the report never combines a pre-payment purchase with its post-payment grants. Findings describe that snapshot, not a guarantee that a discrepancy still exists when an operator later inspects it.
+
+- **Paid purchase missing grant:** no retained grant matches provider/source/reference. Expiration does not delete a grant; a valid retained expired grant is not missing.
+- **Refunded purchase active grant:** a related grant is unrevoked and satisfies `startsAt <= asOf < endsAt`. Expired, not-yet-active, and revoked grants do not count as currently active.
+- **Purchase/grant terms mismatch:** a related grant has a different class/capability, a duration unequal to the purchased number of 24-hour days, or starts before checkout creation. The comparison uses purchased terms, not edited plan terms. Matching grant revocation alone is not a discrepancy; intentional revocation is not classified as missing coverage.
+
+A paid purchase with an incorrectly classed/dimensioned grant reports a terms mismatch, rather than a second missing-grant finding. Findings are bounded to one kind/purchase per job. Pending/failed purchases without grants are normal. This first handler does not detect orphan source references, all possible unexpected grants on unpaid purchases, or missing financial events. Exact activation start cannot be reconstructed from receipt hashes: the current schema does not retain payment occurrence time independently of the grant. It validates duration and earliest permissible start, not equality with an unavailable payment timestamp. Add stronger audit data/predicates deliberately when needed.
+
+The scan allows at most 10,000 purchases, 5,000 matching grants per batch, and 1,000 findings. It uses a 30-second monotonic scan budget checked between queries, with a 10-second per-statement database timeout; the worker also enforces its 45-second execution timeout. Cancellation is checked before/after queries and before returning results. An in-flight query may continue until its statement timeout, but it cannot write financial state or finalize a late result.
+
+Purchase/grant cap overflow records `RECONCILIATION_SCAN_LIMIT`; finding overflow records `RECONCILIATION_REPORT_LIMIT`; the explicit scan budget records `RECONCILIATION_SCAN_TIMEOUT`. Other failures remain sanitized. These are failed attempts subject to bounded retries, with no partial findings or successful partial counts. Growing beyond these bounds requires partitioned jobs or revised limits/lease design, not silently skipping records.
+
+The handler returns data only. The existing lease-fenced finalizer atomically persists findings and run/job completion. A failed attempt after scanning leaves no report rows; retrying the same job produces one set. Separate later jobs may legitimately report the same unresolved discrepancy. Integration tests compare all financial rows before/after and verify no purchase/grant mutation.
 
 ## Deferred work
 

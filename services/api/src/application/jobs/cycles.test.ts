@@ -1,3 +1,4 @@
+import { JobExecutionError } from './errors';
 import type { JobType } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { JobStore } from '../../persistence/jobs/types';
 import { runSchedulerCycle, runWorkerCycle } from './cycles';
@@ -117,4 +118,16 @@ test('per-type defaults and bounded retry delays are explicit', () => {
   expect([1, 2, 3, 10].map((attempt) => retryDelaySeconds(attempt, definition))).toEqual([
     30, 60, 120, 900,
   ]);
+});
+
+test('explicit reconciliation failure codes are preserved without error messages', async () => {
+  const { store, registry } = fixture(async () => {
+    throw new JobExecutionError('RECONCILIATION_SCAN_LIMIT');
+  });
+  store.finish.mockResolvedValue('retry');
+  await runWorkerCycle(store, registry);
+  expect(store.finish).toHaveBeenCalledWith(claim, {
+    ok: false,
+    code: 'RECONCILIATION_SCAN_LIMIT',
+  });
 });

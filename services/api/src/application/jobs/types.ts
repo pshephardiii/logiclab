@@ -1,3 +1,4 @@
+import type { ReconciliationFailureCode } from './errors';
 import type { FindingKind, JobType } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 export interface JobFinding {
@@ -32,5 +33,9 @@ export interface JobClaim {
   leaseToken: string;
 }
 export type JobFailureCode =
-  'HANDLER_UNAVAILABLE' | 'HANDLER_FAILED' | 'EXECUTION_TIMEOUT' | 'INVALID_RESULT';
+  | 'HANDLER_UNAVAILABLE'
+  | 'HANDLER_FAILED'
+  | 'EXECUTION_TIMEOUT'
+  | 'INVALID_RESULT'
+  | ReconciliationFailureCode;
 export type JobOutcome = { ok: true; result: JobResult } | { ok: false; code: JobFailureCode };
