@@ -17,9 +17,3 @@ export function createJobRegistry(
     },
   };
 }
-export function retryDelaySeconds(
-  attempt: number,
-  policy: { retryBaseSeconds: number; retryMaxSeconds: number },
-) {
-  return Math.min(policy.retryMaxSeconds, policy.retryBaseSeconds * 2 ** Math.max(0, attempt - 1));
-}

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
+import { nextScheduledTime, scheduledOccurrenceKey } from '../../application/jobs/scheduling';
 import type { JobRegistry } from '../../application/jobs/types';
 import type { JobStore } from './types';
 import { databaseTime } from './database-time';
@@ -77,15 +78,13 @@ export async function createScheduleStore(
               jobType: schedule.jobType,
               schedule,
               scheduledFor: occurrence,
-              deduplicationKey: `schedule:${schedule.id}:${occurrence.toISOString()}`,
+              deduplicationKey: scheduledOccurrenceKey(schedule.id, occurrence),
               maxAttempts: schedule.maxAttempts,
               availableAt: now,
             },
             { onConflictFields: ['schedule', 'scheduledFor'], onConflictAction: 'ignore' },
           );
-          const interval = schedule.intervalSeconds * 1000;
-          const steps = Math.floor((now.getTime() - occurrence.getTime()) / interval) + 1;
-          schedule.nextRunAt = new Date(occurrence.getTime() + steps * interval);
+          schedule.nextRunAt = nextScheduledTime(occurrence, schedule.intervalSeconds, now);
         }
         await em.flush();
         return schedules.length;

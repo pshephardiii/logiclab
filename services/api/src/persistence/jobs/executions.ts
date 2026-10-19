@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { JobRegistry, JobResult } from '../../application/jobs/types';
-import { retryDelaySeconds } from '../../application/jobs/registry';
+import type { JobRegistry } from '../../application/jobs/types';
+import { failureTransition } from '../../application/jobs/execution-policy';
+import { validResult } from '../../application/jobs/result-validation';
 import type { JobStore } from './types';
 import { databaseTime } from './database-time';
 
@@ -10,34 +11,8 @@ export async function createExecutionStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
   registry: JobRegistry,
 ): Promise<Pick<JobStore, 'recoverExpired' | 'claim' | 'finish'>> {
-  const {
-    DurableJob,
-    JobRun,
-    ReconciliationFinding,
-    JobStatus,
-    JobRunStatus,
-    FindingKind,
-    LockMode,
-  } = await import('@logiclab/db');
-  function validResult(result: JobResult) {
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return (
-      result &&
-      Number.isInteger(result.recordsChecked) &&
-      result.recordsChecked >= 0 &&
-      result.recordsChecked <= 2147483647 &&
-      Array.isArray(result.findings) &&
-      result.findings.length <= 1000 &&
-      result.findings.every(
-        (row) =>
-          row &&
-          Object.values(FindingKind).includes(row.kind) &&
-          uuid.test(row.purchaseId) &&
-          uuid.test(row.classId) &&
-          (row.grantId === undefined || uuid.test(row.grantId)),
-      )
-    );
-  }
+  const { DurableJob, JobRun, ReconciliationFinding, JobStatus, JobRunStatus, LockMode } =
+    await import('@logiclab/db');
   return {
     async recoverExpired(limit) {
       return orm.em.fork().transactional(async (em) => {
@@ -60,12 +35,15 @@ export async function createExecutionStore(
           run.status = JobRunStatus.LeaseExpired;
           run.finishedAt = now;
           run.errorCode = 'LEASE_EXPIRED';
-          const exhausted = job.attempts >= job.maxAttempts;
-          job.status = exhausted ? JobStatus.Failed : JobStatus.Queued;
-          job.completedAt = exhausted ? now : undefined;
-          job.availableAt = new Date(
-            now.getTime() + retryDelaySeconds(job.attempts, registry[job.jobType]) * 1000,
+          const transition = failureTransition(
+            job.attempts,
+            job.maxAttempts,
+            registry[job.jobType],
+            now,
           );
+          job.status = transition.exhausted ? JobStatus.Failed : JobStatus.Queued;
+          job.completedAt = transition.completedAt;
+          job.availableAt = transition.availableAt;
           job.leaseToken = undefined;
           job.leaseExpiresAt = undefined;
         }
@@ -158,12 +136,15 @@ export async function createExecutionStore(
         } else {
           run.status = JobRunStatus.Failed;
           run.errorCode = checked.code;
-          const exhausted = job.attempts >= job.maxAttempts;
-          job.status = exhausted ? JobStatus.Failed : JobStatus.Queued;
-          job.completedAt = exhausted ? now : undefined;
-          job.availableAt = new Date(
-            now.getTime() + retryDelaySeconds(job.attempts, registry[job.jobType]) * 1000,
+          const transition = failureTransition(
+            job.attempts,
+            job.maxAttempts,
+            registry[job.jobType],
+            now,
           );
+          job.status = transition.exhausted ? JobStatus.Failed : JobStatus.Queued;
+          job.completedAt = transition.completedAt;
+          job.availableAt = transition.availableAt;
         }
         job.leaseToken = undefined;
         job.leaseExpiresAt = undefined;
