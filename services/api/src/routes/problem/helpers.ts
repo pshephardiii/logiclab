@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify';
-import type { AppUser } from '../../application/auth/types';
+import type { ResourceUser } from '../resource-context';
 import { AuthError } from '../../application/auth/service';
-import { SESSION_COOKIE } from '../auth/cookies';
+import { cookieName } from '../auth/cookies';
 import type { ProblemContext } from './context';
 import { ProblemError } from './errors';
 
@@ -9,10 +9,10 @@ import { ProblemError } from './errors';
 export async function instructor(
   request: FastifyRequest,
   context: ProblemContext,
-): Promise<AppUser> {
-  const scoped = request as FastifyRequest & { problemUser?: AppUser | null };
+): Promise<ResourceUser> {
+  const scoped = request as FastifyRequest & { problemUser?: ResourceUser | null };
   if (scoped.problemUser) return scoped.problemUser;
-  const id = request.cookies[SESSION_COOKIE];
+  const id = request.cookies[cookieName(context.config)];
   if (!id) throw new AuthError('SESSION_INVALID');
   const user = await context.service.authenticate(id);
   if (user.role !== 'instructor')

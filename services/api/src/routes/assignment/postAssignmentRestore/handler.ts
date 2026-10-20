@@ -14,6 +14,7 @@ export function postAssignmentRestoreHandler(context: AssignmentContext) {
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
     parseRequest(assignmentActionRequestSchema, request.body);
     const assignment = await context.assignments.setArchived(user.id, assignmentId, false);
-    return reply.code(200).send(assignmentResponseSchema.parse({ assignment }));
+    reply.code(200);
+    return assignmentResponseSchema.parse({ assignment });
   };
 }

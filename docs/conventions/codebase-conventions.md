@@ -107,6 +107,21 @@ For durable jobs, keep pure cadence, occurrence identity, retry-budget/backoff, 
 
 Commit migrations and application snapshots; keep applied migrations immutable. Generate/review migrations for actual schema changes. For entity-only refactors, run `migration:check` and verify no migration is needed. Integration-test migration runs disable snapshot generation; ignored test snapshots are not a reason to ignore application snapshots or source tests. See [Local Database](../development/local-database.md).
 
+### SQL readability
+
+Apply the same SQL formatting conventions to trigger bodies, compound entity checks, migration statements, and raw queries in persistence code or tests:
+
+- Keep short, simple expressions on one line. Use multiline template literals for longer statements rather than dense strings or concatenation.
+- Put major clauses (`select`, `from`, `where`, `order by`, and locking clauses) on separate lines. Put each join on its own line with its `on` predicates indented beneath it. Split long select lists across lines.
+- List table columns and table constraints on separate lines in `create table`. Separate long `alter table` actions, foreign-key references, and deletion rules into readable lines.
+- Break compound checks into logical groups and place their `and`/`or` predicates on separate lines. Preserve parentheses and operator precedence.
+- Indent procedural SQL to show `if`/`then`/`end if` and nested `declare`/`begin`/`end` blocks. Give returns and exceptions their own lines. Format SQL nested inside `execute format(...)` too, with formatting arguments, `into`, and `using` separated when helpful.
+- Preserve existing keyword casing in formatting-only edits. Keep SQL identifiers, literal values, placeholders, parameter order, statement order, and behavior unchanged. Continue using bound values and safe identifier formatting; readability is not a reason to interpolate untrusted values.
+
+Format new migration SQL before it is applied. Keep applied migration history unchanged by default; an explicitly requested historical formatting pass must remain a separate change and preserve SQL tokens, including nested procedural/dynamic SQL. Verify such a pass with a fresh migration replay and rollback in an isolated test schema, schema comparison, and relevant database/trigger tests. A whitespace-only change should not require a new schema migration or a rewritten snapshot.
+
+Prettier formats the surrounding TypeScript but does not format SQL inside template literals; review the SQL layout directly. Migration history and generated snapshots are excluded from ordinary repository formatting.
+
 ## Tools: logic-engine structure and invariants
 
 The parser directory separates the public entry point, tokenization, token parsing, types, errors, and limits. Precedence stages stay together in `parse-tokens.ts`, where their recursive relationships are visible. Its index exposes the public parser API, not tokenization internals.

@@ -11,7 +11,7 @@ import type { FastifyInstance } from 'fastify';
 import { assignmentErrorResponseSchema } from '@logiclab/contracts';
 import type { AssignmentContext } from './context';
 import { installAccountHttpPolicy } from '../account-http';
-import { clearSessionCookie } from '../auth/cookies';
+import { clearRejectedSessionCookie } from '../auth/cookies';
 import { instructor } from './helpers';
 import { mapAssignmentError } from './errors';
 
@@ -24,7 +24,7 @@ export async function assignmentRoutes(app: FastifyInstance, context: Assignment
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapAssignmentError(error);
-    if (mapped.status === 401) clearSessionCookie(reply, context.config);
+    if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
     if (mapped.status === 503)
       request.log.warn({ code: mapped.code }, 'Assignment operation unavailable');
     return reply.code(mapped.status).send(

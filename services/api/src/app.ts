@@ -1,3 +1,5 @@
+import { demoRoutes } from './routes/demo';
+import type { DemoRuntime } from './bootstrap/demo';
 import { billingRoutes } from './routes/billing';
 import type { BillingContext } from './routes/billing/context';
 import { studentWorkRoutes } from './routes/studentWork';
@@ -20,6 +22,7 @@ import type { AuthContext } from './routes/auth/context';
 export function buildApp(
   options: {
     logger?: boolean;
+    demo?: DemoRuntime;
     auth?: AuthContext;
     classroom?: ClassroomContext;
     problem?: ProblemContext;
@@ -41,6 +44,7 @@ export function buildApp(
         }
       : false,
   });
+  if (options.demo) app.register(demoRoutes, options.demo);
   if (options.billing) app.register(billingRoutes, options.billing);
   if (options.auth) app.register(authRoutes, options.auth);
   if (options.classroom) app.register(classroomRoutes, options.classroom);

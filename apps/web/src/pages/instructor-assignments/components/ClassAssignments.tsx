@@ -1,3 +1,4 @@
+import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import { SubmissionReview } from './SubmissionReview';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ type Props = { classId: string };
 
 /** Composes the class-scoped assignment list, editor, and lifecycle controls. */
 export function ClassAssignments({ classId }: Props) {
+  const accountPath = useAccountPath();
   const state = useAssignments(classId);
   const [dirty, setDirty] = useState(false);
   function select(id: string | null) {
@@ -19,7 +21,7 @@ export function ClassAssignments({ classId }: Props) {
     <>
       <p className="help">
         Switching classes, assignments, or pages discards unsaved edits. New publication requires
-        coverage; <Link to="/billing">manage simulated class billing</Link>.
+        coverage; <Link to={accountPath('/billing')}>manage simulated class billing</Link>.
       </p>
       {state.error && (
         <p role="alert" className="error">

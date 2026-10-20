@@ -19,6 +19,7 @@ export function postProblemVersionHandler(context: ProblemContext) {
       throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
     if (result.status === 'archived')
       throw new ProblemError(409, 'PROBLEM_ARCHIVED', 'Restore this problem before publishing.');
-    return reply.code(201).send(problemVersionResponseSchema.parse({ version: result.version }));
+    reply.code(201);
+    return problemVersionResponseSchema.parse({ version: result.version });
   };
 }

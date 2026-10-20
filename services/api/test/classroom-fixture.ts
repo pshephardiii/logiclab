@@ -16,6 +16,6 @@ export function classroomFixture() {
     list: jest.fn(async () => [classroom]),
     findOwned: jest.fn(async (): Promise<typeof classroom | null> => classroom),
   };
-  const context: ClassroomContext = { ...auth.context, classrooms };
+  const context = { ...auth.context, classrooms } satisfies ClassroomContext;
   return { ...auth, context, classrooms, user: authUser };
 }

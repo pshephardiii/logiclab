@@ -1,3 +1,4 @@
+import { createDemoDependencies } from './bootstrap/demo';
 import { buildApp } from './app';
 import { createDependencies } from './bootstrap/dependencies';
 import type { FastifyInstance } from 'fastify';
@@ -11,9 +12,18 @@ const host = process.env.HOST ?? '0.0.0.0';
 async function start() {
   try {
     const dependencies = await createDependencies(process.env);
-    closeDependencies = dependencies?.close;
+    let demo: Awaited<ReturnType<typeof createDemoDependencies>> = null;
+    closeDependencies = async () => {
+      try {
+        await demo?.close();
+      } finally {
+        await dependencies?.close();
+      }
+    };
+    demo = await createDemoDependencies(process.env);
     app = buildApp({
       logger: true,
+      ...(demo ? { demo: demo.runtime } : {}),
       ...(dependencies
         ? {
             billing: dependencies.billing,

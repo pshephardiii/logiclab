@@ -14,6 +14,7 @@ export function postAssignmentPublishHandler(context: AssignmentContext) {
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
     parseRequest(assignmentActionRequestSchema, request.body);
     const assignment = await context.assignments.publish(user.id, assignmentId);
-    return reply.code(200).send(assignmentResponseSchema.parse({ assignment }));
+    reply.code(200);
+    return assignmentResponseSchema.parse({ assignment });
   };
 }

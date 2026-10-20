@@ -1,3 +1,4 @@
+import { useAccountPath } from '../../routing/hooks/useAccountPath';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Page } from '../../components/layout/Page';
@@ -9,6 +10,7 @@ import { StudentAssignments } from './components/StudentAssignments';
 import '../../features/assignment/assignment.css';
 
 function StudentWork() {
+  const accountPath = useAccountPath();
   const [classId, setClassId] = useState('');
   return (
     <>
@@ -26,7 +28,7 @@ function StudentWork() {
         emptyMessage={
           <>
             You have not joined a class yet.{' '}
-            <Link to={routeDefinitions.studentClasses.path}>Join a class</Link>
+            <Link to={accountPath(routeDefinitions.studentClasses.path)}>Join a class</Link>
           </>
         }
       />

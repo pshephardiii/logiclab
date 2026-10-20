@@ -25,6 +25,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Cognito development](development/cognito-development.md)
 - [Simulated billing development](development/simulated-billing.md)
 - [Operator jobs CLI](development/operator-jobs.md)
+- [Local isolated demo](development/public-demo.md)
 - [GitHub setup](development/github-setup.md)
 
 ## API reference
@@ -36,6 +37,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Instructor assignments](api/assignment-api.md)
 - [Student assignment work](api/student-work-api.md)
 - [Simulated billing](api/billing-api.md)
+- [Isolated demo](api/demo-api.md)
 
 ## Conventions
 

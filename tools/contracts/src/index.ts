@@ -11,3 +11,4 @@ export * from './student-work';
 
 export * from './submission-review';
 export * from './billing';
+export * from './demo';

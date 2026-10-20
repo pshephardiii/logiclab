@@ -9,6 +9,7 @@ export function postClassroomHandler(context: ClassroomContext) {
     const user = await instructor(request, context);
     const { name } = parseRequest(createClassroomRequestSchema, request.body);
     const classroom = await context.classrooms.create(user.id, name);
-    return reply.code(201).send(classroomResponseSchema.parse({ classroom }));
+    reply.code(201);
+    return classroomResponseSchema.parse({ classroom });
   };
 }

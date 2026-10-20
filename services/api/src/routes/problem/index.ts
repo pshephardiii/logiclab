@@ -6,7 +6,7 @@ import { postProblemRestoreRoute } from './postProblemRestore/route';
 import type { FastifyInstance } from 'fastify';
 import { problemErrorResponseSchema } from '@logiclab/contracts';
 import { installAccountHttpPolicy } from '../account-http';
-import { clearSessionCookie } from '../auth/cookies';
+import { clearRejectedSessionCookie } from '../auth/cookies';
 import type { ProblemContext } from './context';
 import { instructor } from './helpers';
 import { mapProblemError } from './errors';
@@ -24,7 +24,7 @@ export async function problemRoutes(app: FastifyInstance, context: ProblemContex
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapProblemError(error);
-    if (mapped.status === 401) clearSessionCookie(reply, context.config);
+    if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
     if (mapped.status === 503)
       request.log.warn({ code: mapped.code }, 'Problem operation unavailable');
     const { status, ...publicError } = mapped;

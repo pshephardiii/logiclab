@@ -8,7 +8,7 @@ import { routeDefinitions, type RouteAccess } from './route-definitions';
  * Authorized child pages render through the routing outlet.
  */
 export function ProtectedRoute({ allowedRoles, deniedTitle, deniedMessage }: RouteAccess) {
-  const { user, busy } = useAccountContext();
+  const { user, busy, demoMode } = useAccountContext();
 
   if (busy) {
     return (
@@ -18,7 +18,7 @@ export function ProtectedRoute({ allowedRoles, deniedTitle, deniedMessage }: Rou
     );
   }
   if (!user) {
-    return <Navigate to={routeDefinitions.account.path} replace />;
+    return <Navigate to={demoMode ? '/demo' : routeDefinitions.account.path} replace />;
   }
   if (!allowedRoles.includes(user.role)) {
     return (

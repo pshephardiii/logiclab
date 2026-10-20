@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify';
 import { studentWorkErrorResponseSchema } from '@logiclab/contracts';
 import type { StudentWorkContext } from './context';
 import { installAccountHttpPolicy } from '../account-http';
-import { clearSessionCookie } from '../auth/cookies';
+import { clearRejectedSessionCookie } from '../auth/cookies';
 import { student } from './helpers';
 import { mapStudentWorkError } from './errors';
 
@@ -19,7 +19,7 @@ export async function studentWorkRoutes(app: FastifyInstance, context: StudentWo
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapStudentWorkError(error);
-    if (mapped.status === 401) clearSessionCookie(reply, context.config);
+    if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
     if (mapped.status === 503) request.log.warn({ code: mapped.code }, 'Student work unavailable');
     return reply.code(mapped.status).send(
       studentWorkErrorResponseSchema.parse({

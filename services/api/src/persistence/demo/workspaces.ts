@@ -16,6 +16,7 @@ import type { Database } from '../transactions';
 export async function createDemoWorkspaceStore(
   orm: Database,
   policy: DemoPolicy,
+  capacity?: number,
 ): Promise<DemoWorkspaceStore> {
   validateDemoPolicy(policy);
   const { DemoWorkspace, DemoWorkspaceStatus, DemoSession, LockMode } =
@@ -26,6 +27,14 @@ export async function createDemoWorkspaceStore(
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(workspaceId))
         throw new Error('Invalid internal workspace request.');
       return orm.em.fork().transactional(async (em) => {
+        if (capacity !== undefined) {
+          await em.execute('select pg_advisory_xact_lock(?, ?)', [500026, 9]);
+          if (
+            !(await em.findOne(DemoWorkspace, workspaceId)) &&
+            (await em.count(DemoWorkspace, {})) >= capacity
+          )
+            throw new Error('DEMO_CAPACITY');
+        }
         const initialTime = await databaseTime(em);
         await em.upsert(
           DemoWorkspace,

@@ -1,3 +1,4 @@
+import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import type { PublishedProblemVersion } from '@logiclab/contracts';
 import { usePublishedProblemChoices } from '../hooks/usePublishedProblemChoices';
@@ -7,6 +8,7 @@ type Props = { disabled: boolean; onAdd: (version: PublishedProblemVersion) => v
 
 /** Selects immutable publications, including retained versions of archived library problems. */
 export function PublishedProblemPicker({ disabled, onAdd }: Props) {
+  const accountPath = useAccountPath();
   const choices = usePublishedProblemChoices();
   return (
     <section aria-label="Add published problems">
@@ -40,7 +42,7 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
       {!choices.problemLoading && !choices.problemError && choices.problems.length === 0 && (
         <p>
           No library problems yet.{' '}
-          <Link to={routeDefinitions.problemLibrary.path}>Open problem library</Link>
+          <Link to={accountPath(routeDefinitions.problemLibrary.path)}>Open problem library</Link>
         </p>
       )}
       {choices.problemNext !== null && (

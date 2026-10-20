@@ -1,7 +1,7 @@
-import type { AppUser } from '../../application/auth/types';
+import type { ResourceUser } from '../resource-context';
 import type { FastifyRequest } from 'fastify';
 import type { ClassroomContext } from './context';
-import { SESSION_COOKIE } from '../auth/cookies';
+import { cookieName } from '../auth/cookies';
 import { AuthError } from '../../application/auth/service';
 
 export class ClassroomError extends Error {
@@ -33,10 +33,13 @@ export async function student(request: FastifyRequest, context: ClassroomContext
   return user;
 }
 
-async function classroomUser(request: FastifyRequest, context: ClassroomContext): Promise<AppUser> {
-  const scoped = request as FastifyRequest & { classroomUser?: AppUser | null };
+async function classroomUser(
+  request: FastifyRequest,
+  context: ClassroomContext,
+): Promise<ResourceUser> {
+  const scoped = request as FastifyRequest & { classroomUser?: ResourceUser | null };
   if (scoped.classroomUser) return scoped.classroomUser;
-  const id = request.cookies[SESSION_COOKIE];
+  const id = request.cookies[cookieName(context.config)];
   if (!id) throw new AuthError('SESSION_INVALID');
   const user = await context.service.authenticate(id);
   scoped.classroomUser = user;

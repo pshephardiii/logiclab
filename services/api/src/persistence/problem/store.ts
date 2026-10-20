@@ -1,3 +1,4 @@
+import { transactionRunner, type DatabaseManager } from '../transactions';
 import { publishedProblemVersion } from './version-response';
 import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -62,7 +63,9 @@ function draft(problem: ProblemEntity): ProblemDraft {
 /** Every query scopes ownership; updates lock the row before checking archive state. */
 export async function createProblemStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<ProblemStore> {
+  const transact = transactionRunner(orm, transaction);
   const { Problem, ProblemVersion, User, LockMode } = await import('@logiclab/db');
   type TransactionManager = typeof orm.em;
   function lockedProblem(em: TransactionManager, ownerId: string, problemId: string) {
@@ -74,7 +77,7 @@ export async function createProblemStore(
   }
   return {
     async publish(ownerId, problemId) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         // The parent lock serializes numbering and snapshots against edits and archiving.
         const problem = await lockedProblem(em, ownerId, problemId);
         if (!problem) return { status: 'not_found' as const };
@@ -97,7 +100,7 @@ export async function createProblemStore(
       });
     },
     async setArchived(ownerId, problemId, archived) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const problem = await lockedProblem(em, ownerId, problemId);
         if (!problem) return null;
         // Repeated archive/restore requests preserve the original timestamp/state.
@@ -108,7 +111,7 @@ export async function createProblemStore(
       });
     },
     async listVersions(ownerId, problemId, limit, offset) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       if (!(await em.findOne(Problem, { id: problemId, owner: ownerId }))) return null;
       const versions = await em.find(
         ProblemVersion,
@@ -118,13 +121,14 @@ export async function createProblemStore(
       return versions.map(publishedProblemVersion);
     },
     async findVersion(ownerId, problemId, version) {
-      const value = await orm.em
-        .fork()
-        .findOne(ProblemVersion, { problem: { id: problemId, owner: ownerId }, version });
+      const value = await (transaction ?? orm.em.fork()).findOne(ProblemVersion, {
+        problem: { id: problemId, owner: ownerId },
+        version,
+      });
       return value ? publishedProblemVersion(value) : null;
     },
     async create(ownerId, input) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       const problem = em.create(Problem, {
         owner: em.getReference(User, ownerId),
         title: input.title,
@@ -136,7 +140,7 @@ export async function createProblemStore(
       return draft(problem);
     },
     async list(ownerId, limit, offset, archive = 'active') {
-      const rows = await orm.em.fork().find(
+      const rows = await (transaction ?? orm.em.fork()).find(
         Problem,
         {
           owner: ownerId,
@@ -151,11 +155,14 @@ export async function createProblemStore(
       return rows.map(draft);
     },
     async findOwned(ownerId, problemId) {
-      const problem = await orm.em.fork().findOne(Problem, { id: problemId, owner: ownerId });
+      const problem = await (transaction ?? orm.em.fork()).findOne(Problem, {
+        id: problemId,
+        owner: ownerId,
+      });
       return problem ? draft(problem) : null;
     },
     async update(ownerId, problemId, input) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const problem = await lockedProblem(em, ownerId, problemId);
         if (!problem) return { status: 'not_found' as const };
         if (problem.archivedAt) return { status: 'archived' as const };

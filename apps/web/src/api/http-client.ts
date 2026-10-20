@@ -1,3 +1,5 @@
+import { demoResourcePath } from './demo/resource-path';
+
 export type RequestOptions = {
   signal: AbortSignal;
   body?: unknown;
@@ -14,7 +16,7 @@ export async function requestJson(
   { signal, body, method, invalidJson = 'null', error }: RequestOptions,
 ): Promise<unknown> {
   const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
-  const response = await fetch(`${base}${path}`, {
+  const response = await fetch(`${base}${demoResourcePath(path, window.location.pathname)}`, {
     method: method ?? (body === undefined ? 'GET' : 'POST'),
     credentials: 'same-origin',
     signal,

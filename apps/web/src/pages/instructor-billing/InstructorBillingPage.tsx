@@ -1,3 +1,4 @@
+import { useAccountPath } from '../../routing/hooks/useAccountPath';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Page } from '../../components/layout/Page';
@@ -8,6 +9,7 @@ import { ClassBilling } from './components/ClassBilling';
 import './instructor-billing.css';
 
 function InstructorBilling() {
+  const accountPath = useAccountPath();
   const [classId, setClassId] = useState('');
   return (
     <>
@@ -26,7 +28,7 @@ function InstructorBilling() {
         value={classId}
         onChange={setClassId}
         loadPage={listClassrooms}
-        emptyMessage={<Link to="/classes">Create a class first</Link>}
+        emptyMessage={<Link to={accountPath('/classes')}>Create a class first</Link>}
       />
       <p className="help">
         Reload billing after an uncertain outcome. Switching classes or leaving this page cancels
