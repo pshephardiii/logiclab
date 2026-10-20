@@ -208,7 +208,7 @@ Depends on: the complete student/instructor journey and durable jobs. Current br
 
 Agreed direction: per-visitor isolated demo workspaces with synthetic instructor/student identities, same-workspace role switching, resettable assignments, and unpaid/funded simulated billing scenarios. Expiration blocks access independently of scheduled cleanup. No per-visitor Cognito accounts or real charges. The existing portfolio will link to the application; low-cost hosting is still to be selected rather than assuming AWS now.
 
-Follow the commit-sized sequence and isolation/reset design in [Public Demo Direction](public-demo.md). Slice 1 implements only the workspace persistence root, lifecycle fields/checks, expiry indexes, migration/snapshot, and database tests. Identity/session integration, seed/reset, UI, cleanup, and hosting remain later slices.
+Follow the commit-sized sequence and isolation/reset design in [Public Demo Direction](public-demo.md). Slice 1 implements only the workspace persistence root, lifecycle fields/checks, expiry indexes, migration/snapshot, and database tests. Slice 2 now adds the internal demo identity/session foundation and policy/isolation tests; public route integration, seed/reset, UI, cleanup, and hosting remain later work.
 
 Done when: a reviewer can run the project locally and explore an isolated hosted instructor/student journey without personal classroom data or payment details. Verify cross-workspace isolation, reset/cleanup behavior, resource limits, the walkthrough, and published links before claiming completion.
 

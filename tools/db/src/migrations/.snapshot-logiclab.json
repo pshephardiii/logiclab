@@ -1728,6 +1728,152 @@
       "comment": null
     },
     {
+      "name": "demo_sessions",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "generation": {
+          "name": "generation",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "selected_role": {
+          "name": "selected_role",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 16,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "demo_sessions_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "demo_sessions_workspace_id_index",
+          "primary": false,
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "demo_sessions_generation_check",
+          "expression": "generation > 0",
+          "definition": "check (generation > 0)"
+        },
+        {
+          "name": "demo_sessions_hash_check",
+          "expression": "id ~ '^[0-9a-f]{64}$'",
+          "definition": "check (id ~ '^[0-9a-f]{64}$')"
+        },
+        {
+          "name": "demo_sessions_role_check",
+          "expression": "selected_role in ('student', 'instructor')",
+          "definition": "check (selected_role in ('student', 'instructor'))"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "demo_sessions_workspace_id_fkey": {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "constraintName": "demo_sessions_workspace_id_fkey",
+          "localTableName": "public.demo_sessions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.demo_workspaces",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
       "name": "demo_workspaces",
       "schema": "public",
       "columns": {
@@ -3546,7 +3692,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": false,
           "length": null,
           "precision": null,
@@ -3563,7 +3709,7 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "unique": true,
           "length": null,
           "precision": null,
@@ -3590,6 +3736,23 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "demo_workspace_id": {
+          "name": "demo_workspace_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         },
         "email": {
           "name": "email",
@@ -3624,6 +3787,23 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "identity_provider": {
+          "name": "identity_provider",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 16,
+          "precision": null,
+          "scale": null,
+          "default": "'cognito'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
         "role": {
           "name": "role",
@@ -3661,6 +3841,17 @@
         },
         {
           "columnNames": [
+            "demo_workspace_id",
+            "role"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "users_demo_workspace_role_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -3681,9 +3872,28 @@
           "unique": true
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "users_identity_check",
+          "expression": "(identity_provider = 'cognito' and cognito_user_pool_id is not null and cognito_subject is not null and demo_workspace_id is null) or (identity_provider = 'demo' and cognito_user_pool_id is null and cognito_subject is null and email is null and demo_workspace_id is not null)",
+          "definition": "check ((identity_provider = 'cognito' and cognito_user_pool_id is not null and cognito_subject is not null and demo_workspace_id is null) or (identity_provider = 'demo' and cognito_user_pool_id is null and cognito_subject is null and email is null and demo_workspace_id is not null))"
+        }
+      ],
       "triggers": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_demo_workspace_id_fkey": {
+          "columnNames": [
+            "demo_workspace_id"
+          ],
+          "constraintName": "users_demo_workspace_id_fkey",
+          "localTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.demo_workspaces",
+          "deleteRule": "restrict"
+        }
+      },
       "comment": null
     }
   ],

@@ -1,3 +1,4 @@
+import { registerDemoIdentityPersistenceTests } from './demo-identity-persistence.ts';
 import { registerDemoWorkspacePersistenceTests } from './demo-workspace-persistence.ts';
 import { registerJobPersistenceTests } from './job-persistence.ts';
 import { randomUUID } from 'node:crypto';
@@ -1128,3 +1129,5 @@ test('demo plan seeding is repeatable and preserves edited or retired catalog te
 registerJobPersistenceTests(orm);
 
 registerDemoWorkspacePersistenceTests(orm);
+
+registerDemoIdentityPersistenceTests(orm);

@@ -4,7 +4,7 @@ import type { JobRegistry } from '../../application/jobs/types';
 import { failureTransition } from '../../application/jobs/execution-policy';
 import { validResult } from '../../application/jobs/result-validation';
 import type { JobStore } from './types';
-import { databaseTime } from './database-time';
+import { databaseTime } from '../database-time';
 
 /** Short row-locking transactions only; handlers never run inside these transactions. */
 export async function createExecutionStore(

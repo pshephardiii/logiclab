@@ -1,7 +1,7 @@
 import { JobExecutionError } from '../../application/jobs/errors';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { BillingReconciliationReader } from '../../application/jobs/billing-reconciliation/types';
-import { databaseTime } from './database-time';
+import { databaseTime } from '../database-time';
 
 const DEFAULT_LIMITS = { batchSize: 200, maxPurchases: 10000, maxGrantsPerBatch: 5000 };
 

@@ -82,3 +82,7 @@ export { FindingKind } from './types/reconciliation-finding/enums.ts';
 export { DemoWorkspace } from './entities/DemoWorkspace.ts';
 export { DemoWorkspaceStatus } from './types/demo-workspace/enums.ts';
 export type { DemoWorkspaceFields } from './types/demo-workspace/fields.ts';
+
+export { UserIdentityProvider } from './types/user/enums.ts';
+export { DemoSession } from './entities/DemoSession.ts';
+export type { DemoSessionFields } from './types/demo-session/fields.ts';

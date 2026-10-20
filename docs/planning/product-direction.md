@@ -24,7 +24,7 @@ Use Amazon Cognito for email/password authentication. Cognito owns credentials; 
 - Normal authenticated access requires email confirmation.
 - Include login, logout, and forgot/reset password in the classroom-access branch. Recovery requests send an email code; users submit the code and a new password.
 - Recovery responses should not disclose whether an email has an account.
-- Synthetic development/demo accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool.
+- Synthetic development Cognito accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool. The isolated public demo uses separate local synthetic identities without Cognito accounts; see [Public Demo Direction](public-demo.md).
 - Start with Cognito's default email sender for development and a controlled demo; configure SES before broader public registration. See [AWS deployment notes](aws-deployment-notes.md) for the sending limit and follow-up setup.
 - MFA and institutional SSO are deferred.
 - Use one development pool in `us-east-1`; keep production configuration separate later. Prepare version-controlled infrastructure before provisioning.
