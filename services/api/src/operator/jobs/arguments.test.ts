@@ -9,6 +9,8 @@ test.each([[], ['help'], ['--help'], ['-h']].map((args) => [args]))(
 test.each(
   [
     ['setup', 'billing_reconciliation'],
+    ['setup', 'demo_cleanup'],
+    ['enqueue', 'demo_cleanup', 'cleanup-1'],
     ['enqueue', 'billing_reconciliation', 'request-1'],
     ['scheduler', '20'],
     ['worker', '1'],

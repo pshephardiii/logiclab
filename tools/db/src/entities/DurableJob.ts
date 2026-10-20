@@ -24,7 +24,10 @@ import { JobStatus } from '../types/durable-job/enums.ts';
 })
 @Index({ name: 'durable_jobs_available_index', properties: ['status', 'availableAt'] })
 @Index({ name: 'durable_jobs_lease_index', properties: ['status', 'leaseExpiresAt'] })
-@Check({ name: 'durable_jobs_type_check', expression: "job_type in ('billing_reconciliation')" })
+@Check({
+  name: 'durable_jobs_type_check',
+  expression: "job_type in ('billing_reconciliation', 'demo_cleanup')",
+})
 @Check({
   name: 'durable_jobs_occurrence_check',
   expression: '(schedule_id is null) = (scheduled_for is null)',

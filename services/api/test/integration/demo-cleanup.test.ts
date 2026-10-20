@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
+import { createJobRuntime } from '../../src/bootstrap/jobs';
+import { runJobsCommand } from '../../src/operator/jobs/run';
 import { cleanupExpiredDemoWorkspaces } from '../../src/persistence/demo/cleanup';
 import { createDemoWorkspaceStore } from '../../src/persistence/demo/workspaces';
 import { createDemoSessionStore } from '../../src/persistence/demo/sessions';
@@ -205,4 +207,78 @@ test('unsafe cross-workspace data rolls back an earlier deletion in the same bat
     );
     assert.equal(await em.count(db.User, {}), 4);
     assert.equal(await em.count(db.Enrollment, { student: student.id }), 3);
+  }));
+
+test('operator cleanup setup stays disabled, executes bounded deletion and records durable history', async () =>
+  fixture(async (orm, db) => {
+    const schema = orm.config.get('schema');
+    async function command(args: string[]) {
+      const output: string[] = [];
+      const errors: string[] = [];
+      const code = await runJobsCommand(
+        args,
+        { DATABASE_URL: url },
+        { out: (value) => output.push(value), error: (value) => errors.push(value) },
+        async (connectionString, options) =>
+          db.createDatabase(connectionString, { ...options, schema }),
+      );
+      assert.equal(code, 0, errors.join('\n'));
+      return JSON.parse(output[0]!);
+    }
+    const setup = await command(['setup', 'demo_cleanup']);
+    const em = orm.em.fork();
+    const schedule = await em.findOneOrFail(db.JobSchedule, setup.scheduleId);
+    assert.equal(schedule.enabled, false);
+    assert.equal(schedule.intervalSeconds, 300);
+    await em.nativeUpdate(db.JobSchedule, schedule.id, { intervalSeconds: 900 });
+    assert.equal((await command(['setup', 'demo_cleanup'])).scheduleId, schedule.id);
+    assert.equal((await em.fork().findOneOrFail(db.JobSchedule, schedule.id)).intervalSeconds, 900);
+    assert.equal((await command(['scheduler'])).scheduled, 0);
+    const now = await databaseTime(em);
+    for (let index = 0; index < 11; index += 1) {
+      em.create(db.DemoWorkspace, {
+        status: db.DemoWorkspaceStatus.Provisioning,
+        templateVersion: 1,
+        generation: 1,
+        createdAt: new Date(now.getTime() - 60000),
+        lastActivityAt: new Date(now.getTime() - 60000),
+        idleExpiresAt: new Date(now.getTime() - 1000),
+        expiresAt: new Date(now.getTime() + 60000),
+      });
+    }
+    await em.flush();
+    const enqueue = await command(['enqueue', 'demo_cleanup', 'cleanup-test']);
+    assert.equal((await command(['enqueue', 'demo_cleanup', 'cleanup-test'])).jobId, enqueue.jobId);
+    assert.equal((await command(['worker', '1'])).succeeded, 1);
+    assert.equal(await em.count(db.DemoWorkspace, {}), 1);
+    const job = await em.fork().findOneOrFail(db.DurableJob, enqueue.jobId);
+    assert.equal(job.status, db.JobStatus.Succeeded);
+    assert.equal((await em.findOneOrFail(db.JobRun, { job: job.id })).recordsChecked, 10);
+    assert.equal(await em.count(db.ReconciliationFinding, { job: job.id }), 0);
+    assert.equal(await em.count(db.JobRun, { job: job.id }), 1);
+    await command(['enqueue', 'demo_cleanup', 'cleanup-remainder']);
+    assert.equal((await command(['worker', '1'])).succeeded, 1);
+    assert.equal(await em.count(db.DemoWorkspace, {}), 0);
+    const runtime = await createJobRuntime(orm);
+    assert.equal(runtime.registry.demo_cleanup.defaultIntervalSeconds, 300);
+  }));
+
+test('aborted cleanup leaves expired data intact', async () =>
+  fixture(async (orm, db) => {
+    const now = await databaseTime(orm.em.fork());
+    const em = orm.em.fork();
+    em.create(db.DemoWorkspace, {
+      status: db.DemoWorkspaceStatus.Provisioning,
+      templateVersion: 1,
+      generation: 1,
+      createdAt: new Date(now.getTime() - 60000),
+      lastActivityAt: new Date(now.getTime() - 60000),
+      idleExpiresAt: new Date(now.getTime() - 1000),
+      expiresAt: new Date(now.getTime() + 60000),
+    });
+    await em.flush();
+    const controller = new AbortController();
+    controller.abort();
+    await assert.rejects(cleanupExpiredDemoWorkspaces(orm, 10, controller.signal));
+    assert.equal(await em.count(db.DemoWorkspace, {}), 1);
   }));

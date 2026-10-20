@@ -16,7 +16,7 @@ Then restart `npm run dev` and open `http://localhost:5173/demo`.
 
 Demo mode does not require normal authentication or billing configuration. For a demo-only local process, set `AUTH_ENABLED=false` and `BILLING_ENABLED=false`; otherwise the configured normal account flows remain available alongside it. `DATABASE_URL` must point to your development PostgreSQL database. Production/non-localhost origins require HTTPS. The frontend and cookie-based API must share an origin (Vite's `/api` proxy handles this locally).
 
-Lifetime settings are described in [Public Demo Direction](../planning/public-demo.md). `DEMO_ENABLED` defaults to false. `DEMO_MAX_WORKSPACES` defaults to 25 and supports 1–100 workspaces. Capacity counts all stored workspaces, including expired ones, to bound storage until cleanup is implemented. An advisory transaction lock serializes the capacity check and provisioning across API processes. HTTP limits are currently per-process/per-IP; distributed rate limiting is not implemented.
+Lifetime settings are described in [Public Demo Direction](../planning/public-demo.md). `DEMO_ENABLED` defaults to false. `DEMO_MAX_WORKSPACES` defaults to 25 and supports 1–100 workspaces. Capacity counts all stored workspaces, including expired ones, to bound storage between cleanup runs. An advisory transaction lock serializes the capacity check and provisioning across API processes. HTTP limits are currently per-process/per-IP; distributed rate limiting is not implemented.
 
 ## Walkthrough
 
@@ -39,4 +39,18 @@ A one-off local Chrome walkthrough also verified instructor creation, student su
 
 ## Remaining work
 
-The bounded backend cleanup operation is implemented and tested; durable job registration, automation wiring, and operator instructions are next. Once the configured workspace cap is reached, starts return a sanitized unavailable response; restarting the API does not remove persistent rows. No cleanup trigger or operator command invokes it yet. The internal batch operation defaults to 10 workspaces, skips locked rows, and rolls back the entire batch on unsafe references or retention failures; see [cleanup semantics](../planning/public-demo.md#expired-workspace-cleanup-operation). Hosting, published links, and production/shared rate limiting remain later deployment decisions.
+Expired-workspace cleanup is available through the existing operator jobs CLI after applying migrations:
+
+```sh
+npm run db:migrate
+npm run jobs -- setup demo_cleanup
+npm run jobs -- enqueue demo_cleanup manual-cleanup-001
+npm run jobs -- worker 1
+npm run jobs -- inspect <job-id>
+```
+
+Setup creates a **disabled** schedule with a five-minute interval and preserves later operator edits. For recurring cleanup, explicitly enable the returned schedule ID with `npm run jobs -- enable <schedule-id>`. An external trigger must invoke `npm run jobs -- scheduler` and `npm run jobs -- worker` repeatedly (for example, once a minute); each command runs once and exits. No trigger is installed, and API startup never runs cleanup. The worker consumes all eligible job types, so `worker 1` may claim another queued job first. Reuse an enqueue request key only to retry the same request; use a new key for a new cleanup pass.
+
+Each execution deletes at most ten expired workspaces. Remaining/locked workspaces wait for another execution. The job uses three attempts, a 90-second execution timeout and a 120-second lease. Database statements/lock waits are bounded; cancellation checks before deletion steps and commit roll back an interrupted batch. Deletion and durable completion are separate transactions: a crash after deletion can leave history incomplete, but retries safely find already-deleted roots absent. `JobRun.recordsChecked` counts workspaces removed in that attempt; there are no reconciliation findings. An unsafe batch fails for operator inspection instead of bypassing retention guards. See [cleanup semantics](../planning/public-demo.md#expired-workspace-cleanup-operation).
+
+Cleanup operates on stored expired demo data even when demo HTTP routes are disabled. Capacity remains occupied until a cleanup pass actually removes rows. Hosting, published links, shared rate limiting, and the external automation trigger remain deployment decisions. Rolling back the job-type migration requires removing cleanup schedules/jobs and their dependent history first; do not discard history casually.

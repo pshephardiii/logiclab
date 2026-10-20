@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const uuid = z.uuid();
-const jobType = z.literal('billing_reconciliation');
+const jobType = z.enum(['billing_reconciliation', 'demo_cleanup']);
 const integer = (min: number, max: number) =>
   z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(min).max(max));
 const page = [integer(0, 1000000).optional(), integer(1, 100).optional()] as const;
@@ -28,11 +28,11 @@ export function parseJobArguments(args: string[]) {
 }
 export type JobCommand = ReturnType<typeof parseJobArguments>;
 export const JOBS_HELP = `Operator jobs commands (run from repository root):
-  npm run jobs -- setup billing_reconciliation
+  npm run jobs -- setup <billing_reconciliation|demo_cleanup>
   npm run jobs -- schedules [offset] [limit]
   npm run jobs -- enable <schedule-id>
   npm run jobs -- pause <schedule-id>
-  npm run jobs -- enqueue billing_reconciliation <request-key>
+  npm run jobs -- enqueue <billing_reconciliation|demo_cleanup> <request-key>
   npm run jobs -- scheduler [limit]
   npm run jobs -- worker [limit]
   npm run jobs -- list [offset] [limit]

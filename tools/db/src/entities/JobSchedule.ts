@@ -9,7 +9,10 @@ import { JobType } from '../types/job-schedule/enums.ts';
 @Entity({ tableName: 'job_schedules' })
 @Unique({ name: 'job_schedules_name_unique', properties: ['name'] })
 @Index({ name: 'job_schedules_due_index', properties: ['enabled', 'nextRunAt'] })
-@Check({ name: 'job_schedules_type_check', expression: "job_type in ('billing_reconciliation')" })
+@Check({
+  name: 'job_schedules_type_check',
+  expression: "job_type in ('billing_reconciliation', 'demo_cleanup')",
+})
 @Check({ name: 'job_schedules_interval_check', expression: 'interval_seconds > 0' })
 @Check({ name: 'job_schedules_attempts_check', expression: 'max_attempts between 1 and 10' })
 export class JobSchedule implements JobScheduleFields {

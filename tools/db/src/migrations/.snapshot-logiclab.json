@@ -2369,8 +2369,8 @@
         },
         {
           "name": "durable_jobs_type_check",
-          "expression": "job_type in ('billing_reconciliation')",
-          "definition": "check (job_type in ('billing_reconciliation'))"
+          "expression": "job_type in ('billing_reconciliation', 'demo_cleanup')",
+          "definition": "check (job_type in ('billing_reconciliation', 'demo_cleanup'))"
         }
       ],
       "triggers": [],
@@ -2960,8 +2960,8 @@
         },
         {
           "name": "job_schedules_type_check",
-          "expression": "job_type in ('billing_reconciliation')",
-          "definition": "check (job_type in ('billing_reconciliation'))"
+          "expression": "job_type in ('billing_reconciliation', 'demo_cleanup')",
+          "definition": "check (job_type in ('billing_reconciliation', 'demo_cleanup'))"
         }
       ],
       "triggers": [],
