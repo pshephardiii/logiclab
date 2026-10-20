@@ -92,7 +92,11 @@ export function registerDemoIdentityPersistenceTests(
         const [column, value] = Object.entries(invalid.changes)[0]!;
         await assert.rejects(
           em.execute(
-            `update ${invalid.target === 'user' ? 'users' : 'demo_sessions'} set ${column} = ? where id = ?`,
+            `
+              update ${invalid.target === 'user' ? 'users' : 'demo_sessions'}
+              set ${column} = ?
+              where id = ?
+            `,
             [value, invalid.target === 'user' ? user.id : session.id],
           ),
           new RegExp(invalid.constraint),

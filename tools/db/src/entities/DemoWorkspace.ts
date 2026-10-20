@@ -19,8 +19,11 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
 })
 @Check({
   name: 'demo_workspaces_lifetime_check',
-  expression:
-    'created_at <= last_activity_at and last_activity_at < idle_expires_at and idle_expires_at <= expires_at',
+  expression: `
+      created_at <= last_activity_at
+        and last_activity_at < idle_expires_at
+        and idle_expires_at <= expires_at
+    `,
 })
 export class DemoWorkspace implements DemoWorkspaceFields {
   [OptionalProps]?: 'id' | 'status' | 'generation';

@@ -22,8 +22,17 @@ export { UserRole } from '../types/user/enums.ts';
 @Unique({ name: 'users_demo_workspace_role_unique', properties: ['demoWorkspace', 'role'] })
 @Check({
   name: 'users_identity_check',
-  expression:
-    "(identity_provider = 'cognito' and cognito_user_pool_id is not null and cognito_subject is not null and demo_workspace_id is null) or (identity_provider = 'demo' and cognito_user_pool_id is null and cognito_subject is null and email is null and demo_workspace_id is not null)",
+  expression: `
+      (identity_provider = 'cognito'
+        and cognito_user_pool_id is not null
+        and cognito_subject is not null
+        and demo_workspace_id is null)
+      or (identity_provider = 'demo'
+        and cognito_user_pool_id is null
+        and cognito_subject is null
+        and email is null
+        and demo_workspace_id is not null)
+    `,
 })
 @Unique({
   name: 'users_cognito_identity_unique',

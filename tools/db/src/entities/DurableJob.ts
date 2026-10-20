@@ -35,8 +35,23 @@ import { JobStatus } from '../types/durable-job/enums.ts';
 })
 @Check({
   name: 'durable_jobs_state_check',
-  expression:
-    "(status = 'queued' and attempts < max_attempts and lease_token is null and lease_expires_at is null and completed_at is null) or (status = 'running' and attempts > 0 and lease_token is not null and lease_expires_at is not null and completed_at is null) or (status in ('succeeded', 'failed') and attempts > 0 and lease_token is null and lease_expires_at is null and completed_at is not null)",
+  expression: `
+      (status = 'queued'
+        and attempts < max_attempts
+        and lease_token is null
+        and lease_expires_at is null
+        and completed_at is null)
+      or (status = 'running'
+        and attempts > 0
+        and lease_token is not null
+        and lease_expires_at is not null
+        and completed_at is null)
+      or (status in ('succeeded', 'failed')
+        and attempts > 0
+        and lease_token is null
+        and lease_expires_at is null
+        and completed_at is not null)
+    `,
 })
 export class DurableJob implements DurableJobFields {
   [OptionalProps]?: 'id' | 'status' | 'availableAt' | 'attempts' | 'maxAttempts' | 'createdAt';
