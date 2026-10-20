@@ -1,3 +1,4 @@
+import { DemoWorkspace } from './entities/DemoWorkspace.ts';
 import { JobSchedule } from './entities/JobSchedule.ts';
 import { DurableJob } from './entities/DurableJob.ts';
 import { JobRun } from './entities/JobRun.ts';
@@ -28,6 +29,7 @@ export function databaseOptions(
     clientUrl: connectionString,
     ...(options.schema ? { schema: options.schema } : {}),
     entities: [
+      DemoWorkspace,
       User,
       AuthSession,
       Classroom,

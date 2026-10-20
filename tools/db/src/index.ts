@@ -78,3 +78,7 @@ export { JobType } from './types/job-schedule/enums.ts';
 export { JobStatus } from './types/durable-job/enums.ts';
 export { JobRunStatus } from './types/job-run/enums.ts';
 export { FindingKind } from './types/reconciliation-finding/enums.ts';
+
+export { DemoWorkspace } from './entities/DemoWorkspace.ts';
+export { DemoWorkspaceStatus } from './types/demo-workspace/enums.ts';
+export type { DemoWorkspaceFields } from './types/demo-workspace/fields.ts';
