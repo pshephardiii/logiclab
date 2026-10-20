@@ -6,7 +6,7 @@ This verifies a locally runnable demo foundation, not a hosted release. Frontend
 
 ## Automated checks
 
-- `npm run check`: passed type checks, 588 tests (71 engine, 452 API, 65 frontend), and production builds.
+- `npm run check`: passed type checks, 590 tests (71 engine, 452 API, 67 frontend), and production builds.
 - `npm run db:test`: passed 138 PostgreSQL integration checks (103 database, 35 API/workflow tests).
 - `npm run format:check` and `git diff --check` against both the working tree and main: passed.
 - Local PR draft path is ignored by Git. Markdown link targets in the reviewer documentation were checked locally.
@@ -16,6 +16,8 @@ Database tests cover workspace lifetime/identity constraints, migrations, immuta
 HTTP integration tests cover opt-in registration, exact origins, separate cookies, lifecycle/resource routes, normal/other-workspace invitation isolation, concurrent capacity enforcement, and a commit failure that must not send a success response. Existing normal account/resource regression tests also pass; this is not a new live Cognito verification.
 
 Cleanup tests exercise bounded concurrent deletion, abandoned provisioning/reset recovery, locked-row skipping, activity extension, retained ordinary/shared/audit data, cancellation before execution, and whole-batch rollback on unsafe references. Operator tests cover disabled schedule setup, preserved edits, manual enqueue deduplication, ten-workspace execution bounds, durable run counts, and subsequent backlog removal.
+
+Frontend regression tests also verify unchanged generic transport paths, explicit normal/demo client destinations, and retained-client scope after navigation/unmount.
 
 ## Repeated local Chrome walkthrough
 
@@ -38,6 +40,6 @@ Apply committed migrations with `npm run db:migrate`. Demo routes default off; e
 
 Cleanup schedule setup is disabled by default. Explicitly enqueue work or enable its schedule and invoke scheduler/worker cycles; enabling the API demo flag alone installs no automation. Deletion and job-history completion are separate transactions, so interruption can leave incomplete counts even though idempotent cleanup retries are safe. Cancellation is cooperative, not a hard process kill.
 
-No clean dependency installation, remote CI query, installed scheduler trigger, hosted availability test, load/soak test, or current hosting cost comparison was performed. Vite reports an approximately 839 kB application chunk warning; Jest emits its expected experimental VM-modules warning. Production/shared rate limits and resource budgets still need deployment design. Historical migration SQL includes the explicitly requested readability pass; this branch is not exclusively additive migration text.
+No clean dependency installation, remote CI query, installed scheduler trigger, hosted availability test, load/soak test, or current hosting cost comparison was performed. Vite reports an approximately 842 kB application chunk warning; Jest emits its expected experimental VM-modules warning. Production/shared rate limits and resource budgets still need deployment design. Historical migration SQL includes the explicitly requested readability pass; this branch is not exclusively additive migration text.
 
 Continue with a small hosting-design slice: settle persistence, same-origin routing, cold starts, scheduler invocation, and a spending ceiling before provisioning or publishing. See the [reviewer walkthrough](../development/demo-walkthrough.md) and [architecture overview](../architecture/overview.md).

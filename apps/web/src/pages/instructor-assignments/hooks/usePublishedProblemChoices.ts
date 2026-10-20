@@ -1,10 +1,12 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { ProblemDraft, PublishedProblemVersion } from '@logiclab/contracts';
-import { listProblems, listVersions } from '../../../api/problems/api';
+import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Paginated library choices; switching problems cancels stale version reads. */
 export function usePublishedProblemChoices() {
+  const { listProblems, listVersions } = useResourceApi(problemsApi);
   const [problems, setProblems] = useState<ProblemDraft[]>([]);
   const [problemNext, setProblemNext] = useState<number | null>(null);
   const [problemLoading, setProblemLoading] = useState(false);
@@ -34,7 +36,7 @@ export function usePublishedProblemChoices() {
         if (!signal.aborted) setProblemLoading(false);
       }
     },
-    [library.startRequest],
+    [listProblems, library.startRequest],
   );
   useEffect(() => {
     void loadProblems();
@@ -62,7 +64,7 @@ export function usePublishedProblemChoices() {
         if (!signal.aborted) setVersionLoading(false);
       }
     },
-    [problemId, history.startRequest],
+    [listVersions, problemId, history.startRequest],
   );
   useEffect(() => {
     void loadVersions();

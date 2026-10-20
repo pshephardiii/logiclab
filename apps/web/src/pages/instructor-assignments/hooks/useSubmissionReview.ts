@@ -1,10 +1,12 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
-import { listSubmissions, readSubmission } from '../../../api/submission-review/api';
+import * as submissionReviewApi from '../../../api/submission-review/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Lists only final submissions; independent detail reads are canceled on selection changes. */
 export function useSubmissionReview(assignmentId: string) {
+  const { listSubmissions, readSubmission } = useResourceApi(submissionReviewApi);
   const [submissions, setSubmissions] = useState<SubmissionSummary[]>([]);
   const [next, setNext] = useState<number | null>(null);
   const [review, setReview] = useState<SubmissionReview | null>(null);
@@ -39,7 +41,7 @@ export function useSubmissionReview(assignmentId: string) {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [assignmentId, reads.startRequest],
+    [listSubmissions, assignmentId, reads.startRequest],
   );
   useEffect(() => {
     void load();

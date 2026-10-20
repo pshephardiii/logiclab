@@ -1,9 +1,11 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { AssignmentSummary } from '@logiclab/contracts';
-import { listAssignedWork } from '../../../api/student-work/api';
+import * as studentWorkApi from '../../../api/student-work/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 export function useStudentAssignments(classId: string) {
+  const { listAssignedWork } = useResourceApi(studentWorkApi);
   const [assignments, setAssignments] = useState<AssignmentSummary[]>([]);
   const [next, setNext] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export function useStudentAssignments(classId: string) {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [classId, startRequest],
+    [listAssignedWork, classId, startRequest],
   );
   useEffect(() => {
     void load();

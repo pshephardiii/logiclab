@@ -1,15 +1,17 @@
+import { useResourceApi } from '../../api/ResourceApiProvider';
 import { useAccountPath } from '../../routing/hooks/useAccountPath';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Page } from '../../components/layout/Page';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 import { ClassSelection } from '../../features/classroom/components/ClassSelection';
-import { listEnrollments } from '../../api/enrollments/api';
+import * as enrollmentsApi from '../../api/enrollments/api';
 import { routeDefinitions } from '../../routing/route-definitions';
 import { StudentAssignments } from './components/StudentAssignments';
 import '../../features/assignment/assignment.css';
 
 function StudentWork() {
+  const { listEnrollments } = useResourceApi(enrollmentsApi);
   const accountPath = useAccountPath();
   const [classId, setClassId] = useState('');
   return (

@@ -1,15 +1,17 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { appendClassroomPage } from '../../../features/classroom/helpers/classroom-pages';
 import { useEffect, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
-import { joinClassroom, listEnrollments } from '../../../api/enrollments/api';
+import * as enrollmentsApi from '../../../api/enrollments/api';
 
 /**
  * Manages student enrollment and paginated class listings.
  * Successful joins update the list immediately; reloading restores complete pagination.
  */
 export function useStudentClasses() {
+  const { joinClassroom, listEnrollments } = useResourceApi(enrollmentsApi);
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [busy, setBusy] = useState(true);

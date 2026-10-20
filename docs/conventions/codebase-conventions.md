@@ -287,3 +287,11 @@ Shared-package builds also emit JavaScript source maps (`sourceMap`) for debugge
 Keep student completion orchestration in `pages/student-work/` and instructor review controls with `pages/instructor-assignments/`. Share assigned table rendering, answer normalization, and result presentation through `features/assignment/`; the practice provider remains independent. Shared `features/classroom/components/ClassSelection.tsx` presentation and `features/classroom/hooks/useClassChoices.ts` accept an owned/enrolled-class API loader so student pages do not import instructor page internals.
 
 Unsaved answers and the server baseline remain separate. Compare normalized blank/false values by assignment-item ID, preserve other items when saving one, and require explicit final confirmation only after all edits are saved. Render official feedback from the retained result rather than calling public practice checks. Read-only tables and solution buttons reflect policy, while backend role/enrollment/ownership/submission checks remain authoritative. Instructor review reads final submissions only, never private drafts.
+
+## Web: explicit resource API scope
+
+Keep the generic HTTP client independent of React, navigation, and demo behavior. It sends the supplied path unchanged. Resource domain clients expose a `createApi(request)` factory; their default exported operations target normal account endpoints.
+
+Route composition supplies `ResourceApiProvider` with an explicit normal/demo scope. Resource hooks and components obtain a stable domain client with `useResourceApi`. The selected request transport binds the namespace when the client is created, so a retained callback cannot switch destinations after navigation. Include scoped clients/functions in callback dependencies. Remount resource pages when changing scope; do not introduce a mutable global client or read `window.location` during requests.
+
+Only resource domain clients use this provider. Normal authentication, demo lifecycle, and anonymous practice retain explicit paths and use the shared transport directly. Server authorization remains authoritative.

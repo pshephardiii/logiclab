@@ -16,7 +16,7 @@ Contracts describe data crossing the API boundary; entities describe stored data
 
 Within the API, `routes/` handles HTTP concerns, `application/` holds workflows and policies, `integrations/` adapts external systems, and `persistence/` implements database operations. `bootstrap/` assembles concrete dependencies. Small domains need no empty application layer solely for symmetry.
 
-The web groups navigable screens in `pages/`, shared domain UI/state in `features/`, transport clients in `api/`, and layout in `components/layout/`. Hooks stay near their owners; shared request cancellation lives in `hooks/`. Frontend role guards guide navigation; the server independently enforces authorization.
+The web groups navigable screens in `pages/`, shared domain UI/state in `features/`, transport clients in `api/`, and layout in `components/layout/`. Hooks stay near their owners; shared request cancellation lives in `hooks/`. Route composition explicitly binds resource clients to normal or demo namespaces through a provider. The HTTP wrapper sends its supplied URL without inspecting browser location, and retained clients keep their original scope. Auth, demo lifecycle, and anonymous practice clients retain explicit endpoints. Frontend role guards guide navigation; the server independently enforces authorization.
 
 ## One assignment journey
 

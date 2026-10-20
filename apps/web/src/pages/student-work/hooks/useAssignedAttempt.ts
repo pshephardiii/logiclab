@@ -1,3 +1,4 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   StudentAssignment,
@@ -9,10 +10,11 @@ import { cellKey } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
 import { savedAnswerMaps, sameAnswers } from '../../../features/assignment/helpers/answers';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
-import * as api from '../../../api/student-work/api';
+import * as apiModule from '../../../api/student-work/api';
 
 /** Keeps unsaved item edits separate from server revisions; no feedback is requested before final submission. */
 export function useAssignedAttempt(assignmentId: string) {
+  const api = useResourceApi(apiModule);
   const [assignment, setAssignment] = useState<StudentAssignment | null>(null);
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
   const [answers, setAnswers] = useState<Record<string, Answers>>({});
@@ -53,7 +55,7 @@ export function useAssignedAttempt(assignmentId: string) {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [assignmentId, reads.startRequest, writes.cancelRequest]);
+  }, [api, assignmentId, reads.startRequest, writes.cancelRequest]);
   useEffect(() => {
     void load();
     return reads.cancelRequest;

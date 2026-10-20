@@ -1,3 +1,4 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type {
   AssignmentDetail,
@@ -5,11 +6,12 @@ import type {
   AssignmentListQuery,
   CreateAssignmentRequest,
 } from '@logiclab/contracts';
-import * as api from '../../../api/assignments/api';
+import * as apiModule from '../../../api/assignments/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Owns a single class's assignments; list, detail, and mutation requests have independent lifecycles. */
 export function useAssignments(classId: string) {
+  const api = useResourceApi(apiModule);
   const [assignments, setAssignments] = useState<AssignmentSummary[]>([]);
   const [filter, setFilter] = useState<AssignmentListQuery['archive']>('active');
   const [next, setNext] = useState<number | null>(null);
@@ -49,7 +51,7 @@ export function useAssignments(classId: string) {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [classId, filter, reads.startRequest],
+    [api, classId, filter, reads.startRequest],
   );
   useEffect(() => {
     void load();

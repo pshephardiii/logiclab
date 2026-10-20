@@ -1,10 +1,12 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { CreateProblemRequest, ProblemArchiveFilter, ProblemDraft } from '@logiclab/contracts';
-import * as api from '../../../api/problems/api';
+import * as apiModule from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Owns library pagination and mutations; separate request lifecycles prevent stale list updates. */
 export function useProblemLibrary() {
+  const api = useResourceApi(apiModule);
   const [filter, setFilter] = useState<ProblemArchiveFilter>('active');
   const [problems, setProblems] = useState<ProblemDraft[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
@@ -40,7 +42,7 @@ export function useProblemLibrary() {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [filter, list.startRequest],
+    [api, filter, list.startRequest],
   );
   useEffect(() => {
     void load();

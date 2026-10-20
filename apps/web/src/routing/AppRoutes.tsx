@@ -1,3 +1,4 @@
+import { ResourceApiProvider } from '../api/ResourceApiProvider';
 import { DemoPage } from '../pages/demo/DemoPage';
 import { InstructorBillingPage } from '../pages/instructor-billing/InstructorBillingPage';
 import { StudentWorkPage } from '../pages/student-work/StudentWorkPage';
@@ -34,7 +35,17 @@ export function AppRoutes() {
             key={`${prefix}${definition.path}`}
             element={<ProtectedRoute {...definition.access} />}
           >
-            <Route path={`${prefix}${definition.path}`} element={element} />
+            <Route
+              path={`${prefix}${definition.path}`}
+              element={
+                <ResourceApiProvider
+                  key={prefix || 'normal'}
+                  scope={prefix === '/demo' ? 'demo' : 'normal'}
+                >
+                  {element}
+                </ResourceApiProvider>
+              }
+            />
           </Route>
         )),
       )}
