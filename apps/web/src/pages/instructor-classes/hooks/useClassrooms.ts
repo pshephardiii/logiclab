@@ -1,15 +1,17 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { appendClassroomPage } from '../../../features/classroom/helpers/classroom-pages';
 import { useEffect, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
-import { createClassroom, listClassrooms } from '../../../api/classrooms/api';
+import * as classroomsApi from '../../../api/classrooms/api';
 
 /**
  * Manages the instructor's owned-class list, creation, and offset pagination.
  * Shows successful creations immediately and reports success so callers can decide when to clear input.
  */
 export function useClassrooms() {
+  const { createClassroom, listClassrooms } = useResourceApi(classroomsApi);
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [busy, setBusy] = useState(true);

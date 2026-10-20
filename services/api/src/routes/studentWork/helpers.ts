@@ -1,7 +1,7 @@
 import type { FastifyRequest } from 'fastify';
-import type { AppUser } from '../../application/auth/types';
+import type { ResourceUser } from '../resource-context';
 import { AuthError } from '../../application/auth/service';
-import { SESSION_COOKIE } from '../auth/cookies';
+import { cookieName } from '../auth/cookies';
 import type { StudentWorkContext } from './context';
 import { StudentWorkRouteError } from './errors';
 
@@ -9,10 +9,10 @@ import { StudentWorkRouteError } from './errors';
 export async function student(
   request: FastifyRequest,
   context: StudentWorkContext,
-): Promise<AppUser> {
-  const scoped = request as FastifyRequest & { studentWorkUser?: AppUser | null };
+): Promise<ResourceUser> {
+  const scoped = request as FastifyRequest & { studentWorkUser?: ResourceUser | null };
   if (scoped.studentWorkUser) return scoped.studentWorkUser;
-  const id = request.cookies[SESSION_COOKIE];
+  const id = request.cookies[cookieName(context.config)];
   if (!id) throw new AuthError('SESSION_INVALID');
   const user = await context.service.authenticate(id);
   if (user.role !== 'student')

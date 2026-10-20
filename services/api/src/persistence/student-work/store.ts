@@ -1,3 +1,4 @@
+import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { assignmentExercises } from '../assignment/exercise-response';
 import { truthTableSolutionResponseSchema } from '@logiclab/contracts';
@@ -35,7 +36,9 @@ export interface StudentWorkStore {
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
 export async function createStudentWorkStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<StudentWorkStore> {
+  const transact = transactionRunner(orm, transaction);
   const { Assignment, AssignmentItem, AssignmentAttempt, Enrollment, User, LockMode } =
     await import('@logiclab/db');
   type Manager = typeof orm.em;
@@ -88,7 +91,7 @@ export async function createStudentWorkStore(
   }
   return {
     async list(studentId, classId, query) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         await enrolled(em, studentId, classId, true);
         const rows = await em.find(
           Assignment,
@@ -103,7 +106,7 @@ export async function createStudentWorkStore(
       });
     },
     async read(studentId, assignmentId) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const assignment = await accessible(em, studentId, assignmentId);
         const assigned = await items(em, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
@@ -117,7 +120,7 @@ export async function createStudentWorkStore(
       });
     },
     async save(studentId, assignmentId, input) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         await accessible(em, studentId, assignmentId);
         const item = await em.findOne(
           AssignmentItem,
@@ -136,7 +139,7 @@ export async function createStudentWorkStore(
       });
     },
     async submit(studentId, assignmentId, revision) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         await accessible(em, studentId, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) return attemptResponse(attempt);
@@ -156,7 +159,7 @@ export async function createStudentWorkStore(
       });
     },
     async solution(studentId, assignmentId, itemId) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const assignment = await accessible(em, studentId, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
           assignment: assignmentId,

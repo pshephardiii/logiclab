@@ -107,6 +107,21 @@ For durable jobs, keep pure cadence, occurrence identity, retry-budget/backoff, 
 
 Commit migrations and application snapshots; keep applied migrations immutable. Generate/review migrations for actual schema changes. For entity-only refactors, run `migration:check` and verify no migration is needed. Integration-test migration runs disable snapshot generation; ignored test snapshots are not a reason to ignore application snapshots or source tests. See [Local Database](../development/local-database.md).
 
+### SQL readability
+
+Apply the same SQL formatting conventions to trigger bodies, compound entity checks, migration statements, and raw queries in persistence code or tests:
+
+- Keep short, simple expressions on one line. Use multiline template literals for longer statements rather than dense strings or concatenation.
+- Put major clauses (`select`, `from`, `where`, `order by`, and locking clauses) on separate lines. Put each join on its own line with its `on` predicates indented beneath it. Split long select lists across lines.
+- List table columns and table constraints on separate lines in `create table`. Separate long `alter table` actions, foreign-key references, and deletion rules into readable lines.
+- Break compound checks into logical groups and place their `and`/`or` predicates on separate lines. Preserve parentheses and operator precedence.
+- Indent procedural SQL to show `if`/`then`/`end if` and nested `declare`/`begin`/`end` blocks. Give returns and exceptions their own lines. Format SQL nested inside `execute format(...)` too, with formatting arguments, `into`, and `using` separated when helpful.
+- Preserve existing keyword casing in formatting-only edits. Keep SQL identifiers, literal values, placeholders, parameter order, statement order, and behavior unchanged. Continue using bound values and safe identifier formatting; readability is not a reason to interpolate untrusted values.
+
+Format new migration SQL before it is applied. Keep applied migration history unchanged by default; an explicitly requested historical formatting pass must remain a separate change and preserve SQL tokens, including nested procedural/dynamic SQL. Verify such a pass with a fresh migration replay and rollback in an isolated test schema, schema comparison, and relevant database/trigger tests. A whitespace-only change should not require a new schema migration or a rewritten snapshot.
+
+Prettier formats the surrounding TypeScript but does not format SQL inside template literals; review the SQL layout directly. Migration history and generated snapshots are excluded from ordinary repository formatting.
+
 ## Tools: logic-engine structure and invariants
 
 The parser directory separates the public entry point, tokenization, token parsing, types, errors, and limits. Precedence stages stay together in `parse-tokens.ts`, where their recursive relationships are visible. Its index exposes the public parser API, not tokenization internals.
@@ -272,3 +287,11 @@ Shared-package builds also emit JavaScript source maps (`sourceMap`) for debugge
 Keep student completion orchestration in `pages/student-work/` and instructor review controls with `pages/instructor-assignments/`. Share assigned table rendering, answer normalization, and result presentation through `features/assignment/`; the practice provider remains independent. Shared `features/classroom/components/ClassSelection.tsx` presentation and `features/classroom/hooks/useClassChoices.ts` accept an owned/enrolled-class API loader so student pages do not import instructor page internals.
 
 Unsaved answers and the server baseline remain separate. Compare normalized blank/false values by assignment-item ID, preserve other items when saving one, and require explicit final confirmation only after all edits are saved. Render official feedback from the retained result rather than calling public practice checks. Read-only tables and solution buttons reflect policy, while backend role/enrollment/ownership/submission checks remain authoritative. Instructor review reads final submissions only, never private drafts.
+
+## Web: explicit resource API scope
+
+Keep the generic HTTP client independent of React, navigation, and demo behavior. It sends the supplied path unchanged. Resource domain clients expose a `createApi(request)` factory; their default exported operations target normal account endpoints.
+
+Route composition supplies `ResourceApiProvider` with an explicit normal/demo scope. Resource hooks and components obtain a stable domain client with `useResourceApi`. The selected request transport binds the namespace when the client is created, so a retained callback cannot switch destinations after navigation. Include scoped clients/functions in callback dependencies. Remount resource pages when changing scope; do not introduce a mutable global client or read `window.location` during requests.
+
+Only resource domain clients use this provider. Normal authentication, demo lifecycle, and anonymous practice retain explicit paths and use the shared transport directly. Server authorization remains authoritative.

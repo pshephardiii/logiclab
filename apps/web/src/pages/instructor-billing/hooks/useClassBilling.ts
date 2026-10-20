@@ -1,14 +1,16 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   BillingPlanChoice,
   ClassBillingResponse,
   SimulatorRequest,
 } from '@logiclab/contracts';
-import * as api from '../../../api/billing/api';
+import * as apiModule from '../../../api/billing/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Class-local billing state. Retain a checkout intent through failed responses; never retry outcomes automatically. */
 export function useClassBilling(classId: string) {
+  const api = useResourceApi(apiModule);
   const [data, setData] = useState<ClassBillingResponse | null>(null);
   const [plans, setPlans] = useState<BillingPlanChoice[]>([]);
   const [planNext, setPlanNext] = useState<number | null>(null);
@@ -41,7 +43,7 @@ export function useClassBilling(classId: string) {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [classId, reads.startRequest]);
+  }, [api, classId, reads.startRequest]);
   useEffect(() => {
     void load();
     return reads.cancelRequest;

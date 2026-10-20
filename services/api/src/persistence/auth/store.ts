@@ -10,12 +10,16 @@ export async function createAuthStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
   poolId: string,
 ): Promise<AuthStore> {
-  const { User, AuthSession, UserRole } = await import('@logiclab/db');
-  const appUser = (user: UserEntity): AppUser => ({
-    id: user.id,
-    subject: user.cognitoSubject,
-    role: user.role,
-  });
+  const { User, AuthSession, UserRole, UserIdentityProvider } = await import('@logiclab/db');
+  const appUser = (user: UserEntity): AppUser => {
+    if (
+      user.identityProvider !== UserIdentityProvider.Cognito ||
+      !user.cognitoSubject ||
+      user.cognitoUserPoolId !== poolId
+    )
+      throw new Error('Expected a Cognito identity in the configured pool.');
+    return { id: user.id, subject: user.cognitoSubject, role: user.role };
+  };
   return {
     async createUser(subject, role, email) {
       const em = orm.em.fork();
@@ -30,9 +34,11 @@ export async function createAuthStore(
       return appUser(user);
     },
     async findUser(subject) {
-      const user = await orm.em
-        .fork()
-        .findOne(User, { cognitoUserPoolId: poolId, cognitoSubject: subject });
+      const user = await orm.em.fork().findOne(User, {
+        identityProvider: UserIdentityProvider.Cognito,
+        cognitoUserPoolId: poolId,
+        cognitoSubject: subject,
+      });
       return user ? appUser(user) : null;
     },
     async saveSession(id, session) {
@@ -62,7 +68,12 @@ export async function createAuthStore(
     },
     async getSession(id) {
       const record = await orm.em.fork().findOne(AuthSession, id, { populate: ['user'] });
-      if (!record || record.user.cognitoUserPoolId !== poolId) return null;
+      if (
+        !record ||
+        record.user.identityProvider !== UserIdentityProvider.Cognito ||
+        record.user.cognitoUserPoolId !== poolId
+      )
+        return null;
       return {
         user: appUser(record.user),
         encryptedTokens: record.encryptedTokens,
@@ -75,7 +86,11 @@ export async function createAuthStore(
     },
     async deleteSessionsForEmail(email) {
       const em = orm.em.fork();
-      const user = await em.findOne(User, { cognitoUserPoolId: poolId, email });
+      const user = await em.findOne(User, {
+        identityProvider: UserIdentityProvider.Cognito,
+        cognitoUserPoolId: poolId,
+        email,
+      });
       if (user) await em.nativeDelete(AuthSession, { user: user.id });
     },
   };

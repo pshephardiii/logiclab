@@ -1,14 +1,21 @@
 # Documentation
 
-Start with the repository [README](../README.md) for local commands and project structure. Documentation is grouped by purpose:
+Start with the repository [README](../README.md) for local commands and project structure. For a quick project tour, start with the [reviewer walkthrough](development/demo-walkthrough.md) and [architecture overview](architecture/overview.md). Application hosting is still pending.
+
+Documentation is grouped by purpose:
 
 | Directory                      | Contents                                                                               |
 | ------------------------------ | -------------------------------------------------------------------------------------- |
+| [architecture/](architecture/) | Package boundaries, request/data flows, and implementation tradeoffs                   |
 | [planning/](planning/)         | Product direction, proposed data model, delivery roadmap, and AWS deployment direction |
 | [development/](development/)   | Local PostgreSQL/DBeaver, Cognito configuration, and GitHub setup                      |
 | [api/](api/)                   | Authentication, classroom, problem, assignment, and student-work contracts             |
 | [conventions/](conventions/)   | Codebase structure/style and numbered branch workflow                                  |
 | [verification/](verification/) | Feature walkthroughs, checks performed, limitations, and supporting images             |
+
+## Architecture
+
+- [System overview and tradeoffs](architecture/overview.md)
 
 ## Planning
 
@@ -16,6 +23,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Product direction](planning/product-direction.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)
+- [Public demo direction and implementation slices](planning/public-demo.md)
 - [AWS deployment notes](planning/aws-deployment-notes.md)
 
 ## Development setup
@@ -24,6 +32,8 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Cognito development](development/cognito-development.md)
 - [Simulated billing development](development/simulated-billing.md)
 - [Operator jobs CLI](development/operator-jobs.md)
+- [Local isolated demo](development/public-demo.md)
+- [Reviewer walkthrough](development/demo-walkthrough.md)
 - [GitHub setup](development/github-setup.md)
 
 ## API reference
@@ -35,6 +45,7 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Instructor assignments](api/assignment-api.md)
 - [Student assignment work](api/student-work-api.md)
 - [Simulated billing](api/billing-api.md)
+- [Isolated demo](api/demo-api.md)
 
 ## Conventions
 
@@ -42,6 +53,8 @@ Start with the repository [README](../README.md) for local commands and project 
 - [Branch naming and PR workflow](conventions/branch-naming-conventions.md)
 
 ## Verification
+
+- [Isolated demo foundation and browser evidence](verification/public-demo-verification.md)
 
 - [Truth-table walkthrough and evidence](verification/truth-table-verification.md)
 - [Classroom-access walkthrough and evidence](verification/classroom-access-verification.md)

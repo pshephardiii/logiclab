@@ -1,3 +1,4 @@
+import { problemVersionRetentionBody } from '../triggers/demo-retention.ts';
 import type { ProblemVersionFields } from '../types/problem-version/fields.ts';
 import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts';
 import { randomUUID } from 'node:crypto';
@@ -20,7 +21,7 @@ import type { ProblemDefinition } from '../types/problem/definition.ts';
   name: 'problem_versions_immutable',
   timing: 'before',
   events: ['update', 'delete'],
-  body: "raise exception 'Published problem versions are immutable' using errcode = '23514'",
+  body: problemVersionRetentionBody,
 })
 @Check({ name: 'problem_versions_positive_version', expression: 'version > 0' })
 @Unique({ name: 'problem_versions_problem_version_unique', properties: ['problem', 'version'] })

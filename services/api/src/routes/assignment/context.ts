@@ -1,4 +1,4 @@
-import type { AuthContext } from '../auth/context';
+import type { ResourceContext } from '../resource-context';
 import type { AssignmentStore } from '../../persistence/assignment/store';
 
-export type AssignmentContext = AuthContext & { assignments: AssignmentStore };
+export type AssignmentContext = ResourceContext & { assignments: AssignmentStore };

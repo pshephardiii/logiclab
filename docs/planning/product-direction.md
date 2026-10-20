@@ -24,7 +24,7 @@ Use Amazon Cognito for email/password authentication. Cognito owns credentials; 
 - Normal authenticated access requires email confirmation.
 - Include login, logout, and forgot/reset password in the classroom-access branch. Recovery requests send an email code; users submit the code and a new password.
 - Recovery responses should not disclose whether an email has an account.
-- Synthetic development/demo accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool.
+- Synthetic development Cognito accounts can be preconfirmed for repeatable testing. Still verify actual confirmation and recovery flows against a development Cognito pool. The isolated public demo uses separate local synthetic identities without Cognito accounts; see [Public Demo Direction](public-demo.md).
 - Start with Cognito's default email sender for development and a controlled demo; configure SES before broader public registration. See [AWS deployment notes](aws-deployment-notes.md) for the sending limit and follow-up setup.
 - MFA and institutional SSO are deferred.
 - Use one development pool in `us-east-1`; keep production configuration separate later. Prepare version-controlled infrastructure before provisioning.
@@ -184,3 +184,9 @@ Persist authoritative run status, timestamps, records-checked/finding counts, an
 Recurring schedules and scheduler/worker cycles must be designed now so external automation can invoke the same code later, even though automatic execution is initially disabled. Retry timing and recurring cadence are separate. The initial job only flags discrepancies; it does not repair coverage, refund money, or change student access. Real email, notifications, assignment reminders, institutions, and subscriptions remain later work.
 
 Future administrative tooling should allow authorized operators to enable/pause schedules and change their intervals through the backend. Initial intervals are job-type-specific code defaults copied into schedule records at setup, not a single global frequency; persisted values control recurrence thereafter. Management requires explicit permissions, validation, and an audit trail. Decide how interval changes recalculate the next occurrence before implementing edits; existing queued work remains unchanged. This admin interface and its authorization/audit model remain outside the current CLI-only jobs branch.
+
+## Isolated portfolio demo
+
+The public demo will create a private synthetic workspace per visitor, with an instructor and student selectable without registration. Switching roles preserves changes within that workspace. Restarting invalidates prior demo sessions and restores seeded classroom, assignment/progress, and simulator payment scenarios. No real charges, per-visit Cognito identities, or personal classroom data.
+
+Expire workspaces after inactivity and an absolute lifetime; reject expired sessions immediately and clean up demo-owned data through bounded durable jobs. Keep normal accounts and their financial/history records outside demo deletion. Hosting should minimize initial cost and may precede an eventual AWS deployment; the existing portfolio links to this separately hosted application. See [Public Demo Direction](public-demo.md) for scope, security boundaries, and implementation status.

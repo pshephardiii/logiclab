@@ -1,5 +1,5 @@
-import type { AuthConfig } from '../../config/auth';
-import { clearSessionCookie } from '../auth/cookies';
+import type { CookieConfig } from '../auth/cookies';
+import { clearRejectedSessionCookie } from '../auth/cookies';
 import type { FastifyInstance } from 'fastify';
 import { BillingError } from '../../application/billing/errors';
 import { mapAuthError } from '../auth/errors';
@@ -20,7 +20,7 @@ const failures = {
   invalid_signature: { status: 400, message: 'Payment event could not be verified.' },
 };
 
-export function installBillingErrors(app: FastifyInstance, config: AuthConfig) {
+export function installBillingErrors(app: FastifyInstance, config: CookieConfig) {
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof BillingError) {
       const failure = failures[error.reason];
@@ -29,7 +29,7 @@ export function installBillingErrors(app: FastifyInstance, config: AuthConfig) {
       });
     }
     const mapped = mapAuthError(error);
-    if (mapped.status === 401) clearSessionCookie(reply, config);
+    if (mapped.status === 401) clearRejectedSessionCookie(reply, config);
     if (mapped.status === 503)
       request.log.warn({ code: 'BILLING_UNAVAILABLE' }, 'Billing operation unavailable');
     return reply.code(mapped.status).send({

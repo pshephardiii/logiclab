@@ -3,7 +3,7 @@ import type {
   DurableJob as JobEntity,
   JobSchedule as ScheduleEntity,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import { databaseTime } from './database-time';
+import { databaseTime } from '../database-time';
 
 export interface JobPage {
   offset: number;

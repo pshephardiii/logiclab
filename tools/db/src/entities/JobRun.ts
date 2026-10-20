@@ -21,8 +21,17 @@ import { JobRunStatus } from '../types/job-run/enums.ts';
 })
 @Check({
   name: 'job_runs_state_check',
-  expression:
-    "(status = 'running' and finished_at is null and error_code is null) or (status = 'succeeded' and finished_at is not null and error_code is null) or (status in ('failed', 'lease_expired') and finished_at is not null and error_code is not null)",
+  expression: `
+      (status = 'running'
+        and finished_at is null
+        and error_code is null)
+      or (status = 'succeeded'
+        and finished_at is not null
+        and error_code is null)
+      or (status in ('failed', 'lease_expired')
+        and finished_at is not null
+        and error_code is not null)
+    `,
 })
 export class JobRun implements JobRunFields {
   [OptionalProps]?: 'id' | 'status' | 'startedAt' | 'recordsChecked' | 'findingsCount';

@@ -14,6 +14,7 @@ export function patchAssignmentHandler(context: AssignmentContext) {
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
     const input = parseRequest(updateAssignmentRequestSchema, request.body);
     const assignment = await context.assignments.update(user.id, assignmentId, input);
-    return reply.code(200).send(assignmentResponseSchema.parse({ assignment }));
+    reply.code(200);
+    return assignmentResponseSchema.parse({ assignment });
   };
 }

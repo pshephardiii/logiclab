@@ -1,10 +1,12 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { PublishedProblemVersion } from '@logiclab/contracts';
-import { listVersions, publishProblem } from '../../../api/problems/api';
+import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Owns paginated history and explicit publication, without automatically retrying writes. */
 export function useProblemHistory(problemId: string) {
+  const { listVersions, publishProblem } = useResourceApi(problemsApi);
   const [versions, setVersions] = useState<PublishedProblemVersion[]>([]);
   const [next, setNext] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export function useProblemHistory(problemId: string) {
         if (!signal.aborted) setLoading(false);
       }
     },
-    [problemId, reads.startRequest],
+    [listVersions, problemId, reads.startRequest],
   );
   useEffect(() => {
     void load();

@@ -1,14 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import rateLimit, { type RateLimitPluginOptions } from '@fastify/rate-limit';
-import type { AuthConfig } from '../config/auth';
+import type { CookieConfig } from './auth/cookies';
 import { assertAuthOrigin } from './auth/cookies';
 import { installZodSchemas, installRateLimitDefaults } from './setup';
 
 /** Apply directly to the existing group scope, so child endpoints inherit its policies. */
 export async function installAccountHttpPolicy(
   app: FastifyInstance,
-  config: AuthConfig,
+  config: CookieConfig,
   rateLimitOptions: RateLimitPluginOptions = {},
 ) {
   installZodSchemas(app);

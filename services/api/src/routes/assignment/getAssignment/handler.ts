@@ -9,6 +9,7 @@ export function getAssignmentHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
     const assignment = await context.assignments.findOwned(user.id, assignmentId);
-    return reply.code(200).send(assignmentResponseSchema.parse({ assignment }));
+    reply.code(200);
+    return assignmentResponseSchema.parse({ assignment });
   };
 }

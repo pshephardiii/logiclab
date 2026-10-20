@@ -16,8 +16,16 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
 })
 @Check({
   name: 'billing_plans_terms_check',
-  expression:
-    "(billing_model = 'one_time' and coverage_days is not null and coverage_days > 0 and billing_interval is null) or (billing_model = 'recurring' and coverage_days is null and billing_interval is not null and billing_interval in ('month', 'year'))",
+  expression: `
+      (billing_model = 'one_time'
+        and coverage_days is not null
+        and coverage_days > 0
+        and billing_interval is null)
+      or (billing_model = 'recurring'
+        and coverage_days is null
+        and billing_interval is not null
+        and billing_interval in ('month', 'year'))
+    `,
 })
 export class BillingPlan implements BillingPlanFields {
   [OptionalProps]?: 'id' | 'active' | 'createdAt';

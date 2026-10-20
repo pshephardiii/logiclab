@@ -13,8 +13,8 @@ export function getClassBillingHandler(context: BillingContext) {
     const user = await billingInstructor(request, context);
     const { classId } = parseRequest(billingClassParamsSchema, request.params);
     const query = parseRequest(billingListQuerySchema, request.query);
-    return reply.send(
-      classBillingResponseSchema.parse(await context.billing.readClass(user.id, classId, query)),
+    return classBillingResponseSchema.parse(
+      await context.billing.readClass(user.id, classId, query),
     );
   };
 }

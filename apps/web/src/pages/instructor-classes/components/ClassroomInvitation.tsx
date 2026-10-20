@@ -1,6 +1,7 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useEffect, useRef, useState } from 'react';
 import type { ClassroomInvitation as Invitation } from '@logiclab/contracts';
-import { replaceInvitation } from '../../../api/classrooms/api';
+import * as classroomsApi from '../../../api/classrooms/api';
 import { AccountApiError } from '../../../api/errors';
 
 /**
@@ -14,6 +15,7 @@ export function ClassroomInvitation({
   classId: string;
   className: string;
 }) {
+  const { replaceInvitation } = useResourceApi(classroomsApi);
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

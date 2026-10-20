@@ -11,16 +11,19 @@ import { postWebhookRoute } from './postWebhook/route';
 
 export async function billingRoutes(app: FastifyInstance, context: BillingContext) {
   installBillingErrors(app, context.config);
-  app.register(async (account) => {
-    account.decorateRequest('billingUser', null);
-    await installAccountHttpPolicy(account, context.config);
-    account.addHook('preValidation', async (request) => {
-      await billingInstructor(request, context);
-    });
-    account.register(getPlansRoute, context);
-    account.register(getClassBillingRoute, context);
-    account.register(postCheckoutRoute, context);
-    account.register(postSimulationRoute, context);
-  });
+  app.register(billingAccountRoutes, context);
   app.register(postWebhookRoute, context);
+}
+
+export async function billingAccountRoutes(app: FastifyInstance, context: BillingContext) {
+  installBillingErrors(app, context.config);
+  app.decorateRequest('billingUser', null);
+  await installAccountHttpPolicy(app, context.config);
+  app.addHook('preValidation', async (request) => {
+    await billingInstructor(request, context);
+  });
+  app.register(getPlansRoute, context);
+  app.register(getClassBillingRoute, context);
+  app.register(postCheckoutRoute, context);
+  app.register(postSimulationRoute, context);
 }

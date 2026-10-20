@@ -17,6 +17,6 @@ test('postProblemVersion delegates authenticated ownership and returns the expec
     reply as unknown as FastifyReply,
   );
   expect(reply.code).toHaveBeenCalledWith(201);
-  expect(reply.send).toHaveBeenCalledWith({ version: publishedVersion });
+  expect(result).toEqual({ version: publishedVersion });
   expect(problems.publish).toHaveBeenCalledWith(user.id, problem.id);
 });

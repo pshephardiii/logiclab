@@ -3,7 +3,7 @@ import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'im
 import { nextScheduledTime, scheduledOccurrenceKey } from '../../application/jobs/scheduling';
 import type { JobRegistry } from '../../application/jobs/types';
 import type { JobStore } from './types';
-import { databaseTime } from './database-time';
+import { databaseTime } from '../database-time';
 
 /** One due occurrence per schedule per cycle; skip missed slots while preserving interval alignment. */
 export async function createScheduleStore(

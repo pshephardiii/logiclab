@@ -6,6 +6,15 @@ export function createJobRegistry(
   handlers: Partial<Record<JobType, JobHandler>> = {},
 ): JobRegistry {
   return {
+    demo_cleanup: {
+      defaultIntervalSeconds: 300,
+      maxAttempts: 3,
+      leaseSeconds: 120,
+      timeoutSeconds: 90,
+      retryBaseSeconds: 30,
+      retryMaxSeconds: 300,
+      handler: handlers.demo_cleanup,
+    },
     billing_reconciliation: {
       defaultIntervalSeconds: 3600,
       maxAttempts: 3,

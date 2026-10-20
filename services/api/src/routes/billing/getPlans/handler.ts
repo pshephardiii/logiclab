@@ -9,6 +9,6 @@ export function getPlansHandler(context: BillingContext) {
     const user = await billingInstructor(request, context);
 
     const query = parseRequest(billingListQuerySchema, request.query);
-    return reply.send(billingPlansResponseSchema.parse(await context.billing.plans(query)));
+    return billingPlansResponseSchema.parse(await context.billing.plans(query));
   };
 }

@@ -1,6 +1,8 @@
+import { useResourceApi } from '../../../api/ResourceApiProvider';
+import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import { ClassSelection } from '../../../features/classroom/components/ClassSelection';
-import { listClassrooms } from '../../../api/classrooms/api';
+import * as classroomsApi from '../../../api/classrooms/api';
 import { routeDefinitions } from '../../../routing/route-definitions';
 
 export function ClassSelector({
@@ -10,6 +12,8 @@ export function ClassSelector({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const { listClassrooms } = useResourceApi(classroomsApi);
+  const accountPath = useAccountPath();
   return (
     <ClassSelection
       value={value}
@@ -18,7 +22,7 @@ export function ClassSelector({
       emptyMessage={
         <>
           Create a class before authoring assignments.{' '}
-          <Link to={routeDefinitions.instructorClasses.path}>Manage classes</Link>
+          <Link to={accountPath(routeDefinitions.instructorClasses.path)}>Manage classes</Link>
         </>
       }
     />

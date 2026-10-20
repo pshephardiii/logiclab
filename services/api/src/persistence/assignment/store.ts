@@ -1,3 +1,4 @@
+import { transactionRunner, type DatabaseManager } from '../transactions';
 import { hasClassCapability } from '../billing/class-coverage';
 import {
   createSubmissionReviewStore,
@@ -37,7 +38,9 @@ export interface AssignmentStore extends SubmissionReviewStore {
 /** Parent-row locks serialize every draft mutation with publication and archive transitions. */
 export async function createAssignmentStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<AssignmentStore> {
+  const transact = transactionRunner(orm, transaction);
   const {
     Assignment,
     AssignmentItem,
@@ -109,11 +112,11 @@ export async function createAssignmentStore(
     );
   }
 
-  const reviews = await createSubmissionReviewStore(orm);
+  const reviews = await createSubmissionReviewStore(orm, transaction);
   return {
     ...reviews,
     async create(ownerId, classId, input) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const classroom = await ownedClass(em, ownerId, classId);
         const assignment = em.create(Assignment, {
           classroom,
@@ -131,7 +134,7 @@ export async function createAssignmentStore(
       });
     },
     async list(ownerId, classId, query) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       await ownedClass(em, ownerId, classId);
       const assignments = await em.find(
         Assignment,
@@ -146,11 +149,11 @@ export async function createAssignmentStore(
       return assignments.map(assignmentSummary);
     },
     async findOwned(ownerId, assignmentId) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       return detail(em, await ownedAssignment(em, ownerId, assignmentId));
     },
     async update(ownerId, assignmentId, input) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (assignment.archivedAt) throw new AssignmentOperationError('archived');
         if (assignment.publishedAt) throw new AssignmentOperationError('published');
@@ -166,7 +169,7 @@ export async function createAssignmentStore(
       });
     },
     async publish(ownerId, assignmentId) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (assignment.archivedAt) throw new AssignmentOperationError('archived');
         if (!assignment.publishedAt) {
@@ -193,7 +196,7 @@ export async function createAssignmentStore(
       });
     },
     async setArchived(ownerId, assignmentId, archived) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (archived && !assignment.archivedAt) assignment.archivedAt = new Date();
         if (!archived && assignment.archivedAt) assignment.archivedAt = undefined;

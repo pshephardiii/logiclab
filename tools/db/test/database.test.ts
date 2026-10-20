@@ -1,3 +1,5 @@
+import { registerDemoIdentityPersistenceTests } from './demo-identity-persistence.ts';
+import { registerDemoWorkspacePersistenceTests } from './demo-workspace-persistence.ts';
 import { registerJobPersistenceTests } from './job-persistence.ts';
 import { randomUUID } from 'node:crypto';
 import { before, after, test } from 'node:test';
@@ -121,7 +123,10 @@ test('database rejects an unsupported account role', async () => {
   try {
     await assert.rejects(
       em.execute(
-        "insert into users (cognito_user_pool_id, cognito_subject, role) values ('test-pool', 'test-role', 'admin')",
+        `
+          insert into users (cognito_user_pool_id, cognito_subject, role)
+          values ('test-pool', 'test-role', 'admin')
+        `,
       ),
       /invalid input value for enum/i,
     );
@@ -1065,7 +1070,15 @@ test('BillingPlan migration preserves purchases created before plans existed', a
     await em.execute(`set local search_path to "${schema}"`);
     // Model the columns used by the upgrade before plan_id/capability existed.
     await em.execute(
-      'create table class_purchases (id uuid primary key, amount_minor int not null, currency varchar(3) not null, coverage_days int not null, created_at timestamptz not null)',
+      `
+        create table class_purchases (
+          id uuid primary key,
+          amount_minor int not null,
+          currency varchar(3) not null,
+          coverage_days int not null,
+          created_at timestamptz not null
+        )
+      `,
     );
     const id = randomUUID();
     await em.execute('insert into class_purchases values (?, ?, ?, ?, ?)', [
@@ -1087,7 +1100,16 @@ test('BillingPlan migration preserves purchases created before plans existed', a
         billing_model: string;
       }[]
     >(
-      'select p.plan_id, p.amount_minor, p.coverage_days, b.active, b.billing_model from class_purchases p join billing_plans b on b.id = p.plan_id',
+      `
+        select p.plan_id,
+               p.amount_minor,
+               p.coverage_days,
+               b.active,
+               b.billing_model
+        from class_purchases p
+        join billing_plans b
+          on b.id = p.plan_id
+      `,
     );
     assert.deepEqual(rows, [
       {
@@ -1125,3 +1147,7 @@ test('demo plan seeding is repeatable and preserves edited or retired catalog te
 });
 
 registerJobPersistenceTests(orm);
+
+registerDemoWorkspacePersistenceTests(orm);
+
+registerDemoIdentityPersistenceTests(orm);

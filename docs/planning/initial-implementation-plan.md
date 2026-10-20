@@ -204,23 +204,15 @@ Later decisions: production trigger/hosting, longer-term retention, automated re
 
 ### 9. `009-chore-public-demo-and-portfolio` — An employer-ready release
 
-Depends on: the complete journey and the selected deployment model.
+Depends on: the complete student/instructor journey and durable jobs. Current branch: `009-chore-public-demo-and-portfolio`.
 
-- Choose hosting after checking current pricing, usage terms, quotas, and scheduled-job support. Document an explicit budget and resource limits.
-- Prepare seeded demo data, a safe reset strategy, health checks, structured logs, and environment setup.
-- Add a focused browser smoke test for the principal journey and run the risk-focused permission, event, and job tests.
-- Finish the README with screenshots, a short demo walkthrough, architecture/data diagrams, tradeoffs, test evidence, and known limitations.
-- Prepare the public repository and deployment for review before publishing them.
+Agreed direction: per-visitor isolated demo workspaces with synthetic instructor/student identities, same-workspace role switching, resettable assignments, and unpaid/funded simulated billing scenarios. Expiration blocks access independently of scheduled cleanup. No per-visitor Cognito accounts or real charges. The existing portfolio will link to the application; low-cost hosting is still to be selected rather than assuming AWS now.
 
-Done when: a reviewer can understand the project quickly, run it locally, and try the hosted journey without supplying payment details or personal classroom data. Public links and deployment behavior are verified after publication.
+Follow the commit-sized sequence and isolation/reset design in [Public Demo Direction](public-demo.md). Slice 1 implements only the workspace persistence root, lifecycle fields/checks, expiry indexes, migration/snapshot, and database tests. Slice 2 adds the internal demo identity/session foundation and policy/isolation tests. Slice 3 adds transactional seed/reset, unpaid/funded simulator scenarios, published sample work, narrow demo-only deletion guards, and concurrency/rollback tests. Slice 4 adds opt-in demo lifecycle/resource HTTP access, the demo UI, request-local transaction binding, invitation isolation, cookie/rate policies, and storage capacity enforcement. Slice 5 adds bounded expired-workspace deletion, concurrency/retention tests, and the disabled-by-default demo_cleanup durable job with operator commands and retry/history coverage. The next documentation slice adds a reviewer walkthrough and architecture overview, linked from the README. External trigger installation, final deployment/browser verification, shared production limits, and hosting remain later work.
 
-Open product/design questions:
+Done when: a reviewer can run the project locally and explore an isolated hosted instructor/student journey without personal classroom data or payment details. Verify cross-workspace isolation, reset/cleanup behavior, resource limits, the walkthrough, and published links before claiming completion.
 
-- What should a reviewer experience in the first two minutes, and which deeper engineering scenarios should be linked?
-- Should the hosted demo allow writes, use per-session isolation, or periodically reset shared data?
-- What budget, uptime expectations, and cold-start behavior are acceptable?
-- How should the site communicate simulated billing, synthetic data, and incomplete features?
-- Which screenshots, architecture explanations, and tradeoffs best support the intended job applications?
+Remaining decisions: configurable idle/absolute lifetime defaults and capacity limits; acceptable cold starts; hosting budget/provider/automation trigger; demo history retention and screenshots. Prepare deployment for review before provisioning paid resources or publishing.
 
 ## Scope and decision checkpoints
 

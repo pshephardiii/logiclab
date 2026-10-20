@@ -11,6 +11,7 @@ export function postProblemHandler(context: ProblemContext) {
     const input = parseRequest(createProblemRequestSchema, request.body);
     parseFormula(input.definition.formula);
     const problem = await context.problems.create(user.id, input);
-    return reply.code(201).send(problemResponseSchema.parse({ problem }));
+    reply.code(201);
+    return problemResponseSchema.parse({ problem });
   };
 }
