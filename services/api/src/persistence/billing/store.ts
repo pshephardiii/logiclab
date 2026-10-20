@@ -1,3 +1,4 @@
+import { transactionRunner, type DatabaseManager } from '../transactions';
 import { purchaseResponse } from './purchase-response';
 import { createBillingReadStore, type BillingReadStore } from './read-store';
 import type { createDatabase, ClassPurchase as PurchaseEntity } from '@logiclab/db' with {
@@ -30,7 +31,9 @@ export interface BillingStore extends BillingReadStore {
 /** Purchase row locks serialize event effects; receipts and coverage commit or roll back together. */
 export async function createBillingStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<BillingStore> {
+  const transact = transactionRunner(orm, transaction);
   const {
     Classroom,
     BillingPlan,
@@ -110,11 +113,11 @@ export async function createBillingStore(
     await em.flush();
     return { result: ignored ? ('ignored' as const) : ('applied' as const) };
   }
-  const reads = await createBillingReadStore(orm);
+  const reads = await createBillingReadStore(orm, transaction);
   return {
     ...reads,
     checkout(ownerId, classId, input, provider) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         // Serialize a user's idempotency keys across classes, then verify current class ownership.
         const { User } = await import('@logiclab/db');
         const payer = await em.findOne(
@@ -168,7 +171,7 @@ export async function createBillingStore(
       });
     },
     process(delivery) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const purchase = await em.findOne(
           ClassPurchase,
           {
@@ -182,7 +185,7 @@ export async function createBillingStore(
       });
     },
     simulate(ownerId, purchaseId, makeDelivery) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const purchase = await em.findOne(
           ClassPurchase,
           { id: purchaseId, classroom: { owner: ownerId } },

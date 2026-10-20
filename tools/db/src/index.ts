@@ -86,3 +86,5 @@ export type { DemoWorkspaceFields } from './types/demo-workspace/fields.ts';
 export { UserIdentityProvider } from './types/user/enums.ts';
 export { DemoSession } from './entities/DemoSession.ts';
 export type { DemoSessionFields } from './types/demo-session/fields.ts';
+
+export { seedDemoBillingPlan } from './seeds/billing-plan.ts';

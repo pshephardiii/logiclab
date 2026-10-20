@@ -1,3 +1,4 @@
+import { submittedAttemptRetentionBody } from '../triggers/demo-retention.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import {
@@ -30,7 +31,7 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
   name: 'assignment_attempts_submitted_immutable',
   timing: 'before',
   events: ['update', 'delete'],
-  body: "if OLD.submitted_at is not null then raise exception 'Submitted attempts are immutable' using errcode = '23514'; end if; if TG_OP = 'DELETE' then return OLD; end if; return NEW;",
+  body: submittedAttemptRetentionBody,
 })
 export class AssignmentAttempt implements AssignmentAttemptFields {
   [OptionalProps]?: 'id' | 'answers' | 'revision' | 'createdAt' | 'updatedAt';

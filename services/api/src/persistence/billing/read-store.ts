@@ -1,3 +1,4 @@
+import { transactionRunner, type DatabaseManager } from '../transactions';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type {
   BillingListQuery,
@@ -20,7 +21,9 @@ export interface BillingReadStore {
 /** Exposes catalog terms and owned history without provider references or event payloads. */
 export async function createBillingReadStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<BillingReadStore> {
+  const transact = transactionRunner(orm, transaction);
   const {
     BillingPlan,
     BillingModel,
@@ -32,13 +35,11 @@ export async function createBillingReadStore(
   } = await import('@logiclab/db');
   return {
     async plans(query) {
-      const rows = await orm.em
-        .fork()
-        .find(
-          BillingPlan,
-          { active: true, billingModel: BillingModel.OneTime },
-          { limit: query.limit + 1, offset: query.offset, orderBy: { name: 'ASC', id: 'ASC' } },
-        );
+      const rows = await (transaction ?? orm.em.fork()).find(
+        BillingPlan,
+        { active: true, billingModel: BillingModel.OneTime },
+        { limit: query.limit + 1, offset: query.offset, orderBy: { name: 'ASC', id: 'ASC' } },
+      );
       return {
         plans: rows.slice(0, query.limit).map((plan) => ({
           id: plan.id,
@@ -52,7 +53,7 @@ export async function createBillingReadStore(
       };
     },
     async readClass(ownerId, classId, query) {
-      return orm.em.fork().transactional(async (em) => {
+      return transact(async (em) => {
         const classroom = await em.findOne(
           Classroom,
           { id: classId, owner: ownerId },

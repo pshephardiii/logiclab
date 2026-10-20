@@ -6,8 +6,13 @@ import { ClassCapability } from '../types/class-entitlement/enums.ts';
 export const DEMO_CLASS_PLAN_ID = 'b1000000-0000-4000-8000-000000000001';
 
 /** Explicit, repeatable demo setup; never overwrite an existing plan's edited or retired terms. */
-export async function seedDemoBillingPlan(orm: Awaited<ReturnType<typeof createDatabase>>) {
-  const em = orm.em.fork();
+export async function seedDemoBillingPlan(
+  orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: Awaited<ReturnType<typeof createDatabase>>['em'],
+) {
+  if (transaction && !transaction.isInTransaction())
+    throw new Error('An active transaction is required.');
+  const em = transaction ?? orm.em.fork();
   await em.upsert(
     BillingPlan,
     {

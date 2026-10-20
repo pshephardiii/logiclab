@@ -1,3 +1,4 @@
+import type { DatabaseManager } from '../transactions';
 import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -31,6 +32,7 @@ function summary(attempt: AssignmentAttempt): SubmissionSummary {
 /** Only retained final submissions are visible; draft answers never cross the instructor boundary. */
 export async function createSubmissionReviewStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
+  transaction?: DatabaseManager,
 ): Promise<SubmissionReviewStore> {
   const { Assignment, AssignmentItem, AssignmentAttempt } = await import('@logiclab/db');
   async function owned(em: typeof orm.em, ownerId: string, id: string) {
@@ -40,7 +42,7 @@ export async function createSubmissionReviewStore(
   }
   return {
     async listSubmissions(ownerId, assignmentId, query) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       await owned(em, ownerId, assignmentId);
       const submissions = await em.find(
         AssignmentAttempt,
@@ -58,7 +60,7 @@ export async function createSubmissionReviewStore(
       return submissions.map(summary);
     },
     async findSubmission(ownerId, assignmentId, submissionId) {
-      const em = orm.em.fork();
+      const em = transaction ?? orm.em.fork();
       const assignment = await owned(em, ownerId, assignmentId);
       const attempt = await em.findOne(
         AssignmentAttempt,
