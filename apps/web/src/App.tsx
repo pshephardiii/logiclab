@@ -13,11 +13,16 @@ export function App() {
 
 function SessionPages() {
   const { demo, demoMode } = useAccountContext();
-  const key = demoMode
-    ? `demo:${demo.session?.workspace.id}:${demo.session?.workspace.generation}:${demo.session?.user.id}`
-    : 'normal';
+  const workspaceId = demo.session?.workspace.id;
+  const generation = demo.session?.workspace.generation;
+  const userId = demo.session?.user.id;
+
+  // Reset page state when the demo workspace, reset generation, or selected user changes.
+  const demoSessionKey = `demo:${workspaceId}:${generation}:${userId}`;
+  const pageSessionKey = demoMode ? demoSessionKey : 'normal';
+
   return (
-    <PracticeProvider key={key}>
+    <PracticeProvider key={pageSessionKey}>
       <AppRoutes />
     </PracticeProvider>
   );
