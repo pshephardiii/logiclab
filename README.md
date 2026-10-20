@@ -2,7 +2,9 @@
 
 Browse the [documentation index](docs/README.md) for planning, setup, API reference, conventions, and verification.
 
-An interactive formal-logic learning project, built as a public full-stack portfolio. The browser creates truth-table exercises through the API, lets students fill blank/T/F answer cells, checks answers, and shows solutions alongside their entries. See the [implementation plan](docs/planning/initial-implementation-plan.md) and [truth-table API](docs/api/truth-table-api.md).
+LogicLab is a full-stack formal-logic learning project. Instructors build reusable problems, publish class assignments, and review submissions; students save and submit truth-table work. It also includes anonymous practice, simulated class payments, and durable operator jobs.
+
+**Start with the [reviewer walkthrough](docs/development/demo-walkthrough.md)** to explore both roles using an isolated, resettable demo without signup or real charges. See the [architecture overview](docs/architecture/overview.md) for package boundaries, data flow, and engineering tradeoffs. The demo runs locally; application hosting is not yet deployed.
 
 The agreed product behavior and remaining design questions are recorded in [Product Direction](docs/planning/product-direction.md).
 
@@ -21,7 +23,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds the schema and logic engine before starting all five workspace watchers.
+Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds contracts, the logic engine, and the database package before starting all five workspace watchers.
 
 To use accounts, configure the backend following [Cognito development setup](docs/development/cognito-development.md), then select **Sign in / Create account**. Signup includes a student/instructor role, email confirmation, and password recovery. Sessions use HttpOnly cookies; Cognito tokens remain on the backend. Account navigation preserves current practice work. Instructors can use **Classes** to create and list their own persistent classes; see [classroom API and local walkthrough](docs/api/classroom-api.md). Instructors can also generate or replace a seven-day invitation code; students can redeem it on **My classes** to join and view their enrolled classes.
 
@@ -53,7 +55,7 @@ An admin app can be added as `apps/admin` with package name `@logiclab/admin`, i
 | `services/api`       | `@logiclab/api`          | Node.js + TypeScript API using Fastify; Jest tests                   |
 | `tools/contracts`    | `@logiclab/contracts`    | Shared Zod request/response schemas and inferred types               |
 | `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
-| `tools/db`           | `@logiclab/db`           | MikroORM/PostgreSQL client, users schema, and SQL migrations         |
+| `tools/db`           | `@logiclab/db`           | MikroORM/PostgreSQL entities, client, and SQL migrations             |
 
 The contracts package contains API contracts, not database migrations. Each domain file groups reusable shapes, request contracts, and response contracts, with inferred TypeScript types beside public schemas. `index.ts` only re-exports domain modules. Named type exports are conveniences; parsed values are already inferred from their Zod schemas. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
@@ -63,7 +65,7 @@ Formula parsing lives in `tools/logic-engine/src/parser/`: `parser.ts` checks le
 
 Truth-table generation lives in `tools/logic-engine/src/truth-table/`: `truth-table.ts` orchestrates parsing and generation, `types.ts` declares the output shapes, and `helpers/` groups expression traversal/labels, column construction, and row evaluation. Helpers are implementation details; the root package exports retain the generator and its public types.
 
-Frontend features own their UI and behavior under `apps/web/src/features/`. The truth-table feature composes `FormulaForm`, `ExercisePanel`, and `TruthTable`; `useTruthTablePractice` manages requests, answers, errors, and resets. Its API client and answer types live alongside the feature. `App.tsx` composes practice and account navigation. The auth feature owns its account form/panel, API client, and session-state hook; shared UI components can be introduced when other features reuse them.
+Frontend pages own their screen-specific components, hooks, and styles under `apps/web/src/pages/`. Reusable domain UI/state stays in `features/`; shared HTTP clients live in `api/`. `App.tsx` composes providers and routing. Route definitions centralize navigation labels and role requirements; shared layout components supply the page skeleton. See [codebase conventions](docs/conventions/codebase-conventions.md) for ownership rules.
 
 ## Commands
 
@@ -76,9 +78,9 @@ npm run build
 npm run check
 ```
 
-`check` runs type checking, engine/backend Jest tests, and production builds. Backend tests cover handlers directly and routes through Fastify injection without opening a network port. Browser smoke checks have been run locally; a frontend test suite and CI browser job remain follow-up work. Vite is the frontend development/build tool.
+`check` runs type checking, engine/backend Jest tests, frontend Vitest tests, and production builds. Backend tests cover handlers directly and routes through Fastify injection without opening a network port. `npm run db:test` separately verifies migrations and PostgreSQL workflows/concurrency. Browser smoke checks have been run locally; a browser CI suite remains follow-up work. Vite is the frontend development/build tool.
 
-Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's request-injection tooling. An experimental warning during tests is expected. The initial dependency audit reports 20 moderate findings in the Jest development dependency chain, originating in `sprintf-js`. No automatic downgrade was applied; revisit upstream fixes as dependencies evolve.
+Jest uses Node's experimental VM modules flag for an ESM dependency in Fastify's request-injection tooling. An experimental warning during tests is expected. Dependency audit results vary with the installed lockfile and advisory database; run `npm audit` when assessing current findings.
 
 After a root build, `npm start -w @logiclab/api` starts the compiled API and `npm run preview -w @logiclab/web` previews the static frontend build locally. Individual workspace commands assume the shared contracts package has already been built. `PORT` and `HOST` configure the API through environment variables. Example files document options; API dev/start loads the ignored root `.env`.
 
@@ -86,7 +88,7 @@ After a root build, `npm start -w @logiclab/api` starts the compiled API and `np
 
 The [Cognito development foundation](docs/development/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; the web app includes account screens and restores sessions through the API. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/api/auth-api.md) for contracts, cookies, recovery, and limits.
 
-Both applications will target AWS. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
+The initial public demo will use a low-cost hosting design still to be selected; AWS remains a possible later production destination. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
 
 The production browser uses same-origin `/api` by default. Configure routing for that path to the backend. `VITE_API_URL` optionally sets an API origin at frontend build time; using a different origin will also require explicit backend CORS configuration. Never put secrets in `VITE_*` variables, which are visible in the browser.
 
@@ -126,4 +128,4 @@ The assignment branch adds class-owned assignment records and ordered items pinn
 
 New assignment publication requires valid class coverage, even when billing routes are disabled. Existing published work remains available after coverage expires or is refunded. See [simulated billing](docs/api/billing-api.md) for opt-in checkout configuration and setup and the instructor `/billing` page. Run `npm run billing:seed` after migration to add the local no-charge demo plan; no coverage is granted until a simulated success is processed.
 
-Operator-only report-only billing reconciliation is available through `npm run jobs -- help` from the repository root. Commands cover disabled schedule setup, manual enqueue, scheduler/worker cycles, and paginated report/history inspection. Nothing runs automatically on API startup. See [operator jobs CLI](docs/development/operator-jobs.md).
+Operator-only report-only billing reconciliation and expired demo-workspace cleanup are available through `npm run jobs -- help` from the repository root. Commands cover disabled schedule setup, manual enqueue, scheduler/worker cycles, and paginated report/history inspection. Nothing runs automatically on API startup. See [operator jobs CLI](docs/development/operator-jobs.md).

@@ -41,7 +41,7 @@ Add admission/rate limits and a global active-workspace cap before public exposu
 3. **Repeatable seed/reset (internal implementation complete):** private instructor/student data graph, unpaid/funded simulator scenarios, example assignment, transactional provisioning/reset, concurrent write fencing, and retry/rollback tests.
 4. **Demo entry and role switching (implemented, opt-in):** clear synthetic-data/payment notices, role selection, reset controls, and preserved same-workspace journeys with frontend tests.
 5. **Bounded cleanup and admission controls (implemented; external trigger pending):** job registration, abandoned provisioning recovery, safe scoped deletion, capacity/rate controls, concurrency tests, and operator instructions. Automation wiring is prepared; hosting determines the trigger.
-6. **Portfolio/deployment verification:** walkthrough, architecture/tradeoffs, screenshots, browser smoke checks, and reviewed hosting configuration. Do not claim a hosted demo until verified.
+6. **Portfolio/deployment verification (reviewer documentation implemented; deployment verification pending):** [reviewer walkthrough](../development/demo-walkthrough.md) and [architecture/tradeoffs](../architecture/overview.md), plus [local verification and screenshot](../verification/public-demo-verification.md). Hosted verification and reviewed hosting configuration remain pending. Do not claim a hosted demo until verified.
 
 ## Hosting boundary
 
