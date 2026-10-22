@@ -22,7 +22,7 @@ Published assessment, feedback and solution settings remain frozen. Enrollment, 
 2. **Persistence and authoring API (assessment/feedback and solution-release storage implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
 3. **Student workflow API (explicit check foundation implemented):** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
 4. **Instructor UI (implemented; publication guard retained):** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
-5. **Student UI:** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
+5. **Student UI (implemented; publication rollout pending):** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
 6. **Demo and final verification:** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
 
 Keep each slice small; split API work further if needed. QA and code audit branches remain planned before deployment and will be numbered after this feature. No hosted rollout or resources are part of this branch.
@@ -66,3 +66,9 @@ Practice still cannot submit. No migration or result backfill is required. New-m
 The editor now offers graded, completion-only and ungraded practice modes with explanatory feedback text and explicit solution-release choices. Mode changes produce a complete valid policy, count as unsaved edits, and survive failed saves. Changing an after-submission policy to practice selects never and announces the adjustment instead of silently enabling solutions. Saved policy restores on reload; published/archived controls remain disabled.
 
 New-mode/anytime publication is visibly disabled until student workflow controls are ready. Practice assignment review is excluded from the instructor page. The next slice is the student Check answers/practice/completion UI, followed by publication rollout and the demo practice example.
+
+### Student controls checkpoint
+
+The student UI now supports transient explicit checking, practice without final submission, completion-only completeness/save gating, and anytime/after-submission solution controls. Feedback is per occurrence, cleared by edits, and protected against canceled late responses. Existing graded interactions remain unchanged.
+
+New modes and anytime access remain draft-only through public authoring. Next: remove the temporary publication gates, seed an additional demo practice assignment, update walkthroughs, and verify the real instructor-to-student journey before branch completion.

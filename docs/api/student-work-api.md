@@ -112,3 +112,11 @@ The existing version field name is retained for compatibility; this result conta
 Finalization increments revision once, is idempotent after submission, and serializes with saves/checks through the existing attempt locks. Final answers cannot be edited; permitted after-submission solutions become available. Practice still has no final submission and remains excluded from instructor review.
 
 No database migration or rewrite of old results is needed: result is stored in the existing JSON column and covered by the existing final-attempt retention trigger. Application rollback to a version that only understands graded results requires care once completion results exist. New-mode publication remains blocked until the planned frontend controls/workflow rollout; this slice verifies completion through isolated test fixtures.
+
+## Student learning-mode controls
+
+Assigned work now shows explicit Check answers for on_check policies. Checks use current entries without saving them; repeated checks do not submit work. Edits clear that problem's transient feedback and cancel pending checks. Reload, saves, solution actions and final submission cancel outstanding checks so late responses cannot restore stale feedback.
+
+Practice pages retain Save problem and checking but omit final submission/confirmation. Anytime solutions can be shown before saving or submitting without replacing entries. Completion-only final confirmation is disabled until every expected cell across all occurrences is filled and all edits are saved. Final completion displays counts without a correctness score. Existing graded submission-only feedback and after-submission solutions remain supported.
+
+The server independently enforces these rules. Publication remains staged off for new policies until the rollout/demo verification slice.
