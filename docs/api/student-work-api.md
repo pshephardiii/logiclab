@@ -72,3 +72,13 @@ Local verification for the completion/review slice includes DOM/hook regression 
 ## Learning-policy contract rollout
 
 Assignment responses now use solutionAccess (never/after_submission/anytime). The currently published student workflow remains graded/on_submission, with solutions enabled only by after_submission and a final submission. New learning policies can be authored as drafts but cannot yet be published; explicit checking and new mode-specific submission behavior follow in a later slice.
+
+## Explicit check foundation
+
+`POST /api/student/assignments/:assignmentId/check` accepts `{ itemId, answers }`. The answers use the existing truth-table cell format. It evaluates the submitted transient item answers and returns `{ itemId, feedback }`, with cell statuses and correct/incorrect/unanswered totals. Omitted/null cells are unanswered. Duplicate/invalid cells are rejected. Expected values and solutions are not included.
+
+This operation does not create an attempt, save answers, increment revisions, finalize work, or persist a result/official grade. It intentionally has no revision parameter because it checks the supplied answers rather than a saved snapshot. A frontend must discard stale feedback when its inputs change.
+
+Only enrolled students can check published, nonarchived work whose policy permits explicit checks (completion_only/on_check or ungraded_practice/on_check). Graded assignments return 403 CHECK_UNAVAILABLE. Submitted attempts reject checks with 409 ATTEMPT_SUBMITTED; those students use their final feedback instead. Missing/foreign/unpublished/archived assignments and foreign items return 404. Origin, role, rate, and no-store policies apply, including the existing demo resource namespace.
+
+Publication of the new modes remains blocked during staged rollout. This endpoint is the checking foundation; mode-specific read/save/submit/solution support and frontend integration follow. Integration fixtures exercise the new policies directly without removing the public publication guard.

@@ -11,6 +11,11 @@ export class StudentWorkRouteError extends Error {
   }
 }
 const failures = {
+  check_locked: {
+    status: 403,
+    code: 'CHECK_UNAVAILABLE',
+    message: 'Explicit answer checking is unavailable for this assignment.',
+  },
   not_found: {
     status: 404,
     code: 'ASSIGNMENT_NOT_FOUND',

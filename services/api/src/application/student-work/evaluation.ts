@@ -32,3 +32,9 @@ export function evaluateSubmission(
   });
   return { gradingVersion: 'truth_table_v1', items: feedback, summary };
 }
+
+/** Transient feedback shares submission validation but never produces a persisted result. */
+export function checkAssignedAnswers(formula: string, answers: TruthTableAnswer[]) {
+  const validated = validateAnswers(formula, answers);
+  return buildFeedback(validated.table, validated.columns, validated.answers);
+}

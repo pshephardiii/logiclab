@@ -1,3 +1,4 @@
+import { postStudentCheckRoute } from './postStudentCheck/route';
 import { getStudentAssignmentsRoute } from './getStudentAssignments/route';
 import { getStudentAssignmentRoute } from './getStudentAssignment/route';
 import { patchStudentAttemptRoute } from './patchStudentAttempt/route';
@@ -32,4 +33,5 @@ export async function studentWorkRoutes(app: FastifyInstance, context: StudentWo
   app.register(patchStudentAttemptRoute, context);
   app.register(postStudentSubmissionRoute, context);
   app.register(getStudentSolutionRoute, context);
+  app.register(postStudentCheckRoute, context);
 }

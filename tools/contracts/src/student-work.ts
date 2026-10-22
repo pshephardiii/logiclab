@@ -82,3 +82,15 @@ export const studentWorkErrorResponseSchema = z.strictObject({
   error: z.strictObject({ code: z.string(), message: z.string() }),
 });
 export type StudentWorkErrorResponse = z.infer<typeof studentWorkErrorResponseSchema>;
+
+/** Explicit checking evaluates these transient answers; it does not save or submit them. */
+export const checkStudentAnswersSchema = z.strictObject({
+  itemId: z.uuid(),
+  answers: z.array(truthTableAnswerSchema).max(4096),
+});
+export type CheckStudentAnswers = z.infer<typeof checkStudentAnswersSchema>;
+export const studentCheckResponseSchema = z.strictObject({
+  itemId: z.uuid(),
+  feedback: truthTableCheckResponseSchema,
+});
+export type StudentCheckResponse = z.infer<typeof studentCheckResponseSchema>;

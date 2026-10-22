@@ -20,7 +20,7 @@ Published assessment, feedback and solution settings remain frozen. Enrollment, 
 
 1. **Policy/contracts foundation (implemented):** standalone target contract, pure capabilities/solution-release helpers, legacy mapping, and policy tests. Existing endpoints, database checks, UI, and demo template remain unchanged; the new contract is not yet accepted by assignment routes.
 2. **Persistence and authoring API (assessment/feedback and solution-release storage implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
-3. **Student workflow API:** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
+3. **Student workflow API (explicit check foundation implemented):** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
 4. **Instructor UI:** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
 5. **Student UI:** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
 6. **Demo and final verification:** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
@@ -44,3 +44,7 @@ Active API requests/responses still use the graded-only legacy contract. The aut
 Authoring now accepts all valid draft policies, returns solutionAccess, and rejects the removed allowSolutions API field. Creation defaults remain graded/on_submission/never. PATCH merges supplied policy fields with locked saved state and validates the full combination before changing anything. Published policy remains immutable.
 
 New modes and anytime solutions are intentionally draft-only until student workflow support exists; publication fails with ASSIGNMENT_POLICY_NOT_READY. The current web editor preserves saved policies and sends the new contract, but mode/solution selectors remain a later UI slice. Existing graded checks, demo seeds, and frontend fixtures were updated together for the contract replacement. No new migration is needed for this slice.
+
+### Explicit checking checkpoint
+
+The student check endpoint evaluates transient per-item answers under assignment/enrollment locks and applicable feedback policy, returns status-only feedback, and never writes an attempt or grade. Completion-only submitted work rejects further checks. Existing graded read/save/submission/solution behavior is unchanged. Public publication remains blocked for new modes until the remaining student workflows are implemented. Next sub-slice: mode-specific saved work, completion results, submission/solution rules and privacy.

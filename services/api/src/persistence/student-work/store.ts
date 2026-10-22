@@ -1,12 +1,18 @@
+import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { assignmentExercises } from '../assignment/exercise-response';
-import { truthTableSolutionResponseSchema } from '@logiclab/contracts';
+import {
+  assignmentLearningPolicySchema,
+  truthTableSolutionResponseSchema,
+} from '@logiclab/contracts';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type {
   AssignmentSummary,
+  CheckStudentAnswers,
+  StudentCheckResponse,
   StudentAssignmentResponse,
   StudentAttempt,
   SaveStudentAnswers,
@@ -15,7 +21,11 @@ import type {
 } from '@logiclab/contracts';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import { StudentWorkError } from '../../application/student-work/errors';
-import { validateAnswers, evaluateSubmission } from '../../application/student-work/evaluation';
+import {
+  validateAnswers,
+  evaluateSubmission,
+  checkAssignedAnswers,
+} from '../../application/student-work/evaluation';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -26,6 +36,11 @@ export interface StudentWorkStore {
   ): Promise<AssignmentSummary[]>;
   read(studentId: string, assignmentId: string): Promise<StudentAssignmentResponse>;
   save(studentId: string, assignmentId: string, input: SaveStudentAnswers): Promise<StudentAttempt>;
+  check(
+    studentId: string,
+    assignmentId: string,
+    input: CheckStudentAnswers,
+  ): Promise<StudentCheckResponse>;
   submit(studentId: string, assignmentId: string, revision: number): Promise<StudentAttempt>;
   solution(
     studentId: string,
@@ -59,6 +74,10 @@ export async function createStudentWorkStore(
     if (!assignment || !assignment.publishedAt || assignment.archivedAt)
       throw new StudentWorkError('not_found');
     await enrolled(em, studentId, assignment.classroom.id, true);
+    return assignment;
+  }
+  async function gradedAssignment(em: Manager, studentId: string, assignmentId: string) {
+    const assignment = await accessible(em, studentId, assignmentId);
     if (assignment.assessmentMode !== 'graded' || assignment.feedbackTiming !== 'on_submission')
       throw new StudentWorkError('unsupported_policy');
     return assignment;
@@ -107,7 +126,7 @@ export async function createStudentWorkStore(
     },
     async read(studentId, assignmentId) {
       return transact(async (em) => {
-        const assignment = await accessible(em, studentId, assignmentId);
+        const assignment = await gradedAssignment(em, studentId, assignmentId);
         const assigned = await items(em, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
           assignment: assignmentId,
@@ -121,7 +140,7 @@ export async function createStudentWorkStore(
     },
     async save(studentId, assignmentId, input) {
       return transact(async (em) => {
-        await accessible(em, studentId, assignmentId);
+        await gradedAssignment(em, studentId, assignmentId);
         const item = await em.findOne(
           AssignmentItem,
           { id: input.itemId, assignment: assignmentId },
@@ -138,9 +157,44 @@ export async function createStudentWorkStore(
         return attemptResponse(attempt);
       });
     },
+    async check(studentId, assignmentId, input) {
+      return transact(async (em) => {
+        const assignment = await accessible(em, studentId, assignmentId);
+        const policy = assignmentLearningPolicySchema.safeParse({
+          assessmentMode: assignment.assessmentMode,
+          feedbackTiming: assignment.feedbackTiming,
+          solutionAccess: assignment.solutionAccess,
+        });
+        if (!policy.success) throw new StudentWorkError('unsupported_policy');
+        if (!assignmentLearningCapabilities(policy.data).allowsExplicitCheck)
+          throw new StudentWorkError('check_locked');
+        const attempt = await em.findOne(
+          AssignmentAttempt,
+          {
+            assignment: assignmentId,
+            student: studentId,
+          },
+          { lockMode: LockMode.PESSIMISTIC_READ },
+        );
+        if (attempt?.submittedAt) throw new StudentWorkError('submitted');
+        const item = await em.findOne(
+          AssignmentItem,
+          {
+            id: input.itemId,
+            assignment: assignmentId,
+          },
+          { populate: ['problemVersion'] },
+        );
+        if (!item) throw new StudentWorkError('not_found');
+        return {
+          itemId: item.id,
+          feedback: checkAssignedAnswers(item.problemVersion.definition.formula, input.answers),
+        };
+      });
+    },
     async submit(studentId, assignmentId, revision) {
       return transact(async (em) => {
-        await accessible(em, studentId, assignmentId);
+        await gradedAssignment(em, studentId, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) return attemptResponse(attempt);
         checkRevision(attempt, revision);
@@ -160,7 +214,7 @@ export async function createStudentWorkStore(
     },
     async solution(studentId, assignmentId, itemId) {
       return transact(async (em) => {
-        const assignment = await accessible(em, studentId, assignmentId);
+        const assignment = await gradedAssignment(em, studentId, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
           assignment: assignmentId,
           student: studentId,

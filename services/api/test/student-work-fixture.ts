@@ -5,7 +5,10 @@ import { authFixture, authUser } from './auth-fixture';
 import { assignment, assignmentSummary, classId } from './assignment-fixture';
 import { exerciseResponse } from '../src/application/truth-table/exercise';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import { evaluateSubmission } from '../src/application/student-work/evaluation';
+import {
+  checkAssignedAnswers,
+  evaluateSubmission,
+} from '../src/application/student-work/evaluation';
 export { classId };
 export const assignmentId = assignment.id;
 export const itemId = assignment.items[0]!.id;
@@ -42,6 +45,12 @@ export function studentWorkFixture() {
   const user = { ...authUser, role: 'student' as const };
   auth.service.authenticate.mockResolvedValue(user);
   const studentWork = {
+    check: jest.fn<ReturnType<StudentWorkStore['check']>, Parameters<StudentWorkStore['check']>>(
+      async () => ({
+        itemId,
+        feedback: checkAssignedAnswers(detail.assignment.items[0]!.formula, []),
+      }),
+    ),
     list: jest.fn<ReturnType<StudentWorkStore['list']>, Parameters<StudentWorkStore['list']>>(
       async () => [summary],
     ),
