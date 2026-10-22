@@ -49,6 +49,7 @@ export async function createAssignmentStore(
     LockMode,
     AssessmentMode,
     FeedbackTiming,
+    SolutionAccess,
     ClassCapability,
   } = await import('@logiclab/db');
   type Manager = typeof orm.em;
@@ -124,7 +125,9 @@ export async function createAssignmentStore(
           instructions: input.instructions ?? undefined,
           assessmentMode: AssessmentMode.Graded,
           feedbackTiming: FeedbackTiming.OnSubmission,
-          allowSolutions: input.allowSolutions,
+          solutionAccess: input.allowSolutions
+            ? SolutionAccess.AfterSubmission
+            : SolutionAccess.Never,
         });
         em.persist(assignment);
         await em.flush();
@@ -160,7 +163,10 @@ export async function createAssignmentStore(
         if (input.title !== undefined) assignment.title = input.title;
         if (input.instructions !== undefined)
           assignment.instructions = input.instructions ?? undefined;
-        if (input.allowSolutions !== undefined) assignment.allowSolutions = input.allowSolutions;
+        if (input.allowSolutions !== undefined)
+          assignment.solutionAccess = input.allowSolutions
+            ? SolutionAccess.AfterSubmission
+            : SolutionAccess.Never;
         if (input.problemVersionIds !== undefined)
           await replaceItems(em, ownerId, assignment, input.problemVersionIds);
         assignment.updatedAt = new Date();

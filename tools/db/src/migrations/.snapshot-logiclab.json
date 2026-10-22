@@ -373,23 +373,6 @@
       "name": "assignments",
       "schema": "public",
       "columns": {
-        "allow_solutions": {
-          "name": "allow_solutions",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": null,
-          "scale": null,
-          "default": "false",
-          "comment": null,
-          "collation": null,
-          "enumItems": [],
-          "mappedType": "boolean"
-        },
         "archived_at": {
           "name": "archived_at",
           "type": "timestamptz(6)",
@@ -526,6 +509,23 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "solution_access": {
+          "name": "solution_access",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 32,
+          "precision": null,
+          "scale": null,
+          "default": "'never'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
         "title": {
           "name": "title",
           "type": "varchar(120)",
@@ -598,6 +598,16 @@
           "name": "assignments_learning_policy_check",
           "expression": "\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  ",
           "definition": "check (\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  )"
+        },
+        {
+          "name": "assignments_practice_solution_check",
+          "expression": "assessment_mode <> 'ungraded_practice' or solution_access <> 'after_submission'",
+          "definition": "check (assessment_mode <> 'ungraded_practice' or solution_access <> 'after_submission')"
+        },
+        {
+          "name": "assignments_solution_access_check",
+          "expression": "solution_access in ('never', 'after_submission', 'anytime')",
+          "definition": "check (solution_access in ('never', 'after_submission', 'anytime'))"
         }
       ],
       "triggers": [],

@@ -4,6 +4,9 @@ import type { Assignment as AssignmentEntity } from '@logiclab/db' with {
 import { assignmentPolicySchema, type AssignmentSummary } from '@logiclab/contracts';
 
 export function assignmentSummary(assignment: AssignmentEntity): AssignmentSummary {
+  // The legacy boolean cannot represent pre-submission solution access.
+  if (assignment.solutionAccess === 'anytime')
+    throw new Error('Assignment solution policy is not supported by the current API.');
   return {
     id: assignment.id,
     classId: assignment.classroom.id,
@@ -13,7 +16,7 @@ export function assignmentSummary(assignment: AssignmentEntity): AssignmentSumma
     ...assignmentPolicySchema.parse({
       assessmentMode: assignment.assessmentMode,
       feedbackTiming: assignment.feedbackTiming,
-      allowSolutions: assignment.allowSolutions,
+      allowSolutions: assignment.solutionAccess === 'after_submission',
     }),
     publishedAt: assignment.publishedAt?.toISOString() ?? null,
     archivedAt: assignment.archivedAt?.toISOString() ?? null,

@@ -165,7 +165,7 @@ export async function createStudentWorkStore(
           assignment: assignmentId,
           student: studentId,
         });
-        if (!assignment.allowSolutions || !attempt?.submittedAt)
+        if (assignment.solutionAccess !== 'after_submission' || !attempt?.submittedAt)
           throw new StudentWorkError('solution_locked');
         const item = await em.findOne(
           AssignmentItem,

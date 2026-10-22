@@ -10,3 +10,10 @@ export enum FeedbackTiming {
   OnSubmission = 'on_submission',
   OnCheck = 'on_check',
 }
+
+/** When students may access assigned solutions. */
+export enum SolutionAccess {
+  Never = 'never',
+  AfterSubmission = 'after_submission',
+  Anytime = 'anytime',
+}

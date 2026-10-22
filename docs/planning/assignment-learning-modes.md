@@ -19,7 +19,7 @@ Published assessment, feedback and solution settings remain frozen. Enrollment, 
 ## Commit-sized sequence
 
 1. **Policy/contracts foundation (implemented):** standalone target contract, pure capabilities/solution-release helpers, legacy mapping, and policy tests. Existing endpoints, database checks, UI, and demo template remain unchanged; the new contract is not yet accepted by assignment routes.
-2. **Persistence and authoring API (assessment/feedback storage foundation implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
+2. **Persistence and authoring API (assessment/feedback and solution-release storage implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
 3. **Student workflow API:** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
 4. **Instructor UI:** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
 5. **Student UI:** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
@@ -32,3 +32,9 @@ Keep each slice small; split API work further if needed. QA and code audit branc
 The database now stores the three assessment modes and enforces their supported feedback pairs. Existing defaults, solution flags, published data and submissions are unchanged. The migration changes constraints only; it does not rewrite assignments. Rollback is valid while all rows remain graded/on_submission and deliberately fails if new modes exist rather than coercing or deleting them.
 
 Assignment endpoints remain graded-only, and response serialization rejects unsupported stored policies instead of describing them as graded. Do not manually enable new modes for live assignments yet. Replacing the legacy solution boolean with release policy, full-policy validation on PATCH, authoring support, and student workflow enforcement remain subsequent slices. This split keeps the migration review small.
+
+### Solution-release storage checkpoint
+
+Assignments now persist `solutionAccess` as never/after_submission/anytime instead of the boolean. The migration backfills both legacy boolean values before dropping that column, without changing publication timestamps or attempt data. Rollback restores the old flags only if no anytime policy exists; otherwise it fails explicitly. The database rejects practice with after_submission access.
+
+Active API requests/responses still use the graded-only legacy contract. The authoring store translates the boolean at that boundary, and student solutions retain the existing after-submission gate. Serialization rejects anytime rows until the full contract/workflows support them. This is staged persistence support, not an enabled new learning mode. Complete-policy PATCH validation and authoring/student support remain next.

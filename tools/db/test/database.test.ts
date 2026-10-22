@@ -20,6 +20,7 @@ import {
   AssignmentAttempt,
   AssessmentMode,
   FeedbackTiming,
+  SolutionAccess,
   ClassPurchase,
   BillingPlan,
   BillingModel,
@@ -482,16 +483,16 @@ test('assignment SQL defaults keep assessment, feedback, and solutions independe
     const saved = await em.findOneOrFail(Assignment, row!.id);
     assert.equal(saved.assessmentMode, AssessmentMode.Graded);
     assert.equal(saved.feedbackTiming, FeedbackTiming.OnSubmission);
-    assert.equal(saved.allowSolutions, false);
+    assert.equal(saved.solutionAccess, SolutionAccess.Never);
     assert.equal(saved.publishedAt ?? null, null);
     assert.equal(saved.archivedAt ?? null, null);
     assert(saved.createdAt instanceof Date);
     assert(saved.updatedAt instanceof Date);
-    saved.allowSolutions = true;
+    saved.solutionAccess = SolutionAccess.AfterSubmission;
     await em.flush();
     em.clear();
     const reloaded = await em.findOneOrFail(Assignment, saved.id);
-    assert.equal(reloaded.allowSolutions, true);
+    assert.equal(reloaded.solutionAccess, SolutionAccess.AfterSubmission);
     assert.equal(reloaded.assessmentMode, AssessmentMode.Graded);
     assert.equal(reloaded.feedbackTiming, FeedbackTiming.OnSubmission);
   } finally {
