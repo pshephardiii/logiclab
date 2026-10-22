@@ -190,3 +190,7 @@ Future administrative tooling should allow authorized operators to enable/pause 
 The public demo will create a private synthetic workspace per visitor, with an instructor and student selectable without registration. Switching roles preserves changes within that workspace. Restarting invalidates prior demo sessions and restores seeded classroom, assignment/progress, and simulator payment scenarios. No real charges, per-visit Cognito identities, or personal classroom data.
 
 Expire workspaces after inactivity and an absolute lifetime; reject expired sessions immediately and clean up demo-owned data through bounded durable jobs. Keep normal accounts and their financial/history records outside demo deletion. Hosting should minimize initial cost and may precede an eventual AWS deployment; the existing portfolio links to this separately hosted application. See [Public Demo Direction](public-demo.md) for scope, security boundaries, and implementation status.
+
+## Assignment learning modes follow-up
+
+The agreed next feature is graded, completion-only, and ungraded practice assignments with explicit checking and independent solution release. See [learning-mode decisions and delivery slices](assignment-learning-modes.md). Immediate per-cell feedback remains deferred. Existing graded endpoints remain unchanged until the new persistence and workflows are implemented; the earlier single-mode statements describe the initial release.

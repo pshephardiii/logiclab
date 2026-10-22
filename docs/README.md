@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
+- [Assignment learning modes](planning/assignment-learning-modes.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)
 - [Public demo direction and implementation slices](planning/public-demo.md)

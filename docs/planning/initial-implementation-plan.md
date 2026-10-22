@@ -247,3 +247,7 @@ Work is now on `006-feat-assignments-and-progress`. The first slice adds assignm
 ### Current durable-jobs branch
 
 `007-feat-simulated-billing-and-entitlements` is complete; see [billing verification](../verification/simulated-billing-verification.md). Work is now on `008-feat-durable-jobs-and-history`, starting with job persistence. Scheduler/worker cycles and policy/setup foundations are implemented; the reconciliation handler and operator runtime are also implemented. Operator CLI commands are implemented; final branch verification and documentation are complete, with the ignored local PR draft prepared. See [verification evidence](../verification/durable-jobs-verification.md). Existing development checkouts should apply the additive migration with `npm run db:migrate`; no schedules or jobs are seeded or started by this slice.
+
+## Current feature: 010-feat-assignment-learning-modes
+
+Implement the agreed [learning-mode plan](assignment-learning-modes.md) in small slices. The first slice supplies standalone target contracts/policy helpers only; existing assignment APIs still accept graded/on_submission with allowSolutions. Persistence, student workflows, UI, and an extra demo practice assignment follow. Dedicated demo QA and a code audit remain before deployment; branch numbers will follow this feature.
