@@ -9,10 +9,20 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
 /** Class-owned assignment; publication locks will be enforced by the assignment workflow. */
 @Entity({ tableName: 'assignments' })
 @Index({ name: 'assignments_classroom_id_index', properties: ['classroom'] })
-@Check({ name: 'assignments_assessment_mode_check', expression: "assessment_mode in ('graded')" })
+@Check({
+  name: 'assignments_assessment_mode_check',
+  expression: "assessment_mode in ('graded', 'completion_only', 'ungraded_practice')",
+})
 @Check({
   name: 'assignments_feedback_timing_check',
-  expression: "feedback_timing in ('on_submission')",
+  expression: "feedback_timing in ('on_submission', 'on_check')",
+})
+@Check({
+  name: 'assignments_learning_policy_check',
+  expression: `
+    (assessment_mode = 'graded' and feedback_timing = 'on_submission')
+    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')
+  `,
 })
 export class Assignment implements AssignmentFields {
   [OptionalProps]?:

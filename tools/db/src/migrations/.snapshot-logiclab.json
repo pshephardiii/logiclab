@@ -586,13 +586,18 @@
       "checks": [
         {
           "name": "assignments_assessment_mode_check",
-          "expression": "assessment_mode in ('graded')",
-          "definition": "check (assessment_mode in ('graded'))"
+          "expression": "assessment_mode in ('graded', 'completion_only', 'ungraded_practice')",
+          "definition": "check (assessment_mode in ('graded', 'completion_only', 'ungraded_practice'))"
         },
         {
           "name": "assignments_feedback_timing_check",
-          "expression": "feedback_timing in ('on_submission')",
-          "definition": "check (feedback_timing in ('on_submission'))"
+          "expression": "feedback_timing in ('on_submission', 'on_check')",
+          "definition": "check (feedback_timing in ('on_submission', 'on_check'))"
+        },
+        {
+          "name": "assignments_learning_policy_check",
+          "expression": "\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  ",
+          "definition": "check (\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  )"
         }
       ],
       "triggers": [],
