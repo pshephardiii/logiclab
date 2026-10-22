@@ -129,3 +129,7 @@ The assignment branch adds class-owned assignment records and ordered items pinn
 New assignment publication requires valid class coverage, even when billing routes are disabled. Existing published work remains available after coverage expires or is refunded. See [simulated billing](docs/api/billing-api.md) for opt-in checkout configuration and setup and the instructor `/billing` page. Run `npm run billing:seed` after migration to add the local no-charge demo plan; no coverage is granted until a simulated success is processed.
 
 Operator-only report-only billing reconciliation and expired demo-workspace cleanup are available through `npm run jobs -- help` from the repository root. Commands cover disabled schedule setup, manual enqueue, scheduler/worker cycles, and paginated report/history inspection. Nothing runs automatically on API startup. See [operator jobs CLI](docs/development/operator-jobs.md).
+
+### Assignment learning modes
+
+Instructors can publish graded, completion-only or private-practice assignments with independent solution-release rules. Students explicitly check practice/completion answers, save work and finalize completion-only work without an official correctness score. Demo template 2 includes both the graded example and private practice; reset an existing workspace to load the new examples. See [learning-mode verification and rollout](docs/verification/assignment-learning-modes-verification.md).

@@ -55,6 +55,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Assignment learning modes](verification/assignment-learning-modes-verification.md)
+
 - [Isolated demo foundation and browser evidence](verification/public-demo-verification.md)
 
 - [Truth-table walkthrough and evidence](verification/truth-table-verification.md)

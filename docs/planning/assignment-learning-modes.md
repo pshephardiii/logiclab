@@ -1,82 +1,46 @@
 # Assignment learning modes
 
-Agreed for `010-feat-assignment-learning-modes`. These decisions extend assigned work; anonymous practice remains separate.
+Implemented in `010-feat-assignment-learning-modes`. All valid policies can now be authored and published. Anonymous practice remains a separate workflow.
 
 ## Product rules
 
-| Mode              | Feedback                                 | Final submission                               | Correctness score | Instructor review                 |
-| ----------------- | ---------------------------------------- | ---------------------------------------------- | ----------------- | --------------------------------- |
-| Graded            | On submission                            | Yes; existing blank-answer behavior retained   | Yes               | Final submissions                 |
-| Completion-only   | Explicit Check answers before submission | Yes; every expected answer cell must be filled | No                | Final submissions/completion      |
-| Ungraded practice | Repeated explicit Check answers          | No                                             | No official score | Answers remain private to student |
+| Mode              | Feedback                                 | Final submission                        | Correctness score | Instructor review                 |
+| ----------------- | ---------------------------------------- | --------------------------------------- | ----------------- | --------------------------------- |
+| Graded            | On submission                            | Yes; blanks count as unanswered         | Yes               | Final submissions                 |
+| Completion-only   | Explicit Check answers before submission | Yes; every expected cell must be filled | No                | Final submissions/completion      |
+| Ungraded practice | Repeated explicit Check answers          | No                                      | No official score | Answers remain private to student |
 
-Completion-only submission requires every expected cell across every assignment item, not merely a nonempty answer map. Incorrect answers do not prevent completion. Checking provides correctness feedback but does not save an official grade or finalize work. Students explicitly save practice work; checking must not silently submit it.
+Completion requires every expected cell across every assigned occurrence, not just a nonempty answer map. Incorrect answers count as filled; missing/null cells do not. Checking evaluates transient inputs without saving, submitting or recording a grade. Saving remains explicit.
 
-Solution access is independent: `never`, `after_submission`, or `anytime`. Ungraded practice permits only never/anytime because it has no submission. Existing graded assignments map `allowSolutions=false` to never and true to after_submission. Default new authoring should retain graded/on_submission/never. Anytime solutions may intentionally be available before a graded submission; that is an instructor choice.
+Solution access is independent: `never`, `after_submission`, or `anytime`. Practice supports only never/anytime. Existing boolean solution flags were migrated from false to never and true to after_submission. New authoring defaults to graded/on_submission/never. Anytime solutions can intentionally be available before a graded submission.
 
-Published assessment, feedback and solution settings remain frozen. Enrollment, ownership, archive visibility and server-side authorization continue to apply. Private practice answers must not leak through instructor review endpoints or aggregates. Immediate per-cell feedback, retries after final submission, deadlines, new exercise types, and broader analytics are outside this branch.
+Published assessment, feedback and solution settings are frozen. Enrollment, ownership, archive visibility, class coverage for new publication, and server authorization still apply. Practice answers are excluded from instructor submission lists/detail, including unexpected final practice data.
 
-## Commit-sized sequence
+## Implemented slices
 
-1. **Policy/contracts foundation (implemented):** standalone target contract, pure capabilities/solution-release helpers, legacy mapping, and policy tests. Existing endpoints, database checks, UI, and demo template remain unchanged; the new contract is not yet accepted by assignment routes.
-2. **Persistence and authoring API (assessment/feedback and solution-release storage implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
-3. **Student workflow API (explicit check foundation implemented):** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
-4. **Instructor UI (implemented; publication guard retained):** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
-5. **Student UI (implemented; publication rollout pending):** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
-6. **Demo and final verification (rollout/seed implemented; final branch verification pending):** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
+1. Shared learning-policy contract, pure capabilities/release rules and legacy mapping.
+2. Assessment/feedback enums and SQL constraints, with preservation and rollback tests.
+3. SolutionAccess storage and preserving boolean backfill. The API now uses solutionAccess and rejects allowSolutions.
+4. Full-policy authoring: defaults on creation, omitted PATCH fields retained, merged policy validated under the parent lock before mutations.
+5. Explicit check endpoint: enrollment-scoped, status-only feedback, no attempt/grade writes.
+6. All-mode reads/saves, solution release, rejected practice submission and private instructor review.
+7. Atomic completion finalization: completeness validation, frozen completion_v1 counts, idempotent retries and score-free review.
+8. Instructor mode/solution controls, valid transitions, failed-save retention and locked publications.
+9. Student checking, canceled late-feedback protection, practice without final submission, completion/save gating and policy-based solution controls.
+10. Publication rollout and demo template 2, with the original graded assignment plus private practice and anytime solutions.
 
-Keep each slice small; split API work further if needed. QA and code audit branches remain planned before deployment and will be numbered after this feature. No hosted rollout or resources are part of this branch.
+Temporary rollout gates have been removed. Mode-specific policy and workflow tests remain in place.
 
-## Persistence rollout checkpoint
+## Rollout and compatibility
 
-The database now stores the three assessment modes and enforces their supported feedback pairs. Existing defaults, solution flags, published data and submissions are unchanged. The migration changes constraints only; it does not rewrite assignments. Rollback is valid while all rows remain graded/on_submission and deliberately fails if new modes exist rather than coercing or deleting them.
+Apply both new migrations before starting the new API. The solution migration changes the stored column; old and new application versions should not serve concurrently during that change. Existing graded rows retain their behavior and publication timestamps.
 
-Assignment endpoints remain graded-only, and response serialization rejects unsupported stored policies instead of describing them as graded. Do not manually enable new modes for live assignments yet. Replacing the legacy solution boolean with release policy, full-policy validation on PATCH, authoring support, and student workflow enforcement remain subsequent slices. This split keeps the migration review small.
+Rollback cannot silently discard new semantics: the solution migration refuses anytime policies, and the assessment migration refuses non-graded rows. Older application versions do not understand completion_v1 result JSON. Plan rollback deliberately once new policies/results exist.
 
-### Solution-release storage checkpoint
+New demo workspaces use template 2. Existing active workspaces keep their changes; explicit reset upgrades the template, replaces visitor data and credentials, and retains the original absolute deadline. Shared catalog plans and ordinary account data remain unchanged.
 
-Assignments now persist `solutionAccess` as never/after_submission/anytime instead of the boolean. The migration backfills both legacy boolean values before dropping that column, without changing publication timestamps or attempt data. Rollback restores the old flags only if no anytime policy exists; otherwise it fails explicitly. The database rejects practice with after_submission access.
+## Verification and remaining scope
 
-Active API requests/responses still use the graded-only legacy contract. The authoring store translates the boolean at that boundary, and student solutions retain the existing after-submission gate. Serialization rejects anytime rows until the full contract/workflows support them. This is staged persistence support, not an enabled new learning mode. Complete-policy PATCH validation and authoring/student support remain next.
+See [final learning-mode verification](../verification/assignment-learning-modes-verification.md). Local Chrome rollout checks cover instructor publication, practice check/save/reload/solutions, completion gating/finalization, score-free instructor review, reset, mobile layout and empty browser storage. This is local evidence, not a browser CI suite or exhaustive QA.
 
-### Authoring contract checkpoint
-
-Authoring now accepts all valid draft policies, returns solutionAccess, and rejects the removed allowSolutions API field. Creation defaults remain graded/on_submission/never. PATCH merges supplied policy fields with locked saved state and validates the full combination before changing anything. Published policy remains immutable.
-
-New modes and anytime solutions are intentionally draft-only until student workflow support exists; publication fails with ASSIGNMENT_POLICY_NOT_READY. The current web editor preserves saved policies and sends the new contract, but mode/solution selectors remain a later UI slice. Existing graded checks, demo seeds, and frontend fixtures were updated together for the contract replacement. No new migration is needed for this slice.
-
-### Explicit checking checkpoint
-
-The student check endpoint evaluates transient per-item answers under assignment/enrollment locks and applicable feedback policy, returns status-only feedback, and never writes an attempt or grade. Completion-only submitted work rejects further checks. Existing graded read/save/submission/solution behavior is unchanged. Public publication remains blocked for new modes until the remaining student workflows are implemented. Next sub-slice: mode-specific saved work, completion results, submission/solution rules and privacy.
-
-### Saved work, solution release and privacy checkpoint
-
-Student reads and revisioned saves now support valid policies across all modes. Solution release uses the shared never/after_submission/anytime rules. Practice submission is explicitly rejected without attempt mutation, and instructor submission review excludes practice even if unexpected final data exists. Existing graded work remains supported.
-
-Completion-only finalization and its score-free result representation remain the next small slice. New-mode/anytime publication stays blocked, and UI controls/demo changes remain deferred. The integration suite exercises these staged policies through test-only publication fixtures.
-
-### Completion finalization checkpoint
-
-Completion-only finalization now requires all expected cells for every occurrence, freezes work atomically, and stores completion_v1 counts without correctness scores or grading feedback. Instructor summaries/detail and existing result views support both retained graded snapshots and score-free completion snapshots. Failed/incomplete work rolls back; concurrent/retried finalization remains idempotent.
-
-Practice still cannot submit. No migration or result backfill is required. New-mode publication remains staged off while instructor/student controls are added. The next slices are instructor mode/solution controls, student explicit-check/practice interactions, then publication rollout, demo examples and final verification.
-
-### Instructor policy controls checkpoint
-
-The editor now offers graded, completion-only and ungraded practice modes with explanatory feedback text and explicit solution-release choices. Mode changes produce a complete valid policy, count as unsaved edits, and survive failed saves. Changing an after-submission policy to practice selects never and announces the adjustment instead of silently enabling solutions. Saved policy restores on reload; published/archived controls remain disabled.
-
-New-mode/anytime publication is visibly disabled until student workflow controls are ready. Practice assignment review is excluded from the instructor page. The next slice is the student Check answers/practice/completion UI, followed by publication rollout and the demo practice example.
-
-### Student controls checkpoint
-
-The student UI now supports transient explicit checking, practice without final submission, completion-only completeness/save gating, and anytime/after-submission solution controls. Feedback is per occurrence, cleared by edits, and protected against canceled late responses. Existing graded interactions remain unchanged.
-
-New modes and anytime access remain draft-only through public authoring. Next: remove the temporary publication gates, seed an additional demo practice assignment, update walkthroughs, and verify the real instructor-to-student journey before branch completion.
-
-### Publication and demo rollout
-
-The temporary API/UI publication gates are removed. All valid learning policies use normal ownership, coverage, content and publication-lock rules. Demo template 2 retains the graded example and adds **Explore truth tables at your own pace**, with explicit checking, private saved answers and anytime solutions. Existing workspaces are not silently reseeded; reset upgrades their template and restores both examples without extending absolute expiry.
-
-The automated suite exercises new-policy publication and immutability, practice seed behavior, template upgrade/reset, and cleanup with shared version references. Final branch verification/evidence and PR notes remain a separate step.
-
-Local rollout verification passed the full instructor-to-student completion journey, seeded practice check/save/reload/anytime solutions, score-free instructor review, reset restoration, empty browser storage and a 390px layout. This was a one-off Chrome run against a temporary test schema, not browser CI or full branch QA.
+Immediate per-cell feedback, deadlines, retryable final submissions, new exercise types, analytics, and deployment remain outside this branch. Next are a dedicated local demo QA branch, a code audit, and deployment planning.
