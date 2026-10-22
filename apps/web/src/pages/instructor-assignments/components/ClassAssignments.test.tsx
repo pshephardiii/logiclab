@@ -58,7 +58,7 @@ const assignment: AssignmentDetail = {
   instructions: null,
   assessmentMode: 'graded',
   feedbackTiming: 'on_submission',
-  allowSolutions: false,
+  solutionAccess: 'never',
   publishedAt: null,
   archivedAt: null,
   createdAt: time,
@@ -108,7 +108,7 @@ test('metadata-only edits retain failed input and omit item replacement, then pu
     expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeEnabled(),
   );
   const input = vi.mocked(api.updateAssignment).mock.calls.at(-1)![1];
-  expect(input).toMatchObject({ title: 'Revised', allowSolutions: false });
+  expect(input).toMatchObject({ title: 'Revised', solutionAccess: 'never' });
   expect(input).not.toHaveProperty('problemVersionIds');
   vi.mocked(api.assignmentAction).mockResolvedValue({
     ...assignment,
@@ -154,14 +154,18 @@ test('creates a class-scoped empty draft, preserves solution policy, and disable
   vi.mocked(api.createAssignment).mockResolvedValue({
     ...assignment,
     title: 'Empty draft',
-    allowSolutions: true,
+    solutionAccess: 'after_submission',
     items: [],
   });
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
   await screen.findByText('Assignment draft saved.');
   expect(api.createAssignment).toHaveBeenCalledWith(
     classId,
-    expect.objectContaining({ title: 'Empty draft', allowSolutions: true, problemVersionIds: [] }),
+    expect.objectContaining({
+      title: 'Empty draft',
+      solutionAccess: 'after_submission',
+      problemVersionIds: [],
+    }),
     expect.any(AbortSignal),
   );
   expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();

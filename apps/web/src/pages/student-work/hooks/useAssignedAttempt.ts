@@ -124,7 +124,8 @@ export function useAssignedAttempt(assignmentId: string) {
     }
   }
   async function toggleSolution(itemId: string) {
-    if (!assignment?.allowSolutions || !attempt?.submittedAt || action) return;
+    if (assignment?.solutionAccess !== 'after_submission' || !attempt?.submittedAt || action)
+      return;
     if (solutions[itemId]) {
       setSolutions((previous) => {
         const next = { ...previous };

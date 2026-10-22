@@ -90,7 +90,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     const assignments = await createAssignmentStore(orm);
     const draft = await assignments.create(instructor.id, unpaid.id, {
       title: 'Unpaid draft',
-      allowSolutions: false,
+      solutionAccess: 'never',
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
       problemVersionIds: [versions[0]!.id],

@@ -121,7 +121,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               {work.action === 'save' ? 'Saving problem…' : 'Save problem'}
             </button>
           )}
-          {submitted && work.assignment.allowSolutions && (
+          {submitted && work.assignment.solutionAccess === 'after_submission' && (
             <button disabled={busy} onClick={() => void work.toggleSolution(item.id)}>
               {work.solutions[item.id] ? 'Hide assigned solution' : 'Show assigned solution'}
             </button>

@@ -1,5 +1,12 @@
 export type AssignmentFailure =
-  'coverage_required' | 'not_found' | 'version_not_found' | 'published' | 'archived' | 'empty';
+  | 'invalid_policy'
+  | 'unsupported_policy'
+  | 'coverage_required'
+  | 'not_found'
+  | 'version_not_found'
+  | 'published'
+  | 'archived'
+  | 'empty';
 
 /** Domain failures are mapped to transport responses by the assignment routes. */
 export class AssignmentOperationError extends Error {

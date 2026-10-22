@@ -1,15 +1,26 @@
 import { z } from 'zod';
+import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
 import { problemVersionSchema } from './problem';
 
 // Independent policy dimensions; additional modes require application/database support.
-export const assignmentPolicySchema = z.strictObject({
-  assessmentMode: z.literal('graded'),
-  feedbackTiming: z.literal('on_submission'),
-  allowSolutions: z.boolean(),
-});
+export const assignmentPolicySchema = z
+  .strictObject({
+    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']),
+    feedbackTiming: z.enum(['on_submission', 'on_check']),
+    solutionAccess: solutionAccessSchema,
+  })
+  .refine(
+    (policy) =>
+      assignmentLearningPolicySchema.safeParse({
+        assessmentMode: policy.assessmentMode,
+        feedbackTiming: policy.feedbackTiming,
+        solutionAccess: policy.solutionAccess,
+      }).success,
+    'Unsupported assignment learning policy.',
+  );
 export type AssignmentPolicy = z.infer<typeof assignmentPolicySchema>;
 
-export const assignmentSummarySchema = assignmentPolicySchema.extend({
+export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
   id: z.uuid(),
   classId: z.uuid(),
   title: z.string().min(1).max(120),
@@ -27,7 +38,7 @@ export const assignmentItemSchema = z.strictObject({
   problemVersion: problemVersionSchema,
 });
 export type AssignmentItem = z.infer<typeof assignmentItemSchema>;
-export const assignmentSchema = assignmentSummarySchema.extend({
+export const assignmentSchema = assignmentSummarySchema.safeExtend({
   items: z.array(assignmentItemSchema).max(50),
 });
 export type AssignmentDetail = z.infer<typeof assignmentSchema>;
@@ -43,14 +54,24 @@ export const assignmentListQuerySchema = z.strictObject({
 });
 export type AssignmentListQuery = z.infer<typeof assignmentListQuerySchema>;
 
-export const createAssignmentRequestSchema = z.strictObject({
-  title: z.string().trim().min(1).max(120),
-  instructions: z.string().trim().max(5000).nullable().optional(),
-  problemVersionIds: z.array(z.uuid()).max(50).default([]),
-  assessmentMode: z.literal('graded').default('graded'),
-  feedbackTiming: z.literal('on_submission').default('on_submission'),
-  allowSolutions: z.boolean().default(false),
-});
+export const createAssignmentRequestSchema = z
+  .strictObject({
+    title: z.string().trim().min(1).max(120),
+    instructions: z.string().trim().max(5000).nullable().optional(),
+    problemVersionIds: z.array(z.uuid()).max(50).default([]),
+    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
+    feedbackTiming: z.enum(['on_submission', 'on_check']).default('on_submission'),
+    solutionAccess: solutionAccessSchema.default('never'),
+  })
+  .refine(
+    (policy) =>
+      assignmentLearningPolicySchema.safeParse({
+        assessmentMode: policy.assessmentMode,
+        feedbackTiming: policy.feedbackTiming,
+        solutionAccess: policy.solutionAccess,
+      }).success,
+    'Unsupported assignment learning policy.',
+  );
 export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestSchema>;
 
 // No creation defaults here: omitted PATCH fields retain their saved values.
@@ -59,9 +80,9 @@ export const updateAssignmentRequestSchema = z
     title: z.string().trim().min(1).max(120).optional(),
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).optional(),
-    assessmentMode: z.literal('graded').optional(),
-    feedbackTiming: z.literal('on_submission').optional(),
-    allowSolutions: z.boolean().optional(),
+    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),
+    feedbackTiming: z.enum(['on_submission', 'on_check']).optional(),
+    solutionAccess: solutionAccessSchema.optional(),
   })
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),

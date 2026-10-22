@@ -1,4 +1,5 @@
-import type { AssignmentLearningPolicy } from '@logiclab/contracts';
+import { AssignmentOperationError } from './errors';
+import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 
 /** Capabilities only: callers must still enforce enrollment, publication and attempt state. */
 export function assignmentLearningCapabilities(policy: AssignmentLearningPolicy) {
@@ -28,4 +29,21 @@ export function legacyAssignmentLearningPolicy(allowSolutions: boolean): Assignm
     feedbackTiming: 'on_submission',
     solutionAccess: allowSolutions ? 'after_submission' : 'never',
   };
+}
+
+/** PATCH omission retains saved policy; validate all dimensions together before any mutation. */
+export function resolveAssignmentLearningPolicy(
+  current: AssignmentLearningPolicy,
+  patch: {
+    assessmentMode?: AssignmentLearningPolicy['assessmentMode'];
+    feedbackTiming?: AssignmentLearningPolicy['feedbackTiming'];
+    solutionAccess?: AssignmentLearningPolicy['solutionAccess'];
+  },
+): AssignmentLearningPolicy {
+  const defined = Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined),
+  );
+  const result = assignmentLearningPolicySchema.safeParse({ ...current, ...defined });
+  if (!result.success) throw new AssignmentOperationError('invalid_policy');
+  return result.data;
 }

@@ -68,3 +68,7 @@ Final submission requires a checked acknowledgment that work cannot be edited. B
 An uncertain submission failure can be resolved by reloading saved work to see whether the final result was recorded. Submission requests are idempotent, and the UI does not automatically retry them. Student work state remains independent of the Practice page.
 
 Local verification for the completion/review slice includes DOM/hook regression tests for save failures, stale revisions, per-occurrence dirty state, final confirmation, readonly restoration, solution gating, pagination/retry, and late-response cancellation. A local Chrome walkthrough against real Fastify routes/PostgreSQL verifies student save/reload/submission/solutions, instructor final-only review, draft privacy, cross-owner rejection, and desktop/mobile layouts without document overflow. Scripts and screenshots remain ignored under `.codex-local/verification/`. No live Cognito, remote CI, alternate browser, or screen-reader audit is implied.
+
+## Learning-policy contract rollout
+
+Assignment responses now use solutionAccess (never/after_submission/anytime). The currently published student workflow remains graded/on_submission, with solutions enabled only by after_submission and a final submission. New learning policies can be authored as drafts but cannot yet be published; explicit checking and new mode-specific submission behavior follow in a later slice.

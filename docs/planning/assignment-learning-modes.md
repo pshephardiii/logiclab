@@ -38,3 +38,9 @@ Assignment endpoints remain graded-only, and response serialization rejects unsu
 Assignments now persist `solutionAccess` as never/after_submission/anytime instead of the boolean. The migration backfills both legacy boolean values before dropping that column, without changing publication timestamps or attempt data. Rollback restores the old flags only if no anytime policy exists; otherwise it fails explicitly. The database rejects practice with after_submission access.
 
 Active API requests/responses still use the graded-only legacy contract. The authoring store translates the boolean at that boundary, and student solutions retain the existing after-submission gate. Serialization rejects anytime rows until the full contract/workflows support them. This is staged persistence support, not an enabled new learning mode. Complete-policy PATCH validation and authoring/student support remain next.
+
+### Authoring contract checkpoint
+
+Authoring now accepts all valid draft policies, returns solutionAccess, and rejects the removed allowSolutions API field. Creation defaults remain graded/on_submission/never. PATCH merges supplied policy fields with locked saved state and validates the full combination before changing anything. Published policy remains immutable.
+
+New modes and anytime solutions are intentionally draft-only until student workflow support exists; publication fails with ASSIGNMENT_POLICY_NOT_READY. The current web editor preserves saved policies and sends the new contract, but mode/solution selectors remain a later UI slice. Existing graded checks, demo seeds, and frontend fixtures were updated together for the contract replacement. No new migration is needed for this slice.

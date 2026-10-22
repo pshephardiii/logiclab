@@ -79,7 +79,7 @@ export async function seedDemoWorkspace(
     title: DEMO_TEMPLATE.assignmentTitle,
     instructions: DEMO_TEMPLATE.assignmentInstructions,
     problemVersionIds: [version.id],
-    allowSolutions: true,
+    solutionAccess: 'after_submission',
     assessmentMode: 'graded',
     feedbackTiming: 'on_submission',
   });

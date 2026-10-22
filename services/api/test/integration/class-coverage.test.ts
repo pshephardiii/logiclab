@@ -76,7 +76,7 @@ test(
         problemVersionIds: [publication.version.id],
         assessmentMode: 'graded' as const,
         feedbackTiming: 'on_submission' as const,
-        allowSolutions: false,
+        solutionAccess: 'never' as const,
       };
       const draft = await assignments.create(owner.id, classroom.id, input);
       const assertDenied = async (id = draft.id) => {

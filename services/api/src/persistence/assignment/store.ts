@@ -1,3 +1,5 @@
+import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
+import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { hasClassCapability } from '../billing/class-coverage';
 import {
@@ -52,6 +54,24 @@ export async function createAssignmentStore(
     SolutionAccess,
     ClassCapability,
   } = await import('@logiclab/db');
+  const modes = {
+    graded: AssessmentMode.Graded,
+    completion_only: AssessmentMode.CompletionOnly,
+    ungraded_practice: AssessmentMode.UngradedPractice,
+  };
+  const timings = { on_submission: FeedbackTiming.OnSubmission, on_check: FeedbackTiming.OnCheck };
+  const solutions = {
+    never: SolutionAccess.Never,
+    after_submission: SolutionAccess.AfterSubmission,
+    anytime: SolutionAccess.Anytime,
+  };
+  function policyFields(policy: AssignmentLearningPolicy) {
+    return {
+      assessmentMode: modes[policy.assessmentMode],
+      feedbackTiming: timings[policy.feedbackTiming],
+      solutionAccess: solutions[policy.solutionAccess],
+    };
+  }
   type Manager = typeof orm.em;
 
   async function ownedClass(em: Manager, ownerId: string, classId: string) {
@@ -123,11 +143,20 @@ export async function createAssignmentStore(
           classroom,
           title: input.title,
           instructions: input.instructions ?? undefined,
-          assessmentMode: AssessmentMode.Graded,
-          feedbackTiming: FeedbackTiming.OnSubmission,
-          solutionAccess: input.allowSolutions
-            ? SolutionAccess.AfterSubmission
-            : SolutionAccess.Never,
+          ...policyFields(
+            resolveAssignmentLearningPolicy(
+              {
+                assessmentMode: 'graded',
+                feedbackTiming: 'on_submission',
+                solutionAccess: 'never',
+              },
+              {
+                assessmentMode: input.assessmentMode,
+                feedbackTiming: input.feedbackTiming,
+                solutionAccess: input.solutionAccess,
+              },
+            ),
+          ),
         });
         em.persist(assignment);
         await em.flush();
@@ -160,13 +189,20 @@ export async function createAssignmentStore(
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (assignment.archivedAt) throw new AssignmentOperationError('archived');
         if (assignment.publishedAt) throw new AssignmentOperationError('published');
+        const current = assignmentLearningPolicySchema.parse({
+          assessmentMode: assignment.assessmentMode,
+          feedbackTiming: assignment.feedbackTiming,
+          solutionAccess: assignment.solutionAccess,
+        });
+        const policy = resolveAssignmentLearningPolicy(current, {
+          assessmentMode: input.assessmentMode,
+          feedbackTiming: input.feedbackTiming,
+          solutionAccess: input.solutionAccess,
+        });
+        Object.assign(assignment, policyFields(policy));
         if (input.title !== undefined) assignment.title = input.title;
         if (input.instructions !== undefined)
           assignment.instructions = input.instructions ?? undefined;
-        if (input.allowSolutions !== undefined)
-          assignment.solutionAccess = input.allowSolutions
-            ? SolutionAccess.AfterSubmission
-            : SolutionAccess.Never;
         if (input.problemVersionIds !== undefined)
           await replaceItems(em, ownerId, assignment, input.problemVersionIds);
         assignment.updatedAt = new Date();
@@ -179,6 +215,13 @@ export async function createAssignmentStore(
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (assignment.archivedAt) throw new AssignmentOperationError('archived');
         if (!assignment.publishedAt) {
+          // Draft authoring precedes rollout of the corresponding student workflow.
+          if (
+            assignment.assessmentMode !== AssessmentMode.Graded ||
+            assignment.feedbackTiming !== FeedbackTiming.OnSubmission ||
+            assignment.solutionAccess === SolutionAccess.Anytime
+          )
+            throw new AssignmentOperationError('unsupported_policy');
           const items = await em.find(AssignmentItem, { assignment: assignment.id });
           if (!items.length) throw new AssignmentOperationError('empty');
           await ownedVersions(

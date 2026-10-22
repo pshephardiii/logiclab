@@ -23,7 +23,7 @@ export const studentAttemptSchema = z.strictObject({
   result: submissionResultSchema.nullable(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
-export const studentAssignmentSchema = assignmentSummarySchema.extend({
+export const studentAssignmentSchema = assignmentSummarySchema.safeExtend({
   items: z
     .array(
       z.strictObject({

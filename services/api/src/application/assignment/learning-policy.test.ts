@@ -3,6 +3,7 @@ import {
   assignmentLearningCapabilities,
   canViewAssignedSolution,
   legacyAssignmentLearningPolicy,
+  resolveAssignmentLearningPolicy,
 } from './learning-policy';
 
 test.each([
@@ -91,4 +92,35 @@ test('policy contract requires all dimensions and rejects unknown fields', () =>
       allowSolutions: true,
     }).success,
   ).toBe(false);
+});
+
+test('PATCH preserves omitted policy fields and rejects invalid combined transitions', () => {
+  const practice = assignmentLearningPolicySchema.parse({
+    assessmentMode: 'ungraded_practice',
+    feedbackTiming: 'on_check',
+    solutionAccess: 'anytime',
+  });
+  expect(resolveAssignmentLearningPolicy(practice, {})).toEqual(practice);
+  expect(resolveAssignmentLearningPolicy(practice, { solutionAccess: undefined })).toEqual(
+    practice,
+  );
+  expect(resolveAssignmentLearningPolicy(practice, { solutionAccess: 'never' })).toEqual({
+    ...practice,
+    solutionAccess: 'never',
+  });
+  expect(() => resolveAssignmentLearningPolicy(practice, { assessmentMode: 'graded' })).toThrow();
+  expect(() =>
+    resolveAssignmentLearningPolicy(practice, { solutionAccess: 'after_submission' }),
+  ).toThrow();
+  expect(
+    resolveAssignmentLearningPolicy(practice, {
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+    }),
+  ).toEqual({
+    assessmentMode: 'graded',
+    feedbackTiming: 'on_submission',
+    solutionAccess: 'anytime',
+  });
+  expect(practice.assessmentMode).toBe('ungraded_practice');
 });

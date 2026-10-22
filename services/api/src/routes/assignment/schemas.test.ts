@@ -10,7 +10,7 @@ test('creation applies independent policy defaults while PATCH retains omission 
     problemVersionIds: [],
     assessmentMode: 'graded',
     feedbackTiming: 'on_submission',
-    allowSolutions: false,
+    solutionAccess: 'never',
   });
   expect(updateAssignmentRequestSchema.parse({ instructions: null })).toEqual({
     instructions: null,
@@ -24,7 +24,7 @@ test.each([
   { title: 'x', classId: 'spoof' },
   { title: 'x', assessmentMode: 'completion' },
   { title: 'x', feedbackTiming: 'immediate' },
-  { title: 'x', allowSolutions: 'false' },
+  { title: 'x', solutionAccess: false },
   { title: 'x', problemVersionIds: ['bad'] },
   { title: 'x', problemVersionIds: Array(51).fill('a1111111-1111-4111-8111-111111111111') },
   { title: 'x', instructions: 'x'.repeat(5001) },

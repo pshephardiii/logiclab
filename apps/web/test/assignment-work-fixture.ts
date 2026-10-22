@@ -32,7 +32,7 @@ export const work: StudentAssignment = {
   instructions: 'Complete both occurrences.',
   assessmentMode: 'graded',
   feedbackTiming: 'on_submission',
-  allowSolutions: false,
+  solutionAccess: 'never',
   publishedAt: '2026-10-16T12:00:00.000Z',
   archivedAt: null,
   createdAt: '2026-10-16T12:00:00.000Z',

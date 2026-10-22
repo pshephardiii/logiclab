@@ -70,7 +70,7 @@ test('changing classes aborts a pending save and prevents its late result appear
       instructions: null,
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
-      allowSolutions: false,
+      solutionAccess: 'never',
       publishedAt: null,
       archivedAt: null,
       createdAt: time,

@@ -23,15 +23,21 @@ Authorization runs before request-field validation and reuses the authenticated 
   "problemVersionIds": ["f516a148-91c7-4bf3-bf7f-42cbf18ad995"],
   "assessmentMode": "graded",
   "feedbackTiming": "on_submission",
-  "allowSolutions": false
+  "solutionAccess": "never"
 }
 ```
 
-Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to an empty item list, graded assessment, feedback on submission, and solution access off. These policy dimensions remain independent; completion-only, ungraded, and immediate-feedback modes are not supported yet. Unknown fields, client-supplied ownership/classroom changes, invalid IDs, and unsupported policy values are rejected.
+Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to an empty item list, graded assessment, feedback on submission, and solution access off. Drafts support graded/on_submission, completion_only/on_check, and ungraded_practice/on_check. Solution access is never, after_submission, or anytime; practice rejects after_submission. Immediate input feedback remains deferred. Unknown fields, client-supplied ownership/classroom changes, invalid IDs, and unsupported policy values are rejected.
 
 `problemVersionIds` holds up to 50 published version UUIDs belonging to the same instructor. Draft problem IDs are not accepted as publication references. Archived library problems' retained publications may still be selected. Repeated versions are allowed: each ordered occurrence has its own item ID and a positive position starting at one.
 
-PATCH requires at least one field and has no creation defaults. Omitted fields retain their values; a supplied item list atomically replaces the entire ordered list and generates new occurrence IDs. Metadata-only edits retain item IDs. Invalid references or database failures roll back both assignment changes and item replacement. The assignment cannot move to another classroom.
+PATCH requires at least one field and has no creation defaults. Omitted fields retain their values. The full saved policy is merged and validated under the assignment lock before any mutation; invalid combinations return 400 ASSIGNMENT_POLICY_INVALID and leave metadata/items unchanged. A supplied item list atomically replaces the entire ordered list and generates new occurrence IDs. Metadata-only edits retain item IDs. Invalid references or database failures roll back both assignment changes and item replacement. The assignment cannot move to another classroom.
+
+The legacy `allowSolutions` field is no longer accepted or returned. Existing clients and demo seeding now send `solutionAccess`; false/true stored behavior was migrated to never/after_submission in the preceding database slice. Creation defaults remain graded/on_submission/never.
+
+## Staged publication support
+
+Until student workflow support is implemented, only graded/on_submission with never/after_submission solutions can be newly published. Other valid policies can be saved and read as drafts; publication returns 409 ASSIGNMENT_POLICY_NOT_READY without setting publishedAt. This temporary rollout guard must be removed alongside the new student workflow, not bypassed through direct database updates. Existing published work remains available.
 
 ## Publication, archiving, and responses
 

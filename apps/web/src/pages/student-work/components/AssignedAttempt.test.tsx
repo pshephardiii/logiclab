@@ -99,7 +99,7 @@ test('reloading restores saved answers and official results without public reche
 
 test('enabled solutions are fetched only after final submission and preserve saved entries', async () => {
   vi.mocked(api.readAssignedWork).mockResolvedValue({
-    assignment: { ...work, allowSolutions: true },
+    assignment: { ...work, solutionAccess: 'after_submission' },
     attempt: submitted,
   });
   const { user } = await open();

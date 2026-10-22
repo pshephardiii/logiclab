@@ -18,7 +18,7 @@ type Props = {
 export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const [title, setTitle] = useState(assignment?.title ?? '');
   const [instructions, setInstructions] = useState(assignment?.instructions ?? '');
-  const [allowSolutions, setAllowSolutions] = useState(assignment?.allowSolutions ?? false);
+  const [solutionAccess, setSolutionAccess] = useState(assignment?.solutionAccess ?? 'never');
   const [items, setItems] = useState<SelectedProblem[]>(
     assignment?.items.map((item) => ({ key: item.id, version: item.problemVersion })) ?? [],
   );
@@ -30,7 +30,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const dirty =
     title !== (assignment?.title ?? '') ||
     instructions !== (assignment?.instructions ?? '') ||
-    allowSolutions !== (assignment?.allowSolutions ?? false) ||
+    solutionAccess !== (assignment?.solutionAccess ?? 'never') ||
     itemsChanged;
   useEffect(() => {
     onDirty(dirty);
@@ -53,6 +53,12 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   function remove(index: number) {
     setItems((previous) => previous.filter((_, position) => position !== index));
   }
+  function toggleSolutions(enabled: boolean) {
+    const release =
+      assignment?.assessmentMode === 'ungraded_practice' ? 'anytime' : 'after_submission';
+    setSolutionAccess(enabled ? release : 'never');
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await onSave(
@@ -60,9 +66,9 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
         title,
         instructions: instructions || null,
         problemVersionIds: ids,
-        assessmentMode: 'graded',
-        feedbackTiming: 'on_submission',
-        allowSolutions,
+        assessmentMode: assignment?.assessmentMode ?? 'graded',
+        feedbackTiming: assignment?.feedbackTiming ?? 'on_submission',
+        solutionAccess,
       },
       itemsChanged,
     );
@@ -93,12 +99,15 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
           />
-          <p className="help">Assessment: graded · Feedback: on submission.</p>
+          <p className="help">
+            Assessment: {assignment?.assessmentMode ?? 'graded'} · Feedback:{' '}
+            {assignment?.feedbackTiming ?? 'on_submission'}.
+          </p>
           <label className="assignment-solution-option">
             <input
               type="checkbox"
-              checked={allowSolutions}
-              onChange={(event) => setAllowSolutions(event.target.checked)}
+              checked={solutionAccess !== 'never'}
+              onChange={(event) => toggleSolutions(event.target.checked)}
             />{' '}
             Allow students to reveal solutions
           </label>
