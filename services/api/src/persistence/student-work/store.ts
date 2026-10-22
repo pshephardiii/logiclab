@@ -27,6 +27,7 @@ import { StudentWorkError } from '../../application/student-work/errors';
 import {
   validateAnswers,
   evaluateSubmission,
+  evaluateCompletion,
   checkAssignedAnswers,
 } from '../../application/student-work/evaluation';
 import { assignmentSummary } from '../assignment/summary';
@@ -93,12 +94,10 @@ export async function createStudentWorkStore(
     if (!policy.success) throw new StudentWorkError('unsupported_policy');
     return policy.data;
   }
-  async function gradedAssignment(em: Manager, studentId: string, assignmentId: string) {
+  async function submittableAssignment(em: Manager, studentId: string, assignmentId: string) {
     const assignment = await accessible(em, studentId, assignmentId);
     if (!assignmentLearningCapabilities(policyFor(assignment)).hasFinalSubmission)
       throw new StudentWorkError('submission_unavailable');
-    if (assignment.assessmentMode !== 'graded' || assignment.feedbackTiming !== 'on_submission')
-      throw new StudentWorkError('unsupported_policy');
     return assignment;
   }
   function items(em: Manager, assignmentId: string) {
@@ -207,12 +206,14 @@ export async function createStudentWorkStore(
     },
     async submit(studentId, assignmentId, revision) {
       return transact(async (em) => {
-        await gradedAssignment(em, studentId, assignmentId);
+        const assignment = await submittableAssignment(em, studentId, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) return attemptResponse(attempt);
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
-        attempt.result = evaluateSubmission(
+        const evaluate =
+          assignment.assessmentMode === 'completion_only' ? evaluateCompletion : evaluateSubmission;
+        attempt.result = evaluate(
           assigned.map((item) => ({
             id: item.id,
             formula: item.problemVersion.definition.formula,

@@ -1,5 +1,9 @@
 import { generateTruthTable } from '@logiclab/logic-engine';
-import type { TruthTableAnswer, SubmissionResult } from '@logiclab/contracts';
+import type {
+  TruthTableAnswer,
+  GradedSubmissionResult,
+  CompletionSubmissionResult,
+} from '@logiclab/contracts';
 import { indexSubmittedAnswers, buildFeedback } from '../truth-table/checking';
 import { StudentWorkError } from './errors';
 
@@ -19,7 +23,7 @@ export function validateAnswers(formula: string, answers: TruthTableAnswer[]) {
 export function evaluateSubmission(
   items: { id: string; formula: string }[],
   saved: Record<string, TruthTableAnswer[]>,
-): SubmissionResult {
+): GradedSubmissionResult {
   const summary = { correct: 0, incorrect: 0, unanswered: 0, total: 0 };
   const feedback = items.map((item) => {
     const validated = validateAnswers(item.formula, saved[item.id] ?? []);
@@ -37,4 +41,30 @@ export function evaluateSubmission(
 export function checkAssignedAnswers(formula: string, answers: TruthTableAnswer[]) {
   const validated = validateAnswers(formula, answers);
   return buildFeedback(validated.table, validated.columns, validated.answers);
+}
+
+/** Count actual nonblank expected cells per occurrence; correctness never affects completion. */
+export function evaluateCompletion(
+  items: { id: string; formula: string }[],
+  saved: Record<string, TruthTableAnswer[]>,
+): CompletionSubmissionResult {
+  if (!items.length) throw new StudentWorkError('incomplete_work');
+  const completed = items.map((item) => {
+    const validated = validateAnswers(item.formula, saved[item.id] ?? []);
+    const totalCells = validated.table.rows.length * validated.columns.length;
+    const completedCells = [...validated.answers.values()].filter((value) => value != null).length;
+    if (completedCells !== totalCells) throw new StudentWorkError('incomplete_work');
+    return { itemId: item.id, completedCells, totalCells };
+  });
+  return {
+    gradingVersion: 'completion_v1',
+    items: completed,
+    summary: completed.reduce(
+      (total, item) => ({
+        completedCells: total.completedCells + item.completedCells,
+        totalCells: total.totalCells + item.totalCells,
+      }),
+      { completedCells: 0, totalCells: 0 },
+    ),
+  };
 }

@@ -11,11 +11,20 @@ export function SubmissionSummary({
     <section className="panel" aria-label="Submission result">
       <h2>Final submission</h2>
       <p>Submitted {new Date(submittedAt).toLocaleString()}. Answers are locked.</p>
-      <p>
-        {result.summary.correct} correct · {result.summary.incorrect} incorrect ·{' '}
-        {result.summary.unanswered} unanswered · {result.summary.total} cells
-      </p>
-      <p className="help">Completion records submission; correctness is shown separately.</p>
+      {result.gradingVersion === 'completion_v1' ? (
+        <p>
+          Completed {result.summary.completedCells} of {result.summary.totalCells} cells. No
+          correctness score is recorded.
+        </p>
+      ) : (
+        <>
+          <p>
+            {result.summary.correct} correct · {result.summary.incorrect} incorrect ·{' '}
+            {result.summary.unanswered} unanswered · {result.summary.total} cells
+          </p>
+          <p className="help">Completion records submission; correctness is shown separately.</p>
+        </>
+      )}
     </section>
   );
 }

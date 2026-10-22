@@ -7,7 +7,6 @@ import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 import { buildApp } from '../../src/app';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
-import { evaluateSubmission } from '../../src/application/student-work/evaluation';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
@@ -213,7 +212,7 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     assert.equal(
       (await workRequest('POST', '/submission', { revision: saved.revision + 1 })).statusCode,
       409,
-      'Completion finalization remains blocked in this slice.',
+      'Incomplete completion-only work cannot be finalized.',
     );
 
     const completionSave = await workRequest('PATCH', '/attempt', {
@@ -226,13 +225,63 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     assert.equal(completionSave.json().attempt.result, null);
     assert.equal(completionSave.json().attempt.submittedAt, null);
 
-    await em.nativeUpdate(db.AssignmentAttempt, saved.id, {
-      submittedAt: new Date(),
-      result: evaluateSubmission(
-        [{ id: item.id, formula: item.problemVersion.definition.formula }],
-        {},
-      ),
+    const beforeFailure = JSON.stringify(
+      await em.fork().findOneOrFail(db.AssignmentAttempt, saved.id),
+    );
+    const incomplete = await workRequest('POST', '/submission', { revision: saved.revision + 2 });
+    assert.equal(incomplete.statusCode, 409);
+    assert.equal(incomplete.json().error.code, 'ATTEMPT_INCOMPLETE');
+    assert.equal(
+      JSON.stringify(await em.fork().findOneOrFail(db.AssignmentAttempt, saved.id)),
+      beforeFailure,
+    );
+    const fullSave = await workRequest('PATCH', '/attempt', {
+      revision: saved.revision + 2,
+      itemId: item.id,
+      answers: answers.map((answer) => ({ ...answer, value: !answer.value })),
     });
+    assert.equal(fullSave.statusCode, 200, fullSave.body);
+    const revision = fullSave.json().attempt.revision;
+    const finals = await Promise.all([
+      workRequest('POST', '/submission', { revision }),
+      workRequest('POST', '/submission', { revision }),
+    ]);
+    assert(finals.every((response) => response.statusCode === 200));
+    assert.deepEqual(finals[0]!.json(), finals[1]!.json());
+    const final = finals[0]!.json().attempt;
+    assert.equal(final.result.gradingVersion, 'completion_v1');
+    assert.deepEqual(final.result.summary, {
+      completedCells: answers.length,
+      totalCells: answers.length,
+    });
+    assert.deepEqual(Object.keys(final.result.items[0]).sort(), [
+      'completedCells',
+      'itemId',
+      'totalCells',
+    ]);
+    assert.equal(final.revision, revision + 1);
+    assert.deepEqual((await workRequest('GET')).json().attempt, final);
+    assert.deepEqual(
+      (await workRequest('POST', '/submission', { revision: 0 })).json().attempt,
+      final,
+    );
+    assert.equal(
+      (
+        await workRequest('PATCH', '/attempt', {
+          revision: final.revision,
+          itemId: item.id,
+          answers: [],
+        })
+      ).statusCode,
+      409,
+    );
+    const finalReview = await reviews.findSubmission(owner.id, assignment.id, saved.id);
+    assert.deepEqual(finalReview.attempt.result, final.result);
+    const summaries = await reviews.listSubmissions(owner.id, assignment.id, {
+      limit: 20,
+      offset: 0,
+    });
+    assert.deepEqual(summaries[0]!.summary, final.result.summary);
     assert.equal(
       (await check({ itemId: item.id, answers })).json().error.code,
       'ATTEMPT_SUBMITTED',

@@ -92,3 +92,23 @@ Solution reads apply never/after_submission/anytime on the server. Anytime can r
 Ungraded practice rejects final submission with 403 SUBMISSION_UNAVAILABLE before creating or changing an attempt. Instructor submission list/detail reject practice assignments as not found, including any accidentally retained final practice rows. Practice answers remain student-private. Completion-only submission still returns ASSIGNMENT_POLICY_UNSUPPORTED until the next finalization slice; reads, saves and explicit checks are available in the internal/test workflow.
 
 New-mode/anytime publication remains blocked through the authoring API during rollout. No frontend learning-mode controls or new demo assignments are enabled by this slice.
+
+## Completion-only finalization
+
+Completion-only submissions use the existing revisioned submission endpoint. Every expected answer cell in every assigned occurrence must contain T/F; missing items/cells and null values return 409 ATTEMPT_INCOMPLETE. A failed finalization leaves saved answers, revision and result unchanged. Incorrect answers still count as filled. Extra, foreign or duplicate cells cannot substitute for expected cells.
+
+Successful completion freezes the answers and persists a versioned score-free result:
+
+```json
+{
+  "gradingVersion": "completion_v1",
+  "items": [{ "itemId": "<uuid>", "completedCells": 4, "totalCells": 4 }],
+  "summary": { "completedCells": 4, "totalCells": 4 }
+}
+```
+
+The existing version field name is retained for compatibility; this result contains no correctness counts or per-cell grading feedback. Existing truth_table_v1 graded snapshots are unchanged. Instructor list summaries accept either correctness counts or completion counts; detail returns the retained result and final answers. Existing views render completion without a score.
+
+Finalization increments revision once, is idempotent after submission, and serializes with saves/checks through the existing attempt locks. Final answers cannot be edited; permitted after-submission solutions become available. Practice still has no final submission and remains excluded from instructor review.
+
+No database migration or rewrite of old results is needed: result is stored in the existing JSON column and covered by the existing final-attempt retention trigger. Application rollback to a version that only understands graded results requires care once completion results exist. New-mode publication remains blocked until the planned frontend controls/workflow rollout; this slice verifies completion through isolated test fixtures.

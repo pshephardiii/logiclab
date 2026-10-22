@@ -7,13 +7,28 @@ import {
   truthTableSolutionResponseSchema,
 } from './truth-table';
 
-export const submissionResultSchema = z.strictObject({
+export const gradedSubmissionResultSchema = z.strictObject({
   gradingVersion: z.literal('truth_table_v1'),
   items: z
     .array(z.strictObject({ itemId: z.uuid(), feedback: truthTableCheckResponseSchema }))
     .max(50),
   summary: truthTableCheckResponseSchema.shape.summary,
 });
+export type GradedSubmissionResult = z.infer<typeof gradedSubmissionResultSchema>;
+export const completionCountsSchema = z.strictObject({
+  completedCells: z.number().int().nonnegative(),
+  totalCells: z.number().int().nonnegative(),
+});
+export const completionSubmissionResultSchema = z.strictObject({
+  gradingVersion: z.literal('completion_v1'),
+  items: z.array(completionCountsSchema.extend({ itemId: z.uuid() })).max(50),
+  summary: completionCountsSchema,
+});
+export type CompletionSubmissionResult = z.infer<typeof completionSubmissionResultSchema>;
+export const submissionResultSchema = z.discriminatedUnion('gradingVersion', [
+  gradedSubmissionResultSchema,
+  completionSubmissionResultSchema,
+]);
 export type SubmissionResult = z.infer<typeof submissionResultSchema>;
 export const studentAttemptSchema = z.strictObject({
   id: z.uuid(),

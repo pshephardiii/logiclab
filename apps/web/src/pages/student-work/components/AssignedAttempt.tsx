@@ -1,3 +1,4 @@
+import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
@@ -97,12 +98,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <AssignedItemTable
             item={item}
             answers={work.answers[item.id] ?? {}}
-            feedback={
-              submitted
-                ? (work.attempt?.result?.items.find((value) => value.itemId === item.id)
-                    ?.feedback ?? null)
-                : null
-            }
+            feedback={submitted ? submissionFeedback(work.attempt?.result, item.id) : null}
             solution={work.solutions[item.id] ?? null}
             readOnly={busy || submitted}
             onAnswer={(row, column, value) => {

@@ -54,3 +54,9 @@ The student check endpoint evaluates transient per-item answers under assignment
 Student reads and revisioned saves now support valid policies across all modes. Solution release uses the shared never/after_submission/anytime rules. Practice submission is explicitly rejected without attempt mutation, and instructor submission review excludes practice even if unexpected final data exists. Existing graded work remains supported.
 
 Completion-only finalization and its score-free result representation remain the next small slice. New-mode/anytime publication stays blocked, and UI controls/demo changes remain deferred. The integration suite exercises these staged policies through test-only publication fixtures.
+
+### Completion finalization checkpoint
+
+Completion-only finalization now requires all expected cells for every occurrence, freezes work atomically, and stores completion_v1 counts without correctness scores or grading feedback. Instructor summaries/detail and existing result views support both retained graded snapshots and score-free completion snapshots. Failed/incomplete work rolls back; concurrent/retried finalization remains idempotent.
+
+Practice still cannot submit. No migration or result backfill is required. New-mode publication remains staged off while instructor/student controls are added. The next slices are instructor mode/solution controls, student explicit-check/practice interactions, then publication rollout, demo examples and final verification.
