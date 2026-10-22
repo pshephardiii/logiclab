@@ -21,7 +21,7 @@ Published assessment, feedback and solution settings remain frozen. Enrollment, 
 1. **Policy/contracts foundation (implemented):** standalone target contract, pure capabilities/solution-release helpers, legacy mapping, and policy tests. Existing endpoints, database checks, UI, and demo template remain unchanged; the new contract is not yet accepted by assignment routes.
 2. **Persistence and authoring API (assessment/feedback and solution-release storage implemented):** enum/check/field changes and migration for learning/solution policies; preserve legacy behavior and final-work retention; validate complete saved policy on partial updates.
 3. **Student workflow API (explicit check foundation implemented):** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
-4. **Instructor UI:** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
+4. **Instructor UI (implemented; publication guard retained):** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
 5. **Student UI:** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
 6. **Demo and final verification:** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
 
@@ -60,3 +60,9 @@ Completion-only finalization and its score-free result representation remain the
 Completion-only finalization now requires all expected cells for every occurrence, freezes work atomically, and stores completion_v1 counts without correctness scores or grading feedback. Instructor summaries/detail and existing result views support both retained graded snapshots and score-free completion snapshots. Failed/incomplete work rolls back; concurrent/retried finalization remains idempotent.
 
 Practice still cannot submit. No migration or result backfill is required. New-mode publication remains staged off while instructor/student controls are added. The next slices are instructor mode/solution controls, student explicit-check/practice interactions, then publication rollout, demo examples and final verification.
+
+### Instructor policy controls checkpoint
+
+The editor now offers graded, completion-only and ungraded practice modes with explanatory feedback text and explicit solution-release choices. Mode changes produce a complete valid policy, count as unsaved edits, and survive failed saves. Changing an after-submission policy to practice selects never and announces the adjustment instead of silently enabling solutions. Saved policy restores on reload; published/archived controls remain disabled.
+
+New-mode/anytime publication is visibly disabled until student workflow controls are ready. Practice assignment review is excluded from the instructor page. The next slice is the student Check answers/practice/completion UI, followed by publication rollout and the demo practice example.

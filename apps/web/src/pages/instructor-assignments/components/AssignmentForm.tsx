@@ -1,3 +1,5 @@
+import { AssignmentPolicyFields } from './AssignmentPolicyFields';
+import { assignmentLearningPolicySchema } from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
 import type {
   AssignmentDetail,
@@ -18,7 +20,12 @@ type Props = {
 export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const [title, setTitle] = useState(assignment?.title ?? '');
   const [instructions, setInstructions] = useState(assignment?.instructions ?? '');
-  const [solutionAccess, setSolutionAccess] = useState(assignment?.solutionAccess ?? 'never');
+  const originalPolicy = {
+    assessmentMode: assignment?.assessmentMode ?? 'graded',
+    feedbackTiming: assignment?.feedbackTiming ?? 'on_submission',
+    solutionAccess: assignment?.solutionAccess ?? 'never',
+  };
+  const [policy, setPolicy] = useState(() => assignmentLearningPolicySchema.parse(originalPolicy));
   const [items, setItems] = useState<SelectedProblem[]>(
     assignment?.items.map((item) => ({ key: item.id, version: item.problemVersion })) ?? [],
   );
@@ -30,7 +37,9 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const dirty =
     title !== (assignment?.title ?? '') ||
     instructions !== (assignment?.instructions ?? '') ||
-    solutionAccess !== (assignment?.solutionAccess ?? 'never') ||
+    policy.assessmentMode !== originalPolicy.assessmentMode ||
+    policy.feedbackTiming !== originalPolicy.feedbackTiming ||
+    policy.solutionAccess !== originalPolicy.solutionAccess ||
     itemsChanged;
   useEffect(() => {
     onDirty(dirty);
@@ -53,12 +62,6 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   function remove(index: number) {
     setItems((previous) => previous.filter((_, position) => position !== index));
   }
-  function toggleSolutions(enabled: boolean) {
-    const release =
-      assignment?.assessmentMode === 'ungraded_practice' ? 'anytime' : 'after_submission';
-    setSolutionAccess(enabled ? release : 'never');
-  }
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await onSave(
@@ -66,9 +69,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
         title,
         instructions: instructions || null,
         problemVersionIds: ids,
-        assessmentMode: assignment?.assessmentMode ?? 'graded',
-        feedbackTiming: assignment?.feedbackTiming ?? 'on_submission',
-        solutionAccess,
+        ...policy,
       },
       itemsChanged,
     );
@@ -99,19 +100,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
           />
-          <p className="help">
-            Assessment: {assignment?.assessmentMode ?? 'graded'} · Feedback:{' '}
-            {assignment?.feedbackTiming ?? 'on_submission'}.
-          </p>
-          <label className="assignment-solution-option">
-            <input
-              type="checkbox"
-              checked={solutionAccess !== 'never'}
-              onChange={(event) => toggleSolutions(event.target.checked)}
-            />{' '}
-            Allow students to reveal solutions
-          </label>
-          <p className="help">Solution access defaults off and is locked when published.</p>
+          <AssignmentPolicyFields policy={policy} onChange={setPolicy} />
           <AssignmentItems items={items} readOnly={readOnly} onMove={move} onRemove={remove} />
           {!readOnly && (
             <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />

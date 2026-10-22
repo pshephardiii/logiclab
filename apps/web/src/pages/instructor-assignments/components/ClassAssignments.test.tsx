@@ -118,6 +118,8 @@ test('metadata-only edits retain failed input and omit item replacement, then pu
   await user.click(screen.getByRole('button', { name: 'Publish assignment' }));
   await screen.findByRole('heading', { name: 'Saved assignment' });
   expect(screen.getByLabelText('Assignment title')).toBeDisabled();
+  expect(screen.getByLabelText('Assessment mode')).toBeDisabled();
+  expect(screen.getByLabelText('Solution access')).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Publish assignment' })).not.toBeInTheDocument();
 });
 
@@ -150,7 +152,7 @@ test('creates a class-scoped empty draft, preserves solution policy, and disable
     </MemoryRouter>,
   );
   await user.type(screen.getByLabelText('Assignment title'), 'Empty draft');
-  await user.click(screen.getByLabelText('Allow students to reveal solutions'));
+  await user.selectOptions(screen.getByLabelText('Solution access'), 'after_submission');
   vi.mocked(api.createAssignment).mockResolvedValue({
     ...assignment,
     title: 'Empty draft',
@@ -188,6 +190,8 @@ test('archive and restore retain publication locks and immutable item content', 
   await user.click(await screen.findByRole('button', { name: 'Restore assignment' }));
   await screen.findByRole('button', { name: 'Archive assignment' });
   expect(screen.getByLabelText('Assignment title')).toBeDisabled();
+  expect(screen.getByLabelText('Assessment mode')).toBeDisabled();
+  expect(screen.getByLabelText('Solution access')).toBeDisabled();
   expect(screen.getByText('Read this snapshot')).toBeInTheDocument();
 });
 
@@ -241,4 +245,40 @@ test('assignment pagination stops at the last page and filter changes ignore lat
   expect(signal.aborted).toBe(true);
   await act(async () => resolve({ assignments: [summary], nextOffset: null }));
   expect(screen.queryByRole('button', { name: 'Homework (draft)' })).not.toBeInTheDocument();
+});
+
+test('mode changes preserve failed input, send complete policies and remain draft-only during rollout', async () => {
+  const user = await openDraft();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  await user.selectOptions(screen.getByLabelText('Solution access'), 'anytime');
+  expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();
+  vi.mocked(api.updateAssignment).mockRejectedValueOnce(new Error('Save unavailable'));
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Save unavailable');
+  expect(screen.getByLabelText('Assessment mode')).toHaveValue('completion_only');
+  expect(screen.getByLabelText('Solution access')).toHaveValue('anytime');
+  vi.mocked(api.updateAssignment).mockResolvedValue({
+    ...assignment,
+    assessmentMode: 'completion_only',
+    feedbackTiming: 'on_check',
+    solutionAccess: 'anytime',
+  });
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await screen.findByText('Assignment draft saved.');
+  expect(api.updateAssignment).toHaveBeenLastCalledWith(
+    assignment.id,
+    expect.objectContaining({
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_check',
+      solutionAccess: 'anytime',
+    }),
+    expect.any(AbortSignal),
+  );
+  expect(screen.getByLabelText('Assessment mode')).toHaveValue('completion_only');
+  expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();
+  expect(
+    screen.getByText(
+      'This learning policy can be saved as a draft. Publishing is not available yet.',
+    ),
+  ).toBeInTheDocument();
 });
