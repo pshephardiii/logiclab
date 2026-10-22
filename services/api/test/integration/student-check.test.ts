@@ -1,3 +1,4 @@
+import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -12,7 +13,7 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 
-test('explicit checks enforce policy and workspace access without creating, saving or grading attempts', async () => {
+test('learning-mode checks, saves and solutions preserve privacy and enforce workspace access', async () => {
   const db = await import('@logiclab/db');
   const schema = `student_check_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -134,6 +135,64 @@ test('explicit checks enforce policy and workspace access without creating, savi
       snapshot,
     );
     assert.equal((await check({ itemId: item.id, answers }, second.cookie)).statusCode, 404);
+    async function workRequest(
+      method: 'GET' | 'PATCH' | 'POST',
+      suffix = '',
+      payload?: object,
+      cookie = first.cookie,
+    ) {
+      return app.inject({
+        method,
+        url: path.replace(/\/check$/, suffix),
+        headers: { origin: config.APP_ORIGIN, cookie },
+        payload,
+        remoteAddress: `127.0.0.${address++}`,
+      });
+    }
+    const read = await workRequest('GET');
+    assert.equal(read.statusCode, 200, read.body);
+    assert.equal(read.json().assignment.assessmentMode, 'ungraded_practice');
+    assert.equal(read.json().attempt.revision, saved.revision);
+    assert.equal(read.json().attempt.result, null);
+    const saveInput = { revision: saved.revision, itemId: item.id, answers: answers.slice(0, 2) };
+    const practiceSave = await workRequest('PATCH', '/attempt', saveInput);
+    assert.equal(practiceSave.statusCode, 200, practiceSave.body);
+    assert.equal(practiceSave.json().attempt.revision, saved.revision + 1);
+    assert.equal(practiceSave.json().attempt.result, null);
+    assert.equal(practiceSave.json().attempt.submittedAt, null);
+    assert.equal((await workRequest('PATCH', '/attempt', saveInput)).statusCode, 409);
+    assert.equal((await workRequest('GET', '', undefined, second.cookie)).statusCode, 404);
+    assert.equal(
+      (await workRequest('PATCH', '/attempt', saveInput, second.cookie)).statusCode,
+      404,
+    );
+    const noSubmission = await workRequest('POST', '/submission', { revision: saved.revision + 1 });
+    assert.equal(noSubmission.statusCode, 403);
+    assert.equal(noSubmission.json().error.code, 'SUBMISSION_UNAVAILABLE');
+    assert.equal((await workRequest('GET')).json().attempt.revision, saved.revision + 1);
+    const solutionPath = `/items/${item.id}/solution`;
+    assert.equal((await workRequest('GET', solutionPath)).statusCode, 403);
+    await em.nativeUpdate(db.Assignment, assignment.id, {
+      solutionAccess: db.SolutionAccess.Anytime,
+    });
+    const anytime = await workRequest('GET', solutionPath);
+    assert.equal(anytime.statusCode, 200, anytime.body);
+    assert(anytime.json().solution.rows.length);
+    assert.equal(
+      (await workRequest('GET', solutionPath, undefined, second.cookie)).statusCode,
+      404,
+    );
+    assert.equal((await workRequest('GET', `/items/${randomUUID()}/solution`)).statusCode, 404);
+    const owner = await em.findOneOrFail(db.User, {
+      demoWorkspace: first.session.workspace.id,
+      role: db.UserRole.Instructor,
+    });
+    const reviews = await createAssignmentStore(orm);
+    await assert.rejects(
+      reviews.listSubmissions(owner.id, assignment.id, { limit: 20, offset: 0 }),
+      (error: unknown) => error instanceof Error && error.message === 'not_found',
+    );
+
     assert.equal((await check({ itemId: randomUUID(), answers })).statusCode, 404);
     assert.equal(
       (await check({ itemId: item.id, answers: [answers[0], answers[0]] })).json().error.code,
@@ -146,8 +205,27 @@ test('explicit checks enforce policy and workspace access without creating, savi
     );
     await em.nativeUpdate(db.Assignment, assignment.id, {
       assessmentMode: db.AssessmentMode.CompletionOnly,
+      solutionAccess: db.SolutionAccess.AfterSubmission,
     });
     assert.equal((await check({ itemId: item.id, answers: [] })).statusCode, 200);
+    assert.equal((await workRequest('GET')).statusCode, 200);
+    assert.equal((await workRequest('GET', solutionPath)).statusCode, 403);
+    assert.equal(
+      (await workRequest('POST', '/submission', { revision: saved.revision + 1 })).statusCode,
+      409,
+      'Completion finalization remains blocked in this slice.',
+    );
+
+    const completionSave = await workRequest('PATCH', '/attempt', {
+      revision: saved.revision + 1,
+      itemId: item.id,
+      answers: [],
+    });
+    assert.equal(completionSave.statusCode, 200, completionSave.body);
+    assert.equal(completionSave.json().attempt.revision, saved.revision + 2);
+    assert.equal(completionSave.json().attempt.result, null);
+    assert.equal(completionSave.json().attempt.submittedAt, null);
+
     await em.nativeUpdate(db.AssignmentAttempt, saved.id, {
       submittedAt: new Date(),
       result: evaluateSubmission(
@@ -159,6 +237,21 @@ test('explicit checks enforce policy and workspace access without creating, savi
       (await check({ itemId: item.id, answers })).json().error.code,
       'ATTEMPT_SUBMITTED',
     );
+    assert.equal((await workRequest('GET', solutionPath)).statusCode, 200);
+    // Even a legacy/corrupt final practice row must not expose answers through instructor review.
+    await em.nativeUpdate(db.Assignment, assignment.id, {
+      assessmentMode: db.AssessmentMode.UngradedPractice,
+      solutionAccess: db.SolutionAccess.Anytime,
+    });
+    await assert.rejects(
+      reviews.findSubmission(owner.id, assignment.id, saved.id),
+      (error: unknown) => error instanceof Error && error.message === 'not_found',
+    );
+    await assert.rejects(
+      reviews.listSubmissions(owner.id, assignment.id, { limit: 20, offset: 0 }),
+      (error: unknown) => error instanceof Error && error.message === 'not_found',
+    );
+
     await em.nativeUpdate(db.Assignment, assignment.id, { archivedAt: new Date() });
     assert.equal((await check({ itemId: item.id, answers })).statusCode, 404);
     await em.nativeUpdate(db.Assignment, assignment.id, { archivedAt: null, publishedAt: null });

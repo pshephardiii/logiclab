@@ -6,7 +6,7 @@ import { studentWorkErrorResponses } from '../../error-responses';
 import { getStudentSolutionHandler } from './handler';
 
 export const getStudentSolutionSchema = {
-  summary: 'Read an allowed solution after submission',
+  summary: 'Read an assigned solution when its release policy permits',
   description: 'Enrollment-scoped student work; feedback and solutions are enforced server-side.',
   params: studentItemParamsSchema,
   response: { 200: studentSolutionResponseSchema, ...studentWorkErrorResponses },

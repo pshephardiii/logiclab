@@ -1,4 +1,7 @@
-import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
+import {
+  assignmentLearningCapabilities,
+  canViewAssignedSolution,
+} from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { assignmentExercises } from '../assignment/exercise-response';
@@ -74,10 +77,26 @@ export async function createStudentWorkStore(
     if (!assignment || !assignment.publishedAt || assignment.archivedAt)
       throw new StudentWorkError('not_found');
     await enrolled(em, studentId, assignment.classroom.id, true);
+    policyFor(assignment);
     return assignment;
+  }
+  function policyFor(assignment: {
+    assessmentMode: string;
+    feedbackTiming: string;
+    solutionAccess: string;
+  }) {
+    const policy = assignmentLearningPolicySchema.safeParse({
+      assessmentMode: assignment.assessmentMode,
+      feedbackTiming: assignment.feedbackTiming,
+      solutionAccess: assignment.solutionAccess,
+    });
+    if (!policy.success) throw new StudentWorkError('unsupported_policy');
+    return policy.data;
   }
   async function gradedAssignment(em: Manager, studentId: string, assignmentId: string) {
     const assignment = await accessible(em, studentId, assignmentId);
+    if (!assignmentLearningCapabilities(policyFor(assignment)).hasFinalSubmission)
+      throw new StudentWorkError('submission_unavailable');
     if (assignment.assessmentMode !== 'graded' || assignment.feedbackTiming !== 'on_submission')
       throw new StudentWorkError('unsupported_policy');
     return assignment;
@@ -126,7 +145,7 @@ export async function createStudentWorkStore(
     },
     async read(studentId, assignmentId) {
       return transact(async (em) => {
-        const assignment = await gradedAssignment(em, studentId, assignmentId);
+        const assignment = await accessible(em, studentId, assignmentId);
         const assigned = await items(em, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
           assignment: assignmentId,
@@ -140,7 +159,7 @@ export async function createStudentWorkStore(
     },
     async save(studentId, assignmentId, input) {
       return transact(async (em) => {
-        await gradedAssignment(em, studentId, assignmentId);
+        await accessible(em, studentId, assignmentId);
         const item = await em.findOne(
           AssignmentItem,
           { id: input.itemId, assignment: assignmentId },
@@ -160,13 +179,7 @@ export async function createStudentWorkStore(
     async check(studentId, assignmentId, input) {
       return transact(async (em) => {
         const assignment = await accessible(em, studentId, assignmentId);
-        const policy = assignmentLearningPolicySchema.safeParse({
-          assessmentMode: assignment.assessmentMode,
-          feedbackTiming: assignment.feedbackTiming,
-          solutionAccess: assignment.solutionAccess,
-        });
-        if (!policy.success) throw new StudentWorkError('unsupported_policy');
-        if (!assignmentLearningCapabilities(policy.data).allowsExplicitCheck)
+        if (!assignmentLearningCapabilities(policyFor(assignment)).allowsExplicitCheck)
           throw new StudentWorkError('check_locked');
         const attempt = await em.findOne(
           AssignmentAttempt,
@@ -214,12 +227,12 @@ export async function createStudentWorkStore(
     },
     async solution(studentId, assignmentId, itemId) {
       return transact(async (em) => {
-        const assignment = await gradedAssignment(em, studentId, assignmentId);
+        const assignment = await accessible(em, studentId, assignmentId);
         const attempt = await em.findOne(AssignmentAttempt, {
           assignment: assignmentId,
           student: studentId,
         });
-        if (assignment.solutionAccess !== 'after_submission' || !attempt?.submittedAt)
+        if (!canViewAssignedSolution(policyFor(assignment), Boolean(attempt?.submittedAt)))
           throw new StudentWorkError('solution_locked');
         const item = await em.findOne(
           AssignmentItem,

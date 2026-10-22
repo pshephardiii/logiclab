@@ -11,6 +11,11 @@ export class StudentWorkRouteError extends Error {
   }
 }
 const failures = {
+  submission_unavailable: {
+    status: 403,
+    code: 'SUBMISSION_UNAVAILABLE',
+    message: 'Ungraded practice has no final submission.',
+  },
   check_locked: {
     status: 403,
     code: 'CHECK_UNAVAILABLE',

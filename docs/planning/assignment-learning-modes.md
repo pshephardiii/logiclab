@@ -48,3 +48,9 @@ New modes and anytime solutions are intentionally draft-only until student workf
 ### Explicit checking checkpoint
 
 The student check endpoint evaluates transient per-item answers under assignment/enrollment locks and applicable feedback policy, returns status-only feedback, and never writes an attempt or grade. Completion-only submitted work rejects further checks. Existing graded read/save/submission/solution behavior is unchanged. Public publication remains blocked for new modes until the remaining student workflows are implemented. Next sub-slice: mode-specific saved work, completion results, submission/solution rules and privacy.
+
+### Saved work, solution release and privacy checkpoint
+
+Student reads and revisioned saves now support valid policies across all modes. Solution release uses the shared never/after_submission/anytime rules. Practice submission is explicitly rejected without attempt mutation, and instructor submission review excludes practice even if unexpected final data exists. Existing graded work remains supported.
+
+Completion-only finalization and its score-free result representation remain the next small slice. New-mode/anytime publication stays blocked, and UI controls/demo changes remain deferred. The integration suite exercises these staged policies through test-only publication fixtures.

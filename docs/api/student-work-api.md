@@ -82,3 +82,13 @@ This operation does not create an attempt, save answers, increment revisions, fi
 Only enrolled students can check published, nonarchived work whose policy permits explicit checks (completion_only/on_check or ungraded_practice/on_check). Graded assignments return 403 CHECK_UNAVAILABLE. Submitted attempts reject checks with 409 ATTEMPT_SUBMITTED; those students use their final feedback instead. Missing/foreign/unpublished/archived assignments and foreign items return 404. Origin, role, rate, and no-store policies apply, including the existing demo resource namespace.
 
 Publication of the new modes remains blocked during staged rollout. This endpoint is the checking foundation; mode-specific read/save/submit/solution support and frontend integration follow. Integration fixtures exercise the new policies directly without removing the public publication guard.
+
+## Learning-mode saved work and solution release
+
+Published assignments with any valid learning policy can now be read and saved by their enrolled student. Existing per-item revision/conflict checks, invalid-cell rejection, immutable final-attempt guards, and archive/enrollment locks remain in force. Saving never grades, checks, or submits work.
+
+Solution reads apply never/after_submission/anytime on the server. Anytime can return a solution without a saved attempt; after_submission requires a final attempt; never always denies access. Enrollment, item ownership, publication and archive rules apply regardless of release timing.
+
+Ungraded practice rejects final submission with 403 SUBMISSION_UNAVAILABLE before creating or changing an attempt. Instructor submission list/detail reject practice assignments as not found, including any accidentally retained final practice rows. Practice answers remain student-private. Completion-only submission still returns ASSIGNMENT_POLICY_UNSUPPORTED until the next finalization slice; reads, saves and explicit checks are available in the internal/test workflow.
+
+New-mode/anytime publication remains blocked through the authoring API during rollout. No frontend learning-mode controls or new demo assignments are enabled by this slice.

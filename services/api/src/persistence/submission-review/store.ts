@@ -37,7 +37,8 @@ export async function createSubmissionReviewStore(
   const { Assignment, AssignmentItem, AssignmentAttempt } = await import('@logiclab/db');
   async function owned(em: typeof orm.em, ownerId: string, id: string) {
     const assignment = await em.findOne(Assignment, { id, classroom: { owner: ownerId } });
-    if (!assignment) throw new AssignmentOperationError('not_found');
+    if (!assignment || assignment.assessmentMode === 'ungraded_practice')
+      throw new AssignmentOperationError('not_found');
     return assignment;
   }
   return {
