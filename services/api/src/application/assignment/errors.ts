@@ -1,6 +1,5 @@
 export type AssignmentFailure =
   | 'invalid_policy'
-  | 'unsupported_policy'
   | 'coverage_required'
   | 'not_found'
   | 'version_not_found'

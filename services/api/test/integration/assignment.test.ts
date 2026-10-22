@@ -372,10 +372,6 @@ test(
       assert.equal(renamed.statusCode, 200);
       assert.equal(renamed.json().assignment.assessmentMode, 'ungraded_practice');
       assert.equal(renamed.json().assignment.solutionAccess, 'anytime');
-      const notReady = await request('POST', policyPath + '/publish', {});
-      assert.equal(notReady.statusCode, 409);
-      assert.equal(notReady.json().error.code, 'ASSIGNMENT_POLICY_NOT_READY');
-      assert.equal((await request('GET', policyPath)).json().assignment.publishedAt, null);
       const completion = await request('PATCH', policyPath, {
         assessmentMode: 'completion_only',
         solutionAccess: 'after_submission',
@@ -408,6 +404,35 @@ test(
         (await request('POST', base, { title: 'Legacy flag', allowSolutions: true })).statusCode,
         400,
       );
+
+      for (const policy of [
+        {
+          assessmentMode: 'ungraded_practice',
+          feedbackTiming: 'on_check',
+          solutionAccess: 'anytime',
+        },
+        {
+          assessmentMode: 'completion_only',
+          feedbackTiming: 'on_check',
+          solutionAccess: 'after_submission',
+        },
+        { assessmentMode: 'graded', feedbackTiming: 'on_submission', solutionAccess: 'anytime' },
+      ]) {
+        const draft = await request('POST', base, {
+          ...policy,
+          title: 'Enabled policy',
+          problemVersionIds: [second.id],
+        });
+        assert.equal(draft.statusCode, 201, draft.body);
+        const enabledPath = `/api/assignments/${draft.json().assignment.id}`;
+        const published = await request('POST', enabledPath + '/publish', {});
+        assert.equal(published.statusCode, 200, published.body);
+        assert(published.json().assignment.publishedAt);
+        assert.equal(
+          (await request('PATCH', enabledPath, { solutionAccess: 'never' })).statusCode,
+          409,
+        );
+      }
     } finally {
       await app.close();
       await orm.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);

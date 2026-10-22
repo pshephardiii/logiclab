@@ -84,5 +84,14 @@ export async function seedDemoWorkspace(
     feedbackTiming: 'on_submission',
   });
   await assignments.publish(instructor.id, assignment.id);
+  const practice = await assignments.create(instructor.id, funded.id, {
+    title: DEMO_TEMPLATE.practiceAssignmentTitle,
+    instructions: DEMO_TEMPLATE.practiceAssignmentInstructions,
+    problemVersionIds: [version.id],
+    assessmentMode: 'ungraded_practice',
+    feedbackTiming: 'on_check',
+    solutionAccess: 'anytime',
+  });
+  await assignments.publish(instructor.id, practice.id);
   return { instructorId: instructor.id, studentId: student.id };
 }

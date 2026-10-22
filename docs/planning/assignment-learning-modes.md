@@ -23,7 +23,7 @@ Published assessment, feedback and solution settings remain frozen. Enrollment, 
 3. **Student workflow API (explicit check foundation implemented):** explicit check operation, mode-specific saves/submission/results, complete-cell validation, protected solutions and private practice access. Add authorization and concurrency regression coverage.
 4. **Instructor UI (implemented; publication guard retained):** mode and solution controls, consistent published read-only display, mode-appropriate review without practice answers.
 5. **Student UI (implemented; publication rollout pending):** repeated checking, completion requirements, practice without final submission, mode-specific feedback/results.
-6. **Demo and final verification:** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
+6. **Demo and final verification (rollout/seed implemented; final branch verification pending):** seed an additional practice assignment, verify reset/cleanup and existing graded behavior, update walkthrough/evidence and draft PR notes.
 
 Keep each slice small; split API work further if needed. QA and code audit branches remain planned before deployment and will be numbered after this feature. No hosted rollout or resources are part of this branch.
 
@@ -72,3 +72,11 @@ New-mode/anytime publication is visibly disabled until student workflow controls
 The student UI now supports transient explicit checking, practice without final submission, completion-only completeness/save gating, and anytime/after-submission solution controls. Feedback is per occurrence, cleared by edits, and protected against canceled late responses. Existing graded interactions remain unchanged.
 
 New modes and anytime access remain draft-only through public authoring. Next: remove the temporary publication gates, seed an additional demo practice assignment, update walkthroughs, and verify the real instructor-to-student journey before branch completion.
+
+### Publication and demo rollout
+
+The temporary API/UI publication gates are removed. All valid learning policies use normal ownership, coverage, content and publication-lock rules. Demo template 2 retains the graded example and adds **Explore truth tables at your own pace**, with explicit checking, private saved answers and anytime solutions. Existing workspaces are not silently reseeded; reset upgrades their template and restores both examples without extending absolute expiry.
+
+The automated suite exercises new-policy publication and immutability, practice seed behavior, template upgrade/reset, and cleanup with shared version references. Final branch verification/evidence and PR notes remain a separate step.
+
+Local rollout verification passed the full instructor-to-student completion journey, seeded practice check/save/reload/anytime solutions, score-free instructor review, reset restoration, empty browser storage and a 390px layout. This was a one-off Chrome run against a temporary test schema, not browser CI or full branch QA.

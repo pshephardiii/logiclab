@@ -43,6 +43,7 @@ test('cleanup removes frozen demo work, sessions and financial data while retain
     const session = await sessions.issue(expired.workspaceId, 'student');
     const em = orm.em.fork();
     const assignment = await em.findOneOrFail(db.Assignment, {
+      assessmentMode: db.AssessmentMode.Graded,
       classroom: { owner: { demoWorkspace: expired.workspaceId } },
     });
     await (await createStudentWorkStore(orm)).submit(session.actor.id, assignment.id, 0);

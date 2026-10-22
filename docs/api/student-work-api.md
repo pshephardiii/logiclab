@@ -71,7 +71,7 @@ Local verification for the completion/review slice includes DOM/hook regression 
 
 ## Learning-policy contract rollout
 
-Assignment responses now use solutionAccess (never/after_submission/anytime). The currently published student workflow remains graded/on_submission, with solutions enabled only by after_submission and a final submission. New learning policies can be authored as drafts but cannot yet be published; explicit checking and new mode-specific submission behavior follow in a later slice.
+Assignment responses now use solutionAccess (never/after_submission/anytime). All valid policies can now be authored and published. Graded work retains submission-only feedback; completion and practice support explicit checks. Solutions follow their release policy.
 
 ## Explicit check foundation
 
@@ -81,7 +81,7 @@ This operation does not create an attempt, save answers, increment revisions, fi
 
 Only enrolled students can check published, nonarchived work whose policy permits explicit checks (completion_only/on_check or ungraded_practice/on_check). Graded assignments return 403 CHECK_UNAVAILABLE. Submitted attempts reject checks with 409 ATTEMPT_SUBMITTED; those students use their final feedback instead. Missing/foreign/unpublished/archived assignments and foreign items return 404. Origin, role, rate, and no-store policies apply, including the existing demo resource namespace.
 
-Publication of the new modes remains blocked during staged rollout. This endpoint is the checking foundation; mode-specific read/save/submit/solution support and frontend integration follow. Integration fixtures exercise the new policies directly without removing the public publication guard.
+All valid modes are publishable. The check endpoint is available through both normal and demo resource clients; checks remain transient.
 
 ## Learning-mode saved work and solution release
 
@@ -89,9 +89,9 @@ Published assignments with any valid learning policy can now be read and saved b
 
 Solution reads apply never/after_submission/anytime on the server. Anytime can return a solution without a saved attempt; after_submission requires a final attempt; never always denies access. Enrollment, item ownership, publication and archive rules apply regardless of release timing.
 
-Ungraded practice rejects final submission with 403 SUBMISSION_UNAVAILABLE before creating or changing an attempt. Instructor submission list/detail reject practice assignments as not found, including any accidentally retained final practice rows. Practice answers remain student-private. Completion-only submission still returns ASSIGNMENT_POLICY_UNSUPPORTED until the next finalization slice; reads, saves and explicit checks are available in the internal/test workflow.
+Ungraded practice rejects final submission with 403 SUBMISSION_UNAVAILABLE before creating or changing an attempt. Instructor submission list/detail reject practice assignments as not found, including any accidentally retained final practice rows. Practice answers remain student-private. Completion-only submission requires all expected cells and stores the score-free result described below.
 
-New-mode/anytime publication remains blocked through the authoring API during rollout. No frontend learning-mode controls or new demo assignments are enabled by this slice.
+Instructor and student learning-mode controls are available. The demo includes both graded and private-practice examples.
 
 ## Completion-only finalization
 
@@ -111,7 +111,7 @@ The existing version field name is retained for compatibility; this result conta
 
 Finalization increments revision once, is idempotent after submission, and serializes with saves/checks through the existing attempt locks. Final answers cannot be edited; permitted after-submission solutions become available. Practice still has no final submission and remains excluded from instructor review.
 
-No database migration or rewrite of old results is needed: result is stored in the existing JSON column and covered by the existing final-attempt retention trigger. Application rollback to a version that only understands graded results requires care once completion results exist. New-mode publication remains blocked until the planned frontend controls/workflow rollout; this slice verifies completion through isolated test fixtures.
+No database migration or rewrite of old results is needed: result is stored in the existing JSON column and covered by the existing final-attempt retention trigger. Application rollback to a version that only understands graded results requires care once completion results exist. New-mode publication is enabled; automated integration tests and a local Chrome walkthrough verify completion.
 
 ## Student learning-mode controls
 
@@ -119,4 +119,4 @@ Assigned work now shows explicit Check answers for on_check policies. Checks use
 
 Practice pages retain Save problem and checking but omit final submission/confirmation. Anytime solutions can be shown before saving or submitting without replacing entries. Completion-only final confirmation is disabled until every expected cell across all occurrences is filled and all edits are saved. Final completion displays counts without a correctness score. Existing graded submission-only feedback and after-submission solutions remain supported.
 
-The server independently enforces these rules. Publication remains staged off for new policies until the rollout/demo verification slice.
+The server independently enforces these rules. Publication is enabled for all valid learning policies.

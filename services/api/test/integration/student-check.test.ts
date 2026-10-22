@@ -40,6 +40,7 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     const second = await start();
     const em = orm.em.fork();
     const assignment = await em.findOneOrFail(db.Assignment, {
+      assessmentMode: db.AssessmentMode.Graded,
       classroom: { owner: { demoWorkspace: first.session.workspace.id } },
       publishedAt: { $ne: null },
     });
@@ -95,7 +96,7 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
       itemId: item.id,
       answers: answers.slice(0, 1),
     });
-    // Test-only publication fixture: public authoring still blocks these modes until rollout completes.
+    // Test-only policy changes isolate student behavior; authoring immutability is tested separately.
     await em.nativeUpdate(db.Assignment, assignment.id, {
       assessmentMode: db.AssessmentMode.UngradedPractice,
       feedbackTiming: db.FeedbackTiming.OnCheck,

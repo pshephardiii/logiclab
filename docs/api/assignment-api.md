@@ -35,9 +35,9 @@ PATCH requires at least one field and has no creation defaults. Omitted fields r
 
 The legacy `allowSolutions` field is no longer accepted or returned. Existing clients and demo seeding now send `solutionAccess`; false/true stored behavior was migrated to never/after_submission in the preceding database slice. Creation defaults remain graded/on_submission/never.
 
-## Staged publication support
+## Learning-mode publication
 
-Until student workflow support is implemented, only graded/on_submission with never/after_submission solutions can be newly published. Other valid policies can be saved and read as drafts; publication returns 409 ASSIGNMENT_POLICY_NOT_READY without setting publishedAt. This temporary rollout guard must be removed alongside the new student workflow, not bypassed through direct database updates. Existing published work remains available.
+All valid learning policies can now be published, including practice/completion modes and anytime solutions. The temporary rollout guard has been removed from API and UI. Ownership, nonempty pinned content, current class coverage, archive rules, and immutable published policies still apply.
 
 ## Publication, archiving, and responses
 
@@ -61,7 +61,7 @@ Run `npm run check` and `npm run db:test`. Colocated handler/route tests cover n
 
 Sign in as an instructor and choose **Assignments**. Select an owned class; **Load more classes** exposes later pages. If no class exists, follow **Manage classes** to create one. Class selection and unsaved editor state are local to the page and reset on reload/navigation; saved assignments remain in PostgreSQL.
 
-Create a draft with title, optional instructions, assessment mode, and solution-release policy. Defaults remain graded/on_submission/never. The mode sets its currently supported feedback timing; the editor explains graded scoring, completion requirements and private practice. Practice offers only Never/Anytime solutions. Switching from After final submission to practice selects Never and announces the change. Published/archived policy controls are read-only. New modes and Anytime can be saved as drafts, but their Publish action remains disabled during student-UI rollout, matching the server guard. Choose a library problem, then add a specific published version. Library problems and publications have separate pagination/retry controls; unpublished problems show guidance to publish first. Retained publications of archived problems remain selectable.
+Create a draft with title, optional instructions, assessment mode, and solution-release policy. Defaults remain graded/on_submission/never. The mode sets its currently supported feedback timing; the editor explains graded scoring, completion requirements and private practice. Practice offers only Never/Anytime solutions. Switching from After final submission to practice selects Never and announces the change. Published/archived policy controls are read-only. All valid modes and solution-release policies can be published after saving, with the usual content/coverage requirements. Choose a library problem, then add a specific published version. Library problems and publications have separate pagination/retry controls; unpublished problems show guidance to publish first. Retained publications of archived problems remain selectable.
 
 The ordered item list displays snapshot titles, versions, instructions, and formulas. Repeated versions are separate occurrences. **Move up**, **Move down**, and **Remove** update the local order; additions stop at 50 items. Empty drafts can be saved, but cannot be published. Failed saves retain input and ordering. Metadata-only edits omit item replacement so existing occurrence IDs survive.
 

@@ -109,7 +109,11 @@ test('demo HTTP starts, switches roles, uses existing scoped workflows, and rese
         headers: { cookie: token },
       });
       assert.equal(assignments.statusCode, 200, assignments.body);
-      const assignmentId = assignments.json().assignments[0].id;
+      const assignmentId = assignments
+        .json()
+        .assignments.find(
+          (value: { assessmentMode: string }) => value.assessmentMode === 'graded',
+        ).id;
       const submission = await app.inject({
         method: 'POST',
         url: `/api/demo/resources/student/assignments/${assignmentId}/submission`,

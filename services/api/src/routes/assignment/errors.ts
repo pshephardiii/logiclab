@@ -16,12 +16,6 @@ const failures = {
     code: 'ASSIGNMENT_POLICY_INVALID',
     message: 'The combined assignment learning policy is invalid.',
   },
-  unsupported_policy: {
-    status: 409,
-    code: 'ASSIGNMENT_POLICY_NOT_READY',
-    message:
-      'This learning policy can be saved as a draft but student workflow support is not available yet.',
-  },
   coverage_required: {
     status: 409,
     code: 'CLASS_COVERAGE_REQUIRED',

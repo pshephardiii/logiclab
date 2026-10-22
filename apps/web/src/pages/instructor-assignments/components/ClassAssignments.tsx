@@ -13,11 +13,6 @@ export function ClassAssignments({ classId }: Props) {
   const accountPath = useAccountPath();
   const state = useAssignments(classId);
   const [dirty, setDirty] = useState(false);
-  // Temporary rollout gate mirrors the server until the student UI supports every mode.
-  const publicationReady =
-    state.selected?.assessmentMode === 'graded' &&
-    state.selected.feedbackTiming === 'on_submission' &&
-    state.selected.solutionAccess !== 'anytime';
   function select(id: string | null) {
     setDirty(false);
     void state.select(id);
@@ -124,16 +119,10 @@ export function ClassAssignments({ classId }: Props) {
               <p className="help">
                 Published, active assignments are available to enrolled students.
               </p>
-              {!state.selected.publishedAt && !publicationReady && (
-                <p>
-                  This learning policy can be saved as a draft. Publishing is not available yet.
-                </p>
-              )}
               <div className="action-row">
                 {!state.selected.publishedAt && (
                   <button
                     disabled={
-                      !publicationReady ||
                       dirty ||
                       state.busy ||
                       Boolean(state.selected.archivedAt) ||

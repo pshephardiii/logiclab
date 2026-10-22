@@ -215,13 +215,6 @@ export async function createAssignmentStore(
         const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
         if (assignment.archivedAt) throw new AssignmentOperationError('archived');
         if (!assignment.publishedAt) {
-          // Draft authoring precedes rollout of the corresponding student workflow.
-          if (
-            assignment.assessmentMode !== AssessmentMode.Graded ||
-            assignment.feedbackTiming !== FeedbackTiming.OnSubmission ||
-            assignment.solutionAccess === SolutionAccess.Anytime
-          )
-            throw new AssignmentOperationError('unsupported_policy');
           const items = await em.find(AssignmentItem, { assignment: assignment.id });
           if (!items.length) throw new AssignmentOperationError('empty');
           await ownedVersions(

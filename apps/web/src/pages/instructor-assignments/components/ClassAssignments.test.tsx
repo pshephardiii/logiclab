@@ -247,7 +247,7 @@ test('assignment pagination stops at the last page and filter changes ignore lat
   expect(screen.queryByRole('button', { name: 'Homework (draft)' })).not.toBeInTheDocument();
 });
 
-test('mode changes preserve failed input, send complete policies and remain draft-only during rollout', async () => {
+test('mode changes preserve failed input and enable publication after saving valid policies', async () => {
   const user = await openDraft();
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
   await user.selectOptions(screen.getByLabelText('Solution access'), 'anytime');
@@ -275,10 +275,5 @@ test('mode changes preserve failed input, send complete policies and remain draf
     expect.any(AbortSignal),
   );
   expect(screen.getByLabelText('Assessment mode')).toHaveValue('completion_only');
-  expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();
-  expect(
-    screen.getByText(
-      'This learning policy can be saved as a draft. Publishing is not available yet.',
-    ),
-  ).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeEnabled();
 });
