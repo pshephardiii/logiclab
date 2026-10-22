@@ -138,12 +138,12 @@ test(
         problemVersionIds: [publication.version.id, publication.version.id],
         assessmentMode: 'graded' as const,
         feedbackTiming: 'on_submission' as const,
-        allowSolutions: false,
+        solutionAccess: 'never' as const,
       };
       async function published(allowSolutions = false) {
         const draft = await assignments.create(owner.id, classroom.id, {
           ...input,
-          allowSolutions,
+          solutionAccess: allowSolutions ? ('after_submission' as const) : ('never' as const),
         });
         return assignments.publish(owner.id, draft.id);
       }

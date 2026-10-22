@@ -11,6 +11,21 @@ export class StudentWorkRouteError extends Error {
   }
 }
 const failures = {
+  incomplete_work: {
+    status: 409,
+    code: 'ATTEMPT_INCOMPLETE',
+    message: 'Fill and save every answer cell before submitting completion-only work.',
+  },
+  submission_unavailable: {
+    status: 403,
+    code: 'SUBMISSION_UNAVAILABLE',
+    message: 'Ungraded practice has no final submission.',
+  },
+  check_locked: {
+    status: 403,
+    code: 'CHECK_UNAVAILABLE',
+    message: 'Explicit answer checking is unavailable for this assignment.',
+  },
   not_found: {
     status: 404,
     code: 'ASSIGNMENT_NOT_FOUND',

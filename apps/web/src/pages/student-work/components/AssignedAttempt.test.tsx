@@ -1,3 +1,4 @@
+import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -16,6 +17,7 @@ vi.mock('../../../api/student-work/api', () => ({
   readAssignedWork: vi.fn(),
   saveAssignedAnswers: vi.fn(),
   submitAssignedWork: vi.fn(),
+  checkAssignedAnswers: vi.fn(),
   readAssignedSolution: vi.fn(),
 }));
 beforeEach(() => {
@@ -24,6 +26,10 @@ beforeEach(() => {
   vi.mocked(api.saveAssignedAnswers).mockResolvedValue(saved);
   vi.mocked(api.submitAssignedWork).mockResolvedValue(submitted);
   vi.mocked(api.readAssignedSolution).mockResolvedValue(solution);
+  vi.mocked(api.checkAssignedAnswers).mockResolvedValue({
+    itemId: itemA,
+    feedback: submissionFeedback(submitted.result, itemA)!,
+  });
 });
 function cells() {
   return within(screen.getByRole('group', { name: 'Truth-table answers' })).getAllByRole(
@@ -99,7 +105,7 @@ test('reloading restores saved answers and official results without public reche
 
 test('enabled solutions are fetched only after final submission and preserve saved entries', async () => {
   vi.mocked(api.readAssignedWork).mockResolvedValue({
-    assignment: { ...work, allowSolutions: true },
+    assignment: { ...work, solutionAccess: 'after_submission' },
     attempt: submitted,
   });
   const { user } = await open();
@@ -149,4 +155,156 @@ test('a reverted blank clears dirty state and an unconfirmed submission can be c
   );
   await waitFor(() => expect(cells()[0]).toBeDisabled());
   expect(api.submitAssignedWork).toHaveBeenCalledTimes(1);
+});
+
+test('practice checks transient answers repeatedly, clears feedback on edit, and permits anytime solutions without submission', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: {
+      ...work,
+      assessmentMode: 'ungraded_practice',
+      feedbackTiming: 'on_check',
+      solutionAccess: 'anytime',
+    },
+    attempt: null,
+  });
+  const { user } = await open();
+  expect(screen.queryByRole('button', { name: 'Submit final answers' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(await screen.findByText('Incorrect', { exact: true })).toBeInTheDocument();
+  expect(api.checkAssignedAnswers).toHaveBeenCalledWith(
+    work.id,
+    {
+      itemId: itemA,
+      answers: saved.answers[itemA],
+    },
+    expect.any(AbortSignal),
+  );
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(screen.getByText('Unsaved changes in 1 problem(s).')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(api.checkAssignedAnswers).toHaveBeenCalledTimes(2);
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  await screen.findByRole('button', { name: 'Hide assigned solution' });
+  expect(cells()[0]).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  await user.selectOptions(cells()[0]!, 'T');
+  expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
+});
+
+test('editing cancels a pending check and late feedback cannot overwrite the edited table', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, assessmentMode: 'ungraded_practice', feedbackTiming: 'on_check' },
+    attempt: null,
+  });
+  let resolve!: (value: Awaited<ReturnType<typeof api.checkAssignedAnswers>>) => void;
+  vi.mocked(api.checkAssignedAnswers).mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const { user } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  const signal = vi.mocked(api.checkAssignedAnswers).mock.calls[0]![2];
+  expect(cells()[0]).toBeEnabled();
+  await user.selectOptions(cells()[0]!, 'T');
+  expect(signal.aborted).toBe(true);
+  await act(async () =>
+    resolve({ itemId: itemA, feedback: submissionFeedback(submitted.result, itemA)! }),
+  );
+  expect(cells()[0]).toHaveValue('T');
+  expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check answers' })).toBeEnabled();
+});
+
+test('completion requires every occurrence to be filled and saved before final confirmation', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, assessmentMode: 'completion_only', feedbackTiming: 'on_check' },
+    attempt: null,
+  });
+  vi.mocked(api.saveAssignedAnswers).mockImplementation(async (_id, input) => ({
+    ...saved,
+    revision: input.revision + 1,
+    answers: { [input.itemId]: input.answers },
+  }));
+  vi.mocked(api.submitAssignedWork).mockResolvedValue({
+    ...saved,
+    revision: 3,
+    submittedAt: submitted.submittedAt,
+    answers: {
+      [itemA]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
+      [itemB]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
+    },
+    result: {
+      gradingVersion: 'completion_v1',
+      items: [
+        { itemId: itemA, completedCells: 2, totalCells: 2 },
+        { itemId: itemB, completedCells: 2, totalCells: 2 },
+      ],
+      summary: { completedCells: 4, totalCells: 4 },
+    },
+  });
+  const { user } = await open();
+  const confirmation = screen.getByLabelText(
+    'I understand submission is final and cannot be edited.',
+  );
+  expect(confirmation).toBeDisabled();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.selectOptions(cells()[1]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 1 saved.');
+  expect(confirmation).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.selectOptions(cells()[1]!, 'F');
+  expect(confirmation).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 2 saved.');
+  expect(confirmation).toBeEnabled();
+  await user.click(confirmation);
+  await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+  expect(
+    await screen.findByText('Completed 4 of 4 cells. No correctness score is recorded.'),
+  ).toBeInTheDocument();
+  expect(cells()[0]).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
+});
+
+test('failed checks preserve entries and can be retried, while reload cancels outstanding feedback', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, assessmentMode: 'ungraded_practice', feedbackTiming: 'on_check' },
+    attempt: null,
+  });
+  vi.mocked(api.checkAssignedAnswers).mockRejectedValueOnce(new Error('Check unavailable'));
+  const { user } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Check unavailable');
+  expect(cells()[0]).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(await screen.findByText('Incorrect', { exact: true })).toBeInTheDocument();
+  let resolve!: (value: Awaited<ReturnType<typeof api.checkAssignedAnswers>>) => void;
+  vi.mocked(api.checkAssignedAnswers).mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  const signal = vi.mocked(api.checkAssignedAnswers).mock.calls.at(-1)![2];
+  await user.click(
+    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
+  );
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  expect(signal.aborted).toBe(true);
+  await act(async () =>
+    resolve({ itemId: itemA, feedback: submissionFeedback(submitted.result, itemA)! }),
+  );
+  expect(cells()[0]).toHaveValue('');
+  expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
 });

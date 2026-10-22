@@ -14,14 +14,12 @@
 .assignment-editor code {
   overflow-wrap: anywhere;
 }
-.assignment-editor input[type='checkbox'] {
-  width: auto;
-  margin: 0;
-}
-.assignment-solution-option {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.assignment-policy select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  font: inherit;
+  margin-bottom: 1rem;
 }
 .assignment-items {
   padding-left: 1.5rem;
@@ -34,7 +32,7 @@
   width: 100%;
   max-width: 100%;
 }
-.assignment-editor input:not([type='checkbox']) {
+.assignment-editor input {
   width: 100%;
   margin-bottom: 1rem;
 }

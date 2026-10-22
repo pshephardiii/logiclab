@@ -3,6 +3,8 @@ import {
   studentAssignmentResponseSchema,
   studentAttemptResponseSchema,
   studentSolutionResponseSchema,
+  studentCheckResponseSchema,
+  type CheckStudentAnswers,
   type SaveStudentAnswers,
 } from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
@@ -45,6 +47,14 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       })
     ).attempt;
   }
+  async function checkAssignedAnswers(id: string, input: CheckStudentAnswers, signal: AbortSignal) {
+    return request(`/api/student/assignments/${id}/check`, {
+      schema: studentCheckResponseSchema,
+      fallback,
+      signal,
+      body: input,
+    });
+  }
   async function readAssignedSolution(id: string, itemId: string, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/items/${itemId}/solution`, {
@@ -61,6 +71,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
     saveAssignedAnswers,
     submitAssignedWork,
     readAssignedSolution,
+    checkAssignedAnswers,
   };
 }
 
@@ -70,4 +81,5 @@ export const {
   saveAssignedAnswers,
   submitAssignedWork,
   readAssignedSolution,
+  checkAssignedAnswers,
 } = createApi();

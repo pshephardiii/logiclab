@@ -11,6 +11,11 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  invalid_policy: {
+    status: 400,
+    code: 'ASSIGNMENT_POLICY_INVALID',
+    message: 'The combined assignment learning policy is invalid.',
+  },
   coverage_required: {
     status: 409,
     code: 'CLASS_COVERAGE_REQUIRED',

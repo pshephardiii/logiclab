@@ -1,3 +1,4 @@
+import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useSubmissionReview } from '../hooks/useSubmissionReview';
 import { answerMap } from '../../../features/assignment/helpers/answers';
@@ -38,8 +39,9 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
                 {submission.student.email ?? `Student ${submission.student.id}`}
               </button>
               <p>
-                {submission.summary.correct} correct · {submission.summary.incorrect} incorrect ·{' '}
-                {submission.summary.unanswered} unanswered
+                {'completedCells' in submission.summary
+                  ? `Completed ${submission.summary.completedCells} of ${submission.summary.totalCells} cells · No correctness score`
+                  : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
               </p>
             </li>
           ))}
@@ -88,10 +90,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
             <AssignedItemTable
               item={item}
               answers={answerMap(review.attempt.answers[item.id] ?? [])}
-              feedback={
-                review.attempt.result?.items.find((value) => value.itemId === item.id)?.feedback ??
-                null
-              }
+              feedback={submissionFeedback(review.attempt.result, item.id)}
               readOnly
               onAnswer={() => {}}
             />

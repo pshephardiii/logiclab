@@ -1,3 +1,4 @@
+import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
@@ -21,6 +22,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const item = work.assignment.items[position] ?? work.assignment.items[0];
   const submitted = Boolean(work.attempt?.submittedAt);
   const busy = work.action !== null;
+  const submissionBlocked =
+    busy || work.dirty.length > 0 || (work.requiresCompleteAnswers && !work.completionReady);
   function reload() {
     setConfirmed(false);
     setPosition(0);
@@ -38,8 +41,16 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         <p>
           {submitted
             ? 'Final answers are read-only.'
-            : 'Use Save problem to persist changes. Feedback arrives after final submission.'}
+            : work.allowsExplicitCheck
+              ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
+              : 'Use Save problem to persist changes. Feedback arrives after final submission.'}
         </p>
+        {!work.hasFinalSubmission && (
+          <p>
+            Ungraded practice: no final submission or official score. Your practice answers stay
+            private.
+          </p>
+        )}
         <button className="secondary" disabled={busy} onClick={reload}>
           Reload saved work (discard unsaved edits)
         </button>
@@ -99,9 +110,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             answers={work.answers[item.id] ?? {}}
             feedback={
               submitted
-                ? (work.attempt?.result?.items.find((value) => value.itemId === item.id)
-                    ?.feedback ?? null)
-                : null
+                ? submissionFeedback(work.attempt?.result, item.id)
+                : (work.feedback[item.id] ?? null)
             }
             solution={work.solutions[item.id] ?? null}
             readOnly={busy || submitted}
@@ -121,33 +131,39 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               {work.action === 'save' ? 'Saving problem…' : 'Save problem'}
             </button>
           )}
-          {submitted && work.assignment.allowSolutions && (
+          {!submitted && work.allowsExplicitCheck && (
+            <button
+              disabled={busy || work.checkingItem !== null}
+              onClick={() => void work.check(item.id)}
+            >
+              {work.checkingItem === item.id ? 'Checking answers…' : 'Check answers'}
+            </button>
+          )}
+          {work.solutionAvailable && (
             <button disabled={busy} onClick={() => void work.toggleSolution(item.id)}>
               {work.solutions[item.id] ? 'Hide assigned solution' : 'Show assigned solution'}
             </button>
           )}
         </>
       )}
-      {!submitted && (
+      {!submitted && work.hasFinalSubmission && (
         <section className="panel">
           <h2>Final submission</h2>
           <p>
-            Save all edited problems first. Blank cells count as unanswered. You may submit only
-            once.
+            {work.requiresCompleteAnswers
+              ? 'Fill every answer cell in every problem and save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
+              : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
           </p>
           <label className="final-confirmation">
             <input
               type="checkbox"
               checked={confirmed}
-              disabled={busy || work.dirty.length > 0}
+              disabled={submissionBlocked}
               onChange={(event) => setConfirmed(event.target.checked)}
             />{' '}
             I understand submission is final and cannot be edited.
           </label>
-          <button
-            disabled={busy || !confirmed || work.dirty.length > 0}
-            onClick={() => void work.submit()}
-          >
+          <button disabled={submissionBlocked || !confirmed} onClick={() => void work.submit()}>
             {work.action === 'submit' ? 'Submitting…' : 'Submit final answers'}
           </button>
         </section>

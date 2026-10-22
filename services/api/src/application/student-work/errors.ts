@@ -1,4 +1,7 @@
 export type StudentWorkFailure =
+  | 'incomplete_work'
+  | 'submission_unavailable'
+  | 'check_locked'
   | 'not_found'
   | 'revision_conflict'
   | 'submitted'

@@ -1,7 +1,7 @@
 import type { Assignment as AssignmentEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import type { AssignmentSummary } from '@logiclab/contracts';
+import { assignmentPolicySchema, type AssignmentSummary } from '@logiclab/contracts';
 
 export function assignmentSummary(assignment: AssignmentEntity): AssignmentSummary {
   return {
@@ -9,9 +9,12 @@ export function assignmentSummary(assignment: AssignmentEntity): AssignmentSumma
     classId: assignment.classroom.id,
     title: assignment.title,
     instructions: assignment.instructions ?? null,
-    assessmentMode: assignment.assessmentMode,
-    feedbackTiming: assignment.feedbackTiming,
-    allowSolutions: assignment.allowSolutions,
+    // Validate persisted policy before exposing it through shared contracts.
+    ...assignmentPolicySchema.parse({
+      assessmentMode: assignment.assessmentMode,
+      feedbackTiming: assignment.feedbackTiming,
+      solutionAccess: assignment.solutionAccess,
+    }),
     publishedAt: assignment.publishedAt?.toISOString() ?? null,
     archivedAt: assignment.archivedAt?.toISOString() ?? null,
     createdAt: assignment.createdAt.toISOString(),

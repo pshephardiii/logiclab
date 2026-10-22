@@ -26,7 +26,7 @@ test('delegates normalized fields and authenticated ownership for postAssignment
     problemVersionIds: [],
     assessmentMode: 'graded',
     feedbackTiming: 'on_submission',
-    allowSolutions: false,
+    solutionAccess: 'never',
   });
   expect(result).toEqual({ assignment });
 });

@@ -150,7 +150,7 @@ export function ClassAssignments({ classId }: Props) {
               </div>
             </section>
           )}
-          {state.selected?.publishedAt && (
+          {state.selected?.publishedAt && state.selected.assessmentMode !== 'ungraded_practice' && (
             <SubmissionReview key={state.selected.id} assignmentId={state.selected.id} />
           )}
         </>

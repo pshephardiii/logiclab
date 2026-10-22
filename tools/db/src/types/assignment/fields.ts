@@ -1,4 +1,4 @@
-import type { AssessmentMode, FeedbackTiming } from './enums.ts';
+import type { AssessmentMode, FeedbackTiming, SolutionAccess } from './enums.ts';
 import type { Classroom } from '../../entities/Classroom.ts';
 
 /** Readable Assignment shape; the decorated entity is checked against it in both directions. */
@@ -9,7 +9,7 @@ export interface AssignmentFields {
   instructions?: string;
   assessmentMode: AssessmentMode;
   feedbackTiming: FeedbackTiming;
-  allowSolutions: boolean;
+  solutionAccess: SolutionAccess;
   publishedAt?: Date;
   archivedAt?: Date;
   createdAt: Date;

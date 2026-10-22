@@ -159,7 +159,7 @@ test(
         [1, 2, 3],
       );
       assert.equal(new Set(assignment.items.map((item: any) => item.id)).size, 3);
-      assert.equal(assignment.allowSolutions, false);
+      assert.equal(assignment.solutionAccess, 'never');
       assert.equal(assignment.assessmentMode, 'graded');
       assert.equal(assignment.feedbackTiming, 'on_submission');
       const originalItems = assignment.items;
@@ -184,11 +184,14 @@ test(
         assignment,
         'Database errors roll back content and item replacement.',
       );
-      const patched = await request('PATCH', path, { instructions: null, allowSolutions: true });
+      const patched = await request('PATCH', path, {
+        instructions: null,
+        solutionAccess: 'after_submission',
+      });
       assert.equal(patched.statusCode, 200);
       assignment = patched.json().assignment;
       assert.equal(assignment.instructions, null);
-      assert.equal(assignment.allowSolutions, true);
+      assert.equal(assignment.solutionAccess, 'after_submission');
       assert.deepEqual(
         assignment.items,
         originalItems,
@@ -208,7 +211,7 @@ test(
       assert.deepEqual((await request('POST', `${path}/publish`, {})).json().assignment, snapshot);
       for (const payload of [
         { title: 'Denied' },
-        { allowSolutions: false },
+        { solutionAccess: 'never' },
         { problemVersionIds: [] },
         { feedbackTiming: 'on_submission' },
       ])
@@ -277,7 +280,7 @@ test(
         problemVersionIds: [second.id],
         assessmentMode: 'graded' as const,
         feedbackTiming: 'on_submission' as const,
-        allowSolutions: false,
+        solutionAccess: 'never' as const,
       };
       const race = await store.create(owner.id, classroom.id, input);
       const lock = orm.em.fork();
@@ -340,6 +343,96 @@ test(
         results[1]!.status === 'fulfilled' ? 'Concurrent edit' : 'Race draft',
       );
       assert.equal(await em.fork().count(AssignmentItem, { assignment: simultaneous.id }), 1);
+
+      const policyDraft = await request('POST', base, {
+        title: 'Practice draft',
+        assessmentMode: 'ungraded_practice',
+        feedbackTiming: 'on_check',
+        solutionAccess: 'anytime',
+        problemVersionIds: [second.id],
+      });
+      assert.equal(policyDraft.statusCode, 201, policyDraft.body);
+      const policyPath = `/api/assignments/${policyDraft.json().assignment.id}`;
+      const policySnapshot = policyDraft.json().assignment;
+      assert.equal(policySnapshot.solutionAccess, 'anytime');
+      assert.equal((await request('GET', policyPath)).statusCode, 200);
+      const badPatch = await request('PATCH', policyPath, {
+        title: 'Must roll back',
+        assessmentMode: 'graded',
+        problemVersionIds: [],
+      });
+      assert.equal(badPatch.statusCode, 400);
+      assert.equal(badPatch.json().error.code, 'ASSIGNMENT_POLICY_INVALID');
+      assert.deepEqual((await request('GET', policyPath)).json().assignment, policySnapshot);
+      assert.equal(
+        (await request('PATCH', policyPath, { solutionAccess: 'after_submission' })).statusCode,
+        400,
+      );
+      const renamed = await request('PATCH', policyPath, { title: 'Renamed practice' });
+      assert.equal(renamed.statusCode, 200);
+      assert.equal(renamed.json().assignment.assessmentMode, 'ungraded_practice');
+      assert.equal(renamed.json().assignment.solutionAccess, 'anytime');
+      const completion = await request('PATCH', policyPath, {
+        assessmentMode: 'completion_only',
+        solutionAccess: 'after_submission',
+      });
+      assert.equal(completion.statusCode, 200);
+      assert.equal(completion.json().assignment.feedbackTiming, 'on_check');
+      const graded = await request('PATCH', policyPath, {
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+      });
+      assert.equal(graded.statusCode, 200);
+      assert.equal(graded.json().assignment.solutionAccess, 'after_submission');
+      assert.equal((await request('POST', policyPath + '/publish', {})).statusCode, 200);
+      assert.equal(
+        (await request('PATCH', policyPath, { solutionAccess: 'never' })).statusCode,
+        409,
+      );
+      assert.equal(
+        (
+          await request('POST', base, {
+            title: 'Invalid practice',
+            assessmentMode: 'ungraded_practice',
+            feedbackTiming: 'on_check',
+            solutionAccess: 'after_submission',
+          })
+        ).statusCode,
+        400,
+      );
+      assert.equal(
+        (await request('POST', base, { title: 'Legacy flag', allowSolutions: true })).statusCode,
+        400,
+      );
+
+      for (const policy of [
+        {
+          assessmentMode: 'ungraded_practice',
+          feedbackTiming: 'on_check',
+          solutionAccess: 'anytime',
+        },
+        {
+          assessmentMode: 'completion_only',
+          feedbackTiming: 'on_check',
+          solutionAccess: 'after_submission',
+        },
+        { assessmentMode: 'graded', feedbackTiming: 'on_submission', solutionAccess: 'anytime' },
+      ]) {
+        const draft = await request('POST', base, {
+          ...policy,
+          title: 'Enabled policy',
+          problemVersionIds: [second.id],
+        });
+        assert.equal(draft.statusCode, 201, draft.body);
+        const enabledPath = `/api/assignments/${draft.json().assignment.id}`;
+        const published = await request('POST', enabledPath + '/publish', {});
+        assert.equal(published.statusCode, 200, published.body);
+        assert(published.json().assignment.publishedAt);
+        assert.equal(
+          (await request('PATCH', enabledPath, { solutionAccess: 'never' })).statusCode,
+          409,
+        );
+      }
     } finally {
       await app.close();
       await orm.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);

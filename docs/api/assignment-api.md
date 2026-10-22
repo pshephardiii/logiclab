@@ -23,15 +23,21 @@ Authorization runs before request-field validation and reuses the authenticated 
   "problemVersionIds": ["f516a148-91c7-4bf3-bf7f-42cbf18ad995"],
   "assessmentMode": "graded",
   "feedbackTiming": "on_submission",
-  "allowSolutions": false
+  "solutionAccess": "never"
 }
 ```
 
-Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to an empty item list, graded assessment, feedback on submission, and solution access off. These policy dimensions remain independent; completion-only, ungraded, and immediate-feedback modes are not supported yet. Unknown fields, client-supplied ownership/classroom changes, invalid IDs, and unsupported policy values are rejected.
+Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to an empty item list, graded assessment, feedback on submission, and solution access off. Drafts support graded/on_submission, completion_only/on_check, and ungraded_practice/on_check. Solution access is never, after_submission, or anytime; practice rejects after_submission. Immediate input feedback remains deferred. Unknown fields, client-supplied ownership/classroom changes, invalid IDs, and unsupported policy values are rejected.
 
 `problemVersionIds` holds up to 50 published version UUIDs belonging to the same instructor. Draft problem IDs are not accepted as publication references. Archived library problems' retained publications may still be selected. Repeated versions are allowed: each ordered occurrence has its own item ID and a positive position starting at one.
 
-PATCH requires at least one field and has no creation defaults. Omitted fields retain their values; a supplied item list atomically replaces the entire ordered list and generates new occurrence IDs. Metadata-only edits retain item IDs. Invalid references or database failures roll back both assignment changes and item replacement. The assignment cannot move to another classroom.
+PATCH requires at least one field and has no creation defaults. Omitted fields retain their values. The full saved policy is merged and validated under the assignment lock before any mutation; invalid combinations return 400 ASSIGNMENT_POLICY_INVALID and leave metadata/items unchanged. A supplied item list atomically replaces the entire ordered list and generates new occurrence IDs. Metadata-only edits retain item IDs. Invalid references or database failures roll back both assignment changes and item replacement. The assignment cannot move to another classroom.
+
+The legacy `allowSolutions` field is no longer accepted or returned. Existing clients and demo seeding now send `solutionAccess`; false/true stored behavior was migrated to never/after_submission in the preceding database slice. Creation defaults remain graded/on_submission/never.
+
+## Learning-mode publication
+
+All valid learning policies can now be published, including practice/completion modes and anytime solutions. The temporary rollout guard has been removed from API and UI. Ownership, nonempty pinned content, current class coverage, archive rules, and immutable published policies still apply.
 
 ## Publication, archiving, and responses
 
@@ -55,7 +61,7 @@ Run `npm run check` and `npm run db:test`. Colocated handler/route tests cover n
 
 Sign in as an instructor and choose **Assignments**. Select an owned class; **Load more classes** exposes later pages. If no class exists, follow **Manage classes** to create one. Class selection and unsaved editor state are local to the page and reset on reload/navigation; saved assignments remain in PostgreSQL.
 
-Create a draft with title, optional instructions, and the solution-access checkbox (off by default). Graded assessment and feedback on submission are currently fixed. Choose a library problem, then add a specific published version. Library problems and publications have separate pagination/retry controls; unpublished problems show guidance to publish first. Retained publications of archived problems remain selectable.
+Create a draft with title, optional instructions, assessment mode, and solution-release policy. Defaults remain graded/on_submission/never. The mode sets its currently supported feedback timing; the editor explains graded scoring, completion requirements and private practice. Practice offers only Never/Anytime solutions. Switching from After final submission to practice selects Never and announces the change. Published/archived policy controls are read-only. All valid modes and solution-release policies can be published after saving, with the usual content/coverage requirements. Choose a library problem, then add a specific published version. Library problems and publications have separate pagination/retry controls; unpublished problems show guidance to publish first. Retained publications of archived problems remain selectable.
 
 The ordered item list displays snapshot titles, versions, instructions, and formulas. Repeated versions are separate occurrences. **Move up**, **Move down**, and **Remove** update the local order; additions stop at 50 items. Empty drafts can be saved, but cannot be published. Failed saves retain input and ordering. Metadata-only edits omit item replacement so existing occurrence IDs survive.
 

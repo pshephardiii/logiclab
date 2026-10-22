@@ -14,7 +14,7 @@ export interface SubmissionCounts {
 }
 
 /** Frozen evaluation snapshot; future engine changes must not silently recompute official results. */
-export interface SubmissionResult {
+export interface GradedSubmissionResult {
   gradingVersion: 'truth_table_v1';
   items: {
     itemId: string;
@@ -25,3 +25,11 @@ export interface SubmissionResult {
   }[];
   summary: SubmissionCounts;
 }
+
+/** Completion-only finalization stores no correctness counts or grading feedback. */
+export interface CompletionSubmissionResult {
+  gradingVersion: 'completion_v1';
+  items: { itemId: string; completedCells: number; totalCells: number }[];
+  summary: { completedCells: number; totalCells: number };
+}
+export type SubmissionResult = GradedSubmissionResult | CompletionSubmissionResult;

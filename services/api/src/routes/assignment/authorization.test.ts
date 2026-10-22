@@ -155,7 +155,7 @@ test('authorization precedes validation and request boundaries reject unsupporte
         await app.inject({
           method: 'POST',
           url: `/api/assignments/${assignment.id}/publish`,
-          payload: { allowSolutions: true },
+          payload: { solutionAccess: 'after_submission' },
           headers: authenticated,
         })
       ).statusCode,

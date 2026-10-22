@@ -4,6 +4,7 @@ import type {
   StudentAssignment,
   StudentAttempt,
   TruthTableSolutionResponse,
+  TruthTableCheckResponse,
 } from '@logiclab/contracts';
 import type { Answers } from '../../../features/truthTable/types';
 import { cellKey } from '../../../features/truthTable/types';
@@ -12,7 +13,7 @@ import { savedAnswerMaps, sameAnswers } from '../../../features/assignment/helpe
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import * as apiModule from '../../../api/student-work/api';
 
-/** Keeps unsaved item edits separate from server revisions; no feedback is requested before final submission. */
+/** Keeps unsaved item edits separate from server revisions; explicit checks are transient and cancel when answers change. */
 export function useAssignedAttempt(assignmentId: string) {
   const api = useResourceApi(apiModule);
   const [assignment, setAssignment] = useState<StudentAssignment | null>(null);
@@ -20,19 +21,49 @@ export function useAssignedAttempt(assignmentId: string) {
   const [answers, setAnswers] = useState<Record<string, Answers>>({});
   const [baseline, setBaseline] = useState<Record<string, Answers>>({});
   const [solutions, setSolutions] = useState<Record<string, TruthTableSolutionResponse>>({});
+  const [feedback, setFeedback] = useState<Record<string, TruthTableCheckResponse>>({});
+  const [checkingItem, setCheckingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<'save' | 'submit' | 'solution' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const checks = useAbortableRequest();
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
   const dirty = useMemo(
     () => Object.keys(answers).filter((id) => !sameAnswers(answers[id]!, baseline[id])),
     [answers, baseline],
   );
+  const hasFinalSubmission =
+    assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
+  const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
+  const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check';
+  const solutionAvailable =
+    assignment?.solutionAccess === 'anytime' ||
+    (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
+  const completionReady = useMemo(
+    () =>
+      Boolean(assignment?.items.length) &&
+      Boolean(
+        assignment?.items.every((item) =>
+          submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
+            (answer) => answer.value !== null,
+          ),
+        ),
+      ),
+    [assignment, answers],
+  );
+
+  function cancelCheck() {
+    checks.cancelRequest();
+    setCheckingItem(null);
+  }
   const load = useCallback(async () => {
     const signal = reads.startRequest();
     writes.cancelRequest();
+    checks.cancelRequest();
+    setCheckingItem(null);
+    setFeedback({});
     setAction(null);
     setLoading(true);
     setError(null);
@@ -55,13 +86,20 @@ export function useAssignedAttempt(assignmentId: string) {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [api, assignmentId, reads.startRequest, writes.cancelRequest]);
+  }, [api, assignmentId, reads.startRequest, writes.cancelRequest, checks.cancelRequest]);
   useEffect(() => {
     void load();
     return reads.cancelRequest;
   }, [load, reads.cancelRequest]);
   function changeAnswer(itemId: string, row: string, column: string, value: boolean | null) {
     if (action || attempt?.submittedAt) return;
+    cancelCheck();
+    setFeedback((previous) => {
+      const next = { ...previous };
+      delete next[itemId];
+      return next;
+    });
+    setError(null);
     setNotice(null);
     setAnswers((previous) => ({
       ...previous,
@@ -72,6 +110,7 @@ export function useAssignedAttempt(assignmentId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
     if (!item) return;
+    cancelCheck();
     const snapshot = answers[itemId]!;
     const signal = writes.startRequest();
     setAction('save');
@@ -100,7 +139,16 @@ export function useAssignedAttempt(assignmentId: string) {
     }
   }
   async function submit() {
-    if (!assignment || action || dirty.length || attempt?.submittedAt) return;
+    if (
+      !assignment ||
+      !hasFinalSubmission ||
+      action ||
+      dirty.length ||
+      attempt?.submittedAt ||
+      (requiresCompleteAnswers && !completionReady)
+    )
+      return;
+    cancelCheck();
     const signal = writes.startRequest();
     setAction('submit');
     setError(null);
@@ -123,8 +171,35 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
+  async function check(itemId: string) {
+    if (!assignment || !allowsExplicitCheck || action || attempt?.submittedAt) return;
+    const item = assignment.items.find((value) => value.id === itemId);
+    if (!item) return;
+    const signal = checks.startRequest();
+    setCheckingItem(itemId);
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await api.checkAssignedAnswers(
+        assignmentId,
+        {
+          itemId,
+          answers: submittedAnswers(item.exercise, answers[itemId] ?? {}),
+        },
+        signal,
+      );
+      if (!signal.aborted)
+        setFeedback((previous) => ({ ...previous, [itemId]: response.feedback }));
+    } catch (caught) {
+      if (!signal.aborted)
+        setError(caught instanceof Error ? caught.message : 'Could not check answers.');
+    } finally {
+      if (!signal.aborted) setCheckingItem(null);
+    }
+  }
   async function toggleSolution(itemId: string) {
-    if (!assignment?.allowSolutions || !attempt?.submittedAt || action) return;
+    if (!solutionAvailable || action) return;
+    cancelCheck();
     if (solutions[itemId]) {
       setSolutions((previous) => {
         const next = { ...previous };
@@ -149,6 +224,14 @@ export function useAssignedAttempt(assignmentId: string) {
   return {
     assignment,
     attempt,
+    feedback,
+    checkingItem,
+    check,
+    hasFinalSubmission,
+    requiresCompleteAnswers,
+    completionReady,
+    allowsExplicitCheck,
+    solutionAvailable,
     answers,
     solutions,
     loading,

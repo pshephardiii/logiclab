@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
+- [Assignment learning modes](planning/assignment-learning-modes.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)
 - [Public demo direction and implementation slices](planning/public-demo.md)
@@ -53,6 +54,8 @@ Documentation is grouped by purpose:
 - [Branch naming and PR workflow](conventions/branch-naming-conventions.md)
 
 ## Verification
+
+- [Assignment learning modes](verification/assignment-learning-modes-verification.md)
 
 - [Isolated demo foundation and browser evidence](verification/public-demo-verification.md)
 

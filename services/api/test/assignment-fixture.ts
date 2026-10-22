@@ -12,7 +12,7 @@ export const assignment: AssignmentDetail = {
   instructions: null,
   assessmentMode: 'graded',
   feedbackTiming: 'on_submission',
-  allowSolutions: false,
+  solutionAccess: 'never',
   publishedAt: null,
   archivedAt: null,
   createdAt: '2026-10-16T12:00:00.000Z',

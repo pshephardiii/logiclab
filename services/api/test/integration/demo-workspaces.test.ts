@@ -80,6 +80,21 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     await work.read(student.id, assignment.id);
     const submitted = await work.submit(student.id, assignment.id, 0);
     assert(submitted.submittedAt);
+    const practice = await em.findOneOrFail(db.Assignment, {
+      title: DEMO_TEMPLATE.practiceAssignmentTitle,
+    });
+    assert(practice.publishedAt);
+    const practiceDetail = await work.read(student.id, practice.id);
+    assert.equal(practiceDetail.assignment.assessmentMode, 'ungraded_practice');
+    assert.equal(practiceDetail.assignment.solutionAccess, 'anytime');
+    const practiceItem = practiceDetail.assignment.items[0]!;
+    assert((await work.solution(student.id, practice.id, practiceItem.id)).solution);
+    assert(
+      (await work.check(student.id, practice.id, { itemId: practiceItem.id, answers: [] }))
+        .feedback,
+    );
+    await assert.rejects(work.submit(student.id, practice.id, 0), /submission_unavailable/);
+    assert.equal(await em.count(db.AssignmentAttempt, { assignment: practice.id }), 0);
     const instructor = await em.findOneOrFail(db.User, {
       demoWorkspace: id,
       role: db.UserRole.Instructor,
@@ -90,7 +105,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     const assignments = await createAssignmentStore(orm);
     const draft = await assignments.create(instructor.id, unpaid.id, {
       title: 'Unpaid draft',
-      allowSolutions: false,
+      solutionAccess: 'never',
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
       problemVersionIds: [versions[0]!.id],
@@ -112,6 +127,7 @@ test('reset restores the template, clears submitted work and billing history, an
     const absoluteDeadline = workspace.expiresAt.getTime();
     const oldUsers = await em.find(db.User, { demoWorkspace: first.workspaceId });
     const oldAssignment = await em.findOneOrFail(db.Assignment, {
+      assessmentMode: db.AssessmentMode.Graded,
       classroom: { owner: { demoWorkspace: first.workspaceId } },
     });
     const oldPurchase = await em.findOneOrFail(db.ClassPurchase, {
@@ -153,6 +169,7 @@ test('reset restores the template, clears submitted work and billing history, an
     const normalClass = em.create(db.Classroom, { name: 'Real data stays', owner: normal });
     em.persist([normal, normalClass]);
     await em.flush();
+    await em.nativeUpdate(db.DemoWorkspace, first.workspaceId, { templateVersion: 1 });
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
     assert.equal(reset.actor.generation, 2);
@@ -171,6 +188,25 @@ test('reset restores the template, clears submitted work and billing history, an
     );
     assert.equal(await em.count(db.User, { id: { $in: oldUsers.map((user) => user.id) } }), 0);
     assert.equal(await em.count(db.Assignment, { id: oldAssignment.id }), 0);
+    assert.equal(
+      (await em.findOneOrFail(db.DemoWorkspace, first.workspaceId)).templateVersion,
+      DEMO_TEMPLATE.version,
+    );
+    assert.equal(
+      await em.count(db.Assignment, {
+        classroom: { owner: { demoWorkspace: first.workspaceId } },
+        publishedAt: { $ne: null },
+      }),
+      2,
+    );
+    assert.equal(
+      await em.count(db.Assignment, {
+        classroom: { owner: { demoWorkspace: first.workspaceId } },
+        title: DEMO_TEMPLATE.practiceAssignmentTitle,
+      }),
+      1,
+    );
+
     assert.equal(await em.count(db.AssignmentAttempt, {}), 0);
     assert.equal(await em.count(db.ClassPurchase, { id: oldPurchase.id }), 0);
     assert.equal(
@@ -205,6 +241,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
       role: db.UserRole.Student,
     });
     const assignment = await em.findOneOrFail(db.Assignment, {
+      assessmentMode: db.AssessmentMode.Graded,
       classroom: { owner: { demoWorkspace: first.workspaceId } },
     });
     await (await createStudentWorkStore(orm)).submit(student.id, assignment.id, 0);
@@ -335,6 +372,7 @@ test('demo retention guards allow delete only during reset/expiry and never allo
       problem: { owner: { demoWorkspace: workspace.workspaceId } },
     });
     const assignment = await em.findOneOrFail(db.Assignment, {
+      assessmentMode: db.AssessmentMode.Graded,
       classroom: { owner: { demoWorkspace: workspace.workspaceId } },
     });
     const student = await em.findOneOrFail(db.User, {
@@ -380,7 +418,7 @@ test('demo retention guards allow delete only during reset/expiry and never allo
       status: db.DemoWorkspaceStatus.Expired,
     });
     await em.nativeDelete(db.AssignmentAttempt, attempt.id);
-    await em.nativeDelete(db.AssignmentItem, { assignment: assignment.id });
+    await em.nativeDelete(db.AssignmentItem, { problemVersion: version.id });
     await em.nativeDelete(db.ProblemVersion, version.id);
     assert.equal(await em.count(db.AssignmentAttempt, { id: attempt.id }), 0);
     assert.equal(await em.count(db.ProblemVersion, { id: version.id }), 0);
