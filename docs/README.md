@@ -55,6 +55,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Immediate answer feedback](verification/immediate-answer-feedback-verification.md)
+
 - [Assignment learning modes](verification/assignment-learning-modes-verification.md)
 
 - [Isolated demo foundation and browser evidence](verification/public-demo-verification.md)

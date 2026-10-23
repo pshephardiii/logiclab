@@ -58,7 +58,7 @@ Commit-sized sequence:
 3. Enable API authoring/read/check support with authorization, publication immutability, transient-write and policy coverage (implemented).
 4. Instructor feedback-timing controls and valid mode transitions (implemented), with failed-save retention and published/archive locks.
 5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage (implemented).
-6. One resettable demo example and walkthrough (implemented: template 3); final branch verification remains pending.
+6. One resettable demo example and walkthrough (implemented: template 3); final branch verification and local PR draft complete.
 
 Dedicated demo QA, code audit, and deployment follow this feature; they are not replaced by its focused regression checks.
 
@@ -74,4 +74,6 @@ Draft authoring now offers explicit Check answers or immediate feedback for comp
 
 Student immediate-policy work now checks transient answers after 1.2 seconds without an edit. Manual Check bypasses and cancels the queued timer. Editing cancels any previous request and clears stale feedback for that occurrence; problem navigation, reload, save, solution actions, assignment/session changes and unmount cancel queued/in-flight work. Graded and on_check work never checks automatically. Submitted work remains read-only. Blank cells receive no Unanswered marker in immediate mode; expected values remain protected by solution policy.
 
-Automatic failures preserve entries, display the existing error, and do not retry in a loop. Students can retry with Check answers or make another edit. The delay bounds automatic requests to at most 50/minute during sustained edits, leaving some headroom under existing limits; this is not a replacement for server rate limiting, and manual or multi-tab traffic can still reach it. Saving and final submission remain explicit. Synthetic-timer/DOM regression tests cover request replacement, late results, queued/in-flight lifecycle cancellation, retry and neutral blanks; template 3 now supplies the seeded example and reviewer walkthrough. Final real-browser branch verification remains pending.
+Automatic failures preserve entries, display the existing error, and do not retry in a loop. Students can retry with Check answers or make another edit. The delay bounds automatic requests to at most 50/minute during sustained edits, leaving some headroom under existing limits; this is not a replacement for server rate limiting, and manual or multi-tab traffic can still reach it. Saving and final submission remain explicit. Synthetic-timer/DOM regression tests cover request replacement, late results, queued/in-flight lifecycle cancellation, retry and neutral blanks; template 3 now supplies the seeded example and reviewer walkthrough. Final automated and focused Chrome checks passed; see [verification evidence](../verification/immediate-answer-feedback-verification.md).
+
+Next sequence: `012-test-demo-qa`, `013-refactor-demo-audit`, then `014-chore-demo-deployment`. These deliberate release-readiness passes remain separate from this feature’s focused checks.
