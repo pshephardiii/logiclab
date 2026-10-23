@@ -54,10 +54,16 @@ Use the existing enrollment-authorized check endpoint with debounced requests. C
 Commit-sized sequence:
 
 1. Shared learning-policy support and capability/transition tests (implemented). Transport still rejects immediate timing; no database or UI behavior changes yet.
-2. Database enum/constraint migration and persistence regression checks, preserving existing rows and refusing lossy rollback.
+2. Database enum/constraint migration and persistence regression checks (implemented), preserving existing rows and refusing lossy rollback.
 3. Enable API authoring/read/check support with authorization, publication immutability, transient-write and policy coverage.
 4. Instructor feedback-timing controls and valid mode transitions.
 5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage.
 6. One resettable demo example, documentation and final verification.
 
 Dedicated demo QA, code audit, and deployment follow this feature; they are not replaced by its focused regression checks.
+
+### Immediate-feedback persistence rollout
+
+Migration `Migration20261023120000` expands the existing string-column checks; it does not rewrite assignments, publication timestamps, solution rules, or defaults. Only completion-only and ungraded practice may store `immediate`. Graded work still requires `on_submission`; practice still rejects after-submission solutions.
+
+Apply with `npm run db:migrate` before the later API rollout. Slice 2 leaves transport authoring gated and does not add UI controls or automatic checks. Do not manually enable immediate timing on application rows while running this intermediate version. Down migration restores the prior checks only when no immediate assignments remain; it refuses to silently convert their policy.

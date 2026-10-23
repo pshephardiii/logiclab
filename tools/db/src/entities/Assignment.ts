@@ -15,13 +15,13 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
 })
 @Check({
   name: 'assignments_feedback_timing_check',
-  expression: "feedback_timing in ('on_submission', 'on_check')",
+  expression: "feedback_timing in ('on_submission', 'on_check', 'immediate')",
 })
 @Check({
   name: 'assignments_learning_policy_check',
   expression: `
     (assessment_mode = 'graded' and feedback_timing = 'on_submission')
-    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')
+    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing in ('on_check', 'immediate'))
   `,
 })
 @Check({
