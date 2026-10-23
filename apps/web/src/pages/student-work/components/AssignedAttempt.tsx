@@ -30,6 +30,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
     void work.load();
   }
   function changeItem(index: number) {
+    work.cancelCheck();
     setPosition(index);
     setConfirmed(false);
   }
@@ -41,9 +42,11 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         <p>
           {submitted
             ? 'Final answers are read-only.'
-            : work.allowsExplicitCheck
-              ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
-              : 'Use Save problem to persist changes. Feedback arrives after final submission.'}
+            : work.allowsImmediateFeedback
+              ? 'Incorrect entries are highlighted shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
+              : work.allowsExplicitCheck
+                ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
+                : 'Use Save problem to persist changes. Feedback arrives after final submission.'}
         </p>
         {!work.hasFinalSubmission && (
           <p>
@@ -114,6 +117,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 : (work.feedback[item.id] ?? null)
             }
             solution={work.solutions[item.id] ?? null}
+            neutralBlanks={!submitted && work.allowsImmediateFeedback}
             readOnly={busy || submitted}
             onAnswer={(row, column, value) => {
               setConfirmed(false);

@@ -11,10 +11,11 @@ import {
   SolutionAccess,
   type createDatabase,
 } from '../src/index.ts';
+import { Migration20261023120000 } from '../src/migrations/Migration20261023120000.ts';
 import { Migration20261022160507 } from '../src/migrations/Migration20261022160507.ts';
 import { Migration20261022155758 } from '../src/migrations/Migration20261022155758.ts';
 
-/** Database capabilities only; authoring routes remain graded-only during staged rollout. */
+/** Database policy guarantees, including timings not yet enabled in authoring routes. */
 export function registerAssignmentLearningPersistenceTests(
   orm: Awaited<ReturnType<typeof createDatabase>>,
 ) {
@@ -32,6 +33,8 @@ export function registerAssignmentLearningPersistenceTests(
 
   for (const [mode, timing] of [
     [AssessmentMode.Graded, FeedbackTiming.OnSubmission],
+    [AssessmentMode.CompletionOnly, FeedbackTiming.Immediate],
+    [AssessmentMode.UngradedPractice, FeedbackTiming.Immediate],
     [AssessmentMode.CompletionOnly, FeedbackTiming.OnCheck],
     [AssessmentMode.UngradedPractice, FeedbackTiming.OnCheck],
   ] as const) {
@@ -59,6 +62,7 @@ export function registerAssignmentLearningPersistenceTests(
 
   for (const [mode, timing] of [
     [AssessmentMode.Graded, FeedbackTiming.OnCheck],
+    [AssessmentMode.Graded, FeedbackTiming.Immediate],
     [AssessmentMode.CompletionOnly, FeedbackTiming.OnSubmission],
     [AssessmentMode.UngradedPractice, FeedbackTiming.OnSubmission],
   ] as const) {
@@ -114,6 +118,74 @@ export function registerAssignmentLearningPersistenceTests(
       await em.rollback();
     }
   });
+  test('immediate-feedback migration preserves existing published policies through down/up', async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      const parent = await classroom(em);
+      em.persist([
+        em.create(Assignment, { classroom: parent, title: 'Graded', publishedAt: new Date() }),
+        em.create(Assignment, {
+          classroom: parent,
+          title: 'Completion',
+          assessmentMode: AssessmentMode.CompletionOnly,
+          feedbackTiming: FeedbackTiming.OnCheck,
+          solutionAccess: SolutionAccess.AfterSubmission,
+          publishedAt: new Date(),
+        }),
+        em.create(Assignment, {
+          classroom: parent,
+          title: 'Practice',
+          assessmentMode: AssessmentMode.UngradedPractice,
+          feedbackTiming: FeedbackTiming.OnCheck,
+          solutionAccess: SolutionAccess.Anytime,
+          publishedAt: new Date(),
+        }),
+      ]);
+      await em.flush();
+      const before = await em.execute(
+        'select * from assignments where classroom_id = ? order by id',
+        [parent.id],
+      );
+      for (const direction of ['down', 'up'] as const) {
+        const migration = new Migration20261023120000(orm.driver, orm.config);
+        migration[direction]();
+        for (const sql of migration.getQueries()) await em.execute(sql);
+        assert.deepEqual(
+          await em.execute('select * from assignments where classroom_id = ? order by id', [
+            parent.id,
+          ]),
+          before,
+        );
+      }
+    } finally {
+      await em.rollback();
+    }
+  });
+
+  test('immediate-feedback rollback refuses to discard an active policy', async () => {
+    const em = orm.em.fork();
+    await em.begin();
+    try {
+      em.persist(
+        em.create(Assignment, {
+          classroom: await classroom(em),
+          title: 'Immediate practice',
+          assessmentMode: AssessmentMode.UngradedPractice,
+          feedbackTiming: FeedbackTiming.Immediate,
+        }),
+      );
+      await em.flush();
+      const migration = new Migration20261023120000(orm.driver, orm.config);
+      migration.down();
+      await assert.rejects(async () => {
+        for (const sql of migration.getQueries()) await em.execute(sql);
+      }, /Cannot roll back immediate feedback/);
+    } finally {
+      await em.rollback();
+    }
+  });
+
   test('solution migration backfills legacy flags without changing published assignment metadata', async () => {
     const em = orm.em.fork();
     await em.begin();
@@ -183,7 +255,7 @@ export function registerAssignmentLearningPersistenceTests(
           classroom: await classroom(em),
           title: 'Invalid practice',
           assessmentMode: AssessmentMode.UngradedPractice,
-          feedbackTiming: FeedbackTiming.OnCheck,
+          feedbackTiming: FeedbackTiming.Immediate,
           solutionAccess: SolutionAccess.AfterSubmission,
         }),
       );

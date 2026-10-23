@@ -40,3 +40,20 @@ test('PATCH rejects empty requests and classroom changes, query bounds are enfor
   for (const query of [{ limit: 0 }, { limit: 51 }, { offset: -1 }, { archive: 'bad' }])
     expect(assignmentListQuerySchema.safeParse(query).success).toBe(false);
 });
+
+test('immediate timing is accepted for practice and completion authoring', () => {
+  for (const assessmentMode of ['completion_only', 'ungraded_practice']) {
+    expect(
+      createAssignmentRequestSchema.safeParse({
+        title: 'Practice',
+        assessmentMode,
+        feedbackTiming: 'immediate',
+        solutionAccess: 'never',
+      }).success,
+    ).toBe(true);
+  }
+  // PATCH validates the full merged policy under the assignment lock.
+  expect(updateAssignmentRequestSchema.parse({ feedbackTiming: 'immediate' })).toEqual({
+    feedbackTiming: 'immediate',
+  });
+});

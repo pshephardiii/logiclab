@@ -7,7 +7,8 @@ export function assignmentLearningCapabilities(policy: AssignmentLearningPolicy)
     hasFinalSubmission: policy.assessmentMode !== 'ungraded_practice',
     recordsCorrectnessScore: policy.assessmentMode === 'graded',
     requiresAllAnswers: policy.assessmentMode === 'completion_only',
-    allowsExplicitCheck: policy.feedbackTiming === 'on_check',
+    allowsExplicitCheck: policy.feedbackTiming !== 'on_submission',
+    allowsImmediateFeedback: policy.feedbackTiming === 'immediate',
     instructorReviewsFinalSubmission: policy.assessmentMode !== 'ungraded_practice',
   };
 }

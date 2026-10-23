@@ -6,7 +6,7 @@ import { problemVersionSchema } from './problem';
 export const assignmentPolicySchema = z
   .strictObject({
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']),
-    feedbackTiming: z.enum(['on_submission', 'on_check']),
+    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']),
     solutionAccess: solutionAccessSchema,
   })
   .refine(
@@ -60,7 +60,7 @@ export const createAssignmentRequestSchema = z
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).default([]),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
-    feedbackTiming: z.enum(['on_submission', 'on_check']).default('on_submission'),
+    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).default('on_submission'),
     solutionAccess: solutionAccessSchema.default('never'),
   })
   .refine(
@@ -81,7 +81,7 @@ export const updateAssignmentRequestSchema = z
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).optional(),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),
-    feedbackTiming: z.enum(['on_submission', 'on_check']).optional(),
+    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).optional(),
     solutionAccess: solutionAccessSchema.optional(),
   })
   .refine(

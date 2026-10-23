@@ -9,6 +9,7 @@ export enum AssessmentMode {
 export enum FeedbackTiming {
   OnSubmission = 'on_submission',
   OnCheck = 'on_check',
+  Immediate = 'immediate',
 }
 
 /** When students may access assigned solutions. */

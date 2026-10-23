@@ -8,6 +8,8 @@ import {
 
 test.each([
   ['graded', 'on_submission', true, true, false, false],
+  ['completion_only', 'immediate', true, false, true, true],
+  ['ungraded_practice', 'immediate', false, false, false, true],
   ['completion_only', 'on_check', true, false, true, true],
   ['ungraded_practice', 'on_check', false, false, false, true],
 ] as const)(
@@ -23,6 +25,7 @@ test.each([
       recordsCorrectnessScore: score,
       requiresAllAnswers: complete,
       allowsExplicitCheck: check,
+      allowsImmediateFeedback: feedbackTiming === 'immediate',
       instructorReviewsFinalSubmission: final,
     });
   },
@@ -123,4 +126,36 @@ test('PATCH preserves omitted policy fields and rejects invalid combined transit
     solutionAccess: 'anytime',
   });
   expect(practice.assessmentMode).toBe('ungraded_practice');
+});
+
+test.each(['completion_only', 'ungraded_practice'] as const)(
+  '%s can switch feedback timing without changing scoring or release rules',
+  (assessmentMode) => {
+    const original = assignmentLearningPolicySchema.parse({
+      assessmentMode,
+      feedbackTiming: 'on_check',
+      solutionAccess: 'anytime',
+    });
+    const immediate = resolveAssignmentLearningPolicy(original, { feedbackTiming: 'immediate' });
+    expect(immediate).toEqual({ ...original, feedbackTiming: 'immediate' });
+    expect(assignmentLearningCapabilities(immediate)).toEqual({
+      ...assignmentLearningCapabilities(original),
+      allowsImmediateFeedback: true,
+    });
+    expect(canViewAssignedSolution(immediate, false)).toBe(true);
+    expect(resolveAssignmentLearningPolicy(immediate, { feedbackTiming: 'on_check' })).toEqual(
+      original,
+    );
+    expect(original.feedbackTiming).toBe('on_check');
+  },
+);
+
+test('immediate practice still cannot release solutions after a nonexistent submission', () => {
+  expect(
+    assignmentLearningPolicySchema.safeParse({
+      assessmentMode: 'ungraded_practice',
+      feedbackTiming: 'immediate',
+      solutionAccess: 'after_submission',
+    }).success,
+  ).toBe(false);
 });

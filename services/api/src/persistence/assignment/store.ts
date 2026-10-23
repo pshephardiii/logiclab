@@ -59,7 +59,11 @@ export async function createAssignmentStore(
     completion_only: AssessmentMode.CompletionOnly,
     ungraded_practice: AssessmentMode.UngradedPractice,
   };
-  const timings = { on_submission: FeedbackTiming.OnSubmission, on_check: FeedbackTiming.OnCheck };
+  const timings = {
+    on_submission: FeedbackTiming.OnSubmission,
+    on_check: FeedbackTiming.OnCheck,
+    immediate: FeedbackTiming.Immediate,
+  };
   const solutions = {
     never: SolutionAccess.Never,
     after_submission: SolutionAccess.AfterSubmission,

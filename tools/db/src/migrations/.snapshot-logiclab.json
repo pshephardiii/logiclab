@@ -591,13 +591,13 @@
         },
         {
           "name": "assignments_feedback_timing_check",
-          "expression": "feedback_timing in ('on_submission', 'on_check')",
-          "definition": "check (feedback_timing in ('on_submission', 'on_check'))"
+          "expression": "feedback_timing in ('on_submission', 'on_check', 'immediate')",
+          "definition": "check (feedback_timing in ('on_submission', 'on_check', 'immediate'))"
         },
         {
           "name": "assignments_learning_policy_check",
-          "expression": "\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  ",
-          "definition": "check (\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing = 'on_check')\n  )"
+          "expression": "\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing in ('on_check', 'immediate'))\n  ",
+          "definition": "check (\n    (assessment_mode = 'graded' and feedback_timing = 'on_submission')\n    or (assessment_mode in ('completion_only', 'ungraded_practice') and feedback_timing in ('on_check', 'immediate'))\n  )"
         },
         {
           "name": "assignments_practice_solution_check",

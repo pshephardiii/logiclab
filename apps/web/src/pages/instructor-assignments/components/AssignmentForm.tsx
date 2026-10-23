@@ -1,5 +1,5 @@
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
-import { assignmentLearningPolicySchema } from '@logiclab/contracts';
+import { assignmentLearningPolicySchema, createAssignmentRequestSchema } from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
 import type {
   AssignmentDetail,
@@ -65,12 +65,12 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await onSave(
-      {
+      createAssignmentRequestSchema.parse({
         title,
         instructions: instructions || null,
         problemVersionIds: ids,
         ...policy,
-      },
+      }),
       itemsChanged,
     );
   }

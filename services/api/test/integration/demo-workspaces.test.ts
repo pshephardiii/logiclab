@@ -72,6 +72,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
       title: DEMO_TEMPLATE.assignmentTitle,
     });
     assert(assignment.publishedAt);
+    assert.equal(assignment.feedbackTiming, db.FeedbackTiming.OnSubmission);
     const student = await em.findOneOrFail(db.User, {
       demoWorkspace: id,
       role: db.UserRole.Student,
@@ -86,6 +87,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     assert(practice.publishedAt);
     const practiceDetail = await work.read(student.id, practice.id);
     assert.equal(practiceDetail.assignment.assessmentMode, 'ungraded_practice');
+    assert.equal(practiceDetail.assignment.feedbackTiming, 'immediate');
     assert.equal(practiceDetail.assignment.solutionAccess, 'anytime');
     const practiceItem = practiceDetail.assignment.items[0]!;
     assert((await work.solution(student.id, practice.id, practiceItem.id)).solution);
@@ -169,7 +171,30 @@ test('reset restores the template, clears submitted work and billing history, an
     const normalClass = em.create(db.Classroom, { name: 'Real data stays', owner: normal });
     em.persist([normal, normalClass]);
     await em.flush();
-    await em.nativeUpdate(db.DemoWorkspace, first.workspaceId, { templateVersion: 1 });
+    // Simulate a retained template-2 visitor: authentication must not upgrade its content.
+    await em.nativeUpdate(db.DemoWorkspace, first.workspaceId, { templateVersion: 2 });
+    await em.nativeUpdate(
+      db.Assignment,
+      {
+        classroom: { owner: { demoWorkspace: first.workspaceId } },
+        title: DEMO_TEMPLATE.practiceAssignmentTitle,
+      },
+      { feedbackTiming: db.FeedbackTiming.OnCheck },
+    );
+    await sessions.authenticate(initial.sessionId);
+    assert.equal(
+      (await em.fork().findOneOrFail(db.DemoWorkspace, first.workspaceId)).templateVersion,
+      2,
+    );
+    assert.equal(
+      (
+        await em.fork().findOneOrFail(db.Assignment, {
+          classroom: { owner: { demoWorkspace: first.workspaceId } },
+          title: DEMO_TEMPLATE.practiceAssignmentTitle,
+        })
+      ).feedbackTiming,
+      db.FeedbackTiming.OnCheck,
+    );
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
     assert.equal(reset.actor.generation, 2);
@@ -203,6 +228,7 @@ test('reset restores the template, clears submitted work and billing history, an
       await em.count(db.Assignment, {
         classroom: { owner: { demoWorkspace: first.workspaceId } },
         title: DEMO_TEMPLATE.practiceAssignmentTitle,
+        feedbackTiming: db.FeedbackTiming.Immediate,
       }),
       1,
     );

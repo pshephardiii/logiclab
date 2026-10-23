@@ -89,7 +89,7 @@ export async function seedDemoWorkspace(
     instructions: DEMO_TEMPLATE.practiceAssignmentInstructions,
     problemVersionIds: [version.id],
     assessmentMode: 'ungraded_practice',
-    feedbackTiming: 'on_check',
+    feedbackTiming: 'immediate',
     solutionAccess: 'anytime',
   });
   await assignments.publish(instructor.id, practice.id);

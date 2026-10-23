@@ -42,7 +42,12 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
     onChange(
       assignmentLearningPolicySchema.parse({
         assessmentMode: mode,
-        feedbackTiming: mode === 'graded' ? 'on_submission' : 'on_check',
+        feedbackTiming:
+          mode === 'graded'
+            ? 'on_submission'
+            : policy.feedbackTiming === 'immediate'
+              ? 'immediate'
+              : 'on_check',
         solutionAccess: resetSolutions ? 'never' : policy.solutionAccess,
       }),
     );
@@ -52,6 +57,16 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
         : null,
     );
   }
+  function changeTiming(event: ChangeEvent<HTMLSelectElement>) {
+    onChange(
+      assignmentLearningPolicySchema.parse({
+        ...policy,
+        feedbackTiming: event.target.value,
+      }),
+    );
+    setNotice(null);
+  }
+
   function changeSolutions(event: ChangeEvent<HTMLSelectElement>) {
     onChange(
       assignmentLearningPolicySchema.parse({
@@ -79,12 +94,29 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
       <p id="assignment-mode-help" className="help">
         {modes.find((mode) => mode.value === policy.assessmentMode)?.description}
       </p>
-      <p>
-        Feedback:{' '}
+      <label htmlFor="assignment-feedback">Feedback timing</label>
+      <select
+        id="assignment-feedback"
+        value={policy.feedbackTiming}
+        onChange={changeTiming}
+        disabled={policy.assessmentMode === 'graded'}
+        aria-describedby="assignment-feedback-help"
+      >
+        {policy.assessmentMode === 'graded' ? (
+          <option value="on_submission">On final submission</option>
+        ) : (
+          <>
+            <option value="on_check">On explicit Check answers</option>
+            <option value="immediate">Immediately after an answer changes</option>
+          </>
+        )}
+      </select>
+      <p id="assignment-feedback-help" className="help">
         {policy.feedbackTiming === 'on_submission'
-          ? 'On final submission'
-          : 'On explicit Check answers'}
-        .
+          ? 'Graded work receives feedback only on final submission.'
+          : policy.feedbackTiming === 'immediate'
+            ? 'Incorrect entries are highlighted without revealing the answer. Manual Check answers remains available; saving is still explicit.'
+            : 'Students choose Check answers to receive feedback. Saving is still explicit.'}
       </p>
       <label htmlFor="assignment-solutions">Solution access</label>
       <select

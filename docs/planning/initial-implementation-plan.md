@@ -252,4 +252,10 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 Branch 010 now implements all-mode authoring/publication, transient checks, private practice saves, complete-cell finalization, independent solution release, instructor/student controls and demo template 2. See [learning-mode verification](../verification/assignment-learning-modes-verification.md). The temporary publication gates are removed.
 
-Next sequence: 011-test-demo-qa for deliberate local QA, 012-refactor-demo-audit for correctness/structure/readability findings, then 013-chore-demo-deployment for a costed and reviewed deployment. No hosting or product expansion is part of branch 010.
+Next: `011-feat-immediate-answer-feedback`, following the small slices in [assignment learning modes](assignment-learning-modes.md#immediate-feedback-011-feat-immediate-answer-feedback). Slice 1 adds shared policy/capability rules. Slice 2 adds the immediate-feedback persistence enum/checks, preserving migration and guarded rollback; slice 3 enables API authoring, reads and transient checking with immediate policies. UI controls and automatic feedback follow separately. Deliberate local demo QA, a correctness/structure/readability audit, and a costed deployment follow this feature on separately numbered branches. No hosting is part of branch 011.
+
+## Completed feature: 011-feat-immediate-answer-feedback
+
+Immediate feedback now supports instructor authoring, persisted policies, authorized transient checks, debounced student feedback, cancellation and manual retries, and resettable demo template 3. Final automated and focused local Chrome checks passed; see [verification evidence](../verification/immediate-answer-feedback-verification.md). Apply the additive migration before rollout; rollback cannot discard active immediate policies.
+
+Next are `012-test-demo-qa`, `013-refactor-demo-audit`, and `014-chore-demo-deployment`. Do not treat focused feature verification as exhaustive demo QA or a hosted release.
