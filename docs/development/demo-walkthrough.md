@@ -23,19 +23,27 @@ Open **Assigned work**, select the funded class and example assignment. Enter so
 
 Follow the final-submission confirmation. Submission freezes the saved answers and produces feedback; the seeded assignment permits solutions after submission. Final work is read-only. This flow differs from anonymous practice, where visitors can check freely without creating an official submission.
 
-## 3. Review the submission as the instructor
+## 3. Try immediate feedback without submitting
+
+As the student, select **Explore truth tables at your own pace** in the funded class. In the first row, enter **F** for the final answer: with P and Q both T, the formula evaluates to T. Pause for about 1.2 seconds and look for **Incorrect**. Change the answer to **T** and pause again; the old feedback clears while the new check runs. Blank cells have no Unanswered marker.
+
+Try several quick edits: checking waits until you pause. **Check answers** runs immediately. Neither action saves or submits; use **Save problem** to persist entries, then reload to confirm. Solutions are available anytime through the separate button, and practice has no final submission. Switch between the graded and practice assignments to compare their feedback rules.
+
+New visitors receive template 3. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
+
+## 4. Review the submission as the instructor
 
 Return to the demo controls and choose instructor. Under **Assignments**, select the funded class and example assignment, then review its submitted work.
 
 The instructor sees the work just submitted by the synthetic student. This demonstrates that role switching preserves one shared classroom journey, while separate visitors receive independent data.
 
-## 4. Try simulated billing
+## 5. Try simulated billing
 
 Open **Billing (simulated)** and select **Demo: Try simulated checkout**. Start checkout and use the simulator's success action. Inspect the resulting purchase and class coverage.
 
 No payment provider is contacted. Coverage comes from the same purchase/event/entitlement workflow used by the simulator, rather than a frontend flag. If desired, author an assignment for this class using the existing published problem and publish it after coverage is active.
 
-## 5. Reset and inspect the restored state
+## 6. Reset and inspect the restored state
 
 Return to the demo controls and choose **Reset demo and discard changes**. Choose either role again.
 

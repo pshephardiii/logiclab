@@ -37,7 +37,7 @@ Apply both new migrations before starting the new API. The solution migration ch
 
 Rollback cannot silently discard new semantics: the solution migration refuses anytime policies, and the assessment migration refuses non-graded rows. Older application versions do not understand completion_v1 result JSON. Plan rollback deliberately once new policies/results exist.
 
-New demo workspaces use template 2. Existing active workspaces keep their changes; explicit reset upgrades the template, replaces visitor data and credentials, and retains the original absolute deadline. Shared catalog plans and ordinary account data remain unchanged.
+Branch 010 introduced template 2; branch 011 now creates template 3 with immediate practice feedback. Existing active workspaces keep their changes; explicit reset upgrades the template, replaces visitor data and credentials, and retains the original absolute deadline. Shared catalog plans and ordinary account data remain unchanged.
 
 ## Verification and remaining scope
 
@@ -58,7 +58,7 @@ Commit-sized sequence:
 3. Enable API authoring/read/check support with authorization, publication immutability, transient-write and policy coverage (implemented).
 4. Instructor feedback-timing controls and valid mode transitions (implemented), with failed-save retention and published/archive locks.
 5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage (implemented).
-6. One resettable demo example, documentation and final verification.
+6. One resettable demo example and walkthrough (implemented: template 3); final branch verification remains pending.
 
 Dedicated demo QA, code audit, and deployment follow this feature; they are not replaced by its focused regression checks.
 
@@ -66,7 +66,7 @@ Dedicated demo QA, code audit, and deployment follow this feature; they are not 
 
 Migration `Migration20261023120000` expands the existing string-column checks; it does not rewrite assignments, publication timestamps, solution rules, or defaults. Only completion-only and ungraded practice may store `immediate`. Graded work still requires `on_submission`; practice still rejects after-submission solutions.
 
-Apply with `npm run db:migrate` before the later API rollout. Slice 3 enables transport authoring and persisted-policy responses after the slice 2 migration. The existing transient check endpoint serves immediate and on_check policies; neither saves work. UI timing controls and automatic checks remain later slices. Down migration restores the prior checks only when no immediate assignments remain; it refuses to silently convert their policy.
+Apply with `npm run db:migrate` before the later API rollout. Slice 3 enables transport authoring and persisted-policy responses after the slice 2 migration. The existing transient check endpoint serves immediate and on_check policies; neither saves work. Instructor timing controls and automatic student checks are implemented in slices 4 and 5. Down migration restores the prior checks only when no immediate assignments remain; it refuses to silently convert their policy.
 
 ### Instructor timing controls
 
@@ -74,4 +74,4 @@ Draft authoring now offers explicit Check answers or immediate feedback for comp
 
 Student immediate-policy work now checks transient answers after 1.2 seconds without an edit. Manual Check bypasses and cancels the queued timer. Editing cancels any previous request and clears stale feedback for that occurrence; problem navigation, reload, save, solution actions, assignment/session changes and unmount cancel queued/in-flight work. Graded and on_check work never checks automatically. Submitted work remains read-only. Blank cells receive no Unanswered marker in immediate mode; expected values remain protected by solution policy.
 
-Automatic failures preserve entries, display the existing error, and do not retry in a loop. Students can retry with Check answers or make another edit. The delay bounds automatic requests to at most 50/minute during sustained edits, leaving some headroom under existing limits; this is not a replacement for server rate limiting, and manual or multi-tab traffic can still reach it. Saving and final submission remain explicit. Synthetic-timer/DOM regression tests cover request replacement, late results, queued/in-flight lifecycle cancellation, retry and neutral blanks; real-browser walkthrough and the seeded example remain the next slice.
+Automatic failures preserve entries, display the existing error, and do not retry in a loop. Students can retry with Check answers or make another edit. The delay bounds automatic requests to at most 50/minute during sustained edits, leaving some headroom under existing limits; this is not a replacement for server rate limiting, and manual or multi-tab traffic can still reach it. Saving and final submission remain explicit. Synthetic-timer/DOM regression tests cover request replacement, late results, queued/in-flight lifecycle cancellation, retry and neutral blanks; template 3 now supplies the seeded example and reviewer walkthrough. Final real-browser branch verification remains pending.
