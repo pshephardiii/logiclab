@@ -4,8 +4,8 @@ export const solutionAccessSchema = z.enum(['never', 'after_submission', 'anytim
 export type SolutionAccess = z.infer<typeof solutionAccessSchema>;
 
 /**
- * Supported learning rules. Assignment transport contracts deliberately gate new
- * timings until persistence and student workflows support them.
+ * Supported learning rules shared by authoring and student workflows.
+ * Graded work stays submission-only; practice and completion support checking.
  */
 export const assignmentLearningPolicySchema = z.discriminatedUnion('assessmentMode', [
   z.strictObject({

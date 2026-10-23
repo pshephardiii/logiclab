@@ -59,17 +59,17 @@ export async function createAssignmentStore(
     completion_only: AssessmentMode.CompletionOnly,
     ungraded_practice: AssessmentMode.UngradedPractice,
   };
-  const timings = { on_submission: FeedbackTiming.OnSubmission, on_check: FeedbackTiming.OnCheck };
+  const timings = {
+    on_submission: FeedbackTiming.OnSubmission,
+    on_check: FeedbackTiming.OnCheck,
+    immediate: FeedbackTiming.Immediate,
+  };
   const solutions = {
     never: SolutionAccess.Never,
     after_submission: SolutionAccess.AfterSubmission,
     anytime: SolutionAccess.Anytime,
   };
   function policyFields(policy: AssignmentLearningPolicy) {
-    // Keep unsupported timings out of persistence until the database migration lands.
-    if (policy.feedbackTiming === 'immediate') {
-      throw new AssignmentOperationError('invalid_policy');
-    }
     return {
       assessmentMode: modes[policy.assessmentMode],
       feedbackTiming: timings[policy.feedbackTiming],

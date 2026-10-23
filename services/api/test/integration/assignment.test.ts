@@ -372,12 +372,22 @@ test(
       assert.equal(renamed.statusCode, 200);
       assert.equal(renamed.json().assignment.assessmentMode, 'ungraded_practice');
       assert.equal(renamed.json().assignment.solutionAccess, 'anytime');
+      const immediate = await request('PATCH', policyPath, { feedbackTiming: 'immediate' });
+      assert.equal(immediate.statusCode, 200, immediate.body);
+      assert.equal(immediate.json().assignment.feedbackTiming, 'immediate');
+      const beforeInvalid = immediate.json().assignment;
+      const invalidImmediate = await request('PATCH', policyPath, {
+        assessmentMode: 'graded',
+        title: 'Must not change',
+      });
+      assert.equal(invalidImmediate.statusCode, 400);
+      assert.deepEqual((await request('GET', policyPath)).json().assignment, beforeInvalid);
       const completion = await request('PATCH', policyPath, {
         assessmentMode: 'completion_only',
         solutionAccess: 'after_submission',
       });
       assert.equal(completion.statusCode, 200);
-      assert.equal(completion.json().assignment.feedbackTiming, 'on_check');
+      assert.equal(completion.json().assignment.feedbackTiming, 'immediate');
       const graded = await request('PATCH', policyPath, {
         assessmentMode: 'graded',
         feedbackTiming: 'on_submission',
@@ -408,6 +418,16 @@ test(
       for (const policy of [
         {
           assessmentMode: 'ungraded_practice',
+          feedbackTiming: 'immediate',
+          solutionAccess: 'anytime',
+        },
+        {
+          assessmentMode: 'completion_only',
+          feedbackTiming: 'immediate',
+          solutionAccess: 'after_submission',
+        },
+        {
+          assessmentMode: 'ungraded_practice',
           feedbackTiming: 'on_check',
           solutionAccess: 'anytime',
         },
@@ -428,6 +448,15 @@ test(
         const published = await request('POST', enabledPath + '/publish', {});
         assert.equal(published.statusCode, 200, published.body);
         assert(published.json().assignment.publishedAt);
+        assert.equal(published.json().assignment.feedbackTiming, policy.feedbackTiming);
+        assert.equal(
+          (await request('GET', enabledPath)).json().assignment.feedbackTiming,
+          policy.feedbackTiming,
+        );
+        assert.equal(
+          (await request('PATCH', enabledPath, { feedbackTiming: 'on_check' })).statusCode,
+          409,
+        );
         assert.equal(
           (await request('PATCH', enabledPath, { solutionAccess: 'never' })).statusCode,
           409,

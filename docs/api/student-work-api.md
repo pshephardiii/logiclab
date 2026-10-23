@@ -17,11 +17,11 @@ Demo resources use the same paths under `/api/demo/resources/student/...` with i
 
 ## Policy
 
-| Assessment        | Feedback      | Submission                                               | Solutions                        |
-| ----------------- | ------------- | -------------------------------------------------------- | -------------------------------- |
-| graded            | on_submission | One final correctness result; blanks allowed             | never, after_submission, anytime |
-| completion_only   | on_check      | One final completion result; all expected cells required | never, after_submission, anytime |
-| ungraded_practice | on_check      | None                                                     | never, anytime                   |
+| Assessment        | Feedback              | Submission                                               | Solutions                        |
+| ----------------- | --------------------- | -------------------------------------------------------- | -------------------------------- |
+| graded            | on_submission         | One final correctness result; blanks allowed             | never, after_submission, anytime |
+| completion_only   | on_check or immediate | One final completion result; all expected cells required | never, after_submission, anytime |
+| ungraded_practice | on_check or immediate | None                                                     | never, anytime                   |
 
 Policy is returned as assessmentMode, feedbackTiming and solutionAccess. Published policies cannot be edited. The removed allowSolutions field is not accepted. See [authoring](assignment-api.md).
 
@@ -46,9 +46,9 @@ Use revision zero before starting, then the latest returned revision. Saves incr
 
 Attempts contain id, revision, answers by item ID, nullable submittedAt and result. Before final submission, result is null. Saving does not grade or return correctness. Stale revisions return 409 ATTEMPT_REVISION_CONFLICT; reload/reconcile instead of overwriting another tab.
 
-## Explicit checking
+## Transient checking
 
-Check accepts `{ itemId, answers }` using current transient entries. It returns `{ itemId, feedback }`: cell statuses and correct/incorrect/unanswered counts, without expected values. There is no revision parameter because checking does not evaluate a saved snapshot.
+Check accepts `{ itemId, answers }` using current transient entries. It returns `{ itemId, feedback }`: cell statuses and correct/incorrect/unanswered counts, without expected values. There is no revision parameter because checking does not evaluate a saved snapshot. Both on_check and immediate policies use this same endpoint, with the same authorization, origin, rate-limit and no-store protections. Immediate timing does not reveal expected values or persist checks. Automatic browser checking is a later UI slice; manual checks remain available.
 
 Checks create no attempt, save no answers, increment no revision and persist no score/result. Graded assignments return 403 CHECK_UNAVAILABLE; final attempts return 409 ATTEMPT_SUBMITTED. Invalid/duplicate cells are rejected.
 

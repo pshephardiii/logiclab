@@ -41,7 +41,7 @@ test('PATCH rejects empty requests and classroom changes, query bounds are enfor
     expect(assignmentListQuerySchema.safeParse(query).success).toBe(false);
 });
 
-test('immediate timing stays gated in transport until persistence supports it', () => {
+test('immediate timing is accepted for practice and completion authoring', () => {
   for (const assessmentMode of ['completion_only', 'ungraded_practice']) {
     expect(
       createAssignmentRequestSchema.safeParse({
@@ -50,9 +50,10 @@ test('immediate timing stays gated in transport until persistence supports it', 
         feedbackTiming: 'immediate',
         solutionAccess: 'never',
       }).success,
-    ).toBe(false);
+    ).toBe(true);
   }
-  expect(updateAssignmentRequestSchema.safeParse({ feedbackTiming: 'immediate' }).success).toBe(
-    false,
-  );
+  // PATCH validates the full merged policy under the assignment lock.
+  expect(updateAssignmentRequestSchema.parse({ feedbackTiming: 'immediate' })).toEqual({
+    feedbackTiming: 'immediate',
+  });
 });

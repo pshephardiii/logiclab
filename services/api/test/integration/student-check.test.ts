@@ -12,10 +12,10 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 
-test('learning-mode checks, saves and solutions preserve privacy and enforce workspace access', async () => {
+async function verifyStudentChecks(databaseUrl: string, timing: 'on_check' | 'immediate') {
   const db = await import('@logiclab/db');
   const schema = `student_check_${randomUUID().replaceAll('-', '')}`;
-  const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
+  const orm = await db.createDatabase(databaseUrl, { schema, snapshotOnMigrate: false });
   const config = readDemoConfig({ DEMO_ENABLED: 'true', APP_ORIGIN: 'http://localhost:5173' })!;
   const app = buildApp({ demo: await createDemoRuntime(orm, config) });
   let address = 1;
@@ -77,7 +77,8 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     );
     await em.nativeUpdate(db.Assignment, assignment.id, {
       assessmentMode: db.AssessmentMode.UngradedPractice,
-      feedbackTiming: db.FeedbackTiming.OnCheck,
+      feedbackTiming:
+        timing === 'immediate' ? db.FeedbackTiming.Immediate : db.FeedbackTiming.OnCheck,
       solutionAccess: db.SolutionAccess.Never,
     });
     assert.equal((await check({ itemId: item.id, answers: [] })).statusCode, 200);
@@ -99,7 +100,8 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     // Test-only policy changes isolate student behavior; authoring immutability is tested separately.
     await em.nativeUpdate(db.Assignment, assignment.id, {
       assessmentMode: db.AssessmentMode.UngradedPractice,
-      feedbackTiming: db.FeedbackTiming.OnCheck,
+      feedbackTiming:
+        timing === 'immediate' ? db.FeedbackTiming.Immediate : db.FeedbackTiming.OnCheck,
       solutionAccess: db.SolutionAccess.Never,
     });
     const before = await em.fork().findOneOrFail(db.AssignmentAttempt, saved.id);
@@ -316,4 +318,9 @@ test('learning-mode checks, saves and solutions preserve privacy and enforce wor
     await orm.em.execute(`drop schema if exists "${schema}" cascade`);
     await orm.close(true);
   }
-});
+}
+
+for (const timing of ['on_check', 'immediate'] as const) {
+  test(`learning-mode ${timing} checks, saves and solutions preserve privacy and enforce workspace access`, () =>
+    verifyStudentChecks(url, timing));
+}
