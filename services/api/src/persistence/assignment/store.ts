@@ -66,6 +66,10 @@ export async function createAssignmentStore(
     anytime: SolutionAccess.Anytime,
   };
   function policyFields(policy: AssignmentLearningPolicy) {
+    // Keep unsupported timings out of persistence until the database migration lands.
+    if (policy.feedbackTiming === 'immediate') {
+      throw new AssignmentOperationError('invalid_policy');
+    }
     return {
       assessmentMode: modes[policy.assessmentMode],
       feedbackTiming: timings[policy.feedbackTiming],

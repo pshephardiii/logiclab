@@ -4,8 +4,8 @@ export const solutionAccessSchema = z.enum(['never', 'after_submission', 'anytim
 export type SolutionAccess = z.infer<typeof solutionAccessSchema>;
 
 /**
- * Target policy for learning modes. Existing assignment endpoints retain their legacy
- * contract until persistence and student workflows implement this policy.
+ * Supported learning rules. Assignment transport contracts deliberately gate new
+ * timings until persistence and student workflows support them.
  */
 export const assignmentLearningPolicySchema = z.discriminatedUnion('assessmentMode', [
   z.strictObject({
@@ -15,12 +15,12 @@ export const assignmentLearningPolicySchema = z.discriminatedUnion('assessmentMo
   }),
   z.strictObject({
     assessmentMode: z.literal('completion_only'),
-    feedbackTiming: z.literal('on_check'),
+    feedbackTiming: z.enum(['on_check', 'immediate']),
     solutionAccess: solutionAccessSchema,
   }),
   z.strictObject({
     assessmentMode: z.literal('ungraded_practice'),
-    feedbackTiming: z.literal('on_check'),
+    feedbackTiming: z.enum(['on_check', 'immediate']),
     solutionAccess: z.enum(['never', 'anytime']),
   }),
 ]);

@@ -252,4 +252,4 @@ After finishing `003-feat-classroom-access` (including student invitation redemp
 
 Branch 010 now implements all-mode authoring/publication, transient checks, private practice saves, complete-cell finalization, independent solution release, instructor/student controls and demo template 2. See [learning-mode verification](../verification/assignment-learning-modes-verification.md). The temporary publication gates are removed.
 
-Next sequence: 011-test-demo-qa for deliberate local QA, 012-refactor-demo-audit for correctness/structure/readability findings, then 013-chore-demo-deployment for a costed and reviewed deployment. No hosting or product expansion is part of branch 010.
+Next: `011-feat-immediate-answer-feedback`, following the small slices in [assignment learning modes](assignment-learning-modes.md#immediate-feedback-011-feat-immediate-answer-feedback). Slice 1 adds shared policy/capability rules only; transport remains gated until persistence support lands. Deliberate local demo QA, a correctness/structure/readability audit, and a costed deployment follow this feature on separately numbered branches. No hosting is part of branch 011.

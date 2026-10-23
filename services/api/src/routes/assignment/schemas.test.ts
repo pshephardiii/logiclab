@@ -40,3 +40,19 @@ test('PATCH rejects empty requests and classroom changes, query bounds are enfor
   for (const query of [{ limit: 0 }, { limit: 51 }, { offset: -1 }, { archive: 'bad' }])
     expect(assignmentListQuerySchema.safeParse(query).success).toBe(false);
 });
+
+test('immediate timing stays gated in transport until persistence supports it', () => {
+  for (const assessmentMode of ['completion_only', 'ungraded_practice']) {
+    expect(
+      createAssignmentRequestSchema.safeParse({
+        title: 'Practice',
+        assessmentMode,
+        feedbackTiming: 'immediate',
+        solutionAccess: 'never',
+      }).success,
+    ).toBe(false);
+  }
+  expect(updateAssignmentRequestSchema.safeParse({ feedbackTiming: 'immediate' }).success).toBe(
+    false,
+  );
+});

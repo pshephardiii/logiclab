@@ -43,4 +43,21 @@ New demo workspaces use template 2. Existing active workspaces keep their change
 
 See [final learning-mode verification](../verification/assignment-learning-modes-verification.md). Local Chrome rollout checks cover instructor publication, practice check/save/reload/solutions, completion gating/finalization, score-free instructor review, reset, mobile layout and empty browser storage. This is local evidence, not a browser CI suite or exhaustive QA.
 
-Immediate per-cell feedback, deadlines, retryable final submissions, new exercise types, analytics, and deployment remain outside this branch. Next are a dedicated local demo QA branch, a code audit, and deployment planning.
+Immediate feedback is the next feature branch, described below. Deadlines, retryable final submissions, new exercise types, analytics, and deployment remain separate work.
+
+## Immediate feedback: 011-feat-immediate-answer-feedback
+
+Agreed behavior: instructors can choose immediate feedback for completion-only and ungraded practice work. Graded work retains submission-only feedback. Manual Check remains available in immediate mode. Incorrect answered cells are highlighted without returning expected answers; blanks remain neutral. Solution release stays independent. Checking is transient, saving stays explicit, and publication freezes policy.
+
+Use the existing enrollment-authorized check endpoint with debounced requests. Cancel and invalidate outdated checks after edits, item changes, session changes, and unmount; late responses must never restore stale feedback. Keep requests bounded by the existing rate limits, and preserve editable answers and retry behavior on failure.
+
+Commit-sized sequence:
+
+1. Shared learning-policy support and capability/transition tests (implemented). Transport still rejects immediate timing; no database or UI behavior changes yet.
+2. Database enum/constraint migration and persistence regression checks, preserving existing rows and refusing lossy rollback.
+3. Enable API authoring/read/check support with authorization, publication immutability, transient-write and policy coverage.
+4. Instructor feedback-timing controls and valid mode transitions.
+5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage.
+6. One resettable demo example, documentation and final verification.
+
+Dedicated demo QA, code audit, and deployment follow this feature; they are not replaced by its focused regression checks.
