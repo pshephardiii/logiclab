@@ -23,7 +23,7 @@ test('switching to practice removes impossible after-submission access and annou
   );
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
   expect(screen.getByLabelText('Solution access')).toHaveValue('after_submission');
-  expect(screen.getByText('Feedback: On explicit Check answers.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_check');
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
   expect(screen.getByLabelText('Solution access')).toHaveValue('never');
   expect(screen.queryByRole('option', { name: 'After final submission' })).not.toBeInTheDocument();
@@ -32,7 +32,8 @@ test('switching to practice removes impossible after-submission access and annou
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'graded');
   expect(screen.getByLabelText('Solution access')).toHaveValue('anytime');
-  expect(screen.getByText('Feedback: On final submission.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_submission');
+  expect(screen.getByLabelText('Feedback timing')).toBeDisabled();
 });
 
 test('restores saved practice policy and explains that answers are private with no final submission', () => {
@@ -48,4 +49,49 @@ test('restores saved practice policy and explains that answers are private with 
   expect(screen.getByLabelText('Assessment mode')).toHaveValue('ungraded_practice');
   expect(screen.getByLabelText('Solution access')).toHaveValue('anytime');
   expect(screen.getByText(/practice answers stay private/)).toBeInTheDocument();
+});
+
+test('preserves immediate timing between non-graded modes and resets it when choosing graded work', async () => {
+  const user = userEvent.setup();
+  render(
+    <Editor
+      initial={{
+        assessmentMode: 'completion_only',
+        feedbackTiming: 'on_check',
+        solutionAccess: 'anytime',
+      }}
+    />,
+  );
+  await user.selectOptions(screen.getByLabelText('Feedback timing'), 'immediate');
+  expect(screen.getByText(/Manual Check answers remains available/)).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('immediate');
+  expect(screen.getByLabelText('Solution access')).toHaveValue('anytime');
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('immediate');
+  await user.selectOptions(screen.getByLabelText('Feedback timing'), 'on_check');
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_check');
+  await user.selectOptions(screen.getByLabelText('Feedback timing'), 'immediate');
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'graded');
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_submission');
+  expect(screen.getByLabelText('Feedback timing')).toBeDisabled();
+  expect(
+    screen.queryByRole('option', { name: 'Immediately after an answer changes' }),
+  ).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_check');
+});
+
+test('restores a saved immediate policy without changing solution access', () => {
+  render(
+    <Editor
+      initial={{
+        assessmentMode: 'completion_only',
+        feedbackTiming: 'immediate',
+        solutionAccess: 'after_submission',
+      }}
+    />,
+  );
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('immediate');
+  expect(screen.getByLabelText('Solution access')).toHaveValue('after_submission');
 });
