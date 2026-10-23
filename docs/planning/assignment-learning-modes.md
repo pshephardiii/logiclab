@@ -57,7 +57,7 @@ Commit-sized sequence:
 2. Database enum/constraint migration and persistence regression checks (implemented), preserving existing rows and refusing lossy rollback.
 3. Enable API authoring/read/check support with authorization, publication immutability, transient-write and policy coverage (implemented).
 4. Instructor feedback-timing controls and valid mode transitions (implemented), with failed-save retention and published/archive locks.
-5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage.
+5. Student debounced feedback, cancellation/stale-response protection, neutral blanks, manual check and failure/retry coverage (implemented).
 6. One resettable demo example, documentation and final verification.
 
 Dedicated demo QA, code audit, and deployment follow this feature; they are not replaced by its focused regression checks.
@@ -72,4 +72,6 @@ Apply with `npm run db:migrate` before the later API rollout. Slice 3 enables tr
 
 Draft authoring now offers explicit Check answers or immediate feedback for completion-only and ungraded practice. Switching between those two modes retains the selected timing. Choosing graded work resets timing to on_submission and disables that selector; leaving graded starts with on_check. Solution choices remain independent, except the existing practice/after-submission incompatibility. Saved immediate policies restore in the editor; published and archived editors stay locked. Failed saves retain timing edits for retry.
 
-This authoring slice does not yet implement automatic student requests. Until the next slice, immediate-policy work can still use manual checking through the existing endpoint.
+Student immediate-policy work now checks transient answers after 1.2 seconds without an edit. Manual Check bypasses and cancels the queued timer. Editing cancels any previous request and clears stale feedback for that occurrence; problem navigation, reload, save, solution actions, assignment/session changes and unmount cancel queued/in-flight work. Graded and on_check work never checks automatically. Submitted work remains read-only. Blank cells receive no Unanswered marker in immediate mode; expected values remain protected by solution policy.
+
+Automatic failures preserve entries, display the existing error, and do not retry in a loop. Students can retry with Check answers or make another edit. The delay bounds automatic requests to at most 50/minute during sustained edits, leaving some headroom under existing limits; this is not a replacement for server rate limiting, and manual or multi-tab traffic can still reach it. Saving and final submission remain explicit. Synthetic-timer/DOM regression tests cover request replacement, late results, queued/in-flight lifecycle cancellation, retry and neutral blanks; real-browser walkthrough and the seeded example remain the next slice.

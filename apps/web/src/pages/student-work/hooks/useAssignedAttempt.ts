@@ -1,5 +1,5 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   StudentAssignment,
   StudentAttempt,
@@ -13,7 +13,10 @@ import { savedAnswerMaps, sameAnswers } from '../../../features/assignment/helpe
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import * as apiModule from '../../../api/student-work/api';
 
-/** Keeps unsaved item edits separate from server revisions; explicit checks are transient and cancel when answers change. */
+// At most 50 automatic requests/minute during continuous edits; leave headroom for other work.
+export const IMMEDIATE_CHECK_DELAY_MS = 1200;
+
+/** Keeps unsaved edits separate from revisions; transient checks are canceled on edits and lifecycle changes. */
 export function useAssignedAttempt(assignmentId: string) {
   const api = useResourceApi(apiModule);
   const [assignment, setAssignment] = useState<StudentAssignment | null>(null);
@@ -27,6 +30,7 @@ export function useAssignedAttempt(assignmentId: string) {
   const [action, setAction] = useState<'save' | 'submit' | 'solution' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checks = useAbortableRequest();
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
@@ -37,7 +41,8 @@ export function useAssignedAttempt(assignmentId: string) {
   const hasFinalSubmission =
     assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
-  const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check';
+  const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
+  const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
   const solutionAvailable =
     assignment?.solutionAccess === 'anytime' ||
     (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
@@ -54,15 +59,16 @@ export function useAssignedAttempt(assignmentId: string) {
     [assignment, answers],
   );
 
-  function cancelCheck() {
+  const cancelCheck = useCallback(() => {
+    if (checkTimer.current !== null) clearTimeout(checkTimer.current);
+    checkTimer.current = null;
     checks.cancelRequest();
     setCheckingItem(null);
-  }
+  }, [checks.cancelRequest]);
   const load = useCallback(async () => {
     const signal = reads.startRequest();
     writes.cancelRequest();
-    checks.cancelRequest();
-    setCheckingItem(null);
+    cancelCheck();
     setFeedback({});
     setAction(null);
     setLoading(true);
@@ -86,13 +92,16 @@ export function useAssignedAttempt(assignmentId: string) {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
-  }, [api, assignmentId, reads.startRequest, writes.cancelRequest, checks.cancelRequest]);
+  }, [api, assignmentId, reads.startRequest, writes.cancelRequest, cancelCheck]);
   useEffect(() => {
     void load();
-    return reads.cancelRequest;
-  }, [load, reads.cancelRequest]);
+    return () => {
+      reads.cancelRequest();
+      cancelCheck();
+    };
+  }, [load, reads.cancelRequest, cancelCheck]);
   function changeAnswer(itemId: string, row: string, column: string, value: boolean | null) {
-    if (action || attempt?.submittedAt) return;
+    if (loading || action || attempt?.submittedAt) return;
     cancelCheck();
     setFeedback((previous) => {
       const next = { ...previous };
@@ -101,10 +110,15 @@ export function useAssignedAttempt(assignmentId: string) {
     });
     setError(null);
     setNotice(null);
-    setAnswers((previous) => ({
-      ...previous,
-      [itemId]: { ...previous[itemId], [cellKey(row, column)]: value },
-    }));
+    const snapshot = { ...answers[itemId], [cellKey(row, column)]: value };
+    setAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
+    if (allowsImmediateFeedback) {
+      // Capture the edited answers rather than the render preceding this state update.
+      checkTimer.current = setTimeout(() => {
+        checkTimer.current = null;
+        void check(itemId, snapshot);
+      }, IMMEDIATE_CHECK_DELAY_MS);
+    }
   }
   async function save(itemId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
@@ -171,10 +185,11 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
-  async function check(itemId: string) {
-    if (!assignment || !allowsExplicitCheck || action || attempt?.submittedAt) return;
+  async function check(itemId: string, snapshot = answers[itemId] ?? {}) {
+    if (!assignment || loading || !allowsExplicitCheck || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
     if (!item) return;
+    cancelCheck();
     const signal = checks.startRequest();
     setCheckingItem(itemId);
     setError(null);
@@ -184,7 +199,7 @@ export function useAssignedAttempt(assignmentId: string) {
         assignmentId,
         {
           itemId,
-          answers: submittedAnswers(item.exercise, answers[itemId] ?? {}),
+          answers: submittedAnswers(item.exercise, snapshot),
         },
         signal,
       );
@@ -231,6 +246,8 @@ export function useAssignedAttempt(assignmentId: string) {
     requiresCompleteAnswers,
     completionReady,
     allowsExplicitCheck,
+    allowsImmediateFeedback,
+    cancelCheck,
     solutionAvailable,
     answers,
     solutions,

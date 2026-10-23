@@ -48,7 +48,7 @@ Attempts contain id, revision, answers by item ID, nullable submittedAt and resu
 
 ## Transient checking
 
-Check accepts `{ itemId, answers }` using current transient entries. It returns `{ itemId, feedback }`: cell statuses and correct/incorrect/unanswered counts, without expected values. There is no revision parameter because checking does not evaluate a saved snapshot. Both on_check and immediate policies use this same endpoint, with the same authorization, origin, rate-limit and no-store protections. Immediate timing does not reveal expected values or persist checks. Automatic browser checking is a later UI slice; manual checks remain available.
+Check accepts `{ itemId, answers }` using current transient entries. It returns `{ itemId, feedback }`: cell statuses and correct/incorrect/unanswered counts, without expected values. There is no revision parameter because checking does not evaluate a saved snapshot. Both on_check and immediate policies use this same endpoint, with the same authorization, origin, rate-limit and no-store protections. Immediate timing does not reveal expected values or persist checks. Immediate browser checking waits 1.2 seconds after the last answer edit; manual checks cancel that timer and run immediately. Errors retain entries without automatic retries. Blank cells remain visually neutral in immediate mode.
 
 Checks create no attempt, save no answers, increment no revision and persist no score/result. Graded assignments return 403 CHECK_UNAVAILABLE; final attempts return 409 ATTEMPT_SUBMITTED. Invalid/duplicate cells are rejected.
 

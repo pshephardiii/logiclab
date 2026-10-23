@@ -308,3 +308,23 @@ test('failed checks preserve entries and can be retried, while reload cancels ou
   expect(cells()[0]).toHaveValue('');
   expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
 });
+
+test('immediate work keeps blanks neutral and manual checking available without showing expected values', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, assessmentMode: 'ungraded_practice', feedbackTiming: 'immediate' },
+    attempt: null,
+  });
+  const { user } = await open();
+  expect(screen.getByText(/Incorrect entries are highlighted shortly/)).toBeInTheDocument();
+  await user.selectOptions(cells()[0]!, 'F');
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(await screen.findByText('Incorrect', { exact: true })).toBeInTheDocument();
+  expect(screen.queryByText('Unanswered', { exact: true })).not.toBeInTheDocument();
+  expect(cells()[0]).toHaveAttribute('aria-invalid', 'true');
+  expect(cells()[1]).not.toHaveAttribute('aria-describedby');
+  expect(screen.queryByText(/Solution:/)).not.toBeInTheDocument();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  expect(cells()[0]).toHaveValue('');
+});

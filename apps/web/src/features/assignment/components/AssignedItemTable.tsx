@@ -13,6 +13,7 @@ type Props = {
   answers: Answers;
   feedback: TruthTableCheckResponse | null;
   solution?: TruthTableSolutionResponse | null;
+  neutralBlanks?: boolean;
   readOnly: boolean;
   onAnswer: (row: string, column: string, value: boolean | null) => void;
 };
@@ -23,9 +24,14 @@ export function AssignedItemTable({
   answers,
   feedback,
   solution = null,
+  neutralBlanks = false,
   readOnly,
   onAnswer,
 }: Props) {
+  const visibleFeedback =
+    feedback && neutralBlanks
+      ? { ...feedback, cells: feedback.cells.filter((cell) => cell.status !== 'unanswered') }
+      : feedback;
   return (
     <section className="panel assigned-item">
       <h2>
@@ -40,7 +46,7 @@ export function AssignedItemTable({
           exercise={item.exercise}
           formula={item.formula}
           answers={answers}
-          feedback={feedback}
+          feedback={visibleFeedback}
           solution={solution}
           onAnswer={onAnswer}
         />
