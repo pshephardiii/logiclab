@@ -21,7 +21,7 @@ const operations = [
     url: `/api/assignments/${assignment.id}`,
     payload: { title: 'Edit' },
   },
-  ...['publish', 'archive', 'restore'].map((action) => ({
+  ...['publish', 'archive', 'restore', 'duplicate'].map((action) => ({
     method: 'POST' as const,
     url: `/api/assignments/${assignment.id}/${action}`,
     payload: {},

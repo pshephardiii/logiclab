@@ -133,3 +133,7 @@ Operator-only report-only billing reconciliation and expired demo-workspace clea
 ### Assignment learning modes
 
 Instructors can publish graded, completion-only or private-practice assignments with independent solution-release rules. Students explicitly check practice/completion answers, save work and finalize completion-only work without an official correctness score. Demo template 2 includes both the graded example and private practice; reset an existing workspace to load the new examples. See [learning-mode verification and rollout](docs/verification/assignment-learning-modes-verification.md).
+
+### Duplicate assignments
+
+Instructors can use **Duplicate as draft** on a saved draft, publication or archived assignment to create an editable copy in the same class. Ordered pinned problems and learning policies are preserved; student work, publication/archive status and billing are not copied. Unsaved source edits require confirmation. See [duplication behavior and recovery](docs/planning/duplicate-assignment.md) and [automated verification](docs/verification/duplicate-assignment-verification.md). Manual browser QA remains pending.

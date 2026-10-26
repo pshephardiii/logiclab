@@ -1,3 +1,4 @@
+import { postAssignmentDuplicateRoute } from './postAssignmentDuplicate/route';
 import { getAssignmentSubmissionRoute } from './getAssignmentSubmission/route';
 import { getAssignmentSubmissionsRoute } from './getAssignmentSubmissions/route';
 import { postAssignmentRoute } from './postAssignment/route';
@@ -40,6 +41,7 @@ export async function assignmentRoutes(app: FastifyInstance, context: Assignment
   app.register(getAssignmentRoute, context);
   app.register(patchAssignmentRoute, context);
   app.register(postAssignmentPublishRoute, context);
+  app.register(postAssignmentDuplicateRoute, context);
   app.register(postAssignmentArchiveRoute, context);
   app.register(postAssignmentRestoreRoute, context);
 }

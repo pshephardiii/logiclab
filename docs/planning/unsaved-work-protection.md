@@ -51,4 +51,4 @@ The shared confirmation grants one callback permission; it neither saves data no
 
 ## Next branches
 
-Continue with `013-test-demo-qa`, then `014-refactor-demo-audit`, followed by `015-chore-demo-deployment`. Manual QA is intentionally pending; automated verification does not certify a hosted release.
+The subsequent duplication feature moves the sequence to `014-test-demo-qa`, then `015-refactor-demo-audit`, followed by `016-chore-demo-deployment`. Manual QA is intentionally pending; automated verification does not certify a hosted release.

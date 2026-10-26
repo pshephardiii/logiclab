@@ -259,3 +259,119 @@ test('mode changes preserve failed input and enable publication after saving val
   expect(screen.getByLabelText('Assessment mode')).toHaveValue('completion_only');
   expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeEnabled();
 });
+
+const copiedAssignment: AssignmentDetail = {
+  ...assignment,
+  id: '77777777-7777-4777-8777-777777777777',
+  title: 'Copy of Homework',
+  items: assignment.items.map((item) => ({ ...item, id: '88888888-8888-4888-8888-888888888888' })),
+};
+
+test.each(['draft', 'published', 'archived'] as const)(
+  'duplicates a %s source into an editable saved draft',
+  async (status) => {
+    const source = {
+      ...assignment,
+      publishedAt: status === 'draft' ? null : time,
+      archivedAt: status === 'archived' ? time : null,
+    };
+    vi.mocked(api.getAssignment).mockResolvedValue(source);
+    vi.mocked(api.assignmentAction).mockResolvedValue(copiedAssignment);
+    const user = await openDraft();
+    await user.click(screen.getByRole('button', { name: 'Duplicate as draft' }));
+    await screen.findByText('Assignment duplicated as a new draft.');
+    expect(api.assignmentAction).toHaveBeenCalledExactlyOnceWith(
+      assignment.id,
+      'duplicate',
+      expect.any(AbortSignal),
+    );
+    expect(screen.getByLabelText('Assignment title')).toHaveValue(copiedAssignment.title);
+    expect(screen.getByLabelText('Assignment title')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeEnabled();
+    // Further edits update the new copy, not the saved source.
+    await user.type(screen.getByLabelText('Assignment title'), ' edited');
+    vi.mocked(api.updateAssignment).mockResolvedValue({
+      ...copiedAssignment,
+      title: copiedAssignment.title + ' edited',
+    });
+    await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+    await waitFor(() =>
+      expect(api.updateAssignment).toHaveBeenCalledWith(
+        copiedAssignment.id,
+        expect.objectContaining({ title: copiedAssignment.title + ' edited' }),
+        expect.any(AbortSignal),
+      ),
+    );
+  },
+);
+
+test('dirty duplication waits for consent and copies saved content; Stay and failure preserve local edits', async () => {
+  const user = await openDraft();
+  await user.type(screen.getByLabelText('Assignment title'), ' unsaved');
+  await user.click(screen.getByRole('button', { name: 'Duplicate as draft' }));
+  await screen.findByRole('dialog');
+  expect(api.assignmentAction).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Homework unsaved');
+  vi.mocked(api.assignmentAction).mockRejectedValueOnce(new Error('Connection lost'));
+  await user.click(screen.getByRole('button', { name: 'Duplicate as draft' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Reload Active or All assignments and check for a copy',
+  );
+  expect(api.assignmentAction).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Homework unsaved');
+  // Reloading the list retains edits and never retries the non-idempotent POST.
+  await user.click(screen.getByRole('button', { name: 'Reload assignments' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Reload assignments' })).toBeEnabled(),
+  );
+  expect(api.assignmentAction).toHaveBeenCalledTimes(1);
+  vi.mocked(api.assignmentAction).mockResolvedValueOnce(copiedAssignment);
+  await user.click(screen.getByRole('button', { name: 'Duplicate as draft' }));
+  await screen.findByRole('dialog');
+  expect(api.assignmentAction).toHaveBeenCalledTimes(1);
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByText('Assignment duplicated as a new draft.');
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Copy of Homework');
+  expect(api.updateAssignment).not.toHaveBeenCalled();
+});
+
+test('pending duplication disables repeated clicks and ignores a late response after unmount', async () => {
+  let resolve!: (value: AssignmentDetail) => void;
+  vi.mocked(api.assignmentAction).mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const user = userEvent.setup();
+  const view = render(<ClassAssignments classId={classId} />);
+  await user.click(await screen.findByRole('button', { name: 'Homework (draft)' }));
+  await screen.findByDisplayValue('Homework');
+  await user.dblClick(screen.getByRole('button', { name: 'Duplicate as draft' }));
+  expect(api.assignmentAction).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Duplicate as draft' })).toBeDisabled();
+  const signal = vi.mocked(api.assignmentAction).mock.calls[0]![2];
+  view.unmount();
+  expect(signal.aborted).toBe(true);
+  render(<ClassAssignments classId="another-class" />);
+  await screen.findByRole('button', { name: 'Homework (draft)' });
+  await act(async () => resolve(copiedAssignment));
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('');
+  expect(screen.queryByText('Assignment duplicated as a new draft.')).not.toBeInTheDocument();
+});
+
+test('a failed list refresh after duplication retains the confirmed copy without another POST', async () => {
+  const user = await openDraft();
+  vi.mocked(api.assignmentAction).mockResolvedValueOnce(copiedAssignment);
+  vi.mocked(api.listAssignments).mockRejectedValueOnce(new Error('List unavailable'));
+  await user.click(screen.getByRole('button', { name: 'Duplicate as draft' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('List unavailable');
+  expect(screen.getByText('Assignment duplicated as a new draft.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Assignment title')).toHaveValue(copiedAssignment.title);
+  await user.click(screen.getByRole('button', { name: 'Reload assignments' }));
+  await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  expect(api.assignmentAction).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('Assignment title')).toHaveValue(copiedAssignment.title);
+});

@@ -20,6 +20,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Unsaved work protection](planning/unsaved-work-protection.md)
+- [Duplicate assignment](planning/duplicate-assignment.md)
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
@@ -56,6 +57,8 @@ Documentation is grouped by purpose:
 - [Branch naming and PR workflow](conventions/branch-naming-conventions.md)
 
 ## Verification
+
+- [Duplicate assignment](verification/duplicate-assignment-verification.md)
 
 - [Unsaved work protection](verification/unsaved-work-protection-verification.md)
 

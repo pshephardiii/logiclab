@@ -60,7 +60,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
 
   async function assignmentAction(
     id: string,
-    action: 'publish' | 'archive' | 'restore',
+    action: 'publish' | 'archive' | 'restore' | 'duplicate',
     signal: AbortSignal,
   ) {
     const response = await request(`/api/assignments/${id}/${action}`, {

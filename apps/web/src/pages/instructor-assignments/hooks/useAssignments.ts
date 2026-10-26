@@ -1,5 +1,5 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   AssignmentDetail,
   AssignmentSummary,
@@ -26,6 +26,7 @@ export function useAssignments(classId: string) {
   const reads = useAbortableRequest();
   const details = useAbortableRequest();
   const writes = useAbortableRequest();
+  const mutationPending = useRef(false);
   const load = useCallback(
     async (offset = 0) => {
       const signal = reads.startRequest();
@@ -84,7 +85,10 @@ export function useAssignments(classId: string) {
   async function mutate(
     operation: (signal: AbortSignal) => Promise<AssignmentDetail>,
     message: string,
+    failureHint = '',
   ) {
+    if (mutationPending.current) return false;
+    mutationPending.current = true;
     const signal = writes.startRequest();
     reads.cancelRequest();
     details.cancelRequest();
@@ -103,10 +107,14 @@ export function useAssignments(classId: string) {
       await load();
       return true;
     } catch (caught) {
-      if (!signal.aborted)
-        setError(caught instanceof Error ? caught.message : 'Could not update the assignment.');
+      if (!signal.aborted) {
+        const reason =
+          caught instanceof Error ? caught.message : 'Could not update the assignment.';
+        setError(failureHint ? `${reason} ${failureHint}` : reason);
+      }
       return false;
     } finally {
+      mutationPending.current = false;
       if (!signal.aborted) setBusy(false);
     }
   }
@@ -122,6 +130,14 @@ export function useAssignments(classId: string) {
             )
           : api.createAssignment(classId, input, signal),
       'Assignment draft saved.',
+    );
+  }
+  function duplicate() {
+    if (!selected || busy) return;
+    return mutate(
+      (signal) => api.assignmentAction(selected.id, 'duplicate', signal),
+      'Assignment duplicated as a new draft.',
+      'Duplication could not be confirmed. Reload Active or All assignments and check for a copy before trying again; another request creates another draft.',
     );
   }
   function act(action: 'publish' | 'archive' | 'restore') {
@@ -151,6 +167,7 @@ export function useAssignments(classId: string) {
     load,
     select,
     save,
+    duplicate,
     act,
   };
 }

@@ -33,6 +33,7 @@ export interface AssignmentStore extends SubmissionReviewStore {
     assignmentId: string,
     input: UpdateAssignmentRequest,
   ): Promise<AssignmentDetail>;
+  duplicate(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
   publish(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
   setArchived(ownerId: string, assignmentId: string, archived: boolean): Promise<AssignmentDetail>;
 }
@@ -167,6 +168,44 @@ export async function createAssignmentStore(
         await replaceItems(em, ownerId, assignment, input.problemVersionIds);
         await em.flush();
         return detail(em, assignment);
+      });
+    },
+    async duplicate(ownerId, assignmentId) {
+      return transact(async (em) => {
+        // Serialize the saved snapshot with edits, publication and archive changes.
+        const source = await ownedAssignment(em, ownerId, assignmentId, true);
+        const items = await em.find(
+          AssignmentItem,
+          { assignment: source.id },
+          { orderBy: { position: 'ASC' } },
+        );
+        let title = 'Copy of ';
+        // Respect the API's 120-code-unit limit without splitting a Unicode character.
+        for (const character of source.title) {
+          if (title.length + character.length > 120) break;
+          title += character;
+        }
+        const policy = assignmentLearningPolicySchema.parse({
+          assessmentMode: source.assessmentMode,
+          feedbackTiming: source.feedbackTiming,
+          solutionAccess: source.solutionAccess,
+        });
+        const copy = em.create(Assignment, {
+          classroom: source.classroom,
+          title: title.trimEnd(),
+          instructions: source.instructions,
+          ...policyFields(policy),
+        });
+        em.persist(copy);
+        await em.flush();
+        await replaceItems(
+          em,
+          ownerId,
+          copy,
+          items.map((item) => item.problemVersion.id),
+        );
+        await em.flush();
+        return detail(em, copy);
       });
     },
     async list(ownerId, classId, query) {
