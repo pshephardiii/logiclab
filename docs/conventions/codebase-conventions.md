@@ -295,3 +295,11 @@ Keep the generic HTTP client independent of React, navigation, and demo behavior
 Route composition supplies `ResourceApiProvider` with an explicit normal/demo scope. Resource hooks and components obtain a stable domain client with `useResourceApi`. The selected request transport binds the namespace when the client is created, so a retained callback cannot switch destinations after navigation. Include scoped clients/functions in callback dependencies. Remount resource pages when changing scope; do not introduce a mutable global client or read `window.location` during requests.
 
 Only resource domain clients use this provider. Normal authentication, demo lifecycle, and anonymous practice retain explicit paths and use the shared transport directly. Server authorization remains authoritative.
+
+## Web: unsaved work protection
+
+Use the single UnsavedWorkProvider under the browser data router. Editors register their existing dirty comparison through useUnsavedWork; keep field data, saved baselines and save operations in the editor or owning hook. Exclude read-only work, retain protection after failed saves, and remove it on successful save, reversion or unmount. Do not treat answer checking as saving.
+
+Use useConfirmDiscard before same-page actions that replace dirty state. Keep the complete destructive action inside its callback; Stay must not change selections, abort active work or invoke a session mutation. The hook cancels a pending callback when its owner unmounts. Discard authorizes one action rather than installing a global bypass. Preserve list/filter/preview operations that retain edits without unnecessary prompts. Forced credential changes and authorization must never depend on discard consent.
+
+Dirty unregistration must be visible synchronously to route blocking, so forced session redirects cannot see a stale registration while React updates rendered state. Native dialog focus and browser unload UI require browser QA; shared DOM test helpers only simulate native dialog methods.

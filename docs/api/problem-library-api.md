@@ -59,7 +59,7 @@ Publish, edit, and archive/restore transactions lock the same parent problem row
 
 ## Instructor library page
 
-Sign in as an instructor and choose **Problem library** in navigation. Create a title, optional instructions, and a formula, then select **Save draft**. Select a problem from the list to edit it; failed saves retain entered fields. Switching problems or choosing **New problem** discards unsaved edits. Reloading the browser reloads persisted library data; editor selection and unsaved input are not persisted.
+Sign in as an instructor and choose **Problem library** in navigation. Create a title, optional instructions, and a formula, then select **Save draft**. Select a problem from the list to edit it; failed saves retain entered fields. Switching problems or choosing **New problem** asks for confirmation when edits are unsaved; Stay retains the current fields. List refresh/filter/preview operations retain the editor without prompting. Reloading the browser reloads persisted library data; editor selection and unsaved input are not persisted.
 
 Save edits before selecting **Publish saved draft**. Publication and archive controls are disabled while the form differs from the saved draft. Published versions show their own title, instructions, formula, and timestamp, with separate preview controls. A publication error can mean the server committed before the response was lost: reload history before deciding to publish again. The client never automatically retries publication.
 

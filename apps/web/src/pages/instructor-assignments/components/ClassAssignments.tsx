@@ -1,3 +1,5 @@
+import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import { SubmissionReview } from './SubmissionReview';
@@ -13,15 +15,19 @@ export function ClassAssignments({ classId }: Props) {
   const accountPath = useAccountPath();
   const state = useAssignments(classId);
   const [dirty, setDirty] = useState(false);
+  useUnsavedWork(dirty && !state.selected?.publishedAt && !state.selected?.archivedAt);
+  const confirmDiscard = useConfirmDiscard();
   function select(id: string | null) {
-    setDirty(false);
-    void state.select(id);
+    confirmDiscard(() => {
+      setDirty(false);
+      void state.select(id);
+    });
   }
   return (
     <>
       <p className="help">
-        Switching classes, assignments, or pages discards unsaved edits. New publication requires
-        coverage; <Link to={accountPath('/billing')}>manage simulated class billing</Link>.
+        Unsaved edits are protected when you switch classes, assignments, or pages. New publication
+        requires coverage; <Link to={accountPath('/billing')}>manage simulated class billing</Link>.
       </p>
       {state.error && (
         <p role="alert" className="error">

@@ -1,20 +1,24 @@
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useState } from 'react';
 import { useStudentAssignments } from '../hooks/useStudentAssignments';
 import { AssignedAttempt } from './AssignedAttempt';
 
 export function StudentAssignments({ classId }: { classId: string }) {
+  const confirmDiscard = useConfirmDiscard();
   const list = useStudentAssignments(classId);
   const [selected, setSelected] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   function select(id: string) {
-    setSelected(id);
-    setRevision((value) => value + 1);
+    confirmDiscard(() => {
+      setSelected(id);
+      setRevision((value) => value + 1);
+    });
   }
   return (
     <>
       <p className="help">
-        Changing classes, assignments, or pages discards unsaved edits. Saved answers survive
-        reloads.
+        Unsaved edits are protected when you change classes, assignments, or pages. Save answers
+        explicitly to keep them after a reload.
       </p>
       <section className="panel" aria-label="Available assignments">
         <h2>Published assignments</h2>

@@ -1,3 +1,4 @@
+import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useResourceApi } from '../../api/ResourceApiProvider';
 import { useAccountPath } from '../../routing/hooks/useAccountPath';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ import '../../features/assignment/assignment.css';
 function StudentWork() {
   const { listEnrollments } = useResourceApi(enrollmentsApi);
   const accountPath = useAccountPath();
+  const confirmDiscard = useConfirmDiscard();
   const [classId, setClassId] = useState('');
   return (
     <>
@@ -25,7 +27,9 @@ function StudentWork() {
       </header>
       <ClassSelection
         value={classId}
-        onChange={setClassId}
+        onChange={(id) => {
+          if (id !== classId) confirmDiscard(() => setClassId(id));
+        }}
         loadPage={listEnrollments}
         emptyMessage={
           <>

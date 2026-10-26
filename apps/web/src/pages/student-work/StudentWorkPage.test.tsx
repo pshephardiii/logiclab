@@ -1,5 +1,5 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../test/unsaved-work';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { StudentWorkPage } from './StudentWorkPage';
@@ -7,6 +7,8 @@ import { listEnrollments } from '../../api/enrollments/api';
 import * as api from '../../api/student-work/api';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 import { work } from '../../../test/assignment-work-fixture';
+
+installDialogStub();
 
 vi.mock('../../api/enrollments/api', () => ({ listEnrollments: vi.fn() }));
 vi.mock('../../api/student-work/api', () => ({
@@ -45,11 +47,7 @@ test('enrolled classes and assigned work paginate and selecting work loads its s
       nextOffset: null,
     });
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <StudentWorkPage />
-    </MemoryRouter>,
-  );
+  render(<StudentWorkPage />);
   await user.click(await screen.findByRole('button', { name: 'Load more classes' }));
   await user.selectOptions(screen.getByLabelText('Class'), second.id);
   await user.click(await screen.findByRole('button', { name: 'Load more assignments' }));
@@ -82,11 +80,7 @@ test('class changes cancel late assignment lists and expose load retries', async
     nextOffset: null,
   });
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <StudentWorkPage />
-    </MemoryRouter>,
-  );
+  render(<StudentWorkPage />);
   await screen.findByRole('option', { name: 'Enrolled logic' });
   await user.selectOptions(screen.getByLabelText('Class'), classroom.id);
   const signal = vi.mocked(api.listAssignedWork).mock.calls[0]![2];
@@ -97,4 +91,55 @@ test('class changes cancel late assignment lists and expose load retries', async
   expect(screen.queryByRole('button', { name: 'Assigned logic' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Reload available assignments' }));
   await screen.findByText('No published assignments for this class.');
+});
+
+test('class and assignment changes preserve unsaved answers on Stay and discard only the selected transition', async () => {
+  const second = { ...classroom, id: 'b1111111-1111-4111-8111-111111111111', name: 'Second class' };
+  const other = { ...summary, id: 'b2222222-2222-4222-8222-222222222222', title: 'Other work' };
+  vi.mocked(listEnrollments).mockResolvedValue({
+    classrooms: [classroom, second],
+    nextOffset: null,
+  });
+  vi.mocked(api.listAssignedWork).mockResolvedValue({
+    assignments: [summary, other],
+    nextOffset: null,
+  });
+  const user = userEvent.setup();
+  const { router } = render(<StudentWorkPage />);
+  await screen.findByRole('option', { name: classroom.name });
+  await user.selectOptions(screen.getByLabelText('Class'), classroom.id);
+  await user.click(await screen.findByRole('button', { name: work.title }));
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  const answer = () =>
+    screen.getByRole('group', { name: 'Truth-table answers' }).querySelector('select')!;
+  await user.selectOptions(answer(), 'F');
+  await user.selectOptions(screen.getByLabelText('Class'), second.id);
+  await screen.findByRole('dialog');
+  expect(screen.getByLabelText('Class')).toHaveValue(classroom.id);
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(answer()).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Other work' }));
+  await screen.findByRole('dialog');
+  expect(api.readAssignedWork).toHaveBeenCalledTimes(1);
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(answer()).toHaveValue('F');
+  await act(async () => {
+    await router.navigate('/elsewhere');
+  });
+  await screen.findByRole('dialog');
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(router.state.location.pathname).toBe('/');
+  expect(answer()).toHaveValue('F');
+  await user.click(screen.getByRole('button', { name: 'Other work' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(api.readAssignedWork).toHaveBeenCalledTimes(2));
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  expect(answer()).toHaveValue('');
+  // A subsequent edit still requires its own confirmation: discard is not a global bypass.
+  await user.selectOptions(answer(), 'T');
+  await user.selectOptions(screen.getByLabelText('Class'), second.id);
+  await screen.findByRole('dialog');
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(screen.getByLabelText('Class')).toHaveValue(second.id));
+  expect(screen.queryByRole('group', { name: 'Truth-table answers' })).not.toBeInTheDocument();
 });

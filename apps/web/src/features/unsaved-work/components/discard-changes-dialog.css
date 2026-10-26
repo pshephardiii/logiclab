@@ -1,0 +1,10 @@
+.discard-changes-dialog {
+  max-width: min(30rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+}
+
+.discard-changes-dialog::backdrop {
+  background: rgb(15 23 42 / 55%);
+}
