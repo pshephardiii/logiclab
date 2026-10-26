@@ -104,4 +104,4 @@ The operation copies saved title/instructions, learning policy and ordered pinne
 
 Creating the copy needs no class coverage; later publication still enforces the ordinary coverage/content checks. Client-supplied target class, title, owner or item overrides are rejected. Every successful request creates another draft: no idempotency key or automatic retry is provided. After an uncertain response, inspect/reload the assignment list before deliberately trying again.
 
-This slice adds the backend endpoint only; Duplicate as draft UI and unsaved-editor confirmation follow separately. No migration is required.
+The instructor editor exposes Duplicate as draft for saved assignments. Dirty source edits require confirmation and are not copied. Success opens the returned draft; failure preserves local edits and advises inspecting Active or All assignments before retrying. A list-refresh failure retains a confirmed copy and does not repeat the POST. Normal/demo frontend clients share the response contract and explicit resource scope. No migration is required.

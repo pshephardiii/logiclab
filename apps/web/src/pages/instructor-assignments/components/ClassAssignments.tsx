@@ -23,6 +23,9 @@ export function ClassAssignments({ classId }: Props) {
       void state.select(id);
     });
   }
+  function duplicate() {
+    confirmDiscard(() => void state.duplicate());
+  }
   return (
     <>
       <p className="help">
@@ -125,7 +128,14 @@ export function ClassAssignments({ classId }: Props) {
               <p className="help">
                 Published, active assignments are available to enrolled students.
               </p>
+              <p className="help">
+                Duplicate as draft copies saved content into this class and opens a new editable
+                draft. Unsaved edits are not copied; the source is unchanged.
+              </p>
               <div className="action-row">
+                <button className="secondary" disabled={state.busy} onClick={duplicate}>
+                  Duplicate as draft
+                </button>
                 {!state.selected.publishedAt && (
                   <button
                     disabled={
