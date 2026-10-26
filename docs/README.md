@@ -20,6 +20,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Unsaved work protection](planning/unsaved-work-protection.md)
+- [Duplicate assignment](planning/duplicate-assignment.md)
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)

@@ -49,6 +49,14 @@ export function assignmentFixture() {
     update: jest.fn<ReturnType<AssignmentStore['update']>, Parameters<AssignmentStore['update']>>(
       async () => assignment,
     ),
+    duplicate: jest.fn<
+      ReturnType<AssignmentStore['duplicate']>,
+      Parameters<AssignmentStore['duplicate']>
+    >(async () => ({
+      ...assignment,
+      id: 'a4444444-4444-4444-8444-444444444444',
+      title: 'Copy of Conjunction assignment',
+    })),
     publish: jest.fn<
       ReturnType<AssignmentStore['publish']>,
       Parameters<AssignmentStore['publish']>
