@@ -13,10 +13,10 @@ Duplication reads saved state, not local unsaved edits. UI must use unsaved-work
 ## Small slices
 
 1. Persistence operation and PostgreSQL regression checks (implemented). Lock the source parent row to serialize the snapshot with edits/publication/archive. Create the complete draft atomically, including when invoked inside a demo workspace transaction. No HTTP endpoint or UI yet.
-2. Instructor-only POST endpoint with an empty action body, returning 201 and the existing assignment response. Reuse authorization, exact-origin, rate-limit, error and no-store policies, including scoped demo resources. Add handler/route/access checks.
+2. Instructor-only POST endpoint (implemented) with an empty action body, returning 201 and the existing assignment response. Reuse authorization, exact-origin, rate-limit, error and no-store policies, including scoped demo resources. Add handler/route/access checks.
 3. Duplicate as draft UI, opening the returned draft with dirty-editor protection, busy/error/recovery behavior and regression tests. Avoid silently issuing another duplicate after an uncertain response.
 4. Automated final verification, documentation and local PR draft. Manual browser QA remains in the dedicated QA branch.
 
 ## Verification boundaries
 
-Slice 1 should prove new IDs, saved content/policy/order including repeats, cleared publication/archive fields, unchanged source and student/financial data, owner scoping, coverage-independent draft creation, empty/long-title cases, source-lock serialization and transactional rollback. Subsequent slices verify HTTP/role/workspace boundaries and UI behavior. No database migration is required.
+Slice 1 should prove new IDs, saved content/policy/order including repeats, cleared publication/archive fields, unchanged source and student/financial data, owner scoping, coverage-independent draft creation, empty/long-title cases, source-lock serialization and transactional rollback. Slice 2 verifies HTTP/role/workspace boundaries, request strictness, no-store, errors and inherited rate limits. UI behavior remains the next slice. No database migration is required.

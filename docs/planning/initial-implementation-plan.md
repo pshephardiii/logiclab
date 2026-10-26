@@ -262,4 +262,4 @@ Current branch: `012-feat-unsaved-work-protection`, following the [small-slice p
 
 ## Current feature: 013-feat-duplicate-assignment
 
-Before the dedicated QA pass, implement same-class duplication into a fresh draft. Slice 1 adds the owner-scoped transactional persistence operation, saved-source locking and PostgreSQL coverage. No endpoint or UI exists in this slice. Follow the [small-slice plan](duplicate-assignment.md) for the API and editor integration; retain explicit saves, publication checks and unsaved-work protection. QA, audit and sandbox deployment remain subsequent work and will be renumbered.
+Before the dedicated QA pass, implement same-class duplication into a fresh draft. Slice 1 adds the owner-scoped transactional persistence operation, saved-source locking and PostgreSQL coverage. Slice 2 adds the instructor-only normal/demo duplication endpoint and HTTP/access regression checks. UI remains the next slice. Follow the [small-slice plan](duplicate-assignment.md) for editor integration; retain explicit saves, publication checks and unsaved-work protection. QA, audit and sandbox deployment remain subsequent work and will be renumbered.

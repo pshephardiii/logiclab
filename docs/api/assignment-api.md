@@ -95,3 +95,13 @@ Existing published assignments, student work, and instructor review remain avail
 ## Immediate-feedback policy support
 
 After applying `Migration20261023120000`, create/read/list/update/publication support `feedbackTiming: "immediate"` for completion-only and ungraded practice assignments. Graded policies remain on_submission. Defaults stay graded/on_submission/never. Omitted PATCH fields retain saved values; validate the merged policy under the assignment lock, rejecting invalid transitions without partial writes. Published policy remains immutable. Instructor draft controls now expose timing for non-graded work, preserve it between practice/completion modes, and reset it to submission-only for graded work. Published/archived fields remain disabled. Immediate student feedback is implemented with debounced transient checks; see the [student-work API](student-work-api.md).
+
+## Duplicate as draft
+
+`POST /api/assignments/:assignmentId/duplicate` accepts exactly `{}` and returns `201` with the existing `{ assignment }` response. The instructor must own the source through its class. Anonymous/student requests are rejected before storage; foreign/missing sources return the same 404. Existing exact-Origin, mutation rate-limit (10 requests per 15 minutes per IP for this route), no-store and sanitized-error handling apply. Demo resources expose the same operation at `/api/demo/resources/assignments/:assignmentId/duplicate` within the authenticated visitor workspace.
+
+The operation copies saved title/instructions, learning policy and ordered pinned problem references, including repeated occurrences, into the same class. The title starts with Copy of and stays within the existing length limit. Assignment/item IDs and timestamps are new; publication and archive fields are cleared. Draft, published and archived sources are allowed. Source contents, attempts/results and billing remain unchanged. An empty source produces an empty draft. Source locking serializes duplication with edit/publication/archive; the entire copy joins the owning transaction, including demo resources.
+
+Creating the copy needs no class coverage; later publication still enforces the ordinary coverage/content checks. Client-supplied target class, title, owner or item overrides are rejected. Every successful request creates another draft: no idempotency key or automatic retry is provided. After an uncertain response, inspect/reload the assignment list before deliberately trying again.
+
+This slice adds the backend endpoint only; Duplicate as draft UI and unsaved-editor confirmation follow separately. No migration is required.
