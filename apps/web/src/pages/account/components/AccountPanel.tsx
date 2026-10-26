@@ -1,3 +1,4 @@
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AccountForm } from './AccountForm';
 import type { useAccount, AccountView } from '../../../features/auth/hooks/useAccount';
 
@@ -15,6 +16,7 @@ const headings: Record<AccountView, string> = {
  * Composes account status, workflow navigation, and forms from provider-owned state.
  */
 export function AccountPanel({ account }: Props) {
+  const confirmDiscard = useConfirmDiscard();
   return (
     <>
       <section className="panel" aria-labelledby="account-heading" aria-busy={account.busy}>
@@ -31,7 +33,10 @@ export function AccountPanel({ account }: Props) {
             <p>
               Account role: <strong>{account.user.role}</strong>.
             </p>
-            <button disabled={account.busy} onClick={() => void account.run('logout', {})}>
+            <button
+              disabled={account.busy}
+              onClick={() => confirmDiscard(() => void account.run('logout', {}))}
+            >
               Sign out
             </button>
           </>

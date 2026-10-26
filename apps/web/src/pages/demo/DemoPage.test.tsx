@@ -1,10 +1,17 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { Routes, Route } from 'react-router';
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../test/unsaved-work';
+import { useUnsavedWork } from '../../features/unsaved-work/hooks/useUnsavedWork';
 import { test, expect, vi } from 'vitest';
 import { DemoPage } from './DemoPage';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 vi.mock('../../features/auth/AccountProvider', () => ({ useAccountContext: vi.fn() }));
-function fixture(active = false) {
+installDialogStub();
+function DirtyEditor() {
+  useUnsavedWork(true);
+  return null;
+}
+function fixture(active = false, dirty = false) {
   const run = vi.fn().mockResolvedValue(true);
   vi.mocked(useAccountContext).mockReturnValue({
     user: null,
@@ -12,13 +19,14 @@ function fixture(active = false) {
     demo: { session: active ? { user: { role: 'student' } } : null, busy: false, error: null, run },
   } as unknown as ReturnType<typeof useAccountContext>);
   render(
-    <MemoryRouter initialEntries={['/demo']}>
+    <>
+      {dirty && <DirtyEditor />}
       <Routes>
-        <Route path="/demo" element={<DemoPage />} />
+        <Route path="/" element={<DemoPage />} />
         <Route path="/demo/classes" element={<p>Instructor destination</p>} />
         <Route path="/demo/work" element={<p>Student destination</p>} />
       </Routes>
-    </MemoryRouter>,
+    </>,
   );
   return run;
 }
@@ -41,4 +49,39 @@ test('reset and logout are separate explicit actions', async () => {
   await waitFor(() => expect(run).toHaveBeenCalledWith('reset'));
   fireEvent.click(screen.getByRole('button', { name: 'End demo' }));
   await waitFor(() => expect(run).toHaveBeenCalledWith('logout'));
+});
+
+test.each([
+  ['Explore as instructor', 'role', 'instructor'],
+  ['Explore as student', 'role', 'student'],
+  ['Reset demo and discard changes', 'reset', undefined],
+  ['End demo', 'logout', undefined],
+] as const)(
+  '%s waits for consent and Stay never invokes the session action',
+  async (label, action, role) => {
+    const run = fixture(true, true);
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    await screen.findByRole('dialog');
+    expect(run).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+    expect(run).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    if (role) expect(run).toHaveBeenCalledWith(action, role);
+    else expect(run).toHaveBeenCalledWith(action);
+  },
+);
+
+test('a failed demo action does not navigate or grant a persistent discard bypass', async () => {
+  const run = fixture(true, true);
+  run.mockResolvedValue(false);
+  fireEvent.click(screen.getByRole('button', { name: 'Explore as instructor' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+  expect(screen.queryByText('Instructor destination')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'End demo' }));
+  await screen.findByRole('dialog');
+  expect(run).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
 });

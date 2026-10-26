@@ -21,15 +21,16 @@ const UnsavedWorkContext = createContext<UnsavedWorkContextValue | null>(null);
 
 /** Owns one navigation blocker for all registered editors; never stores or saves their data. */
 export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
+  const editorsRef = useRef(new Set<string>());
   const [editors, setEditors] = useState<ReadonlySet<string>>(new Set());
   const register = useCallback((id: string) => {
-    setEditors((previous) => new Set(previous).add(id));
-    return () =>
-      setEditors((previous) => {
-        const next = new Set(previous);
-        next.delete(id);
-        return next;
-      });
+    editorsRef.current.add(id);
+    setEditors(new Set(editorsRef.current));
+    return () => {
+      // Unregistration must be visible before a forced session redirect runs its effect.
+      editorsRef.current.delete(id);
+      setEditors(new Set(editorsRef.current));
+    };
   }, []);
   const [pending, setPending] = useState<LocalTransition | null>(null);
   const pendingRef = useRef<LocalTransition | null>(null);
@@ -47,16 +48,17 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
   const blocker = useBlocker(
     useCallback<BlockerFunction>(
       ({ currentLocation, nextLocation }) =>
-        dirty &&
+        editorsRef.current.size > 0 &&
         (currentLocation.pathname !== nextLocation.pathname ||
           currentLocation.search !== nextLocation.search),
-      [dirty],
+      [],
     ),
   );
 
   useEffect(() => {
     if (!dirty) return;
     function warnBeforeUnload(event: BeforeUnloadEvent) {
+      if (editorsRef.current.size === 0) return;
       event.preventDefault();
       event.returnValue = '';
     }
@@ -67,7 +69,7 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
   const confirm = useCallback(
     (owner: string, run: () => void) => {
       if (pendingRef.current || blocker.state !== 'unblocked') return;
-      if (!dirty) {
+      if (editorsRef.current.size === 0) {
         run();
         return;
       }
@@ -75,7 +77,7 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
       pendingRef.current = transition;
       setPending(transition);
     },
-    [dirty, blocker.state],
+    [blocker.state],
   );
   function discardLocalChanges() {
     const transition = pendingRef.current;

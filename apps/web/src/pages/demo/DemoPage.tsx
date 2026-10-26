@@ -1,3 +1,4 @@
+import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
 import './demo.css';
 import { useNavigate, Link } from 'react-router';
 import { Page } from '../../components/layout/Page';
@@ -7,6 +8,7 @@ import { useAccountContext } from '../../features/auth/AccountProvider';
 export function DemoPage() {
   const { demo } = useAccountContext();
   const navigate = useNavigate();
+  const confirmDiscard = useConfirmDiscard();
   async function explore(role: 'instructor' | 'student') {
     if (await demo.run(demo.session ? 'role' : 'start', role))
       navigate(role === 'instructor' ? '/demo/classes' : '/demo/work');
@@ -28,18 +30,27 @@ export function DemoPage() {
       {demo.busy && <p role="status">Updating demo…</p>}
       {demo.session && <p>Current demo role: {demo.session.user.role}</p>}
       <div className="demo-actions">
-        <button disabled={demo.busy} onClick={() => void explore('instructor')}>
+        <button
+          disabled={demo.busy}
+          onClick={() => confirmDiscard(() => void explore('instructor'))}
+        >
           Explore as instructor
         </button>
-        <button disabled={demo.busy} onClick={() => void explore('student')}>
+        <button disabled={demo.busy} onClick={() => confirmDiscard(() => void explore('student'))}>
           Explore as student
         </button>
         {demo.session && (
           <>
-            <button disabled={demo.busy} onClick={() => void demo.run('reset')}>
+            <button
+              disabled={demo.busy}
+              onClick={() => confirmDiscard(() => void demo.run('reset'))}
+            >
               Reset demo and discard changes
             </button>
-            <button disabled={demo.busy} onClick={() => void demo.run('logout')}>
+            <button
+              disabled={demo.busy}
+              onClick={() => confirmDiscard(() => void demo.run('logout'))}
+            >
               End demo
             </button>
           </>
