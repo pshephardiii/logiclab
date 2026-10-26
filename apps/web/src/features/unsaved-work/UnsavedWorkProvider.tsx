@@ -1,9 +1,23 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useBlocker, type BlockerFunction } from 'react-router';
 import { DiscardChangesDialog } from './components/DiscardChangesDialog';
 
 type RegisterDirtyWork = (id: string) => () => void;
-const UnsavedWorkContext = createContext<RegisterDirtyWork | null>(null);
+type LocalTransition = { owner: string; run: () => void };
+type UnsavedWorkContextValue = {
+  register: RegisterDirtyWork;
+  confirm: (owner: string, run: () => void) => void;
+  cancel: (owner: string) => void;
+};
+const UnsavedWorkContext = createContext<UnsavedWorkContextValue | null>(null);
 
 /** Owns one navigation blocker for all registered editors; never stores or saves their data. */
 export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
@@ -17,6 +31,18 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
         return next;
       });
   }, []);
+  const [pending, setPending] = useState<LocalTransition | null>(null);
+  const pendingRef = useRef<LocalTransition | null>(null);
+  const clearPending = useCallback(() => {
+    pendingRef.current = null;
+    setPending(null);
+  }, []);
+  const cancel = useCallback(
+    (owner: string) => {
+      if (pendingRef.current?.owner === owner) clearPending();
+    },
+    [clearPending],
+  );
   const dirty = editors.size > 0;
   const blocker = useBlocker(
     useCallback<BlockerFunction>(
@@ -38,14 +64,41 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('beforeunload', warnBeforeUnload);
   }, [dirty]);
 
+  const confirm = useCallback(
+    (owner: string, run: () => void) => {
+      if (pendingRef.current || blocker.state !== 'unblocked') return;
+      if (!dirty) {
+        run();
+        return;
+      }
+      const transition = { owner, run };
+      pendingRef.current = transition;
+      setPending(transition);
+    },
+    [dirty, blocker.state],
+  );
+  function discardLocalChanges() {
+    const transition = pendingRef.current;
+    clearPending();
+    transition?.run();
+  }
+
+  useEffect(() => {
+    // Prefer a router transition over a stale local action; never keep two confirmations alive.
+    if (!dirty || blocker.state !== 'unblocked') clearPending();
+  }, [dirty, blocker.state, clearPending]);
+
   // Saving while a confirmation is open must not leave a stale pending navigation.
   useEffect(() => {
     if (!dirty && blocker.state === 'blocked') blocker.reset();
   }, [dirty, blocker]);
 
   return (
-    <UnsavedWorkContext.Provider value={register}>
+    <UnsavedWorkContext.Provider value={{ register, confirm, cancel }}>
       {children}
+      {dirty && pending && blocker.state === 'unblocked' && (
+        <DiscardChangesDialog onStay={clearPending} onDiscard={discardLocalChanges} />
+      )}
       {dirty && blocker.state === 'blocked' && (
         <DiscardChangesDialog onStay={blocker.reset} onDiscard={blocker.proceed} />
       )}
@@ -56,5 +109,11 @@ export function UnsavedWorkProvider({ children }: { children: ReactNode }) {
 export function useDirtyWorkRegistration() {
   const register = useContext(UnsavedWorkContext);
   if (!register) throw new Error('UnsavedWorkProvider is required.');
-  return register;
+  return register.register;
+}
+
+export function useDiscardConfirmationContext() {
+  const context = useContext(UnsavedWorkContext);
+  if (!context) throw new Error('UnsavedWorkProvider is required.');
+  return context;
 }

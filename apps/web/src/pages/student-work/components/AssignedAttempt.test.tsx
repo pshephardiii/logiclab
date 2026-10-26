@@ -1,5 +1,6 @@
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
 import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import * as api from '../../../api/student-work/api';
@@ -12,6 +13,8 @@ import {
   solution,
 } from '../../../../test/assignment-work-fixture';
 import { AssignedAttempt } from './AssignedAttempt';
+
+installDialogStub();
 
 vi.mock('../../../api/student-work/api', () => ({
   readAssignedWork: vi.fn(),
@@ -300,6 +303,7 @@ test('failed checks preserve entries and can be retried, while reload cancels ou
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
   expect(signal.aborted).toBe(true);
   await act(async () =>
@@ -327,4 +331,50 @@ test('immediate work keeps blanks neutral and manual checking available without 
   expect(api.submitAssignedWork).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   expect(cells()[0]).toHaveValue('');
+});
+
+test('dirty reload requires permission; Stay preserves answers and failed reload keeps protection', async () => {
+  const { user } = await open();
+  await user.selectOptions(cells()[0]!, 'F');
+  const before = vi.mocked(api.readAssignedWork).mock.calls.length;
+  const reload = () =>
+    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' });
+  await user.click(reload());
+  await screen.findByRole('dialog');
+  expect(api.readAssignedWork).toHaveBeenCalledTimes(before);
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(cells()[0]).toHaveValue('F');
+  vi.mocked(api.readAssignedWork).mockRejectedValueOnce(new Error('Reload unavailable'));
+  await user.click(reload());
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByRole('button', { name: 'Retry assigned work' });
+  const unload = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(unload);
+  expect(unload.defaultPrevented).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Retry assigned work' }));
+  await screen.findByRole('dialog');
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(api.readAssignedWork).toHaveBeenCalledTimes(before + 1);
+});
+
+test('saved and reverted answers clear protection, while a failed save retains it', async () => {
+  const { user } = await open();
+  function protectedWork() {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  expect(protectedWork()).toBe(false);
+  await user.selectOptions(cells()[0]!, 'F');
+  expect(protectedWork()).toBe(true);
+  await user.selectOptions(cells()[0]!, '');
+  expect(protectedWork()).toBe(false);
+  await user.selectOptions(cells()[0]!, 'F');
+  vi.mocked(api.saveAssignedAnswers).mockRejectedValueOnce(new Error('Save unavailable'));
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByRole('alert');
+  expect(protectedWork()).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 1 saved.');
+  await waitFor(() => expect(protectedWork()).toBe(false));
 });

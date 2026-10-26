@@ -23,7 +23,7 @@ export function DiscardChangesDialog({ onStay, onDiscard }: Props) {
       }}
     >
       <h2 id="discard-changes-title">Discard unsaved changes?</h2>
-      <p id="discard-changes-description">Leaving this page will discard your unsaved changes.</p>
+      <p id="discard-changes-description">Continuing will discard your unsaved changes.</p>
       <div className="action-row">
         <button autoFocus onClick={onStay}>
           Stay

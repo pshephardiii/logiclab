@@ -1,39 +1,14 @@
+import { useConfirmDiscard } from './hooks/useConfirmDiscard';
+import { installDialogStub } from '../../../test/unsaved-work';
 import { StrictMode, useState } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, Link, RouterProvider, useLocation } from 'react-router';
-import { beforeAll, afterAll, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 import { UnsavedWorkProvider } from './UnsavedWorkProvider';
 import { useUnsavedWork } from './hooks/useUnsavedWork';
 
-// jsdom does not implement native modal behavior; browser focus handling is separate QA.
-const originalModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
-const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
-beforeAll(() => {
-  Object.defineProperties(HTMLDialogElement.prototype, {
-    showModal: {
-      configurable: true,
-      value: function (this: HTMLDialogElement) {
-        this.setAttribute('open', '');
-      },
-    },
-    close: {
-      configurable: true,
-      value: function (this: HTMLDialogElement) {
-        this.removeAttribute('open');
-      },
-    },
-  });
-});
-afterAll(() => {
-  for (const [name, descriptor] of [
-    ['showModal', originalModal],
-    ['close', originalClose],
-  ] as const) {
-    if (descriptor) Object.defineProperty(HTMLDialogElement.prototype, name, descriptor);
-    else Reflect.deleteProperty(HTMLDialogElement.prototype, name);
-  }
-});
+installDialogStub();
 function Editor({ label }: { label: string }) {
   const [dirty, setDirty] = useState(false);
   useUnsavedWork(dirty);
@@ -44,9 +19,16 @@ function Editor({ label }: { label: string }) {
     </label>
   );
 }
+function LocalAction({ onRun }: { onRun: () => void }) {
+  const confirm = useConfirmDiscard();
+  return <button onClick={() => confirm(onRun)}>Replace local work</button>;
+}
+
 function Screen() {
   const location = useLocation();
   const [second, setSecond] = useState(true);
+  const [owner, setOwner] = useState(true);
+  const [actions, setActions] = useState(0);
   return (
     <>
       <p data-testid="location">
@@ -54,6 +36,9 @@ function Screen() {
         {location.search}
         {location.hash}
       </p>
+      <p>Local actions: {actions}</p>
+      {owner && <LocalAction onRun={() => setActions((value) => value + 1)} />}
+      <button onClick={() => setOwner(false)}>Remove local owner</button>
       <Editor label="First editor dirty" />
       {second && <Editor label="Second editor dirty" />}
       <button onClick={() => setSecond(false)}>Remove second editor</button>
@@ -156,4 +141,30 @@ test('becoming clean while blocked dismisses the prompt without silently navigat
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByTestId('location')).toHaveTextContent('/edit');
   expect(unload()).toBe(false);
+});
+
+test('local discard executes once and leaves subsequent changes protected', async () => {
+  const { user } = setup();
+  await user.click(screen.getByLabelText('First editor dirty'));
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByText('Local actions: 1')).toBeInTheDocument();
+  await user.click(screen.getByRole('link', { name: 'Next page' }));
+  await screen.findByRole('dialog');
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(unload()).toBe(true);
+});
+
+test('unmounting a local action owner cancels its pending callback', async () => {
+  const { user } = setup();
+  await user.click(screen.getByLabelText('First editor dirty'));
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  await screen.findByRole('dialog');
+  fireEvent.click(screen.getByRole('button', { name: 'Remove local owner' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
+  expect(unload()).toBe(true);
 });

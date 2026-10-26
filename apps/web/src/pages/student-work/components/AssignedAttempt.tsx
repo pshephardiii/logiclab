@@ -1,3 +1,5 @@
+import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
@@ -7,6 +9,8 @@ import { SubmissionSummary } from '../../../features/assignment/components/Submi
 /** Explicit item saves precede the irreversible final-submission confirmation. */
 export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const work = useAssignedAttempt(assignmentId);
+  useUnsavedWork(work.dirty.length > 0 && !work.attempt?.submittedAt);
+  const confirmDiscard = useConfirmDiscard();
   const [position, setPosition] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
   if (work.loading) return <p role="status">Loading assigned work…</p>;
@@ -16,7 +20,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         <p role="alert" className="error">
           {work.error}
         </p>
-        <button onClick={() => void work.load()}>Retry assigned work</button>
+        <button onClick={() => confirmDiscard(() => void work.load())}>Retry assigned work</button>
       </section>
     );
   const item = work.assignment.items[position] ?? work.assignment.items[0];
@@ -25,9 +29,11 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const submissionBlocked =
     busy || work.dirty.length > 0 || (work.requiresCompleteAnswers && !work.completionReady);
   function reload() {
-    setConfirmed(false);
-    setPosition(0);
-    void work.load();
+    confirmDiscard(() => {
+      setConfirmed(false);
+      setPosition(0);
+      void work.load();
+    });
   }
   function changeItem(index: number) {
     work.cancelCheck();
