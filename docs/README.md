@@ -57,6 +57,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Unsaved work protection](verification/unsaved-work-protection-verification.md)
+
 - [Immediate answer feedback](verification/immediate-answer-feedback-verification.md)
 
 - [Assignment learning modes](verification/assignment-learning-modes-verification.md)

@@ -13,7 +13,7 @@ Only dirty editors register protection. Successful saves or a return to the save
 1. Shared foundation (implemented): dirty registration hook, one route blocker, native confirmation dialog, beforeunload cleanup, and data-router browser entry point. Tests cover clean navigation, Stay/discard/Escape, multiple registrations, unmount cleanup, Back, query navigation, hash-only navigation and becoming clean during a prompt. Student and instructor editor integration are implemented in slices 2 and 3.
 2. Student integration (implemented): register unsaved answers and protect same-page class/assignment changes and reload. Keep pending checks, saves, dirty baselines and final confirmation consistent. Explicit discard must authorize only the intended transition, with no persistent bypass.
 3. Instructor integration (implemented): assignment and library drafts, same-page selections, published/read-only exclusions, failed-save retention and action controls.
-4. Session/demo actions (implemented) and final verification (pending): deliberate logout/role/reset controls, cancellation/failure behavior, browser focus/keyboard and unload checks, documentation and local PR draft.
+4. Session/demo actions (implemented) and automated final verification (complete; manual QA deferred): deliberate logout/role/reset controls, cancellation/failure behavior, browser focus/keyboard and unload checks, documentation and local PR draft.
 
 Keep each slice small and reviewable; adjust the sequence if shared same-page confirmation belongs in its own slice.
 
@@ -39,7 +39,7 @@ Assignment drafts register existing field/item/policy dirty state. Confirm befor
 
 Problem-library drafts register title/instructions/formula dirty state. Confirm before New problem or selecting/reselecting a problem. A published version is an immutable snapshot, but its source problem draft remains editable and protected; publication does not make the draft read-only. Archived drafts remain excluded. Previews, list reloads, filters and pagination preserve the open editor and therefore do not prompt.
 
-Successful saves or reverted edits clear dirty protection; failed saves preserve input and protection. Tests cover class cancellation, discard during pending save with late-result isolation, selection/new/reload confirmation, failed/successful saves, retained edits during list operations, one-transition discard, read-only assignment exclusions, problem preview retention, and reverted problem edits. Native browser focus/unload behavior and session/demo controls remain for the next slice and final verification.
+Successful saves or reverted edits clear dirty protection; failed saves preserve input and protection. Tests cover class cancellation, discard during pending save with late-result isolation, selection/new/reload confirmation, failed/successful saves, retained edits during list operations, one-transition discard, read-only assignment exclusions, problem preview retention, and reverted problem edits. Session/demo controls are implemented below. Native browser focus/unload behavior remains for the dedicated QA branch.
 
 ## Deliberate session actions
 
@@ -47,4 +47,8 @@ Sign out and demo start/role/reset/end controls confirm before invoking the sess
 
 Forced session expiry, rejected credentials and role denial remain authoritative; the UI never waits for permission to enforce access. Dirty registrations update a synchronous registry as well as rendered state, so unmounting a protected editor removes its blocker before a session redirect effect runs. Tests cover forced expiry with and without an already-open confirmation, and successful/failed deliberate actions with fresh-consent behavior.
 
-The shared confirmation grants one callback permission; it neither saves data nor suppresses future route warnings. Session reconciliation remains in the existing account/demo hooks. Real-browser modal focus, unload behavior, full branch checks and the PR draft remain final-verification work.
+The shared confirmation grants one callback permission; it neither saves data nor suppresses future route warnings. Session reconciliation remains in the existing account/demo hooks. Full branch automated checks and the local PR draft are complete; see [verification evidence](../verification/unsaved-work-protection-verification.md). Real-browser modal focus and unload behavior are explicitly deferred to the QA branch at the developer’s request.
+
+## Next branches
+
+Continue with `013-test-demo-qa`, then `014-refactor-demo-audit`, followed by `015-chore-demo-deployment`. Manual QA is intentionally pending; automated verification does not certify a hosted release.
