@@ -1,9 +1,12 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type { ProblemDraft, PublishedProblemVersion } from '@logiclab/contracts';
 import * as api from '../../../api/problems/api';
 import { ProblemLibrary } from './ProblemLibrary';
+
+installDialogStub();
 
 vi.mock('../../../api/problems/api', () => ({
   listProblems: vi.fn(),
@@ -39,6 +42,12 @@ beforeEach(() => {
   vi.mocked(api.listVersions).mockResolvedValue({ versions: [version], nextOffset: null });
   vi.mocked(api.publishProblem).mockResolvedValue({ ...version, version: 2 });
 });
+function protectedWork() {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
 async function openDraft() {
   const user = userEvent.setup();
   render(<ProblemLibrary />);
@@ -57,6 +66,7 @@ test('failed edits retain input; saving uses the selected ID and publishing uses
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Try again');
   expect(title).toHaveValue('Revised');
+  expect(protectedWork()).toBe(true);
   vi.mocked(api.saveProblem).mockResolvedValue({
     ...draft,
     title: 'Revised',
@@ -71,6 +81,7 @@ test('failed edits retain input; saving uses the selected ID and publishing uses
     expect.any(AbortSignal),
     draft.id,
   );
+  await waitFor(() => expect(protectedWork()).toBe(false));
   await user.click(screen.getByRole('button', { name: 'Publish saved draft' }));
   expect(await screen.findByText('Published version 2.')).toBeInTheDocument();
   expect(api.publishProblem).toHaveBeenCalledTimes(1);
@@ -90,6 +101,7 @@ test('archiving preserves history and restoring re-enables editing', async () =>
   await user.click(screen.getByRole('button', { name: 'Archive problem' }));
   await screen.findByRole('button', { name: 'Restore problem' });
   expect(screen.getByLabelText('Title')).toBeDisabled();
+  expect(protectedWork()).toBe(false);
   expect(screen.getByRole('button', { name: 'Publish saved draft' })).toBeDisabled();
   expect(screen.getByRole('heading', { name: 'Version 1: Original snapshot' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Restore problem' }));
@@ -165,4 +177,48 @@ test('library and version pagination append results and stop on the last page', 
   ).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Version 2: Original snapshot' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Load more versions' })).not.toBeInTheDocument();
+});
+
+test.each(['New problem', 'Second problem', 'Conjunction'])(
+  '%s asks before replacing a dirty problem draft and leaves it intact on Stay',
+  async (selection) => {
+    const second = {
+      ...draft,
+      id: '33333333-3333-4333-8333-333333333333',
+      title: 'Second problem',
+    };
+    vi.mocked(api.listProblems).mockResolvedValue({ problems: [draft, second], nextOffset: null });
+    const user = await openDraft();
+    await user.type(screen.getByLabelText('Formula'), ' & R');
+    await user.click(screen.getByRole('button', { name: selection }));
+    await screen.findByRole('dialog');
+    await user.click(screen.getByRole('button', { name: 'Stay' }));
+    expect(screen.getByLabelText('Formula')).toHaveValue('P & Q & R');
+    // List/filter/preview operations preserve the editor and do not ask to discard.
+    await user.click(screen.getByRole('button', { name: 'Reload problems' }));
+    await user.selectOptions(screen.getByLabelText('Show problems'), 'all');
+    await user.click(screen.getByRole('button', { name: 'Preview draft' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Preview formula: P & Q & R')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: selection }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(screen.getByLabelText('Formula')).toHaveValue(
+      selection === 'New problem' ? '' : 'P & Q',
+    );
+    expect(screen.queryByText('Preview formula: P & Q & R')).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Formula'), 'P');
+    await user.click(screen.getByRole('button', { name: 'New problem' }));
+    await screen.findByRole('dialog');
+    await user.click(screen.getByRole('button', { name: 'Stay' }));
+  },
+);
+
+test('reverting problem edits removes protection without saving', async () => {
+  const user = await openDraft();
+  await user.type(screen.getByLabelText('Formula'), ' & R');
+  expect(protectedWork()).toBe(true);
+  await user.clear(screen.getByLabelText('Formula'));
+  await user.type(screen.getByLabelText('Formula'), draft.definition.formula);
+  await waitFor(() => expect(protectedWork()).toBe(false));
+  expect(api.saveProblem).not.toHaveBeenCalled();
 });

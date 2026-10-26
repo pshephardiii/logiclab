@@ -1,6 +1,6 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../test/unsaved-work';
+import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type { AssignmentDetail, ClassroomSummary } from '@logiclab/contracts';
 import { useAccountContext } from '../../features/auth/AccountProvider';
@@ -8,6 +8,8 @@ import * as api from '../../api/assignments/api';
 import { listClassrooms } from '../../api/classrooms/api';
 import { listProblems } from '../../api/problems/api';
 import { InstructorAssignmentsPage } from './InstructorAssignmentsPage';
+
+installDialogStub();
 
 vi.mock('../../features/auth/AccountProvider', () => ({ useAccountContext: vi.fn() }));
 vi.mock('../../api/assignments/api', () => ({
@@ -50,17 +52,14 @@ test('changing classes aborts a pending save and prevents its late result appear
       }),
   );
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <InstructorAssignmentsPage />
-    </MemoryRouter>,
-  );
+  render(<InstructorAssignmentsPage />);
   await screen.findByRole('option', { name: 'First class' });
   await user.selectOptions(screen.getByLabelText('Class'), first.id);
   await user.type(screen.getByLabelText('Assignment title'), 'Old class work');
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
   const signal = vi.mocked(api.createAssignment).mock.calls[0]![2];
   await user.selectOptions(screen.getByLabelText('Class'), second.id);
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(signal.aborted).toBe(true);
   await act(async () =>
     resolve({
@@ -94,11 +93,7 @@ test('owned-class pagination and failure retry expose later class choices', asyn
     .mockResolvedValueOnce({ classrooms: [first], nextOffset: 20 })
     .mockResolvedValueOnce({ classrooms: [second], nextOffset: null });
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <InstructorAssignmentsPage />
-    </MemoryRouter>,
-  );
+  render(<InstructorAssignmentsPage />);
   await user.click(await screen.findByRole('button', { name: 'Retry classes' }));
   await user.click(await screen.findByRole('button', { name: 'Load more classes' }));
   await screen.findByRole('option', { name: 'Second class' });
@@ -113,3 +108,87 @@ test('owned-class pagination and failure retry expose later class choices', asyn
     ),
   );
 });
+
+const draft: AssignmentDetail = {
+  id: '33333333-3333-4333-8333-333333333333',
+  classId: first.id,
+  title: 'Draft one',
+  instructions: null,
+  assessmentMode: 'graded',
+  feedbackTiming: 'on_submission',
+  solutionAccess: 'never',
+  publishedAt: null,
+  archivedAt: null,
+  createdAt: time,
+  updatedAt: time,
+  items: [],
+};
+function protectedWork() {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
+test('instructor drafts protect class changes, new selection and reload; failed saves retain protection', async () => {
+  vi.mocked(api.listAssignments).mockResolvedValue({ assignments: [draft], nextOffset: null });
+  vi.mocked(api.getAssignment).mockResolvedValue(draft);
+  const user = userEvent.setup();
+  render(<InstructorAssignmentsPage />);
+  await screen.findByRole('option', { name: first.name });
+  await user.selectOptions(screen.getByLabelText('Class'), first.id);
+  await user.click(await screen.findByRole('button', { name: 'Draft one (draft)' }));
+  await screen.findByRole('heading', { name: 'Edit assignment draft' });
+  await user.type(screen.getByLabelText('Assignment title'), ' edited');
+  expect(protectedWork()).toBe(true);
+  expect(screen.getByRole('button', { name: 'Archive assignment' })).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Class'), second.id);
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Class')).toHaveValue(first.id);
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Draft one edited');
+  await user.click(screen.getByRole('button', { name: 'New assignment' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Draft one edited');
+  // List refresh and filters do not replace the editor or discard its edits.
+  await user.click(screen.getByRole('button', { name: 'Reload assignments' }));
+  await user.selectOptions(screen.getByLabelText('Show assignments'), 'all');
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Draft one edited');
+  vi.mocked(api.updateAssignment).mockRejectedValueOnce(new Error('Save unavailable'));
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await screen.findByRole('alert');
+  expect(protectedWork()).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Reload saved assignment' }));
+  expect(api.getAssignment).toHaveBeenCalledTimes(1);
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByRole('heading', { name: 'Edit assignment draft' });
+  expect(screen.getByLabelText('Assignment title')).toHaveValue(draft.title);
+  await waitFor(() => expect(protectedWork()).toBe(false));
+  await user.type(screen.getByLabelText('Assignment title'), ' saved');
+  vi.mocked(api.updateAssignment).mockResolvedValue({ ...draft, title: 'Draft one saved' });
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await screen.findByText('Assignment draft saved.');
+  await waitFor(() => expect(protectedWork()).toBe(false));
+});
+
+test.each(['publishedAt', 'archivedAt'] as const)(
+  '%s assignments stay read-only without an unsaved warning',
+  async (field) => {
+    const locked = { ...draft, [field]: time };
+    vi.mocked(api.listAssignments).mockResolvedValue({ assignments: [locked], nextOffset: null });
+    vi.mocked(api.getAssignment).mockResolvedValue(locked);
+    const user = userEvent.setup();
+    render(<InstructorAssignmentsPage />);
+    await screen.findByRole('option', { name: first.name });
+    await user.selectOptions(screen.getByLabelText('Class'), first.id);
+    await user.click(
+      await screen.findByRole('button', {
+        name: field === 'publishedAt' ? 'Draft one (published)' : 'Draft one (archived)',
+      }),
+    );
+    await screen.findByRole('heading', { name: 'Saved assignment' });
+    expect(screen.getByLabelText('Assignment title')).toBeDisabled();
+    expect(protectedWork()).toBe(false);
+    await user.click(screen.getByRole('button', { name: 'New assignment' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  },
+);

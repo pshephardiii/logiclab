@@ -1,3 +1,4 @@
+import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useState } from 'react';
 import { Page } from '../../components/layout/Page';
 import { useAccountContext } from '../../features/auth/AccountProvider';
@@ -7,6 +8,7 @@ import './instructor-assignments.css';
 
 function InstructorAssignments() {
   const [classId, setClassId] = useState('');
+  const confirmDiscard = useConfirmDiscard();
   return (
     <>
       <header>
@@ -17,7 +19,12 @@ function InstructorAssignments() {
           content and policy.
         </p>
       </header>
-      <ClassSelector value={classId} onChange={setClassId} />
+      <ClassSelector
+        value={classId}
+        onChange={(id) => {
+          if (id !== classId) confirmDiscard(() => setClassId(id));
+        }}
+      />
       {classId && <ClassAssignments key={classId} classId={classId} />}
     </>
   );

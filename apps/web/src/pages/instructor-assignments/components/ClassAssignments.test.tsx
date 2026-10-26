@@ -1,6 +1,6 @@
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
 import * as reviews from '../../../api/submission-review/api';
-import { MemoryRouter } from 'react-router';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type {
@@ -12,6 +12,8 @@ import type {
 import * as api from '../../../api/assignments/api';
 import * as library from '../../../api/problems/api';
 import { ClassAssignments } from './ClassAssignments';
+
+installDialogStub();
 
 vi.mock('../../../api/submission-review/api', () => ({
   listSubmissions: vi.fn(),
@@ -79,11 +81,7 @@ beforeEach(() => {
 });
 async function openDraft() {
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <ClassAssignments classId={classId} />
-    </MemoryRouter>,
-  );
+  render(<ClassAssignments classId={classId} />);
   await user.click(await screen.findByRole('button', { name: 'Homework (draft)' }));
   await screen.findByDisplayValue('Homework');
   return user;
@@ -146,11 +144,7 @@ test('repeated publications are distinct occurrences and ordering/removal contro
 
 test('creates a class-scoped empty draft, preserves solution policy, and disables empty publication', async () => {
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <ClassAssignments classId={classId} />
-    </MemoryRouter>,
-  );
+  render(<ClassAssignments classId={classId} />);
   await user.type(screen.getByLabelText('Assignment title'), 'Empty draft');
   await user.selectOptions(screen.getByLabelText('Solution access'), 'after_submission');
   vi.mocked(api.createAssignment).mockResolvedValue({
@@ -176,11 +170,7 @@ test('creates a class-scoped empty draft, preserves solution policy, and disable
 test('archive and restore retain publication locks and immutable item content', async () => {
   vi.mocked(api.getAssignment).mockResolvedValue({ ...assignment, publishedAt: time });
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <ClassAssignments classId={classId} />
-    </MemoryRouter>,
-  );
+  render(<ClassAssignments classId={classId} />);
   await user.click(await screen.findByRole('button', { name: 'Homework (draft)' }));
   await screen.findByRole('heading', { name: 'Saved assignment' });
   vi.mocked(api.assignmentAction)
@@ -200,11 +190,7 @@ test('failed detail reads offer retry rather than allowing a mistaken create', a
     .mockRejectedValueOnce(new Error('Read unavailable'))
     .mockResolvedValueOnce(assignment);
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <ClassAssignments classId={classId} />
-    </MemoryRouter>,
-  );
+  render(<ClassAssignments classId={classId} />);
   await user.click(await screen.findByRole('button', { name: 'Homework (draft)' }));
   await screen.findByRole('button', { name: 'Retry assignment' });
   expect(screen.queryByRole('button', { name: 'Save assignment draft' })).not.toBeInTheDocument();
@@ -222,11 +208,7 @@ test('assignment pagination stops at the last page and filter changes ignore lat
     .mockResolvedValueOnce({ assignments: [summary], nextOffset: 20 })
     .mockResolvedValueOnce({ assignments: [other], nextOffset: null });
   const user = userEvent.setup();
-  render(
-    <MemoryRouter>
-      <ClassAssignments classId={classId} />
-    </MemoryRouter>,
-  );
+  render(<ClassAssignments classId={classId} />);
   await user.click(await screen.findByRole('button', { name: 'Load more assignments' }));
   await screen.findByRole('button', { name: 'Other (draft)' });
   expect(screen.queryByRole('button', { name: 'Load more assignments' })).not.toBeInTheDocument();

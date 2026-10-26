@@ -1,3 +1,5 @@
+import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useState } from 'react';
 import type { ProblemArchiveFilter } from '@logiclab/contracts';
 import { useProblemLibrary } from '../hooks/useProblemLibrary';
@@ -10,16 +12,20 @@ import '../problem-library.css';
 export function ProblemLibrary() {
   const library = useProblemLibrary();
   const [dirty, setDirty] = useState(false);
+  useUnsavedWork(dirty && !library.selected?.archivedAt);
+  const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
   const [preview, setPreview] = useState<{ formula: string; key: number } | null>(null);
   function showPreview(formula: string) {
     setPreview((previous) => ({ formula, key: (previous?.key ?? 0) + 1 }));
   }
   function select(problem: typeof library.selected) {
-    library.setSelected(problem);
-    setDirty(false);
-    setEditorKey((value) => value + 1);
-    setPreview(null);
+    confirmDiscard(() => {
+      library.setSelected(problem);
+      setDirty(false);
+      setEditorKey((value) => value + 1);
+      setPreview(null);
+    });
   }
   return (
     <>
@@ -89,8 +95,8 @@ export function ProblemLibrary() {
       </section>
       {dirty && (
         <p className="help">
-          Unsaved edits: save before publishing or archiving. Switching problems discards these
-          edits.
+          Unsaved edits: save before publishing or archiving. Switching problems asks before
+          discarding these edits.
         </p>
       )}
       <ProblemForm
