@@ -258,4 +258,4 @@ Next: `011-feat-immediate-answer-feedback`, following the small slices in [assig
 
 Immediate feedback now supports instructor authoring, persisted policies, authorized transient checks, debounced student feedback, cancellation and manual retries, and resettable demo template 3. Final automated and focused local Chrome checks passed; see [verification evidence](../verification/immediate-answer-feedback-verification.md). Apply the additive migration before rollout; rollback cannot discard active immediate policies.
 
-Next are `012-test-demo-qa`, `013-refactor-demo-audit`, and `014-chore-demo-deployment`. Do not treat focused feature verification as exhaustive demo QA or a hosted release.
+Current branch: `012-feat-unsaved-work-protection`, following the [small-slice plan](unsaved-work-protection.md). Slice 1 adds the shared registration/dialog/navigation foundation; editor integration follows. Dedicated demo QA, the code audit and sandbox deployment remain subsequent branches and will be renumbered. Do not treat focused feature verification as exhaustive demo QA or a hosted release.
