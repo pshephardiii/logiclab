@@ -58,6 +58,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Duplicate assignment](verification/duplicate-assignment-verification.md)
+
 - [Unsaved work protection](verification/unsaved-work-protection-verification.md)
 
 - [Immediate answer feedback](verification/immediate-answer-feedback-verification.md)

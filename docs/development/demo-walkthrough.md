@@ -13,6 +13,8 @@ Choose **Explore as instructor**. Under **Classes**, find:
 
 Open **Problem library** to inspect **Implication and disjunction**. It has an editable draft and an immutable published version. Its formula is `(P -> Q) & (!P | Q)`. Open **Assignments**, select the funded class, and inspect **Your first truth-table assignment**. The assignment pins a published version rather than following future draft edits.
 
+You can also choose **Duplicate as draft** on the saved assignment. The new copy is editable, keeps the same ordered problem publications and learning settings, and has no student submissions or publication timestamp. Leave it as a draft and use the original assignment for the rest of this tour. If you have unsaved edits, Stay retains them; Discard permits copying saved content rather than those edits.
+
 This demonstrates reusable content, versioning, and class-scoped publication.
 
 ## 2. Complete the same assignment as a student
