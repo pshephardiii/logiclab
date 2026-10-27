@@ -33,6 +33,8 @@ Documentation is grouped by purpose:
 
 ## Development setup
 
+- [Dependency installation and script approvals](development/dependency-installation.md)
+
 - [Local database and DBeaver](development/local-database.md)
 - [Cognito development](development/cognito-development.md)
 - [Simulated billing development](development/simulated-billing.md)

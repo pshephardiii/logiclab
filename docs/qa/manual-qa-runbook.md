@@ -36,7 +36,7 @@ Use separate browser **profiles** for A and B. Incognito windows in the same bro
 ### SET-01 — Prepare an isolated QA database
 
 1. From the repository root, run `git branch --show-current` and `git status --short`. Record the branch and `git rev-parse --short HEAD` in the run record. Do not discard unrelated local changes.
-2. Run `node --version`, `npm --version`, and `docker compose version`. Use the repository-required Node 24.9+ and npm 10+; start Docker Desktop if needed.
+2. Run `node --version`, `npm --version`, and `docker compose version`. Use the repository-required Node 24.9+ and npm 11.19.0+; start Docker Desktop if needed.
 3. Keep the existing ignored `.env`; do not overwrite it with `.env.example`. Record which settings you will change in private local notes.
 4. Run `npm run db:up`.
 5. Connect DBeaver to the local server as described in [local database setup](../development/local-database.md). Create a new database named `logiclab_qa` using its Create Database action. If it already contains data, inspect it first; do not drop or truncate it.
@@ -51,7 +51,7 @@ Use separate browser **profiles** for A and B. Incognito windows in the same bro
 
 1. In the ignored root `.env`, set `DEMO_ENABLED=true`, `APP_ORIGIN=http://localhost:5173`, `AUTH_ENABLED=false`, and `BILLING_ENABLED=false`.
 2. Leave normal lifetime/capacity defaults for the main pass. Demo billing works through its isolated runtime even with normal billing disabled.
-3. Run `npm ci` only if dependencies need installing; then run `npm run dev` from the repository root and leave that terminal open.
+3. Run `npm ci` only if dependencies need installing. If strict script approval fails, follow the [reviewed installation policy](../development/dependency-installation.md), not a blanket approval; then run `npm run dev` from the repository root and leave that terminal open.
 4. Open `http://localhost:5173/` in profile A. If Vite selects a different port, stop the old conflicting process and restore 5173; do not casually change the origin while testing cookies.
 5. Open `http://localhost:5173/api/health` in another tab.
 6. Open DevTools Console and Network in the application tab. Clear old entries; enable Preserve log when examining navigation failures.

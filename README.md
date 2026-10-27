@@ -16,12 +16,14 @@ See the [truth-table walkthrough, screenshots, and verification evidence](docs/v
 
 ## Local setup
 
-Use Node.js 24.9 or newer (see `.nvmrc`) and npm 10 or newer. If you use nvm, run `nvm install` and `nvm use` from the repository root.
+Use Node.js 24.9 or newer (see `.nvmrc`) and npm 11.19.0 or newer. If you use nvm, run `nvm install` and `nvm use` from the repository root.
 
 ```sh
 npm ci
 npm run dev
 ```
+
+Dependency install scripts use an explicit reviewed policy with strict enforcement; see [dependency installation](docs/development/dependency-installation.md) before approving a new script.
 
 Open http://localhost:5173 and select **Create table** to load the example formula, or enter your own. Variable columns are given; intermediate and final expression columns have keyboard-accessible blank/T/F selectors. Editing the formula clears the table and answers; work is not saved across reloads. Syntax errors identify the offending character. The backend listens on port 3000; Vite proxies `/api` requests to it. The root development command builds contracts, the logic engine, and the database package before starting all five workspace watchers.
 

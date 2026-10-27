@@ -92,7 +92,7 @@ Initial planning matrix below: **all Not run**. When testing begins, add run ID,
 
 ## Findings
 
-No findings have been recorded yet. Assign sequential IDs QA-001, QA-002, etc. One root cause can link multiple failed cases; record separate issues when failures need different fixes or acceptance decisions.
+Findings are recorded below. Assign sequential IDs QA-001, QA-002, etc. One root cause can link multiple failed cases; record separate issues when failures need different fixes or acceptance decisions.
 
 Copy this template for each finding:
 
@@ -124,10 +124,11 @@ Do not close a finding merely because code was changed or a unit test passed. Us
 
 Keep this concise and chronological. Each fix-sized commit should have a finding reference or a stated QA infrastructure/documentation purpose. Link real files where useful and describe resulting behavior rather than listing filenames alone. Keep broad refactors/product features out of an unrelated fix.
 
-| Entry      | Finding / cases         | Change and reason                                                                                                                    | Commit                            | Checks actually run                                                                                                                       | Retest / outstanding work                                                      |
-| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| QA-PLAN    | All                     | Add step-by-step runbook and empty results/finding/change templates. No application behavior changed.                                | Pending documentation commit      | Documentation formatting, local links and case-ID consistency only                                                                        | Manual cases not run                                                           |
-| QA-FIX-001 | QA-001 / SET-02, SET-03 | Apply five compatible security patch updates in package-lock.json; retain upstream glob deprecation without a forced major override. | Pending user commit; base e879b8a | Clean install with scripts disabled; zero-vulnerability audit; 700 tests/type checks/builds; 163 PostgreSQL checks; formatting/whitespace | Default-script install review remains QA-002; no manual browser retest claimed |
+| Entry      | Finding / cases         | Change and reason                                                                                                                    | Commit                       | Checks actually run                                                                                                                          | Retest / outstanding work                                                                       |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| QA-PLAN    | All                     | Add step-by-step runbook and empty results/finding/change templates. No application behavior changed.                                | Pending documentation commit | Documentation formatting, local links and case-ID consistency only                                                                           | Manual cases not run                                                                            |
+| QA-FIX-001 | QA-001 / SET-02, SET-03 | Apply five compatible security patch updates in package-lock.json; retain upstream glob deprecation without a forced major override. | a5c4ea3                      | Clean install with scripts disabled; zero-vulnerability audit; 700 tests/type checks/builds; 163 PostgreSQL checks; formatting/whitespace    | Normal clean install verified in QA-002; glob warning remains; no manual browser retest claimed |
+| QA-FIX-002 | QA-002 / SET-02, SET-03 | Record two pinned approvals/two denials, strict unknown-script enforcement and npm minimum; document review and upgrade workflow.    | Pending user commit          | Normal clean install; zero audit; no pending decisions; native smoke; negative strict-gate fixture; 700 tests/type checks/builds; formatting | Manual setup/browser QA not claimed; platform/source-build limits explicit                      |
 
 Add rows for fixes, fixture/test tooling, scope corrections and documentation changes as they occur. If a fix changes expected behavior, update the runbook in the same slice, explain why, and preserve the original finding's expected/actual record.
 
@@ -148,12 +149,12 @@ The audit and sandbox deployment remain subsequent branches. Passing local QA do
 ## QA-001 — Clean install reports deprecated dependency and security advisories
 
 - Severity: major (dependency review required; application exploitability not yet assessed).
-- Status: fixed-awaiting-retest (security updates verified automatically; original default-script install awaits QA-002).
+- Status: verified for security remediation after QA-002 normal-install retest; upstream glob deprecation remains an explicit tooling limitation.
 - Cases: SET-02 installation / SET-03 baseline; not a completed manual case.
 - Reported reproduction: run `npm ci` from the repository root. Installation succeeds, then reports glob@10.5.0 deprecation and three audit findings (one low, one moderate, one high).
 - Verified investigation: `npm audit --json` reports low Fastify, moderate fast-uri and high undici findings with fixes available. Lockfile inspection locates glob@10.5.0 under test-exclude, undici under jsdom, and fast-uri through API validation dependencies. The high finding is in the frontend test dependency tree; that alone does not establish application exploitability.
 - Expected: dependency warnings are reviewed, remediated where compatible, and any remaining limitation is explicit.
-- Fix/commit: uncommitted patch-only lockfile updates: Fastify 5.12.5 → 5.12.7, fast-uri 4.2.2 → 4.2.3 plus both 3.1.8 → 3.1.9 installations, and undici 8.12.1 → 8.12.3. A dry-run preview showed exactly these five changes before applying `npm audit fix --ignore-scripts`; no manifest range, override or major upgrade was introduced.
+- Fix/commit: a5c4ea3; patch-only lockfile updates: Fastify 5.12.5 → 5.12.7, fast-uri 4.2.2 → 4.2.3 plus both 3.1.8 → 3.1.9 installations, and undici 8.12.1 → 8.12.3. A dry-run preview showed exactly these five changes before applying `npm audit fix --ignore-scripts`; no manifest range, override or major upgrade was introduced.
 - Agent retest: `npm ci --ignore-scripts` passed; `npm audit --json` reports zero vulnerabilities. `npm run check` passed 700 tests (71 engine, 493 API, 136 web), type checks and production builds. `npm run db:test` passed 163 PostgreSQL checks (121 database, 42 API/workflow) against the separate test database. No manual browser case is marked passed.
 - Remaining deprecation: glob@10.5.0 remains under babel-plugin-istanbul@8.0.0 → test-exclude@7.0.2. Registry inspection shows the latest coverage plugin still requires test-exclude ^7.0.1; test-exclude 8 uses glob 13 but is outside that supported range. Do not force an unvalidated major override just to hide the warning. Track this as an outstanding upstream/tooling limitation, separate from the now-zero audit count.
 - Evidence: `.codex-local/qa/QA-RUN-001-dependencies/`. Tested base commit e879b8a plus the uncommitted lockfile patch; evidence metadata records its SHA-256. Install scripts were explicitly disabled for this clean-install check; approval-policy/default-install retesting remains QA-002.
@@ -161,10 +162,11 @@ The audit and sandbox deployment remain subsequent branches. Passing local QA do
 ## QA-002 — Dependency install scripts lack an explicit approval policy
 
 - Severity: minor (setup/policy review; whether any required build step was skipped is not established).
-- Status: investigating.
+- Status: verified by agent automated install/policy/native/build checks; manual browser setup remains unverified.
 - Cases: SET-02 installation / SET-03 baseline.
 - Reported reproduction: the same successful `npm ci` warns about four unreviewed install scripts.
 - Verified investigation: `npm install-scripts ls --json` lists pending entries for @parcel/watcher@2.6.0, esbuild@0.28.2, fsevents@2.3.3 and unrs-resolver@1.12.2. Local npm version: 11.19.0. No project allowScripts policy was found in package.json.
 - Expected: review the actual package scripts and record deliberate approval/denial, then verify installation/build behavior. Pending review is not by itself evidence that the scripts are malicious or that installation failed.
-- Fix/commit: pending; no scripts approved or executed by this investigation.
-- Retest: pending reviewed policy and clean-install/build checks.
+- Fix/commit: pending user commit. Root allowScripts pins esbuild@0.28.2 and unrs-resolver@1.12.2 approvals; denies @parcel/watcher/fsevents install scripts. Root .npmrc enables strict-allow-scripts. Raise the npm minimum to 11.19.0 and document the reviewed scripts/helper/fallbacks and future upgrade workflow.
+- Agent retest: normal `npm ci --foreground-scripts` passed and ran only the two approved postinstall hooks. `npm install-scripts ls --json` has no pending decisions; audit has zero findings. All 700 tests, type checks and builds passed. Native smoke verified esbuild/unrs functionality and native watcher subscriptions on macOS with denied hooks. A temporary missing-approval install failed with ESTRICTALLOWSCRIPTS. No version changes beyond the npm engine requirement; PostgreSQL tests were not repeated for this script-policy-only slice (QA-001 already verified the same dependency versions).
+- Evidence: `.codex-local/qa/QA-RUN-002-install-policy/`; normal install, pending/audit reports, native smoke, missing-approval fixture and source hashes. Linux/Windows, source-build-only setups, remote CI and manual browser behavior remain unverified. The glob deprecation remains; script approvals do not hide it.

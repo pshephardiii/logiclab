@@ -9,7 +9,7 @@
   ],
   "engines": {
     "node": ">=24.9.0",
-    "npm": ">=10"
+    "npm": ">=11.19.0"
   },
   "scripts": {
     "predev": "npm run build -w @logiclab/contracts && npm run build -w @logiclab/logic-engine && npm run build -w @logiclab/db",
@@ -33,5 +33,11 @@
     "concurrently": "^9.2.1",
     "prettier": "3.9.10",
     "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true,
+    "@parcel/watcher": false,
+    "fsevents": false
   }
 }
