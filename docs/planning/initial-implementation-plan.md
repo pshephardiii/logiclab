@@ -263,3 +263,7 @@ Completed branch: `012-feat-unsaved-work-protection`, following the [small-slice
 ## Completed feature: 013-feat-duplicate-assignment
 
 Before the dedicated QA pass, implement same-class duplication into a fresh draft. Slice 1 adds the owner-scoped transactional persistence operation, saved-source locking and PostgreSQL coverage. Slice 2 adds the instructor-only normal/demo duplication endpoint and HTTP/access regression checks. Slice 3 adds the editor action, scoped client support, unsaved-work confirmation, and explicit recovery without automatic retries. Final automated verification and local PR notes are complete; see the [feature plan](duplicate-assignment.md) and [verification evidence](../verification/duplicate-assignment-verification.md). Explicit saves, publication checks and unsaved-work protection are retained. Next: `014-test-demo-qa`, `015-refactor-demo-audit`, and `016-chore-demo-deployment`. Manual browser QA remains pending.
+
+## Current branch: 014-test-demo-qa
+
+Use the [manual QA runbook](../qa/manual-qa-runbook.md) for explicit actions/expected results and the [results, findings and change ledger](../qa/findings-and-changes.md) for run/commit/browser evidence, reproducible issues, fix commits and retests. The plan starts with every manual case Not run. Document fixes in small slices even if the full branch becomes large; preserve failed-run history and distinguish automated evidence from manual results. The code audit and sandbox deployment remain later branches.

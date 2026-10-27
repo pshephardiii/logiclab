@@ -11,6 +11,7 @@ Documentation is grouped by purpose:
 | [development/](development/)   | Local PostgreSQL/DBeaver, Cognito configuration, and GitHub setup                      |
 | [api/](api/)                   | Authentication, classroom, problem, assignment, and student-work contracts             |
 | [conventions/](conventions/)   | Codebase structure/style and numbered branch workflow                                  |
+| [qa/](qa/)                     | Manual test instructions, case results, findings and fix history                       |
 | [verification/](verification/) | Feature walkthroughs, checks performed, limitations, and supporting images             |
 
 ## Architecture
@@ -55,6 +56,11 @@ Documentation is grouped by purpose:
 
 - [Codebase conventions](conventions/codebase-conventions.md)
 - [Branch naming and PR workflow](conventions/branch-naming-conventions.md)
+
+## QA
+
+- [Step-by-step manual QA runbook](qa/manual-qa-runbook.md)
+- [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
 
