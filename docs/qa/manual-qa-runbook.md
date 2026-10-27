@@ -89,7 +89,7 @@ npm run format:check
 4. Fill final answers T, F, T, T and check.
 5. Refresh the browser.
 
-**Expected:** showing/hiding solutions preserves entries. Expected T/F values appear in blue to the right of the dropdown, without a visible Solution label; assistive text identifies them as correct answers. In-app practice navigation preserves the mounted practice state. Editing the formula clears the prior exercise/answers; implication has the expected four answers. Browser refresh can reset anonymous practice: it is not a persisted assignment and is outside dirty-editor registration.
+**Expected:** showing/hiding solutions preserves entries. Expected values appear to the right of the dropdown, with T in green and F in rose/red, without a visible Solution label; assistive text identifies them as correct answers. In-app practice navigation preserves the mounted practice state. Editing the formula clears the prior exercise/answers; implication has the expected four answers. Browser refresh can reset anonymous practice: it is not a persisted assignment and is outside dirty-editor registration.
 
 ### PRA-03 — Parsing, limits and helpful errors
 

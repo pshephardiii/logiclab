@@ -34,7 +34,7 @@ export function AnswerCell({ label, value, status, expected, feedbackId, onChang
         </select>
         {typeof expected === 'boolean' && (
           <span
-            className="solution-value"
+            className={`solution-value solution-${expected ? 'true' : 'false'}`}
             role="note"
             aria-label={`Correct answer: ${expected ? 'T' : 'F'}`}
           >

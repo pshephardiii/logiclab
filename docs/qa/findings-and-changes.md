@@ -309,3 +309,9 @@ The user retried the original gesture and reports period substitution still occu
 - QA-011 verification: `npm run check` passed 733 tests (83 engine, 494 API, 156 web), type checks and all production builds. Entry JavaScript is 480.01 kB, below the unchanged chunk-warning threshold. Evidence: `.codex-local/qa/QA-RUN-006-practice/square-brackets-check.log`. Formatting/whitespace passed. No browser or database suite rerun for this parser/guide slice; manual square-bracket retest remains pending.
 
 - QA-011 guide follow-up: user approves square-bracket support and requests one Group expressions row. Combine `( ) or [ ]` in the Key column and retain only `( )` in Symbol to keep the reference compact. Presentation-only adjustment; parser behavior is unchanged. Formatting/whitespace checked, with no functional-suite rerun for this static content change.
+
+### QA-007 solution-color follow-up
+
+- User finds the dark-blue expected values too close to black and requests distinct green T and pink/red F values. Set solution T to #086e3f and F to #ac285c, retaining the literal letters, accessible Correct answer labels and all separate correctness feedback. Colors describe expected truth values, not whether the student's answer is correct. Shared assignment/review tables inherit this presentation.
+- Calculated contrast against white, neutral/final, correct and incorrect cell backgrounds: minimum 4.60:1 for T and 4.75:1 for F. These numerical checks do not replace user visual approval or a full accessibility audit.
+- Both focused suites passed (14 tests: AnswerCell and AssignedAttempt); formatting/whitespace passed. Evidence: `.codex-local/qa/QA-RUN-006-practice/solution-colors.log`. No browser screenshot, full-suite or build rerun for this styling change. User visual retest pending; changes uncommitted.

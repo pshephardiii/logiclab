@@ -89,9 +89,14 @@ tbody th {
   color: #465b65;
 }
 .solution-value {
-  color: #234aa0;
   font-size: 1rem;
   font-weight: 700;
+}
+.solution-true {
+  color: #086e3f;
+}
+.solution-false {
+  color: #ac285c;
 }
 .feedback-summary {
   font-weight: 600;
