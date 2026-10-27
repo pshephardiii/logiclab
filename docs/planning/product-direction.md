@@ -194,3 +194,7 @@ Expire workspaces after inactivity and an absolute lifetime; reject expired sess
 ## Assignment learning modes follow-up
 
 The agreed next feature is graded, completion-only, and ungraded practice assignments with explicit checking and independent solution release. See [learning-mode decisions and delivery slices](assignment-learning-modes.md). Immediate per-cell feedback remains deferred. Existing graded endpoints remain unchanged until the new persistence and workflows are implemented; the earlier single-mode statements describe the initial release.
+
+## Controlled assessment investigation
+
+Current assignment feedback/solution controls do not prevent students from solving the same formula through independent practice or external tools. Keep independent practice available and avoid presenting graded homework as a secure exam. Investigate Safe Exam Browser as a future option for supervised assessment, with explicit server integration, accessibility, recovery and operational evaluation before implementation. No browser restrictions or student monitoring are part of the current QA/deployment scope. See [controlled assessment investigation](controlled-assessment.md).

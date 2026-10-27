@@ -256,3 +256,17 @@ The audit and sandbox deployment remain subsequent branches. Passing local QA do
 - Further user review: table presentation is improved and the guide direction is accepted, with a wording clarification. Rename the guide column from Type to Key and make the introduction keyboard-first. Direct Unicode symbol parsing remains available for pasted course material; no special symbol-entry mechanism is required. This copy-only follow-up does not establish completion of the remaining practice cases.
 
 - Keyboard-guide polish requested in the next review: add 0.75rem below the explanatory table caption and use regular-weight math typography for all symbols to reduce mixed glyph-weight appearance. Formatting/whitespace checked; no functional tests or browser screenshot rerun for this CSS-only adjustment. User visual retest remains pending.
+
+### Assessment-design follow-up
+
+The user accepts that independent practice and external solvers can reproduce graded truth tables. Record this as a product limitation, not a broken solution-release authorization check. Future controlled assessment will investigate Safe Exam Browser, with feasibility questions and source links in [the planning note](../planning/controlled-assessment.md). No runtime restrictions, monitoring, automatic focus-loss penalties or changes to the QA branch's implementation scope. Documentation formatting and local link targets checked; no functional tests needed for this documentation-only update.
+
+## QA-008 — Successful table creation can be missed on short screens
+
+- Severity: minor; status: fixed-awaiting-retest by user. Case: PRA-01.
+- Reported actual: clicking Create table on a short viewport can leave the newly created table below the visible area, making success hard to notice. Expected: gently reveal the table only after successful creation.
+- Fix: observe new exercise results in the practice composition component and scroll the table panel into view with native smooth scrolling. Use instant movement for prefers-reduced-motion. Preserve keyboard focus. Do not scroll on initial/remounted retained data, pending/failed creation, formula edits or answer checking. The browser controls smooth-scroll duration; no custom animation or fixed-delay timer is added.
+- Verification: all 153 frontend tests passed, including new successful-result, failure/loading, retained-table, reduced-motion and focus regression tests. Frontend typecheck/production build passed without a chunk warning. Formatting/whitespace checked. No backend/persistence changes or database suite rerun.
+- Evidence: `.codex-local/qa/QA-RUN-006-practice/scroll-tests.log` and `scroll-build.log`. Browser scroll results are recorded separately below. User retest remains pending; fix commit pending user commit.
+
+- QA-008 browser retest: Chrome 156.0.8078.48 at 390×650 successfully revealed the table after creation under both ordinary and reduced-motion preferences; scrolling did not force focus into table controls. Temporary stateless API/Vite/browser resources were closed. Evidence: `browser-scroll.log`, `scroll-no-preference.png`, `scroll-reduce.png` under the same run directory. The first smoke assertion incorrectly expected the submitting button to retain focus despite its existing disabled loading state; corrected the harness to check that scrolling does not force table focus and reran successfully. No additional application change was needed.

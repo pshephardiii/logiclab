@@ -74,7 +74,7 @@ npm run format:check
 
 ### PRA-01 — Correct, incorrect and blank cells
 
-1. At `/`, enter `P & Q` in **Propositional formula**; click **Create table**.
+1. At `/`, use a short viewport, enter `P & Q` in **Propositional formula** and click **Create table**. After successful creation, verify the page scrolls smoothly to Your truth table; with reduced motion enabled, it moves without animation. Errors, answer checks and returning to an existing practice table must not trigger this scroll.
 2. Verify row order TT, TF, FT, FF and fixed given columns P and Q.
 3. In the final answer column, enter T, F, F, F. Click **Check answers**.
 4. Change the first final answer to F; leave the second blank; check again.

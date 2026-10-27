@@ -25,6 +25,7 @@ Documentation is grouped by purpose:
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
+- [Controlled assessment and Safe Exam Browser investigation](planning/controlled-assessment.md)
 - [Assignment learning modes](planning/assignment-learning-modes.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)

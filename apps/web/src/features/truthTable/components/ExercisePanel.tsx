@@ -4,9 +4,11 @@ import type {
   TruthTableSolutionResponse,
 } from '@logiclab/contracts';
 import type { Answers } from '../types';
+import type { Ref } from 'react';
 import { TruthTable } from './TruthTable';
 
 type Props = {
+  panelRef?: Ref<HTMLElement>;
   feedback: TruthTableCheckResponse | null;
   solution: TruthTableSolutionResponse | null;
   action: 'check' | 'solution' | null;
@@ -26,6 +28,7 @@ type Props = {
  * Presents exercise progress, check/solution controls, request feedback, and the truth table.
  */
 export function ExercisePanel({
+  panelRef,
   exercise,
   formula,
   answers,
@@ -54,6 +57,7 @@ export function ExercisePanel({
 
   return (
     <section
+      ref={panelRef}
       className="panel"
       aria-labelledby="exercise-heading"
       aria-busy={loading || action !== null}
