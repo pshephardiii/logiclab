@@ -20,6 +20,12 @@ Keep structural refactors separate from product changes and broad mechanical for
 
 Keep dependencies directed toward these shared capabilities. Tools must not import application or service implementation modules. Consumers import the supported API through `@logiclab/contracts`, `@logiclab/db`, or `@logiclab/logic-engine`, rather than reaching into their source directories.
 
+## Tools: browser and server contracts builds
+
+The contracts package builds from one source tree into CommonJS for Node (`dist/index.js`) and ES modules for browser bundlers (`dist/browser/index.js`, selected by the package's `browser` field). Browser ES modules allow unused exports and validation-library code to be removed during production bundling. The browser output is bundler input, not a native Node entry point; declarations and declaration maps remain on the existing shared types entry.
+
+Keep both targets in build, typecheck and development watch commands. Consumers continue importing `@logiclab/contracts`; do not alias across workspace source directories or duplicate contracts. Verify frontend production sizes and server consumers when changing package resolution. Keep chunk-size diagnostics enabled and measure emitted totals as well as individual chunks; splitting a large file alone does not prove less code is downloaded.
+
 ## Tools: file organization and readability
 
 - Use named functions that describe their responsibility. Entry points should show the main steps; focused helpers should contain their details.

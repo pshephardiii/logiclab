@@ -143,6 +143,8 @@ Keep this concise and chronological. Each fix-sized commit should have a finding
 
 | QA-FIX-003 | QA-003 / SET-03 | Use an explicit TypeScript config import supported by native loading. | Pending user commit | 136 frontend tests under each loader; type check and default/native builds | Compatibility warning resolved; chunk-size investigation separate |
 
+| QA-FIX-004 | QA-004 / SET-03 | Add browser ESM contracts output and load the two larger assignment pages on demand; keep the warning threshold unchanged. | Pending user commit | 706 tests/type checks/builds; native frontend build; both contracts watch compilers | Build warning resolved; browser/network QA remains pending |
+
 Add rows for fixes, fixture/test tooling, scope corrections and documentation changes as they occur. If a fix changes expected behavior, update the runbook in the same slice, explain why, and preserve the original finding's expected/actual record.
 
 ## End-of-branch review
@@ -194,6 +196,21 @@ The audit and sandbox deployment remain subsequent branches. Passing local QA do
 - Root cause: `vitest.config.ts` relies on the bundled loader resolving a missing file extension; native loading requires the explicit path.
 - Fix: import `./vite.config.ts` and enable `allowImportingTsExtensions` in the frontend's existing no-emit TypeScript configuration. Keep the current default loader; do not suppress warnings.
 - Verification: `npm run test -w @logiclab/web` and the same command with `-- --configLoader native` each passed 136 tests in 28 files. `npm run build -w @logiclab/web` passed frontend type checking and production build; `npm exec -w @logiclab/web -- vite build --configLoader native` also passed. No native-config compatibility warning appeared in any captured log.
-- Evidence: `.codex-local/qa/QA-RUN-004-native-config/` contains the four command logs. Fix commit pending user commit.
+- Evidence: `.codex-local/qa/QA-RUN-004-native-config/` contains the four command logs. Fix commit: 38e18a8.
 - Limits: the production chunk-size warning remains a separate investigation. No manual browser QA, full monorepo suite, database tests or hosted checks were repeated for this frontend configuration fix.
 - Reference: [Vite config loading](https://vite.dev/config/) documents native loading and its planned future default.
+
+## QA-004 — Production frontend bundle exceeds the default size warning
+
+- Severity: minor (delivery/build optimization; local QA is not blocked).
+- Status: verified for the production build warning; browser loading/navigation checks remain pending.
+- Cases / run: SET-03; QA-RUN-005-bundle, base commit 38e18a8 plus this uncommitted fix.
+- Reproduction: run `npm run build -w @logiclab/web` after building shared packages. The entry JavaScript is 910.60 kB (220.35 kB gzip), exceeding the unchanged 500 kB warning threshold.
+- Expected: avoid shipping unused dependency code and defer substantial page-specific code until needed, without disabling size diagnostics.
+- Investigation: the contracts package's CommonJS entry prevents effective removal of unused Zod code. All route pages are also eagerly imported. A route-only experiment still left a 615.93 kB shared chunk, so splitting pages alone did not resolve the cause.
+- Fix: build a browser-only ES-module version of contracts from the same source and select it through the package's browser entry. Keep Node's CommonJS entry and declarations intact. Build/typecheck/watch both targets; add no dependencies or duplicated schema source. Load StudentWorkPage and InstructorAssignmentsPage through module-scoped React.lazy imports with an accessible Suspense fallback; keep providers and role/resource boundaries in place. Other pages remain eager.
+- Measured result: entry JavaScript is 469.65 kB (142.16 kB gzip); deferred JavaScript is 22.13 kB, 11.88 kB and 2.07 kB shared (6.20, 3.96 and 0.93 kB gzip). Total emitted JavaScript is about 505.73 kB before gzip. These are emitted asset sizes, not measured browser transfer timings. No chunk-size or native-config warning appears in the final builds; the threshold remains unchanged.
+- Agent verification: `npm run check` passed 706 tests (71 engine, 493 API, 142 web), type checks and all production builds. Six new routing tests cover loading fallback, role/anonymous guards and authorized normal/demo routes. A native-loader frontend build and all 142 frontend tests under the native loader also passed. Starting the contracts development command verified both compilers reach zero errors; the temporary watcher process group was stopped afterward. This startup smoke does not establish later source-change HMR behavior.
+- Evidence: `.codex-local/qa/QA-RUN-005-bundle/` holds baseline, experimental/final build, full check, native build and watch startup logs. Fix commit pending user commit.
+- Limits: no real-browser cold-cache navigation, failed chunk-download recovery, production hosting/cache verification, clean installation or PostgreSQL rerun in this slice. Browser QA still needs to check assignment navigation, state retention and unsaved-work prompts. Chunk sizes may grow with future features; revisit measured boundaries rather than increasing the warning limit.
+- Reference: [Vite build optimizations](https://vite.dev/guide/features#build-optimizations) explains dynamic-import chunk loading and associated CSS handling.
