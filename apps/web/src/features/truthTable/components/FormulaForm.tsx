@@ -24,10 +24,16 @@ export function FormulaForm({
   onCreate,
 }: Props) {
   const validation = useFormulaValidation(formula);
-  const descriptions = ['formula-help', 'formula-validation', ...(error ? ['formula-error'] : [])];
+  const canCreate = validation?.valid === true && !loading;
+  const requestError = error !== validation?.message ? error : null;
+  const descriptions = [
+    'formula-help',
+    'formula-validation',
+    ...(requestError ? ['formula-error'] : []),
+  ];
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void onCreate();
+    if (canCreate) void onCreate();
   }
 
   return (
@@ -46,18 +52,20 @@ export function FormulaForm({
               required
               maxLength={256}
               autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               spellCheck={false}
               aria-invalid={Boolean(error) || validation?.valid === false}
               aria-describedby={descriptions.join(' ')}
             />
-            <button type="submit" disabled={loading || formula.trim().length === 0}>
+            <button type="submit" disabled={!canCreate}>
               {loading ? 'Creating…' : 'Create table'}
             </button>
           </div>
           <p id="formula-help" className="help">
             Use up to four uppercase variables (A–Z). Lowercase v means OR; uppercase V is a
-            variable. Parentheses control grouping. Editing the formula clears the current table and
-            answers.
+            variable. Parentheses and square brackets control grouping. Editing the formula clears
+            the current table and answers.
           </p>
           <p
             id="formula-validation"
@@ -66,9 +74,9 @@ export function FormulaForm({
           >
             {validation?.message}
           </p>
-          {error && (
+          {requestError && (
             <p id="formula-error" className="error" role="alert">
-              {error}
+              {requestError}
             </p>
           )}
         </form>

@@ -270,3 +270,42 @@ The user accepts that independent practice and external solvers can reproduce gr
 - Evidence: `.codex-local/qa/QA-RUN-006-practice/scroll-tests.log` and `scroll-build.log`. Browser scroll results are recorded separately below. User retest remains pending; fix commit pending user commit.
 
 - QA-008 browser retest: Chrome 156.0.8078.48 at 390×650 successfully revealed the table after creation under both ordinary and reduced-motion preferences; scrolling did not force focus into table controls. Temporary stateless API/Vite/browser resources were closed. Evidence: `browser-scroll.log`, `scroll-no-preference.png`, `scroll-reduce.png` under the same run directory. The first smoke assertion incorrectly expected the submitting button to retain focus despite its existing disabled loading state; corrected the harness to check that scrolling does not force table focus and reran successfully. No additional application change was needed.
+
+### PRA-03 retest — lowercase v reports old parser message
+
+- User reports `P v Q` producing the older INVALID_CHARACTER guidance without the v alias. Keep QA-005 awaiting successful user retest.
+- Agent inspection: source tokenizer, compiled engine and current Vite optimized engine asset all contain the v alias and updated guidance. A stateless request to the running local API on port 3000 successfully returned the four-row OR exercise for `P v Q`. No application change made.
+- Hypothesis, not confirmed root cause: an older browser-loaded module or earlier running process produced the reported message. Ask the user to hard-refresh the practice tab, then retry; restart development processes if it persists and distinguish inline feedback from a Create table API error. No user pass claimed.
+
+## QA-009 — Invalid formula submission duplicates inline syntax feedback
+
+- Severity: minor; status: fixed-awaiting-retest by user. Case: PRA-03.
+- Reproduction: enter an invalid formula, wait for the debounced error, then click Create table. Actual: the API returns the same syntax error, which appears again below the local message. Expected: retain one local syntax message and allow creation only for a validated, well-formed current formula.
+- Fix: disable creation for empty, pending or invalid input and during creation. Guard the form submit handler as well, so Enter or programmatic form submission cannot bypass the disabled button. Suppress an exact duplicate request error while preserving distinct API/network failures. Backend validation remains authoritative and unchanged.
+- Verification: 154 frontend tests passed, including disabled-state/submit guards through pending, invalid, valid and loading transitions, duplicate-message suppression and retained distinct request errors. Frontend typecheck/production build passed; entry JavaScript 479.77 kB, below the unchanged warning threshold. Formatting/whitespace checked. No browser or database rerun for this focused form-state change; user retest pending.
+- Evidence: `.codex-local/qa/QA-RUN-006-practice/formula-gating-tests.log` and `formula-gating-build.log`. Supersedes the earlier QA-006 decision to allow explicit invalid-formula submission from this form. Fix commit pending user commit.
+
+## QA-010 — Keyboard text correction changes formula punctuation
+
+- Severity: minor; status: deferred by user decision after retest. Case: PRA-03.
+- Reported reproduction: enter an opening parenthesis followed by spaces in Propositional formula; a period is inserted automatically. A system keyboard double-space substitution is suspected, not independently confirmed.
+- Fix: explicitly set autoCorrect and autoCapitalize to off alongside existing autocomplete off and spellcheck false on the formula input. Do not rewrite entered punctuation, swallow keyboard events or interfere with composition/paste to compensate for system behavior.
+- Verification: both existing FormulaForm tests and frontend typechecking passed; formatting/whitespace checked. No native keyboard/browser retest or full-suite/build rerun for this input-hint-only change. Browsers/OS keyboards may not honor every hint; user must retry the original double-space gesture in the affected environment. Fix commit pending user commit.
+- Evidence: `.codex-local/qa/QA-RUN-006-practice/formula-autocorrect.log`.
+
+### QA-010 disposition — accepted keyboard limitation
+
+The user retried the original gesture and reports period substitution still occurs. Keep the input's autocorrect/autocapitalize/autocomplete/spellcheck opt-outs, but defer further mitigation by explicit user agreement on October 27. OS/browser text-substitution settings remain a possible cause, not a proven diagnosis. Do not intercept spaces, replace punctuation or introduce keyboard/composition workarounds in this QA pass. Formula validation still reports substituted punctuation as invalid; no guarantee of suppressing native substitutions is claimed.
+
+## QA-011 — Support textbook square-bracket grouping
+
+- Severity: minor (notation/usability enhancement); status: fixed-awaiting-retest by user. Case: PRA-03.
+- User request: support alternating parentheses and square brackets to make nested textbook formulas easier to read. Previously [ and ] were invalid characters.
+- Fix: accept both grouping delimiters in the shared tokenizer/parser, with matched pairs required and existing precedence/length/variable/nesting bounds retained. Add the positioned EXPECTED_CLOSING_BRACKET error code while preserving EXPECTED_CLOSING_PAREN for parentheses. Empty, unmatched, crossed or mismatched groups remain invalid.
+- Canonical AST, column labels, structural IDs and truth values are unchanged for equivalent formulas; display labels continue to normalize grouping to parentheses. The original formula input can retain brackets. Shared parsing applies to independent practice, authoring and assignment content validation without a data migration.
+- Update the keyboard guide, sample formula, formula help and engine grammar docs. Tests cover nested/mixed groups, mismatches/positions, square-bracket depth bounds, stable generated tables, API exercise/check/solution equivalence and local validation.
+- Fix commit pending user commit. Verification results recorded below; user retest and cross-browser keyboard behavior remain pending.
+
+- QA-011 verification: `npm run check` passed 733 tests (83 engine, 494 API, 156 web), type checks and all production builds. Entry JavaScript is 480.01 kB, below the unchanged chunk-warning threshold. Evidence: `.codex-local/qa/QA-RUN-006-practice/square-brackets-check.log`. Formatting/whitespace passed. No browser or database suite rerun for this parser/guide slice; manual square-bracket retest remains pending.
+
+- QA-011 guide follow-up: user approves square-bracket support and requests one Group expressions row. Combine `( ) or [ ]` in the Key column and retain only `( )` in Symbol to keep the reference compact. Presentation-only adjustment; parser behavior is unchanged. Formatting/whitespace checked, with no functional-suite rerun for this static content change.

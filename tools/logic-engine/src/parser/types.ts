@@ -1,6 +1,6 @@
 export type BinaryOperator = 'and' | 'or' | 'implies';
 
-/** Parentheses determine grouping but do not create separate AST nodes. */
+/** Parentheses and square brackets group expressions without creating separate AST nodes. */
 export type Formula =
   | { readonly type: 'variable'; readonly name: string }
   | { readonly type: 'not'; readonly operand: Formula }
@@ -15,6 +15,7 @@ export type FormulaErrorCode =
   | 'INVALID_CHARACTER'
   | 'EXPECTED_EXPRESSION'
   | 'EXPECTED_CLOSING_PAREN'
+  | 'EXPECTED_CLOSING_BRACKET'
   | 'UNEXPECTED_TOKEN'
   | 'FORMULA_TOO_LONG'
   | 'NESTING_LIMIT'

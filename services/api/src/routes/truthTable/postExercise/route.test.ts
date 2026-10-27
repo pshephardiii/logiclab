@@ -30,25 +30,28 @@ test('returns HTTP 400 for invalid request data', async () => {
   expect(truthTableErrorResponseSchema.parse(response.json()).error.code).toBe('INVALID_REQUEST');
 });
 
-test('exercise, solution and checking agree on IDs across equivalent notation', async () => {
-  const exercise = truthTableExerciseResponseSchema.parse(
-    (await post('exercise', { formula: '!(P & Q)' })).json(),
-  );
-  const solution = truthTableSolutionResponseSchema.parse(
-    (await post('solution', { formula: '¬(P ∧ Q)' })).json(),
-  );
-  expect(exercise.columns).toEqual(solution.columns);
-  expect(exercise.rows.map((row) => row.id)).toEqual(solution.rows.map((row) => row.id));
-  const answers = solution.rows.flatMap((row) =>
-    solution.columns
-      .filter((column) => column.kind === 'answer')
-      .map((column) => ({ rowId: row.id, columnId: column.id, value: row.values[column.id] })),
-  );
-  const result = truthTableCheckResponseSchema.parse(
-    (await post('check', { formula: '((¬(P ∧ Q)))', answers })).json(),
-  );
-  expect(result.summary).toEqual({ correct: 8, incorrect: 0, unanswered: 0, total: 8 });
-});
+test.each(['!(P & Q)', '![(P & Q)]'])(
+  'exercise, solution and checking agree on IDs for %s',
+  async (formula) => {
+    const exercise = truthTableExerciseResponseSchema.parse(
+      (await post('exercise', { formula })).json(),
+    );
+    const solution = truthTableSolutionResponseSchema.parse(
+      (await post('solution', { formula: '¬(P ∧ Q)' })).json(),
+    );
+    expect(exercise.columns).toEqual(solution.columns);
+    expect(exercise.rows.map((row) => row.id)).toEqual(solution.rows.map((row) => row.id));
+    const answers = solution.rows.flatMap((row) =>
+      solution.columns
+        .filter((column) => column.kind === 'answer')
+        .map((column) => ({ rowId: row.id, columnId: column.id, value: row.values[column.id] })),
+    );
+    const result = truthTableCheckResponseSchema.parse(
+      (await post('check', { formula: '((¬(P ∧ Q)))', answers })).json(),
+    );
+    expect(result.summary).toEqual({ correct: 8, incorrect: 0, unanswered: 0, total: 8 });
+  },
+);
 
 test('parser variable limits apply to the API', async () => {
   const response = await post('exercise', { formula: 'A & B & C & D & E' });

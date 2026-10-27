@@ -70,11 +70,22 @@ test('nested groups and repeated negation are preserved semantically', () => {
   expect(parseFormula('((!!P))')).toEqual(not(not(p)));
 });
 
+test('square brackets and nested mixed grouping match parentheses', () => {
+  expect(parseFormula('[P & Q] -> R')).toEqual(parseFormula('(P & Q) -> R'));
+  expect(parseFormula('[(P v Q) & ![R -> P]]')).toEqual(parseFormula('((P v Q) & !(R -> P))'));
+});
+
 test.each<[string, FormulaErrorCode, number]>([
   ['', 'EXPECTED_EXPRESSION', 0],
   ['   ', 'EXPECTED_EXPRESSION', 3],
   ['P &', 'EXPECTED_EXPRESSION', 3],
   ['()', 'EXPECTED_EXPRESSION', 1],
+  ['[]', 'EXPECTED_EXPRESSION', 1],
+  ['[P)', 'EXPECTED_CLOSING_BRACKET', 2],
+  ['(P]', 'EXPECTED_CLOSING_PAREN', 2],
+  ['[P', 'EXPECTED_CLOSING_BRACKET', 2],
+  ['[(P])', 'EXPECTED_CLOSING_PAREN', 3],
+  ['P]', 'UNEXPECTED_TOKEN', 1],
   ['& P', 'EXPECTED_EXPRESSION', 0],
   ['P && Q', 'EXPECTED_EXPRESSION', 3],
   ['P || Q', 'EXPECTED_EXPRESSION', 3],
@@ -112,18 +123,23 @@ test('accepts four distinct variables but rejects a fifth', () => {
   );
 });
 
-test.each(['groups', 'negations', 'implications'])('bounds recursive nesting for %s', (kind) => {
-  const make = (count: number) =>
-    kind === 'groups'
-      ? '('.repeat(count) + 'P' + ')'.repeat(count)
-      : kind === 'negations'
-        ? '!'.repeat(count) + 'P'
-        : 'P -> '.repeat(count) + 'P';
-  expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting))).not.toThrow();
-  expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting + 1))).toThrow(
-    expect.objectContaining({ code: 'NESTING_LIMIT' }),
-  );
-});
+test.each(['groups', 'brackets', 'negations', 'implications'])(
+  'bounds recursive nesting for %s',
+  (kind) => {
+    const make = (count: number) =>
+      kind === 'brackets'
+        ? '['.repeat(count) + 'P' + ']'.repeat(count)
+        : kind === 'groups'
+          ? '('.repeat(count) + 'P' + ')'.repeat(count)
+          : kind === 'negations'
+            ? '!'.repeat(count) + 'P'
+            : 'P -> '.repeat(count) + 'P';
+    expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting))).not.toThrow();
+    expect(() => parseFormula(make(FORMULA_LIMITS.maxNesting + 1))).toThrow(
+      expect.objectContaining({ code: 'NESTING_LIMIT' }),
+    );
+  },
+);
 
 test('nesting limit applies across mixed groups, negations, and implications', () => {
   expect(() => parseFormula('!('.repeat(17) + 'P' + ')'.repeat(17))).toThrow(

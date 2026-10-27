@@ -38,6 +38,8 @@ test('only validates the latest edit and cancels timers on clear or unmount', ()
 
 test.each([
   ['!(P & Q) -> (V v R)', true],
+  ['[(P v Q) & ![R -> P]]', true],
+  ['[P & Q)', false],
   ['P & Q & R & S & T', false],
   ['(P v Q', false],
   ['p', false],

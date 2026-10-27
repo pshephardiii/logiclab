@@ -3,7 +3,7 @@ const operators = [
   { name: 'And', symbol: '∧', keyboard: ['&'] },
   { name: 'Or', symbol: '∨', keyboard: ['v', '|'] },
   { name: 'If … then …', symbol: '→', keyboard: ['->'] },
-  { name: 'Group expressions', symbol: '( )', keyboard: ['( )'] },
+  { name: 'Group expressions', symbol: '( )', keyboard: ['( )', '[ ]'] },
 ];
 
 /** A student-facing reference pairs keyboard notation with logical symbols. */
@@ -23,7 +23,7 @@ export function FormulaKey() {
         </thead>
         <tbody>
           {operators.map(({ name, symbol, keyboard }) => (
-            <tr key={name}>
+            <tr key={symbol}>
               <th scope="row">{name}</th>
               <td>
                 {keyboard.map((key, index) => (
@@ -39,7 +39,7 @@ export function FormulaKey() {
         </tbody>
       </table>
       <p className="formula-key-example">
-        For example: <code>!(P &amp; Q) -&gt; R</code>
+        For example: <code>[(P &amp; Q) -&gt; R]</code>
       </p>
     </aside>
   );
