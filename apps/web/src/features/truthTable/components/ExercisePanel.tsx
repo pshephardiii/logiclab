@@ -40,11 +40,15 @@ export function ExercisePanel({
   onCheck,
   onToggleSolution,
 }: Props) {
-  const statusMessage = loading
-    ? 'Creating your exercise…'
-    : exercise
-      ? 'Table ready. Given values are fixed; choose T or F for each answer.'
-      : 'Enter a formula above and select Create table to start.';
+  const statusMessage = loading ? (
+    'Creating your exercise…'
+  ) : exercise ? (
+    'Table ready. Given values are fixed; choose T or F for each answer.'
+  ) : (
+    <>
+      Enter a formula above and select <strong>“Create table”</strong> to start.
+    </>
+  );
   const solutionLabel =
     action === 'solution' ? 'Loading solution…' : solution ? 'Hide solution' : 'Show solution';
 

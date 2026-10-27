@@ -21,6 +21,8 @@ test.each([
   ['¬P', '!P'],
   ['P ∧ Q', 'P & Q'],
   ['P ∨ Q', 'P | Q'],
+  ['P ∨ Q', 'P v Q'],
+  ['P ∨ Q', 'PvQ'],
   ['P → Q', 'P -> Q'],
 ])('symbol form %s matches alias %s', (symbol, alias) => {
   expect(parseFormula(symbol)).toEqual(parseFormula(alias));
@@ -28,6 +30,10 @@ test.each([
 
 test('supports mixing aliases and symbols', () => {
   expect(parseFormula('!(P ∧ Q) -> R')).toEqual(binary('implies', not(binary('and', p, q)), r));
+});
+
+test('uppercase V remains a variable when lowercase v means OR', () => {
+  expect(parseFormula('V v P')).toEqual(binary('or', variable('V'), p));
 });
 
 test('negation binds more tightly than conjunction', () => {

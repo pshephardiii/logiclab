@@ -70,7 +70,17 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
                   const expected = solutionRows.get(row.id)?.[column.id];
                   const feedbackId = `feedback-${index}-${columnIndex}`;
                   return (
-                    <td key={column.id} className={column.isFinal ? 'final-column' : undefined}>
+                    <td
+                      key={column.id}
+                      className={
+                        [
+                          column.isFinal ? 'final-column' : '',
+                          column.kind === 'answer' && status ? `answer-${status}` : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined
+                      }
+                    >
                       {column.kind === 'given' ? (
                         <span className="given-value">{row.values[column.id] ? 'T' : 'F'}</span>
                       ) : (

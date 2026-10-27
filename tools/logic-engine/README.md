@@ -1,6 +1,6 @@
 # Logic engine
 
-Pure TypeScript parsing, evaluation, and truth-table generation. The API uses this package for stateless practice; UI integration follows next.
+Pure TypeScript parsing, evaluation, and truth-table generation. The API uses this package for stateless practice; the practice UI also uses its parser for local formula feedback.
 
 ```ts
 import { parseFormula, evaluateFormula, generateTruthTable } from '@logiclab/logic-engine';
@@ -18,13 +18,13 @@ const table = generateTruthTable('!(P & Q) -> R');
 ```text
 expression  = implication
 implication = disjunction [ ("→" | "->") implication ]
-disjunction = conjunction { ("∨" | "|") conjunction }
+disjunction = conjunction { ("∨" | "v" | "|") conjunction }
 conjunction = unary { ("∧" | "&") unary }
 unary       = ("¬" | "!") unary | "(" expression ")" | variable
 variable    = "A" … "Z"
 ```
 
-Precedence is negation, conjunction, disjunction, implication. Conjunction/disjunction associate left; implication associates right. Parentheses override grouping without adding AST nodes. Whitespace is allowed between tokens; `->` must be contiguous. Lowercase names, multi-letter variables, constants, biconditionals, `&&`, and `||` are outside the initial grammar.
+Precedence is negation, conjunction, disjunction, implication. Conjunction/disjunction associate left; implication associates right. Parentheses override grouping without adding AST nodes. Whitespace is allowed between tokens; `->` must be contiguous. Lowercase `v` is an OR operator; uppercase `V` remains a variable. Other lowercase names, multi-letter variables, constants, biconditionals, `&&`, and `||` are outside the initial grammar.
 
 `parseFormula` returns a `Formula` AST or throws `FormulaParseError` with a stable `code`, zero-based UTF-16 `position`, and a readable message displaying a one-based character position. At end-of-input, the offset equals the source length. If input contains multiple errors, the tokenizer may report an invalid character before the parser reports a grammatical error.
 

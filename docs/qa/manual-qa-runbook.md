@@ -68,7 +68,7 @@ npm run db:test
 npm run format:check
 ```
 
-**Expected:** type checks/tests/builds/formatting pass. Database tests use the separate `_test` database. Record actual counts instead of copying historical totals. Existing Vite chunk-size/Jest VM/Vitest configuration warnings are not new failures unless behavior changes. Do not mark manual cases passed from these commands.
+**Expected:** type checks/tests/builds/formatting pass. Database tests use the separate `_test` database. Record actual counts instead of copying historical totals. The Vite native-config and chunk-size warnings were resolved in QA-003/QA-004; report a recurrence. The existing Jest VM warning is not a failure by itself. Do not mark manual cases passed from these commands.
 
 ## 3. Anonymous truth-table practice
 
@@ -79,7 +79,7 @@ npm run format:check
 3. In the final answer column, enter T, F, F, F. Click **Check answers**.
 4. Change the first final answer to F; leave the second blank; check again.
 
-**Expected:** first check reports four correct. Second reports two correct, one incorrect and one unanswered. Editing clears stale feedback before the next check; given values cannot be changed. False remains F rather than being mistaken for blank.
+**Expected:** first check reports four correct. Second reports two correct, one incorrect and one unanswered. Editing clears stale feedback before the next check; given values cannot be changed. False remains F rather than being mistaken for blank. Correct and incorrect answer cells have light green/red backgrounds plus readable Correct/Incorrect text and ✓/✕ markers; color is not the only signal. Dropdowns remain keyboard operable and show — for a blank. Use a formula such as `(P & Q) -> R` to compare intermediate and final columns: the final column retains a subtle left edge and slightly deeper green/red shading after checks.
 
 ### PRA-02 — Solutions, preservation and state reset
 
@@ -89,13 +89,13 @@ npm run format:check
 4. Fill final answers T, F, T, T and check.
 5. Refresh the browser.
 
-**Expected:** showing/hiding solutions preserves entries. In-app practice navigation preserves the mounted practice state. Editing the formula clears the prior exercise/answers; implication has the expected four answers. Browser refresh can reset anonymous practice: it is not a persisted assignment and is outside dirty-editor registration.
+**Expected:** showing/hiding solutions preserves entries. Expected T/F values appear in blue to the right of the dropdown, without a visible Solution label; assistive text identifies them as correct answers. In-app practice navigation preserves the mounted practice state. Editing the formula clears the prior exercise/answers; implication has the expected four answers. Browser refresh can reset anonymous practice: it is not a persisted assignment and is outside dirty-editor registration.
 
 ### PRA-03 — Parsing, limits and helpful errors
 
 1. Create `!P`, answer F then T, and check.
-2. Create `¬P`, `P ∧ Q`, `P ∨ Q`, and `P → Q` individually; compare with their ASCII equivalents.
-3. Try `P &`, `p`, `AB`, and `P && Q` one at a time.
+2. Check the Keyboard guide: Meaning / Key / Symbol should read clearly beside the form on desktop and below it on mobile. Create `¬P`, `P ∧ Q`, `P ∨ Q`, and `P → Q` individually; compare with `!P`, `P & Q`, `P v Q` / `P | Q`, and `P -> Q`. Also try `V v P`: uppercase V must remain a variable.
+3. Type `P &`, then pause for at least half a second before clicking Create table. Verify inline invalid-formula feedback appears without creating a table. Complete it as `P & Q`; the old verdict should clear immediately and become well formed after the pause. Clear the field; feedback should clear. Try `p`, `AB`, and `P && Q` one at a time, including explicit Create table errors.
 4. Try `P & Q & R & S`; then try `P & Q & R & S & T`.
 
 **Expected:** supported symbols work; invalid formulas produce useful errors rather than a crash. Four variables generate 16 rows; five variables are rejected. Fixing input permits retry. Parentheses and intermediate columns remain readable. Full precedence/nesting bounds also have engine tests; see [engine rules](../../tools/logic-engine/README.md).

@@ -56,6 +56,7 @@ tbody th {
 }
 .final-column {
   background: #edf7f2;
+  box-shadow: inset 2px 0 #8fae9f;
 }
 .given-value {
   font-weight: 600;
@@ -88,10 +89,111 @@ tbody th {
   color: #465b65;
 }
 .solution-value {
-  color: #162a36;
-  border-top: 1px solid #cbd8d3;
-  padding-top: 0.3rem;
+  color: #234aa0;
+  font-size: 1rem;
+  font-weight: 700;
 }
 .feedback-summary {
   font-weight: 600;
+}
+
+.formula-entry-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: 2rem;
+  align-items: start;
+}
+.formula-key {
+  padding: 1rem;
+  border: 1px solid #d6e0dc;
+  border-radius: 0.5rem;
+  background: #f8faf9;
+  font-size: 0.85rem;
+  color: #465b65;
+}
+.formula-key h3 {
+  margin: 0;
+  color: #162a36;
+  font-size: 1rem;
+}
+.formula-key p {
+  margin: 0.5rem 0;
+}
+.formula-key-table caption {
+  padding: 0 0 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #465b65;
+}
+.formula-key-table th,
+.formula-key-table td {
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid #d6e0dc;
+}
+.formula-key-table th {
+  text-align: left;
+  background: transparent;
+}
+.formula-key-table thead th {
+  font-size: 0.75rem;
+}
+.formula-key-table thead th:not(:first-child) {
+  text-align: center;
+}
+.formula-key-table .keyboard-symbol {
+  font-family: math, 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #162a36;
+}
+.formula-key-example code {
+  white-space: nowrap;
+  color: #162a36;
+}
+@media (max-width: 900px) {
+  .formula-entry-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+}
+.formula-key kbd {
+  display: inline-block;
+  background: #f4f7f6;
+  border: 1px solid #cbd8d3;
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  font-family: monospace;
+  color: #162a36;
+}
+#formula-validation {
+  min-height: 1.6em;
+}
+.answer-values {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.answer-select {
+  min-width: 3.75rem;
+  width: 3.75rem;
+  padding: 0.35rem 0.4rem;
+  border-color: #9aaea5;
+  border-radius: 0.3rem;
+  font-weight: 600;
+}
+td.answer-correct {
+  background: #e2f3e7;
+}
+td.answer-incorrect {
+  background: #fbe5e5;
+}
+
+td.final-column.answer-correct {
+  background: #d2eadb;
+}
+td.final-column.answer-incorrect {
+  background: #f4d4d7;
 }
