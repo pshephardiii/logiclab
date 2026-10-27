@@ -54,7 +54,7 @@ Use separate browser **profiles** for A and B. Incognito windows in the same bro
 3. Run `npm ci` only if dependencies need installing. If strict script approval fails, follow the [reviewed installation policy](../development/dependency-installation.md), not a blanket approval; then run `npm run dev` from the repository root and leave that terminal open.
 4. Open `http://localhost:5173/` in profile A. If Vite selects a different port, stop the old conflicting process and restore 5173; do not casually change the origin while testing cookies.
 5. Open `http://localhost:5173/api/health` in another tab.
-6. Open DevTools Console and Network in the application tab. Clear old entries; enable Preserve log when examining navigation failures.
+6. Return to the **application tab at `http://localhost:5173/`** (not the `/api/health` tab). Open DevTools there and select Console and Network. Clear old entries; enable Preserve log when examining navigation failures.
 
 **Expected:** Web and API start, health returns an OK JSON response, and anonymous practice loads. Health checks API availability, not every dependency. Normal sign-in is unavailable while AUTH_ENABLED=false; record that configuration rather than reporting it as a broken demo.
 
