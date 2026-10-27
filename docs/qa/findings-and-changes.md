@@ -124,9 +124,10 @@ Do not close a finding merely because code was changed or a unit test passed. Us
 
 Keep this concise and chronological. Each fix-sized commit should have a finding reference or a stated QA infrastructure/documentation purpose. Link real files where useful and describe resulting behavior rather than listing filenames alone. Keep broad refactors/product features out of an unrelated fix.
 
-| Entry   | Finding / cases | Change and reason                                                                                     | Commit                       | Checks actually run                                                | Retest / outstanding work |
-| ------- | --------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------ | ------------------------- |
-| QA-PLAN | All             | Add step-by-step runbook and empty results/finding/change templates. No application behavior changed. | Pending documentation commit | Documentation formatting, local links and case-ID consistency only | Manual cases not run      |
+| Entry      | Finding / cases         | Change and reason                                                                                                                    | Commit                            | Checks actually run                                                                                                                       | Retest / outstanding work                                                      |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| QA-PLAN    | All                     | Add step-by-step runbook and empty results/finding/change templates. No application behavior changed.                                | Pending documentation commit      | Documentation formatting, local links and case-ID consistency only                                                                        | Manual cases not run                                                           |
+| QA-FIX-001 | QA-001 / SET-02, SET-03 | Apply five compatible security patch updates in package-lock.json; retain upstream glob deprecation without a forced major override. | Pending user commit; base e879b8a | Clean install with scripts disabled; zero-vulnerability audit; 700 tests/type checks/builds; 163 PostgreSQL checks; formatting/whitespace | Default-script install review remains QA-002; no manual browser retest claimed |
 
 Add rows for fixes, fixture/test tooling, scope corrections and documentation changes as they occur. If a fix changes expected behavior, update the runbook in the same slice, explain why, and preserve the original finding's expected/actual record.
 
@@ -143,3 +144,27 @@ Add rows for fixes, fixture/test tooling, scope corrections and documentation ch
 - [ ] PR draft in `.codex-local/pr/014-test-demo-qa.md` summarizes final fixes, checks and remaining gaps when ready.
 
 The audit and sandbox deployment remain subsequent branches. Passing local QA does not claim hosted availability or production-grade operation.
+
+## QA-001 — Clean install reports deprecated dependency and security advisories
+
+- Severity: major (dependency review required; application exploitability not yet assessed).
+- Status: fixed-awaiting-retest (security updates verified automatically; original default-script install awaits QA-002).
+- Cases: SET-02 installation / SET-03 baseline; not a completed manual case.
+- Reported reproduction: run `npm ci` from the repository root. Installation succeeds, then reports glob@10.5.0 deprecation and three audit findings (one low, one moderate, one high).
+- Verified investigation: `npm audit --json` reports low Fastify, moderate fast-uri and high undici findings with fixes available. Lockfile inspection locates glob@10.5.0 under test-exclude, undici under jsdom, and fast-uri through API validation dependencies. The high finding is in the frontend test dependency tree; that alone does not establish application exploitability.
+- Expected: dependency warnings are reviewed, remediated where compatible, and any remaining limitation is explicit.
+- Fix/commit: uncommitted patch-only lockfile updates: Fastify 5.12.5 → 5.12.7, fast-uri 4.2.2 → 4.2.3 plus both 3.1.8 → 3.1.9 installations, and undici 8.12.1 → 8.12.3. A dry-run preview showed exactly these five changes before applying `npm audit fix --ignore-scripts`; no manifest range, override or major upgrade was introduced.
+- Agent retest: `npm ci --ignore-scripts` passed; `npm audit --json` reports zero vulnerabilities. `npm run check` passed 700 tests (71 engine, 493 API, 136 web), type checks and production builds. `npm run db:test` passed 163 PostgreSQL checks (121 database, 42 API/workflow) against the separate test database. No manual browser case is marked passed.
+- Remaining deprecation: glob@10.5.0 remains under babel-plugin-istanbul@8.0.0 → test-exclude@7.0.2. Registry inspection shows the latest coverage plugin still requires test-exclude ^7.0.1; test-exclude 8 uses glob 13 but is outside that supported range. Do not force an unvalidated major override just to hide the warning. Track this as an outstanding upstream/tooling limitation, separate from the now-zero audit count.
+- Evidence: `.codex-local/qa/QA-RUN-001-dependencies/`. Tested base commit e879b8a plus the uncommitted lockfile patch; evidence metadata records its SHA-256. Install scripts were explicitly disabled for this clean-install check; approval-policy/default-install retesting remains QA-002.
+
+## QA-002 — Dependency install scripts lack an explicit approval policy
+
+- Severity: minor (setup/policy review; whether any required build step was skipped is not established).
+- Status: investigating.
+- Cases: SET-02 installation / SET-03 baseline.
+- Reported reproduction: the same successful `npm ci` warns about four unreviewed install scripts.
+- Verified investigation: `npm install-scripts ls --json` lists pending entries for @parcel/watcher@2.6.0, esbuild@0.28.2, fsevents@2.3.3 and unrs-resolver@1.12.2. Local npm version: 11.19.0. No project allowScripts policy was found in package.json.
+- Expected: review the actual package scripts and record deliberate approval/denial, then verify installation/build behavior. Pending review is not by itself evidence that the scripts are malicious or that installation failed.
+- Fix/commit: pending; no scripts approved or executed by this investigation.
+- Retest: pending reviewed policy and clean-install/build checks.
