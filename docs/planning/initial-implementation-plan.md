@@ -267,3 +267,13 @@ Before the dedicated QA pass, implement same-class duplication into a fresh draf
 ## Current branch: 014-test-demo-qa
 
 Use the [manual QA runbook](../qa/manual-qa-runbook.md) for explicit actions/expected results and the [results, findings and change ledger](../qa/findings-and-changes.md) for run/commit/browser evidence, reproducible issues, fix commits and retests. The plan starts with every manual case Not run. Document fixes in small slices even if the full branch becomes large; preserve failed-run history and distinguish automated evidence from manual results. The code audit and sandbox deployment remain later branches.
+
+## Near-term feature candidate: instructor-authored conceptual questions
+
+Agreed during QA: add true/false and single-answer multiple-choice questions in a focused branch relatively soon after the current QA pass, ahead of derivations. Reuse published problem versions and assignment policy; instructors provide the answer key, so no semantic reasoning engine is required. Proposed scope, compatibility concerns and small slices are in [conceptual questions](conceptual-questions.md). Provisional name: `017-feat-conceptual-questions`; confirm numbering and ordering against audit/deployment work before starting. This is planning, not authorization to start a branch or add feature code during QA.
+
+## Small feature candidate: biconditional support
+
+Schedule a focused biconditional branch relatively soon: the operator is common in logic teaching and currently unsupported. Provisional name: `018-feat-biconditional-support`; confirm the next unused number and priority when starting rather than treating this numbering as a fixed merge order. Add a shared AST/parser/evaluator operator, truth-table generation, authoring/assignment compatibility and keyboard-guide notation. Settle precedence and chaining before coding; proposed spellings are `↔` and `<->`. Preserve existing structural IDs and test old/new formulas. See [product direction](product-direction.md#near-term-notation-feature-biconditional). No derivation implementation or current QA scope expansion.
+
+Bundle `~` as an additional negation alias into this branch. Retain `!`/`¬`, existing negation semantics/precedence and canonical `¬` labels. Include alias-equivalence tests and update keyboard help, parser diagnostics and grammar docs in the same slices. This is planned notation support, not behavior already available during QA.

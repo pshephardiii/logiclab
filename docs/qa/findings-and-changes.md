@@ -315,3 +315,13 @@ The user retried the original gesture and reports period substitution still occu
 - User finds the dark-blue expected values too close to black and requests distinct green T and pink/red F values. Set solution T to #086e3f and F to #ac285c, retaining the literal letters, accessible Correct answer labels and all separate correctness feedback. Colors describe expected truth values, not whether the student's answer is correct. Shared assignment/review tables inherit this presentation.
 - Calculated contrast against white, neutral/final, correct and incorrect cell backgrounds: minimum 4.60:1 for T and 4.75:1 for F. These numerical checks do not replace user visual approval or a full accessibility audit.
 - Both focused suites passed (14 tests: AnswerCell and AssignedAttempt); formatting/whitespace passed. Evidence: `.codex-local/qa/QA-RUN-006-practice/solution-colors.log`. No browser screenshot, full-suite or build rerun for this styling change. User visual retest pending; changes uncommitted.
+
+### Near-term feature planning follow-up
+
+User agrees to pursue instructor-authored true/false and single-answer multiple-choice questions relatively soon on a separate feature branch, before derivations. Added [scope and delivery slices](../planning/conceptual-questions.md), linked from product direction, implementation plan and docs index. No feature code or QA-case completion is implied. Formatting/whitespace and local documentation links checked; no functional tests needed for this documentation-only addition.
+
+### Future biconditional feature
+
+User requests a small future branch for biconditional support, recognizing the current notation gap as a teaching limitation. Recorded scope and provisional branch name in product direction and the implementation plan. Shared truth-table support should provide an operator future derivations can use, without implementing derivations now. Documentation formatting and local link targets checked; no application changes or functional tests in this planning update.
+
+Follow-up decision: include `~` as an alias for existing negation in the same biconditional branch rather than expanding the QA fixes. Retain `!`/`¬`, normalize display to `¬`, preserve IDs/precedence and verify notation equivalence. Updated both planning documents; no parser or guide behavior changes in this documentation-only update.

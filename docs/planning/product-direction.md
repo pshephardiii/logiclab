@@ -198,3 +198,17 @@ The agreed next feature is graded, completion-only, and ungraded practice assign
 ## Controlled assessment investigation
 
 Current assignment feedback/solution controls do not prevent students from solving the same formula through independent practice or external tools. Keep independent practice available and avoid presenting graded homework as a secure exam. Investigate Safe Exam Browser as a future option for supervised assessment, with explicit server integration, accessibility, recovery and operational evaluation before implementation. No browser restrictions or student monitoring are part of the current QA/deployment scope. See [controlled assessment investigation](controlled-assessment.md).
+
+## Near-term conceptual question types
+
+After the current QA work, prioritize a separate feature branch for instructor-authored true/false and single-answer multiple-choice questions before tackling derivations. Instructors supply plain-text questions, choices and correct answers; LogicLab validates structure, protects answer keys and grades selections under existing assignment policies. Reuse versioned problems and assignments, preserving truth-table behavior. See [conceptual question scope and slices](conceptual-questions.md). Exact placement relative to the audit/deployment follow-ups will be settled when QA closes; no feature implementation belongs in the current QA branch.
+
+## Near-term notation feature: biconditional
+
+Biconditionals are common enough in introductory logic that their absence is a meaningful limitation. Add support in a small, separate feature branch: parse and evaluate biconditionals in truth tables now, with an explicit AST operator that future derivation work can use. This is planned work, not part of the current QA fixes.
+
+Propose Unicode `↔` with keyboard alias `<->`, subject to confirming notation before implementation. Define precedence relative to implication and the associativity/chaining rule explicitly; do not assume all textbooks use the same convention. Evaluation is true exactly when both operands have the same truth value. Update canonical labels/structural identifiers for the new operator without changing existing formulas' identifiers, and retain existing length/variable/nesting bounds.
+
+Carry support through shared parser/evaluator/table generation, server validation, authoring/previews, assignments and the keyboard guide. Cover the four truth-value combinations, notation equivalence, grouping/precedence, malformed input, stable existing tables and API/UI integration. Extending the engine does not implement derivation rules; those remain separate work.
+
+Include textbook negation alias `~` in the same branch, alongside existing `!` and `¬`. It maps to the existing negation operator without changing precedence or evaluation; canonical labels remain `¬` and existing structural IDs remain stable. Update the tokenizer, error guidance, keyboard guide and grammar documentation together. Test that `~P`, `!P` and `¬P` produce identical ASTs/tables, including nested grouping and use with biconditionals. This alias remains unsupported until that branch is implemented; do not add it as a current QA fix.
