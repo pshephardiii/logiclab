@@ -1,6 +1,6 @@
 import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
 import './demo.css';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Page } from '../../components/layout/Page';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 
@@ -56,10 +56,6 @@ export function DemoPage() {
           </>
         )}
       </div>
-      <p>
-        <Link to="/">Anonymous truth-table practice</Link> ·{' '}
-        <Link to="/account">Use a normal account</Link>
-      </p>
     </Page>
   );
 }

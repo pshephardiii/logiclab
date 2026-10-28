@@ -325,3 +325,9 @@ User agrees to pursue instructor-authored true/false and single-answer multiple-
 User requests a small future branch for biconditional support, recognizing the current notation gap as a teaching limitation. Recorded scope and provisional branch name in product direction and the implementation plan. Shared truth-table support should provide an operator future derivations can use, without implementing derivations now. Documentation formatting and local link targets checked; no application changes or functional tests in this planning update.
 
 Follow-up decision: include `~` as an alias for existing negation in the same biconditional branch rather than expanding the QA fixes. Retain `!`/`¬`, normalize display to `¬`, preserve IDs/precedence and verify notation equivalence. Updated both planning documents; no parser or guide behavior changes in this documentation-only update.
+
+## QA-012 — Duplicate navigation distracts from demo entry
+
+- Reported October 28, 2026; severity: minor; status: fixed-awaiting-retest by user. Case: DEM-01.
+- User requests removal of the body links Anonymous truth-table practice and Use a normal account because the shared header already provides those destinations. Remove both links and the unused Link import; retain shared navigation and demo role/lifecycle controls.
+- Verification: all eight DemoPage tests passed; formatting/whitespace checked. No new tests for this static-link removal and no browser/full-suite rerun. User visual retest pending; changes uncommitted.
