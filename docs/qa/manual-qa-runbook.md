@@ -6,6 +6,10 @@ This is an executable test plan, not evidence that these checks passed. All case
 
 ## 1. How to use this document
 
+### Current branch completion scope — October 28
+
+The user narrowed remaining manual work to billing and normal-account authentication. Finish the BILL and AUTH journeys, fix blockers/significant functional issues, then perform final automated verification and prepare PR notes. Other unexecuted cases stay Not run or explicitly deferred; do not claim exhaustive QA or infer passes from earlier focused checks. Cosmetic refinements belong to the planned UI/UX audit and structural work to the code audit. This scope change does not remove pre-deployment feature/audit prerequisites.
+
 1. Complete setup and record the commit being tested.
 2. Work through the sections in order. Keep the same demo workspace unless a case explicitly asks for a new one or reset.
 3. For each case ID, record Pass, Fail, Blocked or Not applicable, plus a short observation. Do not mark a section passed because only its happy path worked.
@@ -363,14 +367,15 @@ For UNS-01 through UNS-04 run the actions separately on student answers, an assi
 
 **Expected:** drafting/duplication is permitted without coverage; new publication is blocked. Pending checkout has no coverage or real provider redirect and displays no-real-charge messaging. Server terms are shown; browser input cannot choose arbitrary prices.
 
-### BILL-02 — Success, failure and separate purchases
+### BILL-02 — Success, failure and duplicate-checkout protection
 
-1. On the pending checkout, choose Simulate success and reload billing.
-2. Publish the earlier draft; record its ID and publication date.
-3. Create a second checkout only if you intend a separate purchase; choose Simulate failure.
-4. Reload history and compare both purchase IDs/statuses.
+1. On the pending checkout, verify Create simulated checkout and Plan are disabled. Reload billing and confirm that remains true.
+2. Choose Simulate success and reload billing. Confirm the class is marked paid/covered and a second checkout is still disabled.
+3. Publish the earlier draft; record its ID and publication date.
+4. Use a different unpaid demo class for failure testing. Create a checkout and choose Simulate failure. Confirm a deliberate new checkout is allowed, then create one and confirm its pending state blocks further checkout.
+5. Reload history and compare purchase IDs/statuses. A different plan, another tab or a paginated history page must not bypass the class-wide block; API requests with a new ID for pending/paid classes return 409, while a retry with the original ID returns that purchase.
 
-**Expected:** success grants publishing coverage; failure does not remove another valid grant. Pending/paid/failed states survive reload. Another paid purchase is a separate period starting immediately, not an automatic extension. No card details or real charge occur.
+**Expected:** success grants coverage; pending/paid classes cannot start another checkout. Failed/refunded history alone permits a new intent. State survives reload; no card details or real charge occur. Paid records remain blocking even after coverage expires; renewal/extension is not part of this flow (QA-021).
 
 ### BILL-03 — Refund and retained work
 

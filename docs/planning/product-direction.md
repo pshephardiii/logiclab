@@ -220,3 +220,7 @@ A separate UI/UX audit follows functional QA and precedes public deployment. Rev
 ## Instructor-controlled results release
 
 Complete and verify a separate instructor-results-release feature branch before initial deployment, including the public demo, with official results available either at submission or after an explicit instructor release. Decide in that branch whether grades/completion status must include correct answers or whether answer release is independently controlled; that decision is still open. Keep ungraded practice assistance conceptually distinct from official results. During current QA, graded feedback remains locked at At submission, while completion-only changes are explicitly deferred and saved/published policies remain unchanged. See [results-release scope and decisions](instructor-results-release.md).
+
+## QA billing correction: one unresolved or paid purchase per class
+
+Do not allow another class checkout while any purchase for that class is pending or paid, or active publishing coverage exists. Enforce this server-side across plans and independently of paginated history, and disable the UI action. Preserve same-request idempotent recovery, payment history and existing grants. Failed/refunded states may permit a fresh purchase; paid records continue to block checkout after period expiry, so renewals require a future deliberate policy rather than implicit stacking. This correction applies to normal and demo billing without real charges or a schema migration.

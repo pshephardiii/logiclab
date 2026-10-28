@@ -37,6 +37,7 @@ export function billingFixture() {
     })),
     readClass: jest.fn(async () => ({
       classId,
+      checkoutBlockedReason: null,
       coverage: { active: false, endsAt: null },
       purchases: [],
       nextOffset: null,

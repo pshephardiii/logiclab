@@ -50,6 +50,7 @@ export const billingPlansResponseSchema = z.strictObject({
 });
 export const classBillingResponseSchema = z.strictObject({
   classId: z.uuid(),
+  checkoutBlockedReason: z.enum(['pending', 'paid', 'covered']).nullable(),
   coverage: z.strictObject({ active: z.boolean(), endsAt: z.iso.datetime().nullable() }),
   purchases: z.array(purchaseResponseSchema.shape.purchase.extend({ createdAt: z.iso.datetime() })),
   nextOffset: z.number().int().nonnegative().nullable(),
