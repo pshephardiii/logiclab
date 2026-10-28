@@ -1,6 +1,9 @@
-.problem-list,
-.problem-versions {
+.problem-list {
   padding-left: 1.5rem;
+}
+.problem-versions {
+  list-style: none;
+  padding: 0;
 }
 .problem-versions li {
   margin-bottom: 1.5rem;

@@ -222,3 +222,48 @@ test('reverting problem edits removes protection without saving', async () => {
   await waitFor(() => expect(protectedWork()).toBe(false));
   expect(api.saveProblem).not.toHaveBeenCalled();
 });
+
+test('new-problem formula save errors are visible in the editor and retain the draft for correction', async () => {
+  const user = userEvent.setup();
+  const message = 'Expected a variable, negation, or grouped expression (at character 4).';
+  vi.mocked(api.saveProblem).mockRejectedValueOnce(new Error(message));
+  render(<ProblemLibrary />);
+  await user.type(screen.getByLabelText('Title'), 'My new problem');
+  await user.type(screen.getByLabelText('Instructions'), 'Keep these instructions');
+  await user.type(screen.getByLabelText('Formula'), 'P &');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const alert = await screen.findByRole('alert');
+  expect(alert).toHaveTextContent(message);
+  expect(alert.closest('section')).toContainElement(
+    screen.getByRole('heading', { name: 'Create a problem' }),
+  );
+  expect(alert).toHaveFocus();
+  expect(screen.getByLabelText('Title')).toHaveValue('My new problem');
+  expect(screen.getByLabelText('Instructions')).toHaveValue('Keep these instructions');
+  expect(screen.getByLabelText('Formula')).toHaveValue('P &');
+  expect(protectedWork()).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByRole('alert')).toHaveTextContent(message);
+  await user.type(screen.getByLabelText('Formula'), ' Q');
+  vi.mocked(api.saveProblem).mockResolvedValue({
+    ...draft,
+    title: 'My new problem',
+    instructions: 'Keep these instructions',
+  });
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  await screen.findByRole('heading', { name: 'Edit draft' });
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('discarding an unsuccessful draft clears its save error for the next editor', async () => {
+  const user = await openDraft();
+  vi.mocked(api.saveProblem).mockRejectedValueOnce(new Error('Unable to save this draft.'));
+  await user.type(screen.getByLabelText('Title'), ' edited');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  await screen.findByRole('alert');
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Title')).toHaveValue('');
+});

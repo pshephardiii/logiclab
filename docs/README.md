@@ -11,6 +11,7 @@ Documentation is grouped by purpose:
 | [development/](development/)   | Local PostgreSQL/DBeaver, Cognito configuration, and GitHub setup                      |
 | [api/](api/)                   | Authentication, classroom, problem, assignment, and student-work contracts             |
 | [conventions/](conventions/)   | Codebase structure/style and numbered branch workflow                                  |
+| [qa/](qa/)                     | Manual test instructions, case results, findings and fix history                       |
 | [verification/](verification/) | Feature walkthroughs, checks performed, limitations, and supporting images             |
 
 ## Architecture
@@ -24,13 +25,19 @@ Documentation is grouped by purpose:
 
 - [Implementation plan](planning/initial-implementation-plan.md)
 - [Product direction](planning/product-direction.md)
+- [Pre-deployment UI and UX audit](planning/ui-ux-audit.md)
+- [Controlled assessment and Safe Exam Browser investigation](planning/controlled-assessment.md)
+- [Instructor-authored true/false and multiple-choice questions](planning/conceptual-questions.md)
 - [Assignment learning modes](planning/assignment-learning-modes.md)
+- [Instructor-controlled results release](planning/instructor-results-release.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)
 - [Public demo direction and implementation slices](planning/public-demo.md)
 - [AWS deployment notes](planning/aws-deployment-notes.md)
 
 ## Development setup
+
+- [Dependency installation and script approvals](development/dependency-installation.md)
 
 - [Local database and DBeaver](development/local-database.md)
 - [Cognito development](development/cognito-development.md)
@@ -55,6 +62,11 @@ Documentation is grouped by purpose:
 
 - [Codebase conventions](conventions/codebase-conventions.md)
 - [Branch naming and PR workflow](conventions/branch-naming-conventions.md)
+
+## QA
+
+- [Step-by-step manual QA runbook](qa/manual-qa-runbook.md)
+- [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
 

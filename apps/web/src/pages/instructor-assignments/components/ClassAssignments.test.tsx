@@ -129,7 +129,7 @@ test('repeated publications are distinct occurrences and ordering/removal contro
   let list = within(screen.getByRole('region', { name: 'Selected assignment problems' }));
   expect(list.getAllByRole('listitem')).toHaveLength(3);
   await user.click(screen.getByRole('button', { name: 'Move problem 2 up' }));
-  expect(list.getAllByRole('heading')[1]).toHaveTextContent('1. Second publication');
+  expect(list.getAllByRole('heading')[1]).toHaveTextContent('Second publication · version 2');
   await user.click(screen.getByRole('button', { name: 'Remove problem 3' }));
   vi.mocked(api.updateAssignment).mockResolvedValue(assignment);
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
@@ -374,4 +374,60 @@ test('a failed list refresh after duplication retains the confirmed copy without
   await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   expect(api.assignmentAction).toHaveBeenCalledTimes(1);
   expect(screen.getByLabelText('Assignment title')).toHaveValue(copiedAssignment.title);
+});
+
+test('keeps editor space during detail loading and reveals the loaded assignment', async () => {
+  let resolve!: (value: AssignmentDetail) => void;
+  vi.mocked(api.getAssignment).mockImplementation(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  const user = userEvent.setup();
+  render(<ClassAssignments classId={classId} />);
+  const target = document.querySelector('.assignment-detail') as HTMLDivElement;
+  vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ height: 720 } as DOMRect);
+  const scroll = vi.fn();
+  target.scrollIntoView = scroll;
+  await user.click(await screen.findByRole('button', { name: 'Homework (draft)' }));
+  expect(screen.getByText('Loading assignment…')).toBeInTheDocument();
+  expect(target).toHaveStyle({ minHeight: '720px' });
+  expect(screen.queryByLabelText('Assignment title')).not.toBeInTheDocument();
+  expect(scroll).not.toHaveBeenCalled();
+  await act(async () => resolve(assignment));
+  await screen.findByDisplayValue('Homework');
+  expect(target.style.minHeight).toBe('');
+  expect(scroll).toHaveBeenCalledOnce();
+  await user.clear(screen.getByLabelText('Assignment title'));
+  await user.type(screen.getByLabelText('Assignment title'), 'Unsaved homework');
+  await user.click(screen.getByRole('button', { name: 'New assignment' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Unsaved homework');
+  expect(scroll).toHaveBeenCalledOnce();
+  expect(target.getBoundingClientRect).toHaveBeenCalledTimes(1);
+});
+
+test('lists a problem title once and protects dirty work when following the library link', async () => {
+  const user = await openDraft();
+  expect(
+    screen.getByRole('heading', { name: 'Original publication · version 1' }),
+  ).toBeInTheDocument();
+  const link = screen.getByRole('link', { name: 'Open problem library' });
+  expect(link).toHaveAttribute('href', '/library');
+  await user.type(screen.getByLabelText('Assignment title'), ' revised');
+  await user.click(link);
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Homework revised');
+});
+
+test('the problem-library link retains the demo namespace', async () => {
+  const view = render(<ClassAssignments classId={classId} />);
+  await act(async () => {
+    await view.router.navigate('/demo/assignments');
+  });
+  expect(await screen.findByRole('link', { name: 'Open problem library' })).toHaveAttribute(
+    'href',
+    '/demo/library',
+  );
 });

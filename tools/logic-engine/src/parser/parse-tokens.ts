@@ -62,18 +62,19 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     throw new FormulaParseError(
       'EXPECTED_EXPRESSION',
       token.position,
-      'Expected a variable, negation, or parenthesized expression',
+      'Expected a variable, negation, or grouped expression',
     );
   }
 
   function parseGroup(depth: number, openingToken: Token): Formula {
     cursor++;
     const expression = parseImplication(depth + 1);
-    if (current().kind !== 'close') {
+    const closingSymbol = openingToken.text === '[' ? ']' : ')';
+    if (current().kind !== 'close' || current().text !== closingSymbol) {
       throw new FormulaParseError(
-        'EXPECTED_CLOSING_PAREN',
+        openingToken.text === '[' ? 'EXPECTED_CLOSING_BRACKET' : 'EXPECTED_CLOSING_PAREN',
         current().position,
-        `Expected ')' to close '(' at character ${openingToken.position + 1}`,
+        `Expected '${closingSymbol}' to close '${openingToken.text}' at character ${openingToken.position + 1}`,
       );
     }
     cursor++;

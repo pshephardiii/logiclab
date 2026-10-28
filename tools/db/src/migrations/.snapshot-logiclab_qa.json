@@ -1,0 +1,4022 @@
+{
+  "name": "public",
+  "namespaces": [
+    "public"
+  ],
+  "tables": [
+    {
+      "name": "assignment_attempts",
+      "schema": "public",
+      "columns": {
+        "answers": {
+          "name": "answers",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'{}'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "assignment_id": {
+          "name": "assignment_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "assignment_id",
+            "student_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "assignment_attempts_assignment_student_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "assignment_attempts_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "assignment_attempts_revision_nonnegative",
+          "expression": "revision >= 0",
+          "definition": "CHECK ((revision >= 0))",
+          "columnName": "revision"
+        },
+        {
+          "name": "assignment_attempts_submission_result_check",
+          "expression": "(submitted_at IS NULL) = (result IS NULL)",
+          "definition": "CHECK (((submitted_at IS NULL) = (result IS NULL)))",
+          "columnName": "result"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "assignment_attempts_submitted_immutable",
+          "timing": "before",
+          "events": [
+            "delete",
+            "update"
+          ],
+          "forEach": "row",
+          "body": "if OLD.submitted_at is not null then\n          if TG_OP = 'DELETE' then\n            declare permitted boolean := false;\n            begin\n              execute format(\n                'select true\n                 from %I.assignments a\n                 join %I.classrooms c\n                   on c.id = a.classroom_id\n                 join %I.users owner_user\n                   on owner_user.id = c.owner_id\n                 join %I.users student_user\n                   on student_user.id = $2\n                 join %I.demo_workspaces w\n                   on w.id = owner_user.demo_workspace_id\n                  and w.id = student_user.demo_workspace_id\n                 where a.id = $1\n                   and owner_user.identity_provider = ''demo''\n                   and student_user.identity_provider = ''demo''\n                   and w.status in (''resetting'', ''expired'')\n                 for update of w',\n                TG_TABLE_SCHEMA,\n                TG_TABLE_SCHEMA,\n                TG_TABLE_SCHEMA,\n                TG_TABLE_SCHEMA,\n                TG_TABLE_SCHEMA\n              )\n              into permitted\n              using OLD.assignment_id, OLD.student_id;\n\n              if permitted then\n                return OLD;\n              end if;\n            end;\n          end if;\n\n          raise exception 'Submitted attempts are immutable'\n            using errcode = '23514';\n        end if;\n\n        if TG_OP = 'DELETE' then\n          return OLD;\n        end if;\n\n        return NEW"
+        }
+      ],
+      "foreignKeys": {
+        "assignment_attempts_assignment_id_fkey": {
+          "columnNames": [
+            "assignment_id"
+          ],
+          "constraintName": "assignment_attempts_assignment_id_fkey",
+          "localTableName": "public.assignment_attempts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.assignments",
+          "deleteRule": "restrict"
+        },
+        "assignment_attempts_student_id_fkey": {
+          "columnNames": [
+            "student_id"
+          ],
+          "constraintName": "assignment_attempts_student_id_fkey",
+          "localTableName": "public.assignment_attempts",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "assignment_items",
+      "schema": "public",
+      "columns": {
+        "assignment_id": {
+          "name": "assignment_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "position": {
+          "name": "position",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "problem_version_id": {
+          "name": "problem_version_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "assignment_id",
+            "position"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "assignment_items_assignment_position_unique",
+          "primary": false,
+          "unique": true,
+          "expression": "CREATE UNIQUE INDEX assignment_items_assignment_position_unique ON public.assignment_items USING btree (assignment_id, \"position\")"
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "assignment_items_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "assignment_items_positive_position",
+          "expression": "\"position\" > 0",
+          "definition": "CHECK ((\"position\" > 0))",
+          "columnName": "position"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "assignment_items_assignment_id_fkey": {
+          "columnNames": [
+            "assignment_id"
+          ],
+          "constraintName": "assignment_items_assignment_id_fkey",
+          "localTableName": "public.assignment_items",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.assignments",
+          "deleteRule": "restrict"
+        },
+        "assignment_items_problem_version_id_fkey": {
+          "columnNames": [
+            "problem_version_id"
+          ],
+          "constraintName": "assignment_items_problem_version_id_fkey",
+          "localTableName": "public.assignment_items",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.problem_versions",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "assignments",
+      "schema": "public",
+      "columns": {
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "assessment_mode": {
+          "name": "assessment_mode",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'graded'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "graded",
+            "completion_only",
+            "ungraded_practice"
+          ],
+          "mappedType": "enum"
+        },
+        "classroom_id": {
+          "name": "classroom_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "feedback_timing": {
+          "name": "feedback_timing",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'on_submission'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "on_submission",
+            "on_check",
+            "immediate"
+          ],
+          "mappedType": "enum"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "instructions": {
+          "name": "instructions",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "solution_access": {
+          "name": "solution_access",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'never'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "never",
+            "after_submission",
+            "anytime"
+          ],
+          "mappedType": "enum"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "assignments_classroom_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "assignments_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "assignments_assessment_mode_check",
+          "expression": "\"assessment_mode\" in ('graded', 'completion_only', 'ungraded_practice')",
+          "definition": "check (\"assessment_mode\" in ('graded', 'completion_only', 'ungraded_practice'))",
+          "columnName": "assessment_mode"
+        },
+        {
+          "name": "assignments_feedback_timing_check",
+          "expression": "\"feedback_timing\" in ('on_submission', 'on_check', 'immediate')",
+          "definition": "check (\"feedback_timing\" in ('on_submission', 'on_check', 'immediate'))",
+          "columnName": "feedback_timing"
+        },
+        {
+          "name": "assignments_learning_policy_check",
+          "expression": "((assessment_mode = 'graded'::text) AND (feedback_timing = 'on_submission'::text)) OR ((assessment_mode = ANY (ARRAY['completion_only'::character varying, 'ungraded_practice'::character varying])) AND (feedback_timing = ANY (ARRAY['on_check'::character varying, 'immediate'::character varying])))",
+          "definition": "CHECK (((((assessment_mode)::text = 'graded'::text) AND ((feedback_timing)::text = 'on_submission'::text)) OR (((assessment_mode)::text = ANY ((ARRAY['completion_only'::character varying, 'ungraded_practice'::character varying])::text[])) AND ((feedback_timing)::text = ANY ((ARRAY['on_check'::character varying, 'immediate'::character varying])::text[])))))",
+          "columnName": "assessment_mode"
+        },
+        {
+          "name": "assignments_practice_solution_check",
+          "expression": "(assessment_mode <> 'ungraded_practice'::text) OR (solution_access <> 'after_submission'::text)",
+          "definition": "CHECK ((((assessment_mode)::text <> 'ungraded_practice'::text) OR ((solution_access)::text <> 'after_submission'::text)))",
+          "columnName": "assessment_mode"
+        },
+        {
+          "name": "assignments_solution_access_check",
+          "expression": "\"solution_access\" in ('never', 'after_submission', 'anytime')",
+          "definition": "check (\"solution_access\" in ('never', 'after_submission', 'anytime'))",
+          "columnName": "solution_access"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "assignments_classroom_id_fkey": {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "constraintName": "assignments_classroom_id_fkey",
+          "localTableName": "public.assignments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.classrooms",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "auth_sessions",
+      "schema": "public",
+      "columns": {
+        "access_expires_at": {
+          "name": "access_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "encrypted_tokens": {
+          "name": "encrypted_tokens",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "expires_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "auth_sessions_expires_at_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "auth_sessions_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "auth_sessions_user_id_fkey": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "auth_sessions_user_id_fkey",
+          "localTableName": "public.auth_sessions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "billing_plans",
+      "schema": "public",
+      "columns": {
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "billing_interval": {
+          "name": "billing_interval",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 32,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "billing_model": {
+          "name": "billing_model",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 32,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "capability": {
+          "name": "capability",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "publish_assignments"
+          ],
+          "mappedType": "enum"
+        },
+        "coverage_days": {
+          "name": "coverage_days",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 3,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "billing_plans_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "billing_plans_amount_check",
+          "expression": "amount_minor >= 0",
+          "definition": "CHECK ((amount_minor >= 0))",
+          "columnName": "amount_minor"
+        },
+        {
+          "name": "billing_plans_capability_check",
+          "expression": "\"capability\" in ('publish_assignments')",
+          "definition": "check (\"capability\" in ('publish_assignments'))",
+          "columnName": "capability"
+        },
+        {
+          "name": "billing_plans_currency_check",
+          "expression": "currency ~ '^[A-Z]{3}$'::text",
+          "definition": "CHECK (((currency)::text ~ '^[A-Z]{3}$'::text))",
+          "columnName": "currency"
+        },
+        {
+          "name": "billing_plans_terms_check",
+          "expression": "((billing_model = 'one_time'::text) AND (coverage_days IS NOT NULL) AND (coverage_days > 0) AND (billing_interval IS NULL)) OR ((billing_model = 'recurring'::text) AND (coverage_days IS NULL) AND (billing_interval IS NOT NULL) AND (billing_interval = ANY (ARRAY['month'::character varying, 'year'::character varying])))",
+          "definition": "CHECK (((((billing_model)::text = 'one_time'::text) AND (coverage_days IS NOT NULL) AND (coverage_days > 0) AND (billing_interval IS NULL)) OR (((billing_model)::text = 'recurring'::text) AND (coverage_days IS NULL) AND (billing_interval IS NOT NULL) AND ((billing_interval)::text = ANY ((ARRAY['month'::character varying, 'year'::character varying])::text[])))))",
+          "columnName": "billing_interval"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "class_entitlements",
+      "schema": "public",
+      "columns": {
+        "capability": {
+          "name": "capability",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'publish_assignments'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "publish_assignments"
+          ],
+          "mappedType": "enum"
+        },
+        "classroom_id": {
+          "name": "classroom_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "simulator"
+          ],
+          "mappedType": "enum"
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "class_purchase"
+          ],
+          "mappedType": "enum"
+        },
+        "source_reference": {
+          "name": "source_reference",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "class_entitlements_classroom_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "class_entitlements_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "provider",
+            "source",
+            "source_reference",
+            "classroom_id",
+            "capability"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "class_entitlements_source_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "class_entitlements_capability_check",
+          "expression": "\"capability\" in ('publish_assignments')",
+          "definition": "check (\"capability\" in ('publish_assignments'))",
+          "columnName": "capability"
+        },
+        {
+          "name": "class_entitlements_period_check",
+          "expression": "ends_at > starts_at",
+          "definition": "CHECK ((ends_at > starts_at))",
+          "columnName": "ends_at"
+        },
+        {
+          "name": "class_entitlements_provider_check",
+          "expression": "\"provider\" in ('simulator')",
+          "definition": "check (\"provider\" in ('simulator'))",
+          "columnName": "provider"
+        },
+        {
+          "name": "class_entitlements_source_check",
+          "expression": "\"source\" in ('class_purchase')",
+          "definition": "check (\"source\" in ('class_purchase'))",
+          "columnName": "source"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "class_entitlements_classroom_id_fkey": {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "constraintName": "class_entitlements_classroom_id_fkey",
+          "localTableName": "public.class_entitlements",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.classrooms",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "class_purchases",
+      "schema": "public",
+      "columns": {
+        "amount_minor": {
+          "name": "amount_minor",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "capability": {
+          "name": "capability",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'publish_assignments'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "publish_assignments"
+          ],
+          "mappedType": "enum"
+        },
+        "checkout_reference": {
+          "name": "checkout_reference",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "classroom_id": {
+          "name": "classroom_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "coverage_days": {
+          "name": "coverage_days",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 3,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "last_event_sequence": {
+          "name": "last_event_sequence",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "payer_id": {
+          "name": "payer_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "simulator"
+          ],
+          "mappedType": "enum"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'pending'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "pending",
+            "paid",
+            "failed",
+            "refunded"
+          ],
+          "mappedType": "enum"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "class_purchases_classroom_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "payer_id",
+            "request_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "class_purchases_payer_request_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "class_purchases_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "provider",
+            "checkout_reference"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "class_purchases_provider_checkout_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "class_purchases_amount_check",
+          "expression": "amount_minor >= 0",
+          "definition": "CHECK ((amount_minor >= 0))",
+          "columnName": "amount_minor"
+        },
+        {
+          "name": "class_purchases_capability_check",
+          "expression": "\"capability\" in ('publish_assignments')",
+          "definition": "check (\"capability\" in ('publish_assignments'))",
+          "columnName": "capability"
+        },
+        {
+          "name": "class_purchases_coverage_check",
+          "expression": "coverage_days > 0",
+          "definition": "CHECK ((coverage_days > 0))",
+          "columnName": "coverage_days"
+        },
+        {
+          "name": "class_purchases_currency_check",
+          "expression": "currency ~ '^[A-Z]{3}$'::text",
+          "definition": "CHECK (((currency)::text ~ '^[A-Z]{3}$'::text))",
+          "columnName": "currency"
+        },
+        {
+          "name": "class_purchases_provider_check",
+          "expression": "\"provider\" in ('simulator')",
+          "definition": "check (\"provider\" in ('simulator'))",
+          "columnName": "provider"
+        },
+        {
+          "name": "class_purchases_sequence_check",
+          "expression": "last_event_sequence >= 0",
+          "definition": "CHECK ((last_event_sequence >= 0))",
+          "columnName": "last_event_sequence"
+        },
+        {
+          "name": "class_purchases_status_check",
+          "expression": "\"status\" in ('pending', 'paid', 'failed', 'refunded')",
+          "definition": "check (\"status\" in ('pending', 'paid', 'failed', 'refunded'))",
+          "columnName": "status"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "class_purchases_classroom_id_fkey": {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "constraintName": "class_purchases_classroom_id_fkey",
+          "localTableName": "public.class_purchases",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.classrooms",
+          "deleteRule": "restrict"
+        },
+        "class_purchases_payer_id_fkey": {
+          "columnNames": [
+            "payer_id"
+          ],
+          "constraintName": "class_purchases_payer_id_fkey",
+          "localTableName": "public.class_purchases",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "restrict"
+        },
+        "class_purchases_plan_id_fkey": {
+          "columnNames": [
+            "plan_id"
+          ],
+          "constraintName": "class_purchases_plan_id_fkey",
+          "localTableName": "public.class_purchases",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.billing_plans",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "classrooms",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "invitation_expires_at": {
+          "name": "invitation_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "invitation_hash": {
+          "name": "invitation_hash",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "invitation_hash"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "classrooms_invitation_hash_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "owner_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "classrooms_owner_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "classrooms_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "classrooms_owner_id_fkey": {
+          "columnNames": [
+            "owner_id"
+          ],
+          "constraintName": "classrooms_owner_id_fkey",
+          "localTableName": "public.classrooms",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "demo_sessions",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "generation": {
+          "name": "generation",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "selected_role": {
+          "name": "selected_role",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "student",
+            "instructor"
+          ],
+          "mappedType": "enum"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "demo_sessions_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "demo_sessions_workspace_id_index",
+          "primary": false,
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "demo_sessions_generation_check",
+          "expression": "generation > 0",
+          "definition": "CHECK ((generation > 0))",
+          "columnName": "generation"
+        },
+        {
+          "name": "demo_sessions_hash_check",
+          "expression": "id ~ '^[0-9a-f]{64}$'::text",
+          "definition": "CHECK (((id)::text ~ '^[0-9a-f]{64}$'::text))",
+          "columnName": "id"
+        },
+        {
+          "name": "demo_sessions_role_check",
+          "expression": "\"selected_role\" in ('student', 'instructor')",
+          "definition": "check (\"selected_role\" in ('student', 'instructor'))",
+          "columnName": "selected_role"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "demo_sessions_workspace_id_fkey": {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "constraintName": "demo_sessions_workspace_id_fkey",
+          "localTableName": "public.demo_sessions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.demo_workspaces",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "demo_workspaces",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "generation": {
+          "name": "generation",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "1",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "idle_expires_at": {
+          "name": "idle_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "last_activity_at": {
+          "name": "last_activity_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'provisioning'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "provisioning",
+            "active",
+            "resetting",
+            "expired"
+          ],
+          "mappedType": "enum"
+        },
+        "template_version": {
+          "name": "template_version",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "expires_at",
+            "id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "demo_workspaces_expiry_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "idle_expires_at",
+            "id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "demo_workspaces_idle_expiry_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "demo_workspaces_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "demo_workspaces_lifetime_check",
+          "expression": "(created_at <= last_activity_at) AND (last_activity_at < idle_expires_at) AND (idle_expires_at <= expires_at)",
+          "definition": "CHECK (((created_at <= last_activity_at) AND (last_activity_at < idle_expires_at) AND (idle_expires_at <= expires_at)))",
+          "columnName": "created_at"
+        },
+        {
+          "name": "demo_workspaces_status_check",
+          "expression": "\"status\" in ('provisioning', 'active', 'resetting', 'expired')",
+          "definition": "check (\"status\" in ('provisioning', 'active', 'resetting', 'expired'))",
+          "columnName": "status"
+        },
+        {
+          "name": "demo_workspaces_version_check",
+          "expression": "(template_version > 0) AND (generation > 0)",
+          "definition": "CHECK (((template_version > 0) AND (generation > 0)))",
+          "columnName": "generation"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "durable_jobs",
+      "schema": "public",
+      "columns": {
+        "attempts": {
+          "name": "attempts",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "available_at": {
+          "name": "available_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deduplication_key": {
+          "name": "deduplication_key",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "job_type": {
+          "name": "job_type",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "billing_reconciliation",
+            "demo_cleanup"
+          ],
+          "mappedType": "enum"
+        },
+        "lease_expires_at": {
+          "name": "lease_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "max_attempts": {
+          "name": "max_attempts",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "3",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "schedule_id": {
+          "name": "schedule_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "scheduled_for": {
+          "name": "scheduled_for",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": "'queued'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "status",
+            "available_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "durable_jobs_available_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "status",
+            "lease_expires_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "durable_jobs_lease_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "durable_jobs_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "schedule_id",
+            "scheduled_for"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "durable_jobs_schedule_occurrence_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "job_type",
+            "deduplication_key"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "durable_jobs_type_key_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "durable_jobs_attempts_check",
+          "expression": "((max_attempts >= 1) AND (max_attempts <= 10)) AND ((attempts >= 0) AND (attempts <= max_attempts))",
+          "definition": "CHECK ((((max_attempts >= 1) AND (max_attempts <= 10)) AND ((attempts >= 0) AND (attempts <= max_attempts))))",
+          "columnName": "attempts"
+        },
+        {
+          "name": "durable_jobs_occurrence_check",
+          "expression": "(schedule_id IS NULL) = (scheduled_for IS NULL)",
+          "definition": "CHECK (((schedule_id IS NULL) = (scheduled_for IS NULL)))",
+          "columnName": "schedule_id"
+        },
+        {
+          "name": "durable_jobs_state_check",
+          "expression": "((status = 'queued'::text) AND (attempts < max_attempts) AND (lease_token IS NULL) AND (lease_expires_at IS NULL) AND (completed_at IS NULL)) OR ((status = 'running'::text) AND (attempts > 0) AND (lease_token IS NOT NULL) AND (lease_expires_at IS NOT NULL) AND (completed_at IS NULL)) OR ((status = ANY (ARRAY['succeeded'::character varying, 'failed'::character varying])) AND (attempts > 0) AND (lease_token IS NULL) AND (lease_expires_at IS NULL) AND (completed_at IS NOT NULL))",
+          "definition": "CHECK (((((status)::text = 'queued'::text) AND (attempts < max_attempts) AND (lease_token IS NULL) AND (lease_expires_at IS NULL) AND (completed_at IS NULL)) OR (((status)::text = 'running'::text) AND (attempts > 0) AND (lease_token IS NOT NULL) AND (lease_expires_at IS NOT NULL) AND (completed_at IS NULL)) OR (((status)::text = ANY ((ARRAY['succeeded'::character varying, 'failed'::character varying])::text[])) AND (attempts > 0) AND (lease_token IS NULL) AND (lease_expires_at IS NULL) AND (completed_at IS NOT NULL))))",
+          "columnName": "attempts"
+        },
+        {
+          "name": "durable_jobs_type_check",
+          "expression": "\"job_type\" in ('billing_reconciliation', 'demo_cleanup')",
+          "definition": "check (\"job_type\" in ('billing_reconciliation', 'demo_cleanup'))",
+          "columnName": "job_type"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "durable_jobs_schedule_id_fkey": {
+          "columnNames": [
+            "schedule_id"
+          ],
+          "constraintName": "durable_jobs_schedule_id_fkey",
+          "localTableName": "public.durable_jobs",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.job_schedules",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "enrollments",
+      "schema": "public",
+      "columns": {
+        "classroom_id": {
+          "name": "classroom_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "classroom_id",
+            "student_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "enrollments_classroom_student_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "enrollments_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "student_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "enrollments_student_id_index",
+          "primary": false,
+          "unique": false
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "enrollments_classroom_id_fkey": {
+          "columnNames": [
+            "classroom_id"
+          ],
+          "constraintName": "enrollments_classroom_id_fkey",
+          "localTableName": "public.enrollments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.classrooms",
+          "deleteRule": "cascade"
+        },
+        "enrollments_student_id_fkey": {
+          "columnNames": [
+            "student_id"
+          ],
+          "constraintName": "enrollments_student_id_fkey",
+          "localTableName": "public.enrollments",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "job_runs",
+      "schema": "public",
+      "columns": {
+        "attempt": {
+          "name": "attempt",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "error_code": {
+          "name": "error_code",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "findings_count": {
+          "name": "findings_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "job_id": {
+          "name": "job_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "lease_token": {
+          "name": "lease_token",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "records_checked": {
+          "name": "records_checked",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": "'running'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "job_id",
+            "attempt"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "job_runs_job_attempt_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "lease_token"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "job_runs_lease_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "job_runs_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "job_runs_attempt_check",
+          "expression": "(attempt >= 1) AND (attempt <= 10)",
+          "definition": "CHECK (((attempt >= 1) AND (attempt <= 10)))",
+          "columnName": "attempt"
+        },
+        {
+          "name": "job_runs_counts_check",
+          "expression": "(records_checked >= 0) AND (findings_count >= 0)",
+          "definition": "CHECK (((records_checked >= 0) AND (findings_count >= 0)))",
+          "columnName": "findings_count"
+        },
+        {
+          "name": "job_runs_finished_check",
+          "expression": "(finished_at IS NULL) OR (finished_at >= started_at)",
+          "definition": "CHECK (((finished_at IS NULL) OR (finished_at >= started_at)))",
+          "columnName": "finished_at"
+        },
+        {
+          "name": "job_runs_state_check",
+          "expression": "((status = 'running'::text) AND (finished_at IS NULL) AND (error_code IS NULL)) OR ((status = 'succeeded'::text) AND (finished_at IS NOT NULL) AND (error_code IS NULL)) OR ((status = ANY (ARRAY['failed'::character varying, 'lease_expired'::character varying])) AND (finished_at IS NOT NULL) AND (error_code IS NOT NULL))",
+          "definition": "CHECK (((((status)::text = 'running'::text) AND (finished_at IS NULL) AND (error_code IS NULL)) OR (((status)::text = 'succeeded'::text) AND (finished_at IS NOT NULL) AND (error_code IS NULL)) OR (((status)::text = ANY ((ARRAY['failed'::character varying, 'lease_expired'::character varying])::text[])) AND (finished_at IS NOT NULL) AND (error_code IS NOT NULL))))",
+          "columnName": "error_code"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "job_runs_job_id_fkey": {
+          "columnNames": [
+            "job_id"
+          ],
+          "constraintName": "job_runs_job_id_fkey",
+          "localTableName": "public.job_runs",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.durable_jobs",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "job_schedules",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "interval_seconds": {
+          "name": "interval_seconds",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "job_type": {
+          "name": "job_type",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "billing_reconciliation",
+            "demo_cleanup"
+          ],
+          "mappedType": "enum"
+        },
+        "max_attempts": {
+          "name": "max_attempts",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "3",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "next_run_at": {
+          "name": "next_run_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "enabled",
+            "next_run_at"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "job_schedules_due_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "job_schedules_name_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "job_schedules_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "job_schedules_attempts_check",
+          "expression": "(max_attempts >= 1) AND (max_attempts <= 10)",
+          "definition": "CHECK (((max_attempts >= 1) AND (max_attempts <= 10)))",
+          "columnName": "max_attempts"
+        },
+        {
+          "name": "job_schedules_interval_check",
+          "expression": "interval_seconds > 0",
+          "definition": "CHECK ((interval_seconds > 0))",
+          "columnName": "interval_seconds"
+        },
+        {
+          "name": "job_schedules_type_check",
+          "expression": "\"job_type\" in ('billing_reconciliation', 'demo_cleanup')",
+          "definition": "check (\"job_type\" in ('billing_reconciliation', 'demo_cleanup'))",
+          "columnName": "job_type"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "payment_events",
+      "schema": "public",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "payload_hash": {
+          "name": "payload_hash",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar(32)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "simulator"
+          ],
+          "mappedType": "enum"
+        },
+        "sequence": {
+          "name": "sequence",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "source_reference": {
+          "name": "source_reference",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "payment_events_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "provider",
+            "event_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "payment_events_provider_event_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "provider",
+            "source_reference"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "payment_events_source_index",
+          "primary": false,
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "payment_events_hash_check",
+          "expression": "payload_hash ~ '^[0-9a-f]{64}$'::text",
+          "definition": "CHECK (((payload_hash)::text ~ '^[0-9a-f]{64}$'::text))",
+          "columnName": "payload_hash"
+        },
+        {
+          "name": "payment_events_provider_check",
+          "expression": "\"provider\" in ('simulator')",
+          "definition": "check (\"provider\" in ('simulator'))",
+          "columnName": "provider"
+        },
+        {
+          "name": "payment_events_sequence_check",
+          "expression": "sequence > 0",
+          "definition": "CHECK ((sequence > 0))",
+          "columnName": "sequence"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "problem_versions",
+      "schema": "public",
+      "columns": {
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "instructions": {
+          "name": "instructions",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "problem_id": {
+          "name": "problem_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "problem_versions_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "problem_id",
+            "version"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "problem_versions_problem_version_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "problem_versions_positive_version",
+          "expression": "version > 0",
+          "definition": "CHECK ((version > 0))",
+          "columnName": "version"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "problem_versions_immutable",
+          "timing": "before",
+          "events": [
+            "delete",
+            "update"
+          ],
+          "forEach": "row",
+          "body": "if TG_OP = 'DELETE' then\n          declare permitted boolean := false;\n          begin\n            execute format(\n              'select true\n               from %I.problems p\n               join %I.users u\n                 on u.id = p.owner_id\n               join %I.demo_workspaces w\n                 on w.id = u.demo_workspace_id\n               where p.id = $1\n                 and u.identity_provider = ''demo''\n                 and w.status in (''resetting'', ''expired'')\n               for update of w',\n              TG_TABLE_SCHEMA,\n              TG_TABLE_SCHEMA,\n              TG_TABLE_SCHEMA\n            )\n            into permitted\n            using OLD.problem_id;\n\n            if permitted then\n              return OLD;\n            end if;\n          end;\n        end if;\n\n        raise exception 'Published problem versions are immutable'\n          using errcode = '23514'"
+        }
+      ],
+      "foreignKeys": {
+        "problem_versions_problem_id_fkey": {
+          "columnNames": [
+            "problem_id"
+          ],
+          "constraintName": "problem_versions_problem_id_fkey",
+          "localTableName": "public.problem_versions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.problems",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "problems",
+      "schema": "public",
+      "columns": {
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "definition": {
+          "name": "definition",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "instructions": {
+          "name": "instructions",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(120)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 120,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "owner_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "problems_owner_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "problems_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "problems_owner_id_fkey": {
+          "columnNames": [
+            "owner_id"
+          ],
+          "constraintName": "problems_owner_id_fkey",
+          "localTableName": "public.problems",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "reconciliation_findings",
+      "schema": "public",
+      "columns": {
+        "class_id": {
+          "name": "class_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "detected_at": {
+          "name": "detected_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "grant_id": {
+          "name": "grant_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "job_id": {
+          "name": "job_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "refunded_purchase_active_grant",
+            "paid_purchase_missing_grant",
+            "purchase_grant_terms_mismatch"
+          ],
+          "mappedType": "enum"
+        },
+        "purchase_id": {
+          "name": "purchase_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "job_id",
+            "kind",
+            "purchase_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "reconciliation_findings_job_kind_purchase_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "reconciliation_findings_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "reconciliation_findings_kind_check",
+          "expression": "\"kind\" in ('refunded_purchase_active_grant', 'paid_purchase_missing_grant', 'purchase_grant_terms_mismatch')",
+          "definition": "check (\"kind\" in ('refunded_purchase_active_grant', 'paid_purchase_missing_grant', 'purchase_grant_terms_mismatch'))",
+          "columnName": "kind"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "reconciliation_findings_job_id_fkey": {
+          "columnNames": [
+            "job_id"
+          ],
+          "constraintName": "reconciliation_findings_job_id_fkey",
+          "localTableName": "public.reconciliation_findings",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.durable_jobs",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "users",
+      "schema": "public",
+      "columns": {
+        "cognito_subject": {
+          "name": "cognito_subject",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "cognito_user_pool_id": {
+          "name": "cognito_user_pool_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "demo_workspace_id": {
+          "name": "demo_workspace_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "identity_provider": {
+          "name": "identity_provider",
+          "type": "varchar(16)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 16,
+          "precision": null,
+          "scale": null,
+          "default": "'cognito'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "student",
+            "instructor"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "user_role"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "cognito_user_pool_id",
+            "cognito_subject"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "users_cognito_identity_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "demo_workspace_id",
+            "role"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "users_demo_workspace_role_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "users_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "cognito_user_pool_id",
+            "email"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "users_pool_email_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "users_identity_check",
+          "expression": "((identity_provider = 'cognito'::text) AND (cognito_user_pool_id IS NOT NULL) AND (cognito_subject IS NOT NULL) AND (demo_workspace_id IS NULL)) OR ((identity_provider = 'demo'::text) AND (cognito_user_pool_id IS NULL) AND (cognito_subject IS NULL) AND (email IS NULL) AND (demo_workspace_id IS NOT NULL))",
+          "definition": "CHECK (((((identity_provider)::text = 'cognito'::text) AND (cognito_user_pool_id IS NOT NULL) AND (cognito_subject IS NOT NULL) AND (demo_workspace_id IS NULL)) OR (((identity_provider)::text = 'demo'::text) AND (cognito_user_pool_id IS NULL) AND (cognito_subject IS NULL) AND (email IS NULL) AND (demo_workspace_id IS NOT NULL))))",
+          "columnName": "cognito_subject"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "users_demo_workspace_id_fkey": {
+          "columnNames": [
+            "demo_workspace_id"
+          ],
+          "constraintName": "users_demo_workspace_id_fkey",
+          "localTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.demo_workspaces",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    }
+  ],
+  "views": [],
+  "nativeEnums": {
+    "user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "items": [
+        "student",
+        "instructor"
+      ]
+    }
+  }
+}

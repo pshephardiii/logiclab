@@ -14,13 +14,16 @@ export function AssignmentItems({ items, readOnly, onMove, onRemove }: Props) {
     <section aria-label="Selected assignment problems">
       <h3>Ordered problems ({items.length}/50)</h3>
       {!items.length && (
-        <p>No problems selected. Empty drafts can be saved; add a publication before publishing.</p>
+        <p>
+          No problems selected. Use Add published problems below to build this list. Empty drafts
+          can be saved.
+        </p>
       )}
       <ol className="assignment-items">
         {items.map((item, index) => (
           <li key={item.key}>
             <h4>
-              {index + 1}. {item.version.title} · version {item.version.version}
+              {item.version.title} · version {item.version.version}
             </h4>
             <p>{item.version.instructions || 'No problem instructions.'}</p>
             <code>{item.version.definition.formula}</code>

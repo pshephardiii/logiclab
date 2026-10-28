@@ -34,7 +34,7 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       )}
       {loading && <p role="status">Loading versions…</p>}
       {!loading && !error && versions.length === 0 && <p>No published versions yet.</p>}
-      <ol className="problem-versions">
+      <ol className="problem-versions" role="list">
         {versions.map((version) => (
           <li key={version.id}>
             <h3>

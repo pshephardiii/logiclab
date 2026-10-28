@@ -6,6 +6,7 @@ import type {
   SimulatorRequest,
 } from '@logiclab/contracts';
 import * as apiModule from '../../../api/billing/api';
+import { AccountApiError } from '../../../api/errors';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Class-local billing state. Retain a checkout intent through failed responses; never retry outcomes automatically. */
@@ -83,7 +84,8 @@ export function useClassBilling(classId: string) {
     }
   }
   async function checkout() {
-    if (!selectedPlan || busy) return;
+    if (!selectedPlan || busy || loading || uncertain || !data || data.checkoutBlockedReason)
+      return;
     intent.current ??= { planId: selectedPlan, requestId: crypto.randomUUID() };
     const signal = writes.startRequest();
     setBusy(true);
@@ -98,10 +100,18 @@ export function useClassBilling(classId: string) {
       );
       await load();
     } catch (caught) {
-      if (!signal.aborted)
-        setError(
-          `${caught instanceof Error ? caught.message : 'Checkout failed.'} Retry with the same intent, or reload history to inspect existing purchases before starting another.`,
-        );
+      if (signal.aborted) return;
+      if (caught instanceof AccountApiError && caught.status === 409) {
+        // A definitive business rejection is not an uncertain checkout creation.
+        intent.current = null;
+        setUncertain(true);
+        await load();
+        if (!signal.aborted) setError(caught.message);
+        return;
+      }
+      setError(
+        `${caught instanceof Error ? caught.message : 'Checkout failed.'} Retry with the same intent, or reload history to inspect existing purchases before starting another.`,
+      );
     } finally {
       if (!signal.aborted) setBusy(false);
     }

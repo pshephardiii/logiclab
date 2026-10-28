@@ -263,3 +263,27 @@ Completed branch: `012-feat-unsaved-work-protection`, following the [small-slice
 ## Completed feature: 013-feat-duplicate-assignment
 
 Before the dedicated QA pass, implement same-class duplication into a fresh draft. Slice 1 adds the owner-scoped transactional persistence operation, saved-source locking and PostgreSQL coverage. Slice 2 adds the instructor-only normal/demo duplication endpoint and HTTP/access regression checks. Slice 3 adds the editor action, scoped client support, unsaved-work confirmation, and explicit recovery without automatic retries. Final automated verification and local PR notes are complete; see the [feature plan](duplicate-assignment.md) and [verification evidence](../verification/duplicate-assignment-verification.md). Explicit saves, publication checks and unsaved-work protection are retained. Next: `014-test-demo-qa`, `015-refactor-demo-audit`, and `016-chore-demo-deployment`. Manual browser QA remains pending.
+
+## Current branch: 014-test-demo-qa
+
+Use the [manual QA runbook](../qa/manual-qa-runbook.md) for explicit actions/expected results and the [results, findings and change ledger](../qa/findings-and-changes.md) for run/commit/browser evidence, reproducible issues, fix commits and retests. The plan starts with every manual case Not run. Document fixes in small slices even if the full branch becomes large; preserve failed-run history and distinguish automated evidence from manual results. The code audit and sandbox deployment remain later branches.
+
+## Near-term feature candidate: instructor-authored conceptual questions
+
+Agreed during QA: add true/false and single-answer multiple-choice questions in a focused branch relatively soon after the current QA pass, ahead of derivations. Reuse published problem versions and assignment policy; instructors provide the answer key, so no semantic reasoning engine is required. Proposed scope, compatibility concerns and small slices are in [conceptual questions](conceptual-questions.md). Provisional name: `017-feat-conceptual-questions`; confirm numbering and ordering against audit/deployment work before starting. This is planning, not authorization to start a branch or add feature code during QA.
+
+## Small feature candidate: biconditional support
+
+Schedule a focused biconditional branch relatively soon: the operator is common in logic teaching and currently unsupported. Provisional name: `018-feat-biconditional-support`; confirm the next unused number and priority when starting rather than treating this numbering as a fixed merge order. Add a shared AST/parser/evaluator operator, truth-table generation, authoring/assignment compatibility and keyboard-guide notation. Settle precedence and chaining before coding; proposed spellings are `↔` and `<->`. Preserve existing structural IDs and test old/new formulas. See [product direction](product-direction.md#near-term-notation-feature-biconditional). No derivation implementation or current QA scope expansion.
+
+Bundle `~` as an additional negation alias into this branch. Retain `!`/`¬`, existing negation semantics/precedence and canonical `¬` labels. Include alias-equivalence tests and update keyboard help, parser diagnostics and grammar docs in the same slices. This is planned notation support, not behavior already available during QA.
+
+## Pre-deployment UI and UX audit
+
+After functional QA, complete a dedicated UI/UX audit before public deployment, separate from the planned code correctness/maintainability audit. Assess visual consistency, accessibility, navigation/task flow, all interface states and responsive layouts across student, instructor, anonymous and demo experiences. Agree the visual direction and accessibility target first, then deliver focused fixes with before/after evidence and regression checks. See [audit scope and completion criteria](ui-ux-audit.md). Assign an unused numbered branch when scheduled; this additional release-readiness step supersedes any earlier shorthand implying deployment immediately follows the code audit.
+
+## Required before initial deployment: instructor-controlled results release
+
+Provisional branch `019-feat-instructor-results-release`: introduce explicit instructor release of retained official results, with server-enforced withholding and a student pending-results state. First decide whether releasing grades/completion status always reveals correct answers, and how completion-only practice assistance interacts with official results. Current QA only keeps graded feedback fixed at At submission; the user explicitly deferred completion-only policy/schema changes. Preserve existing behavior until the feature branch. See [release decisions, compatibility and slices](instructor-results-release.md); confirm numbering/priority before starting.
+
+The instructor-results-release branch is an explicit prerequisite for initial deployment, including the public demo. Complete its design decisions, implementation and verification before the deployment branch proceeds to publishing. Previously suggested branch numbers do not determine this dependency; update final sequencing when scheduling the work.

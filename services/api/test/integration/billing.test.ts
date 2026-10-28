@@ -111,7 +111,7 @@ test(
       plan.active = false;
       await em.flush();
       assert.equal((await checkout(requestId)).purchase.amountMinor, 2500);
-      await assert.rejects(checkout(), /plan_unavailable/);
+      await assert.rejects(checkout(), /checkout_pending/);
       plan.active = true;
       await em.flush();
 
@@ -237,15 +237,26 @@ test(
       assert.notEqual(historyPage.purchases[0]!.id, nextHistory.purchases[0]!.id);
       assert.equal(historyPage.coverage.active, true);
       // HTTP policy and the raw body parser must work through real Fastify registration.
+      const routeClass = em.create(Classroom, { owner, name: 'HTTP checkout class' });
+      em.persist(routeClass);
+      await em.flush();
       const routeKey = randomUUID();
       const created = await app.inject({
         method: 'POST',
-        url: `/api/classes/${classroom.id}/checkout`,
+        url: `/api/classes/${routeClass.id}/checkout`,
         headers,
         payload: { planId: plan.id, requestId: routeKey },
       });
       assert.equal(created.statusCode, 201, created.body);
       assert.equal(created.headers['cache-control'], 'no-store');
+      const pendingBlocked = await app.inject({
+        method: 'POST',
+        url: `/api/classes/${routeClass.id}/checkout`,
+        headers,
+        payload: { planId: plan.id, requestId: randomUUID() },
+      });
+      assert.equal(pendingBlocked.statusCode, 409, pendingBlocked.body);
+      assert.equal(pendingBlocked.json().error.code, 'BILLING_CHECKOUT_PENDING');
       const routePurchase = await em.findOneOrFail(ClassPurchase, created.json().purchase.id);
       const raw = signSimulatorEvent(
         wrapper,
@@ -258,6 +269,22 @@ test(
         payload: raw.body,
       });
       assert.equal(received.statusCode, 200, received.body);
+      const paidBlocked = await app.inject({
+        method: 'POST',
+        url: `/api/classes/${routeClass.id}/checkout`,
+        headers,
+        payload: { planId: plan.id, requestId: randomUUID() },
+      });
+      assert.equal(paidBlocked.statusCode, 409, paidBlocked.body);
+      assert.equal(paidBlocked.json().error.code, 'BILLING_CHECKOUT_PAID');
+      const paidRetry = await app.inject({
+        method: 'POST',
+        url: `/api/classes/${routeClass.id}/checkout`,
+        headers,
+        payload: { planId: plan.id, requestId: routeKey },
+      });
+      assert.equal(paidRetry.statusCode, 201, paidRetry.body);
+      assert.equal(paidRetry.json().purchase.id, created.json().purchase.id);
       const badSignature = await app.inject({
         method: 'POST',
         url: '/api/billing/webhook',
@@ -283,6 +310,132 @@ test(
     } finally {
       await app.close();
       await orm.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);
+      await orm.close(true);
+    }
+  },
+);
+
+test(
+  'class-wide checkout guards reject new pending/paid purchases while preserving idempotency and terminal retries',
+  { timeout: 30_000 },
+  async () => {
+    const db = await import('@logiclab/db');
+    const schema = `billing_guard_${randomUUID().replaceAll('-', '')}`;
+    const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
+    const em = orm.em.fork();
+    const config = { signingSecret: 'ab'.repeat(32) };
+    let providerCalls = 0;
+    const adapter = createSimulatorProvider(config);
+    const provider = {
+      ...adapter,
+      createCheckout: async (...args: Parameters<typeof adapter.createCheckout>) => {
+        providerCalls++;
+        return adapter.createCheckout(...args);
+      },
+    };
+    const billing = createBillingService(await createBillingStore(orm), provider, config);
+    try {
+      await orm.schema.create();
+      const owner = em.create(db.User, {
+        role: db.UserRole.Instructor,
+        cognitoUserPoolId: schema,
+        cognitoSubject: 'owner',
+      });
+      const classroom = em.create(db.Classroom, { owner, name: 'Single purchase class' });
+      const coveredClass = em.create(db.Classroom, {
+        owner,
+        name: 'Covered class without a purchase',
+      });
+      const plans = [1, 2].map((i) =>
+        em.create(db.BillingPlan, {
+          name: `Plan ${i}`,
+          billingModel: db.BillingModel.OneTime,
+          amountMinor: 2500,
+          currency: 'USD',
+          coverageDays: 180,
+          capability: db.ClassCapability.PublishAssignments,
+        }),
+      );
+      em.persist([owner, classroom, coveredClass, ...plans]);
+      await em.flush();
+      const checkout = (requestId = randomUUID(), planId = plans[0]!.id) =>
+        billing.checkout(owner.id, classroom.id, { requestId, planId });
+      const requestIds = [randomUUID(), randomUUID()];
+      const results = await Promise.allSettled(requestIds.map((id) => checkout(id)));
+      assert.equal(results.filter((row) => row.status === 'fulfilled').length, 1);
+      const rejected = results.find((row) => row.status === 'rejected');
+      assert(rejected && rejected.status === 'rejected');
+      assert.match(String(rejected.reason), /checkout_pending/);
+      const winner = results.findIndex((row) => row.status === 'fulfilled');
+      const result = results[winner]!;
+      assert(result.status === 'fulfilled');
+      const pending = result.value.purchase;
+      assert.equal(providerCalls, 1);
+      assert.equal(await em.count(db.ClassPurchase, {}), 1);
+      assert.equal((await checkout(requestIds[winner])).purchase.id, pending.id);
+      await assert.rejects(checkout(randomUUID(), plans[1]!.id), /checkout_pending/);
+      // Eligibility is not inferred from a paginated purchase list.
+      const hiddenPending = await billing.readClass(owner.id, classroom.id, {
+        limit: 1,
+        offset: 20,
+      });
+      assert.equal(hiddenPending.purchases.length, 0);
+      assert.equal(hiddenPending.checkoutBlockedReason, 'pending');
+      await billing.simulate(owner.id, pending.id, 'paid');
+      await assert.rejects(checkout(), /checkout_paid/);
+      assert.equal((await checkout(requestIds[winner])).purchase.id, pending.id);
+      assert.equal(providerCalls, 1);
+      assert.equal(
+        (await billing.readClass(owner.id, classroom.id, { limit: 1, offset: 20 }))
+          .checkoutBlockedReason,
+        'paid',
+      );
+      // A paid record must not encourage another charge when its grant expires or is missing.
+      await em.nativeUpdate(
+        db.ClassEntitlement,
+        { classroom: classroom.id },
+        { startsAt: new Date(Date.now() - 180 * 86400000), endsAt: new Date(Date.now() - 1) },
+      );
+      await assert.rejects(checkout(), /checkout_paid/);
+      await billing.simulate(owner.id, pending.id, 'refunded');
+      assert.equal(
+        (await billing.readClass(owner.id, classroom.id, { limit: 1, offset: 0 }))
+          .checkoutBlockedReason,
+        null,
+      );
+      const retry = await checkout();
+      await billing.simulate(owner.id, retry.purchase.id, 'failed');
+      const next = await checkout();
+      assert.notEqual(next.purchase.id, retry.purchase.id);
+      assert.equal(providerCalls, 3);
+      const now = Date.now();
+      em.persist(
+        em.create(db.ClassEntitlement, {
+          classroom: coveredClass,
+          provider: db.BillingProvider.Simulator,
+          source: db.EntitlementSource.ClassPurchase,
+          sourceReference: randomUUID(),
+          capability: db.ClassCapability.PublishAssignments,
+          startsAt: new Date(now - 1000),
+          endsAt: new Date(now + 60000),
+        }),
+      );
+      await em.flush();
+      await assert.rejects(
+        billing.checkout(owner.id, coveredClass.id, {
+          planId: plans[0]!.id,
+          requestId: randomUUID(),
+        }),
+        /checkout_covered/,
+      );
+      assert.equal(
+        (await billing.readClass(owner.id, coveredClass.id, { limit: 1, offset: 0 }))
+          .checkoutBlockedReason,
+        'covered',
+      );
+      assert.equal(providerCalls, 3);
+    } finally {
+      await orm.em.execute(`drop schema if exists "${schema}" cascade`);
       await orm.close(true);
     }
   },

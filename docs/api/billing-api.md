@@ -18,6 +18,10 @@ The request ID identifies one checkout intent. Reuse it after a network failure;
 
 Response (201) contains `purchase` with ID, class/plan IDs, status, amount in minor units, currency, coverage days, and capability; plus `mode: "simulated"` and a no-real-payment notice. It contains no signing key or provider credentials. Checkout creates neither coverage nor a successful-payment event.
 
+New checkout intents are class-wide guarded: any pending purchase returns 409 `BILLING_CHECKOUT_PENDING`; any paid purchase returns 409 `BILLING_CHECKOUT_PAID`; otherwise active publishing coverage returns 409 `BILLING_CHECKOUT_COVERED`. Changing plans, paging history or using a new request ID cannot bypass this guard. Ownership and existing-request idempotency are checked first, so a matching retry still returns its original purchase, including after payment. The payer/class locks serialize new checkout decisions with competing checkout and funding changes; no provider session is created for a blocked request.
+
+Failed/refunded purchases do not by themselves block a deliberate fresh checkout. A paid purchase remains blocking even after its coverage period ends or its grant is missing; this branch does not introduce renewals, stacking or extending an existing class period. Existing duplicate purchases/grants are retained without automatic refund or deletion. Future renewals/subscription allocation need an explicit policy.
+
 The local provider makes no network call. Creating a real external checkout while holding a transaction would require a separate integration design (provider idempotency/reconciliation); this implementation does not claim real-provider checkout reliability.
 
 ## Simulator control
@@ -56,12 +60,16 @@ Coverage is required only for the first publication transition. Repeating a publ
 
 ## Instructor billing reads and UI
 
+Class billing reads return `checkoutBlockedReason: null | "pending" | "paid" | "covered"`. It is computed from all class purchases/active grants independently of history pagination; a page containing only failed/refunded records does not imply another checkout is allowed. This is a required response field, so run matching rebuilt contracts/API/frontend versions together. No database migration is required for this guard.
+
 `GET /api/billing/plans` lists active one-time plans; recurring or retired plans are excluded. `GET /api/classes/:classId/billing` returns owned class coverage and purchase history. Both require an instructor session, use `Cache-Control: no-store`, accept `offset` (default 0) and `limit` (default 20, maximum 50), and return `nextOffset` or null. Plan order is name/ID; history order is newest creation time/ID. Offset pages can shift with concurrent changes.
 
 Coverage is evaluated on the server under the shared class lock. Its `active` flag and latest end time refer to currently valid grants; future or revoked grants do not count. Read responses expose purchase IDs, purchased terms, status, and creation time, without source references, request IDs, event payloads, or credentials. Foreign classes return 404.
 
-Instructors can use `/billing` to select a class, page through plans/history, create a no-charge checkout, simulate success/failure, and refund a paid purchase. The page explains one-time coverage, retention, and the fact that another purchase starts its own period rather than extending the current one. Assignment pages link to billing when publication requires coverage. There is no institutional subscription UI.
+Instructors can use `/billing` to select a class, page through plans/history, create a no-charge checkout, simulate success/failure, and refund a paid purchase. The page explains one-time coverage/retention and disables checkout and plan selection for a paid, pending or otherwise covered class. Assignment pages link to billing when publication requires coverage. There is no institutional subscription UI.
 
 A failed checkout response retains its request ID while the page remains mounted, and retry uses the same intent. The selected plan stays pinned until that retry succeeds or the user explicitly discards the retry intent after inspecting history. Browser navigation/reload does not persist an unconfirmed checkout intent: inspect history before creating another checkout. Canceling browser requests cannot cancel committed server work. An uncertain simulated outcome disables further outcome controls until billing is reloaded; outcomes are never retried automatically. No signing secrets, tokens, or checkout intents are stored in browser storage.
 
 For local setup, run `npm run db:migrate`, then `npm run billing:seed` from the repository root. The seed creates one USD 25.00 / 180-day simulated plan at a stable ID; rerunning preserves edited/retired terms. It neither creates purchases nor grants coverage. Set `BILLING_ENABLED=true` and a dedicated signing key in ignored `.env`, restart the API, and visit `/billing` as an instructor. Disabled billing returns clear unavailable/setup guidance. The UI displays refreshed snapshots; publication always rechecks coverage on the server.
+
+A definitive checkout 409 clears the failed retry intent and reloads authoritative billing state, preserving the server explanation. If reconciliation fails, further payment actions remain blocked until a successful reload. Network/uncertain checkout failures still retain the original request ID for idempotent retry.

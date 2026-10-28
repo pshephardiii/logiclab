@@ -128,3 +128,9 @@ test('generation returns independent data on repeated calls', () => {
   expect(first.rows).not.toBe(second.rows);
   expect(first.rows[0]!.values).not.toBe(second.rows[0]!.values);
 });
+
+test('grouping brackets preserve canonical columns, rows and answer values', () => {
+  expect(generateTruthTable('[(P v Q) & ![R -> P]]')).toEqual(
+    generateTruthTable('((P v Q) & !(R -> P))'),
+  );
+});

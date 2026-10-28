@@ -78,6 +78,10 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
   }
   return (
     <div className="assignment-policy">
+      <p className="help">
+        Feedback tells students whether their entries are correct. Solution access lets them reveal
+        the correct answers. These are separate controls.
+      </p>
       <label htmlFor="assignment-mode">Assessment mode</label>
       <select
         id="assignment-mode"
@@ -103,7 +107,7 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
         aria-describedby="assignment-feedback-help"
       >
         {policy.assessmentMode === 'graded' ? (
-          <option value="on_submission">On final submission</option>
+          <option value="on_submission">At submission</option>
         ) : (
           <>
             <option value="on_check">On explicit Check answers</option>
@@ -113,10 +117,10 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
       </select>
       <p id="assignment-feedback-help" className="help">
         {policy.feedbackTiming === 'on_submission'
-          ? 'Graded work receives feedback only on final submission.'
+          ? 'Graded work receives correct/incorrect feedback and a score only on final submission. This timing is fixed for Graded; solution access is configured separately.'
           : policy.feedbackTiming === 'immediate'
             ? 'Incorrect entries are highlighted without revealing the answer. Manual Check answers remains available; saving is still explicit.'
-            : 'Students choose Check answers to receive feedback. Saving is still explicit.'}
+            : 'Students choose Check answers for correct/incorrect feedback, without revealing correct answers. Saving is still explicit.'}
       </p>
       <label htmlFor="assignment-solutions">Solution access</label>
       <select
@@ -132,8 +136,16 @@ export function AssignmentPolicyFields({ policy, onChange }: Props) {
         <option value="anytime">Anytime</option>
       </select>
       <p id="assignment-solutions-help" className="help">
-        Solution access defaults to Never. Assessment, feedback and solution settings are locked
-        after publication.
+        {policy.solutionAccess === 'never'
+          ? 'Students cannot reveal the correct answers through solution controls, even after submission.'
+          : policy.solutionAccess === 'after_submission'
+            ? 'Students may reveal the correct answers only after final submission.'
+            : 'Students may reveal the correct answers at any time, even before attempting the problems.'}{' '}
+        This does not change when correctness feedback is given. These settings are locked after
+        publication.
+        {policy.assessmentMode === 'graded' && policy.solutionAccess === 'anytime' && (
+          <> Anytime allows answers to be viewed before graded submission.</>
+        )}
       </p>
       {notice && <p role="status">{notice}</p>}
     </div>

@@ -117,9 +117,9 @@ test('enabled solutions are fetched only after final submission and preserve sav
   await screen.findByRole('button', { name: 'Hide assigned solution' });
   expect(api.readAssignedSolution).toHaveBeenCalledWith(work.id, itemA, expect.any(AbortSignal));
   expect(cells()[0]).toHaveValue('F');
-  expect(screen.getByText('Solution: T')).toBeInTheDocument();
+  expect(screen.getByLabelText('Correct answer: T')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
-  expect(screen.queryByText('Solution: T')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Correct answer: T')).not.toBeInTheDocument();
 });
 
 test('switching assignments aborts pending saves and ignores their late result', async () => {
@@ -326,7 +326,7 @@ test('immediate work keeps blanks neutral and manual checking available without 
   expect(screen.queryByText('Unanswered', { exact: true })).not.toBeInTheDocument();
   expect(cells()[0]).toHaveAttribute('aria-invalid', 'true');
   expect(cells()[1]).not.toHaveAttribute('aria-describedby');
-  expect(screen.queryByText(/Solution:/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/Correct answer:/)).not.toBeInTheDocument();
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
   expect(api.submitAssignedWork).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Next problem' }));

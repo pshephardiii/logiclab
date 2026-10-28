@@ -12,6 +12,18 @@ const failures = {
     status: 409,
     message: 'This request ID was already used for different checkout terms.',
   },
+  checkout_pending: {
+    status: 409,
+    message: 'This class already has a pending checkout. Use purchase history to resolve it.',
+  },
+  checkout_paid: {
+    status: 409,
+    message: 'This class has already been paid for. Another checkout is not available.',
+  },
+  checkout_covered: {
+    status: 409,
+    message: 'This class already has publishing coverage. Another checkout is not available.',
+  },
   invalid_event: { status: 400, message: 'Payment event could not be accepted.' },
   event_conflict: {
     status: 409,

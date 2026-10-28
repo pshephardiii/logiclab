@@ -20,6 +20,12 @@ Keep structural refactors separate from product changes and broad mechanical for
 
 Keep dependencies directed toward these shared capabilities. Tools must not import application or service implementation modules. Consumers import the supported API through `@logiclab/contracts`, `@logiclab/db`, or `@logiclab/logic-engine`, rather than reaching into their source directories.
 
+## Tools: browser and server contracts builds
+
+The contracts package builds from one source tree into CommonJS for Node (`dist/index.js`) and ES modules for browser bundlers (`dist/browser/index.js`, selected by the package's `browser` field). Browser ES modules allow unused exports and validation-library code to be removed during production bundling. The browser output is bundler input, not a native Node entry point; declarations and declaration maps remain on the existing shared types entry.
+
+Keep both targets in build, typecheck and development watch commands. Consumers continue importing `@logiclab/contracts`; do not alias across workspace source directories or duplicate contracts. Verify frontend production sizes and server consumers when changing package resolution. Keep chunk-size diagnostics enabled and measure emitted totals as well as individual chunks; splitting a large file alone does not prove less code is downloaded.
+
 ## Tools: file organization and readability
 
 - Use named functions that describe their responsibility. Entry points should show the main steps; focused helpers should contain their details.
@@ -234,6 +240,8 @@ Keep domain differences explicit: authentication maps a missing service to its e
 
 Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
 
+Map domain errors with their own contracts when they include domain-specific fields such as a parser position; a strict auth error contract must not erase a valid problem error message. Keep safe fallbacks for malformed responses. Show save failures in the owning editor, not solely in an offscreen page-level banner, and preserve the unsaved fields and navigation protection.
+
 API clients are plain asynchronous functions, not React hooks. Hooks call them and own UI state. Keep request transport, successful-response validation, domain error mapping, and UI transitions separately understandable. Infer validated response types from schemas rather than casting untrusted JSON.
 
 ## Web: style ownership
@@ -303,3 +311,7 @@ Use the single UnsavedWorkProvider under the browser data router. Editors regist
 Use useConfirmDiscard before same-page actions that replace dirty state. Keep the complete destructive action inside its callback; Stay must not change selections, abort active work or invoke a session mutation. The hook cancels a pending callback when its owner unmounts. Discard authorizes one action rather than installing a global bypass. Preserve list/filter/preview operations that retain edits without unnecessary prompts. Forced credential changes and authorization must never depend on discard consent.
 
 Dirty unregistration must be visible synchronously to route blocking, so forced session redirects cannot see a stale registration while React updates rendered state. Native dialog focus and browser unload UI require browser QA; shared DOM test helpers only simulate native dialog methods.
+
+## Web: site and workspace navigation
+
+Keep Navigation focused on site-wide destinations and WorkspaceNavigation focused on the active account's role-specific resource routes. Derive links from route definitions; demo workspace links belong inside the demo notice with explicit `/demo/` destinations, while normal workspaces use normal resource paths. Give the navigation landmarks distinct accessible names and retain active-link cues. Do not use a demo identity to label a normal account, combine both link levels into one menu, or bypass router/unsaved-work guards when switching flows.

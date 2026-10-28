@@ -194,3 +194,33 @@ Expire workspaces after inactivity and an absolute lifetime; reject expired sess
 ## Assignment learning modes follow-up
 
 The agreed next feature is graded, completion-only, and ungraded practice assignments with explicit checking and independent solution release. See [learning-mode decisions and delivery slices](assignment-learning-modes.md). Immediate per-cell feedback remains deferred. Existing graded endpoints remain unchanged until the new persistence and workflows are implemented; the earlier single-mode statements describe the initial release.
+
+## Controlled assessment investigation
+
+Current assignment feedback/solution controls do not prevent students from solving the same formula through independent practice or external tools. Keep independent practice available and avoid presenting graded homework as a secure exam. Investigate Safe Exam Browser as a future option for supervised assessment, with explicit server integration, accessibility, recovery and operational evaluation before implementation. No browser restrictions or student monitoring are part of the current QA/deployment scope. See [controlled assessment investigation](controlled-assessment.md).
+
+## Near-term conceptual question types
+
+After the current QA work, prioritize a separate feature branch for instructor-authored true/false and single-answer multiple-choice questions before tackling derivations. Instructors supply plain-text questions, choices and correct answers; LogicLab validates structure, protects answer keys and grades selections under existing assignment policies. Reuse versioned problems and assignments, preserving truth-table behavior. See [conceptual question scope and slices](conceptual-questions.md). Exact placement relative to the audit/deployment follow-ups will be settled when QA closes; no feature implementation belongs in the current QA branch.
+
+## Near-term notation feature: biconditional
+
+Biconditionals are common enough in introductory logic that their absence is a meaningful limitation. Add support in a small, separate feature branch: parse and evaluate biconditionals in truth tables now, with an explicit AST operator that future derivation work can use. This is planned work, not part of the current QA fixes.
+
+Propose Unicode `↔` with keyboard alias `<->`, subject to confirming notation before implementation. Define precedence relative to implication and the associativity/chaining rule explicitly; do not assume all textbooks use the same convention. Evaluation is true exactly when both operands have the same truth value. Update canonical labels/structural identifiers for the new operator without changing existing formulas' identifiers, and retain existing length/variable/nesting bounds.
+
+Carry support through shared parser/evaluator/table generation, server validation, authoring/previews, assignments and the keyboard guide. Cover the four truth-value combinations, notation equivalence, grouping/precedence, malformed input, stable existing tables and API/UI integration. Extending the engine does not implement derivation rules; those remain separate work.
+
+Include textbook negation alias `~` in the same branch, alongside existing `!` and `¬`. It maps to the existing negation operator without changing precedence or evaluation; canonical labels remain `¬` and existing structural IDs remain stable. Update the tokenizer, error guidance, keyboard guide and grammar documentation together. Test that `~P`, `!P` and `¬P` produce identical ASTs/tables, including nested grouping and use with biconditionals. This alias remains unsupported until that branch is implemented; do not add it as a current QA fix.
+
+## Product-wide UI and UX audit before deployment
+
+A separate UI/UX audit follows functional QA and precedes public deployment. Review aesthetics and consistency, accessibility, navigation and task flow, interface states, and mobile/zoom behavior across the existing product. Keep this distinct from the code audit and new feature work. Agree a visual direction and accessibility target, make small traceable fixes, and record before/after evidence plus testing limitations. See [UI/UX audit plan](ui-ux-audit.md).
+
+## Instructor-controlled results release
+
+Complete and verify a separate instructor-results-release feature branch before initial deployment, including the public demo, with official results available either at submission or after an explicit instructor release. Decide in that branch whether grades/completion status must include correct answers or whether answer release is independently controlled; that decision is still open. Keep ungraded practice assistance conceptually distinct from official results. During current QA, graded feedback remains locked at At submission, while completion-only changes are explicitly deferred and saved/published policies remain unchanged. See [results-release scope and decisions](instructor-results-release.md).
+
+## QA billing correction: one unresolved or paid purchase per class
+
+Do not allow another class checkout while any purchase for that class is pending or paid, or active publishing coverage exists. Enforce this server-side across plans and independently of paginated history, and disable the UI action. Preserve same-request idempotent recovery, payment history and existing grants. Failed/refunded states may permit a fresh purchase; paid records continue to block checkout after period expiry, so renewals require a future deliberate policy rather than implicit stacking. This correction applies to normal and demo billing without real charges or a schema migration.

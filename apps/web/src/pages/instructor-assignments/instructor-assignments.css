@@ -36,3 +36,17 @@
   width: 100%;
   margin-bottom: 1rem;
 }
+
+.assignment-detail {
+  scroll-margin-top: 1rem;
+}
+.assignment-loading {
+  min-height: 12rem;
+  margin-top: 0;
+  color: #465b65;
+}
+
+.assignment-policy > .help,
+.assignment-picker-help {
+  margin: 0.5rem 0 1.25rem;
+}

@@ -1,11 +1,11 @@
-import { DemoBanner } from '../../features/demo/DemoBanner';
 import { Navigation } from './Navigation';
+import { WorkspaceNavigation } from './WorkspaceNavigation';
 
 export function Header() {
   return (
     <header className="app-header">
       <Navigation />
-      <DemoBanner />
+      <WorkspaceNavigation />
     </header>
   );
 }

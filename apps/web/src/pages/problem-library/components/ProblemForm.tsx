@@ -1,15 +1,27 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { CreateProblemRequest, ProblemDraft } from '@logiclab/contracts';
 
 type Props = {
   problem: ProblemDraft | null;
   busy: boolean;
+  saveError?: string | null;
   onSave: (input: CreateProblemRequest) => Promise<boolean>;
   onPreview: (formula: string) => void;
   onDirty: (dirty: boolean) => void;
 };
 /** Keeps unsaved fields locally, including after failed saves; archived drafts are read-only. */
-export function ProblemForm({ problem, busy, onSave, onPreview, onDirty }: Props) {
+export function ProblemForm({
+  problem,
+  busy,
+  saveError = null,
+  onSave,
+  onPreview,
+  onDirty,
+}: Props) {
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (saveError) errorRef.current?.focus();
+  }, [saveError]);
   const [title, setTitle] = useState(problem?.title ?? '');
   const [instructions, setInstructions] = useState(problem?.instructions ?? '');
   const [formula, setFormula] = useState(problem?.definition.formula ?? '');
@@ -32,7 +44,16 @@ export function ProblemForm({ problem, busy, onSave, onPreview, onDirty }: Props
   return (
     <section className="panel">
       <h2>{problem ? 'Edit draft' : 'Create a problem'}</h2>
-      <form className="problem-editor" onSubmit={(event) => void handleSubmit(event)}>
+      {saveError && (
+        <p ref={errorRef} id="problem-save-error" className="error" role="alert" tabIndex={-1}>
+          {saveError}
+        </p>
+      )}
+      <form
+        aria-describedby={saveError ? 'problem-save-error' : undefined}
+        className="problem-editor"
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <fieldset disabled={busy || Boolean(problem?.archivedAt)}>
           <label htmlFor="problem-title">Title</label>
           <input

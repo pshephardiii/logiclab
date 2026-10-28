@@ -11,7 +11,7 @@ test('selecting blank/T/F emits domain values with accessible feedback', async (
   const input = screen.getByRole('combobox', { name: props.label });
   expect(input).toHaveAttribute('aria-invalid', 'true');
   expect(input).toHaveAccessibleDescription('Incorrect');
-  expect(screen.getByText('Solution: F')).toBeInTheDocument();
+  expect(screen.getByLabelText('Correct answer: F')).toBeInTheDocument();
   await user.selectOptions(input, 'T');
   expect(change).toHaveBeenLastCalledWith(true);
   await user.selectOptions(input, 'F');
@@ -20,5 +20,5 @@ test('selecting blank/T/F emits domain values with accessible feedback', async (
   await user.selectOptions(input, '');
   expect(change).toHaveBeenLastCalledWith(null);
   expect(input).not.toHaveAttribute('aria-describedby');
-  expect(screen.queryByText('Solution: F')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Correct answer: F')).not.toBeInTheDocument();
 });

@@ -1,4 +1,5 @@
 import { transactionRunner, type DatabaseManager } from '../transactions';
+import { checkoutBlockedReason } from './checkout-availability';
 import { purchaseResponse } from './purchase-response';
 import { createBillingReadStore, type BillingReadStore } from './read-store';
 import type { createDatabase, ClassPurchase as PurchaseEntity } from '@logiclab/db' with {
@@ -129,7 +130,7 @@ export async function createBillingStore(
         const classroom = await em.findOne(
           Classroom,
           { id: classId, owner: ownerId },
-          { lockMode: LockMode.PESSIMISTIC_READ },
+          { lockMode: LockMode.PESSIMISTIC_WRITE },
         );
         if (!classroom) throw new BillingError('not_found');
         const existing = await em.findOne(ClassPurchase, {
@@ -141,6 +142,8 @@ export async function createBillingStore(
             throw new BillingError('request_conflict');
           return purchaseResponse(existing);
         }
+        const blocked = await checkoutBlockedReason(em, classId);
+        if (blocked) throw new BillingError(`checkout_${blocked}`);
         const plan = await em.findOne(
           BillingPlan,
           { id: input.planId },

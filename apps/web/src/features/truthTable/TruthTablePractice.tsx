@@ -1,4 +1,5 @@
 import './truth-table.css';
+import { useEffect, useRef } from 'react';
 import { usePracticeContext } from './PracticeProvider';
 import { FormulaForm } from './components/FormulaForm';
 import { ExercisePanel } from './components/ExercisePanel';
@@ -8,6 +9,21 @@ import { ExercisePanel } from './components/ExercisePanel';
  */
 export function TruthTablePractice() {
   const practice = usePracticeContext();
+  const tablePanelRef = useRef<HTMLElement>(null);
+  const previousExercise = useRef(practice.exercise);
+
+  useEffect(() => {
+    const created = practice.exercise !== null && practice.exercise !== previousExercise.current;
+    previousExercise.current = practice.exercise;
+    // Returning to a retained table or checking answers should not move the page.
+    if (!created) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    tablePanelRef.current?.scrollIntoView({
+      behavior: reducedMotion ? 'instant' : 'smooth',
+      block: 'start',
+    });
+  }, [practice.exercise]);
+
   return (
     <>
       <header>
@@ -26,6 +42,7 @@ export function TruthTablePractice() {
         onCreate={practice.createTable}
       />
       <ExercisePanel
+        panelRef={tablePanelRef}
         exercise={practice.exercise}
         formula={practice.formula}
         answers={practice.answers}

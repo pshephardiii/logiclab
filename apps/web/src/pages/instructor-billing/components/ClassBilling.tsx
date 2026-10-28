@@ -7,9 +7,7 @@ export function ClassBilling({ classId }: { classId: string }) {
   const state = useClassBilling(classId);
   const blocked = state.busy || state.loading;
   const selected = state.plans.find((plan) => plan.id === state.selectedPlan);
-  const pending = state.data?.purchases.some(
-    (purchase) => purchase.status === 'pending' && purchase.planId === state.selectedPlan,
-  );
+  const checkoutReason = state.data?.checkoutBlockedReason;
   return (
     <div className="class-billing">
       {state.error && (
@@ -31,17 +29,20 @@ export function ClassBilling({ classId }: { classId: string }) {
               Each purchase covers one class for its stated period, starting when simulated success
               is processed. This is not a subscription.
             </p>
-            {state.data.coverage.active && (
+            {checkoutReason && (
               <p>
-                This class already has coverage. Another purchase starts a separate period
-                immediately; it does not extend the current period.
+                {checkoutReason === 'pending'
+                  ? 'This class has a pending checkout. Resolve it in purchase history before starting another.'
+                  : checkoutReason === 'paid'
+                    ? 'This class has already been paid for. Another checkout is not available.'
+                    : 'This class already has publishing coverage. Another checkout is not available.'}
               </p>
             )}
             <label htmlFor="billing-plan">Plan</label>
             <select
               id="billing-plan"
               value={state.selectedPlan}
-              disabled={blocked || state.retryCheckout}
+              disabled={blocked || state.retryCheckout || Boolean(checkoutReason)}
               onChange={(event) => state.choosePlan(event.target.value)}
             >
               <option value="">Choose a plan</option>
@@ -66,16 +67,11 @@ export function ClassBilling({ classId }: { classId: string }) {
                 Load more plans
               </button>
             )}
-            {pending && !state.retryCheckout && (
-              <p>
-                Use the pending checkout in purchase history before creating another for this plan.
-              </p>
-            )}
             <button
               disabled={
                 blocked ||
                 (!selected && !state.retryCheckout) ||
-                Boolean(pending && !state.retryCheckout) ||
+                Boolean(checkoutReason) ||
                 state.uncertain
               }
               onClick={() => void state.checkout()}

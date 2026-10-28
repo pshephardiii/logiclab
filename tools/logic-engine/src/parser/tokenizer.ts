@@ -8,9 +8,12 @@ const symbols: Readonly<Record<string, TokenKind>> = {
   '&': 'and',
   '∨': 'or',
   '|': 'or',
+  v: 'or',
   '→': 'implies',
   '(': 'open',
   ')': 'close',
+  '[': 'open',
+  ']': 'close',
 };
 
 export function tokenize(source: string): Token[] {
@@ -31,7 +34,7 @@ export function tokenize(source: string): Token[] {
       throw new FormulaParseError(
         'INVALID_CHARACTER',
         position,
-        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!, ∧/&, ∨/|, →/->, or parentheses`,
+        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!, ∧/&, ∨/v/|, →/->, parentheses, or square brackets`,
       );
     }
     tokens.push({ kind, text, position });

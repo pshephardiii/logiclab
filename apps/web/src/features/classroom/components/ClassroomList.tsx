@@ -24,11 +24,16 @@ export function ClassroomList({
   return (
     <>
       {classrooms.length ? (
-        <ul>
+        <ul className="classroom-list">
           {classrooms.map((classroom) => (
-            <li key={classroom.id}>
-              <strong>{classroom.name}</strong> — Created{' '}
-              {new Date(classroom.createdAt).toLocaleDateString()}
+            <li key={classroom.id} className="classroom-card">
+              <h3>{classroom.name}</h3>
+              <p className="help classroom-created">
+                Created{' '}
+                <time dateTime={classroom.createdAt}>
+                  {new Date(classroom.createdAt).toLocaleDateString()}
+                </time>
+              </p>
               {renderActions?.(classroom)}
             </li>
           ))}

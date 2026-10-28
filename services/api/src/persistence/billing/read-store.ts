@@ -7,6 +7,7 @@ import type {
 } from '@logiclab/contracts';
 import type { z } from 'zod';
 import { BillingError } from '../../application/billing/errors';
+import { checkoutBlockedReason } from './checkout-availability';
 import { purchaseResponse } from './purchase-response';
 
 export interface BillingReadStore {
@@ -83,6 +84,7 @@ export async function createBillingReadStore(
         );
         return {
           classId,
+          checkoutBlockedReason: await checkoutBlockedReason(em, classId),
           coverage: { active: grants.length > 0, endsAt: grants[0]?.endsAt.toISOString() ?? null },
           purchases: rows.slice(0, query.limit).map((purchase) => ({
             ...purchaseResponse(purchase).purchase,

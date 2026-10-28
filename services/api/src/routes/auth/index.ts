@@ -1,4 +1,4 @@
-import { mapAuthError } from './errors';
+import { mapAuthError, confirmationFailureReason } from './errors';
 import { installAccountHttpPolicy } from '../account-http';
 import type { FastifyInstance } from 'fastify';
 import { authErrorResponseSchema } from '@logiclab/contracts';
@@ -29,6 +29,12 @@ export async function authRoutes(app: FastifyInstance, context: AuthContext) {
     // Do not log SDK error messages/stacks, request bodies, email addresses, or tokens.
     if (status === 503) {
       request.log.warn({ code: logCode }, 'Authentication operation unavailable');
+    }
+    if (request.routeOptions.url === '/api/auth/confirm' && code === 'CONFIRMATION_FAILED') {
+      request.log.info(
+        { code, reason: confirmationFailureReason(error) },
+        'Email confirmation rejected',
+      );
     }
     return reply.code(status).send(authErrorResponseSchema.parse({ error: { code, message } }));
   });

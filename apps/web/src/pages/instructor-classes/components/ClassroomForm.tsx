@@ -16,6 +16,7 @@ export function ClassroomForm({ busy, onCreate }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
+      <h2>Create a class</h2>
       <label htmlFor="class-name">Class name</label>
       <div className="form-row">
         <input
