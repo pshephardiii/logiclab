@@ -8,7 +8,7 @@ This is an executable test plan, not evidence that these checks passed. All case
 
 ### Current branch completion scope — October 28
 
-The user narrowed remaining manual work to billing and normal-account authentication. Finish the BILL and AUTH journeys, fix blockers/significant functional issues, then perform final automated verification and prepare PR notes. Other unexecuted cases stay Not run or explicitly deferred; do not claim exhaustive QA or infer passes from earlier focused checks. Cosmetic refinements belong to the planned UI/UX audit and structural work to the code audit. This scope change does not remove pre-deployment feature/audit prerequisites.
+The user closed this focused pass after investigating billing and normal-account authentication. Perform final automated verification and prepare PR notes; resume full manual QA after the remaining intended MVP features. Other unexecuted cases stay Not run or explicitly deferred; do not claim exhaustive QA or infer passes from earlier focused checks. The user confirmed that selecting the intended application database resolved the latest auth issue; this is not a pass for every AUTH substep. Cosmetic refinements belong to the planned UI/UX audit and structural work to the code audit. Full QA and the instructor-results-release feature remain prerequisites before initial deployment, including the public demo.
 
 1. Complete setup and record the commit being tested.
 2. Work through the sections in order. Keep the same demo workspace unless a case explicitly asks for a new one or reset.
