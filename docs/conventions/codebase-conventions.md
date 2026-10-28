@@ -240,6 +240,8 @@ Keep domain differences explicit: authentication maps a missing service to its e
 
 Use `api/validated-request.ts` to validate successful payloads and infer their return types from a response schema. It builds on the raw HTTP client; domain clients choose schemas and optional validation-error mapping. Account/class requests propagate schema errors, while practice translates them to its existing unexpected-response message. HTTP/network/JSON-decoding failures are not remapped as schema failures.
 
+Map domain errors with their own contracts when they include domain-specific fields such as a parser position; a strict auth error contract must not erase a valid problem error message. Keep safe fallbacks for malformed responses. Show save failures in the owning editor, not solely in an offscreen page-level banner, and preserve the unsaved fields and navigation protection.
+
 API clients are plain asynchronous functions, not React hooks. Hooks call them and own UI state. Keep request transport, successful-response validation, domain error mapping, and UI transitions separately understandable. Infer validated response types from schemas rather than casting untrusted JSON.
 
 ## Web: style ownership

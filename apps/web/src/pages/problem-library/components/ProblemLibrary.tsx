@@ -103,6 +103,7 @@ export function ProblemLibrary() {
         key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
         problem={library.selected}
         busy={library.busy}
+        saveError={library.saveError}
         onDirty={setDirty}
         onSave={library.save}
         onPreview={showPreview}

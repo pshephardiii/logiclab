@@ -1,6 +1,6 @@
 # Instructor-controlled results release
 
-Status: agreed future feature branch, October 28, 2026. Provisional name: `019-feat-instructor-results-release`; verify the next unused number and priority before starting. No instructor-release functionality or new release policy is implemented by this planning note.
+Status: agreed future feature branch, October 28, 2026. Provisional name: `019-feat-instructor-results-release`; verify the next unused number and priority before starting. This feature branch must be completed and verified before initial deployment, including the initial public demo deployment. Its provisional number does not imply it comes after the currently numbered deployment branch. Resolve the answer-key release decision within this branch before implementation is finalized. No instructor-release functionality or new release policy is implemented by this planning note.
 
 ## Problem and agreed direction
 

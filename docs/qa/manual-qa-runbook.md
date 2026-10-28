@@ -138,6 +138,8 @@ Perform these in A as instructor. Use titles prefixed with your run ID. Keep a p
 
 ### LIB-01 — Create, validate and restore a draft
 
+For an invalid formula such as `P &`, verify Save draft displays the specific parser explanation in the editor and brings it into view. Title, instructions, formula and dirty-work protection must remain. Correct the formula and retry; the old error should disappear on success (QA-019).
+
 1. Open Problem library and choose **New problem**.
 2. Try saving a blank title/formula; then enter title `<run-id> Library`, instructions `QA instructions`, formula `P & Q` and save.
 3. Select the saved problem again; reload the browser and reselect it.

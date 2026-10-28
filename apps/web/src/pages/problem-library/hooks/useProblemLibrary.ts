@@ -14,6 +14,7 @@ export function useProblemLibrary() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const list = useAbortableRequest();
   const action = useAbortableRequest();
@@ -52,12 +53,14 @@ export function useProblemLibrary() {
   async function mutate(
     operation: (signal: AbortSignal) => Promise<ProblemDraft>,
     message: string,
+    saving = false,
   ) {
     const signal = action.startRequest();
     list.cancelRequest();
     setLoading(false);
     setBusy(true);
     setError(null);
+    setSaveError(null);
     setNotice(null);
     try {
       const problem = await operation(signal);
@@ -67,15 +70,18 @@ export function useProblemLibrary() {
       await load();
       return true;
     } catch (caught) {
-      if (!signal.aborted)
-        setError(caught instanceof Error ? caught.message : 'Could not save the problem.');
+      if (!signal.aborted) {
+        const message = caught instanceof Error ? caught.message : 'Could not save the problem.';
+        if (saving) setSaveError(message);
+        else setError(message);
+      }
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);
     }
   }
   function save(input: CreateProblemRequest) {
-    return mutate((signal) => api.saveProblem(input, signal, selected?.id), 'Draft saved.');
+    return mutate((signal) => api.saveProblem(input, signal, selected?.id), 'Draft saved.', true);
   }
   function archive() {
     if (!selected) return;
@@ -90,10 +96,14 @@ export function useProblemLibrary() {
     problems,
     nextOffset,
     selected,
-    setSelected,
+    setSelected: (problem: ProblemDraft | null) => {
+      setSelected(problem);
+      setSaveError(null);
+    },
     loading,
     busy,
     error,
+    saveError,
     notice,
     load,
     save,
