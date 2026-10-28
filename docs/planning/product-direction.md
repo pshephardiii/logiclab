@@ -212,3 +212,7 @@ Propose Unicode `↔` with keyboard alias `<->`, subject to confirming notation 
 Carry support through shared parser/evaluator/table generation, server validation, authoring/previews, assignments and the keyboard guide. Cover the four truth-value combinations, notation equivalence, grouping/precedence, malformed input, stable existing tables and API/UI integration. Extending the engine does not implement derivation rules; those remain separate work.
 
 Include textbook negation alias `~` in the same branch, alongside existing `!` and `¬`. It maps to the existing negation operator without changing precedence or evaluation; canonical labels remain `¬` and existing structural IDs remain stable. Update the tokenizer, error guidance, keyboard guide and grammar documentation together. Test that `~P`, `!P` and `¬P` produce identical ASTs/tables, including nested grouping and use with biconditionals. This alias remains unsupported until that branch is implemented; do not add it as a current QA fix.
+
+## Product-wide UI and UX audit before deployment
+
+A separate UI/UX audit follows functional QA and precedes public deployment. Review aesthetics and consistency, accessibility, navigation and task flow, interface states, and mobile/zoom behavior across the existing product. Keep this distinct from the code audit and new feature work. Agree a visual direction and accessibility target, make small traceable fixes, and record before/after evidence plus testing limitations. See [UI/UX audit plan](ui-ux-audit.md).

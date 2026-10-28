@@ -1,0 +1,64 @@
+.classroom-panel > .eyebrow {
+  margin-top: 0;
+}
+.classroom-panel h1 {
+  margin-bottom: 1.75rem;
+}
+.classroom-editor {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid #d6e0dc;
+}
+.classroom-list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+.classroom-list-heading h2 {
+  margin: 0;
+}
+.classroom-list {
+  display: grid;
+  gap: 1.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+.classroom-card {
+  padding: 1.25rem;
+  border: 1px solid #d6e0dc;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.classroom-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.classroom-created {
+  margin: 0.4rem 0 0;
+}
+.classroom-invitation {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e4ebe7;
+}
+.classroom-invitation > .help {
+  margin: 0 0 1rem;
+}
+.classroom-invitation-result {
+  margin-top: 1rem;
+}
+.classroom-invitation-result input {
+  width: 100%;
+}
+.classroom-invitation-result p {
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .classroom-card {
+    padding: 1rem;
+  }
+}

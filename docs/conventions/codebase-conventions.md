@@ -309,3 +309,7 @@ Use the single UnsavedWorkProvider under the browser data router. Editors regist
 Use useConfirmDiscard before same-page actions that replace dirty state. Keep the complete destructive action inside its callback; Stay must not change selections, abort active work or invoke a session mutation. The hook cancels a pending callback when its owner unmounts. Discard authorizes one action rather than installing a global bypass. Preserve list/filter/preview operations that retain edits without unnecessary prompts. Forced credential changes and authorization must never depend on discard consent.
 
 Dirty unregistration must be visible synchronously to route blocking, so forced session redirects cannot see a stale registration while React updates rendered state. Native dialog focus and browser unload UI require browser QA; shared DOM test helpers only simulate native dialog methods.
+
+## Web: site and workspace navigation
+
+Keep Navigation focused on site-wide destinations and WorkspaceNavigation focused on the active account's role-specific resource routes. Derive links from route definitions; demo workspace links belong inside the demo notice with explicit `/demo/` destinations, while normal workspaces use normal resource paths. Give the navigation landmarks distinct accessible names and retain active-link cues. Do not use a demo identity to label a normal account, combine both link levels into one menu, or bypass router/unsaved-work guards when switching flows.

@@ -115,6 +115,8 @@ npm run format:check
 
 ### DEM-02 — Role switch and deep-link reload
 
+Check header grouping too: the site row has Explore demo, Practice and Sign in / Create account; role-specific links sit inside the demo workspace panel and stay under `/demo/`. Switching roles updates that group. Practice/account still leave the demo flow and must honor unsaved-work confirmation when applicable (QA-014).
+
 1. Use **Switch role, reset, or end demo**, then **Explore as student**.
 2. Open Assigned work and choose the funded class.
 3. Refresh `/demo/work` directly; then use Back and Forward through two visited demo pages.
@@ -384,6 +386,8 @@ For UNS-01 through UNS-04 run the actions separately on student answers, an assi
 ## 11. Classes, invitations and student enrollment
 
 ### CLS-01 — Create and validate classes
+
+Also review the shared page layout: the demo notice is contained under navigation; creation/list controls have clear separation; each class and its invitation actions have readable spacing. Check at desktop and mobile widths (QA-013).
 
 1. As A instructor, open Classes; try a blank/whitespace-only name.
 2. Create `<run-id> Invitation class` with leading/trailing spaces.

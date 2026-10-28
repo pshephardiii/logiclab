@@ -44,7 +44,7 @@ export function ClassroomInvitation({
     }
   }
   return (
-    <section aria-label={`Invitation for ${className}`}>
+    <section className="classroom-invitation" aria-label={`Invitation for ${className}`}>
       <p className="help">
         Generating a code replaces any previous code for this class. It expires after seven days.
         Share it with students so they can join this class.
@@ -58,7 +58,7 @@ export function ClassroomInvitation({
         </p>
       )}
       {invitation && (
-        <div role="status">
+        <div className="classroom-invitation-result" role="status">
           <label htmlFor={`invitation-${classId}`}>Invitation code for {className}</label>
           <input
             id={`invitation-${classId}`}

@@ -13,16 +13,50 @@
 .app-nav {
   flex-wrap: wrap;
 }
-.app-nav a {
+.app-nav a,
+.workspace-nav a {
   color: #176650;
   padding: 0.5rem;
   font-weight: 600;
   text-decoration: none;
   border-radius: 0.4rem;
 }
-.app-nav a:hover {
+.app-nav a:hover,
+.workspace-nav a:hover {
   background: #e3eee8;
 }
-.app-nav a[aria-current='page'] {
+.app-nav a[aria-current='page'],
+.workspace-nav a[aria-current='page'] {
   text-decoration: underline;
+}
+
+.workspace-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  width: 100%;
+  border-top: 1px solid #cbd8d3;
+  padding-top: 0.75rem;
+}
+.account-workspace {
+  max-width: 72rem;
+  margin: 1rem auto 0;
+  padding: 0 1.5rem;
+}
+.account-workspace-content {
+  padding: 1rem 1.25rem;
+  background: white;
+  border: 1px solid #cbd8d3;
+  border-radius: 0.6rem;
+}
+.workspace-title {
+  margin: 0 0 0.75rem;
+  color: #176650;
+  font-weight: 600;
+}
+@media (max-width: 600px) {
+  .app-nav,
+  .account-workspace {
+    padding: 0 1rem;
+  }
 }

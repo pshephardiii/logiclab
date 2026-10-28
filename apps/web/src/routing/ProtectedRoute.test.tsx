@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import { useAccountContext } from '../features/auth/AccountProvider';
 import { ProtectedRoute } from './ProtectedRoute';
-import { Navigation } from '../components/layout/Navigation';
+import { Header } from '../components/layout/Header';
 import { routeDefinitions } from './route-definitions';
 
 installDialogStub();
@@ -63,7 +63,7 @@ test.each([null, 'student', 'instructor'] as const)(
     account(role);
     render(
       <MemoryRouter>
-        <Navigation />
+        <Header />
       </MemoryRouter>,
     );
     expect(screen.getByRole('link', { name: 'Practice' })).toBeInTheDocument();
