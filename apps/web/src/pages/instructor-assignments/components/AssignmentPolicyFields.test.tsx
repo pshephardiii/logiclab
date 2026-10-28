@@ -95,3 +95,32 @@ test('restores a saved immediate policy without changing solution access', () =>
   expect(screen.getByLabelText('Feedback timing')).toHaveValue('immediate');
   expect(screen.getByLabelText('Solution access')).toHaveValue('after_submission');
 });
+
+test('explains correctness feedback separately from solution release', async () => {
+  const user = userEvent.setup();
+  render(
+    <Editor
+      initial={{
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+        solutionAccess: 'after_submission',
+      }}
+    />,
+  );
+  expect(screen.getByLabelText('Feedback timing')).toHaveAccessibleDescription(
+    /correct\/incorrect feedback and a score only on final submission/,
+  );
+  expect(screen.getByLabelText('Solution access')).toHaveAccessibleDescription(
+    /reveal the correct answers only after final submission/,
+  );
+  await user.selectOptions(screen.getByLabelText('Solution access'), 'never');
+  expect(screen.getByLabelText('Solution access')).toHaveAccessibleDescription(
+    /even after submission/,
+  );
+  await user.selectOptions(screen.getByLabelText('Solution access'), 'anytime');
+  expect(screen.getByLabelText('Solution access')).toHaveAccessibleDescription(
+    /before graded submission/,
+  );
+  expect(screen.getByLabelText('Feedback timing')).toBeDisabled();
+  expect(screen.getByLabelText('Feedback timing')).toHaveValue('on_submission');
+});

@@ -13,6 +13,12 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
   return (
     <section aria-label="Add published problems">
       <h3>Add published problems</h3>
+      <p className="help assignment-picker-help">
+        Choose a library problem, then select Add version to append it to the ordered list above.
+        Need a new problem?{' '}
+        <Link to={accountPath(routeDefinitions.problemLibrary.path)}>Open problem library</Link> to
+        create and publish it first. Save your assignment draft before leaving to keep your edits.
+      </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
       <select
         id="assignment-library-problem"
@@ -40,10 +46,7 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
         </>
       )}
       {!choices.problemLoading && !choices.problemError && choices.problems.length === 0 && (
-        <p>
-          No library problems yet.{' '}
-          <Link to={accountPath(routeDefinitions.problemLibrary.path)}>Open problem library</Link>
-        </p>
+        <p>No library problems yet. Create and publish one in the problem library first.</p>
       )}
       {choices.problemNext !== null && (
         <button

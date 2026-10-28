@@ -165,6 +165,8 @@ Perform these in A as instructor. Use titles prefixed with your run ID. Keep a p
 
 ## 6. Instructor assignments and fixed QA fixtures
 
+When opening or reloading an existing assignment, check that the detail area retains its space during loading and scrolls into view after success. Reduced-motion settings should skip animation. Failed reads and choosing Stay on an unsaved-work prompt must not initiate a reveal; retry remains available (QA-015).
+
 Create the following saved assignments in the funded class. For each row: choose **New assignment**, set title/mode/timing/solution access, choose `<run-id> Library`, click **Add version 1**, Save assignment draft, then Publish assignment. Wait for each request to finish. Do not copy values from the latest mutable library draft.
 
 | Fixture title suffix | Assessment        | Feedback                            | Solutions              | Purpose                              |
@@ -183,7 +185,9 @@ Record actual titles with the run ID. Five publications/creations fit the defaul
 2. Try to publish it.
 3. Change from Graded to Completion only; choose immediate timing and after-submission solutions.
 4. Change to Ungraded practice, then back to Graded. Inspect timing and solution choices without saving invalid combinations.
-5. Save a valid empty draft.
+5. While Graded is selected, inspect the help for Feedback timing and try Never / After final submission / Anytime solution access. Verify the copy distinguishes correctness/score from revealing actual answers and explains that Anytime can show answers before submission.
+6. Find Open problem library near Add published problems, even with existing library content. With unsaved edits, follow it and choose Stay; confirm edits remain. After saving, follow it and verify the destination stays in the demo flow. Return to authoring.
+7. Save a valid empty draft.
 
 **Expected:** empty drafts save but cannot publish. Practice cannot select after-submission solutions; the replacement is announced. Immediate timing survives transitions between non-graded modes. Graded resets to submission-only. Invalid combined policies are not persisted.
 
@@ -195,7 +199,7 @@ Record actual titles with the run ID. Five publications/creations fit the defaul
 4. Inspect final problem formulas and titles. Edit/save the library draft afterward without publishing another version.
 5. Reload the assignment.
 
-**Expected:** order and repeats match the saved list, each occurrence is distinct, and later library edits do not change pinned assignment content. No problem draft is substituted for its selected publication.
+**Expected:** each ordered problem has only one visible position number (from the list), with its title and version shown once. Order and repeats match the saved list, each occurrence is distinct, and later library edits do not change pinned assignment content. No problem draft is substituted for its selected publication.
 
 ### ASN-03 — Published locks and archive/restore
 

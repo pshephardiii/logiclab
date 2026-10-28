@@ -29,6 +29,7 @@ Documentation is grouped by purpose:
 - [Controlled assessment and Safe Exam Browser investigation](planning/controlled-assessment.md)
 - [Instructor-authored true/false and multiple-choice questions](planning/conceptual-questions.md)
 - [Assignment learning modes](planning/assignment-learning-modes.md)
+- [Instructor-controlled results release](planning/instructor-results-release.md)
 - [Data design](planning/data-design.md)
 - [Background jobs and reconciliation design](planning/background-jobs.md)
 - [Public demo direction and implementation slices](planning/public-demo.md)

@@ -216,3 +216,7 @@ Include textbook negation alias `~` in the same branch, alongside existing `!` a
 ## Product-wide UI and UX audit before deployment
 
 A separate UI/UX audit follows functional QA and precedes public deployment. Review aesthetics and consistency, accessibility, navigation and task flow, interface states, and mobile/zoom behavior across the existing product. Keep this distinct from the code audit and new feature work. Agree a visual direction and accessibility target, make small traceable fixes, and record before/after evidence plus testing limitations. See [UI/UX audit plan](ui-ux-audit.md).
+
+## Instructor-controlled results release
+
+Plan a separate instructor-results-release feature branch with official results available either at submission or after an explicit instructor release. Decide in that branch whether grades/completion status must include correct answers or whether answer release is independently controlled; that decision is still open. Keep ungraded practice assistance conceptually distinct from official results. During current QA, graded feedback remains locked at At submission, while completion-only changes are explicitly deferred and saved/published policies remain unchanged. See [results-release scope and decisions](instructor-results-release.md).

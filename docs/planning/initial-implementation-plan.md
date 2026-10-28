@@ -281,3 +281,7 @@ Bundle `~` as an additional negation alias into this branch. Retain `!`/`¬`, ex
 ## Pre-deployment UI and UX audit
 
 After functional QA, complete a dedicated UI/UX audit before public deployment, separate from the planned code correctness/maintainability audit. Assess visual consistency, accessibility, navigation/task flow, all interface states and responsive layouts across student, instructor, anonymous and demo experiences. Agree the visual direction and accessibility target first, then deliver focused fixes with before/after evidence and regression checks. See [audit scope and completion criteria](ui-ux-audit.md). Assign an unused numbered branch when scheduled; this additional release-readiness step supersedes any earlier shorthand implying deployment immediately follows the code audit.
+
+## Feature candidate: instructor-controlled results release
+
+Provisional branch `019-feat-instructor-results-release`: introduce explicit instructor release of retained official results, with server-enforced withholding and a student pending-results state. First decide whether releasing grades/completion status always reveals correct answers, and how completion-only practice assistance interacts with official results. Current QA only keeps graded feedback fixed at At submission; the user explicitly deferred completion-only policy/schema changes. Preserve existing behavior until the feature branch. See [release decisions, compatibility and slices](instructor-results-release.md); confirm numbering/priority before starting.
