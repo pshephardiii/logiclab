@@ -9,6 +9,20 @@ export const hiddenAccountErrors = new Set([
   'UsernameExistsException',
 ]);
 
+/** Fixed diagnostic categories only; never return upstream messages or arbitrary error names. */
+export function confirmationFailureReason(error: unknown): string {
+  switch (errorName(error)) {
+    case 'CodeMismatchException':
+      return 'code_mismatch';
+    case 'ExpiredCodeException':
+      return 'code_expired';
+    case 'InvalidParameterException':
+      return 'invalid_parameter';
+    default:
+      return 'other';
+  }
+}
+
 /** Classify errors in precedence order without HTTP side effects. */
 export function mapAuthError(error: unknown, routeUrl?: string) {
   let status = 503;
@@ -24,6 +38,18 @@ export function mapAuthError(error: unknown, routeUrl?: string) {
     status = 400;
     code = 'INVALID_REQUEST';
     text = 'Check the supplied fields and try again.';
+  } else if (
+    routeUrl === '/api/auth/confirm' &&
+    ['CodeMismatchException', 'ExpiredCodeException', 'InvalidParameterException'].includes(name)
+  ) {
+    status = 400;
+    code = 'CONFIRMATION_FAILED';
+    text =
+      name === 'CodeMismatchException'
+        ? 'The confirmation code is invalid. Request a new code and use the newest email.'
+        : name === 'ExpiredCodeException'
+          ? 'The confirmation code has expired. Request a new code.'
+          : 'Could not confirm this email. Check the details, or try signing in if it is already confirmed.';
   } else if (
     routeUrl === '/api/auth/reset-password' &&
     [
