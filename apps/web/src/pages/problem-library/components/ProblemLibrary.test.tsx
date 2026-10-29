@@ -33,7 +33,7 @@ const version: PublishedProblemVersion = {
   version: 1,
   title: 'Original snapshot',
   instructions: null,
-  definition: { ...draft.definition, formula: 'P' },
+  definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
   publishedAt: draft.createdAt,
 };
 beforeEach(() => {
@@ -218,6 +218,7 @@ test('reverting problem edits removes protection without saving', async () => {
   await user.type(screen.getByLabelText('Formula'), ' & R');
   expect(protectedWork()).toBe(true);
   await user.clear(screen.getByLabelText('Formula'));
+  if (draft.definition.type !== 'truth_table') throw new Error('Expected a truth-table fixture');
   await user.type(screen.getByLabelText('Formula'), draft.definition.formula);
   await waitFor(() => expect(protectedWork()).toBe(false));
   expect(api.saveProblem).not.toHaveBeenCalled();

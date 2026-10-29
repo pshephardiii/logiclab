@@ -1,3 +1,4 @@
+import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { CreateProblemRequest, ProblemDraft } from '@logiclab/contracts';
 
@@ -10,7 +11,7 @@ type Props = {
   onDirty: (dirty: boolean) => void;
 };
 /** Keeps unsaved fields locally, including after failed saves; archived drafts are read-only. */
-export function ProblemForm({
+function TruthTableProblemForm({
   problem,
   busy,
   saveError = null,
@@ -24,12 +25,14 @@ export function ProblemForm({
   }, [saveError]);
   const [title, setTitle] = useState(problem?.title ?? '');
   const [instructions, setInstructions] = useState(problem?.instructions ?? '');
-  const [formula, setFormula] = useState(problem?.definition.formula ?? '');
+  const [formula, setFormula] = useState(
+    problem?.definition.type === 'truth_table' ? problem.definition.formula : '',
+  );
   useEffect(() => {
     onDirty(
       title !== (problem?.title ?? '') ||
         instructions !== (problem?.instructions ?? '') ||
-        formula !== (problem?.definition.formula ?? ''),
+        formula !== (problem?.definition.type === 'truth_table' ? problem.definition.formula : ''),
     );
   }, [title, instructions, formula, problem, onDirty]);
 
@@ -91,4 +94,17 @@ export function ProblemForm({
       <p className="help">Save edits before publishing. Publishing uses the saved draft.</p>
     </section>
   );
+}
+
+export function ProblemForm(props: Props) {
+  if (props.problem && props.problem.definition.type !== 'truth_table') {
+    return (
+      <section className="panel">
+        <h2>{props.problem.title}</h2>
+        <ConceptualQuestionSummary definition={props.problem.definition} />
+        <p className="help">This question is read-only in this view.</p>
+      </section>
+    );
+  }
+  return <TruthTableProblemForm {...props} />;
 }

@@ -4,7 +4,7 @@ import {
   conceptualQuestionContentSchema,
   conceptualAnswerSchema,
   conceptualAnswerSchemaFor,
-  problemDefinitionSchema,
+  truthTableDefinitionSchema,
   type ConceptualQuestionDefinition,
 } from '@logiclab/contracts';
 import { conceptualQuestionContent } from './conceptual-content';
@@ -140,11 +140,11 @@ test('answer payloads cannot supply keys, explanations or truth-table cells', ()
   }
 });
 
-test('truth-table definitions remain unchanged and new question types are not enabled on active routes yet', () => {
+test('truth-table definition variants remain unchanged alongside conceptual contracts', () => {
   const definition = { type: 'truth_table', definitionVersion: 1, formula: '~P <-> Q' };
-  expect(problemDefinitionSchema.parse(definition)).toEqual(definition);
-  expect(problemDefinitionSchema.safeParse(choice).success).toBe(false);
-  expect(problemDefinitionSchema.safeParse(truth).success).toBe(false);
+  expect(truthTableDefinitionSchema.parse(definition)).toEqual(definition);
+  expect(truthTableDefinitionSchema.safeParse(choice).success).toBe(false);
+  expect(truthTableDefinitionSchema.safeParse(truth).success).toBe(false);
 });
 
 test('accepts boundary lengths and six unique options without changing the selected identity', () => {

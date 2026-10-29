@@ -16,14 +16,18 @@ export const summary = { ...assignmentSummary, publishedAt: assignment.createdAt
 export const detail = {
   assignment: {
     ...summary,
-    items: assignment.items.map((item) => ({
-      id: item.id,
-      position: item.position,
-      title: item.problemVersion.title,
-      instructions: item.problemVersion.instructions,
-      formula: item.problemVersion.definition.formula,
-      exercise: exerciseResponse(generateTruthTable(item.problemVersion.definition.formula)),
-    })),
+    items: assignment.items.map((item) => {
+      const definition = item.problemVersion.definition;
+      if (definition.type !== 'truth_table') throw new Error('Expected a truth-table fixture');
+      return {
+        id: item.id,
+        position: item.position,
+        title: item.problemVersion.title,
+        instructions: item.problemVersion.instructions,
+        formula: definition.formula,
+        exercise: exerciseResponse(generateTruthTable(definition.formula)),
+      };
+    }),
   },
   attempt: null,
 };

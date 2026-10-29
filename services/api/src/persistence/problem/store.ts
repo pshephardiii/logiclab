@@ -1,4 +1,4 @@
-import { requireTruthTableDefinition } from '../../application/problem/definition-support';
+import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { publishedProblemVersion } from './version-response';
 import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
@@ -54,7 +54,7 @@ function draft(problem: ProblemEntity): ProblemDraft {
     id: problem.id,
     title: problem.title,
     instructions: problem.instructions ?? null,
-    definition: requireTruthTableDefinition(problem.definition),
+    definition: supportedProblemDefinition(problem.definition),
     archivedAt: problem.archivedAt?.toISOString() ?? null,
     createdAt: problem.createdAt.toISOString(),
     updatedAt: problem.updatedAt.toISOString(),
@@ -93,7 +93,7 @@ export async function createProblemStore(
           version: (latest?.version ?? 0) + 1,
           title: problem.title,
           instructions: problem.instructions,
-          definition: structuredClone(problem.definition),
+          definition: structuredClone(supportedProblemDefinition(problem.definition)),
         });
         em.persist(version);
         await em.flush();
@@ -134,7 +134,7 @@ export async function createProblemStore(
         owner: em.getReference(User, ownerId),
         title: input.title,
         instructions: input.instructions ?? undefined,
-        definition: input.definition,
+        definition: supportedProblemDefinition(input.definition),
       });
       em.persist(problem);
       await em.flush();
@@ -170,7 +170,8 @@ export async function createProblemStore(
         if (input.title !== undefined) problem.title = input.title;
         if (input.instructions !== undefined)
           problem.instructions = input.instructions ?? undefined;
-        if (input.definition !== undefined) problem.definition = input.definition;
+        if (input.definition !== undefined)
+          problem.definition = supportedProblemDefinition(input.definition);
         await em.flush();
         return { status: 'updated' as const, problem: draft(problem) };
       });

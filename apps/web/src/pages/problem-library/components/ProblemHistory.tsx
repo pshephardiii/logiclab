@@ -1,3 +1,4 @@
+import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type { ProblemDraft } from '@logiclab/contracts';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
@@ -41,11 +42,23 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
               Version {version.version}: {version.title}
             </h3>
             <p>{version.instructions || 'No instructions.'}</p>
-            <code>{version.definition.formula}</code>
+            {version.definition.type === 'truth_table' ? (
+              <code>{version.definition.formula}</code>
+            ) : (
+              <ConceptualQuestionSummary definition={version.definition} />
+            )}
             <p className="help">Published {new Date(version.publishedAt).toLocaleString()}</p>
-            <button className="secondary" onClick={() => onPreview(version.definition.formula)}>
-              Preview version {version.version}
-            </button>
+            {version.definition.type === 'truth_table' && (
+              <button
+                className="secondary"
+                onClick={() => {
+                  if (version.definition.type === 'truth_table')
+                    onPreview(version.definition.formula);
+                }}
+              >
+                Preview version {version.version}
+              </button>
+            )}
           </li>
         ))}
       </ol>

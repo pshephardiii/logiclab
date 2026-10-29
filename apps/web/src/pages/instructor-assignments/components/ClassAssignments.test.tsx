@@ -463,3 +463,21 @@ test('release failure retains the selected assignment and successful retry updat
   expect(screen.queryByRole('button', { name: 'Release grades' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Reveal answers' })).toBeEnabled();
 });
+
+test('conceptual publications remain unavailable for assignment until student evaluation is enabled', async () => {
+  const conceptual: PublishedProblemVersion = {
+    ...version,
+    definition: {
+      type: 'true_false',
+      definitionVersion: 1,
+      question: 'Every contradiction is true.',
+      correctAnswer: false,
+    },
+  };
+  vi.mocked(library.listVersions).mockResolvedValue({ versions: [conceptual], nextOffset: null });
+  const user = await openDraft();
+  await user.selectOptions(await screen.findByLabelText('Library problem'), problem.id);
+  expect(await screen.findByRole('button', { name: 'Add version 1' })).toBeDisabled();
+  expect(screen.getByText('This question is not available for assignment.')).toBeInTheDocument();
+  expect(api.updateAssignment).not.toHaveBeenCalled();
+});

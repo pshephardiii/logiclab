@@ -80,8 +80,19 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
             <strong>
               {version.title} · version {version.version}
             </strong>{' '}
-            <code>{version.definition.formula}</code>
-            <button type="button" disabled={disabled} onClick={() => onAdd(version)}>
+            <code>
+              {version.definition.type === 'truth_table'
+                ? version.definition.formula
+                : version.definition.question}
+            </code>
+            {version.definition.type !== 'truth_table' && (
+              <p className="help">This question is not available for assignment.</p>
+            )}
+            <button
+              type="button"
+              disabled={disabled || version.definition.type !== 'truth_table'}
+              onClick={() => onAdd(version)}
+            >
               Add version {version.version}
             </button>
           </li>

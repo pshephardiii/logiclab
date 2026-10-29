@@ -26,7 +26,11 @@ export function AssignmentItems({ items, readOnly, onMove, onRemove }: Props) {
               {item.version.title} · version {item.version.version}
             </h4>
             <p>{item.version.instructions || 'No problem instructions.'}</p>
-            <code>{item.version.definition.formula}</code>
+            <code>
+              {item.version.definition.type === 'truth_table'
+                ? item.version.definition.formula
+                : item.version.definition.question}
+            </code>
             {!readOnly && (
               <div className="action-row">
                 <button

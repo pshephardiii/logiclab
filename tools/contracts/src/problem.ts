@@ -1,11 +1,17 @@
 import { z } from 'zod';
+import { trueFalseDefinitionSchema, multipleChoiceDefinitionSchema } from './conceptual-question';
 
 // Authored draft data; publication and classroom sharing have separate lifecycles.
-export const problemDefinitionSchema = z.strictObject({
+export const truthTableDefinitionSchema = z.strictObject({
   type: z.literal('truth_table'),
   definitionVersion: z.literal(1),
   formula: z.string().min(1).max(256),
 });
+export const problemDefinitionSchema = z.discriminatedUnion('type', [
+  truthTableDefinitionSchema,
+  trueFalseDefinitionSchema,
+  multipleChoiceDefinitionSchema,
+]);
 export type ProblemDefinition = z.infer<typeof problemDefinitionSchema>;
 
 export const problemDraftSchema = z.strictObject({

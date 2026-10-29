@@ -12,7 +12,7 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 
-test('staged conceptual snapshots fail closed in formula-only stores and roll back publication/attempt writes', async () => {
+test('conceptual library snapshots are readable by owners while formula-only student stores roll back attempts', async () => {
   const db = await import('@logiclab/db');
   const schema = `conceptual_foundation_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -71,19 +71,14 @@ test('staged conceptual snapshots fail closed in formula-only stores and roll ba
     const problems = await createProblemStore(orm);
     const work = await createStudentWorkStore(orm);
     assert.equal(await problems.findOwned(outsider.id, problem.id), null);
-    await assert.rejects(
-      problems.findOwned(owner.id, problem.id),
-      UnsupportedProblemDefinitionError,
-    );
-    await assert.rejects(
-      problems.findVersion(owner.id, problem.id, 1),
-      UnsupportedProblemDefinitionError,
-    );
-    await assert.rejects(problems.publish(owner.id, problem.id), UnsupportedProblemDefinitionError);
+    assert.deepEqual((await problems.findOwned(owner.id, problem.id))?.definition, definition);
+    assert.deepEqual((await problems.findVersion(owner.id, problem.id, 1))?.definition, definition);
+    const publication = await problems.publish(owner.id, problem.id);
+    assert.equal(publication.status, 'published');
     assert.equal(
       await em.count(db.ProblemVersion, { problem: problem.id }),
-      1,
-      'A failed projection must roll back the new publication.',
+      2,
+      'Conceptual publication now creates an owned immutable snapshot.',
     );
     await assert.rejects(work.read(outsider.id, assignment.id), /not_found/);
     for (const operation of [

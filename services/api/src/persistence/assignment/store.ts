@@ -1,3 +1,4 @@
+import { requireTruthTableDefinition } from '../../application/problem/definition-support';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
@@ -109,6 +110,8 @@ export async function createAssignmentStore(
     });
     if (versions.length !== uniqueIds.length)
       throw new AssignmentOperationError('version_not_found');
+    // Conceptual publication is supported; assignment evaluation is enabled in the next workflow slice.
+    versions.forEach((version) => requireTruthTableDefinition(version.definition));
     return new Map(versions.map((version) => [version.id, version]));
   }
   async function detail(em: Manager, assignment: AssignmentEntity): Promise<AssignmentDetail> {

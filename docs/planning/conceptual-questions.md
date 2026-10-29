@@ -1,6 +1,6 @@
 # Instructor-authored conceptual questions
 
-Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; existing authoring and student routes still accept truth tables only until workflow slices wire the union safely. Slice 2 extends persistence types and guards formula-only paths.
+Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; slice 3 enables private conceptual library authoring/publication. Assignment creation and student evaluation remain guarded until response storage, grading and disclosure are implemented together.
 
 ## Teaching goal and initial scope
 
@@ -62,6 +62,16 @@ These questions broaden assessment beyond mechanical table completion; they do n
 
 The existing Problem/ProblemVersion definition type now includes named truth-table, true/false and multiple-choice variants. Database and transport conceptual shapes are checked for mutual assignability and JSON round-trip compatibility. No separate problem entities, tables or snapshot migration were introduced. JSONB is not itself a question validator: route contracts must validate keys/limits when authoring is enabled.
 
-Existing library, assignment and student formula paths use `requireTruthTableDefinition`; other definitions or format versions fail closed with `PROBLEM_DEFINITION_UNSUPPORTED`. Owner/enrollment checks still precede projection. A rejected publication or attempt operation rolls back fully; it does not create a partial version or attempt. Shared route mapping never includes the private definition or explanation.
+At slice 2, library, assignment and student formula paths used `requireTruthTableDefinition`; other definitions or format versions fail closed with `PROBLEM_DEFINITION_UNSUPPORTED`. Owner/enrollment checks still precede projection. A rejected publication or attempt operation rolls back fully; it does not create a partial version or attempt. Shared route mapping never includes the private definition or explanation.
 
 `npm run check` passed type checks, 848 tests (104 engine, 548 API, 196 web) and production builds. `npm run db:test` passed 187 PostgreSQL checks (139 database, 48 API/workflow), including six new snapshot/immutability checks and unsupported-flow rollback/isolation coverage. Schema comparison remains unchanged. Formatting, whitespace and local Markdown targets checked. No browser run, conceptual API acceptance, grading or editor controls are claimed in this slice; type-specific server workflows follow next.
+
+## Slice 3: private authoring and publication
+
+The active Problem definition contract now includes all three definition types. Existing instructor routes validate conceptual keys and plain-text content without sending questions through the formula parser. Create/read/list/update/publication/history/archive/restore reuse the existing ownership, transaction and snapshot model. Invalid updates preserve the saved draft; retained versions freeze their original keys, option identities and explanations.
+
+A small frontend compatibility guard renders conceptual definitions as instructor-only read views, prevents formula-form replacement and disables premature assignment selection. This is not the full conceptual editor. The assignment store also rejects conceptual version IDs transactionally, so direct client requests cannot bypass the staged restriction. Existing student paths continue failing closed; no conceptual grading, answer-save endpoint acceptance or student content disclosure is enabled by this authoring slice.
+
+### Slice 3 verification — October 29
+
+`npm run check` passed type checks, 851 tests (104 engine, 549 API, 198 web) and production builds. All 49 API PostgreSQL integration checks passed, including normal/demo create/edit/publish/history/archive/restore, unchanged snapshots after key edits, invalid-update rollback, role/ownership/cross-namespace denial and rejected assignment creation without partial drafts. UI tests verify conceptual records cannot be overwritten by the formula editor and unsupported publications cannot be added to assignments. Formatting, whitespace and local Markdown targets checked. No browser run, new migration, conceptual student saves/evaluation or full conceptual editor is claimed here. Next: typed answer/result formats and evaluation, then student/review workflow integration.
