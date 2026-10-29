@@ -1,3 +1,4 @@
+import { createShutdownHandler } from './bootstrap/shutdown';
 import { createDemoDependencies } from './bootstrap/demo';
 import { buildApp } from './app';
 import { createDependencies } from './bootstrap/dependencies';
@@ -7,6 +8,27 @@ let app: FastifyInstance | undefined;
 let closeDependencies: (() => Promise<void>) | undefined;
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? '0.0.0.0';
+let stopping = false;
+
+const closeOnShutdown = createShutdownHandler({
+  close: async () => {
+    // A signal during dependency initialization must not strand resources or start a new listener.
+    await startup;
+    if (app) await app.close();
+    else await closeDependencies?.();
+  },
+  onError: () => {
+    console.error('API shutdown failed.');
+    process.exitCode = 1;
+  },
+  onTimeout: () => console.error('API shutdown exceeded 10 seconds; forcing exit.'),
+  forceExit: (code) => process.exit(code),
+});
+
+function shutdown() {
+  stopping = true;
+  closeOnShutdown();
+}
 
 /** Connects application startup/shutdown to dependency creation and shared-resource cleanup. */
 async function start() {
@@ -20,7 +42,9 @@ async function start() {
         await dependencies?.close();
       }
     };
+    if (stopping) return;
     demo = await createDemoDependencies(process.env);
+    if (stopping) return;
     app = buildApp({
       logger: true,
       ...(demo ? { demo: demo.runtime } : {}),
@@ -45,21 +69,12 @@ async function start() {
         ? error.message
         : 'API startup failed. Check configuration and database connectivity.',
     );
-    if (app) {
-      await app.close();
-    } else await closeDependencies?.();
     process.exitCode = 1;
+    shutdown();
   }
 }
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.once(signal, async () => {
-    try {
-      await app?.close();
-    } catch {
-      console.error('API shutdown failed.');
-      process.exitCode = 1;
-    }
-  });
+  process.on(signal, shutdown);
 }
-void start();
+const startup = start();

@@ -39,6 +39,7 @@ Documentation is grouped by purpose:
 
 ## Development setup
 
+- [Development processes and shutdown](development/dev-processes.md)
 - [Dependency installation and script approvals](development/dependency-installation.md)
 
 - [Local database and DBeaver](development/local-database.md)
