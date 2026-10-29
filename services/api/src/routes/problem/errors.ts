@@ -1,3 +1,4 @@
+import { mapProblemDefinitionError } from '../problem-definition-error';
 import { FormulaParseError } from '@logiclab/logic-engine';
 import { mapAuthError } from '../auth/errors';
 
@@ -12,6 +13,8 @@ export class ProblemError extends Error {
 }
 
 export function mapProblemError(error: unknown) {
+  const unsupported = mapProblemDefinitionError(error);
+  if (unsupported) return unsupported;
   if (error instanceof ProblemError)
     return { status: error.status, code: error.code, message: error.message };
   if (error instanceof FormulaParseError)

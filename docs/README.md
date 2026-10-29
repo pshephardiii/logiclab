@@ -39,6 +39,7 @@ Documentation is grouped by purpose:
 
 ## Development setup
 
+- [Development processes and shutdown](development/dev-processes.md)
 - [Dependency installation and script approvals](development/dependency-installation.md)
 
 - [Local database and DBeaver](development/local-database.md)
@@ -71,6 +72,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Conceptual questions and mixed demo workflows](verification/conceptual-questions-verification.md)
 
 - [Biconditional and tilde notation](verification/biconditional-verification.md)
 

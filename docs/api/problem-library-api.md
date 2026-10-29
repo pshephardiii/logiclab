@@ -1,6 +1,6 @@
 # Private problem-library API
 
-These endpoints manage instructor-owned truth-table drafts, immutable published versions, and archive/restore actions. The instructor library UI is available at `/library`; classroom sharing is deferred. Publishing does not grant students access.
+These endpoints manage instructor-owned problem drafts, immutable published versions, and archive/restore actions. The instructor library UI is available at `/library`. Publishing does not grant students access.
 
 All operations require an instructor session. Ownership comes from the authenticated application user; clients cannot supply owner or classroom identifiers. Authorization runs before request-field validation. Foreign and missing IDs both return `404 PROBLEM_NOT_FOUND`. Responses use `Cache-Control: no-store`; mutations require the configured exact `Origin`. Account-route read/mutation rate limits apply.
 
@@ -72,3 +72,15 @@ Frontend regression tests cover create/edit failure retention, saved publication
 ## Formula notation
 
 Truth-table drafts, previews and published snapshots accept `↔`/`<->` and `~` alongside the existing operators. Source notation is retained in the saved definition; canonical table IDs are shared across aliases. Repeated biconditionals require explicit grouping and invalid edits return positioned errors without replacing the saved draft. Assigned work evaluates its pinned server-owned formula rather than accepting a replacement formula from the student. See [notation and precedence](truth-table-api.md#formula-notation).
+
+## Conceptual authoring (branch 017)
+
+The existing POST/PATCH/read/list/version/archive/restore endpoints now accept and return three version-1 definition types: `truth_table`, `true_false` and `multiple_choice`. Only truth-table formulas enter the logic parser; conceptual question text is plain text, not a formula.
+
+A true/false definition contains `{ type: "true_false", definitionVersion: 1, question, correctAnswer: boolean, explanation?: string | null }`. A multiple-choice definition contains `{ type: "multiple_choice", definitionVersion: 1, question, options: [{ id: UUID, text }], correctOptionId: UUID, explanation?: string | null }`. Limits are 2,000 characters for questions, 2–6 unique options with 500-character labels, and 5,000 characters for explanations. IDs normalize to lowercase; the one selected key must reference an option. Invalid keys, duplicate IDs/trimmed labels and mixed definition fields return 400 before storage. Updates replace the whole definition; keys are not inferred from labels or array positions.
+
+These are privileged instructor DTOs and intentionally contain keys/explanations. They must not be reused for student questions or saved-answer responses. Owner checks, normal/demo isolation, no-store/origin policies and immutable publication history apply unchanged. Snapshot contents remain stable through later draft/key/option edits and archive/restore.
+
+The library editor now supports all three types, with explicit keys, option add/remove/reorder controls and local shared-contract validation. Editing text or moving an option retains its UUID; removing the selected option clears the key and requires another selection. New options get fresh UUIDs. Type changes retain local fields while the editor stays open; only the selected type is saved. Failed saves preserve edits and unsaved-work protection; archived drafts stay read-only. Draft and published-version previews use isolated local state. Conceptual preview answers/explanations are hidden until Show preview answer; this instructor-only view creates no student attempt.
+
+Conceptual published versions can now be added to ordered assignments, including repeated occurrences. Assignment create/update/publication validates supported pinned definitions and retains owner/content/coverage checks. Student and final-review flows support conceptual responses and mixed result formats with independent release rules. Unknown definition formats still fail closed with `PROBLEM_DEFINITION_UNSUPPORTED`. No migration is needed; these definitions and results use existing JSONB columns.

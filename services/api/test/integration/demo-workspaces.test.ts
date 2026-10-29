@@ -12,7 +12,7 @@ import { createDemoWorkspaceService } from '../../src/application/demo/workspace
 import { createDemoAccess } from '../../src/persistence/demo/access';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
-import { DEMO_TEMPLATE } from '../../src/application/demo/template';
+import { DEMO_TEMPLATE, DEMO_CONCEPTUAL_QUESTIONS } from '../../src/application/demo/template';
 import { readDemoPolicy } from '../../src/config/demo';
 import { demoSessionHash } from '../../src/application/demo/service';
 
@@ -50,7 +50,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     assert.equal(await em.count(db.User, { demoWorkspace: id }), 2);
     assert.equal(await em.count(db.Classroom, {}), 2);
     assert.equal(await em.count(db.Enrollment, {}), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 1);
+    assert.equal(await em.count(db.ProblemVersion, {}), 3);
     assert.equal(
       await em.count(db.ClassPurchase, { status: db.PurchaseStatus.Paid, lastEventSequence: 1 }),
       1,
@@ -130,6 +130,7 @@ test('reset restores the template, clears submitted work and billing history, an
     const oldUsers = await em.find(db.User, { demoWorkspace: first.workspaceId });
     const oldAssignment = await em.findOneOrFail(db.Assignment, {
       assessmentMode: db.AssessmentMode.Graded,
+      title: DEMO_TEMPLATE.assignmentTitle,
       classroom: { owner: { demoWorkspace: first.workspaceId } },
     });
     const oldPurchase = await em.findOneOrFail(db.ClassPurchase, {
@@ -171,8 +172,8 @@ test('reset restores the template, clears submitted work and billing history, an
     const normalClass = em.create(db.Classroom, { name: 'Real data stays', owner: normal });
     em.persist([normal, normalClass]);
     await em.flush();
-    // Simulate a retained template-2 visitor: authentication must not upgrade its content.
-    await em.nativeUpdate(db.DemoWorkspace, first.workspaceId, { templateVersion: 2 });
+    // Simulate a retained template-3 visitor: authentication must not upgrade its content.
+    await em.nativeUpdate(db.DemoWorkspace, first.workspaceId, { templateVersion: 3 });
     await em.nativeUpdate(
       db.Assignment,
       {
@@ -184,7 +185,7 @@ test('reset restores the template, clears submitted work and billing history, an
     await sessions.authenticate(initial.sessionId);
     assert.equal(
       (await em.fork().findOneOrFail(db.DemoWorkspace, first.workspaceId)).templateVersion,
-      2,
+      3,
     );
     assert.equal(
       (
@@ -194,6 +195,14 @@ test('reset restores the template, clears submitted work and billing history, an
         })
       ).feedbackTiming,
       db.FeedbackTiming.OnCheck,
+    );
+    assert.equal(await em.fork().count(db.Assignment, { id: oldAssignment.id }), 1);
+    assert.equal(
+      await em.fork().count(db.Problem, {
+        owner: { demoWorkspace: first.workspaceId },
+        title: 'Visitor changed this',
+      }),
+      3,
     );
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
@@ -222,7 +231,7 @@ test('reset restores the template, clears submitted work and billing history, an
         classroom: { owner: { demoWorkspace: first.workspaceId } },
         publishedAt: { $ne: null },
       }),
-      2,
+      3,
     );
     assert.equal(
       await em.count(db.Assignment, {
@@ -268,6 +277,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
     });
     const assignment = await em.findOneOrFail(db.Assignment, {
       assessmentMode: db.AssessmentMode.Graded,
+      title: DEMO_TEMPLATE.assignmentTitle,
       classroom: { owner: { demoWorkspace: first.workspaceId } },
     });
     await (await createStudentWorkStore(orm)).submit(student.id, assignment.id, 0);
@@ -280,7 +290,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
       db.DemoWorkspaceStatus.Active,
     );
     assert.equal(await em.count(db.User, { demoWorkspace: first.workspaceId }), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 1);
+    assert.equal(await em.count(db.ProblemVersion, {}), 3);
     assert.equal(await em.count(db.ClassPurchase, {}), 1);
     assert.equal(await em.count(db.AssignmentAttempt, { submittedAt: { $ne: null } }), 1);
     const nextId = randomUUID();
@@ -399,6 +409,7 @@ test('demo retention guards allow delete only during reset/expiry and never allo
     });
     const assignment = await em.findOneOrFail(db.Assignment, {
       assessmentMode: db.AssessmentMode.Graded,
+      title: DEMO_TEMPLATE.assignmentTitle,
       classroom: { owner: { demoWorkspace: workspace.workspaceId } },
     });
     const student = await em.findOneOrFail(db.User, {
@@ -472,4 +483,66 @@ test('reset cannot revive an idle-expired workspace or extend its absolute deadl
     assert.equal(saved.generation, 1);
     assert.equal(saved.expiresAt.getTime(), expiresAt);
     assert.equal(await em.count(db.User, { demoWorkspace: workspace.workspaceId }), 2);
+  }));
+
+test('template 4 seeds mixed private practice and independent graded release with pinned conceptual keys', async () =>
+  fixture(async (orm, db) => {
+    const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
+    const em = orm.em.fork();
+    const owner = await em.findOneOrFail(db.User, {
+      demoWorkspace: workspace.workspaceId,
+      role: db.UserRole.Instructor,
+    });
+    const student = await em.findOneOrFail(db.User, {
+      demoWorkspace: workspace.workspaceId,
+      role: db.UserRole.Student,
+    });
+    const work = await createStudentWorkStore(orm);
+    const assignments = await createAssignmentStore(orm);
+    const practice = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner },
+      title: DEMO_TEMPLATE.practiceAssignmentTitle,
+    });
+    const graded = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner },
+      title: DEMO_TEMPLATE.mixedAssignmentTitle,
+    });
+    const read = await work.read(student.id, practice.id);
+    assert.equal(read.assignment.items.length, 3);
+    assert.equal(read.assignment.feedbackTiming, 'immediate');
+    assert.equal(read.assignment.assessmentMode, 'ungraded_practice');
+    for (const key of ['correctAnswer', 'correctOptionId', 'explanation'])
+      assert.equal(JSON.stringify(read).includes(`"${key}"`), false);
+    for (const example of DEMO_CONCEPTUAL_QUESTIONS) {
+      const item = read.assignment.items.find((item) => item.title === example.title)!;
+      assert('content' in item);
+      const answer =
+        example.definition.type === 'true_false'
+          ? { type: 'true_false' as const, answer: false }
+          : { type: 'multiple_choice' as const, optionId: example.definition.correctOptionId };
+      const checked = await work.check(student.id, practice.id, {
+        itemId: item.id,
+        answers: answer,
+      });
+      assert.deepEqual(checked.feedback, { status: 'correct' });
+      assert.equal(await em.count(db.AssignmentAttempt, { assignment: practice.id }), 0);
+      const solution = await work.solution(student.id, practice.id, item.id);
+      assert('type' in solution.solution);
+      assert.equal(solution.solution.explanation, example.definition.explanation);
+    }
+    const final = await work.submit(student.id, graded.id, 0);
+    assert.equal(final.gradePending, true);
+    assert.equal(final.result, null);
+    const detail = await work.read(student.id, graded.id);
+    const conceptual = detail.assignment.items.find((item) => 'content' in item)!;
+    await assert.rejects(work.solution(student.id, graded.id, conceptual.id), /solution_locked/);
+    await assignments.release(owner.id, graded.id, 'answers');
+    assert('type' in (await work.solution(student.id, graded.id, conceptual.id)).solution);
+    assert.equal((await work.read(student.id, graded.id)).attempt!.result, null);
+    await assignments.release(owner.id, graded.id, 'grades');
+    assert.equal(
+      (await work.read(student.id, graded.id)).attempt!.result!.gradingVersion,
+      'mixed_v1',
+    );
+    assert.equal((await work.submit(student.id, graded.id, 0)).gradePending, false);
   }));

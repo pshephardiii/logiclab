@@ -9,7 +9,7 @@ import '../../truthTable/truth-table.css';
 import '../assignment.css';
 
 type Props = {
-  item: StudentAssignment['items'][number];
+  item: Extract<StudentAssignment['items'][number], { exercise: unknown }>;
   answers: Answers;
   feedback: TruthTableCheckResponse | null;
   solution?: TruthTableSolutionResponse | null;

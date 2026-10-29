@@ -80,7 +80,11 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
             <strong>
               {version.title} · version {version.version}
             </strong>{' '}
-            <code>{version.definition.formula}</code>
+            <code>
+              {version.definition.type === 'truth_table'
+                ? version.definition.formula
+                : version.definition.question}
+            </code>
             <button type="button" disabled={disabled} onClick={() => onAdd(version)}>
               Add version {version.version}
             </button>

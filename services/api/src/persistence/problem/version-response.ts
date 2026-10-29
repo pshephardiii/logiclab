@@ -1,3 +1,4 @@
+import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import type { ProblemVersion } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { PublishedProblemVersion } from '@logiclab/contracts';
 
@@ -8,7 +9,7 @@ export function publishedProblemVersion(value: ProblemVersion): PublishedProblem
     version: value.version,
     title: value.title,
     instructions: value.instructions ?? null,
-    definition: value.definition,
+    definition: supportedProblemDefinition(value.definition),
     publishedAt: value.publishedAt.toISOString(),
   };
 }

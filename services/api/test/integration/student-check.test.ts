@@ -50,7 +50,10 @@ async function verifyStudentChecks(databaseUrl: string, timing: 'on_check' | 'im
       { populate: ['problemVersion'] },
     );
     const student = first.session.user.id;
-    const table = generateTruthTable(item.problemVersion.definition.formula);
+    const definition = item.problemVersion.definition;
+    assert.equal(definition.type, 'truth_table');
+    if (definition.type !== 'truth_table') throw new Error('Expected a truth-table fixture');
+    const table = generateTruthTable(definition.formula);
     const answers = table.rows.flatMap((row) =>
       table.columns
         .filter((column) => column.kind === 'answer')

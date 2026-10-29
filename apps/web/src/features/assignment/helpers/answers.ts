@@ -1,8 +1,13 @@
-import type { StudentAssignment, StudentAttempt, TruthTableAnswer } from '@logiclab/contracts';
+import type {
+  StudentAssignment,
+  StudentAttempt,
+  AssignmentResponseValue,
+} from '@logiclab/contracts';
 import { cellKey, type Answers } from '../../truthTable/types';
 import { submittedAnswers } from '../../truthTable/helpers/submitted-answers';
 
-export function answerMap(answers: TruthTableAnswer[]): Answers {
+export function answerMap(answers: AssignmentResponseValue): Answers {
+  if (!Array.isArray(answers)) return {};
   return Object.fromEntries(
     answers.map((answer) => [cellKey(answer.rowId, answer.columnId), answer.value]),
   );
@@ -14,10 +19,12 @@ export function savedAnswerMaps(
   attempt: StudentAttempt | null,
 ): Record<string, Answers> {
   return Object.fromEntries(
-    assignment.items.map((item) => [
-      item.id,
-      answerMap(submittedAnswers(item.exercise, answerMap(attempt?.answers[item.id] ?? []))),
-    ]),
+    assignment.items
+      .filter((item) => 'exercise' in item)
+      .map((item) => [
+        item.id,
+        answerMap(submittedAnswers(item.exercise, answerMap(attempt?.answers[item.id] ?? []))),
+      ]),
   );
 }
 export function sameAnswers(left: Answers, right: Answers | undefined): boolean {

@@ -1,3 +1,4 @@
+import { registerConceptualProblemPersistenceTests } from './conceptual-problem-persistence.ts';
 import { registerAssignmentReleasePersistenceTests } from './assignment-release-persistence.ts';
 import { registerAssignmentLearningPersistenceTests } from './assignment-learning-persistence.ts';
 import { registerDemoIdentityPersistenceTests } from './demo-identity-persistence.ts';
@@ -388,6 +389,9 @@ test('draft editing and archive/restore preserve immutable publication history',
     assert.equal(saved.title, 'Revised conjunction');
     assert(saved.archivedAt instanceof Date);
     assert.equal(snapshot.title, 'Conjunction');
+    assert.equal(snapshot.definition.type, 'truth_table');
+    if (snapshot.definition.type !== 'truth_table')
+      throw new Error('Expected a truth-table snapshot');
     assert.equal(snapshot.definition.formula, 'P & Q');
     assert(snapshot.publishedAt instanceof Date);
     saved.archivedAt = undefined;
@@ -516,7 +520,7 @@ test('ordered assignment occurrences retain pinned content after library edits a
     await em.flush();
     assert.notEqual(first.id, second.id);
     problem.title = 'Changed draft';
-    problem.definition = { ...problem.definition, formula: 'Q' };
+    problem.definition = { type: 'truth_table', definitionVersion: 1, formula: 'Q' };
     problem.archivedAt = new Date();
     assignment.publishedAt = new Date();
     assignment.archivedAt = new Date();
@@ -532,7 +536,9 @@ test('ordered assignment occurrences retain pinned content after library edits a
       [1, 2],
     );
     assert.equal(items[0]!.problemVersion.title, 'Conjunction');
-    assert.equal(items[1]!.problemVersion.definition.formula, 'P & Q');
+    const definition = items[1]!.problemVersion.definition;
+    if (definition.type !== 'truth_table') throw new Error('Expected a truth-table snapshot');
+    assert.equal(definition.formula, 'P & Q');
     assert.equal(items[0]!.assignment.classroom.owner.role, UserRole.Instructor);
     assert(items[0]!.assignment.publishedAt instanceof Date);
     assert(items[0]!.assignment.archivedAt instanceof Date);
@@ -1158,3 +1164,5 @@ registerDemoIdentityPersistenceTests(orm);
 registerAssignmentLearningPersistenceTests(orm);
 
 registerAssignmentReleasePersistenceTests(orm);
+
+registerConceptualProblemPersistenceTests(orm);

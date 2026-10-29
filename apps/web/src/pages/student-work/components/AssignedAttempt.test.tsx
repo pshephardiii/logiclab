@@ -234,13 +234,15 @@ test('completion requires every occurrence to be filled and saved before final c
     revision: input.revision + 1,
     answers: { [input.itemId]: input.answers },
   }));
+  const tableAnswers = saved.answers[itemA];
+  if (!Array.isArray(tableAnswers)) throw new Error('Expected saved truth-table fixture');
   vi.mocked(api.submitAssignedWork).mockResolvedValue({
     ...saved,
     revision: 3,
     submittedAt: submitted.submittedAt,
     answers: {
-      [itemA]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
-      [itemB]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
+      [itemA]: tableAnswers.map((answer) => ({ ...answer, value: false })),
+      [itemB]: tableAnswers.map((answer) => ({ ...answer, value: false })),
     },
     result: {
       gradingVersion: 'completion_v1',
@@ -414,4 +416,85 @@ test('pending grades confirm receipt without feedback and refresh enables indepe
     ).not.toBeInTheDocument(),
   );
   expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+});
+
+test('conceptual choices retain edits across problems, failed saves and Stay, with explicit check/solution controls', async () => {
+  const { conceptualWork, conceptualSaved } =
+    await import('../../../../test/conceptual-work-fixture');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: conceptualWork, attempt: null });
+  vi.mocked(api.saveAssignedAnswers)
+    .mockRejectedValueOnce(new Error('Save unavailable'))
+    .mockResolvedValueOnce(conceptualSaved);
+  vi.mocked(api.checkAssignedAnswers).mockResolvedValue({
+    itemId: itemA,
+    feedback: { status: 'incorrect' },
+  });
+  vi.mocked(api.readAssignedSolution).mockResolvedValue({
+    type: 'true_false',
+    correctAnswer: true,
+    explanation: 'Released explanation.',
+  });
+  const user = userEvent.setup();
+  render(<AssignedAttempt assignmentId={work.id} />);
+  await user.click(await screen.findByLabelText('False'));
+  expect(screen.getByText('Unsaved changes in 1 problem(s).')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.click(screen.getByLabelText('Contradiction'));
+  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  expect(screen.getByLabelText('False')).toBeChecked();
+  await user.click(
+    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
+  );
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('False')).toBeChecked();
+  expect(api.readAssignedWork).toHaveBeenCalledTimes(1);
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  expect(await screen.findByText('Save unavailable')).toBeInTheDocument();
+  expect(screen.getByLabelText('False')).toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Check answers' }));
+  expect(await screen.findByText('✕ Incorrect')).toBeInTheDocument();
+  expect(screen.queryByText('Released explanation.')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  expect(await screen.findByText('Released explanation.')).toBeInTheDocument();
+  expect(screen.getByLabelText('False')).toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  expect(screen.queryByText('Released explanation.')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  await screen.findByText('Problem 1 saved.');
+  expect(screen.getByText('Unsaved changes in 1 problem(s).')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  expect(screen.getByLabelText('Contradiction')).toBeChecked();
+  expect(api.saveAssignedAnswers).toHaveBeenLastCalledWith(
+    work.id,
+    { revision: 0, itemId: itemA, answers: { type: 'true_false', answer: false } },
+    expect.any(AbortSignal),
+  );
+});
+
+test('submitted conceptual work is read-only and pending grades disclose neither status nor answers', async () => {
+  const { conceptualWork, conceptualSaved } =
+    await import('../../../../test/conceptual-work-fixture');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: {
+      ...conceptualWork,
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+      gradeReleaseTiming: 'instructor_release',
+      solutionAccess: 'instructor_release',
+    },
+    attempt: {
+      ...conceptualSaved,
+      submittedAt: submitted.submittedAt,
+      gradePending: true,
+      result: null,
+    },
+  });
+  render(<AssignedAttempt assignmentId={work.id} />);
+  expect(await screen.findByLabelText('False')).toBeChecked();
+  expect(screen.getByLabelText('False')).toBeDisabled();
+  expect(screen.getByText('Submitted — awaiting grade release')).toBeInTheDocument();
+  expect(screen.queryByText(/✓ Correct|✕ Incorrect|Correct answer:/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Clear answer' })).not.toBeInTheDocument();
 });

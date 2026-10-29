@@ -1,3 +1,4 @@
+import { mapProblemDefinitionError } from '../problem-definition-error';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { mapAuthError } from '../auth/errors';
 
@@ -11,6 +12,11 @@ export class StudentWorkRouteError extends Error {
   }
 }
 const failures = {
+  invalid_answer: {
+    status: 400,
+    code: 'INVALID_ANSWER',
+    message: 'The answer must match the assigned question and its available options.',
+  },
   incomplete_work: {
     status: 409,
     code: 'ATTEMPT_INCOMPLETE',
@@ -63,6 +69,8 @@ const failures = {
   },
 };
 export function mapStudentWorkError(error: unknown) {
+  const unsupported = mapProblemDefinitionError(error);
+  if (unsupported) return unsupported;
   if (error instanceof StudentWorkRouteError)
     return { status: error.status, code: error.code, message: error.message };
   if (error instanceof StudentWorkError) return failures[error.reason];

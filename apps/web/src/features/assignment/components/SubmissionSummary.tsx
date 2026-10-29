@@ -16,11 +16,17 @@ export function SubmissionSummary({
           Completed {result.summary.completedCells} of {result.summary.totalCells} cells. No
           correctness score is recorded.
         </p>
+      ) : result.gradingVersion === 'mixed_completion_v1' ? (
+        <p>
+          Completed {result.summary.completedResponses} of {result.summary.totalResponses}{' '}
+          responses. No correctness score is recorded.
+        </p>
       ) : (
         <>
           <p>
             {result.summary.correct} correct · {result.summary.incorrect} incorrect ·{' '}
-            {result.summary.unanswered} unanswered · {result.summary.total} cells
+            {result.summary.unanswered} unanswered · {result.summary.total}{' '}
+            {result.gradingVersion === 'mixed_v1' ? 'responses' : 'cells'}
           </p>
           <p className="help">Completion records submission; correctness is shown separately.</p>
         </>

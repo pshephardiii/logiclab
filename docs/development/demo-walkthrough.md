@@ -8,7 +8,7 @@ Allow roughly five to ten minutes. Labels below match the current demo template;
 
 Choose **Explore as instructor**. Under **Classes**, find:
 
-- **Demo: Introduction to Logic** — funded, with an enrolled student and a published assignment.
+- **Demo: Introduction to Logic** — funded, with an enrolled student and three published assignments.
 - **Demo: Try simulated checkout** — initially unpaid.
 
 Open **Problem library** to inspect **Implication and disjunction**. It has an editable draft and an immutable published version. Its formula is `(P -> Q) & (!P | Q)`. Open **Assignments**, select the funded class, and inspect **Your first truth-table assignment**. The assignment pins a published version rather than following future draft edits.
@@ -27,11 +27,13 @@ Follow the final-submission confirmation. Submission freezes the saved answers a
 
 ## 3. Try immediate feedback without submitting
 
-As the student, select **Explore truth tables at your own pace** in the funded class. In the first row, enter **F** for the final answer: with P and Q both T, the formula evaluates to T. Pause for about 1.2 seconds and look for **Incorrect**. Change the answer to **T** and pause again; the old feedback clears while the new check runs. Blank cells have no Unanswered marker.
+As the student, select **Explore tables and concepts at your own pace** in the funded class. In the first row, enter **F** for the final answer: with P and Q both T, the formula evaluates to T. Pause for about 1.2 seconds and look for **Incorrect**. Change the answer to **T** and pause again; the old feedback clears while the new check runs. Blank cells have no Unanswered marker.
 
 Try several quick edits: checking waits until you pause. **Check answers** runs immediately. Neither action saves or submits; use **Save problem** to persist entries, then reload to confirm. Solutions are available anytime through the separate button, and practice has no final submission. Switch between the graded and practice assignments to compare their feedback rules.
 
-New visitors receive template 3. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
+Use the **Problem** selector to open **Recognize a contradiction**. Select True to see Incorrect, then False to see Correct. This is a filled answer, not a blank. Open **Classify a formula** and try Contradiction before Tautology. **Save problem** persists only the selected occurrence; switching problems retains local edits. **Clear answer** restores an unanswered choice. **Show assigned solution** reveals the correct answer and explanation; hiding it does not change your selected answer.
+
+New visitors receive template 4. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
 
 ## 4. Review the submission as the instructor
 
@@ -39,13 +41,21 @@ Return to the demo controls and choose instructor. Under **Assignments**, select
 
 The instructor sees the work just submitted by the synthetic student. This demonstrates that role switching preserves one shared classroom journey, while separate visitors receive independent data.
 
-## 5. Try simulated billing
+## 5. Compare independent grade and answer release
+
+As the student, open **Tables and concepts: separate grade and answer release**. Complete and save all three problems, then submit. This graded example returns a receipt while grades are pending; it does not allow pre-submission checks.
+
+Switch to instructor, open that assignment and choose **Reveal answers**, then **Confirm answer reveal**. Switch back to student: solutions and explanations are now available, but the grade is still pending. Return as instructor and choose **Release grades**, then **Confirm grade release**. The student's result is now visible. You can also release grades before answers; the controls are independent. Graded correctness can still imply binary answers even with the answer key locked.
+
+The problem library also lets you create a True/false or Multiple choice question, supply its key and optional explanation, save it and publish a version. Add that version to a new assignment through **Add published problems**. Option text edits and moves preserve option identity; published versions retain their original keys. Draft and version previews have their own local answers and do not save student work.
+
+## 6. Try simulated billing
 
 Open **Billing (simulated)** and select **Demo: Try simulated checkout**. Start checkout and use the simulator's success action. Inspect the resulting purchase and class coverage.
 
 No payment provider is contacted. Coverage comes from the same purchase/event/entitlement workflow used by the simulator, rather than a frontend flag. If desired, author an assignment for this class using the existing published problem and publish it after coverage is active.
 
-## 6. Reset and inspect the restored state
+## 7. Reset and inspect the restored state
 
 Return to the demo controls and choose **Reset demo and discard changes**. Choose either role again.
 

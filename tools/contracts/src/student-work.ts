@@ -1,7 +1,14 @@
 import { z } from 'zod';
+import {
+  assignmentResponsesSchema,
+  assignmentResponseValueSchema,
+  conceptualFeedbackSchema,
+  mixedGradedSubmissionResultSchema,
+  mixedCompletionSubmissionResultSchema,
+} from './assignment-responses';
+import { conceptualQuestionContentSchema, conceptualSolutionSchema } from './conceptual-question';
 import { assignmentSummarySchema } from './assignment';
 import {
-  truthTableAnswerSchema,
   truthTableCheckResponseSchema,
   truthTableExerciseResponseSchema,
   truthTableSolutionResponseSchema,
@@ -28,30 +35,36 @@ export type CompletionSubmissionResult = z.infer<typeof completionSubmissionResu
 export const submissionResultSchema = z.discriminatedUnion('gradingVersion', [
   gradedSubmissionResultSchema,
   completionSubmissionResultSchema,
+  mixedGradedSubmissionResultSchema,
+  mixedCompletionSubmissionResultSchema,
 ]);
 export type SubmissionResult = z.infer<typeof submissionResultSchema>;
 export const studentAttemptSchema = z.strictObject({
   id: z.uuid(),
   revision: z.number().int().nonnegative(),
-  answers: z.record(z.uuid(), z.array(truthTableAnswerSchema).max(4096)),
+  answers: assignmentResponsesSchema,
   submittedAt: z.iso.datetime().nullable(),
   result: submissionResultSchema.nullable(),
   gradePending: z.boolean().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
+const assignedItemFields = {
+  id: z.uuid(),
+  position: z.number().int().positive(),
+  title: z.string(),
+  instructions: z.string().nullable(),
+};
+/** Legacy table shape remains unchanged; conceptual content is explicitly redacted. */
+export const studentAssignmentItemSchema = z.union([
+  z.strictObject({
+    ...assignedItemFields,
+    formula: z.string(),
+    exercise: truthTableExerciseResponseSchema,
+  }),
+  z.strictObject({ ...assignedItemFields, content: conceptualQuestionContentSchema }),
+]);
 export const studentAssignmentSchema = assignmentSummarySchema.safeExtend({
-  items: z
-    .array(
-      z.strictObject({
-        id: z.uuid(),
-        position: z.number().int().positive(),
-        title: z.string(),
-        instructions: z.string().nullable(),
-        formula: z.string(),
-        exercise: truthTableExerciseResponseSchema,
-      }),
-    )
-    .max(50),
+  items: z.array(studentAssignmentItemSchema).max(50),
 });
 export type StudentAssignment = z.infer<typeof studentAssignmentSchema>;
 
@@ -69,7 +82,7 @@ export type StudentAssignmentListQuery = z.infer<typeof studentAssignmentListQue
 export const saveStudentAnswersSchema = z.strictObject({
   revision: z.number().int().nonnegative().max(2147483646),
   itemId: z.uuid(),
-  answers: z.array(truthTableAnswerSchema).max(4096),
+  answers: assignmentResponseValueSchema,
 });
 export type SaveStudentAnswers = z.infer<typeof saveStudentAnswersSchema>;
 export const submitStudentAttemptSchema = z.strictObject({
@@ -91,7 +104,7 @@ export const studentAttemptResponseSchema = z.strictObject({ attempt: studentAtt
 export type StudentAttemptResponse = z.infer<typeof studentAttemptResponseSchema>;
 export const studentSolutionResponseSchema = z.strictObject({
   itemId: z.uuid(),
-  solution: truthTableSolutionResponseSchema,
+  solution: z.union([truthTableSolutionResponseSchema, conceptualSolutionSchema]),
 });
 export type StudentSolutionResponse = z.infer<typeof studentSolutionResponseSchema>;
 export const studentWorkErrorResponseSchema = z.strictObject({
@@ -102,11 +115,11 @@ export type StudentWorkErrorResponse = z.infer<typeof studentWorkErrorResponseSc
 /** Explicit checking evaluates these transient answers; it does not save or submit them. */
 export const checkStudentAnswersSchema = z.strictObject({
   itemId: z.uuid(),
-  answers: z.array(truthTableAnswerSchema).max(4096),
+  answers: assignmentResponseValueSchema,
 });
 export type CheckStudentAnswers = z.infer<typeof checkStudentAnswersSchema>;
 export const studentCheckResponseSchema = z.strictObject({
   itemId: z.uuid(),
-  feedback: truthTableCheckResponseSchema,
+  feedback: z.union([truthTableCheckResponseSchema, conceptualFeedbackSchema]),
 });
 export type StudentCheckResponse = z.infer<typeof studentCheckResponseSchema>;

@@ -1,3 +1,4 @@
+import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
   canViewAssignedSolution,
@@ -5,10 +6,7 @@ import {
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { assignmentExercises } from '../assignment/exercise-response';
-import {
-  assignmentLearningPolicySchema,
-  truthTableSolutionResponseSchema,
-} from '@logiclab/contracts';
+import { assignmentLearningPolicySchema } from '@logiclab/contracts';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -22,14 +20,16 @@ import type {
   StudentSolutionResponse,
   StudentAssignmentListQuery,
 } from '@logiclab/contracts';
-import { generateTruthTable } from '@logiclab/logic-engine';
+import {
+  validateItemResponse,
+  checkItemResponse,
+  itemSolution,
+} from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
 import {
-  validateAnswers,
-  evaluateSubmission,
-  evaluateCompletion,
-  checkAssignedAnswers,
-} from '../../application/student-work/evaluation';
+  evaluateAssignmentSubmission,
+  evaluateAssignmentCompletion,
+} from '../../application/student-work/mixed-evaluation';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -168,8 +168,11 @@ export async function createStudentWorkStore(
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
-        validateAnswers(item.problemVersion.definition.formula, input.answers);
-        attempt.answers = { ...attempt.answers, [item.id]: input.answers };
+        const answers = validateItemResponse(
+          supportedProblemDefinition(item.problemVersion.definition),
+          input.answers,
+        );
+        attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
         await em.flush();
         return attemptResponse(attempt, assignment);
@@ -200,7 +203,10 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId: item.id,
-          feedback: checkAssignedAnswers(item.problemVersion.definition.formula, input.answers),
+          feedback: checkItemResponse(
+            supportedProblemDefinition(item.problemVersion.definition),
+            input.answers,
+          ),
         };
       });
     },
@@ -212,11 +218,13 @@ export async function createStudentWorkStore(
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
         const evaluate =
-          assignment.assessmentMode === 'completion_only' ? evaluateCompletion : evaluateSubmission;
+          assignment.assessmentMode === 'completion_only'
+            ? evaluateAssignmentCompletion
+            : evaluateAssignmentSubmission;
         attempt.result = evaluate(
           assigned.map((item) => ({
             id: item.id,
-            formula: item.problemVersion.definition.formula,
+            definition: supportedProblemDefinition(item.problemVersion.definition),
           })),
           attempt.answers,
         );
@@ -249,9 +257,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId,
-          solution: truthTableSolutionResponseSchema.parse(
-            generateTruthTable(item.problemVersion.definition.formula),
-          ),
+          solution: itemSolution(supportedProblemDefinition(item.problemVersion.definition)),
         };
       });
     },

@@ -33,7 +33,7 @@ const version: PublishedProblemVersion = {
   version: 1,
   title: 'Original snapshot',
   instructions: null,
-  definition: { ...draft.definition, formula: 'P' },
+  definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
   publishedAt: draft.createdAt,
 };
 beforeEach(() => {
@@ -218,6 +218,7 @@ test('reverting problem edits removes protection without saving', async () => {
   await user.type(screen.getByLabelText('Formula'), ' & R');
   expect(protectedWork()).toBe(true);
   await user.clear(screen.getByLabelText('Formula'));
+  if (draft.definition.type !== 'truth_table') throw new Error('Expected a truth-table fixture');
   await user.type(screen.getByLabelText('Formula'), draft.definition.formula);
   await waitFor(() => expect(protectedWork()).toBe(false));
   expect(api.saveProblem).not.toHaveBeenCalled();
@@ -266,4 +267,38 @@ test('discarding an unsuccessful draft clears its save error for the next editor
   await user.click(screen.getByRole('button', { name: 'Discard changes' }));
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Title')).toHaveValue('');
+});
+
+test('conceptual editing participates in discard protection and previews the selected immutable version', async () => {
+  const conceptual = {
+    ...draft,
+    definition: {
+      type: 'true_false' as const,
+      definitionVersion: 1 as const,
+      question: 'Saved question',
+      correctAnswer: false,
+      explanation: 'Saved explanation',
+    },
+  };
+  vi.mocked(api.listProblems).mockResolvedValue({ problems: [conceptual], nextOffset: null });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [{ ...version, definition: conceptual.definition }],
+    nextOffset: null,
+  });
+  const user = await openDraft();
+  await user.type(screen.getByLabelText('Question'), ' edited');
+  expect(protectedWork()).toBe(true);
+  expect(screen.getByRole('button', { name: 'Publish saved draft' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Question')).toHaveValue('Saved question edited');
+  await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
+  expect(screen.getByRole('group', { name: 'Saved question' })).toBeInTheDocument();
+  expect(screen.queryByRole('group', { name: 'Saved question edited' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Problem preview' }).textContent).not.toContain(
+    'Saved explanation',
+  );
+  await user.click(screen.getByRole('button', { name: 'Show preview answer' }));
+  expect(screen.getAllByText(/Saved explanation/).length).toBeGreaterThan(0);
+  expect(screen.getByLabelText('Question')).toHaveValue('Saved question edited');
 });

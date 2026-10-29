@@ -51,7 +51,7 @@ async function fixture() {
     problem,
     version: 2,
     title: 'Another snapshot',
-    definition: { ...problem.definition, formula: 'Q' },
+    definition: { type: 'truth_table', definitionVersion: 1, formula: 'Q' },
   });
   em.persist([
     owner,

@@ -14,3 +14,5 @@ export * from './billing';
 export * from './demo';
 export * from './assignment-learning-policy';
 export * from './assignment-results-release';
+export * from './conceptual-question';
+export * from './assignment-responses';

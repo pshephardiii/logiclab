@@ -4,7 +4,7 @@ import {
   updateProblemRequestSchema,
   problemResponseSchema,
 } from '@logiclab/contracts';
-import { parseFormula } from '@logiclab/logic-engine';
+import { supportedProblemDefinition } from '../../../application/problem/definition-support';
 import { ProblemError } from '../errors';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -15,7 +15,7 @@ export function patchProblemHandler(context: ProblemContext) {
     const user = await instructor(request, context);
     const { problemId } = parseRequest(problemParamsSchema, request.params);
     const input = parseRequest(updateProblemRequestSchema, request.body);
-    if (input.definition) parseFormula(input.definition.formula);
+    if (input.definition) supportedProblemDefinition(input.definition);
     const result = await context.problems.update(user.id, problemId, input);
     if (result.status === 'not_found')
       throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');

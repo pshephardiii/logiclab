@@ -1,7 +1,12 @@
-import type { ProblemDraft } from '@logiclab/contracts';
+import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
+import type { ProblemDraft, ProblemDefinition } from '@logiclab/contracts';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
-type Props = { problem: ProblemDraft; disabled: boolean; onPreview: (formula: string) => void };
+type Props = {
+  problem: ProblemDraft;
+  disabled: boolean;
+  onPreview: (definition: ProblemDefinition) => void;
+};
 
 /** Presents saved publication controls and immutable snapshot content. */
 export function ProblemHistory({ problem, disabled, onPreview }: Props) {
@@ -13,7 +18,7 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       <h2>Published versions</h2>
       <p>
         Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
-        Students do not receive access.
+        Students receive the snapshot only through an assigned published version.
       </p>
       <div className="action-row">
         <button
@@ -41,9 +46,13 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
               Version {version.version}: {version.title}
             </h3>
             <p>{version.instructions || 'No instructions.'}</p>
-            <code>{version.definition.formula}</code>
+            {version.definition.type === 'truth_table' ? (
+              <code>{version.definition.formula}</code>
+            ) : (
+              <ConceptualQuestionSummary definition={version.definition} />
+            )}
             <p className="help">Published {new Date(version.publishedAt).toLocaleString()}</p>
-            <button className="secondary" onClick={() => onPreview(version.definition.formula)}>
+            <button className="secondary" onClick={() => onPreview(version.definition)}>
               Preview version {version.version}
             </button>
           </li>

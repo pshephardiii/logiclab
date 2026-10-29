@@ -1,15 +1,28 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { CreateProblemRequest, ProblemDraft } from '@logiclab/contracts';
+import {
+  createProblemRequestSchema,
+  type CreateProblemRequest,
+  type ProblemDefinition,
+  type ProblemDraft,
+} from '@logiclab/contracts';
+import {
+  initialProblemFields,
+  editorDefinition,
+  editorSnapshot,
+  type ProblemEditorFields,
+} from '../helpers/problem-editor';
+import { ConceptualProblemFields } from './ConceptualProblemFields';
 
 type Props = {
   problem: ProblemDraft | null;
   busy: boolean;
   saveError?: string | null;
   onSave: (input: CreateProblemRequest) => Promise<boolean>;
-  onPreview: (formula: string) => void;
+  onPreview: (definition: ProblemDefinition) => void;
   onDirty: (dirty: boolean) => void;
 };
-/** Keeps unsaved fields locally, including after failed saves; archived drafts are read-only. */
+
+/** Keeps each draft local through failures and type changes; archived records remain read-only. */
 export function ProblemForm({
   problem,
   busy,
@@ -18,41 +31,62 @@ export function ProblemForm({
   onPreview,
   onDirty,
 }: Props) {
+  const [initial] = useState(() => initialProblemFields(problem));
+  const [fields, setFields] = useState(initial);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const error = validationError ?? saveError;
   useEffect(() => {
-    if (saveError) errorRef.current?.focus();
-  }, [saveError]);
-  const [title, setTitle] = useState(problem?.title ?? '');
-  const [instructions, setInstructions] = useState(problem?.instructions ?? '');
-  const [formula, setFormula] = useState(problem?.definition.formula ?? '');
+    if (error) errorRef.current?.focus();
+  }, [error]);
   useEffect(() => {
-    onDirty(
-      title !== (problem?.title ?? '') ||
-        instructions !== (problem?.instructions ?? '') ||
-        formula !== (problem?.definition.formula ?? ''),
-    );
-  }, [title, instructions, formula, problem, onDirty]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    onDirty(editorSnapshot(fields) !== editorSnapshot(initial));
+  }, [fields, initial, onDirty]);
+  function change(next: ProblemEditorFields) {
+    setFields(next);
+    setValidationError(null);
+  }
+  function validatedDefinition() {
+    const parsed = editorDefinition(fields);
+    if (!parsed.success) {
+      setValidationError(
+        parsed.error.issues
+          .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+          .slice(0, 3)
+          .join(' '),
+      );
+      return null;
+    }
+    setValidationError(null);
+    return parsed.data;
+  }
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await onSave({
-      title,
-      instructions: instructions || null,
-      definition: { type: 'truth_table', definitionVersion: 1, formula },
+    const definition = validatedDefinition();
+    if (!definition) return;
+    const input = createProblemRequestSchema.safeParse({
+      title: fields.title,
+      instructions: fields.instructions || null,
+      definition,
     });
+    if (!input.success) {
+      setValidationError(input.error.issues.map((issue) => issue.message).join(' '));
+      return;
+    }
+    await onSave(input.data);
   }
   return (
     <section className="panel">
       <h2>{problem ? 'Edit draft' : 'Create a problem'}</h2>
-      {saveError && (
+      {error && (
         <p ref={errorRef} id="problem-save-error" className="error" role="alert" tabIndex={-1}>
-          {saveError}
+          {error}
         </p>
       )}
       <form
-        aria-describedby={saveError ? 'problem-save-error' : undefined}
+        aria-describedby={error ? 'problem-save-error' : undefined}
         className="problem-editor"
-        onSubmit={(event) => void handleSubmit(event)}
+        onSubmit={(event) => void submit(event)}
       >
         <fieldset disabled={busy || Boolean(problem?.archivedAt)}>
           <label htmlFor="problem-title">Title</label>
@@ -60,31 +94,62 @@ export function ProblemForm({
             id="problem-title"
             required
             maxLength={120}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            value={fields.title}
+            onChange={(event) => change({ ...fields, title: event.target.value })}
           />
           <label htmlFor="problem-instructions">Instructions</label>
           <textarea
             id="problem-instructions"
             maxLength={5000}
-            value={instructions}
-            onChange={(event) => setInstructions(event.target.value)}
+            value={fields.instructions}
+            onChange={(event) => change({ ...fields, instructions: event.target.value })}
           />
-          <label htmlFor="problem-formula">Formula</label>
-          <input
-            id="problem-formula"
-            required
-            maxLength={256}
-            value={formula}
-            onChange={(event) => setFormula(event.target.value)}
-          />
+          <label htmlFor="problem-type">Problem type</label>
+          <select
+            id="problem-type"
+            value={fields.type}
+            onChange={(event) =>
+              change({ ...fields, type: event.target.value as ProblemDefinition['type'] })
+            }
+          >
+            <option value="truth_table">Truth table</option>
+            <option value="true_false">True/false</option>
+            <option value="multiple_choice">Multiple choice</option>
+          </select>
+          <p className="help">
+            Only the selected problem type is saved. Switching types keeps your fields until you
+            leave this editor.
+          </p>
+          {fields.type === 'truth_table' ? (
+            <>
+              <label htmlFor="problem-formula">Formula</label>
+              <input
+                id="problem-formula"
+                required
+                maxLength={256}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={fields.formula}
+                onChange={(event) => change({ ...fields, formula: event.target.value })}
+              />
+            </>
+          ) : (
+            <ConceptualProblemFields fields={fields} onChange={change} />
+          )}
           <button type="submit">{busy ? 'Saving…' : 'Save draft'}</button>
         </fieldset>
       </form>
       <button
         className="secondary"
-        disabled={busy || !formula.trim()}
-        onClick={() => onPreview(formula)}
+        disabled={
+          busy || (fields.type === 'truth_table' ? !fields.formula.trim() : !fields.question.trim())
+        }
+        onClick={() => {
+          const definition = validatedDefinition();
+          if (definition) onPreview(definition);
+        }}
       >
         Preview draft
       </button>

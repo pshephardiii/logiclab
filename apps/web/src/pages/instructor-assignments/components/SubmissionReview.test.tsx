@@ -57,3 +57,32 @@ test('final-submission lists paginate and failed detail reads can be retried', a
   await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
   expect(screen.queryByRole('button', { name: 'Load more submissions' })).not.toBeInTheDocument();
 });
+
+test('conceptual final review shows the frozen selection/status without an explanation or editable controls', async () => {
+  const { conceptualWork, conceptualSaved } =
+    await import('../../../../test/conceptual-work-fixture');
+  const result = {
+    gradingVersion: 'mixed_v1' as const,
+    items: [
+      {
+        type: 'true_false' as const,
+        itemId: conceptualWork.items[0]!.id,
+        feedback: { status: 'correct' as const },
+      },
+    ],
+    summary: { correct: 1, incorrect: 0, unanswered: 1, total: 2 },
+  };
+  vi.mocked(api.readSubmission).mockResolvedValue({
+    ...review,
+    assignment: conceptualWork,
+    attempt: { ...conceptualSaved, submittedAt: review.attempt.submittedAt, result },
+  });
+  const user = userEvent.setup();
+  render(<SubmissionReview assignmentId={conceptualWork.id} />);
+  await user.click(await screen.findByRole('button', { name: 'student@example.test' }));
+  expect(await screen.findByLabelText('False')).toBeChecked();
+  expect(screen.getByLabelText('False')).toBeDisabled();
+  expect(screen.getByText('✓ Correct')).toBeInTheDocument();
+  expect(screen.queryByText(/Correct answer:/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Clear answer' })).not.toBeInTheDocument();
+});
