@@ -34,6 +34,7 @@ export function registerAssignmentLearningPersistenceTests(
   for (const [mode, timing] of [
     [AssessmentMode.Graded, FeedbackTiming.OnSubmission],
     [AssessmentMode.CompletionOnly, FeedbackTiming.Immediate],
+    [AssessmentMode.CompletionOnly, FeedbackTiming.OnSubmission],
     [AssessmentMode.UngradedPractice, FeedbackTiming.Immediate],
     [AssessmentMode.CompletionOnly, FeedbackTiming.OnCheck],
     [AssessmentMode.UngradedPractice, FeedbackTiming.OnCheck],
@@ -63,7 +64,6 @@ export function registerAssignmentLearningPersistenceTests(
   for (const [mode, timing] of [
     [AssessmentMode.Graded, FeedbackTiming.OnCheck],
     [AssessmentMode.Graded, FeedbackTiming.Immediate],
-    [AssessmentMode.CompletionOnly, FeedbackTiming.OnSubmission],
     [AssessmentMode.UngradedPractice, FeedbackTiming.OnSubmission],
   ] as const) {
     test(`assignment rejects unsupported learning policy ${mode}/${timing}`, async () => {

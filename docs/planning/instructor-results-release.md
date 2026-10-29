@@ -44,9 +44,13 @@ No active response, database field or authoring control changes in slice 1. The 
 ## Suggested slices and verification
 
 1. Establish semantics, standalone grade timing contract and result visibility predicate. Completed October 29, including the clarification that completion-only has no grade-release gate. No active disclosure-path changes yet.
-2. Add persistence and policy support for independent grade/answer metadata, compatibility migrations and rollback tests.
+2. Add persistence and policy support for independent grade/answer metadata, compatibility migrations and rollback tests. Slice 2 adds `gradeReleaseTiming`, separate grade/answer timestamps and actor relations, and `solutionAccess: instructor_release` at the database layer. Non-graded rows use an inert `on_submission` grade-timing default and cannot hold manual grade-release metadata; this does not create a grade control for completion-only. The additive migration preserves existing policies/results, permits submission-time completion alongside legacy checking, and refuses lossy rollback. API contracts and workflows still reject the newly persisted choices until the next slice; do not manually enable those policies in application data yet.
 3. Add server withholding and independent release workflows, with tests across disclosure paths, concurrency, ownership/enrollment and archived work.
 4. Add instructor controls and student pending-grade/answer views with readable terminology and recoverable failures; cover normal/demo workflows.
 5. Verify old/new assignments, score-free completion and private practice; update the QA runbook, evidence and local PR draft.
 
 Delaying disclosure can reduce answer sharing through LogicLab; it cannot prevent external solvers or assistance. See the separate [controlled assessment investigation](controlled-assessment.md).
+
+## Slice 2 verification — October 29
+
+`npm run check` passed type checks, 767 tests (83 engine, 503 API, 181 web) and production builds. `npm run db:test` passed 176 PostgreSQL checks (133 database, 43 API/workflow). The release tests cover independent action ordering, completion-only answer metadata, invalid/partial states, legacy graded/completion/practice preservation, schema comparison and rollback refusal. Formatting and whitespace checks passed. This slice does not implement release endpoints, student withholding or browser controls; no live provider or browser verification was performed.
