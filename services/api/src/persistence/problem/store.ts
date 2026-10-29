@@ -1,3 +1,4 @@
+import { requireTruthTableDefinition } from '../../application/problem/definition-support';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { publishedProblemVersion } from './version-response';
 import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
@@ -53,7 +54,7 @@ function draft(problem: ProblemEntity): ProblemDraft {
     id: problem.id,
     title: problem.title,
     instructions: problem.instructions ?? null,
-    definition: problem.definition,
+    definition: requireTruthTableDefinition(problem.definition),
     archivedAt: problem.archivedAt?.toISOString() ?? null,
     createdAt: problem.createdAt.toISOString(),
     updatedAt: problem.updatedAt.toISOString(),

@@ -1,3 +1,4 @@
+import { requireTruthTableDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
   canViewAssignedSolution,
@@ -168,7 +169,10 @@ export async function createStudentWorkStore(
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
-        validateAnswers(item.problemVersion.definition.formula, input.answers);
+        validateAnswers(
+          requireTruthTableDefinition(item.problemVersion.definition).formula,
+          input.answers,
+        );
         attempt.answers = { ...attempt.answers, [item.id]: input.answers };
         attempt.revision++;
         await em.flush();
@@ -200,7 +204,10 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId: item.id,
-          feedback: checkAssignedAnswers(item.problemVersion.definition.formula, input.answers),
+          feedback: checkAssignedAnswers(
+            requireTruthTableDefinition(item.problemVersion.definition).formula,
+            input.answers,
+          ),
         };
       });
     },
@@ -216,7 +223,7 @@ export async function createStudentWorkStore(
         attempt.result = evaluate(
           assigned.map((item) => ({
             id: item.id,
-            formula: item.problemVersion.definition.formula,
+            formula: requireTruthTableDefinition(item.problemVersion.definition).formula,
           })),
           attempt.answers,
         );
@@ -250,7 +257,7 @@ export async function createStudentWorkStore(
         return {
           itemId,
           solution: truthTableSolutionResponseSchema.parse(
-            generateTruthTable(item.problemVersion.definition.formula),
+            generateTruthTable(requireTruthTableDefinition(item.problemVersion.definition).formula),
           ),
         };
       });

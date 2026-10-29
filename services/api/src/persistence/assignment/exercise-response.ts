@@ -1,3 +1,4 @@
+import { requireTruthTableDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { StudentAssignment } from '@logiclab/contracts';
 import { generateTruthTable } from '@logiclab/logic-engine';
@@ -11,13 +12,16 @@ export function assignmentExercises(
 ): StudentAssignment {
   return {
     ...assignmentSummary(assignment),
-    items: items.map((item) => ({
-      id: item.id,
-      position: item.position,
-      title: item.problemVersion.title,
-      instructions: item.problemVersion.instructions ?? null,
-      formula: item.problemVersion.definition.formula,
-      exercise: exerciseResponse(generateTruthTable(item.problemVersion.definition.formula)),
-    })),
+    items: items.map((item) => {
+      const definition = requireTruthTableDefinition(item.problemVersion.definition);
+      return {
+        id: item.id,
+        position: item.position,
+        title: item.problemVersion.title,
+        instructions: item.problemVersion.instructions ?? null,
+        formula: definition.formula,
+        exercise: exerciseResponse(generateTruthTable(definition.formula)),
+      };
+    }),
   };
 }

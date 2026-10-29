@@ -1,6 +1,6 @@
 # Instructor-authored conceptual questions
 
-Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; existing authoring, persistence entity types and student routes still accept truth tables only until the workflow slices wire the union safely.
+Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; existing authoring and student routes still accept truth tables only until workflow slices wire the union safely. Slice 2 extends persistence types and guards formula-only paths.
 
 ## Teaching goal and initial scope
 
@@ -42,7 +42,7 @@ Carry the types through graded, completion-only and private-practice workflows d
 
 ## Persistence and snapshot compatibility
 
-Keep definition JSON in the existing Problem/ProblemVersion JSONB fields. Publishing freezes type, question, option identities/order/text, key and explanation; later edits cannot alter an assigned snapshot. Slice 1 does not widen the active database entity or route definition union, so new questions cannot accidentally reach formula-only handlers before type dispatch/redaction is ready. No migration or data rewrite is needed for these staged contracts.
+Keep definition JSON in the existing Problem/ProblemVersion JSONB fields. Publishing freezes type, question, option identities/order/text, key and explanation; later edits cannot alter an assigned snapshot. Slice 1 staged the contracts. Slice 2 widens the database definition union and ProblemType enum without changing JSONB columns or enabling new authoring/student routes. Formula-only callers explicitly narrow through a guard; unsupported definitions map to a sanitized HTTP 409 instead of reaching the engine or exposing authored keys. No migration or data rewrite is needed. Runtime authoring validation, grading and complete student projection must be wired before these definitions are enabled through the API.
 
 The workflow slice will extend saved answer JSON by assignment-item identity: retain existing truth-table arrays unchanged, and store tagged conceptual answer objects for conceptual items. Do not encode conceptual selections as fake rows/columns or infer their type from editable labels. Preserve revision/conflict handling and immutable submitted attempts.
 
@@ -57,3 +57,11 @@ These questions broaden assessment beyond mechanical table completion; they do n
 ## Slice 1 verification — October 29
 
 `npm run check` passed type checks, 843 tests (104 engine, 543 API, 196 web) and production builds. The 27 foundation tests cover valid/invalid keys, field/option limits, normalized UUID identity, reordering/text edits, unknown/mismatched responses, null versus false, strict student redaction and independent response allocations. Existing truth-table contracts remain unchanged and reject these staged question types on active routes. Formatting, whitespace and local Markdown targets checked. No database/browser tests were run for this contract-only foundation; no migration, active endpoint acceptance, grading or UI controls were added in this slice.
+
+## Slice 2 persistence and verification — October 29
+
+The existing Problem/ProblemVersion definition type now includes named truth-table, true/false and multiple-choice variants. Database and transport conceptual shapes are checked for mutual assignability and JSON round-trip compatibility. No separate problem entities, tables or snapshot migration were introduced. JSONB is not itself a question validator: route contracts must validate keys/limits when authoring is enabled.
+
+Existing library, assignment and student formula paths use `requireTruthTableDefinition`; other definitions or format versions fail closed with `PROBLEM_DEFINITION_UNSUPPORTED`. Owner/enrollment checks still precede projection. A rejected publication or attempt operation rolls back fully; it does not create a partial version or attempt. Shared route mapping never includes the private definition or explanation.
+
+`npm run check` passed type checks, 848 tests (104 engine, 548 API, 196 web) and production builds. `npm run db:test` passed 187 PostgreSQL checks (139 database, 48 API/workflow), including six new snapshot/immutability checks and unsupported-flow rollback/isolation coverage. Schema comparison remains unchanged. Formatting, whitespace and local Markdown targets checked. No browser run, conceptual API acceptance, grading or editor controls are claimed in this slice; type-specific server workflows follow next.

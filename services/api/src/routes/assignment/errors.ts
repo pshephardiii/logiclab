@@ -1,3 +1,4 @@
+import { mapProblemDefinitionError } from '../problem-definition-error';
 import { AssignmentOperationError } from '../../application/assignment/errors';
 import { mapAuthError } from '../auth/errors';
 
@@ -54,6 +55,8 @@ const failures = {
   },
 };
 export function mapAssignmentError(error: unknown) {
+  const unsupported = mapProblemDefinitionError(error);
+  if (unsupported) return unsupported;
   if (error instanceof AssignmentError)
     return { status: error.status, code: error.code, message: error.message };
   if (error instanceof AssignmentOperationError) return failures[error.reason];

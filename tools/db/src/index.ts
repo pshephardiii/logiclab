@@ -19,7 +19,13 @@ export { LockMode } from '@mikro-orm/core';
 
 export { Problem } from './entities/Problem.ts';
 export { ProblemVersion } from './entities/ProblemVersion.ts';
-export type { ProblemDefinition } from './types/problem/definition.ts';
+export type {
+  ProblemDefinition,
+  TruthTableDefinition,
+  TrueFalseDefinition,
+  MultipleChoiceDefinition,
+  ConceptualProblemDefinition,
+} from './types/problem/definition.ts';
 
 export { Assignment } from './entities/Assignment.ts';
 export { AssignmentItem } from './entities/AssignmentItem.ts';

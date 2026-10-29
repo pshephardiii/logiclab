@@ -1,3 +1,4 @@
+import { mapProblemDefinitionError } from '../problem-definition-error';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { mapAuthError } from '../auth/errors';
 
@@ -63,6 +64,8 @@ const failures = {
   },
 };
 export function mapStudentWorkError(error: unknown) {
+  const unsupported = mapProblemDefinitionError(error);
+  if (unsupported) return unsupported;
   if (error instanceof StudentWorkRouteError)
     return { status: error.status, code: error.code, message: error.message };
   if (error instanceof StudentWorkError) return failures[error.reason];
