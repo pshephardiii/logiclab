@@ -224,3 +224,7 @@ Complete and verify a separate instructor-results-release feature branch before 
 ## QA billing correction: one unresolved or paid purchase per class
 
 Do not allow another class checkout while any purchase for that class is pending or paid, or active publishing coverage exists. Enforce this server-side across plans and independently of paginated history, and disable the UI action. Preserve same-request idempotent recovery, payment history and existing grants. Failed/refunded states may permit a fresh purchase; paid records continue to block checkout after period expiry, so renewals require a future deliberate policy rather than implicit stacking. This correction applies to normal and demo billing without real charges or a schema migration.
+
+## Propositional derivations before the portfolio sandbox
+
+The user has moved derivations ahead of the UI/visual audit and initial sandbox. The active planning branch is `018-docs-derivation-planning`; see [agreed directions and open questions](logical-derivations.md). Target Fitch-style, dependency-style numbered and natural-deduction tree formats, with rule permissions and instructor terminology independent of presentation. Use a checked instructor reference proof to establish solvability under the selected restrictions; certification of additional formats remains open. Predicates, truth trees/tableaux and automated proof search are deferred. Design first, split implementation across feature branches, then resume the UI audit and deployment preparation. Earlier roadmap paragraphs describe prior sequencing.
