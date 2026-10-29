@@ -1,52 +1,52 @@
-# Instructor-controlled results release
+# Instructor-controlled grade release and answer reveal
 
-Status: agreed future feature branch, October 28, 2026. Provisional name: `019-feat-instructor-results-release`; verify the next unused number and priority before starting. This feature branch must be completed and verified before initial deployment, including the initial public demo deployment. Its provisional number does not imply it comes after the currently numbered deployment branch. Resolve the answer-key release decision within this branch before implementation is finalized. No instructor-release functionality or new release policy is implemented by this planning note.
+Status: in progress on `015-feat-instructor-controlled-results-release`, October 29, 2026. This replaces the provisional `019` name. Complete and verify this feature before initial deployment, including the public demo. Slice 1 establishes the grade-timing contract and pure result-visibility rule; persistence, endpoints and UI do not yet use them.
 
-## Problem and agreed direction
+## Agreed controls by assessment mode
 
-The current authoring UI mixes official result timing with pre-submission practice checks. Additional explanatory copy did not resolve the instructor's confusion. Redesign these concepts in a dedicated branch rather than silently changing saved assignment policies during QA.
+User clarification, October 29:
 
-For graded and completion-only assignments, the intended official-results choices are:
+| Mode              | Grade release                                                                                  | Answer reveal                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Graded            | At submission or when the instructor releases grades                                           | Independently controlled; may coincide with grade release or occur separately |
+| Completion only   | No grade-release control; completion is acknowledged at submission without a correctness score | Independently controlled                                                      |
+| Ungraded practice | No grades or final submission                                                                  | Preserve existing practice assistance and answer-access rules                 |
 
-- **At submission:** results become available after final submission.
-- **When the instructor releases results:** retain results privately after submission until an authorized instructor explicitly releases them, for example after all students have submitted.
+Grade release does not automatically reveal the answer key. Revealing answers does not release grades. For graded work these need independent policies, actions and durable metadata; completion-only needs only the answer side. Offer a deliberate combined action if useful later, but do not make either action implicitly perform the other.
 
-Completion-only results remain score-free: completion status must not silently become a correctness grade. Decide separately whether and when such assignments offer practice assistance before submission. Ungraded practice has no final submission or official grades; its checking/reveal controls should be described as practice assistance, not official results timing.
+A graded result currently contains per-cell correctness. With binary answers, correctness plus the student's answer can reveal the expected value even when the explicit answer key is locked. Explain this limitation rather than promising that separate controls eliminate inference. Completion-only results remain score-free and disclose no correctness feedback.
 
-This is a future direction, not an assertion that both choices are currently supported.
+## Slice 1 contract and lifecycle
 
-## Current QA decision: preserve behavior
+- `gradeReleaseTiming`: `on_submission` or `instructor_release`, applicable only to graded work. Default new graded assignments to `on_submission`.
+- A student's grade is visible only after their submission and the configured release condition. A late submission after an assignment-wide grade release receives its grade immediately. Release before submission does not disclose that student's grade.
+- Completion status/counts are visible immediately after completion-only submission. There is no pending-grade state or instructor grade-release action for completion-only work.
+- Keep existing answer policies `never`, `after_submission` and `anytime` meaningful. Add an independent instructor-controlled answer-reveal option in a later slice, usable for both graded and completion-only work. Do not substitute `after_results_release`, which would couple answer access to grades and make completion-only ambiguous.
+- Grade and answer release actions are assignment-wide, owner-authorized, explicit, idempotent and irreversible. Require a published, non-archived assignment with the corresponding instructor-controlled policy. Permit release before all students submit, with clear confirmation; no automatic all-students-submitted detection.
+- Persist separate release timestamps and releasing application-user identities. Preserve release metadata through archive/restore; duplicate assignments start as unreleased drafts. Repeating an action returns its existing state without changing the other release.
+- A graded student awaiting grades sees saved/final answers and a submission receipt, with `result: null` and an explicit pending-grade state. Withhold grade items and summaries on every response. Access to the answer key follows its independent policy, even when grades are pending.
+- New completion-only authoring uses submission-time completion acknowledgement rather than a grade-release control. Preserve existing published pre-submission checking behavior under the compatibility rules below. Ungraded practice retains manual/immediate assistance. Subsequent slices must enforce new authoring combinations consistently in API and UI.
 
-Graded feedback is already restricted to `on_submission`; keep that control locked and label its sole option **At submission**. Do not introduce a selectable instructor-release option before server-side enforcement exists.
+## Compatibility and rollout
 
-The user explicitly deferred completion-only policy changes after clarification. Completion-only currently supports `on_check` or `immediate`, not `on_submission`. Keep those behaviors and existing saved/published policies unchanged in the QA branch; do not display a false At submission value, coerce policies on read/save, backfill assignments or weaken database checks to simulate the requested model. Implement submission-only completion policy deliberately in this future feature branch.
+Existing graded assignments retain submission-time grade visibility; never retrospectively withhold previously visible results. Preserve existing answer access and published completion-only checking policies. New drafts and explicit edits adopt the new valid combinations; document how legacy duplication normalizes into a valid new draft. Test preservation, transitions and rollback before shipping.
 
-Existing solution-access choices remain unchanged for now. Graded feedback timing being fixed does not currently prohibit Anytime solution access; the future branch must settle that interaction rather than imply a new restriction is already enforced.
-
-## Open decision: release grades and answers together?
-
-Before implementation, decide whether an instructor release:
-
-1. Always releases correct answers/explanations alongside grades or completion status; or
-2. Can release grades/completion status while keeping the answer key hidden, with a separately controlled answer release.
-
-No choice has been made. Consider whether per-cell correctness itself effectively reveals a binary answer, what completion-only should disclose, and how the controls are explained to instructors/students. Distinguish acknowledging receipt of a submission from disclosing results or answers.
+No active response, database field or authoring control changes in slice 1. The standalone timing schema and predicate are foundations, not an implemented server disclosure boundary. Roll out matching database, contracts, server and frontend after compatibility tests pass.
 
 ## Implementation boundaries
 
-- Store final results independently of their release state. Submission may compute/persist a frozen result while student-facing responses withhold it until authorized release.
-- Enforce withholding on every relevant server response: submission, attempt reads, summaries, checking/solution endpoints and any progress views. UI hiding alone is insufficient. Retain ownership, enrollment and normal/demo isolation.
-- Add an explicit owner-authorized, idempotent release action and durable release metadata. Decide whether release is assignment-wide, how late submissions are treated, what happens after archive/restore, and whether release can be reversed once students have seen results. Do not assume all-students-submitted detection or automatic release is in scope.
-- Define a student submitted-but-unreleased state that confirms work was received without exposing withheld grades, correctness, counts, answers or explanations. Keep final work immutable and instructor review available under its existing authorization.
-- Specify policy defaults, published locks, compatibility and migration/backfill for existing data. Preserve historical result snapshots and avoid retrospectively withholding results already released under old behavior.
-- Keep practice assistance, official results release and answer-key disclosure conceptually clear even if some controls are combined after the open decision. Preserve existing ungraded practice unless explicitly changed in that design.
+- Store frozen results separately from disclosure metadata. Grade release changes visibility, not the saved evaluation or final work.
+- Enforce grade and answer policies independently on submission responses, attempt reads, summaries, checking/solution endpoints and progress views. Preserve ownership, enrollment and normal/demo isolation. UI hiding alone is insufficient.
+- Keep instructor review available regardless of student grade release. Completion-only review stays score-free; private practice stays excluded.
+- Test independent action ordering: grades first, answers first, both released, neither released, retries, late submissions and concurrent submission/release. Include completion-only answer reveal without any grade action.
+- Published policies remain immutable; release metadata changes through dedicated authorized actions. Keep retained snapshots and final work immutable.
 
 ## Suggested slices and verification
 
-1. Settle release/answer-key semantics, completion-only/practice assistance behavior and late-submission rules; document contracts and compatibility.
-2. Add persistence and policy support, preserving existing assignments, with migration and rollback tests.
-3. Add server withholding/release workflows and tests for every disclosure path, owner/enrollment/isolation, concurrent submission/release, idempotency and archived work.
-4. Add instructor release controls and student pending/released views with readable terminology and recoverable failures; test normal/demo flows and update fixtures deliberately.
-5. Verify old/new assignments, score-free completion and private practice, then update runbook/evidence and prepare the local PR draft.
+1. Establish semantics, standalone grade timing contract and result visibility predicate. Completed October 29, including the clarification that completion-only has no grade-release gate. No active disclosure-path changes yet.
+2. Add persistence and policy support for independent grade/answer metadata, compatibility migrations and rollback tests.
+3. Add server withholding and independent release workflows, with tests across disclosure paths, concurrency, ownership/enrollment and archived work.
+4. Add instructor controls and student pending-grade/answer views with readable terminology and recoverable failures; cover normal/demo workflows.
+5. Verify old/new assignments, score-free completion and private practice; update the QA runbook, evidence and local PR draft.
 
-Delaying result disclosure can reduce answer sharing through LogicLab; it cannot prevent external solvers or assistance. The separate [controlled assessment investigation](controlled-assessment.md) still applies.
+Delaying disclosure can reduce answer sharing through LogicLab; it cannot prevent external solvers or assistance. See the separate [controlled assessment investigation](controlled-assessment.md).
