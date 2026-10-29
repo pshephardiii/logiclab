@@ -115,7 +115,7 @@ async function fixture() {
       headers: { origin: config.APP_ORIGIN, cookie },
     });
   };
-  // Pin fixtures directly while authoring remains guarded until the browser controls land.
+  // Pin fixtures directly to isolate storage/release checks from the separately tested authoring flow.
   async function pinned(mode = db.AssessmentMode.Graded) {
     const assignment = em.create(db.Assignment, {
       classroom,

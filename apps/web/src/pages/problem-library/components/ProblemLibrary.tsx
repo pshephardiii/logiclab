@@ -1,7 +1,8 @@
+import { ConceptualProblemPreview } from './ConceptualProblemPreview';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useState } from 'react';
-import type { ProblemArchiveFilter } from '@logiclab/contracts';
+import type { ProblemArchiveFilter, ProblemDefinition } from '@logiclab/contracts';
 import { useProblemLibrary } from '../hooks/useProblemLibrary';
 import { ProblemForm } from './ProblemForm';
 import { ProblemHistory } from './ProblemHistory';
@@ -15,9 +16,11 @@ export function ProblemLibrary() {
   useUnsavedWork(dirty && !library.selected?.archivedAt);
   const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
-  const [preview, setPreview] = useState<{ formula: string; key: number } | null>(null);
-  function showPreview(formula: string) {
-    setPreview((previous) => ({ formula, key: (previous?.key ?? 0) + 1 }));
+  const [preview, setPreview] = useState<{ definition: ProblemDefinition; key: number } | null>(
+    null,
+  );
+  function showPreview(definition: ProblemDefinition) {
+    setPreview((previous) => ({ definition, key: (previous?.key ?? 0) + 1 }));
   }
   function select(problem: typeof library.selected) {
     confirmDiscard(() => {
@@ -32,10 +35,7 @@ export function ProblemLibrary() {
       <header>
         <p className="eyebrow">LogicLab / Instructor</p>
         <h1>Problem library</h1>
-        <p>
-          Private reusable problems. Publishing preserves a snapshot; sharing with classes comes
-          later.
-        </p>
+        <p>Private reusable problems. Publish a snapshot to add it to class assignments.</p>
       </header>
       {library.error && (
         <p role="alert" className="error">
@@ -134,7 +134,11 @@ export function ProblemLibrary() {
           <button className="secondary" onClick={() => setPreview(null)}>
             Close preview
           </button>
-          <ProblemPreview key={preview.key} formula={preview.formula} />
+          {preview.definition.type === 'truth_table' ? (
+            <ProblemPreview key={preview.key} formula={preview.definition.formula} />
+          ) : (
+            <ConceptualProblemPreview key={preview.key} definition={preview.definition} />
+          )}
         </>
       )}
     </>

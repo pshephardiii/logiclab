@@ -6,6 +6,7 @@ import { readAuthConfig } from '../../src/config/auth';
 import { readDemoConfig } from '../../src/config/demo';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { createProblemStore } from '../../src/persistence/problem/store';
+import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import type { AuthContext } from '../../src/routes/auth/context';
 
@@ -36,7 +37,7 @@ const questions = [
   },
 ];
 
-test('normal/demo conceptual authoring validates keys, scopes private snapshots and blocks premature assignment use', async () => {
+test('normal/demo conceptual authoring validates keys, scopes private snapshots and pins conceptual assignment versions', async () => {
   const db = await import('@logiclab/db');
   const schema = `conceptual_authoring_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -55,7 +56,26 @@ test('normal/demo conceptual authoring validates keys, scopes private snapshots 
       role: db.UserRole.Instructor,
     });
     const classroom = em.create(db.Classroom, { owner, name: 'Normal authoring' });
-    em.persist([owner, other, classroom]);
+    const student = em.create(db.User, {
+      cognitoUserPoolId: schema,
+      cognitoSubject: 'student',
+      role: db.UserRole.Student,
+    });
+    em.persist([
+      owner,
+      other,
+      student,
+      classroom,
+      em.create(db.Enrollment, { classroom, student }),
+      em.create(db.ClassEntitlement, {
+        classroom,
+        provider: db.BillingProvider.Simulator,
+        source: db.EntitlementSource.ClassPurchase,
+        sourceReference: randomUUID(),
+        startsAt: new Date(Date.now() - 60_000),
+        endsAt: new Date(Date.now() + 86_400_000),
+      }),
+    ]);
     await em.flush();
     let activeRole: 'instructor' | 'student' = 'instructor';
     let activeOwner = owner;
@@ -86,6 +106,7 @@ test('normal/demo conceptual authoring validates keys, scopes private snapshots 
         readDemoConfig({ DEMO_ENABLED: 'true', APP_ORIGIN: origin })!,
       ),
     });
+    const work = await createStudentWorkStore(orm);
     let address = 1;
     async function request(
       method: 'POST' | 'GET' | 'PATCH',
@@ -174,18 +195,54 @@ test('normal/demo conceptual authoring validates keys, scopes private snapshots 
           409,
         );
         assert.equal((await request('POST', path + '/restore', scope.cookie, {})).statusCode, 200);
-        const blocked = await request(
+        const assigned = await request(
           'POST',
           `${scope.prefix}/classes/${scope.classId}/assignments`,
           scope.cookie,
-          { title: 'Not yet assignable', problemVersionIds: [first.json().version.id] },
+          { title: 'Conceptual assignment', problemVersionIds: [first.json().version.id] },
         );
-        assert.equal(blocked.statusCode, 409, blocked.body);
-        assert.equal(blocked.json().error.code, 'PROBLEM_DEFINITION_UNSUPPORTED');
+        assert.equal(assigned.statusCode, 201, assigned.body);
+        assert.deepEqual(assigned.json().assignment.items[0].problemVersion.definition, definition);
         assert.equal(
-          await em.count(db.Assignment, { classroom: scope.classId, title: 'Not yet assignable' }),
-          0,
+          await em.count(db.Assignment, {
+            id: assigned.json().assignment.id,
+            classroom: scope.classId,
+          }),
+          1,
         );
+        const assignmentPath = `${scope.prefix}/assignments/${assigned.json().assignment.id}`;
+        const updated = await request('PATCH', assignmentPath, scope.cookie, {
+          problemVersionIds: [
+            first.json().version.id,
+            second.json().version.id,
+            first.json().version.id,
+          ],
+        });
+        assert.equal(updated.statusCode, 200, updated.body);
+        assert.equal(
+          new Set(updated.json().assignment.items.map((item: { id: string }) => item.id)).size,
+          3,
+        );
+        const published = await request('POST', assignmentPath + '/publish', scope.cookie, {});
+        assert.equal(published.statusCode, 200, published.body);
+        assert.deepEqual(
+          published.json().assignment.items[0].problemVersion.definition,
+          definition,
+        );
+        assert.deepEqual(published.json().assignment.items[1].problemVersion.definition, edited);
+        const assignedStudent =
+          scope.prefix === '/api'
+            ? student
+            : await em.findOneOrFail(db.User, {
+                demoWorkspace: (await em.findOneOrFail(db.User, demoOwner)).demoWorkspace!.id,
+                role: db.UserRole.Student,
+              });
+        const studentView = await work.read(assignedStudent.id, assigned.json().assignment.id);
+        assert.equal(studentView.assignment.items.length, 3);
+        for (const key of ['correctAnswer', 'correctOptionId', 'explanation'])
+          assert.equal(JSON.stringify(studentView).includes(`"${key}"`), false);
+        const final = await work.submit(assignedStudent.id, assigned.json().assignment.id, 0);
+        assert.equal(final.result?.gradingVersion, 'mixed_v1');
         if (scope.prefix === '/api') {
           activeRole = 'student';
           assert.equal((await request('GET', path, scope.cookie)).statusCode, 403);

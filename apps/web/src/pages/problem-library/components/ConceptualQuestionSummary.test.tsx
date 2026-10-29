@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { expect, test, vi } from 'vitest';
-import { ProblemForm } from './ProblemForm';
+import { expect, test } from 'vitest';
+import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type { ProblemDraft } from '@logiclab/contracts';
 
 const problem: ProblemDraft = {
@@ -19,20 +19,9 @@ const problem: ProblemDraft = {
   },
 };
 
-test('instructor read view shows the saved conceptual key without a formula editor that could replace it', () => {
-  const onSave = vi.fn();
-  render(
-    <ProblemForm
-      problem={problem}
-      busy={false}
-      onDirty={vi.fn()}
-      onSave={onSave}
-      onPreview={vi.fn()}
-    />,
-  );
+test('instructor summary displays the saved key and explanation', () => {
+  if (problem.definition.type === 'truth_table') throw new Error('Expected conceptual fixture');
+  render(<ConceptualQuestionSummary definition={problem.definition} />);
   expect(screen.getByText('Correct answer: False')).toBeInTheDocument();
   expect(screen.getByText('Explanation: A contradiction is false.')).toBeInTheDocument();
-  expect(screen.queryByLabelText('Formula')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
-  expect(onSave).not.toHaveBeenCalled();
 });

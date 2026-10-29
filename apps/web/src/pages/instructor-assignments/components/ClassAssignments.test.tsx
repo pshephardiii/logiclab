@@ -464,7 +464,7 @@ test('release failure retains the selected assignment and successful retry updat
   expect(screen.getByRole('button', { name: 'Reveal answers' })).toBeEnabled();
 });
 
-test('conceptual publications remain unavailable for assignment until student evaluation is enabled', async () => {
+test('conceptual publications can be selected and saved as pinned assignment items', async () => {
   const conceptual: PublishedProblemVersion = {
     ...version,
     definition: {
@@ -477,7 +477,10 @@ test('conceptual publications remain unavailable for assignment until student ev
   vi.mocked(library.listVersions).mockResolvedValue({ versions: [conceptual], nextOffset: null });
   const user = await openDraft();
   await user.selectOptions(await screen.findByLabelText('Library problem'), problem.id);
-  expect(await screen.findByRole('button', { name: 'Add version 1' })).toBeDisabled();
-  expect(screen.getByText('This question is not available for assignment.')).toBeInTheDocument();
-  expect(api.updateAssignment).not.toHaveBeenCalled();
+  await user.click(await screen.findByRole('button', { name: 'Add version 1' }));
+  expect(
+    screen.queryByText('This question is not available for assignment.'),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await waitFor(() => expect(api.updateAssignment).toHaveBeenCalled());
 });
