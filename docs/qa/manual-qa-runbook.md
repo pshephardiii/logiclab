@@ -98,11 +98,13 @@ npm run format:check
 ### PRA-03 — Parsing, limits and helpful errors
 
 1. Create `!P`, answer F then T, and check.
-2. Check the Keyboard guide: Meaning / Key / Symbol should read clearly beside the form on desktop and below it on mobile. Create `¬P`, `P ∧ Q`, `P ∨ Q`, and `P → Q` individually; compare with `!P`, `P & Q`, `P v Q` / `P | Q`, and `P -> Q`. Also try `V v P`: uppercase V must remain a variable.
+2. Check the Keyboard guide: Meaning / Key / Symbol should read clearly beside the form on desktop and below it on mobile. Create `¬P`, `P ∧ Q`, `P ∨ Q`, and `P → Q` individually; compare with `!P` / `~P`, `P & Q`, `P v Q` / `P | Q`, and `P -> Q`. Also try `V v P`: uppercase V must remain a variable.
 3. Type `P &`, then pause for at least half a second. Verify a single inline invalid-formula message appears and Create table remains disabled; pressing Enter must not create a table or add a duplicate message. Complete it as `P & Q`; the old verdict should clear immediately and become well formed after the pause, enabling Create table. While a newly edited formula is awaiting validation, the button must stay disabled. Clear the field; feedback should clear. Try `p`, `AB`, and `P && Q` one at a time, verifying each remains invalid with Create table disabled.
 4. Enter an opening parenthesis followed by two spaces using your usual keyboard. Verify it does not substitute a period or automatically change case; also check pasted notation remains unchanged. Record browser/OS if correction persists; remaining native substitution is an accepted limitation (QA-010), not a blocker.
 5. Create `[(P v Q) & ![R -> P]]`; compare with `((P v Q) & !(R -> P))`. Verify equivalent rows/columns and answers. Try `[P)`, `(P]`, `[]`, and `[P`; each should produce local invalid feedback and keep creation disabled.
 6. Try `P & Q & R & S`; then try `P & Q & R & S & T`.
+7. Create `P <-> Q` and `P ↔ Q`; show solutions and verify final values T, F, F, T. Create `~[P <-> Q]` and compare with `¬(P ↔ Q)`; the final values should be F, T, T, F.
+8. Try `P <-> Q <-> R`: verify the inline grouping hint and disabled creation. Group it as `[P <-> Q] ↔ R` or `P ↔ [Q <-> R]` to permit creation. Verify the keyboard guide lists `~` and `<->`.
 
 **Expected:** supported symbols work; invalid formulas produce useful errors rather than a crash. Four variables generate 16 rows; five variables are rejected. Fixing input permits retry. Parentheses and intermediate columns remain readable. Full precedence/nesting bounds also have engine tests; see [engine rules](../../tools/logic-engine/README.md).
 
