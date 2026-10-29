@@ -1,3 +1,4 @@
+import { DEMO_TEMPLATE } from '../../src/application/demo/template';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
@@ -112,7 +113,7 @@ test('demo HTTP starts, switches roles, uses existing scoped workflows, and rese
       const assignmentId = assignments
         .json()
         .assignments.find(
-          (value: { assessmentMode: string }) => value.assessmentMode === 'graded',
+          (value: { title: string }) => value.title === DEMO_TEMPLATE.assignmentTitle,
         ).id;
       const submission = await app.inject({
         method: 'POST',
@@ -386,6 +387,7 @@ test('demo release actions remain workspace-scoped and commit independent metada
       const assignment = await em.findOneOrFail(db.Assignment, {
         classroom: classId,
         assessmentMode: db.AssessmentMode.Graded,
+        title: DEMO_TEMPLATE.assignmentTitle,
         publishedAt: { $ne: null },
       });
       await em.nativeUpdate(db.Assignment, assignment.id, {

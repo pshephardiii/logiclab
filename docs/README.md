@@ -73,6 +73,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Conceptual questions and mixed demo workflows](verification/conceptual-questions-verification.md)
+
 - [Biconditional and tilde notation](verification/biconditional-verification.md)
 
 - [Independent grade release and answer reveal](verification/instructor-results-release-verification.md)

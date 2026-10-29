@@ -1,3 +1,4 @@
+import { DEMO_TEMPLATE } from '../../src/application/demo/template';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -44,6 +45,7 @@ test('cleanup removes frozen demo work, sessions and financial data while retain
     const em = orm.em.fork();
     const assignment = await em.findOneOrFail(db.Assignment, {
       assessmentMode: db.AssessmentMode.Graded,
+      title: DEMO_TEMPLATE.assignmentTitle,
       classroom: { owner: { demoWorkspace: expired.workspaceId } },
     });
     await (await createStudentWorkStore(orm)).submit(session.actor.id, assignment.id, 0);
@@ -86,7 +88,7 @@ test('cleanup removes frozen demo work, sessions and financial data while retain
       await em.count(db.ClassEntitlement, { sourceReference: purchase.checkoutReference }),
       0,
     );
-    assert.equal(await em.count(db.ProblemVersion, {}), 1);
+    assert.equal(await em.count(db.ProblemVersion, {}), 3);
     assert.equal(await em.count(db.DemoWorkspace, { id: live.workspaceId }), 1);
     assert.equal(await em.count(db.Classroom, { id: classroom.id }), 1);
     assert.equal(await em.count(db.BillingPlan, {}), 1);
