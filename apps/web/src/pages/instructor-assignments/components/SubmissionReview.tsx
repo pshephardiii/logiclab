@@ -1,4 +1,8 @@
-import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
+import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
+import {
+  submissionFeedback,
+  conceptualSubmissionFeedback,
+} from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useSubmissionReview } from '../hooks/useSubmissionReview';
 import { answerMap } from '../../../features/assignment/helpers/answers';
@@ -15,6 +19,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
   }
   const review = state.review;
   const item = review?.assignment.items[position];
+  const response = item ? review?.attempt.answers[item.id] : undefined;
   return (
     <section aria-label="Final submission review">
       <section className="panel">
@@ -88,15 +93,24 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
               ))}
             </select>
           </section>
-          {item && (
-            <AssignedItemTable
-              item={item}
-              answers={answerMap(review.attempt.answers[item.id] ?? [])}
-              feedback={submissionFeedback(review.attempt.result, item.id)}
-              readOnly
-              onAnswer={() => {}}
-            />
-          )}
+          {item &&
+            ('exercise' in item ? (
+              <AssignedItemTable
+                item={item}
+                answers={answerMap(review.attempt.answers[item.id] ?? [])}
+                feedback={submissionFeedback(review.attempt.result, item.id)}
+                readOnly
+                onAnswer={() => {}}
+              />
+            ) : (
+              <AssignedConceptualQuestion
+                item={item}
+                answer={response && !Array.isArray(response) ? response : undefined}
+                feedback={conceptualSubmissionFeedback(review.attempt.result, item.id)}
+                readOnly
+                onAnswer={() => {}}
+              />
+            ))}
         </>
       )}
     </section>

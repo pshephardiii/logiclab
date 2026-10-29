@@ -3,14 +3,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   StudentAssignment,
   StudentAttempt,
-  TruthTableSolutionResponse,
-  TruthTableCheckResponse,
+  StudentSolutionResponse,
+  StudentCheckResponse,
+  ConceptualAnswer,
+  AssignmentResponseValue,
 } from '@logiclab/contracts';
 import type { Answers } from '../../../features/truthTable/types';
 import { cellKey } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
 import { savedAnswerMaps, sameAnswers } from '../../../features/assignment/helpers/answers';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
+import {
+  blankConceptualAnswer,
+  savedConceptualAnswers,
+  sameConceptualAnswer,
+  conceptualAnswerFilled,
+} from '../../../features/assignment/helpers/conceptual-answers';
 import * as apiModule from '../../../api/student-work/api';
 
 // At most 50 automatic requests/minute during continuous edits; leave headroom for other work.
@@ -23,8 +31,12 @@ export function useAssignedAttempt(assignmentId: string) {
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
   const [answers, setAnswers] = useState<Record<string, Answers>>({});
   const [baseline, setBaseline] = useState<Record<string, Answers>>({});
-  const [solutions, setSolutions] = useState<Record<string, TruthTableSolutionResponse>>({});
-  const [feedback, setFeedback] = useState<Record<string, TruthTableCheckResponse>>({});
+  const [choiceAnswers, setChoiceAnswers] = useState<Record<string, ConceptualAnswer>>({});
+  const [choiceBaseline, setChoiceBaseline] = useState<Record<string, ConceptualAnswer>>({});
+  const [solutions, setSolutions] = useState<Record<string, StudentSolutionResponse['solution']>>(
+    {},
+  );
+  const [feedback, setFeedback] = useState<Record<string, StudentCheckResponse['feedback']>>({});
   const [checkingItem, setCheckingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<'save' | 'submit' | 'solution' | null>(null);
@@ -35,8 +47,13 @@ export function useAssignedAttempt(assignmentId: string) {
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
   const dirty = useMemo(
-    () => Object.keys(answers).filter((id) => !sameAnswers(answers[id]!, baseline[id])),
-    [answers, baseline],
+    () => [
+      ...Object.keys(answers).filter((id) => !sameAnswers(answers[id]!, baseline[id])),
+      ...Object.keys(choiceAnswers).filter(
+        (id) => !sameConceptualAnswer(choiceAnswers[id]!, choiceBaseline[id]),
+      ),
+    ],
+    [answers, baseline, choiceAnswers, choiceBaseline],
   );
   const hasFinalSubmission =
     assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
@@ -52,15 +69,15 @@ export function useAssignedAttempt(assignmentId: string) {
     () =>
       Boolean(assignment?.items.length) &&
       Boolean(
-        assignment?.items.every(
-          (item) =>
-            'exercise' in item &&
-            submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
-              (answer) => answer.value !== null,
-            ),
+        assignment?.items.every((item) =>
+          'exercise' in item
+            ? submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
+                (answer) => answer.value !== null,
+              )
+            : conceptualAnswerFilled(choiceAnswers[item.id]),
         ),
       ),
-    [assignment, answers],
+    [assignment, answers, choiceAnswers],
   );
 
   const cancelCheck = useCallback(() => {
@@ -82,13 +99,14 @@ export function useAssignedAttempt(assignmentId: string) {
     try {
       const result = await api.readAssignedWork(assignmentId, signal);
       if (!signal.aborted) {
-        if (result.assignment.items.some((item) => !('exercise' in item)))
-          throw new Error('Conceptual answer controls are not available in this build yet.');
         setAssignment(result.assignment);
         setAttempt(result.attempt);
         const saved = savedAnswerMaps(result.assignment, result.attempt);
         setAnswers(saved);
         setBaseline(saved);
+        const choices = savedConceptualAnswers(result.assignment, result.attempt);
+        setChoiceAnswers(choices);
+        setChoiceBaseline(choices);
       }
     } catch (caught) {
       if (!signal.aborted) {
@@ -116,22 +134,47 @@ export function useAssignedAttempt(assignmentId: string) {
     });
     setError(null);
     setNotice(null);
+    const item = assignment?.items.find((value) => value.id === itemId);
+    if (!item || !('exercise' in item)) return;
     const snapshot = { ...answers[itemId], [cellKey(row, column)]: value };
     setAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
     if (allowsImmediateFeedback) {
       // Capture the edited answers rather than the render preceding this state update.
       checkTimer.current = setTimeout(() => {
         checkTimer.current = null;
-        void check(itemId, snapshot);
+        void check(itemId, submittedAnswers(item.exercise, snapshot));
       }, IMMEDIATE_CHECK_DELAY_MS);
     }
+  }
+  function changeConceptualAnswer(itemId: string, snapshot: ConceptualAnswer) {
+    if (loading || action || attempt?.submittedAt) return;
+    const item = assignment?.items.find((value) => value.id === itemId);
+    if (!item || !('content' in item) || item.content.type !== snapshot.type) return;
+    cancelCheck();
+    setFeedback((previous) => {
+      const next = { ...previous };
+      delete next[itemId];
+      return next;
+    });
+    setError(null);
+    setNotice(null);
+    setChoiceAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
+    if (allowsImmediateFeedback)
+      checkTimer.current = setTimeout(() => {
+        checkTimer.current = null;
+        void check(itemId, snapshot);
+      }, IMMEDIATE_CHECK_DELAY_MS);
   }
   async function save(itemId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
-    if (!item || !('exercise' in item)) return;
+    if (!item) return;
     cancelCheck();
-    const snapshot = answers[itemId]!;
+    const snapshot = answers[itemId] ?? {};
+    const response =
+      'exercise' in item
+        ? submittedAnswers(item.exercise, snapshot)
+        : (choiceAnswers[itemId] ?? blankConceptualAnswer(item));
     const signal = writes.startRequest();
     setAction('save');
     setError(null);
@@ -142,13 +185,15 @@ export function useAssignedAttempt(assignmentId: string) {
         {
           revision: attempt?.revision ?? 0,
           itemId,
-          answers: submittedAnswers(item.exercise, snapshot),
+          answers: response,
         },
         signal,
       );
       if (!signal.aborted) {
         setAttempt(saved);
-        setBaseline((previous) => ({ ...previous, [itemId]: snapshot }));
+        if (Array.isArray(response))
+          setBaseline((previous) => ({ ...previous, [itemId]: snapshot }));
+        else setChoiceBaseline((previous) => ({ ...previous, [itemId]: response }));
         setNotice(`Problem ${item.position} saved.`);
       }
     } catch (caught) {
@@ -180,6 +225,9 @@ export function useAssignedAttempt(assignmentId: string) {
         const official = savedAnswerMaps(assignment, saved);
         setAnswers(official);
         setBaseline(official);
+        const choices = savedConceptualAnswers(assignment, saved);
+        setChoiceAnswers(choices);
+        setChoiceBaseline(choices);
         setNotice('Final submission recorded.');
       }
     } catch (caught) {
@@ -191,10 +239,10 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
-  async function check(itemId: string, snapshot = answers[itemId] ?? {}) {
+  async function check(itemId: string, snapshot?: AssignmentResponseValue) {
     if (!assignment || loading || !allowsExplicitCheck || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
-    if (!item || !('exercise' in item)) return;
+    if (!item) return;
     cancelCheck();
     const signal = checks.startRequest();
     setCheckingItem(itemId);
@@ -205,13 +253,16 @@ export function useAssignedAttempt(assignmentId: string) {
         assignmentId,
         {
           itemId,
-          answers: submittedAnswers(item.exercise, snapshot),
+          answers:
+            snapshot ??
+            ('exercise' in item
+              ? submittedAnswers(item.exercise, answers[itemId] ?? {})
+              : (choiceAnswers[itemId] ?? blankConceptualAnswer(item))),
         },
         signal,
       );
       const feedback = response.feedback;
-      if (!signal.aborted && 'cells' in feedback)
-        setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
+      if (!signal.aborted) setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
     } catch (caught) {
       if (!signal.aborted)
         setError(caught instanceof Error ? caught.message : 'Could not check answers.');
@@ -235,8 +286,7 @@ export function useAssignedAttempt(assignmentId: string) {
     setError(null);
     try {
       const solution = await api.readAssignedSolution(assignmentId, itemId, signal);
-      if (!signal.aborted && 'rows' in solution)
-        setSolutions((previous) => ({ ...previous, [itemId]: solution }));
+      if (!signal.aborted) setSolutions((previous) => ({ ...previous, [itemId]: solution }));
     } catch (caught) {
       if (!signal.aborted)
         setError(caught instanceof Error ? caught.message : 'Could not load the solution.');
@@ -258,6 +308,7 @@ export function useAssignedAttempt(assignmentId: string) {
     cancelCheck,
     solutionAvailable,
     answers,
+    choiceAnswers,
     solutions,
     loading,
     action,
@@ -266,6 +317,7 @@ export function useAssignedAttempt(assignmentId: string) {
     dirty,
     load,
     changeAnswer,
+    changeConceptualAnswer,
     save,
     submit,
     toggleSolution,

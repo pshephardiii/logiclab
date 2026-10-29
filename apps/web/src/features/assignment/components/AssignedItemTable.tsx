@@ -9,7 +9,7 @@ import '../../truthTable/truth-table.css';
 import '../assignment.css';
 
 type Props = {
-  item: StudentAssignment['items'][number];
+  item: Extract<StudentAssignment['items'][number], { exercise: unknown }>;
   answers: Answers;
   feedback: TruthTableCheckResponse | null;
   solution?: TruthTableSolutionResponse | null;
@@ -28,17 +28,6 @@ export function AssignedItemTable({
   readOnly,
   onAnswer,
 }: Props) {
-  // Assignment acceptance stays guarded until the conceptual controls land.
-  if (!('exercise' in item))
-    return (
-      <section className="panel">
-        <h2>
-          Problem {item.position}: {item.title}
-        </h2>
-        <p>{item.content.question}</p>
-        <p>Conceptual answer controls are not available in this build yet.</p>
-      </section>
-    );
   const visibleFeedback =
     feedback && neutralBlanks
       ? { ...feedback, cells: feedback.cells.filter((cell) => cell.status !== 'unanswered') }

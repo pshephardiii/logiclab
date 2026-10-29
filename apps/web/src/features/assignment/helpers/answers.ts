@@ -19,12 +19,12 @@ export function savedAnswerMaps(
   attempt: StudentAttempt | null,
 ): Record<string, Answers> {
   return Object.fromEntries(
-    assignment.items.map((item) => [
-      item.id,
-      'exercise' in item
-        ? answerMap(submittedAnswers(item.exercise, answerMap(attempt?.answers[item.id] ?? [])))
-        : {},
-    ]),
+    assignment.items
+      .filter((item) => 'exercise' in item)
+      .map((item) => [
+        item.id,
+        answerMap(submittedAnswers(item.exercise, answerMap(attempt?.answers[item.id] ?? []))),
+      ]),
   );
 }
 export function sameAnswers(left: Answers, right: Answers | undefined): boolean {

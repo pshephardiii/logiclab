@@ -1,6 +1,10 @@
+import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
-import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
+import {
+  submissionFeedback,
+  conceptualSubmissionFeedback,
+} from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
@@ -24,6 +28,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       </section>
     );
   const item = work.assignment.items[position] ?? work.assignment.items[0];
+  const currentFeedback = item ? work.feedback[item.id] : undefined;
+  const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
   const busy = work.action !== null;
   const submissionBlocked =
@@ -135,22 +141,45 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               </button>
             </div>
           </section>
-          <AssignedItemTable
-            item={item}
-            answers={work.answers[item.id] ?? {}}
-            feedback={
-              submitted
-                ? submissionFeedback(work.attempt?.result, item.id)
-                : (work.feedback[item.id] ?? null)
-            }
-            solution={work.solutions[item.id] ?? null}
-            neutralBlanks={!submitted && work.allowsImmediateFeedback}
-            readOnly={busy || submitted}
-            onAnswer={(row, column, value) => {
-              setConfirmed(false);
-              work.changeAnswer(item.id, row, column, value);
-            }}
-          />
+          {'exercise' in item ? (
+            <AssignedItemTable
+              item={item}
+              answers={work.answers[item.id] ?? {}}
+              feedback={
+                submitted
+                  ? submissionFeedback(work.attempt?.result, item.id)
+                  : currentFeedback && 'cells' in currentFeedback
+                    ? currentFeedback
+                    : null
+              }
+              solution={currentSolution && 'rows' in currentSolution ? currentSolution : null}
+              neutralBlanks={!submitted && work.allowsImmediateFeedback}
+              readOnly={busy || submitted}
+              onAnswer={(row, column, value) => {
+                setConfirmed(false);
+                work.changeAnswer(item.id, row, column, value);
+              }}
+            />
+          ) : (
+            <AssignedConceptualQuestion
+              item={item}
+              answer={work.choiceAnswers[item.id]}
+              feedback={
+                submitted
+                  ? conceptualSubmissionFeedback(work.attempt?.result, item.id)
+                  : currentFeedback && 'status' in currentFeedback
+                    ? currentFeedback
+                    : null
+              }
+              solution={currentSolution && 'type' in currentSolution ? currentSolution : null}
+              neutralBlanks={!submitted && work.allowsImmediateFeedback}
+              readOnly={busy || submitted}
+              onAnswer={(answer) => {
+                setConfirmed(false);
+                work.changeConceptualAnswer(item.id, answer);
+              }}
+            />
+          )}
           {!submitted && (
             <button
               disabled={busy || !work.dirty.includes(item.id)}
@@ -182,7 +211,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <h2>Final submission</h2>
           <p>
             {work.requiresCompleteAnswers
-              ? 'Fill every answer cell in every problem and save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
+              ? 'Fill every answer cell and select an answer for every question, then save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
               : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
           </p>
           <label className="final-confirmation">

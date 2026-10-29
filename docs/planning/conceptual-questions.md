@@ -1,6 +1,6 @@
 # Instructor-authored conceptual questions
 
-Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; slice 3 enables private conceptual library authoring/publication. Slice 6 connects mixed student storage, grading and disclosure. Assignment creation and browser selection remain guarded until conceptual choice controls are ready.
+Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; slice 3 enables private conceptual library authoring/publication. Slice 6 connects mixed student storage, grading and disclosure. Slice 7 adds student choice controls and final review. Assignment creation and browser selection remain guarded pending instructor editors and coordinated enablement.
 
 ## Teaching goal and initial scope
 
@@ -111,3 +111,15 @@ Assignment creation and browser problem selection remain guarded until conceptua
 ### Slice 6 verification — October 29
 
 `npm run check` passed type checks, 900 tests (104 engine, 595 API, 201 web) and production builds. PostgreSQL checks passed: 139 database tests plus all 52 API integration tests. New HTTP/database coverage exercises mixed saves and invalid-response rollback, false versus null, independent repeated occurrences, revision conflicts, retained final/retry results, both release orders, pinned keys after draft edits, completion independent of correctness, private practice exclusion, demo save/final/review and normal/demo/cross-visitor denial. Three browser-unit checks cover explicit unsupported-choice handling and mixed summary/table-feedback compatibility. Formatting and whitespace checks passed. No real-browser walkthrough or new migration is claimed; assignment acceptance and conceptual browser controls remain guarded.
+
+## Slice 7: student choice controls and instructor final review
+
+Student assigned work now renders true/false and single-choice questions using labeled native radio groups, alongside existing tables. Option identity drives selections; false remains filled and Clear answer produces explicit null. Choice drafts and saved baselines remain separate from table maps, while dirty-work protection aggregates both. Changing problems preserves local edits. Successful saves advance only that occurrence's baseline; failures retain inputs and protection. Completion readiness counts all cells and conceptual occurrences, independently of correctness.
+
+Manual and debounced immediate checking use the existing cancellation/late-result guards. Feedback uses textual Correct/Incorrect/Unanswered signals plus symbols; immediate blanks stay neutral. Explicit saving and final confirmation remain required. Authorized solutions display the pinned answer text and optional explanation without overwriting entries; hiding solutions removes the explanation. Pending grades expose no conceptual status, and final submissions are read-only. Instructor review renders frozen conceptual selections/statuses alongside mixed summaries, with no editable controls or automatic solution/explanation fetch.
+
+Assignment creation/selection remains guarded for this bounded frontend slice. Next: instructor conceptual editors and previews, then coordinated enablement of mixed assignments. Synthetic demo additions and full workflow/browser verification follow. No API, database or migration change is introduced here.
+
+### Slice 7 verification — October 29
+
+`npm run check` passed type checks, 919 tests (104 engine, 595 API, 220 web) and production builds. Frontend tests cover stable option identity, independent blanks/false, mixed table/choice baselines and completion readiness, explicit saves and failed-save retention, Stay with dirty choices, latest-snapshot debouncing/manual bypass, late-response cancellation, solution show/hide without overwriting entries, pending-grade redaction and read-only final review. Formatting and whitespace checks passed. No real-browser walkthrough or database suite rerun was performed for these frontend-only changes. Native keyboard/focus behavior and mobile visual review remain for the later browser/QA pass; conceptual authoring/assignment enablement and demo fixtures are still pending.
