@@ -4,12 +4,14 @@ import type { Token, TokenKind } from './types';
 const symbols: Readonly<Record<string, TokenKind>> = {
   '¬': 'not',
   '!': 'not',
+  '~': 'not',
   '∧': 'and',
   '&': 'and',
   '∨': 'or',
   '|': 'or',
   v: 'or',
   '→': 'implies',
+  '↔': 'iff',
   '(': 'open',
   ')': 'close',
   '[': 'open',
@@ -24,6 +26,12 @@ export function tokenize(source: string): Token[] {
       position++;
       continue;
     }
+    // Match the longer alias before implication so <-> is one token.
+    if (source.startsWith('<->', position)) {
+      tokens.push({ kind: 'iff', text: '<->', position });
+      position += 3;
+      continue;
+    }
     if (source.startsWith('->', position)) {
       tokens.push({ kind: 'implies', text: '->', position });
       position += 2;
@@ -34,7 +42,7 @@ export function tokenize(source: string): Token[] {
       throw new FormulaParseError(
         'INVALID_CHARACTER',
         position,
-        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!, ∧/&, ∨/v/|, →/->, parentheses, or square brackets`,
+        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!/~, ∧/&, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets`,
       );
     }
     tokens.push({ kind, text, position });

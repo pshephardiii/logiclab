@@ -37,7 +37,7 @@ export function expressionColumnId(formula: Formula): string {
   return `expr:v1:${canonicalExpression(formula)}`;
 }
 
-const operatorSymbols = { and: '∧', or: '∨', implies: '→' } as const;
+const operatorSymbols = { and: '∧', or: '∨', implies: '→', iff: '↔' } as const;
 
 /** Fully grouped binary expressions preserve structure, independent of source notation. */
 export function canonicalExpression(formula: Formula): string {

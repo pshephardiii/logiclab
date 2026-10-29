@@ -61,3 +61,19 @@ test('does not change the AST or assignment', () => {
   expect(evaluateFormula(formula, assignment)).toBe(true);
   expect(assignment).toEqual({ P: false, Q: true });
 });
+
+test.each([
+  [true, true, true],
+  [true, false, false],
+  [false, true, false],
+  [false, false, true],
+])('biconditional compares P=%s and Q=%s', (P, Q, expected) => {
+  expect(evaluateFormula(parseFormula('P <-> Q'), { P, Q })).toBe(expected);
+  expect(evaluateFormula(parseFormula('~[P ↔ Q]'), { P, Q })).toBe(!expected);
+});
+
+test('biconditional evaluates both operands and does not hide missing variables', () => {
+  expect(() => evaluateFormula(parseFormula('P ↔ Q'), { P: false })).toThrow(
+    FormulaEvaluationError,
+  );
+});

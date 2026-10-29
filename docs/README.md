@@ -20,6 +20,8 @@ Documentation is grouped by purpose:
 
 ## Planning
 
+- [Biconditional and tilde notation](planning/biconditional-support.md)
+
 - [Unsaved work protection](planning/unsaved-work-protection.md)
 - [Duplicate assignment](planning/duplicate-assignment.md)
 

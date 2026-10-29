@@ -54,5 +54,7 @@ function evaluateBinaryOperation(operator: BinaryOperator, left: boolean, right:
       return left || right;
     case 'implies':
       return !left || right;
+    case 'iff':
+      return left === right;
   }
 }

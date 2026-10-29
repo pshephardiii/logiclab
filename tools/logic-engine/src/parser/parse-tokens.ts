@@ -18,6 +18,21 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     }
   }
 
+  function parseBiconditional(depth: number): Formula {
+    const left = parseImplication(depth);
+    if (current().kind !== 'iff') return left;
+    cursor++;
+    const right = parseImplication(depth);
+    if (current().kind === 'iff') {
+      throw new FormulaParseError(
+        'UNEXPECTED_TOKEN',
+        current().position,
+        'Group repeated biconditionals explicitly, for example (P ↔ Q) ↔ R or P ↔ (Q ↔ R)',
+      );
+    }
+    return { type: 'binary', operator: 'iff', left, right };
+  }
+
   function parseImplication(depth: number): Formula {
     checkDepth(depth);
     const left = parseDisjunction(depth);
@@ -68,7 +83,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
 
   function parseGroup(depth: number, openingToken: Token): Formula {
     cursor++;
-    const expression = parseImplication(depth + 1);
+    const expression = parseBiconditional(depth + 1);
     const closingSymbol = openingToken.text === '[' ? ']' : ')';
     if (current().kind !== 'close' || current().text !== closingSymbol) {
       throw new FormulaParseError(
@@ -94,7 +109,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return { type: 'variable', name: token.text };
   }
 
-  const expression = parseImplication(0);
+  const expression = parseBiconditional(0);
   if (current().kind !== 'end') {
     throw new FormulaParseError(
       'UNEXPECTED_TOKEN',
