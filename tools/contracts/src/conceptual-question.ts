@@ -97,6 +97,21 @@ export const conceptualAnswerSchema = z.discriminatedUnion('type', [
 ]);
 export type ConceptualAnswer = z.infer<typeof conceptualAnswerSchema>;
 
+/** Answer-reveal payload only; ordinary content and correctness feedback exclude these fields. */
+export const conceptualSolutionSchema = z.discriminatedUnion('type', [
+  z.strictObject({
+    type: z.literal('true_false'),
+    correctAnswer: z.boolean(),
+    explanation: z.string().max(CONCEPTUAL_QUESTION_LIMITS.explanation).nullable(),
+  }),
+  z.strictObject({
+    type: z.literal('multiple_choice'),
+    correctOptionId: optionIdSchema,
+    explanation: z.string().max(CONCEPTUAL_QUESTION_LIMITS.explanation).nullable(),
+  }),
+]);
+export type ConceptualSolution = z.infer<typeof conceptualSolutionSchema>;
+
 /** Resolve option identity against the pinned definition, never labels or list positions. */
 export function conceptualAnswerSchemaFor(definition: ConceptualQuestionDefinition) {
   return conceptualAnswerSchema.superRefine((answer, context) => {

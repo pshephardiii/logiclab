@@ -6,10 +6,7 @@ import {
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { assignmentExercises } from '../assignment/exercise-response';
-import {
-  assignmentLearningPolicySchema,
-  truthTableSolutionResponseSchema,
-} from '@logiclab/contracts';
+import { assignmentLearningPolicySchema } from '@logiclab/contracts';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -23,14 +20,13 @@ import type {
   StudentSolutionResponse,
   StudentAssignmentListQuery,
 } from '@logiclab/contracts';
-import { generateTruthTable } from '@logiclab/logic-engine';
-import { StudentWorkError } from '../../application/student-work/errors';
 import {
-  validateAnswers,
-  evaluateSubmission,
-  evaluateCompletion,
-  checkAssignedAnswers,
-} from '../../application/student-work/evaluation';
+  validateItemResponse,
+  checkItemResponse,
+  itemSolution,
+} from '../../application/student-work/item-response';
+import { StudentWorkError } from '../../application/student-work/errors';
+import { evaluateSubmission, evaluateCompletion } from '../../application/student-work/evaluation';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -169,11 +165,11 @@ export async function createStudentWorkStore(
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
-        validateAnswers(
-          requireTruthTableDefinition(item.problemVersion.definition).formula,
+        const answers = validateItemResponse(
+          requireTruthTableDefinition(item.problemVersion.definition),
           input.answers,
         );
-        attempt.answers = { ...attempt.answers, [item.id]: input.answers };
+        attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
         await em.flush();
         return attemptResponse(attempt, assignment);
@@ -204,8 +200,8 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId: item.id,
-          feedback: checkAssignedAnswers(
-            requireTruthTableDefinition(item.problemVersion.definition).formula,
+          feedback: checkItemResponse(
+            requireTruthTableDefinition(item.problemVersion.definition),
             input.answers,
           ),
         };
@@ -256,9 +252,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId,
-          solution: truthTableSolutionResponseSchema.parse(
-            generateTruthTable(requireTruthTableDefinition(item.problemVersion.definition).formula),
-          ),
+          solution: itemSolution(requireTruthTableDefinition(item.problemVersion.definition)),
         };
       });
     },

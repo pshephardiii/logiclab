@@ -87,3 +87,15 @@ Mixed correctness feedback contains only status/cell summaries, never keys or ex
 ### Slice 4 verification — October 29
 
 `npm run check` passed type checks, 877 tests (104 engine, 575 API, 198 web) and production builds. All 26 mixed-evaluation tests passed, including legacy result equality, repeated occurrence identity, mixed totals, null versus false, forged/unknown responses, invalid table cells, completion independent of correctness and exclusion of keys/explanations. Compile-time equality guards verify the staged database/contract JSON shapes match. Formatting, whitespace and local Markdown targets checked. No database integration or browser checks were repeated for these pure/staged format changes; no migration, active endpoint acceptance, new persisted final result or UI behavior is claimed. Next: wire mixed storage/finalization and student/review projections with release enforcement before removing assignment guards.
+
+## Slice 5: per-item response dispatch and answer-reveal projection
+
+`application/student-work/item-response.ts` now provides one type-specific entry point for save validation, transient checking and solution projection. Save validation returns parsed responses without calculating correctness; transient checks return statuses without keys or explanations. Conceptual solution contracts explicitly carry the pinned boolean/option identity and nullable explanation. Only the separate privileged solution projection returns those fields; its callers must enforce enrollment and answer-release permission first.
+
+The existing student persistence store uses this helper for truth-table saves, checks and solutions after its existing authorization checks. This retains current HTTP shapes, revision/transaction behavior and solution-release enforcement. Tests compare legacy solution/check payloads with the existing engine/schema output and cover false/null, stable choice identity, malformed/foreign answers, strict solution fields and unsupported definitions.
+
+This remains a deliberately bounded integration step: active student contracts, attempt fields, mixed result projection and assignment acceptance are not widened yet. Conceptual assignment selection remains guarded. Next, connect mixed student/review contracts and storage/finalization together, then remove those guards once every disclosure path supports conceptual work. No migration or new UI behavior is introduced here.
+
+### Slice 5 verification — October 29
+
+`npm run check` passed type checks, 897 tests (104 engine, 595 API, 198 web) and production builds. Fifteen new per-item tests cover save/check/solution separation and legacy payload equality. All 49 API PostgreSQL integration checks passed, including existing release, authorization/isolation and student work workflows. Formatting and whitespace checks passed. The checks required access outside the sandbox for local PostgreSQL and the native watcher regression. No browser checks or database-package suite were repeated; no migration, conceptual assignment acceptance or student choice UI is claimed in this slice.
