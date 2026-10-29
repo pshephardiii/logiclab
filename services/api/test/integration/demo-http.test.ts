@@ -377,7 +377,11 @@ test('demo release actions remain workspace-scoped and commit independent metada
         url: '/api/demo/resources/classes',
         headers: { cookie: cookie(first) },
       });
-      const classId = classes.json().classrooms[0].id;
+      const classId = classes
+        .json()
+        .classrooms.find(
+          (classroom: { name: string }) => classroom.name === 'Demo: Introduction to Logic',
+        ).id;
       const em = orm.em.fork();
       const assignment = await em.findOneOrFail(db.Assignment, {
         classroom: classId,

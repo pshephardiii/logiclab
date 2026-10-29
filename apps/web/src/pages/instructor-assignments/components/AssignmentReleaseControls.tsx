@@ -69,7 +69,9 @@ export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props
           <p>
             {pending === 'release-grades'
               ? 'Release grades for all submitted work? Answer access will not change.'
-              : 'Reveal correct answers to enrolled students? Grade release will not change.'}{' '}
+              : assignment.assessmentMode === 'completion_only'
+                ? 'Reveal correct answers to enrolled students? Completion status will not change.'
+                : 'Reveal correct answers to enrolled students? Grade release will not change.'}{' '}
             Students may still have unfinished work.
           </p>
           <button disabled={disabled} onClick={() => void confirm()}>

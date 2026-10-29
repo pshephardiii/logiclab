@@ -1,6 +1,6 @@
 # Instructor-controlled grade release and answer reveal
 
-Status: in progress on `015-feat-instructor-controlled-results-release`, October 29, 2026. This replaces the provisional `019` name. Complete and verify this feature before initial deployment, including the public demo. Slices 1–4 establish the contract, persistence, server enforcement and browser controls. Final branch verification and walkthrough evidence remain.
+Status: in progress on `015-feat-instructor-controlled-results-release`, October 29, 2026. This replaces the provisional `019` name. Complete and verify this feature before initial deployment, including the public demo. Slices 1–4 establish the contract, persistence, server enforcement and browser controls. Final branch evidence is recorded in the [verification report](../verification/instructor-results-release-verification.md).
 
 ## Agreed controls by assessment mode
 
@@ -47,7 +47,7 @@ No active response, database field or authoring control changes in slice 1. The 
 2. Add persistence and policy support for independent grade/answer metadata, compatibility migrations and rollback tests. Slice 2 adds `gradeReleaseTiming`, separate grade/answer timestamps and actor relations, and `solutionAccess: instructor_release` at the database layer. Non-graded rows use an inert `on_submission` grade-timing default and cannot hold manual grade-release metadata; this does not create a grade control for completion-only. The additive migration preserves existing policies/results, permits submission-time completion alongside legacy checking, and refuses lossy rollback. These choices were database-only in slice 2; slice 3 enables them through validated API authoring and authorized release workflows.
 3. Add server withholding and independent release workflows, with tests across disclosure paths, concurrency, ownership/enrollment and archived work. Implemented in slice 3: authoring contracts, owner release actions, student result projection and independent solution gating; UI follows separately.
 4. Add instructor controls and student pending-grade/answer views with readable terminology and recoverable failures; cover normal/demo workflows. Implemented: independent authoring fields, confirmed release actions, retryable failures and student receipt/refresh views.
-5. Verify old/new assignments, score-free completion and private practice; update the QA runbook, evidence and local PR draft.
+5. Verify old/new assignments, score-free completion and private practice; update the QA runbook, evidence and local PR draft. Final automated and focused local Chrome evidence is recorded in the verification report; broader UI/product QA remains separate.
 
 Delaying disclosure can reduce answer sharing through LogicLab; it cannot prevent external solvers or assistance. See the separate [controlled assessment investigation](controlled-assessment.md).
 

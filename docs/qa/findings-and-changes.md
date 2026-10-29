@@ -56,6 +56,7 @@ The matrix started with all cases Not run; it now records reported results as te
 | ASN-01  | Empty draft and mode transitions                     | Not run | —                                                                                                              |
 | ASN-02  | Repeated occurrences and saved snapshots             | Not run | —                                                                                                              |
 | ASN-03  | Published locks and archive/restore                  | Not run | —                                                                                                              |
+| ASN-04  | Independent grade release and answer reveal          | Not run | Branch 015; focused agent checks recorded separately; full manual case deferred                                |
 | WRK-01  | Saving false, blank and separate occurrences         | Not run | —                                                                                                              |
 | WRK-02  | Graded submission and frozen feedback                | Not run | —                                                                                                              |
 | WRK-03  | Instructor review and practice privacy               | Not run | —                                                                                                              |

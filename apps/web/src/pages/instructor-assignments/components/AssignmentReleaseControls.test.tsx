@@ -80,3 +80,25 @@ test('completion only has answer actions and busy/archive/released states block 
   expect(screen.getByText(/Grades released/)).toBeInTheDocument();
   expect(screen.getByText(/Answers revealed/)).toBeInTheDocument();
 });
+
+test('completion answer confirmation does not imply a grade-release control', async () => {
+  const user = userEvent.setup();
+  render(
+    <AssignmentReleaseControls
+      assignment={{
+        ...assignment,
+        assessmentMode: 'completion_only',
+        gradeReleaseTiming: 'on_submission',
+      }}
+      busy={false}
+      onRelease={vi.fn()}
+    />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Reveal answers' }));
+  expect(screen.getByRole('group', { name: 'Confirm release' })).toHaveTextContent(
+    'Completion status will not change',
+  );
+  expect(screen.getByRole('group', { name: 'Confirm release' })).not.toHaveTextContent(
+    'Grade release',
+  );
+});
