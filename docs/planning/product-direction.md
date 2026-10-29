@@ -76,10 +76,10 @@ For `P ∧ Q`, the student completes the final column:
 
 For `(P ∧ Q) → R`, the student also completes `P ∧ Q` alongside the final expression. The initial default is to include every distinct compound subexpression, ordered from inner expressions to the final formula.
 
-### Agreed defaults for the first slice
+### Current truth-table defaults
 
-- Accept symbols `¬ ∧ ∨ →`, aliases `! & | ->`, parentheses, and single uppercase-letter variables.
-- Precedence: negation, conjunction, disjunction, implication. Implication associates right; conjunction and disjunction associate left.
+- Accept symbols `¬ ∧ ∨ → ↔`, aliases `! ~ & v | -> <->`, parentheses/square brackets, and single uppercase-letter variables.
+- Precedence: negation, conjunction, disjunction, implication, biconditional. Implication associates right; conjunction/disjunction associate left; repeated biconditionals require explicit grouping.
 - Order variables alphabetically and rows from all T to all F.
 - Use keyboard-accessible blank/T/F selectors. Checking labels blanks as unanswered, separately from incorrect answers.
 - Show solutions alongside student entries without overwriting them.
@@ -205,13 +205,13 @@ After the current QA work, prioritize a separate feature branch for instructor-a
 
 ## Near-term notation feature: biconditional
 
-Biconditionals are common enough in introductory logic that their absence is a meaningful limitation. Add support in a small, separate feature branch: parse and evaluate biconditionals in truth tables now, with an explicit AST operator that future derivation work can use. This is planned work, not part of the current QA fixes.
+Biconditionals are common enough in introductory logic that their absence is a meaningful limitation. Branch `016-feat-biconditional-support` implements parsing and evaluation for truth tables with an explicit AST operator that future derivation work can use. See the [verification record](../verification/biconditional-verification.md).
 
-Propose Unicode `↔` with keyboard alias `<->`, subject to confirming notation before implementation. Define precedence relative to implication and the associativity/chaining rule explicitly; do not assume all textbooks use the same convention. Evaluation is true exactly when both operands have the same truth value. Update canonical labels/structural identifiers for the new operator without changing existing formulas' identifiers, and retain existing length/variable/nesting bounds.
+Active branch `016-feat-biconditional-support` uses Unicode `↔` and keyboard `<->`. Biconditional binds less tightly than implication; repeated biconditionals require explicit grouping instead of silently choosing a textbook chaining convention. See the [notation decisions and slices](biconditional-support.md). Evaluation is true exactly when both operands have the same truth value. Update canonical labels/structural identifiers for the new operator without changing existing formulas' identifiers, and retain existing length/variable/nesting bounds.
 
 Carry support through shared parser/evaluator/table generation, server validation, authoring/previews, assignments and the keyboard guide. Cover the four truth-value combinations, notation equivalence, grouping/precedence, malformed input, stable existing tables and API/UI integration. Extending the engine does not implement derivation rules; those remain separate work.
 
-Include textbook negation alias `~` in the same branch, alongside existing `!` and `¬`. It maps to the existing negation operator without changing precedence or evaluation; canonical labels remain `¬` and existing structural IDs remain stable. Update the tokenizer, error guidance, keyboard guide and grammar documentation together. Test that `~P`, `!P` and `¬P` produce identical ASTs/tables, including nested grouping and use with biconditionals. This alias remains unsupported until that branch is implemented; do not add it as a current QA fix.
+Include textbook negation alias `~` in the same branch, alongside existing `!` and `¬`. It maps to the existing negation operator without changing precedence or evaluation; canonical labels remain `¬` and existing structural IDs remain stable. Update the tokenizer, error guidance, keyboard guide and grammar documentation together. Test that `~P`, `!P` and `¬P` produce identical ASTs/tables, including nested grouping and use with biconditionals. Engine, API workflows, local validation and keyboard help now support this alias.
 
 ## Product-wide UI and UX audit before deployment
 

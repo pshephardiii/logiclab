@@ -5,9 +5,9 @@ import { parseTokens } from './parse-tokens';
 import type { Formula } from './types';
 
 /**
- * Precedence: not > and > or > implies.
- * And/or associate left; implication associates right.
- * Whitespace is ignored between tokens (the alias -> must remain contiguous).
+ * Precedence: not > and > or > implies > iff.
+ * And/or associate left; implication associates right. Repeated biconditionals require grouping.
+ * Whitespace is ignored between tokens (the aliases -> and <-> must remain contiguous).
  */
 export function parseFormula(source: string): Formula {
   checkLength(source);

@@ -1,4 +1,4 @@
-export type BinaryOperator = 'and' | 'or' | 'implies';
+export type BinaryOperator = 'and' | 'or' | 'implies' | 'iff';
 
 /** Parentheses and square brackets group expressions without creating separate AST nodes. */
 export type Formula =

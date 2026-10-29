@@ -64,8 +64,9 @@ export function FormulaForm({
           </div>
           <p id="formula-help" className="help">
             Use up to four uppercase variables (A–Z). Lowercase v means OR; uppercase V is a
-            variable. Parentheses and square brackets control grouping. Editing the formula clears
-            the current table and answers.
+            variable. Biconditional binds less tightly than implication; group repeated
+            biconditionals explicitly. Parentheses and square brackets control grouping. Editing the
+            formula clears the current table and answers.
           </p>
           <p
             id="formula-validation"

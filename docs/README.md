@@ -20,6 +20,8 @@ Documentation is grouped by purpose:
 
 ## Planning
 
+- [Biconditional and tilde notation](planning/biconditional-support.md)
+
 - [Unsaved work protection](planning/unsaved-work-protection.md)
 - [Duplicate assignment](planning/duplicate-assignment.md)
 
@@ -69,6 +71,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Biconditional and tilde notation](verification/biconditional-verification.md)
 
 - [Independent grade release and answer reveal](verification/instructor-results-release-verification.md)
 

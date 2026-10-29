@@ -134,3 +134,39 @@ test('grouping brackets preserve canonical columns, rows and answer values', () 
     generateTruthTable('((P v Q) & !(R -> P))'),
   );
 });
+
+test('biconditional has canonical labels and the equality truth table across aliases', () => {
+  const table = generateTruthTable('P <-> Q');
+  expect(table).toEqual(generateTruthTable('P ↔ Q'));
+  expect(table.columns.at(-1)).toEqual({
+    id: 'expr:v1:(P ↔ Q)',
+    label: '(P ↔ Q)',
+    kind: 'answer',
+    isFinal: true,
+  });
+  expect(table.rows.map((row) => row.values['expr:v1:(P ↔ Q)'])).toEqual([
+    true,
+    false,
+    false,
+    true,
+  ]);
+  expect(table.rows.map((row) => row.id)).toEqual([
+    'row:v1:P=T;Q=T',
+    'row:v1:P=T;Q=F',
+    'row:v1:P=F;Q=T',
+    'row:v1:P=F;Q=F',
+  ]);
+});
+
+test('tilde preserves existing AST-derived columns, rows and canonical negation labels', () => {
+  expect(generateTruthTable('~[P & Q] -> ~~R')).toEqual(generateTruthTable('!(P & Q) -> !!R'));
+  expect(generateTruthTable('~[P <-> ~Q]')).toEqual(generateTruthTable('¬(P ↔ ¬Q)'));
+});
+
+test('biconditional keeps intermediate expressions child-first and deduplicated', () => {
+  const table = generateTruthTable('(P -> Q) ↔ (P -> Q)');
+  expect(
+    table.columns.filter((column) => column.kind === 'answer').map((column) => column.id),
+  ).toEqual(['expr:v1:(P → Q)', 'expr:v1:((P → Q) ↔ (P → Q))']);
+  expect(table.rows.every((row) => row.values['expr:v1:((P → Q) ↔ (P → Q))'] === true)).toBe(true);
+});

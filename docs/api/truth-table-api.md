@@ -1,6 +1,6 @@
 # Truth-table practice API
 
-These public, stateless endpoints support independent practice. They do not store problems or attempts, authenticate users, enforce assignment policy, or produce official grades. Assignment workflows must later resolve a server-owned problem version and enforce its access, feedback, and solution policy; they must not trust a browser-supplied formula as assigned work.
+These public, stateless endpoints support independent practice. They do not store problems or attempts, authenticate users, enforce assignment policy, or produce official grades. Assignment workflows resolve a server-owned problem version and enforce its access, feedback, and solution policy; they do not trust a browser-supplied formula as assigned work.
 
 All endpoints use `POST` with `Content-Type: application/json`. Request and response schemas/types are exported from `@logiclab/contracts`.
 
@@ -30,6 +30,22 @@ services/api/src/routes/truthTable/
 Each `route.ts` registers its method/path and handler with Fastify. The corresponding `handler.ts` owns request validation, engine calls, and response construction. `handler.test.ts` calls the real handler with minimal request/reply doubles to cover validation and detailed behavior. `route.test.ts` uses Fastify injection to cover HTTP registration, status codes, shared error handling, and the cross-endpoint flow. Detailed logic assertions live in handler tests rather than being duplicated at both levels. The entity's `index.ts` registers the endpoint plugins and scopes shared error handling; `errors.ts` provides the common bad-request response helper.
 
 Jest discovers tests under both `src` and `test`; the production TypeScript build excludes colocated `*.test.ts` files. Logic algorithms remain in the engine, and API contracts remain in the schema package.
+
+## Formula notation
+
+Variables are uppercase A–Z (up to four distinct names). Supported operators and keyboard aliases:
+
+| Meaning       | Symbol | Keyboard    |
+| ------------- | ------ | ----------- |
+| Negation      | ¬      | `!` or `~`  |
+| Conjunction   | ∧      | `&`         |
+| Disjunction   | ∨      | `v` or `\|` |
+| Implication   | →      | `->`        |
+| Biconditional | ↔      | `<->`       |
+
+Use parentheses or matching square brackets for grouping. Precedence is negation, conjunction, disjunction, implication, then biconditional. Implication associates right; conjunction/disjunction associate left. Repeated biconditionals require explicit grouping: `(P ↔ Q) ↔ R` or `P ↔ (Q ↔ R)`. Ungrouped `P ↔ Q ↔ R` returns positioned `UNEXPECTED_TOKEN` with a grouping hint. `<->` and `->` must remain contiguous.
+
+Biconditional is true when both operands have the same truth value. `~[P <-> Q]`, `![P ↔ Q]` and `¬(P ↔ Q)` produce identical columns/rows and values; canonical labels use `¬` and `↔`. Existing formulas retain their identifiers and resource limits. The practice form uses this same parser for debounced validation and its keyboard guide lists both new inputs.
 
 ## Create an exercise
 

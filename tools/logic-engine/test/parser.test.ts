@@ -19,6 +19,8 @@ test('parses a variable and ignores surrounding whitespace', () => {
 
 test.each([
   ['¬P', '!P'],
+  ['¬P', '~P'],
+  ['P ↔ Q', 'P<->Q'],
   ['P ∧ Q', 'P & Q'],
   ['P ∨ Q', 'P | Q'],
   ['P ∨ Q', 'P v Q'],
@@ -44,7 +46,7 @@ test('conjunction binds more tightly than disjunction', () => {
   expect(parseFormula('P ∨ Q ∧ R')).toEqual(binary('or', p, binary('and', q, r)));
 });
 
-test('implication has the lowest precedence', () => {
+test('implication binds less tightly than conjunction and disjunction', () => {
   expect(parseFormula('P ∨ Q → R ∧ ¬S')).toEqual(
     binary('implies', binary('or', p, q), binary('and', r, not(variable('S')))),
   );
@@ -96,7 +98,6 @@ test.each<[string, FormulaErrorCode, number]>([
   ['(P Q)', 'EXPECTED_CLOSING_PAREN', 3],
   ['p', 'INVALID_CHARACTER', 0],
   ['P1', 'INVALID_CHARACTER', 1],
-  ['P ↔ Q', 'INVALID_CHARACTER', 2],
   ['P - > Q', 'INVALID_CHARACTER', 2],
 ])('rejects %j with %s at offset %i', (source, code, position) => {
   try {
@@ -150,4 +151,63 @@ test('nesting limit applies across mixed groups, negations, and implications', (
 test('parses are independent after a prior error', () => {
   expect(() => parseFormula('P & Q & R & S & T')).toThrow();
   expect(parseFormula('A')).toEqual(variable('A'));
+});
+
+test('biconditional binds less tightly than implication on either side', () => {
+  expect(parseFormula('P -> Q <-> R')).toEqual(binary('iff', binary('implies', p, q), r));
+  expect(parseFormula('P <-> Q -> R')).toEqual(binary('iff', p, binary('implies', q, r)));
+  expect(parseFormula('~P & Q | R -> P <-> Q')).toEqual(
+    binary('iff', binary('implies', binary('or', binary('and', not(p), q), r), p), q),
+  );
+});
+
+test('explicitly grouped biconditionals can nest on either side with mixed delimiters', () => {
+  expect(parseFormula('[P <-> Q] ↔ R')).toEqual(binary('iff', binary('iff', p, q), r));
+  expect(parseFormula('P ↔ [Q <-> R]')).toEqual(binary('iff', p, binary('iff', q, r)));
+  expect(parseFormula('~[P <-> !Q]')).toEqual(not(binary('iff', p, not(q))));
+});
+
+test('ungrouped biconditional chains identify the second operator and explain grouping', () => {
+  try {
+    parseFormula('P <-> Q ↔ R');
+    throw new Error('Expected rejection');
+  } catch (error) {
+    expect(error).toBeInstanceOf(FormulaParseError);
+    expect(error).toMatchObject({ code: 'UNEXPECTED_TOKEN', position: 8 });
+    expect((error as Error).message).toContain('Group repeated biconditionals explicitly');
+  }
+});
+
+test.each([
+  ['P <->', 'EXPECTED_EXPRESSION', 5],
+  ['<-> P', 'EXPECTED_EXPRESSION', 0],
+  ['P <-> <-> Q', 'EXPECTED_EXPRESSION', 6],
+  ['P < -> Q', 'INVALID_CHARACTER', 2],
+  ['P <- > Q', 'INVALID_CHARACTER', 2],
+  ['P <=> Q', 'INVALID_CHARACTER', 2],
+  ['~', 'EXPECTED_EXPRESSION', 1],
+  ['[P ↔ Q)', 'EXPECTED_CLOSING_BRACKET', 6],
+] as const)('malformed notation %s reports a useful position', (source, code, position) => {
+  expect(() => parseFormula(source)).toThrow(FormulaParseError);
+  try {
+    parseFormula(source);
+  } catch (error) {
+    expect(error).toMatchObject({ code, position });
+  }
+});
+
+test('new notation retains existing variable, length and nesting bounds', () => {
+  for (const [source, code] of [
+    ['~'.repeat(FORMULA_LIMITS.maxNesting + 1) + 'P', 'NESTING_LIMIT'],
+    ['P ↔ (Q & R & S & T)', 'VARIABLE_LIMIT'],
+    ['P<->Q' + ' '.repeat(FORMULA_LIMITS.maxLength), 'FORMULA_TOO_LONG'],
+  ]) {
+    try {
+      parseFormula(source!);
+      throw new Error('Expected bounded parsing to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(FormulaParseError);
+      expect(error).toMatchObject({ code });
+    }
+  }
 });

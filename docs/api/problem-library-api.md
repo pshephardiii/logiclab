@@ -68,3 +68,7 @@ Save edits before selecting **Publish saved draft**. Publication and archive con
 Use **Archive problem** to remove a saved problem from active listing; choose **Archived** or **All** to find it again. Archived drafts are read-only and retain version previews/history. **Restore problem** makes the draft editable and publishable. Problem lists and history load additional pages explicitly; failed loads can be retried through the reload controls.
 
 Frontend regression tests cover create/edit failure retention, saved publication, uncertain publication failures, archive/restore, pagination, stale-response cancellation, role-aware navigation, and preview-state isolation. These DOM/hook checks do not replace the final real-browser and live-session walkthrough.
+
+## Formula notation
+
+Truth-table drafts, previews and published snapshots accept `↔`/`<->` and `~` alongside the existing operators. Source notation is retained in the saved definition; canonical table IDs are shared across aliases. Repeated biconditionals require explicit grouping and invalid edits return positioned errors without replacing the saved draft. Assigned work evaluates its pinned server-owned formula rather than accepting a replacement formula from the student. See [notation and precedence](truth-table-api.md#formula-notation).

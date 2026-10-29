@@ -78,3 +78,51 @@ test('rejects malformed formulas with position information', async () => {
     position: 3,
   });
 });
+
+test.each(['~[P <-> Q]', '¬(P ↔ Q)'])(
+  'preview/check/solution agree on biconditional notation %s',
+  async (formula) => {
+    const exerciseResponse = await post('exercise', { formula });
+    expect(exerciseResponse.statusCode).toBe(200);
+    const exercise = truthTableExerciseResponseSchema.parse(exerciseResponse.json());
+    const solution = truthTableSolutionResponseSchema.parse(
+      (await post('solution', { formula: '![P ↔ Q]' })).json(),
+    );
+    expect(exercise.columns).toEqual(solution.columns);
+    expect(solution.rows.map((row) => row.values['expr:v1:¬(P ↔ Q)'])).toEqual([
+      false,
+      true,
+      true,
+      false,
+    ]);
+    for (const row of exercise.rows)
+      for (const column of exercise.columns.filter((column) => column.kind === 'answer'))
+        expect(row.values).not.toHaveProperty(column.id);
+    const answers = solution.rows.flatMap((row) =>
+      solution.columns
+        .filter((column) => column.kind === 'answer')
+        .map((column) => ({ rowId: row.id, columnId: column.id, value: row.values[column.id] })),
+    );
+    const checked = await post('check', { formula, answers });
+    expect(checked.statusCode).toBe(200);
+    expect(truthTableCheckResponseSchema.parse(checked.json()).summary).toEqual({
+      correct: 8,
+      incorrect: 0,
+      unanswered: 0,
+      total: 8,
+    });
+  },
+);
+
+test.each(['exercise', 'solution', 'check'])(
+  '%s rejects ungrouped biconditional chains consistently',
+  async (route) => {
+    const response = await post(route, {
+      formula: 'P ↔ Q ↔ R',
+      ...(route === 'check' ? { answers: [] } : {}),
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toMatchObject({ code: 'UNEXPECTED_TOKEN', position: 6 });
+    expect(response.json().error.message).toContain('Group repeated biconditionals explicitly');
+  },
+);
