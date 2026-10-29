@@ -378,3 +378,40 @@ test('saved and reverted answers clear protection, while a failed save retains i
   await screen.findByText('Problem 1 saved.');
   await waitFor(() => expect(protectedWork()).toBe(false));
 });
+
+test('pending grades confirm receipt without feedback and refresh enables independently revealed answers', async () => {
+  const pending = { ...submitted, result: null, gradePending: true };
+  const assignment = {
+    ...work,
+    gradeReleaseTiming: 'instructor_release' as const,
+    solutionAccess: 'instructor_release' as const,
+    answersRevealedAt: null,
+  };
+  vi.mocked(api.readAssignedWork).mockResolvedValueOnce({ assignment, attempt: pending });
+  const { user } = await open();
+  expect(
+    screen.getByRole('heading', { name: 'Submitted — awaiting grade release' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Correct:/)).not.toBeInTheDocument();
+  vi.mocked(api.readAssignedWork).mockResolvedValueOnce({
+    assignment: { ...assignment, answersRevealedAt: work.createdAt },
+    attempt: pending,
+  });
+  await user.click(screen.getByRole('button', { name: 'Refresh results and answer access' }));
+  await screen.findByRole('button', { name: 'Show assigned solution' });
+  expect(
+    screen.getByRole('heading', { name: 'Submitted — awaiting grade release' }),
+  ).toBeInTheDocument();
+  vi.mocked(api.readAssignedWork).mockResolvedValueOnce({
+    assignment,
+    attempt: { ...submitted, gradePending: false },
+  });
+  await user.click(screen.getByRole('button', { name: 'Refresh results and answer access' }));
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('heading', { name: 'Submitted — awaiting grade release' }),
+    ).not.toBeInTheDocument(),
+  );
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+});

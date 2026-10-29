@@ -45,6 +45,8 @@ export function useAssignedAttempt(assignmentId: string) {
   const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
   const solutionAvailable =
     assignment?.solutionAccess === 'anytime' ||
+    (assignment?.solutionAccess === 'instructor_release' &&
+      Boolean(assignment.answersRevealedAt)) ||
     (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
   const completionReady = useMemo(
     () =>

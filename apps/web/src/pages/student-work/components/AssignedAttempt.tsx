@@ -52,7 +52,10 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               ? 'Incorrect entries are highlighted shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
               : work.allowsExplicitCheck
                 ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
-                : 'Use Save problem to persist changes. Feedback arrives after final submission.'}
+                : work.assignment.assessmentMode === 'graded' &&
+                    work.assignment.gradeReleaseTiming === 'instructor_release'
+                  ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
+                  : 'Use Save problem to persist changes. Results arrive after final submission.'}
         </p>
         {!work.hasFinalSubmission && (
           <p>
@@ -61,7 +64,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           </p>
         )}
         <button className="secondary" disabled={busy} onClick={reload}>
-          Reload saved work (discard unsaved edits)
+          {submitted
+            ? 'Refresh results and answer access'
+            : 'Reload saved work (discard unsaved edits)'}
         </button>
         {work.error && (
           <p role="alert" className="error">
@@ -73,6 +78,22 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <p role="status">Unsaved changes in {work.dirty.length} problem(s).</p>
         )}
       </section>
+      {work.attempt?.gradePending && (
+        <section className="panel" role="status">
+          <h2>Submitted — awaiting grade release</h2>
+          <p>
+            Your final answers were received. Your instructor has not released your grade yet.
+            Refresh results to check again.
+          </p>
+        </section>
+      )}
+      {work.assignment.solutionAccess === 'instructor_release' &&
+        !work.assignment.answersRevealedAt && (
+          <p className="help">
+            Correct answers are hidden until your instructor reveals them. Answer reveal is separate
+            from grade release.
+          </p>
+        )}
       {work.attempt?.submittedAt && work.attempt.result && (
         <SubmissionSummary result={work.attempt.result} submittedAt={work.attempt.submittedAt} />
       )}

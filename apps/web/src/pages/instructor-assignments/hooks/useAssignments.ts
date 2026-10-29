@@ -140,15 +140,21 @@ export function useAssignments(classId: string) {
       'Duplication could not be confirmed. Reload Active or All assignments and check for a copy before trying again; another request creates another draft.',
     );
   }
-  function act(action: 'publish' | 'archive' | 'restore') {
-    if (!selected) return;
+  async function act(
+    action: 'publish' | 'archive' | 'restore' | 'release-grades' | 'reveal-answers',
+  ) {
+    if (!selected) return false;
     return mutate(
       (signal) => api.assignmentAction(selected.id, action, signal),
-      action === 'publish'
-        ? 'Assignment published. Content and policy are locked.'
-        : action === 'archive'
-          ? 'Assignment archived.'
-          : 'Assignment restored.',
+      action === 'release-grades'
+        ? 'Grades released. Answer access is unchanged.'
+        : action === 'reveal-answers'
+          ? 'Answers revealed. Grade release is unchanged.'
+          : action === 'publish'
+            ? 'Assignment published. Content and policy are locked.'
+            : action === 'archive'
+              ? 'Assignment archived.'
+              : 'Assignment restored.',
     );
   }
   return {

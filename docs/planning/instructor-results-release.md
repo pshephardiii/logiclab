@@ -1,6 +1,6 @@
 # Instructor-controlled grade release and answer reveal
 
-Status: in progress on `015-feat-instructor-controlled-results-release`, October 29, 2026. This replaces the provisional `019` name. Complete and verify this feature before initial deployment, including the public demo. Slices 1–3 establish the grade-timing contract, persistence, authorized release endpoints and student disclosure enforcement. Browser controls remain for the next slice.
+Status: in progress on `015-feat-instructor-controlled-results-release`, October 29, 2026. This replaces the provisional `019` name. Complete and verify this feature before initial deployment, including the public demo. Slices 1–4 establish the contract, persistence, server enforcement and browser controls. Final branch verification and walkthrough evidence remain.
 
 ## Agreed controls by assessment mode
 
@@ -46,7 +46,7 @@ No active response, database field or authoring control changes in slice 1. The 
 1. Establish semantics, standalone grade timing contract and result visibility predicate. Completed October 29, including the clarification that completion-only has no grade-release gate. No active disclosure-path changes yet.
 2. Add persistence and policy support for independent grade/answer metadata, compatibility migrations and rollback tests. Slice 2 adds `gradeReleaseTiming`, separate grade/answer timestamps and actor relations, and `solutionAccess: instructor_release` at the database layer. Non-graded rows use an inert `on_submission` grade-timing default and cannot hold manual grade-release metadata; this does not create a grade control for completion-only. The additive migration preserves existing policies/results, permits submission-time completion alongside legacy checking, and refuses lossy rollback. These choices were database-only in slice 2; slice 3 enables them through validated API authoring and authorized release workflows.
 3. Add server withholding and independent release workflows, with tests across disclosure paths, concurrency, ownership/enrollment and archived work. Implemented in slice 3: authoring contracts, owner release actions, student result projection and independent solution gating; UI follows separately.
-4. Add instructor controls and student pending-grade/answer views with readable terminology and recoverable failures; cover normal/demo workflows.
+4. Add instructor controls and student pending-grade/answer views with readable terminology and recoverable failures; cover normal/demo workflows. Implemented: independent authoring fields, confirmed release actions, retryable failures and student receipt/refresh views.
 5. Verify old/new assignments, score-free completion and private practice; update the QA runbook, evidence and local PR draft.
 
 Delaying disclosure can reduce answer sharing through LogicLab; it cannot prevent external solvers or assistance. See the separate [controlled assessment investigation](controlled-assessment.md).
@@ -58,3 +58,11 @@ Delaying disclosure can reduce answer sharing through LogicLab; it cannot preven
 ## Slice 3 verification — October 29
 
 `npm run check` passed type checks, 774 tests (83 engine, 510 API, 181 web) and production builds. All 46 API PostgreSQL integration checks passed. They cover independent grade/answer release order, repeated release, concurrent submission/release, unchanged frozen results, late submissions, immediate score-free completion, invalid merged PATCH rollback, ownership/enrollment, archive/restore and duplication. Demo HTTP coverage exercises cross-workspace rejection and committed release metadata and reset after both releases. Formatting and whitespace checks passed. Browser controls and pending-grade presentation are not implemented or browser-tested in this slice; current legacy policies retain their behavior.
+
+## Slice 4 UI and verification — October 29
+
+The instructor editor shows Grade release only for graded work and Answer reveal separately. New completion-only selections use submission-time acknowledgement without grade/feedback timing controls; saved legacy assistance remains explicit and can be retained. Switching to practice resets incompatible manual/after-submission answer access, and leaving graded work resets its inert grade-timing value. Published/archive policies remain locked.
+
+Published assignments expose independent confirmed release actions, with irreversible/assignment-wide/late-submission guidance, released timestamps and archive/busy guards. Failed requests retain the selected assignment and permit explicit idempotent retry. Completion-only shows only answer-reveal actions. Student pending grades confirm receipt without a summary; Refresh results and answer access reloads authoritative policy/state. Revealed answers can be shown while grades remain pending, or grades shown while answers remain locked. No polling, autosave or combined implicit release was introduced.
+
+`npm run check` passed type checks, 782 tests (83 engine, 510 API, 189 web) and production builds. UI coverage includes independent dirty/save state, failed saves/releases, mode transitions, published locks, confirmations/cancel/retry, completion-only controls, normal/demo request namespaces and pending-grade refresh with independent answer access. Formatting and whitespace checks passed. PostgreSQL checks were not repeated for frontend-only changes; no browser walkthrough or visual/accessibility QA is claimed in this slice.

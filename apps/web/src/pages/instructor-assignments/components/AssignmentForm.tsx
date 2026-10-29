@@ -26,6 +26,9 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     solutionAccess: assignment?.solutionAccess ?? 'never',
   };
   const [policy, setPolicy] = useState(() => assignmentLearningPolicySchema.parse(originalPolicy));
+  const [gradeReleaseTiming, setGradeReleaseTiming] = useState(
+    assignment?.gradeReleaseTiming ?? 'on_submission',
+  );
   const [items, setItems] = useState<SelectedProblem[]>(
     assignment?.items.map((item) => ({ key: item.id, version: item.problemVersion })) ?? [],
   );
@@ -40,6 +43,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     policy.assessmentMode !== originalPolicy.assessmentMode ||
     policy.feedbackTiming !== originalPolicy.feedbackTiming ||
     policy.solutionAccess !== originalPolicy.solutionAccess ||
+    gradeReleaseTiming !== (assignment?.gradeReleaseTiming ?? 'on_submission') ||
     itemsChanged;
   useEffect(() => {
     onDirty(dirty);
@@ -70,6 +74,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
         instructions: instructions || null,
         problemVersionIds: ids,
         ...policy,
+        gradeReleaseTiming,
       }),
       itemsChanged,
     );
@@ -100,7 +105,12 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             value={instructions}
             onChange={(event) => setInstructions(event.target.value)}
           />
-          <AssignmentPolicyFields policy={policy} onChange={setPolicy} />
+          <AssignmentPolicyFields
+            policy={policy}
+            onChange={setPolicy}
+            gradeReleaseTiming={gradeReleaseTiming}
+            onGradeReleaseChange={setGradeReleaseTiming}
+          />
           <AssignmentItems items={items} readOnly={readOnly} onMove={move} onRemove={remove} />
           {!readOnly && (
             <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />
