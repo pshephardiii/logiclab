@@ -72,6 +72,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Biconditional and tilde notation](verification/biconditional-verification.md)
+
 - [Independent grade release and answer reveal](verification/instructor-results-release-verification.md)
 
 - [Duplicate assignment](verification/duplicate-assignment-verification.md)

@@ -1,6 +1,6 @@
 # Biconditional and tilde notation
 
-Branch: `016-feat-biconditional-support`. Started October 29, 2026.
+Branch: `016-feat-biconditional-support`. Implemented and verified October 29, 2026. See the [final verification record](../verification/biconditional-verification.md).
 
 ## Grammar decisions
 
@@ -13,7 +13,7 @@ Branch: `016-feat-biconditional-support`. Started October 29, 2026.
 
 1. Shared engine: tokenizer, AST, precedence/grouping parser, evaluator, canonical truth-table columns and focused regression tests. Update the engine grammar documentation. No database change.
 2. Carry the notation through API validation/preview/check/submission tests and browser guidance/local validation tests. Implemented in slice 2: updated keyboard guide/help, shared local validation cases, stateless and authoring HTTP coverage, and a persisted demo workflow across publication, assigned checking, graded and completion-only finalization. Public docs and QA examples reflect the grammar.
-3. Verify the branch, document evidence/limitations and prepare local PR notes. Follow with conceptual questions, then the UI/visual audit and portfolio sandbox.
+3. Final verification and local PR notes prepared; see the linked report for actual checks and limits. Follow with conceptual questions, then the UI/visual audit and portfolio sandbox.
 
 This branch does not implement derivation rules or alter existing published content, saved answers, release policy or grading snapshots.
 

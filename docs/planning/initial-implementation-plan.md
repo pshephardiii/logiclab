@@ -274,9 +274,7 @@ Agreed during QA: add true/false and single-answer multiple-choice questions in 
 
 ## Small feature candidate: biconditional support
 
-Schedule a focused biconditional branch relatively soon: the operator is common in logic teaching and currently unsupported. Provisional name: `016-feat-biconditional-support`; confirm the next unused number and priority when starting rather than treating this numbering as a fixed merge order. Add a shared AST/parser/evaluator operator, truth-table generation, authoring/assignment compatibility and keyboard-guide notation. Settle precedence and chaining before coding; proposed spellings are `↔` and `<->`. Preserve existing structural IDs and test old/new formulas. See [product direction](product-direction.md#near-term-notation-feature-biconditional). No derivation implementation or current QA scope expansion.
-
-Bundle `~` as an additional negation alias into this branch. Retain `!`/`¬`, existing negation semantics/precedence and canonical `¬` labels. Include alias-equivalence tests and update keyboard help, parser diagnostics and grammar docs in the same slices. This is planned notation support, not behavior already available during QA.
+Branch `016-feat-biconditional-support` implements `↔`/`<->` and `~` across the shared engine, API workflows, local validation and keyboard guide. Biconditional binds below implication and repeated biconditionals require explicit grouping; old identifiers and resource bounds are preserved. No migration or derivation rules. Automated checks and a focused local Chrome walkthrough passed; see the [notation plan](biconditional-support.md) and [verification evidence](../verification/biconditional-verification.md). Next proposed feature: `017-feat-conceptual-questions`, followed by the UI/visual audit and portfolio sandbox.
 
 ## Pre-deployment UI and UX audit
 
