@@ -1,3 +1,4 @@
+import { gradeReleaseTimingSchema } from './assignment-results-release';
 import { z } from 'zod';
 import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
 import { problemVersionSchema } from './problem';
@@ -8,6 +9,7 @@ export const assignmentPolicySchema = z
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']),
     solutionAccess: solutionAccessSchema,
+    gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })
   .refine(
     (policy) =>
@@ -17,6 +19,11 @@ export const assignmentPolicySchema = z
         solutionAccess: policy.solutionAccess,
       }).success,
     'Unsupported assignment learning policy.',
+  )
+  .refine(
+    (policy) =>
+      policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
+    'Only graded work has grade release.',
   );
 export type AssignmentPolicy = z.infer<typeof assignmentPolicySchema>;
 
@@ -25,6 +32,8 @@ export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
   classId: z.uuid(),
   title: z.string().min(1).max(120),
   instructions: z.string().max(5000).nullable(),
+  gradesReleasedAt: z.iso.datetime().nullable().optional(),
+  answersRevealedAt: z.iso.datetime().nullable().optional(),
   publishedAt: z.iso.datetime().nullable(),
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
@@ -62,6 +71,7 @@ export const createAssignmentRequestSchema = z
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).default('on_submission'),
     solutionAccess: solutionAccessSchema.default('never'),
+    gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })
   .refine(
     (policy) =>
@@ -71,6 +81,11 @@ export const createAssignmentRequestSchema = z
         solutionAccess: policy.solutionAccess,
       }).success,
     'Unsupported assignment learning policy.',
+  )
+  .refine(
+    (policy) =>
+      policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
+    'Only graded work has grade release.',
   );
 export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestSchema>;
 
@@ -83,6 +98,7 @@ export const updateAssignmentRequestSchema = z
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).optional(),
     solutionAccess: solutionAccessSchema.optional(),
+    gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),

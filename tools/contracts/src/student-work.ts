@@ -36,6 +36,7 @@ export const studentAttemptSchema = z.strictObject({
   answers: z.record(z.uuid(), z.array(truthTableAnswerSchema).max(4096)),
   submittedAt: z.iso.datetime().nullable(),
   result: submissionResultSchema.nullable(),
+  gradePending: z.boolean().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
 export const studentAssignmentSchema = assignmentSummarySchema.safeExtend({

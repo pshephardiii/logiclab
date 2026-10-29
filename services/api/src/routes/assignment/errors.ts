@@ -11,6 +11,11 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  release_unavailable: {
+    status: 409,
+    code: 'ASSIGNMENT_RELEASE_UNAVAILABLE',
+    message: 'This assignment does not support the requested release action.',
+  },
   invalid_policy: {
     status: 400,
     code: 'ASSIGNMENT_POLICY_INVALID',

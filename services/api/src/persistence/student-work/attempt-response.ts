@@ -1,14 +1,27 @@
-import type { AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
+import type { Assignment, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type { StudentAttempt } from '@logiclab/contracts';
+import { canViewAssignmentResults } from '../../application/assignment/results-release';
 
-export function attemptResponse(attempt: AttemptEntity): StudentAttempt {
+/** Student projection only: never serialize retained grades before their independent release. */
+export function attemptResponse(attempt: AttemptEntity, assignment: Assignment): StudentAttempt {
+  const submitted = Boolean(attempt.submittedAt);
+  const visible =
+    assignment.assessmentMode === 'graded'
+      ? canViewAssignmentResults({
+          assessmentMode: 'graded',
+          submitted,
+          gradeReleaseTiming: assignment.gradeReleaseTiming,
+          gradesReleased: Boolean(assignment.gradesReleasedAt),
+        })
+      : canViewAssignmentResults({ assessmentMode: assignment.assessmentMode, submitted });
   return {
     id: attempt.id,
     revision: attempt.revision,
     answers: attempt.answers,
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
-    result: attempt.submittedAt ? (attempt.result ?? null) : null,
+    result: visible ? (attempt.result ?? null) : null,
+    gradePending: submitted && assignment.assessmentMode === 'graded' && !visible,
   };
 }

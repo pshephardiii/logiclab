@@ -17,11 +17,11 @@ Demo resources use the same paths under `/api/demo/resources/student/...` with i
 
 ## Policy
 
-| Assessment        | Feedback              | Submission                                               | Solutions                        |
-| ----------------- | --------------------- | -------------------------------------------------------- | -------------------------------- |
-| graded            | on_submission         | One final correctness result; blanks allowed             | never, after_submission, anytime |
-| completion_only   | on_check or immediate | One final completion result; all expected cells required | never, after_submission, anytime |
-| ungraded_practice | on_check or immediate | None                                                     | never, anytime                   |
+| Assessment        | Feedback                             | Submission                                               | Solutions                                            |
+| ----------------- | ------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------- |
+| graded            | on_submission                        | One final correctness result; blanks allowed             | never, after_submission, anytime, instructor_release |
+| completion_only   | on_submission, on_check or immediate | One final completion result; all expected cells required | never, after_submission, anytime, instructor_release |
+| ungraded_practice | on_check or immediate                | None                                                     | never, anytime                                       |
 
 Policy is returned as assessmentMode, feedbackTiming and solutionAccess. Published policies cannot be edited. The removed allowSolutions field is not accepted. See [authoring](assignment-api.md).
 
@@ -85,3 +85,11 @@ Shared assignment/enrollment locks serialize access with archive/removal. Per-st
 See [learning-mode verification](../verification/assignment-learning-modes-verification.md). Run `npm run check` and `npm run db:test` for contracts, policies, UI, authorization, migration, retention and concurrency coverage. Apply committed migrations first on development checkouts.
 
 Immediate per-cell feedback, deadlines, late-work rules, multiple final submissions and alternate scoring weights remain deferred. Official results retain their version; later engine/library changes do not recompute them. Completion uses the existing JSON result column, so older application versions need deliberate rollback handling once completion results exist.
+
+## Grade disclosure and independent answers
+
+Graded submission still evaluates and retains an immutable result, but student submit/retry/read/save projections withhold it until `gradeReleaseTiming` permits disclosure. While waiting, `submittedAt` and final answers confirm receipt, `result` is null and `gradePending` is true. No result items or correctness summary are returned. Current responses include `gradePending`; it is optional in the additive contract for compatibility. Release before a student's submission does not reveal a result; a late submission after release receives its result immediately. Instructor review independently retains the frozen result.
+
+Completion-only submission returns its score-free completion result immediately, with `gradePending: false`; it has no grade-release gate. Practice has no final result. Checking remains unavailable for graded or submission-feedback work, preventing that endpoint from bypassing withheld grades.
+
+Answers follow only `solutionAccess`: never, after_submission, anytime or explicit instructor reveal. A manual answer reveal may happen before or after grade release and is assignment-wide; it is not implicitly contingent on student submission. Without reveal, the solution endpoint returns 403 `SOLUTION_UNAVAILABLE`. Enrollment, publication/archive restrictions and normal/demo isolation still apply to every access path. Revealing answers does not release grades. UI waiting/release controls are a subsequent slice.

@@ -16,9 +16,11 @@ export function assignmentLearningCapabilities(policy: AssignmentLearningPolicy)
 export function canViewAssignedSolution(
   policy: AssignmentLearningPolicy,
   submitted: boolean,
+  answersRevealed = false,
 ): boolean {
   return (
     policy.solutionAccess === 'anytime' ||
+    (policy.solutionAccess === 'instructor_release' && answersRevealed) ||
     (policy.solutionAccess === 'after_submission' && submitted)
   );
 }

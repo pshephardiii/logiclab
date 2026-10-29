@@ -152,13 +152,13 @@ export async function createStudentWorkStore(
         });
         return {
           assignment: assignmentExercises(assignment, assigned),
-          attempt: attempt ? attemptResponse(attempt) : null,
+          attempt: attempt ? attemptResponse(attempt, assignment) : null,
         };
       });
     },
     async save(studentId, assignmentId, input) {
       return transact(async (em) => {
-        await accessible(em, studentId, assignmentId);
+        const assignment = await accessible(em, studentId, assignmentId);
         const item = await em.findOne(
           AssignmentItem,
           { id: input.itemId, assignment: assignmentId },
@@ -172,7 +172,7 @@ export async function createStudentWorkStore(
         attempt.answers = { ...attempt.answers, [item.id]: input.answers };
         attempt.revision++;
         await em.flush();
-        return attemptResponse(attempt);
+        return attemptResponse(attempt, assignment);
       });
     },
     async check(studentId, assignmentId, input) {
@@ -208,7 +208,7 @@ export async function createStudentWorkStore(
       return transact(async (em) => {
         const assignment = await submittableAssignment(em, studentId, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
-        if (attempt.submittedAt) return attemptResponse(attempt);
+        if (attempt.submittedAt) return attemptResponse(attempt, assignment);
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
         const evaluate =
@@ -223,7 +223,7 @@ export async function createStudentWorkStore(
         attempt.submittedAt = new Date();
         attempt.revision++;
         await em.flush();
-        return attemptResponse(attempt);
+        return attemptResponse(attempt, assignment);
       });
     },
     async solution(studentId, assignmentId, itemId) {
@@ -233,7 +233,13 @@ export async function createStudentWorkStore(
           assignment: assignmentId,
           student: studentId,
         });
-        if (!canViewAssignedSolution(policyFor(assignment), Boolean(attempt?.submittedAt)))
+        if (
+          !canViewAssignedSolution(
+            policyFor(assignment),
+            Boolean(attempt?.submittedAt),
+            Boolean(assignment.answersRevealedAt),
+          )
+        )
           throw new StudentWorkError('solution_locked');
         const item = await em.findOne(
           AssignmentItem,

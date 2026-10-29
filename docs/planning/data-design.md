@@ -240,7 +240,7 @@ Assignments now have `gradeReleaseTiming` (`on_submission` or `instructor_releas
 
 The database additionally permits `solutionAccess: instructor_release` for graded/completion-only assignments, and submission-time completion alongside existing completion checking policies. The additive migration preserves existing policies, result snapshots and visibility; no historic result or release timestamp is fabricated. Rollback refuses new policies or retained release history rather than silently dropping their meaning. The schema snapshot changes only the assignment table.
 
-These are persistence capabilities, not yet enabled API choices or release actions. Existing application contracts still reject the new policies until the workflow slice supplies authorization and disclosure enforcement. See [release plan and compatibility](instructor-results-release.md).
+Slice 3 enables these policies in API authoring and independent release actions, with student result withholding and separate answer gating. Browser controls follow in the UI slice. See [release plan and compatibility](instructor-results-release.md).
 
 Before the release extension, learning modes introduced assessmentMode (graded/completion_only/ungraded_practice), feedbackTiming (on_submission/on_check, later immediate) and solutionAccess (never/after_submission/anytime). Database checks enforce valid feedback pairs and prohibit submission-dependent solutions for practice. The former allowSolutions column was backfilled and removed; historical descriptions above refer to the initial assignment foundation.
 

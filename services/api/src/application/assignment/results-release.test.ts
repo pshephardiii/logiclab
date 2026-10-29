@@ -1,3 +1,4 @@
+import { canViewAssignedSolution } from './learning-policy';
 import { gradeReleaseTimingSchema } from '@logiclab/contracts';
 import { canViewAssignmentResults } from './results-release';
 
@@ -39,3 +40,23 @@ test.each([false, true])(
     );
   },
 );
+
+test('manual answer reveal is independent of submission and grade release', () => {
+  for (const assessmentMode of ['graded', 'completion_only'] as const) {
+    for (const submitted of [false, true]) {
+      for (const revealed of [false, true]) {
+        expect(
+          canViewAssignedSolution(
+            {
+              assessmentMode,
+              feedbackTiming: 'on_submission',
+              solutionAccess: 'instructor_release',
+            },
+            submitted,
+            revealed,
+          ),
+        ).toBe(revealed);
+      }
+    }
+  }
+});

@@ -21,11 +21,13 @@ const operations = [
     url: `/api/assignments/${assignment.id}`,
     payload: { title: 'Edit' },
   },
-  ...['publish', 'archive', 'restore', 'duplicate'].map((action) => ({
-    method: 'POST' as const,
-    url: `/api/assignments/${assignment.id}/${action}`,
-    payload: {},
-  })),
+  ...['publish', 'archive', 'restore', 'duplicate', 'release-grades', 'reveal-answers'].map(
+    (action) => ({
+      method: 'POST' as const,
+      url: `/api/assignments/${assignment.id}/${action}`,
+      payload: {},
+    }),
+  ),
 ];
 test.each(operations)(
   'rejects anonymous and student $method $url before storage access',
@@ -170,6 +172,26 @@ test('authorization precedes validation and request boundaries reject unsupporte
       ).statusCode,
     ).toBe(400);
     Object.values(assignments).forEach((method) => expect(method).not.toHaveBeenCalled());
+  } finally {
+    await app.close();
+  }
+});
+
+test.each([
+  ['release-grades', 'grades'],
+  ['reveal-answers', 'answers'],
+] as const)('%s dispatches only its independent release action', async (action, kind) => {
+  const { context, headers, assignments, user } = assignmentFixture();
+  const app = buildApp({ assignment: context });
+  try {
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/assignments/${assignment.id}/${action}`,
+      payload: {},
+      headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(assignments.release).toHaveBeenCalledWith(user.id, assignment.id, kind);
   } finally {
     await app.close();
   }

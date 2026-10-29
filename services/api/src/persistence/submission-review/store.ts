@@ -5,7 +5,6 @@ import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
 import type { SubmissionListQuery, SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
 import { AssignmentOperationError } from '../../application/assignment/errors';
 import { assignmentExercises } from '../assignment/exercise-response';
-import { attemptResponse } from '../student-work/attempt-response';
 
 export interface SubmissionReviewStore {
   listSubmissions(
@@ -81,7 +80,15 @@ export async function createSubmissionReviewStore(
       return {
         submission: summary(attempt),
         assignment: assignmentExercises(assignment, items),
-        attempt: attemptResponse(attempt),
+        // Authorized instructor review includes retained grades independently of student release.
+        attempt: {
+          id: attempt.id,
+          revision: attempt.revision,
+          answers: attempt.answers,
+          submittedAt: attempt.submittedAt?.toISOString() ?? null,
+          result: attempt.result ?? null,
+          gradePending: false,
+        },
       };
     },
   };

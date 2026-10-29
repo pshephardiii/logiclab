@@ -1,0 +1,20 @@
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import {
+  assignmentParamsSchema,
+  assignmentResponseSchema,
+  assignmentActionRequestSchema,
+} from '@logiclab/contracts';
+import type { AssignmentContext } from '../context';
+import { instructor } from '../helpers';
+import { parseRequest } from '../../helpers/parse-request';
+
+export function postAssignmentRevealAnswersHandler(context: AssignmentContext) {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = await instructor(request, context);
+    const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
+    parseRequest(assignmentActionRequestSchema, request.body);
+    const assignment = await context.assignments.release(user.id, assignmentId, 'answers');
+    reply.code(200);
+    return assignmentResponseSchema.parse({ assignment });
+  };
+}

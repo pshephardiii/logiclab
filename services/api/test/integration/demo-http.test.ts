@@ -355,3 +355,82 @@ test('a failed transaction commit never sends a successful demo resource respons
       await app.close();
     }
   }));
+
+test('demo release actions remain workspace-scoped and commit independent metadata', async () =>
+  fixture(async (orm, db) => {
+    const runtime = await createDemoRuntime(orm, config);
+    const app = buildApp({ demo: runtime });
+    try {
+      const start = () =>
+        app.inject({
+          method: 'POST',
+          url: '/api/demo/start',
+          headers: { origin },
+          payload: { role: 'instructor' },
+        });
+      const first = await start();
+      const second = await start();
+      assert.equal(first.statusCode, 200, first.body);
+      assert.equal(second.statusCode, 200, second.body);
+      const classes = await app.inject({
+        method: 'GET',
+        url: '/api/demo/resources/classes',
+        headers: { cookie: cookie(first) },
+      });
+      const classId = classes.json().classrooms[0].id;
+      const em = orm.em.fork();
+      const assignment = await em.findOneOrFail(db.Assignment, {
+        classroom: classId,
+        assessmentMode: db.AssessmentMode.Graded,
+        publishedAt: { $ne: null },
+      });
+      await em.nativeUpdate(db.Assignment, assignment.id, {
+        gradeReleaseTiming: db.GradeReleaseTiming.InstructorRelease,
+        solutionAccess: db.SolutionAccess.InstructorRelease,
+      });
+      const path = `/api/demo/resources/assignments/${assignment.id}`;
+      for (const action of ['release-grades', 'reveal-answers']) {
+        assert.equal(
+          (
+            await app.inject({
+              method: 'POST',
+              url: `${path}/${action}`,
+              payload: {},
+              headers: { origin, cookie: cookie(second) },
+            })
+          ).statusCode,
+          404,
+        );
+      }
+      const grades = await app.inject({
+        method: 'POST',
+        url: path + '/release-grades',
+        payload: {},
+        headers: { origin, cookie: cookie(first) },
+      });
+      assert.equal(grades.statusCode, 200, grades.body);
+      assert(grades.json().assignment.gradesReleasedAt);
+      assert.equal(grades.json().assignment.answersRevealedAt, null);
+      const answers = await app.inject({
+        method: 'POST',
+        url: path + '/reveal-answers',
+        payload: {},
+        headers: { origin, cookie: cookie(first) },
+      });
+      assert.equal(answers.statusCode, 200, answers.body);
+      assert(answers.json().assignment.answersRevealedAt);
+      const saved = await em.findOneOrFail(db.Assignment, assignment.id, { refresh: true });
+      assert(saved.gradesReleasedBy);
+      assert(saved.answersRevealedBy);
+      const reset = await app.inject({
+        method: 'POST',
+        url: '/api/demo/reset',
+        payload: {},
+        headers: { origin, cookie: cookie(first) },
+      });
+      assert.equal(reset.statusCode, 200, reset.body);
+      assert.equal(await orm.em.fork().findOne(db.Assignment, assignment.id), null);
+    } finally {
+      await app.close();
+    }
+  }));
