@@ -34,10 +34,15 @@ test('the API dev watcher exits after its child has already terminated by signal
   });
   try {
     const readyDeadline = Date.now() + 8000;
-    while (!output.includes('DEV_WATCH_READY') && !exited && Date.now() < readyDeadline)
+    while (
+      (!output.includes('DEV_WATCH_READY') || !output.includes('Failed running')) &&
+      !exited &&
+      Date.now() < readyDeadline
+    )
       await pause(50);
     expect(output).toContain('DEV_WATCH_READY');
-    await pause(250);
+    // Confirm the child has actually exited before signaling its surviving watcher.
+    expect(output).toContain('Failed running');
     expect(exited).toBe(false);
     watcher.kill('SIGTERM');
     const shutdownDeadline = Date.now() + 4000;
