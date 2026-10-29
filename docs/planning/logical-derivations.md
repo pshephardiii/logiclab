@@ -145,6 +145,8 @@ After these, return to the UI/visual audit and inexpensive portfolio sandbox pre
 
 ### 019: assignment scoring
 
+Implementation has started on `019-feat-assignment-scoring`. See [scoring decisions and rollout boundaries](assignment-scoring.md) for the staged foundation and subsequent slices.
+
 Keep scoring policy separate from proof correctness and checker reports. Store the allocation on the assignment item, not the reusable problem, so the same published problem can have different weights in different assignments.
 
 Small slices:

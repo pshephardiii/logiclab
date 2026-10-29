@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Logical derivation planning](planning/logical-derivations.md)
+- [Assignment scoring](planning/assignment-scoring.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
