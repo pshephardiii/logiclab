@@ -20,7 +20,7 @@ import { evaluateSubmission, evaluateCompletion } from './evaluation';
 import { mapStudentWorkError } from '../../routes/studentWork/errors';
 import { StudentWorkError } from './errors';
 
-// Compile-time symmetry guards the staged JSON representation across package boundaries.
+// Compile-time symmetry guards the JSON representation across package boundaries.
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Assert<T extends true> = T;
@@ -211,7 +211,7 @@ test('legacy-only assignments retain their exact graded and completion formats',
   expect(submissionResultSchema.parse(completion)).toEqual(completion);
 });
 
-test('staged response JSON round-trips and repeated/empty item lists fail closed', () => {
+test('response JSON round-trips and repeated/empty item lists fail closed', () => {
   const parsed = assignmentResponsesSchema.parse(filled);
   const stored: StoredResponses = parsed;
   expect(assignmentResponsesSchema.parse(JSON.parse(JSON.stringify(stored)))).toEqual(parsed);
@@ -220,9 +220,9 @@ test('staged response JSON round-trips and repeated/empty item lists fail closed
 });
 
 test('feedback and completion contracts reject accidental private fields', () => {
-  expect(
-    submissionResultSchema.safeParse(evaluateAssignmentSubmission(items, filled)).success,
-  ).toBe(false);
+  expect(submissionResultSchema.parse(evaluateAssignmentSubmission(items, filled))).toEqual(
+    evaluateAssignmentSubmission(items, filled),
+  );
   expect(
     conceptualFeedbackSchema.safeParse({ status: 'incorrect', correctOptionId: optionA }).success,
   ).toBe(false);

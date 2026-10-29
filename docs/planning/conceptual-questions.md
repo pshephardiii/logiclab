@@ -1,6 +1,6 @@
 # Instructor-authored conceptual questions
 
-Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; slice 3 enables private conceptual library authoring/publication. Assignment creation and student evaluation remain guarded until response storage, grading and disclosure are implemented together.
+Status: in progress on `017-feat-conceptual-questions`, October 29, 2026. Results release (`015`) and biconditional support (`016`) are merged. This feature precedes the UI/visual audit and initial portfolio sandbox. Slice 1 stages conceptual contracts/validation; slice 3 enables private conceptual library authoring/publication. Slice 6 connects mixed student storage, grading and disclosure. Assignment creation and browser selection remain guarded until conceptual choice controls are ready.
 
 ## Teaching goal and initial scope
 
@@ -99,3 +99,15 @@ This remains a deliberately bounded integration step: active student contracts, 
 ### Slice 5 verification — October 29
 
 `npm run check` passed type checks, 897 tests (104 engine, 595 API, 198 web) and production builds. Fifteen new per-item tests cover save/check/solution separation and legacy payload equality. All 49 API PostgreSQL integration checks passed, including existing release, authorization/isolation and student work workflows. Formatting and whitespace checks passed. The checks required access outside the sandbox for local PostgreSQL and the native watcher regression. No browser checks or database-package suite were repeated; no migration, conceptual assignment acceptance or student choice UI is claimed in this slice.
+
+## Slice 6: mixed student persistence, finalization and disclosure
+
+Active attempt entity/transport unions now support tagged conceptual responses and mixed frozen results in the existing JSONB columns. Student reads project pinned questions/options without keys or explanations. Save/check operations dispatch by definition type and retain existing enrollment, assignment locks, revision checks, rollback and transient-check rules. Finalization dispatches to mixed evaluation, preserving exact legacy formats for table-only assignments. Completion-only work remains score-free and immediate; graded submit/retry/read results remain withheld until the independent grade-release policy permits them.
+
+Authorized solutions now return the pinned conceptual key and nullable explanation. Releasing grades never releases that payload; revealing answers never releases a pending grade. Instructor final-review contracts support both formats without exposing practice drafts. Historical snapshots are not converted or regraded, and no migration is needed.
+
+Assignment creation and browser problem selection remain guarded until conceptual choice controls are implemented. The student browser explicitly refuses conceptual work for now, rather than replacing responses with table maps; small compatibility changes keep legacy tables and mixed summaries type-safe. Tests pin fixtures directly to exercise the server independently of this intentional rollout guard. Next slice: student choice editing/save/check/reveal and instructor review controls, then enable assignment acceptance when the complete flow is ready. Full instructor authoring editors and demo examples remain subsequent work.
+
+### Slice 6 verification — October 29
+
+`npm run check` passed type checks, 900 tests (104 engine, 595 API, 201 web) and production builds. PostgreSQL checks passed: 139 database tests plus all 52 API integration tests. New HTTP/database coverage exercises mixed saves and invalid-response rollback, false versus null, independent repeated occurrences, revision conflicts, retained final/retry results, both release orders, pinned keys after draft edits, completion independent of correctness, private practice exclusion, demo save/final/review and normal/demo/cross-visitor denial. Three browser-unit checks cover explicit unsupported-choice handling and mixed summary/table-feedback compatibility. Formatting and whitespace checks passed. No real-browser walkthrough or new migration is claimed; assignment acceptance and conceptual browser controls remain guarded.

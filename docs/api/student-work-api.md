@@ -93,3 +93,25 @@ Graded submission still evaluates and retains an immutable result, but student s
 Completion-only submission returns its score-free completion result immediately, with `gradePending: false`; it has no grade-release gate. Practice has no final result. Checking remains unavailable for graded or submission-feedback work, preventing that endpoint from bypassing withheld grades.
 
 Answers follow only `solutionAccess`: never, after_submission, anytime or explicit instructor reveal. A manual answer reveal may happen before or after grade release and is assignment-wide; it is not implicitly contingent on student submission. Without reveal, the solution endpoint returns 403 `SOLUTION_UNAVAILABLE`. Enrollment, publication/archive restrictions and normal/demo isolation still apply to every access path. Revealing answers does not release grades. The student UI confirms receipt while grades are pending and offers Refresh results and answer access. Instructor actions and student refresh reuse the normal/demo resource namespace.
+
+## Conceptual response workflows (`017`, server integration)
+
+The server supports mixed truth-table/true-false/multiple-choice work. Assignment authoring still rejects conceptual versions until browser choice controls land. The current student browser explicitly refuses conceptual assignments rather than silently converting saved choices to empty table maps. The following shapes describe implemented server behavior, verified with pinned database fixtures, not a completed browser feature.
+
+A conceptual assigned item retains `id`, `position`, `title` and `instructions`, and has `content` instead of `formula`/`exercise`. Content includes `type`, `definitionVersion`, `question` and, for multiple choice, ordered `{ id, text }` options. Neither keys nor explanations occur in ordinary assigned content.
+
+The same save/check endpoints accept tagged values in `answers`:
+
+```json
+{ "type": "true_false", "answer": false }
+```
+
+```json
+{ "type": "multiple_choice", "optionId": "b1111111-1111-4111-8111-111111111111" }
+```
+
+An explicit null value clears a conceptual response. False is filled. The response type must match the pinned definition; option IDs must belong to that version. Missing fields, foreign IDs and injected keys are rejected. All existing authorization, revision, transaction and no-store rules apply. Checking returns only `{ status: "correct" | "incorrect" | "unanswered" }` in `feedback`; it does not create an attempt or disclose an explanation.
+
+Truth-table-only finalization retains the exact legacy formats. An assignment containing conceptual items stores `mixed_v1` for graded work or `mixed_completion_v1` for completion-only work. Each table cell and each conceptual question contributes one response unit. Mixed graded items carry `type`, `itemId` and type-specific `feedback`; their aggregate summary retains correct/incorrect/unanswered/total counts. Completion items and summary use `completedResponses`/`totalResponses`, with no correctness data. Repeated occurrences remain independent. Null/omission is unanswered, and incomplete completion work rolls back without changing the saved revision. Finalization retries return the original frozen result subject to current disclosure permission.
+
+The solution endpoint returns the legacy full table or a tagged conceptual solution containing `correctAnswer` or `correctOptionId` and nullable `explanation`. Only authorized answer access releases these fields. Grade release alone discloses correctness but never the explicit key or explanation; answer reveal does not release a withheld grade. Instructor final review supports both legacy and mixed formats while practice drafts remain private. Older clients cannot assume all answers are arrays or all results use cell counts; coordinate application rollback if mixed results have been stored.

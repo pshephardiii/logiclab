@@ -1,4 +1,4 @@
-import { requireTruthTableDefinition } from '../../application/problem/definition-support';
+import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
   canViewAssignedSolution,
@@ -26,7 +26,10 @@ import {
   itemSolution,
 } from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
-import { evaluateSubmission, evaluateCompletion } from '../../application/student-work/evaluation';
+import {
+  evaluateAssignmentSubmission,
+  evaluateAssignmentCompletion,
+} from '../../application/student-work/mixed-evaluation';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -166,7 +169,7 @@ export async function createStudentWorkStore(
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
         const answers = validateItemResponse(
-          requireTruthTableDefinition(item.problemVersion.definition),
+          supportedProblemDefinition(item.problemVersion.definition),
           input.answers,
         );
         attempt.answers = { ...attempt.answers, [item.id]: answers };
@@ -201,7 +204,7 @@ export async function createStudentWorkStore(
         return {
           itemId: item.id,
           feedback: checkItemResponse(
-            requireTruthTableDefinition(item.problemVersion.definition),
+            supportedProblemDefinition(item.problemVersion.definition),
             input.answers,
           ),
         };
@@ -215,11 +218,13 @@ export async function createStudentWorkStore(
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
         const evaluate =
-          assignment.assessmentMode === 'completion_only' ? evaluateCompletion : evaluateSubmission;
+          assignment.assessmentMode === 'completion_only'
+            ? evaluateAssignmentCompletion
+            : evaluateAssignmentSubmission;
         attempt.result = evaluate(
           assigned.map((item) => ({
             id: item.id,
-            formula: requireTruthTableDefinition(item.problemVersion.definition).formula,
+            definition: supportedProblemDefinition(item.problemVersion.definition),
           })),
           attempt.answers,
         );
@@ -252,7 +257,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         return {
           itemId,
-          solution: itemSolution(requireTruthTableDefinition(item.problemVersion.definition)),
+          solution: itemSolution(supportedProblemDefinition(item.problemVersion.definition)),
         };
       });
     },

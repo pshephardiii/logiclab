@@ -4,7 +4,7 @@ export type ConceptualResponse =
   | { type: 'true_false'; answer: boolean | null }
   | { type: 'multiple_choice'; optionId: string | null };
 
-/** Staged mixed JSON shapes; active attempt contracts are extended in the workflow slice. */
+/** Mixed JSON response shapes, keyed by pinned assignment occurrence. */
 export type AssignmentResponses = Record<string, AttemptAnswer[] | ConceptualResponse>;
 export type MixedGradedItem =
   | {

@@ -6,13 +6,13 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
-import { UnsupportedProblemDefinitionError } from '../../src/application/problem/definition-support';
+import { StudentWorkError } from '../../src/application/student-work/errors';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 
-test('conceptual library snapshots are readable by owners while formula-only student stores roll back attempts', async () => {
+test('conceptual snapshots project redacted student content and invalid response saves roll back attempts', async () => {
   const db = await import('@logiclab/db');
   const schema = `conceptual_foundation_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -81,17 +81,27 @@ test('conceptual library snapshots are readable by owners while formula-only stu
       'Conceptual publication now creates an owned immutable snapshot.',
     );
     await assert.rejects(work.read(outsider.id, assignment.id), /not_found/);
-    for (const operation of [
-      () => work.read(student.id, assignment.id),
-      () => work.save(student.id, assignment.id, { revision: 0, itemId: item.id, answers: [] }),
-      () => work.submit(student.id, assignment.id, 0),
-      () => work.solution(student.id, assignment.id, item.id),
-    ])
-      await assert.rejects(operation(), UnsupportedProblemDefinitionError);
+    const read = await work.read(student.id, assignment.id);
+    assert.deepEqual(read.assignment.items[0], {
+      id: item.id,
+      position: 1,
+      title: problem.title,
+      instructions: null,
+      content: { type: 'true_false', definitionVersion: 1, question: definition.question },
+    });
+    assert.deepEqual((await work.solution(student.id, assignment.id, item.id)).solution, {
+      type: 'true_false',
+      correctAnswer: false,
+      explanation: definition.explanation,
+    });
+    await assert.rejects(
+      work.save(student.id, assignment.id, { revision: 0, itemId: item.id, answers: [] }),
+      StudentWorkError,
+    );
     assert.equal(
       await em.count(db.AssignmentAttempt, { assignment: assignment.id }),
       0,
-      'No partial attempt survives rejected formula dispatch.',
+      'No partial attempt survives a rejected response.',
     );
     await em.nativeUpdate(db.Assignment, assignment.id, {
       assessmentMode: db.AssessmentMode.UngradedPractice,
@@ -99,7 +109,7 @@ test('conceptual library snapshots are readable by owners while formula-only stu
     });
     await assert.rejects(
       work.check(student.id, assignment.id, { itemId: item.id, answers: [] }),
-      UnsupportedProblemDefinitionError,
+      StudentWorkError,
     );
     em.clear();
     assert.deepEqual(

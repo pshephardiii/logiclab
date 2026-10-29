@@ -1,4 +1,5 @@
-import { requireTruthTableDefinition } from '../../application/problem/definition-support';
+import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
+import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { StudentAssignment } from '@logiclab/contracts';
 import { generateTruthTable } from '@logiclab/logic-engine';
@@ -13,15 +14,20 @@ export function assignmentExercises(
   return {
     ...assignmentSummary(assignment),
     items: items.map((item) => {
-      const definition = requireTruthTableDefinition(item.problemVersion.definition);
-      return {
+      const definition = supportedProblemDefinition(item.problemVersion.definition);
+      const common = {
         id: item.id,
         position: item.position,
         title: item.problemVersion.title,
         instructions: item.problemVersion.instructions ?? null,
-        formula: definition.formula,
-        exercise: exerciseResponse(generateTruthTable(definition.formula)),
       };
+      return definition.type === 'truth_table'
+        ? {
+            ...common,
+            formula: definition.formula,
+            exercise: exerciseResponse(generateTruthTable(definition.formula)),
+          }
+        : { ...common, content: conceptualQuestionContent(definition) };
     }),
   };
 }

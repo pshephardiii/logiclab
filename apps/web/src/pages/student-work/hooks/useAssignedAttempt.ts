@@ -52,10 +52,12 @@ export function useAssignedAttempt(assignmentId: string) {
     () =>
       Boolean(assignment?.items.length) &&
       Boolean(
-        assignment?.items.every((item) =>
-          submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
-            (answer) => answer.value !== null,
-          ),
+        assignment?.items.every(
+          (item) =>
+            'exercise' in item &&
+            submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
+              (answer) => answer.value !== null,
+            ),
         ),
       ),
     [assignment, answers],
@@ -80,6 +82,8 @@ export function useAssignedAttempt(assignmentId: string) {
     try {
       const result = await api.readAssignedWork(assignmentId, signal);
       if (!signal.aborted) {
+        if (result.assignment.items.some((item) => !('exercise' in item)))
+          throw new Error('Conceptual answer controls are not available in this build yet.');
         setAssignment(result.assignment);
         setAttempt(result.attempt);
         const saved = savedAnswerMaps(result.assignment, result.attempt);
@@ -125,7 +129,7 @@ export function useAssignedAttempt(assignmentId: string) {
   async function save(itemId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
-    if (!item) return;
+    if (!item || !('exercise' in item)) return;
     cancelCheck();
     const snapshot = answers[itemId]!;
     const signal = writes.startRequest();
@@ -190,7 +194,7 @@ export function useAssignedAttempt(assignmentId: string) {
   async function check(itemId: string, snapshot = answers[itemId] ?? {}) {
     if (!assignment || loading || !allowsExplicitCheck || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
-    if (!item) return;
+    if (!item || !('exercise' in item)) return;
     cancelCheck();
     const signal = checks.startRequest();
     setCheckingItem(itemId);
@@ -205,8 +209,9 @@ export function useAssignedAttempt(assignmentId: string) {
         },
         signal,
       );
-      if (!signal.aborted)
-        setFeedback((previous) => ({ ...previous, [itemId]: response.feedback }));
+      const feedback = response.feedback;
+      if (!signal.aborted && 'cells' in feedback)
+        setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
     } catch (caught) {
       if (!signal.aborted)
         setError(caught instanceof Error ? caught.message : 'Could not check answers.');
@@ -230,7 +235,8 @@ export function useAssignedAttempt(assignmentId: string) {
     setError(null);
     try {
       const solution = await api.readAssignedSolution(assignmentId, itemId, signal);
-      if (!signal.aborted) setSolutions((previous) => ({ ...previous, [itemId]: solution }));
+      if (!signal.aborted && 'rows' in solution)
+        setSolutions((previous) => ({ ...previous, [itemId]: solution }));
     } catch (caught) {
       if (!signal.aborted)
         setError(caught instanceof Error ? caught.message : 'Could not load the solution.');

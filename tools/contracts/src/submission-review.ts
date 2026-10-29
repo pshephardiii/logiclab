@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { mixedCompletionSubmissionResultSchema } from './assignment-responses';
 import {
   gradedSubmissionResultSchema,
   completionCountsSchema,
@@ -11,7 +12,11 @@ export const submissionSummarySchema = z.strictObject({
   id: z.uuid(),
   student: z.strictObject({ id: z.uuid(), email: z.string().nullable() }),
   submittedAt: z.iso.datetime(),
-  summary: z.union([gradedSubmissionResultSchema.shape.summary, completionCountsSchema]),
+  summary: z.union([
+    gradedSubmissionResultSchema.shape.summary,
+    completionCountsSchema,
+    mixedCompletionSubmissionResultSchema.shape.summary,
+  ]),
 });
 export type SubmissionSummary = z.infer<typeof submissionSummarySchema>;
 export const submissionReviewSchema = z.strictObject({

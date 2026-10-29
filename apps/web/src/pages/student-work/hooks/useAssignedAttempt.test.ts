@@ -192,3 +192,28 @@ test('submitted completion work cannot schedule or manually request feedback', a
   await tick();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
+
+test('conceptual assignments fail closed until choice controls land rather than discarding saved responses', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: {
+      ...work,
+      items: [
+        {
+          id: itemA,
+          position: 1,
+          title: 'Conceptual',
+          instructions: null,
+          content: { type: 'true_false', definitionVersion: 1, question: 'A question' },
+        },
+      ],
+    },
+    attempt: { ...saved, answers: { [itemA]: { type: 'true_false', answer: false } } },
+  });
+  const { result } = await open();
+  expect(result.current.assignment).toBeNull();
+  expect(result.current.error).toBe(
+    'Conceptual answer controls are not available in this build yet.',
+  );
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+});

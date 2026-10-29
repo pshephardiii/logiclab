@@ -16,3 +16,38 @@ test('completion summaries show completion without a correctness score or feedba
   expect(screen.queryByText(/incorrect/)).toBeNull();
   expect(submissionFeedback(result, 'item')).toBeNull();
 });
+
+test('mixed completion summaries count responses without correctness feedback', () => {
+  const result = {
+    gradingVersion: 'mixed_completion_v1' as const,
+    items: [
+      { type: 'true_false' as const, itemId: 'item', completedResponses: 1, totalResponses: 1 },
+    ],
+    summary: { completedResponses: 1, totalResponses: 1 },
+  };
+  render(<SubmissionSummary result={result} submittedAt="2026-10-29T12:00:00Z" />);
+  expect(
+    screen.getByText('Completed 1 of 1 responses. No correctness score is recorded.'),
+  ).toBeTruthy();
+  expect(screen.queryByText(/incorrect/)).toBeNull();
+  expect(submissionFeedback(result, 'item')).toBeNull();
+});
+
+test('mixed graded results retain table feedback while conceptual statuses stay distinct', () => {
+  const tableFeedback = {
+    cells: [],
+    summary: { correct: 0, incorrect: 0, unanswered: 1, total: 1 },
+  };
+  const result = {
+    gradingVersion: 'mixed_v1' as const,
+    items: [
+      { type: 'truth_table' as const, itemId: 'table', feedback: tableFeedback },
+      { type: 'true_false' as const, itemId: 'choice', feedback: { status: 'correct' as const } },
+    ],
+    summary: { correct: 1, incorrect: 0, unanswered: 1, total: 2 },
+  };
+  render(<SubmissionSummary result={result} submittedAt="2026-10-29T12:00:00Z" />);
+  expect(screen.getByText('1 correct · 0 incorrect · 1 unanswered · 2 responses')).toBeTruthy();
+  expect(submissionFeedback(result, 'table')).toEqual(tableFeedback);
+  expect(submissionFeedback(result, 'choice')).toBeNull();
+});

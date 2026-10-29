@@ -234,13 +234,15 @@ test('completion requires every occurrence to be filled and saved before final c
     revision: input.revision + 1,
     answers: { [input.itemId]: input.answers },
   }));
+  const tableAnswers = saved.answers[itemA];
+  if (!Array.isArray(tableAnswers)) throw new Error('Expected saved truth-table fixture');
   vi.mocked(api.submitAssignedWork).mockResolvedValue({
     ...saved,
     revision: 3,
     submittedAt: submitted.submittedAt,
     answers: {
-      [itemA]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
-      [itemB]: saved.answers[itemA]!.map((answer) => ({ ...answer, value: false })),
+      [itemA]: tableAnswers.map((answer) => ({ ...answer, value: false })),
+      [itemB]: tableAnswers.map((answer) => ({ ...answer, value: false })),
     },
     result: {
       gradingVersion: 'completion_v1',
