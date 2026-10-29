@@ -34,6 +34,11 @@ export interface AssignmentStore extends SubmissionReviewStore {
     input: UpdateAssignmentRequest,
   ): Promise<AssignmentDetail>;
   duplicate(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
+  release(
+    ownerId: string,
+    assignmentId: string,
+    kind: 'grades' | 'answers',
+  ): Promise<AssignmentDetail>;
   publish(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
   setArchived(ownerId: string, assignmentId: string, archived: boolean): Promise<AssignmentDetail>;
 }
@@ -46,6 +51,8 @@ export async function createAssignmentStore(
   const transact = transactionRunner(orm, transaction);
   const {
     Assignment,
+    User,
+    GradeReleaseTiming,
     AssignmentItem,
     Classroom,
     ProblemVersion,
@@ -66,6 +73,7 @@ export async function createAssignmentStore(
     immediate: FeedbackTiming.Immediate,
   };
   const solutions = {
+    instructor_release: SolutionAccess.InstructorRelease,
     never: SolutionAccess.Never,
     after_submission: SolutionAccess.AfterSubmission,
     anytime: SolutionAccess.Anytime,
@@ -144,10 +152,16 @@ export async function createAssignmentStore(
     async create(ownerId, classId, input) {
       return transact(async (em) => {
         const classroom = await ownedClass(em, ownerId, classId);
+        if (input.assessmentMode !== 'graded' && input.gradeReleaseTiming === 'instructor_release')
+          throw new AssignmentOperationError('invalid_policy');
         const assignment = em.create(Assignment, {
           classroom,
           title: input.title,
           instructions: input.instructions ?? undefined,
+          gradeReleaseTiming:
+            input.gradeReleaseTiming === 'instructor_release'
+              ? GradeReleaseTiming.InstructorRelease
+              : GradeReleaseTiming.OnSubmission,
           ...policyFields(
             resolveAssignmentLearningPolicy(
               {
@@ -195,6 +209,7 @@ export async function createAssignmentStore(
           title: title.trimEnd(),
           instructions: source.instructions,
           ...policyFields(policy),
+          gradeReleaseTiming: source.gradeReleaseTiming,
         });
         em.persist(copy);
         await em.flush();
@@ -242,6 +257,13 @@ export async function createAssignmentStore(
           feedbackTiming: input.feedbackTiming,
           solutionAccess: input.solutionAccess,
         });
+        const gradeTiming = input.gradeReleaseTiming ?? assignment.gradeReleaseTiming;
+        if (policy.assessmentMode !== 'graded' && gradeTiming === 'instructor_release')
+          throw new AssignmentOperationError('invalid_policy');
+        assignment.gradeReleaseTiming =
+          gradeTiming === 'instructor_release'
+            ? GradeReleaseTiming.InstructorRelease
+            : GradeReleaseTiming.OnSubmission;
         Object.assign(assignment, policyFields(policy));
         if (input.title !== undefined) assignment.title = input.title;
         if (input.instructions !== undefined)
@@ -249,6 +271,37 @@ export async function createAssignmentStore(
         if (input.problemVersionIds !== undefined)
           await replaceItems(em, ownerId, assignment, input.problemVersionIds);
         assignment.updatedAt = new Date();
+        await em.flush();
+        return detail(em, assignment);
+      });
+    },
+    async release(ownerId, assignmentId, kind) {
+      return transact(async (em) => {
+        const assignment = await ownedAssignment(em, ownerId, assignmentId, true);
+        if (assignment.archivedAt) throw new AssignmentOperationError('archived');
+        if (!assignment.publishedAt) throw new AssignmentOperationError('release_unavailable');
+        const at = new Date(Math.max(Date.now(), assignment.publishedAt.getTime()));
+        if (kind === 'grades') {
+          if (
+            assignment.assessmentMode !== AssessmentMode.Graded ||
+            assignment.gradeReleaseTiming !== GradeReleaseTiming.InstructorRelease
+          )
+            throw new AssignmentOperationError('release_unavailable');
+          if (!assignment.gradesReleasedAt) {
+            assignment.gradesReleasedAt = at;
+            assignment.gradesReleasedBy = em.getReference(User, ownerId);
+          }
+        } else {
+          if (
+            assignment.assessmentMode === AssessmentMode.UngradedPractice ||
+            assignment.solutionAccess !== SolutionAccess.InstructorRelease
+          )
+            throw new AssignmentOperationError('release_unavailable');
+          if (!assignment.answersRevealedAt) {
+            assignment.answersRevealedAt = at;
+            assignment.answersRevealedBy = em.getReference(User, ownerId);
+          }
+        }
         await em.flush();
         return detail(em, assignment);
       });

@@ -117,7 +117,7 @@ test('metadata-only edits retain failed input and omit item replacement, then pu
   await screen.findByRole('heading', { name: 'Saved assignment' });
   expect(screen.getByLabelText('Assignment title')).toBeDisabled();
   expect(screen.getByLabelText('Assessment mode')).toBeDisabled();
-  expect(screen.getByLabelText('Solution access')).toBeDisabled();
+  expect(screen.getByLabelText('Answer reveal')).toBeDisabled();
   expect(screen.queryByRole('button', { name: 'Publish assignment' })).not.toBeInTheDocument();
 });
 
@@ -146,7 +146,7 @@ test('creates a class-scoped empty draft, preserves solution policy, and disable
   const user = userEvent.setup();
   render(<ClassAssignments classId={classId} />);
   await user.type(screen.getByLabelText('Assignment title'), 'Empty draft');
-  await user.selectOptions(screen.getByLabelText('Solution access'), 'after_submission');
+  await user.selectOptions(screen.getByLabelText('Answer reveal'), 'after_submission');
   vi.mocked(api.createAssignment).mockResolvedValue({
     ...assignment,
     title: 'Empty draft',
@@ -181,7 +181,7 @@ test('archive and restore retain publication locks and immutable item content', 
   await screen.findByRole('button', { name: 'Archive assignment' });
   expect(screen.getByLabelText('Assignment title')).toBeDisabled();
   expect(screen.getByLabelText('Assessment mode')).toBeDisabled();
-  expect(screen.getByLabelText('Solution access')).toBeDisabled();
+  expect(screen.getByLabelText('Answer reveal')).toBeDisabled();
   expect(screen.getByText('Read this snapshot')).toBeInTheDocument();
 });
 
@@ -232,13 +232,13 @@ test('assignment pagination stops at the last page and filter changes ignore lat
 test('mode changes preserve failed input and enable publication after saving valid policies', async () => {
   const user = await openDraft();
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
-  await user.selectOptions(screen.getByLabelText('Solution access'), 'anytime');
+  await user.selectOptions(screen.getByLabelText('Answer reveal'), 'anytime');
   expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();
   vi.mocked(api.updateAssignment).mockRejectedValueOnce(new Error('Save unavailable'));
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Save unavailable');
   expect(screen.getByLabelText('Assessment mode')).toHaveValue('completion_only');
-  expect(screen.getByLabelText('Solution access')).toHaveValue('anytime');
+  expect(screen.getByLabelText('Answer reveal')).toHaveValue('anytime');
   vi.mocked(api.updateAssignment).mockResolvedValue({
     ...assignment,
     assessmentMode: 'completion_only',
@@ -251,7 +251,7 @@ test('mode changes preserve failed input and enable publication after saving val
     assignment.id,
     expect.objectContaining({
       assessmentMode: 'completion_only',
-      feedbackTiming: 'on_check',
+      feedbackTiming: 'on_submission',
       solutionAccess: 'anytime',
     }),
     expect.any(AbortSignal),
@@ -430,4 +430,36 @@ test('the problem-library link retains the demo namespace', async () => {
     'href',
     '/demo/library',
   );
+});
+
+test('release failure retains the selected assignment and successful retry updates only its own release state', async () => {
+  const published = {
+    ...assignment,
+    publishedAt: time,
+    gradeReleaseTiming: 'instructor_release' as const,
+    solutionAccess: 'instructor_release' as const,
+    gradesReleasedAt: null,
+    answersRevealedAt: null,
+  };
+  vi.mocked(api.getAssignment).mockResolvedValue(published);
+  vi.mocked(api.assignmentAction)
+    .mockRejectedValueOnce(new Error('Release unavailable'))
+    .mockResolvedValueOnce({ ...published, gradesReleasedAt: time });
+  const user = await openDraft();
+  await user.click(screen.getByRole('button', { name: 'Release grades' }));
+  expect(api.assignmentAction).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Confirm grade release' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Release unavailable');
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Homework');
+  await user.click(screen.getByRole('button', { name: 'Confirm grade release' }));
+  expect(
+    await screen.findByText('Grades released. Answer access is unchanged.'),
+  ).toBeInTheDocument();
+  expect(api.assignmentAction).toHaveBeenLastCalledWith(
+    assignment.id,
+    'release-grades',
+    expect.any(AbortSignal),
+  );
+  expect(screen.queryByRole('button', { name: 'Release grades' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Reveal answers' })).toBeEnabled();
 });

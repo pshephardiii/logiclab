@@ -65,7 +65,70 @@ test.each(['publishedAt', 'archivedAt'] as const)(
     expect(screen.getByLabelText('Feedback timing')).toHaveValue('immediate');
     expect(screen.getByLabelText('Feedback timing')).toBeDisabled();
     expect(screen.getByLabelText('Assessment mode')).toBeDisabled();
-    expect(screen.getByLabelText('Solution access')).toBeDisabled();
+    expect(screen.getByLabelText('Answer reveal')).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Save assignment draft' })).not.toBeInTheDocument();
   },
 );
+
+test('grade timing and answer access save independently, retain failed edits and reset grade timing for completion', async () => {
+  const user = userEvent.setup();
+  const onSave = vi.fn().mockResolvedValue(false);
+  const onDirty = vi.fn();
+  render(
+    <AssignmentForm
+      assignment={{ ...assignment, assessmentMode: 'graded', feedbackTiming: 'on_submission' }}
+      busy={false}
+      onSave={onSave}
+      onDirty={onDirty}
+    />,
+  );
+  await user.selectOptions(screen.getByLabelText('Grade release'), 'instructor_release');
+  expect(screen.getByLabelText('Answer reveal')).toHaveValue('never');
+  await user.selectOptions(screen.getByLabelText('Answer reveal'), 'instructor_release');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      gradeReleaseTiming: 'instructor_release',
+      solutionAccess: 'instructor_release',
+    }),
+    false,
+  );
+  expect(screen.getByLabelText('Grade release')).toHaveValue('instructor_release');
+  await waitFor(() => expect(onDirty).toHaveBeenLastCalledWith(true));
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  expect(screen.queryByLabelText('Grade release')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Feedback timing')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Answer reveal')).toHaveValue('instructor_release');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      gradeReleaseTiming: 'on_submission',
+      solutionAccess: 'instructor_release',
+    }),
+    false,
+  );
+});
+
+test('published work locks independent grade and answer policies', () => {
+  render(
+    <AssignmentForm
+      assignment={{
+        ...assignment,
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+        gradeReleaseTiming: 'instructor_release',
+        solutionAccess: 'instructor_release',
+        publishedAt: assignment.createdAt,
+      }}
+      busy={false}
+      onSave={vi.fn()}
+      onDirty={vi.fn()}
+    />,
+  );
+  expect(screen.getByLabelText('Grade release')).toHaveValue('instructor_release');
+  expect(screen.getByLabelText('Grade release')).toBeDisabled();
+  expect(screen.getByLabelText('Answer reveal')).toHaveValue('instructor_release');
+  expect(screen.getByLabelText('Answer reveal')).toBeDisabled();
+});

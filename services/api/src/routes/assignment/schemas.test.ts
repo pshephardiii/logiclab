@@ -57,3 +57,35 @@ test('immediate timing is accepted for practice and completion authoring', () =>
     feedbackTiming: 'immediate',
   });
 });
+
+test('grade and answer policies are independent and release metadata cannot be authored', () => {
+  expect(
+    createAssignmentRequestSchema.safeParse({
+      title: 'Delayed grades',
+      gradeReleaseTiming: 'instructor_release',
+      solutionAccess: 'never',
+    }).success,
+  ).toBe(true);
+  expect(
+    createAssignmentRequestSchema.safeParse({
+      title: 'Delayed answers',
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      solutionAccess: 'instructor_release',
+    }).success,
+  ).toBe(true);
+  expect(
+    createAssignmentRequestSchema.safeParse({
+      title: 'Invalid grades',
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      gradeReleaseTiming: 'instructor_release',
+    }).success,
+  ).toBe(false);
+  for (const patch of [
+    { gradesReleasedAt: '2026-10-29T12:00:00Z' },
+    { answersRevealedAt: '2026-10-29T12:00:00Z' },
+  ]) {
+    expect(updateAssignmentRequestSchema.safeParse(patch).success).toBe(false);
+  }
+});

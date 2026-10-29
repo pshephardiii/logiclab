@@ -234,6 +234,14 @@ A new migration narrows the immutable-version/submitted-attempt guards with a de
 
 ## Assignment learning-mode extension
 
-Assignments now persist assessmentMode (graded/completion_only/ungraded_practice), feedbackTiming (on_submission/on_check) and solutionAccess (never/after_submission/anytime). Database checks enforce valid feedback pairs and forbid practice with after_submission. The former allowSolutions column was backfilled and removed; historical descriptions above refer to the initial assignment foundation.
+### Independent grade release and answer reveal (`015`, persistence slice)
+
+Assignments now have `gradeReleaseTiming` (`on_submission` or `instructor_release`) plus separate `gradesReleasedAt` / `gradesReleasedBy` and `answersRevealedAt` / `answersRevealedBy` fields. Actor relations restrict user deletion while referenced. Each release requires both its timestamp and actor, a published assignment, and its corresponding instructor-controlled policy. Grade release is restricted to graded work; completion-only confirms completion immediately and only exposes answer-reveal controls. Non-graded rows retain an inert `on_submission` grade-timing default.
+
+The database additionally permits `solutionAccess: instructor_release` for graded/completion-only assignments, and submission-time completion alongside existing completion checking policies. The additive migration preserves existing policies, result snapshots and visibility; no historic result or release timestamp is fabricated. Rollback refuses new policies or retained release history rather than silently dropping their meaning. The schema snapshot changes only the assignment table.
+
+Slice 3 enables these policies in API authoring and independent release actions, with student result withholding and separate answer gating. Browser controls follow in the UI slice. See [release plan and compatibility](instructor-results-release.md).
+
+Before the release extension, learning modes introduced assessmentMode (graded/completion_only/ungraded_practice), feedbackTiming (on_submission/on_check, later immediate) and solutionAccess (never/after_submission/anytime). Database checks enforce valid feedback pairs and prohibit submission-dependent solutions for practice. The former allowSolutions column was backfilled and removed; historical descriptions above refer to the initial assignment foundation.
 
 Final attempt JSON supports retained truth_table_v1 correctness snapshots and score-free completion_v1 cell counts. Practice has no final result and its saved answers stay outside instructor review. Existing immutability and demo-only retention exceptions continue to apply. See [learning modes](assignment-learning-modes.md) for current behavior and rollback constraints.

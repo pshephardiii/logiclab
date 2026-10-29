@@ -1,3 +1,4 @@
+import { AssignmentReleaseControls } from './AssignmentReleaseControls';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useAccountPath } from '../../../routing/hooks/useAccountPath';
@@ -190,6 +191,14 @@ export function ClassAssignments({ classId }: Props) {
                   </button>
                 </div>
               </section>
+            )}
+            {state.selected && (
+              <AssignmentReleaseControls
+                key={`${state.selected.id}:${state.selected.gradesReleasedAt}:${state.selected.answersRevealedAt}`}
+                assignment={state.selected}
+                busy={state.busy}
+                onRelease={state.act}
+              />
             )}
             {state.selected?.publishedAt &&
               state.selected.assessmentMode !== 'ungraded_practice' && (

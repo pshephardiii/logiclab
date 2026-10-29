@@ -1,3 +1,4 @@
+import { registerAssignmentReleasePersistenceTests } from './assignment-release-persistence.ts';
 import { registerAssignmentLearningPersistenceTests } from './assignment-learning-persistence.ts';
 import { registerDemoIdentityPersistenceTests } from './demo-identity-persistence.ts';
 import { registerDemoWorkspacePersistenceTests } from './demo-workspace-persistence.ts';
@@ -1155,3 +1156,5 @@ registerDemoWorkspacePersistenceTests(orm);
 registerDemoIdentityPersistenceTests(orm);
 
 registerAssignmentLearningPersistenceTests(orm);
+
+registerAssignmentReleasePersistenceTests(orm);

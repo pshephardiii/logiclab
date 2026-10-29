@@ -17,4 +17,11 @@ export enum SolutionAccess {
   Never = 'never',
   AfterSubmission = 'after_submission',
   Anytime = 'anytime',
+  InstructorRelease = 'instructor_release',
+}
+
+/** Only graded work exposes this control; other modes retain the inert submission default. */
+export enum GradeReleaseTiming {
+  OnSubmission = 'on_submission',
+  InstructorRelease = 'instructor_release',
 }

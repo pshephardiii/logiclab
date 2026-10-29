@@ -26,6 +26,10 @@ export const assignmentSummary = summary;
 export function assignmentFixture() {
   const auth = authFixture();
   const assignments = {
+    release: jest.fn<
+      ReturnType<AssignmentStore['release']>,
+      Parameters<AssignmentStore['release']>
+    >(async () => assignment),
     listSubmissions: jest.fn<
       ReturnType<AssignmentStore['listSubmissions']>,
       Parameters<AssignmentStore['listSubmissions']>

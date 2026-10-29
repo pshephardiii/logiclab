@@ -70,6 +70,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Independent grade release and answer reveal](verification/instructor-results-release-verification.md)
+
 - [Duplicate assignment](verification/duplicate-assignment-verification.md)
 
 - [Unsaved work protection](verification/unsaved-work-protection-verification.md)

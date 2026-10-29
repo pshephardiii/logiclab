@@ -8,7 +8,7 @@ This is an executable test plan, not evidence that these checks passed. All case
 
 ### Current branch completion scope — October 28
 
-The user closed this focused pass after investigating billing and normal-account authentication. Perform final automated verification and prepare PR notes; resume full manual QA after the remaining intended MVP features. Other unexecuted cases stay Not run or explicitly deferred; do not claim exhaustive QA or infer passes from earlier focused checks. The user confirmed that selecting the intended application database resolved the latest auth issue; this is not a pass for every AUTH substep. Cosmetic refinements belong to the planned UI/UX audit and structural work to the code audit. Full QA and the instructor-results-release feature remain prerequisites before initial deployment, including the public demo.
+The user closed this focused pass after investigating billing and normal-account authentication. Perform final automated verification and prepare PR notes; resume full manual QA after the remaining intended MVP features. Other unexecuted cases stay Not run or explicitly deferred; do not claim exhaustive QA or infer passes from earlier focused checks. The user confirmed that selecting the intended application database resolved the latest auth issue; this is not a pass for every AUTH substep. Cosmetic refinements belong to the planned UI/UX audit and structural work to the code audit. The October 29 release target is a portfolio sandbox after the intended MVP features and UI/visual audit. Verify core journeys and important data/access boundaries proportionally; the entire contingency matrix is a deferred reference, not an initial sandbox gate.
 
 1. Complete setup and record the commit being tested.
 2. Work through the sections in order. Keep the same demo workspace unless a case explicitly asks for a new one or reset.
@@ -173,15 +173,15 @@ For an invalid formula such as `P &`, verify Save draft displays the specific pa
 
 When opening or reloading an existing assignment, check that the detail area retains its space during loading and scrolls into view after success. Reduced-motion settings should skip animation. Failed reads and choosing Stay on an unsaved-work prompt must not initiate a reveal; retry remains available (QA-015).
 
-Create the following saved assignments in the funded class. For each row: choose **New assignment**, set title/mode/timing/solution access, choose `<run-id> Library`, click **Add version 1**, Save assignment draft, then Publish assignment. Wait for each request to finish. Do not copy values from the latest mutable library draft.
+Create the following saved assignments in the funded class. For each row: choose **New assignment**, set title/mode/grade release or practice feedback/answer reveal, choose `<run-id> Library`, click **Add version 1**, Save assignment draft, then Publish assignment. Wait for each request to finish. Do not copy values from the latest mutable library draft.
 
-| Fixture title suffix | Assessment        | Feedback                            | Solutions              | Purpose                              |
-| -------------------- | ----------------- | ----------------------------------- | ---------------------- | ------------------------------------ |
-| Graded               | Graded            | On final submission                 | After final submission | Scoring and retained results         |
-| Completion           | Completion only   | On explicit Check answers           | After final submission | Full-cell completion without score   |
-| Practice             | Ungraded practice | On explicit Check answers           | Anytime                | Private repeatable practice          |
-| Immediate            | Ungraded practice | Immediately after an answer changes | Never                  | Automatic feedback without solutions |
-| Anytime graded       | Graded            | On final submission                 | Anytime                | Independent solution release         |
+| Fixture title suffix | Assessment        | Grade release / practice feedback                       | Answer reveal          | Purpose                              |
+| -------------------- | ----------------- | ------------------------------------------------------- | ---------------------- | ------------------------------------ |
+| Graded               | Graded            | Grade release: At submission                            | After final submission | Scoring and retained results         |
+| Completion           | Completion only   | Completion acknowledged at submission; no grade control | After final submission | Full-cell completion without score   |
+| Practice             | Ungraded practice | On explicit Check answers                               | Anytime                | Private repeatable practice          |
+| Immediate            | Ungraded practice | Immediately after an answer changes                     | Never                  | Automatic feedback without solutions |
+| Anytime graded       | Graded            | Grade release: At submission                            | Anytime                | Independent answer reveal            |
 
 Record actual titles with the run ID. Five publications/creations fit the default mutation buckets, but long QA runs can hit **10 requests per route/IP per 15 minutes**. A 429 is expected throttling: note it and allow the window to expire before continuing dependent cases. Do not repeatedly click or silently change limits to force a pass.
 
@@ -189,13 +189,13 @@ Record actual titles with the run ID. Five publications/creations fit the defaul
 
 1. Create a separate `<run-id> Empty` assignment without problems and save it.
 2. Try to publish it.
-3. Change from Graded to Completion only; choose immediate timing and after-submission solutions.
+3. Change from Graded to Completion only; verify there is no grade-release control and choose after-submission answer reveal.
 4. Change to Ungraded practice, then back to Graded. Inspect timing and solution choices without saving invalid combinations.
-5. While Graded is selected, inspect the help for Feedback timing and try Never / After final submission / Anytime solution access. Verify the copy distinguishes correctness/score from revealing actual answers and explains that Anytime can show answers before submission.
+5. While Graded is selected, inspect Grade release and try Never / After final submission / When I reveal answers / Anytime answer reveal. Verify the copy distinguishes correctness/score from revealing actual answers and explains that Anytime can show answers before submission.
 6. Find Open problem library near Add published problems, even with existing library content. With unsaved edits, follow it and choose Stay; confirm edits remain. After saving, follow it and verify the destination stays in the demo flow. Return to authoring.
 7. Save a valid empty draft.
 
-**Expected:** empty drafts save but cannot publish. Practice cannot select after-submission solutions; the replacement is announced. Immediate timing survives transitions between non-graded modes. Graded resets to submission-only. Invalid combined policies are not persisted.
+**Expected:** empty drafts save but cannot publish. Practice cannot select after-submission or instructor-controlled answers; the replacement is announced. New completion selections use submission acknowledgement, while legacy completion assistance is retained on saved assignments. Graded exposes grade release separately from answer reveal. Invalid combined policies are not persisted.
 
 ### ASN-02 — Repeated occurrences and saved snapshots
 
@@ -214,6 +214,21 @@ Record actual titles with the run ID. Five publications/creations fit the defaul
 3. Confirm its original publication date and content remain fixed. Leave it active for student tests.
 
 **Expected:** published content/policy is read-only. Restore does not unlock or republish it. Archived assignments disappear from active student work; restored published work becomes visible again to enrolled students.
+
+### ASN-04 — Independent grade release and answer reveal
+
+1. As instructor in A, create `<run-id> Delayed` with Graded, Grade release **When I release grades**, Answer reveal **When I reveal answers**, and one published problem. Save and publish.
+2. Switch to student in A, open that assignment, save any entries, confirm and submit. Verify receipt and **Submitted — awaiting grade release**, with no grade summary or solution button.
+3. Switch back to instructor, reopen the assignment, click **Reveal answers**, then **Cancel release**. Verify no release occurs.
+4. Click **Reveal answers** and **Confirm answer reveal**. Verify the answer timestamp appears and **Release grades** remains available.
+5. Switch to student and reopen the assignment. Verify grades are still pending and **Show assigned solution** now works.
+6. Switch to instructor, reopen it, click **Release grades** and **Confirm grade release**. Switch to student and reopen it: verify the frozen grade is visible and answers remain available.
+7. Repeat with another graded fixture, releasing grades first. Verify grades become visible while answers stay locked until their separate reveal action.
+8. Create a Completion only fixture with **When I reveal answers**. Verify no grade-release authoring control. Save, publish, fill/save every answer as student and submit.
+9. Verify immediate score-free completion, no pending-grade message and no solution access yet. As instructor, verify only **Reveal answers** is offered. Reveal and recheck student access.
+10. With a released assignment selected, archive and restore it; verify timestamps remain. Duplicate as draft; verify both release histories are cleared and policies retained.
+
+**Expected:** each action is independent, explicit, assignment-wide and irreversible. Releasing before all students submit is permitted; later submissions follow the released grade policy. Graded correctness may reveal binary answers by inference even while the explicit answer key is locked. A refresh failure must retain a recoverable path; retry/reload must not perform the other release action. These steps are a reference for the later focused QA pass, not a claim they were manually executed by the user.
 
 ## 7. Student work and instructor review
 
@@ -251,7 +266,7 @@ Switch A to student. Select the funded class. All fixture tables here use versio
 1. Switch to student, open Completion, and leave at least one answer blank.
 2. Save; try to enable final confirmation/submission.
 3. Fill every answer cell with F, intentionally making the TT answer incorrect; save every edited problem.
-4. Check answers before finalizing; then confirm and submit.
+4. Verify the new completion fixture has no Check answers control; confirm and submit. Legacy saved checking policies remain a separate compatibility case.
 5. Reload and inspect the instructor's review after switching roles.
 
 **Expected:** any blank blocks completion finalization. Fully filled but incorrect work can complete. Final result shows completed/total cells with no correctness score or grading feedback, and remains frozen. After-submission solutions unlock; instructor review also stays score-free.

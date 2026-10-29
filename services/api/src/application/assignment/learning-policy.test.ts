@@ -33,7 +33,6 @@ test.each([
 
 test.each([
   ['graded', 'on_check', 'never'],
-  ['completion_only', 'on_submission', 'never'],
   ['ungraded_practice', 'on_submission', 'never'],
   ['ungraded_practice', 'on_check', 'after_submission'],
   ['graded', 'immediate', 'never'],

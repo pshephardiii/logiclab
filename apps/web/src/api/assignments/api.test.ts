@@ -35,3 +35,21 @@ test('an invalid success response is rejected without automatically creating ano
   ).rejects.toThrow();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+test.each(['normal', 'demo'] as const)(
+  'independent release actions use the %s resource namespace',
+  async (scope) => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: async () => ({ assignment: copy }) });
+    vi.stubGlobal('fetch', fetch);
+    const client = createApi(createResourceRequest(scope));
+    for (const action of ['release-grades', 'reveal-answers'] as const) {
+      await client.assignmentAction(work.id, action, new AbortController().signal);
+      expect(fetch).toHaveBeenLastCalledWith(
+        `${scope === 'demo' ? '/api/demo/resources' : '/api'}/assignments/${work.id}/${action}`,
+        expect.objectContaining({ method: 'POST', body: '{}', credentials: 'same-origin' }),
+      );
+    }
+  },
+);

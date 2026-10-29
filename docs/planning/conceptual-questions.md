@@ -2,7 +2,7 @@
 
 Status: agreed near-term feature direction, recorded during QA on October 27, 2026. Implement on a separate feature branch after the current QA work, before undertaking derivations. No implementation starts in the QA branch. Keep the audit/deployment follow-ups visible; decide the exact ordering when QA closes.
 
-Provisional branch: `017-feat-conceptual-questions`, following the currently planned 015 audit / 016 deployment numbers. Confirm the next unused number against branch/PR history when starting; this note does not create or start a branch.
+Provisional branch: `017-feat-conceptual-questions`, after results release (`015`) and proposed biconditional support (`016`), before the UI/visual audit and initial sandbox deployment. Confirm the next unused number against branch/PR history when starting; this note does not create or start a branch.
 
 ## Teaching goal and initial scope
 

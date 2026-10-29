@@ -1,18 +1,20 @@
 # Instructor assignment API
 
-This slice implements instructor authoring and publication only. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Enrollment-scoped student reads, saved attempts, final submission, and feedback/solution enforcement are implemented in the [student-work API](student-work-api.md); student completion UI is available at `/work`. Publishing records the locked assignment and makes it eligible for the separate enrollment-scoped student endpoints.
+This API implements instructor authoring, publication and independent grade/answer release. All routes require an instructor session and ownership through the assignment's classroom. Instructor pages are available at `/assignments`. Enrollment-scoped student reads, saved attempts, final submission, and feedback/solution enforcement are implemented in the [student-work API](student-work-api.md); student completion UI is available at `/work`. Publishing records the locked assignment and makes it eligible for the separate enrollment-scoped student endpoints.
 
 Authorization runs before request-field validation and reuses the authenticated user within the request. Foreign and missing classrooms/assignments both return 404. Mutations require the configured exact `Origin`; responses use `Cache-Control: no-store`. Shared account-route rate limits and cookie handling apply.
 
-| Method | Path                                     | Behavior                                                            |
-| ------ | ---------------------------------------- | ------------------------------------------------------------------- |
-| POST   | `/api/classes/:classId/assignments`      | Create a draft; return 201 with `{ assignment }`                    |
-| GET    | `/api/classes/:classId/assignments`      | List owned-class summaries; return `{ assignments, nextOffset }`    |
-| GET    | `/api/assignments/:assignmentId`         | Read owned details, ordered items, and pinned publication snapshots |
-| PATCH  | `/api/assignments/:assignmentId`         | Edit supplied fields of an active, unpublished draft                |
-| POST   | `/api/assignments/:assignmentId/publish` | Publish nonempty content; return `{ assignment }`                   |
-| POST   | `/api/assignments/:assignmentId/archive` | Archive a draft or publication; retain all content                  |
-| POST   | `/api/assignments/:assignmentId/restore` | Restore listing visibility; published content remains locked        |
+| Method | Path                                            | Behavior                                                                           |
+| ------ | ----------------------------------------------- | ---------------------------------------------------------------------------------- |
+| POST   | `/api/classes/:classId/assignments`             | Create a draft; return 201 with `{ assignment }`                                   |
+| GET    | `/api/classes/:classId/assignments`             | List owned-class summaries; return `{ assignments, nextOffset }`                   |
+| GET    | `/api/assignments/:assignmentId`                | Read owned details, ordered items, and pinned publication snapshots                |
+| PATCH  | `/api/assignments/:assignmentId`                | Edit supplied fields of an active, unpublished draft                               |
+| POST   | `/api/assignments/:assignmentId/release-grades` | Release grades for a published graded assignment with instructor-controlled timing |
+| POST   | `/api/assignments/:assignmentId/reveal-answers` | Independently reveal answers under instructor-controlled solution access           |
+| POST   | `/api/assignments/:assignmentId/publish`        | Publish nonempty content; return `{ assignment }`                                  |
+| POST   | `/api/assignments/:assignmentId/archive`        | Archive a draft or publication; retain all content                                 |
+| POST   | `/api/assignments/:assignmentId/restore`        | Restore listing visibility; published content remains locked                       |
 
 ## Authored fields
 
@@ -27,7 +29,7 @@ Authorization runs before request-field validation and reuses the authenticated 
 }
 ```
 
-Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to an empty item list, graded assessment, feedback on submission, and solution access off. Drafts support graded/on_submission, completion_only/on_check, and ungraded_practice/on_check. Solution access is never, after_submission, or anytime; practice rejects after_submission. Immediate input feedback remains deferred. Unknown fields, client-supplied ownership/classroom changes, invalid IDs, and unsupported policy values are rejected.
+Titles are trimmed, required, and limited to 120 characters. Instructions are optional, trimmed, nullable, and limited to 5,000 characters; null clears them. Creation defaults to empty items, graded/on_submission, submission-time grade release and no solutions. Graded work requires on_submission feedback; completion-only permits on_submission and retained on_check/immediate assistance, while ungraded practice permits on_check/immediate. Solution access is never, after_submission, anytime or instructor_release; practice permits only never/anytime. Unknown fields, supplied ownership/class changes and invalid policies are rejected.
 
 `problemVersionIds` holds up to 50 published version UUIDs belonging to the same instructor. Draft problem IDs are not accepted as publication references. Archived library problems' retained publications may still be selected. Repeated versions are allowed: each ordered occurrence has its own item ID and a positive position starting at one.
 
@@ -105,3 +107,15 @@ The operation copies saved title/instructions, learning policy and ordered pinne
 Creating the copy needs no class coverage; later publication still enforces the ordinary coverage/content checks. Client-supplied target class, title, owner or item overrides are rejected. Every successful request creates another draft: no idempotency key or automatic retry is provided. After an uncertain response, inspect/reload the assignment list before deliberately trying again.
 
 The instructor editor exposes Duplicate as draft for saved assignments. Dirty source edits require confirmation and are not copied. Success opens the returned draft; failure preserves local edits and advises inspecting Active or All assignments before retrying. A list-refresh failure retains a confirmed copy and does not repeat the POST. Normal/demo frontend clients share the response contract and explicit resource scope. No migration is required.
+
+## Independent grade release and answer reveal
+
+`gradeReleaseTiming` is `on_submission` (default when omitted on creation) or `instructor_release`. Only graded work can use instructor-controlled grade timing. Completion-only has no grade-release control; completion is acknowledged on submission. PATCH omission preserves the stored timing; a change of mode must include a compatible grade timing when necessary.
+
+`solutionAccess: instructor_release` enables a separate answer-reveal action for graded or completion-only work. It does not depend on submission or grade release. Existing never/after_submission/anytime policies retain their meanings. Graded per-cell correctness can reveal binary answers by inference after grades are released, even when the explicit answer key remains locked.
+
+Both POST actions accept `{}` and return `{ assignment }`. Responses include `gradeReleaseTiming`, nullable `gradesReleasedAt` and nullable `answersRevealedAt`; actor identities are retained in the database rather than included in these views. Response contracts allow these additive fields to be absent for older response compatibility; current database-backed responses supply them. Client-authored release timestamps/actors are rejected.
+
+Actions require ownership, a published non-archived assignment and the matching manual policy. Unsupported actions return 409 `ASSIGNMENT_RELEASE_UNAVAILABLE`; archived work returns 409 `ASSIGNMENT_ARCHIVED`, and foreign/missing assignments return 404. Repeats preserve the first timestamp and actor. No payment coverage is required to release existing published work. Independent actions serialize on the assignment lock alongside submission/read locks, edits and archive changes. Release is assignment-wide, including future late submissions; no automatic release or revocation action exists. Archive/restore preserves release state. Duplication copies policies into a new draft and clears both release histories.
+
+The same actions are available under `/api/demo/resources/assignments/:assignmentId/` with workspace-scoped authorization and transaction commit before success. The instructor editor exposes independent Grade release and Answer reveal policies; published work provides separately confirmed release actions. Completion-only has only answer controls.

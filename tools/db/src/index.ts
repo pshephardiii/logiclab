@@ -26,7 +26,12 @@ export { AssignmentItem } from './entities/AssignmentItem.ts';
 
 export type { AssignmentFields } from './types/assignment/fields.ts';
 
-export { AssessmentMode, FeedbackTiming, SolutionAccess } from './types/assignment/enums.ts';
+export {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+  GradeReleaseTiming,
+} from './types/assignment/enums.ts';
 
 export { ProblemType } from './types/problem/enums.ts';
 export type { UserFields } from './types/user/fields.ts';
