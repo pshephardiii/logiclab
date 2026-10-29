@@ -12,6 +12,11 @@ export class StudentWorkRouteError extends Error {
   }
 }
 const failures = {
+  invalid_answer: {
+    status: 400,
+    code: 'INVALID_ANSWER',
+    message: 'The answer must match the assigned question and its available options.',
+  },
   incomplete_work: {
     status: 409,
     code: 'ATTEMPT_INCOMPLETE',

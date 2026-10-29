@@ -6,6 +6,7 @@ export type StudentWorkFailure =
   | 'revision_conflict'
   | 'submitted'
   | 'solution_locked'
+  | 'invalid_answer'
   | 'invalid_cell'
   | 'duplicate_cell'
   | 'unsupported_policy';

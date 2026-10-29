@@ -55,6 +55,12 @@ export type {
   AttemptAnswers,
   SubmissionResult,
 } from './types/assignment-attempt/work.ts';
+export type {
+  ConceptualResponse,
+  AssignmentResponses,
+  MixedGradedSubmissionResult,
+  MixedCompletionSubmissionResult,
+} from './types/assignment-attempt/mixed-work.ts';
 
 export { ClassPurchase } from './entities/ClassPurchase.ts';
 export type { ClassPurchaseFields } from './types/class-purchase/fields.ts';
