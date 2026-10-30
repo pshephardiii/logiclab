@@ -297,3 +297,7 @@ The user chose to design propositional derivations before deployment. [Logical d
 ## Assignment scoring foundation (019)
 
 `019-feat-assignment-scoring` adds instructor-controlled problem allocations, frozen graded point snapshots and weighted totals, authoring/display controls and weighted demo template 5. Practice/completion remain score-free, grade release gates points independently of answer reveal, and pending review is distinct from zero. Existing pre-launch unscored finals require disposable-data reset rather than silent regrading. See [scoring policy](assignment-scoring.md) and [verification](../verification/assignment-scoring-verification.md). Next planned branch: `020-feat-propositional-proof-checker`; begin by agreeing the precise rule catalog and structural semantics. No proof editor, live proof submissions or instructor grade adjustments are enabled by 019.
+
+## Proof-checker foundation (020, first slice)
+
+The user confirmed classical propositional natural deduction with individually selectable classical rules. The [proof-checker specification](propositional-proof-checker.md) proposes exact initial variants and Fitch conventions for review. The engine now exposes an immutable versioned catalog and structural equality through `@logiclab/logic-engine/proof`, keeping existing truth-table imports separate. No proof validator, contradiction parser, transport schema, live derivation assignment or grading operation is enabled. Next slices define bounded proof/report contracts and implement the agreed rule/scope checks.

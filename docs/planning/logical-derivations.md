@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: planning on `018-docs-derivation-planning`. This document records the discussion and will evolve before implementation. The user has accepted the provisional branch sequence below as the planning direction. No derivation code, final rule catalog or proof schema is authorized by this document alone; implementation branches are not created or started here.
+Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring branch 019 is complete and proof-checker branch 020 has started. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for the confirmed classical direction and concrete catalog variants under review. Future authoring/student/review branches are not started by this document.
 
 ## Product direction and scope
 
@@ -158,6 +158,8 @@ Small slices:
 This branch should be useful for existing exercise types without requiring derivation UI. If compatibility and authoring prove too large for one branch, split before implementation and allocate a fresh number rather than dropping those requirements.
 
 ### 020: proof checker foundation
+
+First slice declares a versioned, separately selectable classical rule catalog and structural equality for existing formulas. The user confirmed classical natural deduction with independent classical-rule permissions. The [concrete rule/convention document](propositional-proof-checker.md) specifies exact variants for review; no proof-checking endpoint, contradiction parser or live proof workflow is enabled yet.
 
 Small slices:
 
