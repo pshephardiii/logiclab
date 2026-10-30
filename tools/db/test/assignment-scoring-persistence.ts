@@ -5,7 +5,6 @@ import {
   Assignment,
   AssignmentItem,
   AssignmentAttempt,
-  AssignmentScoringVersion,
   User,
   UserRole,
   Classroom,
@@ -16,7 +15,7 @@ import {
   type AssignmentScore,
   type createDatabase,
 } from '../src/index.ts';
-import { Migration20261029160000 } from '../src/migrations/Migration20261029160000.ts';
+import { Migration20261030120000 } from '../src/migrations/Migration20261030120000.ts';
 
 export function registerAssignmentScoringPersistenceTests(
   orm: Awaited<ReturnType<typeof createDatabase>>,
@@ -77,35 +76,22 @@ export function registerAssignmentScoringPersistenceTests(
     }
   }
   async function migration(em: typeof orm.em, direction: 'up' | 'down') {
-    const change = new Migration20261029160000(orm.driver, orm.config);
+    const change = new Migration20261030120000(orm.driver, orm.config);
     change[direction]();
     for (const sql of change.getQueries()) await em.execute(sql);
   }
 
-  test('nullable scoring fields preserve legacy drafts and final snapshots without defaults', async () =>
+  test('all occurrences default to ten points and unfinished attempts have no score', async () =>
     transaction(async (em) => {
-      const { assignment, first, attempt } = await fixture(em);
-      const answers = { [first.id]: [{ rowId: 'r1', columnId: 'expr:v1:P', value: false }] };
-      await em.nativeUpdate(AssignmentAttempt, attempt.id, {
-        answers,
-        result,
-        submittedAt: new Date(),
-      });
+      const { first, second, attempt } = await fixture(em);
       em.clear();
-      assert.equal((await em.findOneOrFail(Assignment, assignment.id)).scoringVersion, null);
-      assert.equal((await em.findOneOrFail(AssignmentItem, first.id)).maxPoints, null);
-      const retained = await em.findOneOrFail(AssignmentAttempt, attempt.id);
-      assert.equal(retained.score, null);
-      assert.deepEqual(retained.answers, answers);
-      assert.deepEqual(retained.result, result);
+      assert.equal((await em.findOneOrFail(AssignmentItem, first.id)).maxPoints, 10);
+      assert.equal((await em.findOneOrFail(AssignmentItem, second.id)).maxPoints, 10);
+      assert.equal((await em.findOneOrFail(AssignmentAttempt, attempt.id)).score, null);
     }));
-
-  test('point mode and independently weighted repeated occurrences persist with a separate pending score snapshot', async () =>
+  test('repeated occurrences retain independent weights and a separate pending score snapshot', async () =>
     transaction(async (em) => {
-      const { assignment, first, second, attempt } = await fixture(em);
-      await em.nativeUpdate(Assignment, assignment.id, {
-        scoringVersion: AssignmentScoringVersion.PointsV1,
-      });
+      const { first, second, attempt } = await fixture(em);
       await em.nativeUpdate(AssignmentItem, first.id, { maxPoints: 20 });
       await em.nativeUpdate(AssignmentItem, second.id, { maxPoints: 5 });
       const snapshot = score(first.id, second.id);
@@ -115,19 +101,14 @@ export function registerAssignmentScoringPersistenceTests(
         score: snapshot,
       });
       em.clear();
-      assert.equal(
-        (await em.findOneOrFail(Assignment, assignment.id)).scoringVersion,
-        AssignmentScoringVersion.PointsV1,
-      );
       assert.equal((await em.findOneOrFail(AssignmentItem, first.id)).maxPoints, 20);
       assert.equal((await em.findOneOrFail(AssignmentItem, second.id)).maxPoints, 5);
       const retained = await em.findOneOrFail(AssignmentAttempt, attempt.id);
       assert.deepEqual(retained.score, snapshot);
       assert.deepEqual(retained.result, result);
     }));
-
   for (const value of [0, -1, 1001])
-    test(`point allocation constraints reject ${value}`, async () =>
+    test(`allocation constraints reject ${value}`, async () =>
       transaction(async (em) => {
         const { first } = await fixture(em);
         await assert.rejects(
@@ -136,23 +117,22 @@ export function registerAssignmentScoringPersistenceTests(
         );
       }));
   for (const mode of [AssessmentMode.CompletionOnly, AssessmentMode.UngradedPractice])
-    test(`point scoring mode rejects score-free ${mode}`, async () =>
+    test(`score-free ${mode} has no numeric score`, async () =>
       transaction(async (em) => {
-        const { assignment } = await fixture(em);
-        await assert.rejects(
-          em.nativeUpdate(Assignment, assignment.id, {
-            assessmentMode: mode,
-            feedbackTiming: FeedbackTiming.OnCheck,
-            scoringVersion: AssignmentScoringVersion.PointsV1,
-          }),
-          /assignments_scoring_version_check/,
+        const { assignment, attempt } = await fixture(em);
+        await em.nativeUpdate(Assignment, assignment.id, {
+          assessmentMode: mode,
+          feedbackTiming: FeedbackTiming.OnCheck,
+        });
+        assert.equal(
+          (await em.findOneOrFail(AssignmentAttempt, attempt.id, { refresh: true })).score,
+          null,
         );
       }));
   for (const invalid of ['draft', 'completion', 'missing-tag', 'unknown-tag', 'array'] as const)
     test(`score state constraints reject ${invalid}`, async () =>
       transaction(async (em) => {
         const { attempt, first, second } = await fixture(em);
-        const snapshot = score(first.id, second.id);
         const stored =
           invalid === 'missing-tag'
             ? {}
@@ -160,7 +140,7 @@ export function registerAssignmentScoringPersistenceTests(
               ? { scoringVersion: 'future' }
               : invalid === 'array'
                 ? []
-                : snapshot;
+                : score(first.id, second.id);
         await assert.rejects(
           em.execute(
             `
@@ -188,7 +168,6 @@ export function registerAssignmentScoringPersistenceTests(
           /assignment_attempts_score_state_check/,
         );
       }));
-
   test('submitted scoring evidence cannot be changed, removed or deleted', async () => {
     for (const operation of ['replace', 'clear', 'delete'] as const)
       await transaction(async (em) => {
@@ -209,50 +188,44 @@ export function registerAssignmentScoringPersistenceTests(
         );
       });
   });
-
-  test('scoring down/up preserves legacy fields and frozen JSON byte representations', async () =>
+  test('single-model migration down/up preserves already scored snapshots', async () =>
     transaction(async (em) => {
-      const { attempt } = await fixture(em);
-      await em.nativeUpdate(AssignmentAttempt, attempt.id, { submittedAt: new Date(), result });
+      const { attempt, first, second } = await fixture(em);
+      const snapshot = score(first.id, second.id);
+      await em.nativeUpdate(AssignmentAttempt, attempt.id, {
+        submittedAt: new Date(),
+        result,
+        score: snapshot,
+      });
       const read = () =>
-        em.execute(`
-      select a.id, a.title, a.assessment_mode, i.id as item_id, i.position,
-        t.answers::text as answers, t.result::text as result, t.submitted_at
-      from assignments a
-      join assignment_items i on i.assignment_id = a.id
-      join assignment_attempts t on t.assignment_id = a.id
-      order by a.id, i.position
-    `);
+        em.execute(
+          'select answers::text, result::text, score::text, submitted_at from assignment_attempts where id = ?',
+          [attempt.id],
+        );
       const before = await read();
       await migration(em, 'down');
       await migration(em, 'up');
       assert.deepEqual(await read(), before);
-      assert.equal(
-        (
-          await em.execute<{ count: number }[]>(
-            'select count(*)::int as count from assignment_attempts where score is not null',
-          )
-        )[0]!.count,
-        0,
+    }));
+  test('pre-launch migration refuses unscored graded finals rather than regrading them', async () =>
+    transaction(async (em) => {
+      const { attempt } = await fixture(em);
+      await migration(em, 'down');
+      await em.nativeUpdate(AssignmentAttempt, attempt.id, { submittedAt: new Date(), result });
+      await assert.rejects(migration(em, 'up'), /Reset disposable pre-launch data/);
+    }));
+  test('upgrade supplies missing defaults, preserves explicit weights and rejects null allocations', async () =>
+    transaction(async (em) => {
+      const { first, second } = await fixture(em);
+      await migration(em, 'down');
+      await em.execute('update assignment_items set max_points = null where id = ?', [first.id]);
+      await em.nativeUpdate(AssignmentItem, second.id, { maxPoints: 25 });
+      await migration(em, 'up');
+      em.clear();
+      assert.equal((await em.findOneOrFail(AssignmentItem, first.id)).maxPoints, 10);
+      assert.equal((await em.findOneOrFail(AssignmentItem, second.id)).maxPoints, 25);
+      await assert.rejects(
+        em.execute('update assignment_items set max_points = null where id = ?', [first.id]),
       );
     }));
-
-  for (const field of ['mode', 'allocation', 'snapshot'] as const)
-    test(`rollback refuses loss of ${field}`, async () =>
-      transaction(async (em) => {
-        const { assignment, first, second, attempt } = await fixture(em);
-        if (field === 'mode')
-          await em.nativeUpdate(Assignment, assignment.id, {
-            scoringVersion: AssignmentScoringVersion.PointsV1,
-          });
-        if (field === 'allocation')
-          await em.nativeUpdate(AssignmentItem, first.id, { maxPoints: 10 });
-        if (field === 'snapshot')
-          await em.nativeUpdate(AssignmentAttempt, attempt.id, {
-            submittedAt: new Date(),
-            result,
-            score: score(first.id, second.id),
-          });
-        await assert.rejects(migration(em, 'down'), /Cannot roll back assignment scoring/);
-      }));
 }

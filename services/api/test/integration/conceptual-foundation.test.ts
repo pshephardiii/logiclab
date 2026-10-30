@@ -85,6 +85,7 @@ test('conceptual snapshots project redacted student content and invalid response
     assert.deepEqual(read.assignment.items[0], {
       id: item.id,
       position: 1,
+      maxPoints: 10,
       title: problem.title,
       instructions: null,
       content: { type: 'true_false', definitionVersion: 1, question: definition.question },

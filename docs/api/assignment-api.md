@@ -124,14 +124,13 @@ The same actions are available under `/api/demo/resources/assignments/:assignmen
 
 Ordered items may pin truth-table, true/false or single-answer multiple-choice versions, including repeated occurrences of the same version. The instructor picker and create/update/publication paths now accept all supported definitions. Ownership, nonempty publication, class coverage, archive rules and immutable published policies remain enforced. Draft/key/option edits in the library do not alter assigned snapshots. Each conceptual occurrence is one response unit; table cells retain their existing unit weight. Student responses, mixed final results, completion and release rules are documented in the [student work API](student-work-api.md#conceptual-response-workflows-017-server-integration).
 
-## Opt-in point allocations (`019`, backend slice)
+## Point allocations (`019`)
 
-Existing requests remain legacy. To create graded point-scored work, explicitly send:
+All graded assignments use points. There is no assignment-level `scoringVersion` request field. For explicit weights, create with:
 
 ```json
 {
   "title": "Weighted assignment",
-  "scoringVersion": "points_v1",
   "items": [
     { "problemVersionId": "<published version UUID>", "maxPoints": 20 },
     { "problemVersionId": "<another version UUID>", "maxPoints": 5 }
@@ -139,8 +138,10 @@ Existing requests remain legacy. To create graded point-scored work, explicitly 
 }
 ```
 
-Use whole-point maxima 1–1,000, up to 50 occurrences. Repeated versions are allowed with independent weights/IDs. Alternatively use `problemVersionIds` with explicit point opt-in for 10-point defaults. Do not supply a nonempty legacy list alongside weighted items. Completion-only/private practice do not use point scoring.
+Use whole-point maxima 1–1,000, up to 50 occurrences. Repeated versions have independent IDs/weights. Creating with `problemVersionIds` instead assigns 10 points per occurrence. Do not combine a nonempty version list with weighted items. Completion-only/private practice award no points and reject explicit weighted authoring inputs.
 
-PATCH a legacy draft with `scoringVersion: "points_v1"` to allocate 10 points per existing occurrence. To edit weights without replacing content, send the complete `pointAllocations: [{ itemId, maxPoints }]` set. To replace/reorder point-scored content, send ordered `items`; do not combine it with another item/allocation list. An unchanged legacy `problemVersionIds` list preserves scored occurrences/weights for compatibility; a changed unweighted list is rejected. Explicit `scoringVersion: null` clears draft point allocations; mode changes to score-free work require opt-out. Published/archive locks still apply. Invalid combined state returns 400 `ASSIGNMENT_SCORING_INVALID` without partial changes.
+PATCH `pointAllocations: [{ itemId, maxPoints }]` supplies the complete current occurrence set without replacing content/IDs. Ordered weighted `items` replaces/reorders content with fresh occurrences. Do not combine replacement and allocation forms. An identical `problemVersionIds` list preserves existing IDs/weights; changing a nonempty graded list requires weighted `items` so weights cannot be silently reset. Metadata-only PATCH preserves allocations. Mode changes need no scoring toggle and retain allocation metadata for future graded use.
 
-Point assignment responses include `scoringVersion` and item `maxPoints`. Legacy responses omit those fields. Publication validates the whole allocation set under the assignment lock and retains content/ownership/coverage checks. Duplication retains mode/weights with fresh occurrences and no final work or release state. The next frontend slice supplies point controls; these fields are currently usable through the API.
+Instructor item responses include `maxPoints`; student graded items include it too. Publication validates allocations under the assignment lock and retains ownership/content/coverage checks. Duplication preserves weights with fresh occurrences and clears final work/release state. Published/archive locks apply. Invalid combined state returns 400 `ASSIGNMENT_SCORING_INVALID` without partial changes.
+
+The form carries weights on reorder and defaults new occurrences; dedicated point controls and score summaries remain the next frontend slice. See [scoring policy and rollout](../planning/assignment-scoring.md).

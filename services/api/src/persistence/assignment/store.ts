@@ -58,7 +58,6 @@ export async function createAssignmentStore(
   const transact = transactionRunner(orm, transaction);
   const {
     Assignment,
-    AssignmentScoringVersion,
     User,
     GradeReleaseTiming,
     AssignmentItem,
@@ -131,7 +130,7 @@ export async function createAssignmentStore(
       items: items.map((item) => ({
         id: item.id,
         position: item.position,
-        ...(item.maxPoints != null ? { maxPoints: item.maxPoints } : {}),
+        maxPoints: item.maxPoints,
         problemVersion: publishedProblemVersion(item.problemVersion),
       })),
     };
@@ -171,13 +170,9 @@ export async function createAssignmentStore(
         (input.problemVersionIds?.length ?? 0) > 0)
     )
       throw new AssignmentOperationError('invalid_scoring');
-    const previousMode = assignment.scoringVersion;
-    const nextMode = input.scoringVersion === undefined ? previousMode : input.scoringVersion;
-    if (nextMode && (nextMode !== 'points_v1' || assignment.assessmentMode !== 'graded'))
+    const graded = assignment.assessmentMode === 'graded';
+    if ((input.items !== undefined || input.pointAllocations !== undefined) && !graded)
       throw new AssignmentOperationError('invalid_scoring');
-    if ((input.items !== undefined || input.pointAllocations !== undefined) && !nextMode)
-      throw new AssignmentOperationError('invalid_scoring');
-    assignment.scoringVersion = nextMode ? AssignmentScoringVersion.PointsV1 : undefined;
     let items = await em.find(
       AssignmentItem,
       { assignment: assignment.id },
@@ -195,16 +190,15 @@ export async function createAssignmentStore(
       const same =
         input.problemVersionIds.length === items.length &&
         items.every((item, index) => item.problemVersion.id === input.problemVersionIds![index]);
-      if (previousMode && nextMode && !same) throw new AssignmentOperationError('invalid_scoring');
-      if (!same || !previousMode)
+      if (graded && !same && items.length > 0)
+        throw new AssignmentOperationError('invalid_scoring');
+      if (!same)
         await replaceItems(
           em,
           ownerId,
           assignment,
           input.problemVersionIds,
-          nextMode
-            ? input.problemVersionIds.map(() => ASSIGNMENT_POINT_LIMITS.defaultPoints)
-            : undefined,
+          input.problemVersionIds.map(() => ASSIGNMENT_POINT_LIMITS.defaultPoints),
         );
     }
     await em.flush();
@@ -213,9 +207,6 @@ export async function createAssignmentStore(
       { assignment: assignment.id },
       { orderBy: { position: 'ASC' } },
     );
-    if (!nextMode) for (const item of items) item.maxPoints = undefined;
-    else if (!previousMode)
-      for (const item of items) item.maxPoints ??= ASSIGNMENT_POINT_LIMITS.defaultPoints;
     if (input.pointAllocations !== undefined) {
       const parsed = assignmentPointAllocationsSchema.safeParse(input.pointAllocations);
       if (
@@ -263,7 +254,6 @@ export async function createAssignmentStore(
         em.persist(assignment);
         await em.flush();
         await draftScoring(em, ownerId, assignment, {
-          scoringVersion: input.scoringVersion,
           ...(input.items !== undefined
             ? { items: input.items }
             : { problemVersionIds: input.problemVersionIds }),
@@ -300,7 +290,6 @@ export async function createAssignmentStore(
           instructions: source.instructions,
           ...policyFields(policy),
           gradeReleaseTiming: source.gradeReleaseTiming,
-          scoringVersion: source.scoringVersion,
         });
         em.persist(copy);
         await em.flush();
@@ -309,7 +298,7 @@ export async function createAssignmentStore(
           ownerId,
           copy,
           items.map((item) => item.problemVersion.id),
-          source.scoringVersion ? items.map((item) => item.maxPoints!) : undefined,
+          items.map((item) => item.maxPoints),
         );
         await em.flush();
         return detail(em, copy);

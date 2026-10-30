@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
 import { Entity, Index, Check, ManyToOne, PrimaryKey, Property } from '@mikro-orm/decorators/es';
 import {
-  AssignmentScoringVersion,
   AssessmentMode,
   FeedbackTiming,
   SolutionAccess,
@@ -63,11 +62,6 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
       and published_at is not null and answers_revealed_at >= published_at)
   `,
 })
-@Check({
-  name: 'assignments_scoring_version_check',
-  expression:
-    "scoring_version is null or (scoring_version = 'points_v1' and assessment_mode = 'graded')",
-})
 export class Assignment implements AssignmentFields {
   [OptionalProps]?:
     | 'id'
@@ -101,10 +95,6 @@ export class Assignment implements AssignmentFields {
     default: AssessmentMode.Graded,
   })
   assessmentMode: AssessmentMode = AssessmentMode.Graded;
-
-  /** Null retains legacy grading; active workflows opt in explicitly in a later slice. */
-  @Property({ type: 'string', length: 32, fieldName: 'scoring_version', nullable: true })
-  scoringVersion?: AssignmentScoringVersion;
 
   @Property({
     type: 'string',

@@ -15,10 +15,10 @@ import { ProblemVersion } from './ProblemVersion.ts';
 @Check({ name: 'assignment_items_positive_position', expression: 'position > 0' })
 @Check({
   name: 'assignment_items_max_points_check',
-  expression: 'max_points is null or max_points between 1 and 1000',
+  expression: 'max_points between 1 and 1000',
 })
 export class AssignmentItem implements AssignmentItemFields {
-  [OptionalProps]?: 'id';
+  [OptionalProps]?: 'id' | 'maxPoints';
 
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()', onCreate: () => randomUUID() })
   id: string = randomUUID();
@@ -40,9 +40,9 @@ export class AssignmentItem implements AssignmentItemFields {
   @Property({ type: 'integer' })
   position!: number;
 
-  /** No default/backfill: null is unallocated legacy work, not zero points. */
-  @Property({ type: 'integer', fieldName: 'max_points', nullable: true })
-  maxPoints?: number;
+  /** Each occurrence keeps its allocation; only graded assignments award point scores. */
+  @Property({ type: 'integer', fieldName: 'max_points', default: 10 })
+  maxPoints = 10;
 }
 
 // Keep the readable field reference exact, excluding ORM creation metadata.

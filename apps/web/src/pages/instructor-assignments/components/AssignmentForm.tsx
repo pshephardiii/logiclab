@@ -1,5 +1,9 @@
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
-import { assignmentLearningPolicySchema, createAssignmentRequestSchema } from '@logiclab/contracts';
+import {
+  ASSIGNMENT_POINT_LIMITS,
+  assignmentLearningPolicySchema,
+  createAssignmentRequestSchema,
+} from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
 import type {
   AssignmentDetail,
@@ -30,7 +34,11 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     assignment?.gradeReleaseTiming ?? 'on_submission',
   );
   const [items, setItems] = useState<SelectedProblem[]>(
-    assignment?.items.map((item) => ({ key: item.id, version: item.problemVersion })) ?? [],
+    assignment?.items.map((item) => ({
+      key: item.id,
+      version: item.problemVersion,
+      maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
+    })) ?? [],
   );
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
@@ -72,7 +80,14 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
       createAssignmentRequestSchema.parse({
         title,
         instructions: instructions || null,
-        problemVersionIds: ids,
+        ...(policy.assessmentMode === 'graded'
+          ? {
+              items: items.map((item) => ({
+                problemVersionId: item.version.id,
+                maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
+              })),
+            }
+          : { problemVersionIds: ids }),
         ...policy,
         gradeReleaseTiming,
       }),

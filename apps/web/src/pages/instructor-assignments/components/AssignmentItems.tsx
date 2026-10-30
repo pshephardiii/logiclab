@@ -1,6 +1,6 @@
 import type { PublishedProblemVersion } from '@logiclab/contracts';
 
-export type SelectedProblem = { key: string; version: PublishedProblemVersion };
+export type SelectedProblem = { key: string; maxPoints?: number; version: PublishedProblemVersion };
 type Props = {
   items: SelectedProblem[];
   readOnly: boolean;

@@ -9,7 +9,7 @@ import { canViewAssignmentResults } from '../../application/assignment/results-r
 /** Student projection only: never serialize retained grades before their independent release. */
 export function attemptResponse(attempt: AttemptEntity, assignment: Assignment): StudentAttempt {
   const submitted = Boolean(attempt.submittedAt);
-  if (submitted && assignment.scoringVersion && !attempt.score)
+  if (submitted && assignment.assessmentMode === 'graded' && !attempt.score)
     throw new StudentWorkError('unsupported_policy');
   const visible =
     assignment.assessmentMode === 'graded'
@@ -26,7 +26,7 @@ export function attemptResponse(attempt: AttemptEntity, assignment: Assignment):
     answers: attempt.answers,
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
     result: visible ? (attempt.result ?? null) : null,
-    ...(assignment.scoringVersion
+    ...(assignment.assessmentMode === 'graded'
       ? { score: visible && attempt.score ? assignmentScoreSchema.parse(attempt.score) : null }
       : {}),
     gradePending: submitted && assignment.assessmentMode === 'graded' && !visible,

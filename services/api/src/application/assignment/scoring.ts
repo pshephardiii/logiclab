@@ -78,7 +78,7 @@ export function scoreAssignment(
   return assignmentScoreSchema.parse({ scoringVersion: 'points_v1', items, summary });
 }
 
-/** Explicit opt-in adapter for objective evidence; never rewrites a retained grading snapshot. */
+/** Convert objective evidence to points without rewriting the retained correctness report. */
 export function scoreObjectiveSubmission(
   allocations: AssignmentPointAllocation[],
   input: unknown,

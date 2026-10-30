@@ -1,5 +1,4 @@
 import {
-  assignmentScoringVersionSchema,
   assignmentItemPointsSchema,
   assignmentPointAllocationsSchema,
   weightedAssignmentItemsSchema,
@@ -34,7 +33,6 @@ export const assignmentPolicySchema = z
 export type AssignmentPolicy = z.infer<typeof assignmentPolicySchema>;
 
 export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
-  scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
   id: z.uuid(),
   classId: z.uuid(),
   title: z.string().min(1).max(120),
@@ -76,7 +74,6 @@ export const createAssignmentRequestSchema = z
     title: z.string().trim().min(1).max(120),
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).default([]),
-    scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
     items: weightedAssignmentItemsSchema.optional(),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).default('on_submission'),
@@ -102,12 +99,8 @@ export const createAssignmentRequestSchema = z
     'Use items or problemVersionIds, not both.',
   )
   .refine(
-    (input) => input.scoringVersion !== 'points_v1' || input.assessmentMode === 'graded',
+    (input) => input.items === undefined || input.assessmentMode === 'graded',
     'Only graded assignments use points.',
-  )
-  .refine(
-    (input) => input.items === undefined || input.scoringVersion === 'points_v1',
-    'Weighted items require point scoring.',
   );
 export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestSchema>;
 
@@ -117,7 +110,6 @@ export const updateAssignmentRequestSchema = z
     title: z.string().trim().min(1).max(120).optional(),
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).optional(),
-    scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
     items: weightedAssignmentItemsSchema.optional(),
     pointAllocations: assignmentPointAllocationsSchema.optional(),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),

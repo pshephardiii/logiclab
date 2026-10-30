@@ -7,7 +7,6 @@ export const ASSIGNMENT_POINT_LIMITS = {
   maxPoints: 1000,
   maxItems: 50,
 } as const;
-export const assignmentScoringVersionSchema = z.literal('points_v1');
 export const assignmentItemPointsSchema = z
   .number()
   .int()

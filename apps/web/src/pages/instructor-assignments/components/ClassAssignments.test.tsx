@@ -65,7 +65,14 @@ const assignment: AssignmentDetail = {
   archivedAt: null,
   createdAt: time,
   updatedAt: time,
-  items: [{ id: '66666666-6666-4666-8666-666666666666', position: 1, problemVersion: version }],
+  items: [
+    {
+      id: '66666666-6666-4666-8666-666666666666',
+      position: 1,
+      problemVersion: version,
+      maxPoints: 25,
+    },
+  ],
 };
 const { items, ...summary } = assignment;
 beforeEach(() => {
@@ -108,6 +115,7 @@ test('metadata-only edits retain failed input and omit item replacement, then pu
   const input = vi.mocked(api.updateAssignment).mock.calls.at(-1)![1];
   expect(input).toMatchObject({ title: 'Revised', solutionAccess: 'never' });
   expect(input).not.toHaveProperty('problemVersionIds');
+  expect(input).not.toHaveProperty('items');
   vi.mocked(api.assignmentAction).mockResolvedValue({
     ...assignment,
     title: 'Revised',
@@ -136,7 +144,12 @@ test('repeated publications are distinct occurrences and ordering/removal contro
   await waitFor(() =>
     expect(api.updateAssignment).toHaveBeenCalledWith(
       assignment.id,
-      expect.objectContaining({ problemVersionIds: [second.id, version.id] }),
+      expect.objectContaining({
+        items: [
+          { problemVersionId: second.id, maxPoints: 10 },
+          { problemVersionId: version.id, maxPoints: 25 },
+        ],
+      }),
       expect.any(AbortSignal),
     ),
   );

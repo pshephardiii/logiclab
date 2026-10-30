@@ -3,21 +3,17 @@ import { validAssignmentScoring } from './scoring-policy';
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
 
-test.each(['graded', 'completion_only', 'ungraded_practice'])(
-  'legacy %s permits null allocations',
+test.each(['completion_only', 'ungraded_practice'])(
+  'score-free %s does not award points',
   (assessmentMode) => {
     expect(validAssignmentScoring({ assessmentMode }, [{ id: a }])).toBe(true);
-    expect(
-      validAssignmentScoring({ assessmentMode, scoringVersion: null }, [
-        { id: a, maxPoints: null },
-      ]),
-    ).toBe(true);
-    expect(validAssignmentScoring({ assessmentMode }, [{ id: a, maxPoints: 10 }])).toBe(false);
+    expect(validAssignmentScoring({ assessmentMode }, [{ id: a, maxPoints: null }])).toBe(true);
+    expect(validAssignmentScoring({ assessmentMode }, [{ id: a, maxPoints: 10 }])).toBe(true);
   },
 );
 
-test('point scoring needs graded work, known version and a complete unique bounded allocation set', () => {
-  const policy = { assessmentMode: 'graded', scoringVersion: 'points_v1' };
+test('graded work requires a complete unique bounded allocation set', () => {
+  const policy = { assessmentMode: 'graded' };
   expect(
     validAssignmentScoring(policy, [
       { id: a, maxPoints: 20 },
@@ -40,22 +36,16 @@ test('point scoring needs graded work, known version and a complete unique bound
     validAssignmentScoring({ ...policy, assessmentMode: 'completion_only' }, [
       { id: a, maxPoints: 10 },
     ]),
-  ).toBe(false);
-  expect(
-    validAssignmentScoring({ ...policy, scoringVersion: 'future' }, [{ id: a, maxPoints: 10 }]),
-  ).toBe(false);
+  ).toBe(true);
 });
 
-test('new scoring authoring is explicit; old create defaults and PATCH omission are preserved', () => {
-  expect(createAssignmentRequestSchema.parse({ title: 'Legacy' }).scoringVersion).toBeUndefined();
+test('graded authoring defaults to points and mode switches are not accepted', () => {
+  expect(createAssignmentRequestSchema.parse({ title: 'Default' }).assessmentMode).toBe('graded');
   expect(updateAssignmentRequestSchema.parse({ title: 'Metadata' })).toEqual({ title: 'Metadata' });
-  expect(updateAssignmentRequestSchema.parse({ scoringVersion: null })).toEqual({
-    scoringVersion: null,
-  });
+  expect(updateAssignmentRequestSchema.safeParse({ scoringVersion: null }).success).toBe(false);
   expect(
     createAssignmentRequestSchema.safeParse({
       title: 'Points',
-      scoringVersion: 'points_v1',
       items: [{ problemVersionId: a, maxPoints: 20 }],
     }).success,
   ).toBe(true);
@@ -63,19 +53,18 @@ test('new scoring authoring is explicit; old create defaults and PATCH omission 
     createAssignmentRequestSchema.safeParse({
       title: 'Wrong mode',
       assessmentMode: 'completion_only',
-      scoringVersion: 'points_v1',
-    }).success,
-  ).toBe(false);
-  expect(
-    createAssignmentRequestSchema.safeParse({
-      title: 'No opt-in',
       items: [{ problemVersionId: a, maxPoints: 20 }],
     }).success,
   ).toBe(false);
   expect(
     createAssignmentRequestSchema.safeParse({
+      title: 'Default points',
+      items: [{ problemVersionId: a, maxPoints: 20 }],
+    }).success,
+  ).toBe(true);
+  expect(
+    createAssignmentRequestSchema.safeParse({
       title: 'Ambiguous',
-      scoringVersion: 'points_v1',
       problemVersionIds: [b],
       items: [{ problemVersionId: a, maxPoints: 20 }],
     }).success,

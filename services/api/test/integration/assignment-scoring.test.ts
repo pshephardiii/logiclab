@@ -124,7 +124,6 @@ async function fixture() {
   async function create(overrides: object = {}) {
     const response = await request(owner, 'POST', `/api/classes/${classroom.id}/assignments`, {
       title: 'Point draft',
-      scoringVersion: 'points_v1',
       items: versions.map((version, index) => ({
         problemVersionId: version.id,
         maxPoints: index === 0 ? 20 : 5,
@@ -156,24 +155,27 @@ async function fixture() {
   };
 }
 
-test('point draft opt-in, allocation updates and explicit opt-out preserve legacy identity and rollback invalid changes', async () => {
+test('graded drafts default to points, preserve occurrence identity and roll back invalid allocations', async () => {
   const f = await fixture();
   try {
-    const legacy = await f.assignments.create(f.owner.id, f.classroom.id, {
-      title: 'Legacy',
+    const plain = await f.assignments.create(f.owner.id, f.classroom.id, {
+      title: 'Default points',
       problemVersionIds: f.versions.map((version) => version.id),
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
       solutionAccess: 'never',
     });
-    assert.equal(legacy.scoringVersion, undefined);
-    const path = `/api/assignments/${legacy.id}`;
-    const enabled = await f.request(f.owner, 'PATCH', path, { scoringVersion: 'points_v1' });
+    assert.deepEqual(
+      plain.items.map((item) => item.maxPoints),
+      [10, 10],
+    );
+    const path = `/api/assignments/${plain.id}`;
+    const enabled = await f.request(f.owner, 'GET', path);
     assert.equal(enabled.statusCode, 200, enabled.body);
     const draft = enabled.json().assignment;
     assert.deepEqual(
       draft.items.map((item: { id: string; maxPoints: number }) => [item.id, item.maxPoints]),
-      legacy.items.map((item) => [item.id, 10]),
+      plain.items.map((item) => [item.id, 10]),
     );
     const allocations = draft.items.map((item: { id: string }, index: number) => ({
       itemId: item.id,
@@ -181,7 +183,7 @@ test('point draft opt-in, allocation updates and explicit opt-out preserve legac
     }));
     const weighted = await f.request(f.owner, 'PATCH', path, { pointAllocations: allocations });
     assert.equal(weighted.statusCode, 200, weighted.body);
-    const before = await f.assignments.findOwned(f.owner.id, legacy.id);
+    const before = await f.assignments.findOwned(f.owner.id, plain.id);
     for (const bad of [
       [],
       [allocations[0]],
@@ -194,11 +196,11 @@ test('point draft opt-in, allocation updates and explicit opt-out preserve legac
         pointAllocations: bad,
       });
       assert.equal(invalid.statusCode, 400, invalid.body);
-      assert.deepEqual(await f.assignments.findOwned(f.owner.id, legacy.id), before);
+      assert.deepEqual(await f.assignments.findOwned(f.owner.id, plain.id), before);
     }
     const sameList = await f.request(f.owner, 'PATCH', path, {
       problemVersionIds: f.versions.map((version) => version.id),
-      title: 'Safe older client metadata edit',
+      title: 'Metadata edit preserves weights',
     });
     assert.equal(sameList.statusCode, 200, sameList.body);
     assert.deepEqual(sameList.json().assignment.items, before.items);
@@ -206,32 +208,22 @@ test('point draft opt-in, allocation updates and explicit opt-out preserve legac
       problemVersionIds: f.versions.map((version) => version.id).reverse(),
     });
     assert.equal(reorder.statusCode, 400, reorder.body);
-    const invalidMode = await f.request(f.owner, 'PATCH', path, {
+    const completionMode = await f.request(f.owner, 'PATCH', path, {
       assessmentMode: 'completion_only',
     });
-    assert.equal(invalidMode.statusCode, 400, invalidMode.body);
-    const disabled = await f.request(f.owner, 'PATCH', path, {
-      scoringVersion: null,
-      assessmentMode: 'completion_only',
-    });
-    assert.equal(disabled.statusCode, 200, disabled.body);
-    assert.equal(disabled.json().assignment.scoringVersion, undefined);
-    assert(disabled.json().assignment.items.every((item: object) => !('maxPoints' in item)));
-    assert.equal(
-      (await f.em.fork().findOneOrFail(f.db.Assignment, legacy.id)).scoringVersion,
-      null,
-    );
+    assert.equal(completionMode.statusCode, 200, completionMode.body);
+
     assert(
-      (await f.em.fork().find(f.db.AssignmentItem, { assignment: legacy.id })).every(
-        (item) => item.maxPoints === null,
+      (await f.em.fork().find(f.db.AssignmentItem, { assignment: plain.id })).every(
+        (item) => item.maxPoints > 0,
       ),
     );
     assert.equal(
-      (await f.request(f.student, 'PATCH', path, { scoringVersion: 'points_v1' })).statusCode,
+      (await f.request(f.student, 'PATCH', path, { pointAllocations: allocations })).statusCode,
       403,
     );
     assert.equal(
-      (await f.request(f.other, 'PATCH', path, { scoringVersion: 'points_v1' })).statusCode,
+      (await f.request(f.other, 'PATCH', path, { pointAllocations: allocations })).statusCode,
       404,
     );
   } finally {
@@ -319,7 +311,7 @@ test('weighted mixed finalization freezes point scores, withholds every student 
     await f.assignments.setArchived(f.owner.id, draft.id, false);
     assert.deepEqual((await f.work.read(f.student.id, draft.id)).attempt!.score, frozen);
     const copy = await f.assignments.duplicate(f.owner.id, draft.id);
-    assert.equal(copy.scoringVersion, 'points_v1');
+
     assert.deepEqual(
       copy.items.map((item) => item.maxPoints),
       [20, 5],
@@ -337,7 +329,7 @@ test('weighted mixed finalization freezes point scores, withholds every student 
   }
 });
 
-test('weighted item replacement validates references atomically and legacy finals receive no score', async () => {
+test('weighted item replacement validates references atomically and all graded finals receive a score', async () => {
   const f = await fixture();
   try {
     const draft = await f.create();
@@ -360,21 +352,24 @@ test('weighted item replacement validates references atomically and legacy final
       [7, 3],
     );
     assert.notEqual(changed.json().assignment.items[0].id, changed.json().assignment.items[1].id);
-    const legacy = await f.create({
-      scoringVersion: null,
+    const plain = await f.create({
       items: undefined,
       problemVersionIds: [f.versions[1]!.id],
     });
-    await f.assignments.publish(f.owner.id, legacy.id);
-    const result = await f.work.submit(f.student.id, legacy.id, 0);
-    assert.equal(result.score, undefined);
+    await f.assignments.publish(f.owner.id, plain.id);
+    const result = await f.work.submit(f.student.id, plain.id, 0);
+    assert.equal(result.score!.summary.maxPoints, 10);
     assert.equal(result.result!.gradingVersion, 'mixed_v1');
-    assert.equal((await f.em.fork().findOneOrFail(f.db.AssignmentAttempt, result.id)).score, null);
+    assert.equal(
+      (await f.em.fork().findOneOrFail(f.db.AssignmentAttempt, result.id)).score!.scoringVersion,
+      'points_v1',
+    );
     const broken = await f.create();
-    await f.em.nativeUpdate(f.db.AssignmentItem, broken.items[0].id, { maxPoints: null });
-    const blocked = await f.request(f.owner, 'POST', `/api/assignments/${broken.id}/publish`, {});
-    assert.equal(blocked.statusCode, 400, blocked.body);
-    assert.equal((await f.em.fork().findOneOrFail(f.db.Assignment, broken.id)).publishedAt, null);
+    await assert.rejects(
+      f.em.nativeUpdate(f.db.AssignmentItem, broken.items[0].id, { maxPoints: null }),
+    );
+    await f.assignments.publish(f.owner.id, broken.id);
+    assert((await f.em.fork().findOneOrFail(f.db.Assignment, broken.id)).publishedAt);
   } finally {
     await f.close();
   }
@@ -425,7 +420,6 @@ test('demo point scoring follows workspace transactions and rejects cross-visito
       `/api/demo/resources/classes/${classroom.id}/assignments`,
       {
         title: 'Demo points',
-        scoringVersion: 'points_v1',
         items: [{ problemVersionId: publications.json().versions[0].id, maxPoints: 8 }],
       },
       instructorCookie,

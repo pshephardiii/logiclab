@@ -232,7 +232,7 @@ export async function createStudentWorkStore(
         );
         if (!validAssignmentScoring(assignment, assigned))
           throw new StudentWorkError('unsupported_policy');
-        if (assignment.scoringVersion === 'points_v1')
+        if (assignment.assessmentMode === 'graded')
           attempt.score = scoreObjectiveSubmission(
             assigned.map((item) => ({ itemId: item.id, maxPoints: item.maxPoints! })),
             attempt.result,

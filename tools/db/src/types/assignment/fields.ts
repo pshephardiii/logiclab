@@ -1,5 +1,4 @@
 import type {
-  AssignmentScoringVersion,
   AssessmentMode,
   FeedbackTiming,
   SolutionAccess,
@@ -15,7 +14,6 @@ export interface AssignmentFields {
   title: string;
   instructions?: string;
   assessmentMode: AssessmentMode;
-  scoringVersion?: AssignmentScoringVersion;
   feedbackTiming: FeedbackTiming;
   solutionAccess: SolutionAccess;
   gradeReleaseTiming: GradeReleaseTiming;

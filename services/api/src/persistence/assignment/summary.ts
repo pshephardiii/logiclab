@@ -6,7 +6,6 @@ import { assignmentPolicySchema, type AssignmentSummary } from '@logiclab/contra
 export function assignmentSummary(assignment: AssignmentEntity): AssignmentSummary {
   return {
     id: assignment.id,
-    ...(assignment.scoringVersion ? { scoringVersion: assignment.scoringVersion } : {}),
     classId: assignment.classroom.id,
     title: assignment.title,
     instructions: assignment.instructions ?? null,

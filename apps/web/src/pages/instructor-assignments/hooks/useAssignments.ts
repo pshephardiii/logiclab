@@ -119,13 +119,13 @@ export function useAssignments(classId: string) {
     }
   }
   function save(input: CreateAssignmentRequest, itemsChanged: boolean) {
-    const { problemVersionIds, ...metadata } = input;
+    const { problemVersionIds, items, ...metadata } = input;
     return mutate(
       (signal) =>
         selected
           ? api.updateAssignment(
               selected.id,
-              { ...metadata, ...(itemsChanged ? { problemVersionIds } : {}) },
+              { ...metadata, ...(itemsChanged ? (items ? { items } : { problemVersionIds }) : {}) },
               signal,
             )
           : api.createAssignment(classId, input, signal),

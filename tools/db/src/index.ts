@@ -37,7 +37,6 @@ export {
   FeedbackTiming,
   SolutionAccess,
   GradeReleaseTiming,
-  AssignmentScoringVersion,
 } from './types/assignment/enums.ts';
 
 export { ProblemType } from './types/problem/enums.ts';

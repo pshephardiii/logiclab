@@ -303,12 +303,12 @@
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
+          "nullable": false,
           "unique": false,
           "length": null,
           "precision": null,
           "scale": null,
-          "default": null,
+          "default": "10",
           "comment": null,
           "collation": null,
           "enumItems": [],
@@ -375,8 +375,8 @@
       "checks": [
         {
           "name": "assignment_items_max_points_check",
-          "expression": "max_points is null or max_points between 1 and 1000",
-          "definition": "check (max_points is null or max_points between 1 and 1000)"
+          "expression": "max_points between 1 and 1000",
+          "definition": "check (max_points between 1 and 1000)"
         },
         {
           "name": "assignment_items_positive_position",
@@ -638,23 +638,6 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
-        "scoring_version": {
-          "name": "scoring_version",
-          "type": "varchar(32)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 32,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "collation": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
         "solution_access": {
           "name": "solution_access",
           "type": "varchar(32)",
@@ -764,11 +747,6 @@
           "name": "assignments_practice_solution_check",
           "expression": "assessment_mode <> 'ungraded_practice' or solution_access in ('never', 'anytime')",
           "definition": "check (assessment_mode <> 'ungraded_practice' or solution_access in ('never', 'anytime'))"
-        },
-        {
-          "name": "assignments_scoring_version_check",
-          "expression": "scoring_version is null or (scoring_version = 'points_v1' and assessment_mode = 'graded')",
-          "definition": "check (scoring_version is null or (scoring_version = 'points_v1' and assessment_mode = 'graded'))"
         },
         {
           "name": "assignments_solution_access_check",
