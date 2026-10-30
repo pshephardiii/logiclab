@@ -1,6 +1,6 @@
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import { libraryProblemDefinition } from '../../application/problem/library-definition';
-import type { LibraryProblemVersion } from '@logiclab/contracts/derivation';
+import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 import type { ProblemVersion } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { PublishedProblemVersion } from '@logiclab/contracts';
 

@@ -1,4 +1,4 @@
-import type { LibraryProblemDefinition } from '@logiclab/contracts/derivation';
+import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { supportedProblemDefinition } from './definition-support';
 import { validateDerivationDefinition, checkDerivationReference } from './derivation-authoring';
 

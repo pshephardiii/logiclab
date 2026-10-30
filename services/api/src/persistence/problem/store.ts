@@ -18,7 +18,7 @@ import type {
   UpdateLibraryProblemRequest,
   LibraryProblemDraft,
   LibraryProblemVersion,
-} from '@logiclab/contracts/derivation';
+} from '@logiclab/contracts/problem-library';
 
 export type UpdateProblemResult =
   | { status: 'updated'; problem: LibraryProblemDraft }

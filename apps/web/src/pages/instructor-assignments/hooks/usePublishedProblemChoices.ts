@@ -1,13 +1,14 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
-import type { ProblemDraft, PublishedProblemVersion } from '@logiclab/contracts';
+import { problemVersionSchema, type PublishedProblemVersion } from '@logiclab/contracts';
+import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
 import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Paginated library choices; switching problems cancels stale version reads. */
 export function usePublishedProblemChoices() {
   const { listProblems, listVersions } = useResourceApi(problemsApi);
-  const [problems, setProblems] = useState<ProblemDraft[]>([]);
+  const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
   const [problemNext, setProblemNext] = useState<number | null>(null);
   const [problemLoading, setProblemLoading] = useState(false);
   const [problemError, setProblemError] = useState<string | null>(null);
@@ -54,7 +55,11 @@ export function usePublishedProblemChoices() {
       try {
         const page = await listVersions(problemId, offset, signal);
         if (!signal.aborted) {
-          setVersions((previous) => (offset ? [...previous, ...page.versions] : page.versions));
+          const assignable = page.versions.flatMap((version) => {
+            const parsed = problemVersionSchema.safeParse(version);
+            return parsed.success ? [parsed.data] : [];
+          });
+          setVersions((previous) => (offset ? [...previous, ...assignable] : assignable));
           setVersionNext(page.nextOffset);
         }
       } catch (caught) {

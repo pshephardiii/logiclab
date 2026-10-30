@@ -14,6 +14,7 @@ vi.mock('../../../api/problems/api', () => ({
   archiveProblem: vi.fn(),
   publishProblem: vi.fn(),
   listVersions: vi.fn(),
+  checkReference: vi.fn(),
 }));
 vi.mock('./ProblemPreview', () => ({
   ProblemPreview: ({ formula }: { formula: string }) => <p>Preview formula: {formula}</p>,
@@ -301,4 +302,37 @@ test('conceptual editing participates in discard protection and previews the sel
   await user.click(screen.getByRole('button', { name: 'Show preview answer' }));
   expect(screen.getAllByText(/Saved explanation/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText('Question')).toHaveValue('Saved question edited');
+});
+
+test('derivation drafts/history stay private and read-only without becoming conceptual editors', async () => {
+  const { derivationDraft } = await import('../../../../test/derivation');
+  vi.mocked(api.listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [
+      {
+        ...version,
+        title: 'Pinned derivation',
+        definition: { ...derivationDraft.definition, conclusion: 'Q -> Q' },
+      },
+    ],
+    nextOffset: null,
+  });
+  const user = userEvent.setup();
+  render(<ProblemLibrary />);
+  await user.click(await screen.findByRole('button', { name: derivationDraft.title }));
+  expect(await screen.findByRole('region', { name: 'Saved derivation draft' })).toHaveTextContent(
+    'P -> P',
+  );
+  expect(screen.queryByRole('textbox', { name: 'Title' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole('heading', { name: 'Version 1: Pinned derivation' }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
+  expect(screen.getByRole('region', { name: 'Derivation version preview' })).toHaveTextContent(
+    'Q -> Q',
+  );
+  expect(api.saveProblem).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('');
 });

@@ -15,6 +15,11 @@
       "types": "./dist/derivation.d.ts",
       "browser": "./dist/browser/derivation.js",
       "default": "./dist/derivation.js"
+    },
+    "./problem-library": {
+      "types": "./dist/problem-library.d.ts",
+      "browser": "./dist/browser/problem-library.js",
+      "default": "./dist/problem-library.js"
     }
   },
   "files": [

@@ -2,7 +2,10 @@ import { ConceptualProblemPreview } from './ConceptualProblemPreview';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { useState } from 'react';
-import type { ProblemArchiveFilter, ProblemDefinition } from '@logiclab/contracts';
+import type { ProblemArchiveFilter } from '@logiclab/contracts';
+import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
+import { DerivationSummary } from './DerivationSummary';
+import { SavedReferenceCheck } from './SavedReferenceCheck';
 import { useProblemLibrary } from '../hooks/useProblemLibrary';
 import { ProblemForm } from './ProblemForm';
 import { ProblemHistory } from './ProblemHistory';
@@ -16,10 +19,11 @@ export function ProblemLibrary() {
   useUnsavedWork(dirty && !library.selected?.archivedAt);
   const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
-  const [preview, setPreview] = useState<{ definition: ProblemDefinition; key: number } | null>(
-    null,
-  );
-  function showPreview(definition: ProblemDefinition) {
+  const [preview, setPreview] = useState<{
+    definition: LibraryProblemDefinition;
+    key: number;
+  } | null>(null);
+  function showPreview(definition: LibraryProblemDefinition) {
     setPreview((previous) => ({ definition, key: (previous?.key ?? 0) + 1 }));
   }
   function select(problem: typeof library.selected) {
@@ -99,15 +103,35 @@ export function ProblemLibrary() {
           discarding these edits.
         </p>
       )}
-      <ProblemForm
-        key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
-        problem={library.selected}
-        busy={library.busy}
-        saveError={library.saveError}
-        onDirty={setDirty}
-        onSave={library.save}
-        onPreview={showPreview}
-      />
+      {library.selected?.definition.type === 'derivation' ? (
+        <section className="panel" aria-label="Saved derivation draft">
+          <h2>{library.selected.title}</h2>
+          <p>{library.selected.instructions || 'No instructions.'}</p>
+          <p className="help">
+            This derivation is read-only here while its editor is being added. It cannot be assigned
+            yet.
+          </p>
+          <DerivationSummary definition={library.selected.definition} />
+          <SavedReferenceCheck
+            key={`${library.selected.id}:${library.selected.updatedAt}`}
+            problem={library.selected}
+          />
+        </section>
+      ) : (
+        <ProblemForm
+          key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
+          problem={
+            library.selected
+              ? { ...library.selected, definition: library.selected.definition }
+              : null
+          }
+          busy={library.busy}
+          saveError={library.saveError}
+          onDirty={setDirty}
+          onSave={library.save}
+          onPreview={showPreview}
+        />
+      )}
       {library.selected && (
         <>
           <section className="panel">
@@ -134,7 +158,12 @@ export function ProblemLibrary() {
           <button className="secondary" onClick={() => setPreview(null)}>
             Close preview
           </button>
-          {preview.definition.type === 'truth_table' ? (
+          {preview.definition.type === 'derivation' ? (
+            <section className="panel" aria-label="Derivation version preview">
+              <h2>Derivation preview</h2>
+              <DerivationSummary definition={preview.definition} />
+            </section>
+          ) : preview.definition.type === 'truth_table' ? (
             <ProblemPreview key={preview.key} formula={preview.definition.formula} />
           ) : (
             <ConceptualProblemPreview key={preview.key} definition={preview.definition} />

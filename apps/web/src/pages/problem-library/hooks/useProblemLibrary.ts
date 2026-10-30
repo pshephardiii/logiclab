@@ -1,6 +1,10 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
-import type { CreateProblemRequest, ProblemArchiveFilter, ProblemDraft } from '@logiclab/contracts';
+import type { ProblemArchiveFilter } from '@logiclab/contracts';
+import type {
+  CreateLibraryProblemRequest,
+  LibraryProblemDraft,
+} from '@logiclab/contracts/problem-library';
 import * as apiModule from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
@@ -8,9 +12,9 @@ import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 export function useProblemLibrary() {
   const api = useResourceApi(apiModule);
   const [filter, setFilter] = useState<ProblemArchiveFilter>('active');
-  const [problems, setProblems] = useState<ProblemDraft[]>([]);
+  const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const [selected, setSelected] = useState<ProblemDraft | null>(null);
+  const [selected, setSelected] = useState<LibraryProblemDraft | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +55,7 @@ export function useProblemLibrary() {
   }, [load, list.cancelRequest]);
 
   async function mutate(
-    operation: (signal: AbortSignal) => Promise<ProblemDraft>,
+    operation: (signal: AbortSignal) => Promise<LibraryProblemDraft>,
     message: string,
     saving = false,
   ) {
@@ -80,7 +84,7 @@ export function useProblemLibrary() {
       if (!signal.aborted) setBusy(false);
     }
   }
-  function save(input: CreateProblemRequest) {
+  function save(input: CreateLibraryProblemRequest) {
     return mutate((signal) => api.saveProblem(input, signal, selected?.id), 'Draft saved.', true);
   }
   function archive() {
@@ -96,7 +100,7 @@ export function useProblemLibrary() {
     problems,
     nextOffset,
     selected,
-    setSelected: (problem: ProblemDraft | null) => {
+    setSelected: (problem: LibraryProblemDraft | null) => {
       setSelected(problem);
       setSaveError(null);
     },

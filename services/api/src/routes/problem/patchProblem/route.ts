@@ -1,8 +1,8 @@
 import {
-  problemParamsSchema,
-  updateProblemRequestSchema,
-  problemResponseSchema,
-} from '@logiclab/contracts';
+  updateLibraryProblemRequestSchema,
+  libraryProblemResponseSchema,
+} from '@logiclab/contracts/problem-library';
+import { problemParamsSchema } from '@logiclab/contracts';
 import type { FastifyInstance } from 'fastify';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
@@ -14,8 +14,8 @@ export const patchProblemSchema = {
   description:
     'Instructor-only private library operation; publishing and classroom access are separate.',
   params: problemParamsSchema,
-  body: updateProblemRequestSchema,
-  response: { 200: problemResponseSchema, ...problemErrorResponses },
+  body: updateLibraryProblemRequestSchema,
+  response: { 200: libraryProblemResponseSchema, ...problemErrorResponses },
 } satisfies RouteSchema;
 
 export async function patchProblemRoute(app: FastifyInstance, context: ProblemContext) {

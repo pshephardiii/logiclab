@@ -1,7 +1,7 @@
 import {
   createLibraryProblemRequestSchema,
   updateLibraryProblemRequestSchema,
-} from '@logiclab/contracts/derivation';
+} from '@logiclab/contracts/problem-library';
 import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
 import {
   libraryProblemDefinition,

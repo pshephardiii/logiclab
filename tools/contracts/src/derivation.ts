@@ -1,11 +1,10 @@
 import { z } from 'zod';
-import { fitchProofSchema, proofProblemSchema, PROOF_LIMITS } from './proof';
 import {
-  problemDefinitionSchema,
-  problemDraftSchema,
-  problemVersionSchema,
-  createProblemRequestSchema,
-} from './problem';
+  fitchProofSchema,
+  proofProblemSchema,
+  proofCheckReportSchema,
+  PROOF_LIMITS,
+} from './proof';
 
 export const DERIVATION_AUTHORING_LIMITS = Object.freeze({ ruleLabel: 80, explanation: 5000 });
 const id = z.uuid().transform((value) => value.toLowerCase());
@@ -99,28 +98,14 @@ export const derivationSolutionSchema = z.strictObject({
 });
 export type DerivationSolution = z.infer<typeof derivationSolutionSchema>;
 
-/** Owner-only library shapes; assignment definitions retain their separate supported union. */
-export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
-  ...problemDefinitionSchema.options,
-  derivationDefinitionSchema,
-]);
-export type LibraryProblemDefinition = z.infer<typeof libraryProblemDefinitionSchema>;
-export const libraryProblemDraftSchema = problemDraftSchema
-  .omit({ definition: true })
-  .extend({ definition: libraryProblemDefinitionSchema });
-export type LibraryProblemDraft = z.infer<typeof libraryProblemDraftSchema>;
-export const libraryProblemVersionSchema = problemVersionSchema
-  .omit({ definition: true })
-  .extend({ definition: libraryProblemDefinitionSchema });
-export type LibraryProblemVersion = z.infer<typeof libraryProblemVersionSchema>;
-export const createLibraryProblemRequestSchema = createProblemRequestSchema
-  .omit({ definition: true })
-  .extend({ definition: libraryProblemDefinitionSchema });
-export type CreateLibraryProblemRequest = z.infer<typeof createLibraryProblemRequestSchema>;
-export const updateLibraryProblemRequestSchema = createLibraryProblemRequestSchema
-  .partial()
-  .refine(
-    (value) => Object.values(value).some((field) => field !== undefined),
-    'Provide at least one draft field.',
-  );
-export type UpdateLibraryProblemRequest = z.infer<typeof updateLibraryProblemRequestSchema>;
+export const derivationReferenceCheckResponseSchema = z.strictObject({
+  problemId: z.uuid(),
+  updatedAt: z.iso.datetime(),
+  check: z.discriminatedUnion('status', [
+    z.strictObject({ status: z.literal('missing') }),
+    z.strictObject({ status: z.literal('checked'), report: proofCheckReportSchema }),
+  ]),
+});
+export type DerivationReferenceCheckResponse = z.infer<
+  typeof derivationReferenceCheckResponseSchema
+>;

@@ -65,3 +65,25 @@ test('publication pagination retains earlier snapshots and failed loads can be r
   expect(hook.result.current.versions).toHaveLength(2);
   expect(hook.result.current.versionNext).toBeNull();
 });
+
+test('mixed library pages retain supported history but exclude derivation versions from assignments', async () => {
+  const { derivationDraft } = await import('../../../../test/derivation');
+  vi.mocked(listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: 20 });
+  vi.mocked(listVersions)
+    .mockResolvedValueOnce({
+      versions: [{ ...version, definition: derivationDraft.definition }],
+      nextOffset: 20,
+    })
+    .mockResolvedValueOnce({ versions: [version], nextOffset: null });
+  const hook = renderHook(() => usePublishedProblemChoices());
+  await waitFor(() => expect(hook.result.current.problems).toHaveLength(1));
+  expect(hook.result.current.problemNext).toBe(20);
+  act(() => hook.result.current.selectProblem(derivationDraft.id));
+  await waitFor(() => expect(hook.result.current.versionNext).toBe(20));
+  expect(hook.result.current.versions).toEqual([]);
+  await act(async () => {
+    await hook.result.current.loadVersions(20);
+  });
+  expect(hook.result.current.versions).toEqual([version]);
+  expect(hook.result.current.versionNext).toBeNull();
+});

@@ -1,4 +1,5 @@
-import { problemListQuerySchema, problemListResponseSchema } from '@logiclab/contracts';
+import { libraryProblemListResponseSchema } from '@logiclab/contracts/problem-library';
+import { problemListQuerySchema } from '@logiclab/contracts';
 import type { FastifyInstance } from 'fastify';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
@@ -10,7 +11,7 @@ export const getProblemsSchema = {
   description:
     'Instructor-only private library operation; publishing and classroom access are separate.',
   querystring: problemListQuerySchema,
-  response: { 200: problemListResponseSchema, ...problemErrorResponses },
+  response: { 200: libraryProblemListResponseSchema, ...problemErrorResponses },
 } satisfies RouteSchema;
 
 export async function getProblemsRoute(app: FastifyInstance, context: ProblemContext) {

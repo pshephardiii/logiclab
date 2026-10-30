@@ -171,7 +171,7 @@ Keep this engine independently testable; no database, UI, assignment grade write
 
 ### 021: derivation authoring
 
-Implementation has started. The [authoring foundation](derivation-authoring.md) includes versioned private/reference contracts, effective rule labels, redacted projections, owner-store draft/preview/history workflows and checked immutable publication under the parent lock. Live HTTP library admission and assignment/student use remain guarded until their type-specific consumers are implemented. The user confirmed normalized duplicate-label rejection among enabled rules.
+Implementation has started. The [authoring foundation](derivation-authoring.md) includes versioned private/reference contracts, effective rule labels, redacted projections, owner-store draft/preview/history workflows and checked immutable publication under the parent lock. Private owner HTTP routes now support saved derivations with a compatible read-only frontend and explicit saved-reference check. The Fitch editor follows next; assignment/student use remains guarded. The user confirmed normalized duplicate-label rejection among enabled rules.
 
 This is one of the larger branches. Keep its slices separated rather than delivering persistence, editor and publication in one change:
 

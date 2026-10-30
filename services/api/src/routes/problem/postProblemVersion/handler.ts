@@ -1,9 +1,6 @@
+import { libraryProblemVersionResponseSchema } from '@logiclab/contracts/problem-library';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import {
-  problemParamsSchema,
-  emptyProblemRequestSchema,
-  problemVersionResponseSchema,
-} from '@logiclab/contracts';
+import { problemParamsSchema, emptyProblemRequestSchema } from '@logiclab/contracts';
 import { parseRequest } from '../../helpers/parse-request';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -20,6 +17,6 @@ export function postProblemVersionHandler(context: ProblemContext) {
     if (result.status === 'archived')
       throw new ProblemError(409, 'PROBLEM_ARCHIVED', 'Restore this problem before publishing.');
     reply.code(201);
-    return problemVersionResponseSchema.parse({ version: result.version });
+    return libraryProblemVersionResponseSchema.parse({ version: result.version });
   };
 }
