@@ -1,8 +1,8 @@
 # Propositional proof checker
 
-Status: first slice of `020-feat-propositional-proof-checker`. The user confirmed a classical propositional catalog with separately selectable rules. This slice declares version-1 rule identities, suggested labels and citation arities, and adds structural equality for existing parsed formulas. Exact variants below are the concrete specification for review before their application checks are implemented.
+Status: second slice of `020-feat-propositional-proof-checker`. The user confirmed the classical catalog and accepted the starting foundation. Version-1 rule identities/labels/citation arities now have bounded proof/report contracts and proof-only contradiction parsing alongside structural equality. The rule obligations below remain the specification for application checks; no complete checker is available yet.
 
-No proof-validation entry point, proof serialization contract, contradiction parser, authoring/student UI, grading operation or endpoint is enabled yet. A catalog entry is not an implemented checker or permission to use a rule. The [derivation plan](logical-derivations.md) remains the delivery sequence.
+No proof-validation entry point, authoring/student UI, grading operation or endpoint is enabled yet. The new contracts are standalone foundations; existing problem-definition schemas still reject derivations. A catalog entry is not an implemented checker or permission to use a rule. The [derivation plan](logical-derivations.md) remains the delivery sequence.
 
 ## Catalog and permissions
 
@@ -42,17 +42,19 @@ De Morgan replacements, arbitrary subformula replacement, commutativity/associat
 
 ## Formula identity and contradiction
 
-`sameFormula` compares existing parsed ASTs: connective, operand order and variable names must match. Whitespace, redundant grouping and accepted notation aliases disappear during parsing. For example, `~[P v Q]` matches `¬(P ∨ Q)`. Neither `P ∧ Q` versus `Q ∧ P`, `P ↔ Q` versus `Q ↔ P`, nor P versus ¬¬P matches automatically. Logical equivalence is not structural identity, even if both formulas have identical truth tables.
+`sameFormula` compares parsed ordinary/proof ASTs: connective, operand order and variable names must match. Whitespace, redundant grouping and accepted notation aliases disappear during parsing. For example, `~[P v Q]` matches `¬(P ∨ Q)`. Neither `P ∧ Q` versus `Q ∧ P`, `P ↔ Q` versus `Q ↔ P`, nor P versus ¬¬P matches automatically. Logical equivalence is not structural identity, even if both formulas have identical truth tables.
 
-This equality helper accepts trusted parsed `Formula` values; it is not a raw-input validator. Existing parser bounds, truth-table IDs and semantics remain unchanged.
+This equality helper accepts trusted parsed `ProofFormula` values (ordinary `Formula` values remain assignable); it is not a raw-input validator. Existing parser bounds, truth-table IDs and semantics remain unchanged.
 
 Proof utilities use a separate public package entry point so existing truth-table clients do not load catalog metadata. The root engine exports remain unchanged; deep source imports are not needed.
 
-The proposed proof language extends the existing connectives with a distinct falsity constant ⊥. Do not encode contradiction as the variable F (a valid ordinary proposition), an arbitrary false-looking formula, or an unchecked string sentinel. The proof parser/AST must handle ⊥ inside compound formulas too. Its implementation is a later slice, with an ASCII spelling and proof-specific bounds settled then. Existing public truth-table parsing must retain its current accepted language, limits and identifiers.
+`parseProofFormula` extends the existing connectives with a distinct falsity atom `{ type: "bottom" }`, accepting Unicode `⊥` or contiguous keyboard `_|_`. It works inside compound formulas, for example `~_|_ -> P`. F remains an ordinary variable; `FALSE`, separated `_ | _` and malformed aliases are not accepted spellings.
+
+The proof parser shares the existing tokenizer/precedence grammar through an explicit internal atom/limit configuration. It preserves grouping, aliases, implication associativity, explicitly grouped biconditionals and zero-based UTF-16 error positions. Proof limits are 256 characters, 32 nested groups/negations/implications and all 26 uppercase variables. Ordinary truth-table parsing still rejects contradiction, retains its four-variable bound and keeps its error text, ASTs and structural IDs. No evaluator or truth-table generator accepts proof-only falsity.
 
 ## Fitch structural conventions for the next slice
 
-Use ordered nested subproof blocks with stable UUIDs for lines, assumptions/blocks and premise declarations. Displayed line numbers are derived from the current order. References retain IDs through insertion/reordering; an invalidated reference produces a diagnostic rather than silently pointing somewhere else. Precise transport fields, incomplete-entry representation and report schemas are next-slice work.
+Use logically ordered nested subproof blocks with stable UUIDs for lines, assumptions/blocks and premise declarations. The concrete transport uses flat tables described below, rather than recursive JSON. Displayed line numbers are derived from step order. References retain IDs through insertion/reordering; the future checker must diagnose invalidated references rather than silently retargeting them.
 
 Proposed conventions:
 
@@ -66,17 +68,44 @@ Proposed conventions:
 
 These conventions will become executable in small slices, with valid examples and invalid near-misses for scope/discharge. They do not prescribe the dependency-line or tree serialization; later adapters must establish their own structural validity over the shared rule obligations.
 
+## Bounded proof and report contracts (slice 2)
+
+`tools/contracts/src/proof.ts` exposes standalone Zod schemas/types. They are not an instructor-authored derivation definition or a route contract accepting live work.
+
+`proofCheckInputSchema` contains `problem` and `proof`:
+
+- Problem: `ruleCatalogVersion: 1`, ordered `{ id, formula }` premises, a conclusion formula and explicit `permittedRuleIds`. There is no permission default. Rule IDs are bounded identifiers; the checker will verify actual catalog membership, duplicates and permissions.
+- Proof: `proofVersion: 1`, `format: "fitch"`, ordered `steps` and a `blocks` table. Root scope is `blockId: null`; subproof steps cite their block ID.
+- A premise step has `id`, `formula`, root `blockId`, and nullable `premiseId`. An assumption step has `id`, `formula` and non-null `blockId`. An inference has `id`, `formula`, `blockId`, nullable `ruleId`, and line/subproof reference ID arrays. These roles are explicit; a null rule is unfinished work, not reiteration or permission to guess.
+- Blocks have `id`, nullable `parentId`, `assumptionId` and nullable `endId`. An unfinished block has no endpoint. A complete one-line A-assumption block can cite that same assumption as its endpoint. Its occurrence in the ordered steps establishes its opening position; future traversal must validate contiguous nesting and its final direct endpoint.
+
+Flat lists make transport validation independent of recursion through untrusted nested objects. A self-parent cycle, duplicate ID, unknown referenced UUID, blank formula or malformed logical formula can remain bounded draft work. Schema success is **not** proof validity. The checker must reject malformed structure, enforce the declared depth budget, parse formulas and validate exact scope/discharge before accepting anything. IDs normalize to lowercase while formula source is retained verbatim; refs are never remapped by display position. Extra fields, malformed UUIDs, unsupported versions/formats and oversized values fail transport validation.
+
+Budgets: 200 steps, 64 blocks, 50 premises, 64 permitted-rule entries, 256 characters per formula, at most two line and two subproof references per inference, and 500 total diagnostics per report. The future traversal must additionally enforce `maxBlockDepth: 16` and bounded work/cycle detection. The schema does not recursively follow block links or pretend to enforce depth now.
+
+`proofCheckReportSchema` pins `checkerVersion: 1` and `ruleCatalogVersion: 1`. Overall status is `accepted`, `needs_review` or `unassessable`; target status is separately `established`, `not_established` or `unknown`. Per-step reports carry both the incoming UUID and zero-based `stepIndex`, local validity and dependency validity. The index distinguishes malformed duplicate-ID submissions without inventing new identities. A locally valid step may still have invalid upstream dependencies.
+
+Diagnostics carry a stable category, bounded message and optional step index, block ID or UTF-16 formula position. Categories distinguish version/limit failures, structure, formula syntax, unknown/disabled rules, references, rule mismatch, dependencies, incomplete work and target failure. An accepted report must have an established target, nonempty uniquely identified/in-order step results, valid local/dependency states and no diagnostics. An unassessable report must explain the failure. Reports carry no awarded points; grade/review/release policy remains outside the engine.
+
+These guards validate report consistency, not the truth of a caller-supplied acceptance claim. Only a future engine evaluation over authoritative input can produce trusted validation evidence. No report producer or public checking endpoint is enabled in this slice.
+
 ## Remaining work on 020
 
-1. Define bounded/versioned proof input/report contracts and the proof-only formula representation/parser, including contradiction notation. Set explicit line, nesting and work budgets without relaxing existing table limits.
+1. Consume the bounded input/report contracts in the pure checker. Enforce identity/reference coherence, block depth, cycle and work budgets, including safe failure reporting for malformed/unsupported input.
 2. Implement/test local line-rule checks and subproof/discharge checks against the catalog above; reject unknown versions, unsupported rules and disabled citations.
 3. Add the Fitch traversal, stable-reference resolution, dependency propagation and deterministic whole-proof report. Keep incomplete/unassessable distinct from accepted.
 4. Verify alternate correct proofs, locally correct work downstream of errors, unused errors, inaccessible references, nesting/limits and malformed inputs. Finish branch evidence and PR notes then.
 
-No database migration, frontend flow, assigned derivation acceptance, automatic grade or reference-proof publication is introduced by this foundation. Graded derivation availability remains guarded until the planned authoring/student/review branches are complete.
+No database migration, frontend flow, assigned derivation acceptance, automatic grade or reference-proof publication is introduced by these foundations. Graded derivation availability remains guarded until the planned authoring/student/review branches are complete.
 
 ## Background and verification
 
 The natural-deduction rules and discharge discussion use [Logic and Proof: natural deduction](https://leanprover-community.github.io/logic_and_proof/natural_deduction_for_propositional_logic.html) as background. The distinction between constructive rules, proof by contradiction, double-negation elimination and excluded middle is discussed in [Logic and Proof: classical reasoning](https://leanprover-community.github.io/logic_and_proof/classical_reasoning.html). Our exact variants and catalog are product choices, not a claim of textbook-wide uniformity.
 
-Foundation tests exercise notation/grouping identity, distinctions between equivalent formulas, input immutability, stable rule identities versus display aliases, citation requirements and frozen catalog metadata. `npm run check` passed type checks, 994 tests (123 engine, 632 API, 239 web) and production builds. This includes 19 new foundation cases. Built Node ESM imports of both the existing root package and the new proof subpath passed. The frontend entry remains 496.69 kB with no chunk-size warning; catalog metadata is excluded from existing root imports. Formatting, whitespace and local Markdown file links passed. No database checks or browser walkthrough were run: this slice changes no persistence, active proof workflow or browser UI. Existing Jest VM-module advisories remain.
+Foundation tests exercise notation/grouping identity, distinctions between equivalent formulas, input immutability, stable rule identities versus display aliases, citation requirements and frozen catalog metadata. Slice 1: `npm run check` passed type checks, 994 tests (123 engine, 632 API, 239 web) and production builds. This includes 19 new foundation cases. Built Node ESM imports of both the existing root package and the new proof subpath passed. The frontend entry remains 496.69 kB with no chunk-size warning; catalog metadata is excluded from existing root imports. Formatting, whitespace and local Markdown file links passed. No database checks or browser walkthrough were run: this slice changes no persistence, active proof workflow or browser UI. Existing Jest VM-module advisories remain.
+
+### Slice 2 verification — October 30, 2026
+
+`npm run check` passed type checks, 1,047 tests (150 engine, 658 API, 239 web) and production builds. The 53 additional cases cover proof-only falsity/aliases, compound use, positioned syntax errors, unchanged ordinary ASTs/table identifiers/limits, bounded incomplete transport, strict versions/fields, normalized IDs, acceptance consistency, local-versus-dependency reports and continued rejection of authored derivation definitions. Built Node ESM imports of root parsing, proof parsing and proof contracts passed. Formatting, whitespace and local Markdown file links passed. The frontend entry remains under the existing chunk threshold (499.23 kB); no size threshold was raised.
+
+No database checks, migration, browser walkthrough, proof rule application or whole-proof validation is claimed. Existing Jest VM-module advisories remain. Only standalone foundations are enabled; report consistency validation does not certify a user-supplied proof or award points.

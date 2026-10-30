@@ -1,10 +1,12 @@
-import type { Formula } from '../parser/types';
+import type { ProofFormula } from './types';
 
 /** Match parsed structure, never logical equivalence or an implicit rewrite rule. */
-export function sameFormula(left: Formula, right: Formula): boolean {
+export function sameFormula(left: ProofFormula, right: ProofFormula): boolean {
   switch (left.type) {
     case 'variable':
       return right.type === 'variable' && left.name === right.name;
+    case 'bottom':
+      return right.type === 'bottom';
     case 'not':
       return right.type === 'not' && sameFormula(left.operand, right.operand);
     case 'binary':

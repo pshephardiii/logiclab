@@ -1,15 +1,18 @@
 export type BinaryOperator = 'and' | 'or' | 'implies' | 'iff';
 
 /** Parentheses and square brackets group expressions without creating separate AST nodes. */
-export type Formula =
+export type FormulaNode<Atom = never> =
   | { readonly type: 'variable'; readonly name: string }
-  | { readonly type: 'not'; readonly operand: Formula }
+  | { readonly type: 'not'; readonly operand: FormulaNode<Atom> }
   | {
       readonly type: 'binary';
       readonly operator: BinaryOperator;
-      readonly left: Formula;
-      readonly right: Formula;
-    };
+      readonly left: FormulaNode<Atom>;
+      readonly right: FormulaNode<Atom>;
+    }
+  | Atom;
+
+export type Formula = FormulaNode;
 
 export type FormulaErrorCode =
   | 'INVALID_CHARACTER'
@@ -21,6 +24,6 @@ export type FormulaErrorCode =
   | 'NESTING_LIMIT'
   | 'VARIABLE_LIMIT';
 
-export type TokenKind = 'variable' | 'not' | BinaryOperator | 'open' | 'close' | 'end';
+export type TokenKind = 'variable' | 'bottom' | 'not' | BinaryOperator | 'open' | 'close' | 'end';
 
 export type Token = { kind: TokenKind; text: string; position: number };
