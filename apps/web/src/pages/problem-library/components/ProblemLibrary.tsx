@@ -103,34 +103,23 @@ export function ProblemLibrary() {
           discarding these edits.
         </p>
       )}
-      {library.selected?.definition.type === 'derivation' ? (
-        <section className="panel" aria-label="Saved derivation draft">
-          <h2>{library.selected.title}</h2>
-          <p>{library.selected.instructions || 'No instructions.'}</p>
-          <p className="help">
-            This derivation is read-only here while its editor is being added. It cannot be assigned
-            yet.
-          </p>
-          <DerivationSummary definition={library.selected.definition} />
+      <ProblemForm
+        key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
+        problem={library.selected}
+        busy={library.busy}
+        saveError={library.saveError}
+        onDirty={setDirty}
+        onSave={library.save}
+        onPreview={showPreview}
+      />
+      {library.selected?.definition.type === 'derivation' && !dirty && !library.busy && (
+        <section className="panel">
+          <h2>Check saved derivation</h2>
           <SavedReferenceCheck
             key={`${library.selected.id}:${library.selected.updatedAt}`}
             problem={library.selected}
           />
         </section>
-      ) : (
-        <ProblemForm
-          key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
-          problem={
-            library.selected
-              ? { ...library.selected, definition: library.selected.definition }
-              : null
-          }
-          busy={library.busy}
-          saveError={library.saveError}
-          onDirty={setDirty}
-          onSave={library.save}
-          onPreview={showPreview}
-        />
       )}
       {library.selected && (
         <>
