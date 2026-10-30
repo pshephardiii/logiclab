@@ -75,7 +75,7 @@ const summarySchema = z.discriminatedUnion('status', [
   }),
 ]);
 
-/** Staged score snapshot, separate from immutable correctness reports and active result unions. */
+/** Frozen point score, separate from the immutable correctness report. */
 export const assignmentScoreSchema = z
   .strictObject({
     scoringVersion: z.literal('points_v1'),

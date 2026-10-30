@@ -120,14 +120,27 @@ export function useAssignments(classId: string) {
   }
   function save(input: CreateAssignmentRequest, itemsChanged: boolean) {
     const { problemVersionIds, items, ...metadata } = input;
+    const pointsChanged =
+      selected &&
+      items &&
+      !itemsChanged &&
+      items.some((item, index) => item.maxPoints !== selected.items[index]?.maxPoints);
+    const content = itemsChanged
+      ? items
+        ? { items }
+        : { problemVersionIds }
+      : pointsChanged
+        ? {
+            pointAllocations: selected!.items.map((item, index) => ({
+              itemId: item.id,
+              maxPoints: items![index]!.maxPoints,
+            })),
+          }
+        : {};
     return mutate(
       (signal) =>
         selected
-          ? api.updateAssignment(
-              selected.id,
-              { ...metadata, ...(itemsChanged ? (items ? { items } : { problemVersionIds }) : {}) },
-              signal,
-            )
+          ? api.updateAssignment(selected.id, { ...metadata, ...content }, signal)
           : api.createAssignment(classId, input, signal),
       'Assignment draft saved.',
     );

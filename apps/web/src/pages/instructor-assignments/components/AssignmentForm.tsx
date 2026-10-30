@@ -2,6 +2,7 @@ import { AssignmentPolicyFields } from './AssignmentPolicyFields';
 import {
   ASSIGNMENT_POINT_LIMITS,
   assignmentLearningPolicySchema,
+  assignmentItemPointsSchema,
   createAssignmentRequestSchema,
 } from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -43,8 +44,24 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
   const itemsChanged =
-    JSON.stringify(ids) !==
-    JSON.stringify(assignment?.items.map((item) => item.problemVersion.id) ?? []);
+    JSON.stringify(items.map((item) => item.key)) !==
+    JSON.stringify(assignment?.items.map((item) => item.id) ?? []);
+  const graded = policy.assessmentMode === 'graded';
+  const invalidPoints =
+    graded &&
+    items.some(
+      (item) =>
+        !assignmentItemPointsSchema.safeParse(
+          item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
+        ).success,
+    );
+  const pointsChanged =
+    graded &&
+    items.some(
+      (item, index) =>
+        (item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints) !==
+        (assignment?.items[index]?.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints),
+    );
   const dirty =
     title !== (assignment?.title ?? '') ||
     instructions !== (assignment?.instructions ?? '') ||
@@ -52,7 +69,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     policy.feedbackTiming !== originalPolicy.feedbackTiming ||
     policy.solutionAccess !== originalPolicy.solutionAccess ||
     gradeReleaseTiming !== (assignment?.gradeReleaseTiming ?? 'on_submission') ||
-    itemsChanged;
+    itemsChanged ||
+    pointsChanged;
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
@@ -76,6 +94,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (invalidPoints || busy || readOnly) return;
     await onSave(
       createAssignmentRequestSchema.parse({
         title,
@@ -126,11 +145,48 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             gradeReleaseTiming={gradeReleaseTiming}
             onGradeReleaseChange={setGradeReleaseTiming}
           />
-          <AssignmentItems items={items} readOnly={readOnly} onMove={move} onRemove={remove} />
+          <AssignmentItems
+            items={items}
+            graded={graded}
+            readOnly={readOnly}
+            onPoints={(index, maxPoints) =>
+              setItems((previous) =>
+                previous.map((item, position) =>
+                  position === index ? { ...item, maxPoints } : item,
+                ),
+              )
+            }
+            onMove={move}
+            onRemove={remove}
+          />
+          {graded && (
+            <>
+              <p className="help">
+                Each problem has its own weight. Use whole points from 1 to 1,000. Published
+                allocations are locked.
+              </p>
+              {invalidPoints ? (
+                <p role="alert">Enter whole points from 1 to 1,000 for every problem.</p>
+              ) : (
+                <p>
+                  Total available:{' '}
+                  {items.reduce(
+                    (sum, item) => sum + (item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints),
+                    0,
+                  )}{' '}
+                  points.
+                </p>
+              )}
+            </>
+          )}
           {!readOnly && (
             <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />
           )}
-          {!readOnly && <button type="submit">{busy ? 'Saving…' : 'Save assignment draft'}</button>}
+          {!readOnly && (
+            <button type="submit" disabled={invalidPoints}>
+              {busy ? 'Saving…' : 'Save assignment draft'}
+            </button>
+          )}
         </fieldset>
       </form>
       {readOnly && (

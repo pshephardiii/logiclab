@@ -2,7 +2,9 @@ import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 /** Versioned synthetic content only; billing terms come from the saved simulator plan. */
 export const DEMO_TEMPLATE = {
-  version: 4,
+  version: 5,
+  assignmentPoints: 20,
+  mixedPoints: [20, 5, 5],
   fundedClassName: 'Demo: Introduction to Logic',
   unpaidClassName: 'Demo: Try simulated checkout',
   problemTitle: 'Implication and disjunction',
@@ -12,10 +14,11 @@ export const DEMO_TEMPLATE = {
   practiceAssignmentTitle: 'Explore tables and concepts at your own pace',
   mixedAssignmentTitle: 'Tables and concepts: separate grade and answer release',
   mixedAssignmentInstructions:
-    'Complete the table and two conceptual questions. Save each problem, then submit. Switch to the instructor to release grades and reveal answers independently.',
+    'Complete the 20-point table and two 5-point conceptual questions (30 points total). Save each problem, then submit. Switch to the instructor to release grades and reveal answers independently.',
   practiceAssignmentInstructions:
     'Answers are checked automatically after you pause editing. You can also use Check answers or save explicitly. Solutions are available anytime; there is no final submission.',
-  assignmentInstructions: 'Fill in the table, save your progress, then submit to see feedback.',
+  assignmentInstructions:
+    'Fill in the 20-point table, save your progress, then submit to see feedback and your point score.',
 } as const;
 
 /** Stable option IDs belong to the pinned question, not to global database rows. */

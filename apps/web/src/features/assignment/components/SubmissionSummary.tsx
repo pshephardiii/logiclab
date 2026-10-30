@@ -1,11 +1,16 @@
-import type { SubmissionResult } from '@logiclab/contracts';
+import type { AssignmentScore, SubmissionResult } from '@logiclab/contracts';
+import { PointScore } from './PointScore';
 
 export function SubmissionSummary({
   result,
   submittedAt,
+  score,
+  items,
 }: {
   result: SubmissionResult;
   submittedAt: string;
+  score?: AssignmentScore | null;
+  items?: readonly { id: string; title: string }[];
 }) {
   return (
     <section className="panel" aria-label="Submission result">
@@ -23,12 +28,16 @@ export function SubmissionSummary({
         </p>
       ) : (
         <>
+          {score && <PointScore score={score} items={items} />}
           <p>
             {result.summary.correct} correct · {result.summary.incorrect} incorrect ·{' '}
             {result.summary.unanswered} unanswered · {result.summary.total}{' '}
             {result.gradingVersion === 'mixed_v1' ? 'responses' : 'cells'}
           </p>
-          <p className="help">Completion records submission; correctness is shown separately.</p>
+          <p className="help">
+            Correctness counts describe responses; problem point allocations determine the
+            assignment grade.
+          </p>
         </>
       )}
     </section>

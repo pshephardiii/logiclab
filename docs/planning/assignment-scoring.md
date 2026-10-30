@@ -1,6 +1,6 @@
 # Assignment scoring
 
-Status: `019-feat-assignment-scoring`, single-model backend enabled. Instructor weight controls and score presentation remain the next slice. This unreleased product does not retain a separate legacy grading workflow.
+Status: `019-feat-assignment-scoring`, single-model backend enabled. Instructor weight controls and frozen score presentation are implemented. This unreleased product does not retain a separate legacy grading workflow.
 
 ## One model for graded work
 
@@ -16,7 +16,7 @@ Create with ordered `items: [{ problemVersionId, maxPoints }]` for explicit weig
 
 There is no assignment-level `scoringVersion` toggle or opt-out. Mode changes follow learning-policy validation. Score-free work rejects explicit weighted authoring inputs; changing mode does not erase allocation metadata. Published/archive locks, supported content, ownership, nonempty publication and class coverage remain enforced. Duplication copies allocations to fresh draft occurrences and clears final work/release history.
 
-The current form carries allocations when reordering graded content and supplies defaults for added occurrences. Dedicated weight editing and score display remain pending.
+Instructor drafts expose a labeled point input per occurrence and an assignment total. Empty, fractional or out-of-range entries block saving with an explanation. Weight-only saves preserve occurrence IDs; replacements/reorders carry explicit allocations, including differently weighted copies of the same version. Failed writes retain edits and unsaved-work protection. Published/archived allocations are locked, and score-free modes hide point controls. Students see graded problem allocations; released final results and instructor final review show frozen item points, totals and percentage independently of raw correctness counts. Unresolved review displays a pending status without inventing a zero grade.
 
 ## Frozen scores and evaluation evidence
 
@@ -42,8 +42,18 @@ The new migration refuses an existing submitted graded attempt without a score. 
 
 Database constraints enforce occurrence bounds and basic score-row state/version. Application validation enforces cross-row correspondence and required final scores. Existing immutable-final triggers protect scores; future adjustments belong in separate records. Migration rollback restores the earlier schema, but older applications still require compatibility review.
 
-## Verification — October 30, 2026
+## Earlier backend verification — October 30, 2026
 
 `npm run check` passed type checks, 963 tests (104 engine, 632 API, 227 web) and production builds. `npm run db:test` passed 212 PostgreSQL checks (155 database, 57 API/workflow), covering defaults/constraints, migration preservation/refusal, schema comparison, authoring weights/replacement, final scoring/redaction, frozen retries, review, duplication and normal/demo boundaries. Formatting and whitespace checks passed. Focused reruns passed all four scoring integration cases and 18 assignment-editor tests, including preservation of a nondefault weight through reordering.
 
-No browser walkthrough, weight-control UI, instructor adjustment endpoint or user development-database reset/migration is claimed. Only disposable test databases were migrated. Existing Jest VM-module advisories remain.
+That backend verification did not include browser interaction or weight controls. No instructor adjustment endpoint or user development-database reset/migration was performed. Only disposable test databases were migrated. Existing Jest VM-module advisories remain.
+
+## Demo weights and focused UI verification
+
+Demo template 5 assigns 20 points to the introductory table and 20/5/5 points to the mixed graded example (30 total). Private practice stays score-free. New workspaces receive these weights; existing visitors retain their content until explicit reset, which preserves the original absolute deadline. A template change is seed content rather than a new schema migration.
+
+UI regression checks cover invalid allocations, dirty/reverted state, failed-save retention, metadata versus weight-only versus reordered writes, repeated publications with distinct weights, read-only work, score-free controls, frozen totals/items, pending review, instructor lists/detail and student withheld-grade refresh. The API integration suite checks seeded weights, student allocation projection and withheld/released score totals. This slice does not add autosave, instructor grade adjustments or a proof checker.
+
+### UI slice verification — October 30, 2026
+
+`npm run check` passed type checks, 975 tests (104 engine, 632 API, 239 web) and production builds. All 57 API PostgreSQL integration checks passed, including the weighted demo assertions. The first sandboxed full check hit an existing watcher-test file-limit error; the permitted rerun passed. No database-schema change was made in this UI slice, so the database-package suite was not repeated. No browser walkthrough or user development-database migration/reset was performed. Format and whitespace checks passed.

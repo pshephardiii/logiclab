@@ -8,6 +8,7 @@ import { useSubmissionReview } from '../hooks/useSubmissionReview';
 import { answerMap } from '../../../features/assignment/helpers/answers';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
 import { SubmissionSummary } from '../../../features/assignment/components/SubmissionSummary';
+import { PointScore } from '../../../features/assignment/components/PointScore';
 
 /** Owner-scoped review uses frozen answers/results; unsaved student work is never requested. */
 export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
@@ -43,6 +44,7 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
               <button className="text-button" onClick={() => select(submission.id)}>
                 {submission.student.email ?? `Student ${submission.student.id}`}
               </button>
+              {submission.score && <PointScore score={submission.score} showItems={false} />}
               <p>
                 {'completedCells' in submission.summary
                   ? `Completed ${submission.summary.completedCells} of ${submission.summary.totalCells} cells · No correctness score`
@@ -72,6 +74,8 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
             <SubmissionSummary
               result={review.attempt.result}
               submittedAt={review.attempt.submittedAt}
+              score={review.attempt.score}
+              items={review.assignment.items}
             />
           )}
           <section className="panel">

@@ -144,4 +144,4 @@ PATCH `pointAllocations: [{ itemId, maxPoints }]` supplies the complete current 
 
 Instructor item responses include `maxPoints`; student graded items include it too. Publication validates allocations under the assignment lock and retains ownership/content/coverage checks. Duplication preserves weights with fresh occurrences and clears final work/release state. Published/archive locks apply. Invalid combined state returns 400 `ASSIGNMENT_SCORING_INVALID` without partial changes.
 
-The form carries weights on reorder and defaults new occurrences; dedicated point controls and score summaries remain the next frontend slice. See [scoring policy and rollout](../planning/assignment-scoring.md).
+The instructor form exposes per-problem points and a total for graded drafts, retains failed edits and validates whole-point bounds before saving. Weight-only edits preserve occurrence IDs; reordering carries allocations and defaults new occurrences. Published/archived weights are locked. Student final results and instructor review display the retained score, separate from correctness counts. See [scoring policy and rollout](../planning/assignment-scoring.md).
