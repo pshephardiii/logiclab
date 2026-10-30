@@ -41,3 +41,25 @@ Then add create/PATCH validation and instructor controls, wire authoritative fin
 ## Slice 1 verification
 
 `npm run check` passed type checks, 957 tests (104 engine, 626 API, 227 web) and production builds. The 31 new foundation tests cover point bounds/default policy, per-occurrence weighting, decimal/tie rounding, completed zero versus unresolved review, missing/duplicate/foreign identities, UUID normalization, aggregate/snapshot consistency, input immutability, opt-in legacy/mixed objective scoring and rejection of completion/private work. Active assignment/result contracts remain unchanged and reject staged score payloads. Formatting, whitespace and local Markdown file targets passed. No PostgreSQL or browser checks were run for these pure/staged changes; no migration, new persisted grade, route acceptance or authoring UI is claimed.
+
+## Slice 2: persistence and legacy compatibility
+
+`Migration20261029160000` adds three nullable fields with no defaults or backfill:
+
+- `assignments.scoring_version`: null retains legacy grading; `points_v1` is the explicit future opt-in and is allowed only for graded assignments.
+- `assignment_items.max_points`: null means no point allocation, not zero points; non-null integers must be 1–1,000. The value belongs to the occurrence, including repeated versions.
+- `assignment_attempts.score`: a separate JSONB score snapshot beside the unchanged correctness result. It is allowed only on submitted graded-result rows with a recognized score-version tag. Pending review stores null earned points/percentage in the typed snapshot.
+
+Named entity fields, scoring enum and database JSON interfaces match this representation. A compile-time/runtime compatibility check guards mutual assignability with the transport score contract. The existing final-submission trigger protects the new score column from updates, clearing or deletion; ordinary immutable final-work retention and narrowly scoped demo cleanup remain unchanged. Future instructor adjustments must remain separate from this original frozen snapshot.
+
+The database checks enforce local bounds, assessment mode and basic score-row state/version; they do not replace the full shared score validator or enforce cross-row allocation/snapshot correspondence. Atomic parent/item validation, publication locks and required scoring at finalization belong to the next workflow slice. A manually written `points_v1` row is not a supported way to activate live scoring yet.
+
+This slice deliberately leaves API request/result unions, persistence workflows and frontend behavior unchanged. Existing assignments/items/finals remain null in the new columns. New work also remains legacy through current routes until coordinated activation; no live submission is silently scored, and no final correctness JSON is recalculated or rewritten.
+
+Rollback locks the three affected tables before checking for scoring data. It refuses whenever any scoring mode, allocation or score exists, including unpublished configuration, rather than dropping that data. A down/up cycle with only legacy rows preserves original fields and frozen JSON text. Application rollback still needs a compatibility review once point workflows are active.
+
+Next: coordinate mutable-draft opt-in/defaults, create/PATCH/duplication semantics, publication checks and finalization/projection compatibility. Keep historical publications in legacy mode, require complete valid allocations for point-scored publication and apply the existing independent grade-release rules before exposing score data. Instructor controls follow the validated workflow.
+
+### Slice 2 verification — October 30, 2026
+
+`npm run check` passed type checks, 958 tests (104 engine, 627 API, 227 web) and production builds. `npm run db:test` passed 209 PostgreSQL checks (156 database, 53 API/workflow), including 17 new scoring persistence cases and existing schema/migration, retention, demo reset/cleanup and application workflows. Coverage includes null legacy fields, repeated-item allocations, pending snapshot round-trips, invalid bounds/modes/score states, immutable submitted scores, legacy down/up preservation and rollback refusal. Formatting, whitespace and local Markdown targets checked. No browser walkthrough, active scoring endpoint/UI change or user development-database migration is claimed; only disposable test databases were migrated. The snapshot was generated from entity metadata without a database connection and limited to the new columns/checks.

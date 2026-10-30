@@ -13,6 +13,10 @@ import { ProblemVersion } from './ProblemVersion.ts';
   properties: ['assignment', 'position'],
 })
 @Check({ name: 'assignment_items_positive_position', expression: 'position > 0' })
+@Check({
+  name: 'assignment_items_max_points_check',
+  expression: 'max_points is null or max_points between 1 and 1000',
+})
 export class AssignmentItem implements AssignmentItemFields {
   [OptionalProps]?: 'id';
 
@@ -35,6 +39,10 @@ export class AssignmentItem implements AssignmentItemFields {
 
   @Property({ type: 'integer' })
   position!: number;
+
+  /** No default/backfill: null is unallocated legacy work, not zero points. */
+  @Property({ type: 'integer', fieldName: 'max_points', nullable: true })
+  maxPoints?: number;
 }
 
 // Keep the readable field reference exact, excluding ORM creation metadata.

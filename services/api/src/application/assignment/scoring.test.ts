@@ -1,3 +1,7 @@
+import type { AssignmentScore as StoredAssignmentScore } from '@logiclab/db' with {
+  'resolution-mode': 'import',
+};
+import type { AssignmentScore } from '@logiclab/contracts';
 import {
   createAssignmentRequestSchema,
   ASSIGNMENT_POINT_LIMITS,
@@ -293,4 +297,10 @@ test('staged allocations do not silently expand active assignment authoring requ
   expect(createAssignmentRequestSchema.safeParse({ title: 'Staged', maxPoints: 10 }).success).toBe(
     false,
   );
+});
+
+test('database score JSON and shared score contracts remain mutually assignable', () => {
+  const stored: StoredAssignmentScore = scoreAssignment(allocations, [full(a), full(b)]);
+  const transport: AssignmentScore = stored;
+  expect(assignmentScoreSchema.parse(JSON.parse(JSON.stringify(transport)))).toEqual(stored);
 });

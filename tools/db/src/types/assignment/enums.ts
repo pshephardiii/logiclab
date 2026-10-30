@@ -25,3 +25,8 @@ export enum GradeReleaseTiming {
   OnSubmission = 'on_submission',
   InstructorRelease = 'instructor_release',
 }
+
+/** Null on an assignment preserves legacy response-unit grading. */
+export enum AssignmentScoringVersion {
+  PointsV1 = 'points_v1',
+}
