@@ -3,7 +3,8 @@ import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import type { DerivationDefinition } from '@logiclab/contracts/derivation';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
-import { DerivationReferenceSummary } from './DerivationReferenceSummary';
+import { ReferenceProofEditor } from './ReferenceProofEditor';
+import { LocalReferenceCheck } from './LocalReferenceCheck';
 
 type Props = { fields: ProblemEditorFields; onChange: (fields: ProblemEditorFields) => void };
 const formulaInput = {
@@ -172,8 +173,11 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
         The explanation is private reference-answer content. Changing the statement or rules
         preserves the existing reference; check it again after saving.
       </p>
-      <p className="help">Reference lines are read-only in this step of authoring.</p>
-      <DerivationReferenceSummary definition={definition} />
+      <ReferenceProofEditor
+        definition={definition}
+        onChange={(referenceProof) => change({ referenceProof })}
+      />
+      <LocalReferenceCheck definition={definition} />
     </>
   );
 }
