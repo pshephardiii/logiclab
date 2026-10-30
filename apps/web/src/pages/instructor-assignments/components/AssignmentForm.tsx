@@ -2,7 +2,6 @@ import { AssignmentPolicyFields } from './AssignmentPolicyFields';
 import {
   ASSIGNMENT_POINT_LIMITS,
   assignmentLearningPolicySchema,
-  assignmentItemPointsSchema,
   createAssignmentRequestSchema,
 } from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
@@ -13,6 +12,8 @@ import type {
 } from '@logiclab/contracts';
 import { PublishedProblemPicker } from './PublishedProblemPicker';
 import { AssignmentItems, type SelectedProblem } from './AssignmentItems';
+import { assignmentItemState } from '../helpers/assignment-item-state';
+import { AssignmentPointsSummary } from './AssignmentPointsSummary';
 
 type Props = {
   assignment: AssignmentDetail | null;
@@ -43,25 +44,12 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   );
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
-  const itemsChanged =
-    JSON.stringify(items.map((item) => item.key)) !==
-    JSON.stringify(assignment?.items.map((item) => item.id) ?? []);
   const graded = policy.assessmentMode === 'graded';
-  const invalidPoints =
-    graded &&
-    items.some(
-      (item) =>
-        !assignmentItemPointsSchema.safeParse(
-          item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
-        ).success,
-    );
-  const pointsChanged =
-    graded &&
-    items.some(
-      (item, index) =>
-        (item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints) !==
-        (assignment?.items[index]?.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints),
-    );
+  const { itemsChanged, invalidPoints, pointsChanged, totalPoints } = assignmentItemState(
+    items,
+    assignment?.items ?? [],
+    graded,
+  );
   const dirty =
     title !== (assignment?.title ?? '') ||
     instructions !== (assignment?.instructions ?? '') ||
@@ -160,24 +148,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             onRemove={remove}
           />
           {graded && (
-            <>
-              <p className="help">
-                Each problem has its own weight. Use whole points from 1 to 1,000. Published
-                allocations are locked.
-              </p>
-              {invalidPoints ? (
-                <p role="alert">Enter whole points from 1 to 1,000 for every problem.</p>
-              ) : (
-                <p>
-                  Total available:{' '}
-                  {items.reduce(
-                    (sum, item) => sum + (item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints),
-                    0,
-                  )}{' '}
-                  points.
-                </p>
-              )}
-            </>
+            <AssignmentPointsSummary invalidPoints={invalidPoints} totalPoints={totalPoints} />
           )}
           {!readOnly && (
             <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />
