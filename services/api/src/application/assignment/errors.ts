@@ -1,5 +1,6 @@
 export type AssignmentFailure =
   | 'release_unavailable'
+  | 'invalid_scoring'
   | 'invalid_policy'
   | 'coverage_required'
   | 'not_found'

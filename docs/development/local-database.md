@@ -107,3 +107,15 @@ The checkout request-ID migration adds a unique `(payer_id, request_id)` key and
 After migrations, `npm run billing:seed` from the repository root creates the local simulated class plan (USD 25.00 for 180 days). The command preserves existing plan edits/retirement and does not create purchases or coverage. Enable the simulator API separately, then use the instructor `/billing` page.
 
 The durable-jobs foundation adds `job_schedules`, `durable_jobs`, `job_runs`, and `reconciliation_findings`. Apply with `npm run db:migrate` from the repository root. This migration adds storage only: it neither seeds/enables schedules nor starts a worker or reconciliation.
+
+## Pre-launch scoring reset
+
+`Migration20261030120000` requires every retained graded final to have a point score. If migration reports unscored graded submissions, use a fresh disposable database rather than regrading or modifying immutable final work. Existing scored finals and explicit allocations are preserved when migration succeeds.
+
+1. Stop the development servers.
+2. Create a new database, for example `logiclab_scoring`, using DBeaver's SQL editor connected to an existing local database: `CREATE DATABASE logiclab_scoring;`. A new connection alone does not create the database.
+3. In root `.env`, change only the final database-name component of `DATABASE_URL` to `/logiclab_scoring`. Keep host, port and credentials; keep `TEST_DATABASE_URL` pointed at a separate disposable test database.
+4. From the repository root run `npm run db:migrate`, then `npm run billing:seed` if using simulated checkout.
+5. Restart `npm run dev`. Create fresh demo workspaces/accounts as needed. A Cognito identity can still exist remotely while its local application-user row does not exist in this new database; follow the normal account provisioning flow rather than assuming old local data was copied.
+
+The old database remains available through its original connection. No reset, deletion or development-database migration is performed automatically by this code change. Database integration tests migrate only their configured disposable test database.

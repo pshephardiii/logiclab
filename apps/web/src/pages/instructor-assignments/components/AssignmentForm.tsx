@@ -1,5 +1,9 @@
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
-import { assignmentLearningPolicySchema, createAssignmentRequestSchema } from '@logiclab/contracts';
+import {
+  ASSIGNMENT_POINT_LIMITS,
+  assignmentLearningPolicySchema,
+  createAssignmentRequestSchema,
+} from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
 import type {
   AssignmentDetail,
@@ -8,6 +12,8 @@ import type {
 } from '@logiclab/contracts';
 import { PublishedProblemPicker } from './PublishedProblemPicker';
 import { AssignmentItems, type SelectedProblem } from './AssignmentItems';
+import { assignmentItemState } from '../helpers/assignment-item-state';
+import { AssignmentPointsSummary } from './AssignmentPointsSummary';
 
 type Props = {
   assignment: AssignmentDetail | null;
@@ -30,13 +36,20 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     assignment?.gradeReleaseTiming ?? 'on_submission',
   );
   const [items, setItems] = useState<SelectedProblem[]>(
-    assignment?.items.map((item) => ({ key: item.id, version: item.problemVersion })) ?? [],
+    assignment?.items.map((item) => ({
+      key: item.id,
+      version: item.problemVersion,
+      maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
+    })) ?? [],
   );
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
-  const itemsChanged =
-    JSON.stringify(ids) !==
-    JSON.stringify(assignment?.items.map((item) => item.problemVersion.id) ?? []);
+  const graded = policy.assessmentMode === 'graded';
+  const { itemsChanged, invalidPoints, pointsChanged, totalPoints } = assignmentItemState(
+    items,
+    assignment?.items ?? [],
+    graded,
+  );
   const dirty =
     title !== (assignment?.title ?? '') ||
     instructions !== (assignment?.instructions ?? '') ||
@@ -44,7 +57,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     policy.feedbackTiming !== originalPolicy.feedbackTiming ||
     policy.solutionAccess !== originalPolicy.solutionAccess ||
     gradeReleaseTiming !== (assignment?.gradeReleaseTiming ?? 'on_submission') ||
-    itemsChanged;
+    itemsChanged ||
+    pointsChanged;
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
@@ -68,11 +82,19 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (invalidPoints || busy || readOnly) return;
     await onSave(
       createAssignmentRequestSchema.parse({
         title,
         instructions: instructions || null,
-        problemVersionIds: ids,
+        ...(policy.assessmentMode === 'graded'
+          ? {
+              items: items.map((item) => ({
+                problemVersionId: item.version.id,
+                maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
+              })),
+            }
+          : { problemVersionIds: ids }),
         ...policy,
         gradeReleaseTiming,
       }),
@@ -111,11 +133,31 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             gradeReleaseTiming={gradeReleaseTiming}
             onGradeReleaseChange={setGradeReleaseTiming}
           />
-          <AssignmentItems items={items} readOnly={readOnly} onMove={move} onRemove={remove} />
+          <AssignmentItems
+            items={items}
+            graded={graded}
+            readOnly={readOnly}
+            onPoints={(index, maxPoints) =>
+              setItems((previous) =>
+                previous.map((item, position) =>
+                  position === index ? { ...item, maxPoints } : item,
+                ),
+              )
+            }
+            onMove={move}
+            onRemove={remove}
+          />
+          {graded && (
+            <AssignmentPointsSummary invalidPoints={invalidPoints} totalPoints={totalPoints} />
+          )}
           {!readOnly && (
             <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />
           )}
-          {!readOnly && <button type="submit">{busy ? 'Saving…' : 'Save assignment draft'}</button>}
+          {!readOnly && (
+            <button type="submit" disabled={invalidPoints}>
+              {busy ? 'Saving…' : 'Save assignment draft'}
+            </button>
+          )}
         </fieldset>
       </form>
       {readOnly && (

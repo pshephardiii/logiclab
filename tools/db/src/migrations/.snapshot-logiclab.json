@@ -110,6 +110,23 @@
           "enumItems": [],
           "mappedType": "integer"
         },
+        "score": {
+          "name": "score",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
         "student_id": {
           "name": "student_id",
           "type": "uuid",
@@ -190,6 +207,11 @@
           "name": "assignment_attempts_revision_nonnegative",
           "expression": "revision >= 0",
           "definition": "check (revision >= 0)"
+        },
+        {
+          "name": "assignment_attempts_score_state_check",
+          "expression": "\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  ",
+          "definition": "check (\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  )"
         },
         {
           "name": "assignment_attempts_submission_result_check",
@@ -275,6 +297,23 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "max_points": {
+          "name": "max_points",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "10",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
         "position": {
           "name": "position",
           "type": "int",
@@ -334,6 +373,11 @@
         }
       ],
       "checks": [
+        {
+          "name": "assignment_items_max_points_check",
+          "expression": "max_points between 1 and 1000",
+          "definition": "check (max_points between 1 and 1000)"
+        },
         {
           "name": "assignment_items_positive_position",
           "expression": "position > 0",

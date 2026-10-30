@@ -65,7 +65,14 @@ const assignment: AssignmentDetail = {
   archivedAt: null,
   createdAt: time,
   updatedAt: time,
-  items: [{ id: '66666666-6666-4666-8666-666666666666', position: 1, problemVersion: version }],
+  items: [
+    {
+      id: '66666666-6666-4666-8666-666666666666',
+      position: 1,
+      problemVersion: version,
+      maxPoints: 25,
+    },
+  ],
 };
 const { items, ...summary } = assignment;
 beforeEach(() => {
@@ -108,6 +115,7 @@ test('metadata-only edits retain failed input and omit item replacement, then pu
   const input = vi.mocked(api.updateAssignment).mock.calls.at(-1)![1];
   expect(input).toMatchObject({ title: 'Revised', solutionAccess: 'never' });
   expect(input).not.toHaveProperty('problemVersionIds');
+  expect(input).not.toHaveProperty('items');
   vi.mocked(api.assignmentAction).mockResolvedValue({
     ...assignment,
     title: 'Revised',
@@ -136,7 +144,12 @@ test('repeated publications are distinct occurrences and ordering/removal contro
   await waitFor(() =>
     expect(api.updateAssignment).toHaveBeenCalledWith(
       assignment.id,
-      expect.objectContaining({ problemVersionIds: [second.id, version.id] }),
+      expect.objectContaining({
+        items: [
+          { problemVersionId: second.id, maxPoints: 10 },
+          { problemVersionId: version.id, maxPoints: 25 },
+        ],
+      }),
       expect.any(AbortSignal),
     ),
   );
@@ -483,4 +496,70 @@ test('conceptual publications can be selected and saved as pinned assignment ite
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
   await waitFor(() => expect(api.updateAssignment).toHaveBeenCalled());
+});
+
+test('weight-only saves preserve occurrence IDs, retain failed edits and clear dirty protection on success', async () => {
+  const user = await openDraft();
+  const input = screen.getByLabelText('Points for problem 1');
+  await user.clear(input);
+  expect(screen.getByRole('button', { name: 'Save assignment draft' })).toBeDisabled();
+  await user.type(input, '40');
+  expect(screen.getByText('Total available: 40 points.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeDisabled();
+  vi.mocked(api.updateAssignment).mockRejectedValueOnce(new Error('Try again'));
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Try again');
+  expect(input).toHaveValue(40);
+  expect(api.updateAssignment).toHaveBeenLastCalledWith(
+    assignment.id,
+    expect.objectContaining({
+      pointAllocations: [{ itemId: assignment.items[0]!.id, maxPoints: 40 }],
+    }),
+    expect.any(AbortSignal),
+  );
+  const payload = vi.mocked(api.updateAssignment).mock.calls.at(-1)![1];
+  expect(payload).not.toHaveProperty('items');
+  expect(payload).not.toHaveProperty('problemVersionIds');
+  vi.mocked(api.updateAssignment).mockResolvedValue({
+    ...assignment,
+    items: assignment.items.map((item) => ({ ...item, maxPoints: 40 })),
+  });
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Publish assignment' })).toBeEnabled(),
+  );
+});
+
+test('reordering repeated copies of the same publication keeps their distinct point allocations', async () => {
+  const repeated = {
+    ...assignment,
+    items: [
+      assignment.items[0]!,
+      {
+        ...assignment.items[0]!,
+        id: '77777777-7777-4777-8777-777777777777',
+        position: 2,
+        maxPoints: 5,
+      },
+    ],
+  };
+  vi.mocked(api.getAssignment).mockResolvedValue(repeated);
+  vi.mocked(api.updateAssignment).mockResolvedValue(repeated);
+  const user = await openDraft();
+  await user.click(screen.getByRole('button', { name: 'Move problem 2 up' }));
+  expect(screen.getByLabelText('Points for problem 1')).toHaveValue(5);
+  expect(screen.getByLabelText('Points for problem 2')).toHaveValue(25);
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  await waitFor(() =>
+    expect(api.updateAssignment).toHaveBeenCalledWith(
+      assignment.id,
+      expect.objectContaining({
+        items: [
+          { problemVersionId: version.id, maxPoints: 5 },
+          { problemVersionId: version.id, maxPoints: 25 },
+        ],
+      }),
+      expect.any(AbortSignal),
+    ),
+  );
 });

@@ -1,3 +1,4 @@
+import type { AssignmentScore } from '../types/assignment-attempt/scoring.ts';
 import { submittedAttemptRetentionBody } from '../triggers/demo-retention.ts';
 import { randomUUID } from 'node:crypto';
 import { OptionalProps } from '@mikro-orm/core';
@@ -32,6 +33,18 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
   timing: 'before',
   events: ['update', 'delete'],
   body: submittedAttemptRetentionBody,
+})
+@Check({
+  name: 'assignment_attempts_score_state_check',
+  expression: `
+    score is null or coalesce(
+      submitted_at is not null
+      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')
+      and jsonb_typeof(score) = 'object'
+      and score->>'scoringVersion' = 'points_v1',
+      false
+    )
+  `,
 })
 export class AssignmentAttempt implements AssignmentAttemptFields {
   [OptionalProps]?: 'id' | 'answers' | 'revision' | 'createdAt' | 'updatedAt';
@@ -69,6 +82,10 @@ export class AssignmentAttempt implements AssignmentAttemptFields {
 
   @Property({ type: 'json', columnType: 'jsonb', nullable: true })
   result?: SubmissionResult;
+
+  /** Retained with the final result; the existing submission trigger also protects this field. */
+  @Property({ type: 'json', columnType: 'jsonb', nullable: true })
+  score?: AssignmentScore;
 
   @Property({
     type: 'datetime',

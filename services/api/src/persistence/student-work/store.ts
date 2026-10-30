@@ -1,3 +1,5 @@
+import { scoreObjectiveSubmission } from '../../application/assignment/scoring';
+import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
@@ -228,6 +230,13 @@ export async function createStudentWorkStore(
           })),
           attempt.answers,
         );
+        if (!validAssignmentScoring(assignment, assigned))
+          throw new StudentWorkError('unsupported_policy');
+        if (assignment.assessmentMode === 'graded')
+          attempt.score = scoreObjectiveSubmission(
+            assigned.map((item) => ({ itemId: item.id, maxPoints: item.maxPoints! })),
+            attempt.result,
+          );
         attempt.submittedAt = new Date();
         attempt.revision++;
         await em.flush();

@@ -12,6 +12,12 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  invalid_scoring: {
+    status: 400,
+    code: 'ASSIGNMENT_SCORING_INVALID',
+    message:
+      'Point scoring requires graded work and valid points for every problem. Update problem order and points together.',
+  },
   release_unavailable: {
     status: 409,
     code: 'ASSIGNMENT_RELEASE_UNAVAILABLE',

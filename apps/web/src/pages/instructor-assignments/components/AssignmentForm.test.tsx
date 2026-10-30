@@ -132,3 +132,69 @@ test('published work locks independent grade and answer policies', () => {
   expect(screen.getByLabelText('Answer reveal')).toHaveValue('instructor_release');
   expect(screen.getByLabelText('Answer reveal')).toBeDisabled();
 });
+
+const weighted: AssignmentDetail = {
+  ...assignment,
+  assessmentMode: 'graded',
+  feedbackTiming: 'on_submission',
+  items: [
+    {
+      id: '33333333-3333-4333-8333-333333333333',
+      position: 1,
+      maxPoints: 20,
+      problemVersion: {
+        id: '44444444-4444-4444-8444-444444444444',
+        problemId: '55555555-5555-4555-8555-555555555555',
+        version: 1,
+        title: 'Table',
+        instructions: null,
+        publishedAt: assignment.createdAt,
+        definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
+      },
+    },
+  ],
+};
+
+test.each(['0', '1001', '1.5'])(
+  'invalid allocation %s blocks saving without losing the entry',
+  async (value) => {
+    const user = userEvent.setup();
+    const save = vi.fn();
+    const dirty = vi.fn();
+    render(<AssignmentForm assignment={weighted} busy={false} onSave={save} onDirty={dirty} />);
+    const input = screen.getByLabelText('Points for problem 1');
+    await user.clear(input);
+    await user.type(input, value);
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter whole points');
+    expect(screen.getByRole('button', { name: 'Save assignment draft' })).toBeDisabled();
+    expect(save).not.toHaveBeenCalled();
+    expect(dirty).toHaveBeenLastCalledWith(true);
+    await user.clear(input);
+    await user.type(input, '20');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await waitFor(() => expect(dirty).toHaveBeenLastCalledWith(false));
+  },
+);
+
+test.each(['publishedAt', 'archivedAt'] as const)('%s locks allocation controls', (field) => {
+  render(
+    <AssignmentForm
+      assignment={{ ...weighted, [field]: assignment.createdAt }}
+      busy={false}
+      onSave={vi.fn()}
+      onDirty={vi.fn()}
+    />,
+  );
+  expect(screen.getByLabelText('Points for problem 1')).toHaveValue(20);
+  expect(screen.getByLabelText('Points for problem 1')).toBeDisabled();
+});
+
+test('score-free modes hide allocations and restoring graded mode retains the draft weight', async () => {
+  const user = userEvent.setup();
+  render(<AssignmentForm assignment={weighted} busy={false} onSave={vi.fn()} onDirty={vi.fn()} />);
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  expect(screen.queryByLabelText('Points for problem 1')).not.toBeInTheDocument();
+  expect(screen.queryByText(/Total available/)).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'graded');
+  expect(screen.getByLabelText('Points for problem 1')).toHaveValue(20);
+});

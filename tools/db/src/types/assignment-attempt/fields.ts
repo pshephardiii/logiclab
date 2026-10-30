@@ -1,3 +1,4 @@
+import type { AssignmentScore } from './scoring.ts';
 import type { Assignment } from '../../entities/Assignment.ts';
 import type { User } from '../../entities/User.ts';
 import type { AttemptAnswers, SubmissionResult } from './work.ts';
@@ -10,6 +11,7 @@ export interface AssignmentAttemptFields {
   revision: number;
   submittedAt?: Date;
   result?: SubmissionResult;
+  score?: AssignmentScore;
   createdAt: Date;
   updatedAt: Date;
 }

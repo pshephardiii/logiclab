@@ -1,3 +1,9 @@
+import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
+import {
+  ASSIGNMENT_POINT_LIMITS,
+  assignmentPointAllocationsSchema,
+  weightedAssignmentItemsSchema,
+} from '@logiclab/contracts';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
@@ -124,6 +130,7 @@ export async function createAssignmentStore(
       items: items.map((item) => ({
         id: item.id,
         position: item.position,
+        maxPoints: item.maxPoints,
         problemVersion: publishedProblemVersion(item.problemVersion),
       })),
     };
@@ -133,6 +140,7 @@ export async function createAssignmentStore(
     ownerId: string,
     assignment: AssignmentEntity,
     ids: string[],
+    points?: number[],
   ) {
     const versions = await ownedVersions(em, ownerId, ids);
     // Validate all references before replacement; the transaction rolls back the entire draft on failure.
@@ -143,9 +151,73 @@ export async function createAssignmentStore(
           assignment,
           problemVersion: versions.get(id)!,
           position: index + 1,
+          ...(points ? { maxPoints: points[index] } : {}),
         }),
       ),
     );
+  }
+
+  async function draftScoring(
+    em: Manager,
+    ownerId: string,
+    assignment: AssignmentEntity,
+    input: UpdateAssignmentRequest,
+  ) {
+    if (
+      input.items !== undefined &&
+      (!weightedAssignmentItemsSchema.safeParse(input.items).success ||
+        input.pointAllocations !== undefined ||
+        (input.problemVersionIds?.length ?? 0) > 0)
+    )
+      throw new AssignmentOperationError('invalid_scoring');
+    const graded = assignment.assessmentMode === 'graded';
+    if ((input.items !== undefined || input.pointAllocations !== undefined) && !graded)
+      throw new AssignmentOperationError('invalid_scoring');
+    let items = await em.find(
+      AssignmentItem,
+      { assignment: assignment.id },
+      { orderBy: { position: 'ASC' } },
+    );
+    if (input.items !== undefined) {
+      await replaceItems(
+        em,
+        ownerId,
+        assignment,
+        input.items.map((item) => item.problemVersionId),
+        input.items.map((item) => item.maxPoints),
+      );
+    } else if (input.problemVersionIds !== undefined) {
+      const same =
+        input.problemVersionIds.length === items.length &&
+        items.every((item, index) => item.problemVersion.id === input.problemVersionIds![index]);
+      if (graded && !same && items.length > 0)
+        throw new AssignmentOperationError('invalid_scoring');
+      if (!same)
+        await replaceItems(
+          em,
+          ownerId,
+          assignment,
+          input.problemVersionIds,
+          input.problemVersionIds.map(() => ASSIGNMENT_POINT_LIMITS.defaultPoints),
+        );
+    }
+    await em.flush();
+    items = await em.find(
+      AssignmentItem,
+      { assignment: assignment.id },
+      { orderBy: { position: 'ASC' } },
+    );
+    if (input.pointAllocations !== undefined) {
+      const parsed = assignmentPointAllocationsSchema.safeParse(input.pointAllocations);
+      if (
+        !parsed.success ||
+        parsed.data.length !== items.length ||
+        parsed.data.some((value) => !items.some((item) => item.id === value.itemId))
+      )
+        throw new AssignmentOperationError('invalid_scoring');
+      const points = new Map(parsed.data.map((value) => [value.itemId, value.maxPoints]));
+      for (const item of items) item.maxPoints = points.get(item.id)!;
+    }
   }
 
   const reviews = await createSubmissionReviewStore(orm, transaction);
@@ -181,7 +253,11 @@ export async function createAssignmentStore(
         });
         em.persist(assignment);
         await em.flush();
-        await replaceItems(em, ownerId, assignment, input.problemVersionIds);
+        await draftScoring(em, ownerId, assignment, {
+          ...(input.items !== undefined
+            ? { items: input.items }
+            : { problemVersionIds: input.problemVersionIds }),
+        });
         await em.flush();
         return detail(em, assignment);
       });
@@ -195,6 +271,8 @@ export async function createAssignmentStore(
           { assignment: source.id },
           { orderBy: { position: 'ASC' } },
         );
+        if (items.length && !validAssignmentScoring(source, items))
+          throw new AssignmentOperationError('invalid_scoring');
         let title = 'Copy of ';
         // Respect the API's 120-code-unit limit without splitting a Unicode character.
         for (const character of source.title) {
@@ -220,6 +298,7 @@ export async function createAssignmentStore(
           ownerId,
           copy,
           items.map((item) => item.problemVersion.id),
+          items.map((item) => item.maxPoints),
         );
         await em.flush();
         return detail(em, copy);
@@ -270,8 +349,7 @@ export async function createAssignmentStore(
         if (input.title !== undefined) assignment.title = input.title;
         if (input.instructions !== undefined)
           assignment.instructions = input.instructions ?? undefined;
-        if (input.problemVersionIds !== undefined)
-          await replaceItems(em, ownerId, assignment, input.problemVersionIds);
+        await draftScoring(em, ownerId, assignment, input);
         assignment.updatedAt = new Date();
         await em.flush();
         return detail(em, assignment);
@@ -315,6 +393,8 @@ export async function createAssignmentStore(
         if (!assignment.publishedAt) {
           const items = await em.find(AssignmentItem, { assignment: assignment.id });
           if (!items.length) throw new AssignmentOperationError('empty');
+          if (!validAssignmentScoring(assignment, items))
+            throw new AssignmentOperationError('invalid_scoring');
           await ownedVersions(
             em,
             ownerId,

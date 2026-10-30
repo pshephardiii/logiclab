@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Logical derivation planning](planning/logical-derivations.md)
+- [Assignment scoring](planning/assignment-scoring.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
@@ -74,6 +75,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Assignment scoring and weighted demo workflows](verification/assignment-scoring-verification.md)
 
 - [Conceptual questions and mixed demo workflows](verification/conceptual-questions-verification.md)
 

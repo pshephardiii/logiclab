@@ -145,6 +145,8 @@ After these, return to the UI/visual audit and inexpensive portfolio sandbox pre
 
 ### 019: assignment scoring
 
+Branch `019-feat-assignment-scoring` implements per-occurrence allocations, frozen point totals, instructor draft controls and released student/instructor score views for existing exercise types. All graded work uses the single point model; score-free modes remain score-free. Unresolved-review outcomes are represented but proof submission/manual grading are not enabled. See [scoring decisions and rollout boundaries](assignment-scoring.md) and [verification](../verification/assignment-scoring-verification.md).
+
 Keep scoring policy separate from proof correctness and checker reports. Store the allocation on the assignment item, not the reusable problem, so the same published problem can have different weights in different assignments.
 
 Small slices:

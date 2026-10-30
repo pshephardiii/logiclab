@@ -1,3 +1,5 @@
+import { pointScore } from '../../../../test/assignment-score-fixture';
+import { submitted, work } from '../../../../test/assignment-work-fixture';
 import { render, screen } from '@testing-library/react';
 import { test, expect } from 'vitest';
 import { SubmissionSummary } from './SubmissionSummary';
@@ -50,4 +52,37 @@ test('mixed graded results retain table feedback while conceptual statuses stay 
   expect(screen.getByText('1 correct · 0 incorrect · 1 unanswered · 2 responses')).toBeTruthy();
   expect(submissionFeedback(result, 'table')).toEqual(tableFeedback);
   expect(submissionFeedback(result, 'choice')).toBeNull();
+});
+
+test('official point totals and occurrence scores remain distinct from correctness counts', () => {
+  render(
+    <SubmissionSummary
+      result={submitted.result!}
+      submittedAt={submitted.submittedAt!}
+      score={pointScore}
+      items={work.items}
+    />,
+  );
+  expect(screen.getByText('5 / 25 points (20%)')).toBeInTheDocument();
+  expect(screen.getByText(/Problem 1: First occurrence/)).toHaveTextContent('5 / 20 points');
+  expect(screen.getByText(/Problem 2: Second occurrence/)).toHaveTextContent('0 / 5 points');
+});
+
+test('unresolved review has no invented zero total or percentage', () => {
+  render(
+    <SubmissionSummary
+      result={submitted.result!}
+      submittedAt={submitted.submittedAt!}
+      score={{
+        ...pointScore,
+        items: [
+          { ...pointScore.items[0]!, status: 'needs_review', earnedPoints: null },
+          pointScore.items[1]!,
+        ],
+        summary: { status: 'needs_review', maxPoints: 25, earnedPoints: null, percentage: null },
+      }}
+    />,
+  );
+  expect(screen.getByText('Needs instructor review · 25 points available')).toBeInTheDocument();
+  expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 });

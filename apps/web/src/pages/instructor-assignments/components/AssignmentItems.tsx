@@ -1,15 +1,17 @@
-import type { PublishedProblemVersion } from '@logiclab/contracts';
+import { ASSIGNMENT_POINT_LIMITS, type PublishedProblemVersion } from '@logiclab/contracts';
 
-export type SelectedProblem = { key: string; version: PublishedProblemVersion };
+export type SelectedProblem = { key: string; maxPoints?: number; version: PublishedProblemVersion };
 type Props = {
   items: SelectedProblem[];
   readOnly: boolean;
+  graded: boolean;
+  onPoints: (index: number, points: number) => void;
   onMove: (index: number, direction: -1 | 1) => void;
   onRemove: (index: number) => void;
 };
 
 /** Keeps repeated publications distinct while exposing explicit, keyboard-accessible ordering controls. */
-export function AssignmentItems({ items, readOnly, onMove, onRemove }: Props) {
+export function AssignmentItems({ items, readOnly, graded, onPoints, onMove, onRemove }: Props) {
   return (
     <section aria-label="Selected assignment problems">
       <h3>Ordered problems ({items.length}/50)</h3>
@@ -31,6 +33,25 @@ export function AssignmentItems({ items, readOnly, onMove, onRemove }: Props) {
                 ? item.version.definition.formula
                 : item.version.definition.question}
             </code>
+            {graded && (
+              <label>
+                Points for problem {index + 1}
+                <input
+                  type="number"
+                  required
+                  min={ASSIGNMENT_POINT_LIMITS.minPoints}
+                  max={ASSIGNMENT_POINT_LIMITS.maxPoints}
+                  step={1}
+                  disabled={readOnly}
+                  value={
+                    Number.isNaN(item.maxPoints)
+                      ? ''
+                      : (item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints)
+                  }
+                  onChange={(event) => onPoints(index, event.target.valueAsNumber)}
+                />
+              </label>
+            )}
             {!readOnly && (
               <div className="action-row">
                 <button

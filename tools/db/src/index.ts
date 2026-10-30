@@ -105,3 +105,5 @@ export { DemoSession } from './entities/DemoSession.ts';
 export type { DemoSessionFields } from './types/demo-session/fields.ts';
 
 export { seedDemoBillingPlan } from './seeds/billing-plan.ts';
+
+export type { AssignmentItemScore, AssignmentScore } from './types/assignment-attempt/scoring.ts';

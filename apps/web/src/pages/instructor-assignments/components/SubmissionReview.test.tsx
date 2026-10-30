@@ -1,3 +1,4 @@
+import { pointScore } from '../../../../test/assignment-score-fixture';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -85,4 +86,21 @@ test('conceptual final review shows the frozen selection/status without an expla
   expect(screen.getByText('✓ Correct')).toBeInTheDocument();
   expect(screen.queryByText(/Correct answer:/)).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Clear answer' })).not.toBeInTheDocument();
+});
+
+test('instructor list and detail show the retained point score', async () => {
+  vi.mocked(api.listSubmissions).mockResolvedValue({
+    submissions: [{ ...review.submission, score: pointScore }],
+    nextOffset: null,
+  });
+  vi.mocked(api.readSubmission).mockResolvedValue({
+    ...review,
+    attempt: { ...review.attempt, score: pointScore },
+  });
+  const user = userEvent.setup();
+  render(<SubmissionReview assignmentId={review.assignment.id} />);
+  expect(await screen.findByText('5 / 25 points (20%)')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'student@example.test' }));
+  await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
+  expect(screen.getAllByText('5 / 25 points (20%)')).toHaveLength(2);
 });

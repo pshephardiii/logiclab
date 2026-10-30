@@ -8,6 +8,7 @@ import type {
 } from '@logiclab/contracts';
 import * as apiModule from '../../../api/assignments/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
+import { assignmentUpdate } from '../helpers/assignment-update';
 
 /** Owns a single class's assignments; list, detail, and mutation requests have independent lifecycles. */
 export function useAssignments(classId: string) {
@@ -119,13 +120,12 @@ export function useAssignments(classId: string) {
     }
   }
   function save(input: CreateAssignmentRequest, itemsChanged: boolean) {
-    const { problemVersionIds, ...metadata } = input;
     return mutate(
       (signal) =>
         selected
           ? api.updateAssignment(
               selected.id,
-              { ...metadata, ...(itemsChanged ? { problemVersionIds } : {}) },
+              assignmentUpdate(selected, input, itemsChanged),
               signal,
             )
           : api.createAssignment(classId, input, signal),

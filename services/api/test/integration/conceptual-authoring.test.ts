@@ -212,11 +212,9 @@ test('normal/demo conceptual authoring validates keys, scopes private snapshots 
         );
         const assignmentPath = `${scope.prefix}/assignments/${assigned.json().assignment.id}`;
         const updated = await request('PATCH', assignmentPath, scope.cookie, {
-          problemVersionIds: [
-            first.json().version.id,
-            second.json().version.id,
-            first.json().version.id,
-          ],
+          items: [first.json().version.id, second.json().version.id, first.json().version.id].map(
+            (problemVersionId) => ({ problemVersionId, maxPoints: 10 }),
+          ),
         });
         assert.equal(updated.statusCode, 200, updated.body);
         assert.equal(

@@ -7,4 +7,5 @@ export interface AssignmentItemFields {
   assignment: Assignment;
   problemVersion: ProblemVersion;
   position: number;
+  maxPoints: number;
 }

@@ -485,7 +485,7 @@ test('reset cannot revive an idle-expired workspace or extend its absolute deadl
     assert.equal(await em.count(db.User, { demoWorkspace: workspace.workspaceId }), 2);
   }));
 
-test('template 4 seeds mixed private practice and independent graded release with pinned conceptual keys', async () =>
+test('template 5 seeds weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -507,10 +507,24 @@ test('template 4 seeds mixed private practice and independent graded release wit
       classroom: { owner },
       title: DEMO_TEMPLATE.mixedAssignmentTitle,
     });
+    const first = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner },
+      title: DEMO_TEMPLATE.assignmentTitle,
+    });
+    assert.deepEqual(
+      (await assignments.findOwned(owner.id, first.id)).items.map((item) => item.maxPoints),
+      [20],
+    );
+    const gradedRead = await work.read(student.id, graded.id);
+    assert.deepEqual(
+      gradedRead.assignment.items.map((item) => item.maxPoints),
+      [20, 5, 5],
+    );
     const read = await work.read(student.id, practice.id);
     assert.equal(read.assignment.items.length, 3);
     assert.equal(read.assignment.feedbackTiming, 'immediate');
     assert.equal(read.assignment.assessmentMode, 'ungraded_practice');
+    assert(read.assignment.items.every((item) => item.maxPoints === undefined));
     for (const key of ['correctAnswer', 'correctOptionId', 'explanation'])
       assert.equal(JSON.stringify(read).includes(`"${key}"`), false);
     for (const example of DEMO_CONCEPTUAL_QUESTIONS) {
@@ -533,6 +547,7 @@ test('template 4 seeds mixed private practice and independent graded release wit
     const final = await work.submit(student.id, graded.id, 0);
     assert.equal(final.gradePending, true);
     assert.equal(final.result, null);
+    assert.equal(final.score, null);
     const detail = await work.read(student.id, graded.id);
     const conceptual = detail.assignment.items.find((item) => 'content' in item)!;
     await assert.rejects(work.solution(student.id, graded.id, conceptual.id), /solution_locked/);
@@ -540,6 +555,7 @@ test('template 4 seeds mixed private practice and independent graded release wit
     assert('type' in (await work.solution(student.id, graded.id, conceptual.id)).solution);
     assert.equal((await work.read(student.id, graded.id)).attempt!.result, null);
     await assignments.release(owner.id, graded.id, 'grades');
+    assert.equal((await work.read(student.id, graded.id)).attempt!.score!.summary.maxPoints, 30);
     assert.equal(
       (await work.read(student.id, graded.id)).attempt!.result!.gradingVersion,
       'mixed_v1',

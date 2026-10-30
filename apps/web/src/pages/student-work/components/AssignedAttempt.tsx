@@ -51,6 +51,13 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       <section className="panel">
         <h2>{work.assignment.title}</h2>
         {work.assignment.instructions && <p>{work.assignment.instructions}</p>}
+        {work.assignment.assessmentMode === 'graded' &&
+          work.assignment.items.every((value) => value.maxPoints != null) && (
+            <p>
+              Total available:{' '}
+              {work.assignment.items.reduce((sum, value) => sum + value.maxPoints!, 0)} points.
+            </p>
+          )}
         <p>
           {submitted
             ? 'Final answers are read-only.'
@@ -101,11 +108,19 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           </p>
         )}
       {work.attempt?.submittedAt && work.attempt.result && (
-        <SubmissionSummary result={work.attempt.result} submittedAt={work.attempt.submittedAt} />
+        <SubmissionSummary
+          result={work.attempt.result}
+          submittedAt={work.attempt.submittedAt}
+          score={work.attempt.score}
+          items={work.assignment.items}
+        />
       )}
       {item && (
         <>
           <section className="panel">
+            {work.assignment.assessmentMode === 'graded' && item.maxPoints != null && (
+              <p>This problem: {item.maxPoints} points.</p>
+            )}
             <label htmlFor="assigned-item">Problem</label>
             <select
               className="assignment-choice"

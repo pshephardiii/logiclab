@@ -74,3 +74,9 @@ The student submission is gone, the example assignment is available to complete 
 | How are jobs configured and invoked?                           | [Job registry](../../services/api/src/application/jobs/registry.ts) and [operator guide](operator-jobs.md) |
 
 Operational limits and cleanup commands are in [local demo setup](public-demo.md). Normal Cognito signup/login remains a separate flow at `/account`.
+
+## Inspect point weighting
+
+Open the mixed graded assignment as instructor: its three problems carry 20, 5 and 5 points. Published allocations are locked. Choose **Duplicate as draft**, change **Points for problem 1**, and save. Verify the total updates and the saved value survives reload. Reordering carries each problem's allocation; repeated copies can have different weights. Completion-only and practice hide point controls.
+
+For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 5's starting weights and clears submissions.

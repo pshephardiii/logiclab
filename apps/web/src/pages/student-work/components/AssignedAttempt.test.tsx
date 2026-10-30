@@ -1,3 +1,4 @@
+import { pointScore } from '../../../../test/assignment-score-fixture';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
 import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { act, screen, waitFor, within } from '@testing-library/react';
@@ -497,4 +498,27 @@ test('submitted conceptual work is read-only and pending grades disclose neither
   expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Clear answer' })).not.toBeInTheDocument();
+});
+
+test('pending grade hides point results until authoritative refresh and retains problem allocations', async () => {
+  const weightedWork = {
+    ...work,
+    gradeReleaseTiming: 'instructor_release' as const,
+    items: work.items.map((item, index) => ({ ...item, maxPoints: index === 0 ? 20 : 5 })),
+  };
+  vi.mocked(api.readAssignedWork)
+    .mockResolvedValueOnce({
+      assignment: weightedWork,
+      attempt: { ...submitted, result: null, score: null, gradePending: true },
+    })
+    .mockResolvedValue({
+      assignment: weightedWork,
+      attempt: { ...submitted, score: pointScore, gradePending: false },
+    });
+  const { user } = await open();
+  expect(screen.getByText('This problem: 20 points.')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Refresh results and answer access' }));
+  expect(await screen.findByText('5 / 25 points (20%)')).toBeInTheDocument();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });

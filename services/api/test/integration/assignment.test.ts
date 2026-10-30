@@ -167,7 +167,7 @@ test(
         (
           await request('PATCH', path, {
             title: 'Should roll back',
-            problemVersionIds: [foreign.id],
+            items: [{ problemVersionId: foreign.id, maxPoints: 10 }],
           })
         ).statusCode,
         404,
@@ -176,7 +176,7 @@ test(
       await assert.rejects(
         store.update(owner.id, assignment.id, {
           title: 'x'.repeat(121),
-          problemVersionIds: [first.id],
+          items: [{ problemVersionId: first.id, maxPoints: 10 }],
         }),
       );
       assert.deepEqual(
@@ -198,7 +198,12 @@ test(
         'Omitted item list must retain occurrence IDs.',
       );
       assignment = (
-        await request('PATCH', path, { problemVersionIds: [first.id, second.id] })
+        await request('PATCH', path, {
+          items: [first.id, second.id].map((problemVersionId) => ({
+            problemVersionId,
+            maxPoints: 10,
+          })),
+        })
       ).json().assignment;
       assert.deepEqual(
         assignment.items.map((item: any) => item.problemVersion.id),

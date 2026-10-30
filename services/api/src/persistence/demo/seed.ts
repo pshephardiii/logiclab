@@ -79,7 +79,8 @@ export async function seedDemoWorkspace(
   const assignment = await assignments.create(instructor.id, funded.id, {
     title: DEMO_TEMPLATE.assignmentTitle,
     instructions: DEMO_TEMPLATE.assignmentInstructions,
-    problemVersionIds: [version.id],
+    items: [{ problemVersionId: version.id, maxPoints: DEMO_TEMPLATE.assignmentPoints }],
+    problemVersionIds: [],
     solutionAccess: 'after_submission',
     assessmentMode: 'graded',
     feedbackTiming: 'on_submission',
@@ -106,7 +107,11 @@ export async function seedDemoWorkspace(
   const mixed = await assignments.create(instructor.id, funded.id, {
     title: DEMO_TEMPLATE.mixedAssignmentTitle,
     instructions: DEMO_TEMPLATE.mixedAssignmentInstructions,
-    problemVersionIds: mixedVersionIds,
+    items: mixedVersionIds.map((problemVersionId, index) => ({
+      problemVersionId,
+      maxPoints: DEMO_TEMPLATE.mixedPoints[index]!,
+    })),
+    problemVersionIds: [],
     assessmentMode: 'graded',
     feedbackTiming: 'on_submission',
     gradeReleaseTiming: 'instructor_release',

@@ -123,3 +123,25 @@ The same actions are available under `/api/demo/resources/assignments/:assignmen
 ## Mixed conceptual assignments (`017`)
 
 Ordered items may pin truth-table, true/false or single-answer multiple-choice versions, including repeated occurrences of the same version. The instructor picker and create/update/publication paths now accept all supported definitions. Ownership, nonempty publication, class coverage, archive rules and immutable published policies remain enforced. Draft/key/option edits in the library do not alter assigned snapshots. Each conceptual occurrence is one response unit; table cells retain their existing unit weight. Student responses, mixed final results, completion and release rules are documented in the [student work API](student-work-api.md#conceptual-response-workflows-017-server-integration).
+
+## Point allocations (`019`)
+
+All graded assignments use points. There is no assignment-level `scoringVersion` request field. For explicit weights, create with:
+
+```json
+{
+  "title": "Weighted assignment",
+  "items": [
+    { "problemVersionId": "<published version UUID>", "maxPoints": 20 },
+    { "problemVersionId": "<another version UUID>", "maxPoints": 5 }
+  ]
+}
+```
+
+Use whole-point maxima 1–1,000, up to 50 occurrences. Repeated versions have independent IDs/weights. Creating with `problemVersionIds` instead assigns 10 points per occurrence. Do not combine a nonempty version list with weighted items. Completion-only/private practice award no points and reject explicit weighted authoring inputs.
+
+PATCH `pointAllocations: [{ itemId, maxPoints }]` supplies the complete current occurrence set without replacing content/IDs. Ordered weighted `items` replaces/reorders content with fresh occurrences. Do not combine replacement and allocation forms. An identical `problemVersionIds` list preserves existing IDs/weights; changing a nonempty graded list requires weighted `items` so weights cannot be silently reset. Metadata-only PATCH preserves allocations. Mode changes need no scoring toggle and retain allocation metadata for future graded use.
+
+Instructor item responses include `maxPoints`; student graded items include it too. Publication validates allocations under the assignment lock and retains ownership/content/coverage checks. Duplication preserves weights with fresh occurrences and clears final work/release state. Published/archive locks apply. Invalid combined state returns 400 `ASSIGNMENT_SCORING_INVALID` without partial changes.
+
+The instructor form exposes per-problem points and a total for graded drafts, retains failed edits and validates whole-point bounds before saving. Weight-only edits preserve occurrence IDs; reordering carries allocations and defaults new occurrences. Published/archived weights are locked. Student final results and instructor review display the retained score, separate from correctness counts. See [scoring policy and rollout](../planning/assignment-scoring.md).
