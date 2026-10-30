@@ -7,11 +7,15 @@ export const ASSIGNMENT_POINT_LIMITS = {
   maxPoints: 1000,
   maxItems: 50,
 } as const;
+export const assignmentScoringVersionSchema = z.literal('points_v1');
 export const assignmentItemPointsSchema = z
   .number()
   .int()
   .min(ASSIGNMENT_POINT_LIMITS.minPoints)
   .max(ASSIGNMENT_POINT_LIMITS.maxPoints);
+export const weightedAssignmentItemsSchema = z
+  .array(z.strictObject({ problemVersionId: z.uuid(), maxPoints: assignmentItemPointsSchema }))
+  .max(ASSIGNMENT_POINT_LIMITS.maxItems);
 export const assignmentPointAllocationSchema = z.strictObject({
   itemId: z.uuid().transform((id) => id.toLowerCase()),
   maxPoints: assignmentItemPointsSchema,

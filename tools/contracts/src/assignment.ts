@@ -1,3 +1,9 @@
+import {
+  assignmentScoringVersionSchema,
+  assignmentItemPointsSchema,
+  assignmentPointAllocationsSchema,
+  weightedAssignmentItemsSchema,
+} from './assignment-scoring';
 import { gradeReleaseTimingSchema } from './assignment-results-release';
 import { z } from 'zod';
 import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
@@ -28,6 +34,7 @@ export const assignmentPolicySchema = z
 export type AssignmentPolicy = z.infer<typeof assignmentPolicySchema>;
 
 export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
+  scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
   id: z.uuid(),
   classId: z.uuid(),
   title: z.string().min(1).max(120),
@@ -44,6 +51,7 @@ export type AssignmentSummary = z.infer<typeof assignmentSummarySchema>;
 export const assignmentItemSchema = z.strictObject({
   id: z.uuid(),
   position: z.number().int().positive(),
+  maxPoints: assignmentItemPointsSchema.optional(),
   problemVersion: problemVersionSchema,
 });
 export type AssignmentItem = z.infer<typeof assignmentItemSchema>;
@@ -68,6 +76,8 @@ export const createAssignmentRequestSchema = z
     title: z.string().trim().min(1).max(120),
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).default([]),
+    scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
+    items: weightedAssignmentItemsSchema.optional(),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).default('on_submission'),
     solutionAccess: solutionAccessSchema.default('never'),
@@ -86,6 +96,18 @@ export const createAssignmentRequestSchema = z
     (policy) =>
       policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
     'Only graded work has grade release.',
+  )
+  .refine(
+    (input) => input.items === undefined || input.problemVersionIds.length === 0,
+    'Use items or problemVersionIds, not both.',
+  )
+  .refine(
+    (input) => input.scoringVersion !== 'points_v1' || input.assessmentMode === 'graded',
+    'Only graded assignments use points.',
+  )
+  .refine(
+    (input) => input.items === undefined || input.scoringVersion === 'points_v1',
+    'Weighted items require point scoring.',
   );
 export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestSchema>;
 
@@ -95,6 +117,9 @@ export const updateAssignmentRequestSchema = z
     title: z.string().trim().min(1).max(120).optional(),
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).optional(),
+    scoringVersion: assignmentScoringVersionSchema.nullable().optional(),
+    items: weightedAssignmentItemsSchema.optional(),
+    pointAllocations: assignmentPointAllocationsSchema.optional(),
     assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),
     feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).optional(),
     solutionAccess: solutionAccessSchema.optional(),
@@ -103,6 +128,16 @@ export const updateAssignmentRequestSchema = z
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     'Provide at least one assignment field.',
+  )
+  .refine(
+    (input) =>
+      input.items === undefined ||
+      (input.problemVersionIds === undefined && input.pointAllocations === undefined),
+    'Use weighted items without another item list or allocation list.',
+  )
+  .refine(
+    (input) => input.problemVersionIds === undefined || input.pointAllocations === undefined,
+    'Change item order and weights together using items.',
   );
 export type UpdateAssignmentRequest = z.infer<typeof updateAssignmentRequestSchema>;
 export const assignmentActionRequestSchema = z.strictObject({});

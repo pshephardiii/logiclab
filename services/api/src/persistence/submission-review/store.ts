@@ -1,3 +1,4 @@
+import { assignmentScoreSchema } from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
 import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -25,6 +26,7 @@ function summary(attempt: AssignmentAttempt): SubmissionSummary {
     student: { id: attempt.student.id, email: attempt.student.email ?? null },
     submittedAt: attempt.submittedAt.toISOString(),
     summary: attempt.result.summary,
+    ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
   };
 }
 
@@ -87,6 +89,7 @@ export async function createSubmissionReviewStore(
           answers: attempt.answers,
           submittedAt: attempt.submittedAt?.toISOString() ?? null,
           result: attempt.result ?? null,
+          ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
           gradePending: false,
         },
       };

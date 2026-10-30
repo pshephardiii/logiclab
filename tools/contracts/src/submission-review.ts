@@ -1,3 +1,4 @@
+import { assignmentScoreSchema } from './assignment-scoring';
 import { z } from 'zod';
 import { mixedCompletionSubmissionResultSchema } from './assignment-responses';
 import {
@@ -12,6 +13,7 @@ export const submissionSummarySchema = z.strictObject({
   id: z.uuid(),
   student: z.strictObject({ id: z.uuid(), email: z.string().nullable() }),
   submittedAt: z.iso.datetime(),
+  score: assignmentScoreSchema.optional(),
   summary: z.union([
     gradedSubmissionResultSchema.shape.summary,
     completionCountsSchema,

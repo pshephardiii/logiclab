@@ -1,3 +1,4 @@
+import { assignmentScoreSchema, assignmentItemPointsSchema } from './assignment-scoring';
 import { z } from 'zod';
 import {
   assignmentResponsesSchema,
@@ -45,6 +46,7 @@ export const studentAttemptSchema = z.strictObject({
   answers: assignmentResponsesSchema,
   submittedAt: z.iso.datetime().nullable(),
   result: submissionResultSchema.nullable(),
+  score: assignmentScoreSchema.nullable().optional(),
   gradePending: z.boolean().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
@@ -53,6 +55,7 @@ const assignedItemFields = {
   position: z.number().int().positive(),
   title: z.string(),
   instructions: z.string().nullable(),
+  maxPoints: assignmentItemPointsSchema.optional(),
 };
 /** Legacy table shape remains unchanged; conceptual content is explicitly redacted. */
 export const studentAssignmentItemSchema = z.union([

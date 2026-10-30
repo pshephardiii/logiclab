@@ -1,6 +1,6 @@
 # Assignment scoring
 
-Status: slice 1 on `019-feat-assignment-scoring`. Contracts and pure calculations are staged; no live grade, database, route or UI behavior changes yet. This is the first dependency in the [derivation sequence](logical-derivations.md#agreed-implementation-sequence).
+Status: slice 3 on `019-feat-assignment-scoring`. Opt-in backend authoring, publication, final scoring and release/review projections are enabled. Instructor point controls and score presentation are the next slice; current UI/demo defaults still create legacy work. Earlier slice notes below record staging at that time.
 
 ## Decisions for this branch
 
@@ -63,3 +63,19 @@ Next: coordinate mutable-draft opt-in/defaults, create/PATCH/duplication semanti
 ### Slice 2 verification — October 30, 2026
 
 `npm run check` passed type checks, 958 tests (104 engine, 627 API, 227 web) and production builds. `npm run db:test` passed 209 PostgreSQL checks (156 database, 53 API/workflow), including 17 new scoring persistence cases and existing schema/migration, retention, demo reset/cleanup and application workflows. Coverage includes null legacy fields, repeated-item allocations, pending snapshot round-trips, invalid bounds/modes/score states, immutable submitted scores, legacy down/up preservation and rollback refusal. Formatting, whitespace and local Markdown targets checked. No browser walkthrough, active scoring endpoint/UI change or user development-database migration is claimed; only disposable test databases were migrated. The snapshot was generated from entity metadata without a database connection and limited to the new columns/checks.
+
+## Slice 3: opt-in backend workflows
+
+Create accepts explicit `scoringVersion: "points_v1"` for graded work. Supply ordered `items: [{ problemVersionId, maxPoints }]` for weighted content, or the existing `problemVersionIds` list to start with 10 points per occurrence. Omission/null retains legacy mode; old clients and current demo seeding are not silently opted in. Weighted items cannot be combined with a nonempty legacy item list.
+
+Mutable legacy drafts can opt in with PATCH `scoringVersion: "points_v1"`; existing occurrences retain IDs and receive default allocations. PATCH `pointAllocations` updates weights by the complete set of current occurrence IDs, preserving content/order/IDs. Missing, duplicate, foreign or invalid allocations fail atomically. Use ordered weighted `items` to replace/reorder scored content; it generates fresh occurrence IDs and validates all owned publications before replacement. An older client resending the identical legacy list preserves existing scored IDs/weights; a changed legacy-only list is rejected rather than resetting points silently.
+
+Explicit PATCH `scoringVersion: null` clears draft allocations. A point-scored draft cannot become completion-only/practice without that explicit opt-out. Omitted PATCH fields retain existing scoring. Published/archive guards and parent-row locks continue to serialize changes with publication. Publication requires supported content, a nonempty valid allocation set for point mode and existing class coverage. Duplication preserves a valid source's scoring mode/weights on fresh draft occurrences, without copying submissions, release state or final score.
+
+Point-scored finalization validates the published allocations and atomically freezes a separate `points_v1` score with the original correctness result. Retried submissions return that snapshot; reads never recompute it. Student saves/reads/submission/retry responses expose null score while grade release is withheld; answer reveal does not release scores. Authorized instructor final lists/detail include retained point scores independently of student release. Legacy finals have no score field and keep their previous raw result shape. A scored submitted row missing its score fails closed rather than being presented as a complete grade.
+
+This step makes no new schema change and adds no browser point controls. The current UI can parse additive fields; full authoring/display follows next. No client-supplied awarded score, instructor override endpoint or derivation grading is enabled.
+
+### Slice 3 verification — October 30, 2026
+
+`npm run check` passed type checks, 964 tests (104 engine, 633 API, 227 web) and production builds. All 57 API PostgreSQL integration checks passed, including four new normal/demo weighted workflow tests. Coverage includes draft opt-in/defaults/opt-out, malformed allocation rollback, repeated versions/replacement, publication locks, withheld/released scores, frozen retries, instructor projections, archive/restore, scored duplication, legacy finals and workspace/role/ownership boundaries. Six new unit tests cover metadata policy and create/PATCH compatibility. Formatting, whitespace and local Markdown file targets passed. No database-package suite rerun, new migration or browser walkthrough is claimed for this backend slice.

@@ -18,6 +18,7 @@ export function assignmentExercises(
       const common = {
         id: item.id,
         position: item.position,
+        ...(item.maxPoints != null ? { maxPoints: item.maxPoints } : {}),
         title: item.problemVersion.title,
         instructions: item.problemVersion.instructions ?? null,
       };

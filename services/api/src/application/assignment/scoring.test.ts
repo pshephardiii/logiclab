@@ -293,7 +293,7 @@ test('scoring leaves frozen inputs untouched and emits independent JSON-safe sna
   expect(score.items[0]).not.toBe(source[0]);
 });
 
-test('staged allocations do not silently expand active assignment authoring requests', () => {
+test('points cannot be supplied as one assignment-level allocation', () => {
   expect(createAssignmentRequestSchema.safeParse({ title: 'Staged', maxPoints: 10 }).success).toBe(
     false,
   );
