@@ -1,4 +1,4 @@
-import type { PublishedProblemVersion } from '@logiclab/contracts';
+import { problemVersionSchema, type PublishedProblemVersion } from '@logiclab/contracts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -74,7 +74,7 @@ async function fixture() {
     const published = await problems.publish(owner.id, problem.id);
     assert.equal(published.status, 'published');
     if (published.status !== 'published') throw new Error('Fixture publication failed');
-    versions.push(published.version);
+    versions.push(problemVersionSchema.parse(published.version));
   }
   let active = owner;
   const config = readAuthConfig({

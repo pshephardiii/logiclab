@@ -12,6 +12,10 @@
     "./proof": {
       "types": "./dist/proof/index.d.ts",
       "default": "./dist/proof/index.js"
+    },
+    "./proof/rules": {
+      "types": "./dist/proof/rule-catalog.d.ts",
+      "default": "./dist/proof/rule-catalog.js"
     }
   },
   "files": [

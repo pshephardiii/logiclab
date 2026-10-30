@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  createProblemRequestSchema,
-  type CreateProblemRequest,
-  type ProblemDefinition,
-  type ProblemDraft,
-} from '@logiclab/contracts';
+  createLibraryProblemRequestSchema,
+  type CreateLibraryProblemRequest,
+  type LibraryProblemDefinition,
+  type LibraryProblemDraft,
+} from '@logiclab/contracts/problem-library';
+import { DerivationProblemFields } from './DerivationProblemFields';
 import {
   initialProblemFields,
   editorDefinition,
@@ -14,11 +15,11 @@ import {
 import { ConceptualProblemFields } from './ConceptualProblemFields';
 
 type Props = {
-  problem: ProblemDraft | null;
+  problem: LibraryProblemDraft | null;
   busy: boolean;
   saveError?: string | null;
-  onSave: (input: CreateProblemRequest) => Promise<boolean>;
-  onPreview: (definition: ProblemDefinition) => void;
+  onSave: (input: CreateLibraryProblemRequest) => Promise<boolean>;
+  onPreview: (definition: LibraryProblemDefinition) => void;
   onDirty: (dirty: boolean) => void;
 };
 
@@ -64,7 +65,7 @@ export function ProblemForm({
     event.preventDefault();
     const definition = validatedDefinition();
     if (!definition) return;
-    const input = createProblemRequestSchema.safeParse({
+    const input = createLibraryProblemRequestSchema.safeParse({
       title: fields.title,
       instructions: fields.instructions || null,
       definition,
@@ -109,18 +110,21 @@ export function ProblemForm({
             id="problem-type"
             value={fields.type}
             onChange={(event) =>
-              change({ ...fields, type: event.target.value as ProblemDefinition['type'] })
+              change({ ...fields, type: event.target.value as LibraryProblemDefinition['type'] })
             }
           >
             <option value="truth_table">Truth table</option>
             <option value="true_false">True/false</option>
             <option value="multiple_choice">Multiple choice</option>
+            <option value="derivation">Derivation (Fitch)</option>
           </select>
           <p className="help">
             Only the selected problem type is saved. Switching types keeps your fields until you
             leave this editor.
           </p>
-          {fields.type === 'truth_table' ? (
+          {fields.type === 'derivation' ? (
+            <DerivationProblemFields fields={fields} onChange={change} />
+          ) : fields.type === 'truth_table' ? (
             <>
               <label htmlFor="problem-formula">Formula</label>
               <input
@@ -144,7 +148,12 @@ export function ProblemForm({
       <button
         className="secondary"
         disabled={
-          busy || (fields.type === 'truth_table' ? !fields.formula.trim() : !fields.question.trim())
+          busy ||
+          (fields.type === 'derivation'
+            ? false
+            : fields.type === 'truth_table'
+              ? !fields.formula.trim()
+              : !fields.question.trim())
         }
         onClick={() => {
           const definition = validatedDefinition();

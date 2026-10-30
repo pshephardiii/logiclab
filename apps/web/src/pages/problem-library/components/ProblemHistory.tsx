@@ -1,11 +1,15 @@
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
-import type { ProblemDraft, ProblemDefinition } from '@logiclab/contracts';
+import type {
+  LibraryProblemDraft,
+  LibraryProblemDefinition,
+} from '@logiclab/contracts/problem-library';
+import { DerivationSummary } from './DerivationSummary';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
 type Props = {
-  problem: ProblemDraft;
+  problem: LibraryProblemDraft;
   disabled: boolean;
-  onPreview: (definition: ProblemDefinition) => void;
+  onPreview: (definition: LibraryProblemDefinition) => void;
 };
 
 /** Presents saved publication controls and immutable snapshot content. */
@@ -18,7 +22,7 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       <h2>Published versions</h2>
       <p>
         Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
-        Students receive the snapshot only through an assigned published version.
+        Publication does not grant student access. Derivations cannot be assigned yet.
       </p>
       <div className="action-row">
         <button
@@ -46,7 +50,9 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
               Version {version.version}: {version.title}
             </h3>
             <p>{version.instructions || 'No instructions.'}</p>
-            {version.definition.type === 'truth_table' ? (
+            {version.definition.type === 'derivation' ? (
+              <DerivationSummary definition={version.definition} />
+            ) : version.definition.type === 'truth_table' ? (
               <code>{version.definition.formula}</code>
             ) : (
               <ConceptualQuestionSummary definition={version.definition} />

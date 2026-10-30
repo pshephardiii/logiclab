@@ -1,10 +1,10 @@
-import type { FastifyRequest, FastifyReply } from 'fastify';
 import {
-  problemParamsSchema,
-  updateProblemRequestSchema,
-  problemResponseSchema,
-} from '@logiclab/contracts';
-import { supportedProblemDefinition } from '../../../application/problem/definition-support';
+  updateLibraryProblemRequestSchema,
+  libraryProblemResponseSchema,
+} from '@logiclab/contracts/problem-library';
+import type { FastifyRequest, FastifyReply } from 'fastify';
+import { problemParamsSchema } from '@logiclab/contracts';
+import { libraryProblemDefinition } from '../../../application/problem/library-definition';
 import { ProblemError } from '../errors';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -14,8 +14,8 @@ export function patchProblemHandler(context: ProblemContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await instructor(request, context);
     const { problemId } = parseRequest(problemParamsSchema, request.params);
-    const input = parseRequest(updateProblemRequestSchema, request.body);
-    if (input.definition) supportedProblemDefinition(input.definition);
+    const input = parseRequest(updateLibraryProblemRequestSchema, request.body);
+    if (input.definition) libraryProblemDefinition(input.definition);
     const result = await context.problems.update(user.id, problemId, input);
     if (result.status === 'not_found')
       throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
@@ -25,6 +25,6 @@ export function patchProblemHandler(context: ProblemContext) {
         'PROBLEM_ARCHIVED',
         'Restore this problem before editing its draft.',
       );
-    return problemResponseSchema.parse({ problem: result.problem });
+    return libraryProblemResponseSchema.parse({ problem: result.problem });
   };
 }

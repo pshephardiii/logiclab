@@ -1,12 +1,17 @@
 import type {
-  CreateProblemRequest,
-  UpdateProblemRequest,
-  PublishedProblemVersion,
   ProblemArchiveFilter,
+  ProblemDraft,
+  PublishedProblemVersion,
 } from '@logiclab/contracts';
+import type { DerivationReferenceCheckResponse } from '@logiclab/contracts/derivation';
+import type {
+  CreateLibraryProblemRequest as CreateProblemRequest,
+  UpdateLibraryProblemRequest as UpdateProblemRequest,
+  LibraryProblemVersion,
+  LibraryProblemDraft,
+} from '@logiclab/contracts/problem-library';
 import { authFixture, authUser } from './auth-fixture';
 import type { ProblemContext } from '../src/routes/problem/context';
-import type { ProblemDraft } from '@logiclab/contracts';
 import type { UpdateProblemResult } from '../src/persistence/problem/store';
 
 export const problem: ProblemDraft = {
@@ -31,6 +36,12 @@ export const publishedVersion: PublishedProblemVersion = {
 export function problemFixture() {
   const auth = authFixture();
   const problems = {
+    previewReference: jest.fn(
+      async (
+        _ownerId: string,
+        _problemId: string,
+      ): Promise<DerivationReferenceCheckResponse | null> => null,
+    ),
     publish: jest.fn(
       async (
         _ownerId: string,
@@ -45,7 +56,7 @@ export function problemFixture() {
         _ownerId: string,
         _problemId: string,
         _archived: boolean,
-      ): Promise<ProblemDraft | null> => problem,
+      ): Promise<LibraryProblemDraft | null> => problem,
     ),
     listVersions: jest.fn(
       async (
@@ -53,14 +64,14 @@ export function problemFixture() {
         _problemId: string,
         _limit: number,
         _offset: number,
-      ): Promise<PublishedProblemVersion[] | null> => [publishedVersion],
+      ): Promise<LibraryProblemVersion[] | null> => [publishedVersion],
     ),
     findVersion: jest.fn(
       async (
         _ownerId: string,
         _problemId: string,
         _version: number,
-      ): Promise<PublishedProblemVersion | null> => publishedVersion,
+      ): Promise<LibraryProblemVersion | null> => publishedVersion,
     ),
     create: jest.fn(async (_ownerId: string, _input: CreateProblemRequest) => problem),
     list: jest.fn(
@@ -72,7 +83,7 @@ export function problemFixture() {
       ) => [problem],
     ),
     findOwned: jest.fn(
-      async (_ownerId: string, _problemId: string): Promise<ProblemDraft | null> => problem,
+      async (_ownerId: string, _problemId: string): Promise<LibraryProblemDraft | null> => problem,
     ),
     update: jest.fn(
       async (

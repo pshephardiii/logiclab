@@ -1,13 +1,16 @@
 import {
-  problemDefinitionSchema,
-  type ProblemDraft,
-  type ProblemDefinition,
-} from '@logiclab/contracts';
+  libraryProblemDefinitionSchema,
+  type LibraryProblemDraft,
+  type LibraryProblemDefinition,
+} from '@logiclab/contracts/problem-library';
+import type { DerivationDefinition } from '@logiclab/contracts/derivation';
 
 export type ProblemEditorFields = {
   title: string;
   instructions: string;
-  type: ProblemDefinition['type'];
+  type: LibraryProblemDefinition['type'];
+  derivation: DerivationDefinition;
+  derivationLabels: Record<string, string>;
   formula: string;
   question: string;
   explanation: string;
@@ -16,16 +19,40 @@ export type ProblemEditorFields = {
   correctOptionId: string;
 };
 
-export function initialProblemFields(problem: ProblemDraft | null): ProblemEditorFields {
+export function initialProblemFields(problem: LibraryProblemDraft | null): ProblemEditorFields {
   const definition = problem?.definition;
   return {
     title: problem?.title ?? '',
     instructions: problem?.instructions ?? '',
     type: definition?.type ?? 'truth_table',
     formula: definition?.type === 'truth_table' ? definition.formula : '',
-    question: definition && definition.type !== 'truth_table' ? definition.question : '',
+    derivation:
+      definition?.type === 'derivation'
+        ? structuredClone(definition)
+        : {
+            type: 'derivation',
+            definitionVersion: 1,
+            format: 'fitch',
+            ruleCatalogVersion: 1,
+            checkerVersion: 1,
+            premises: [],
+            conclusion: '',
+            rules: [],
+            referenceProof: null,
+            explanation: null,
+          },
+    derivationLabels:
+      definition?.type === 'derivation'
+        ? Object.fromEntries(definition.rules.map((rule) => [rule.id, rule.label]))
+        : {},
+    question:
+      definition && (definition.type === 'true_false' || definition.type === 'multiple_choice')
+        ? definition.question
+        : '',
     explanation:
-      definition && definition.type !== 'truth_table' ? (definition.explanation ?? '') : '',
+      definition && (definition.type === 'true_false' || definition.type === 'multiple_choice')
+        ? (definition.explanation ?? '')
+        : '',
     correctAnswer:
       definition?.type === 'true_false' ? (definition.correctAnswer ? 'true' : 'false') : '',
     options:
@@ -41,6 +68,7 @@ export function initialProblemFields(problem: ProblemDraft | null): ProblemEdito
 
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
+  if (fields.type === 'derivation') return fields.derivation;
   const common = { type: fields.type, definitionVersion: 1 };
   return fields.type === 'truth_table'
     ? { ...common, formula: fields.formula }
@@ -61,7 +89,7 @@ export function editorDraftDefinition(fields: ProblemEditorFields) {
 }
 
 export function editorDefinition(fields: ProblemEditorFields) {
-  return problemDefinitionSchema.safeParse(editorDraftDefinition(fields));
+  return libraryProblemDefinitionSchema.safeParse(editorDraftDefinition(fields));
 }
 
 export function editorSnapshot(fields: ProblemEditorFields) {

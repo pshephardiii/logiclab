@@ -1,9 +1,6 @@
+import { libraryProblemVersionResponseSchema } from '@logiclab/contracts/problem-library';
 import type { FastifyRequest } from 'fastify';
-import {
-  problemParamsSchema,
-  problemVersionParamsSchema,
-  problemVersionResponseSchema,
-} from '@logiclab/contracts';
+import { problemParamsSchema, problemVersionParamsSchema } from '@logiclab/contracts';
 import { parseRequest } from '../../helpers/parse-request';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -16,6 +13,6 @@ export function getProblemVersionHandler(context: ProblemContext) {
     const published = await context.problems.findVersion(user.id, problemId, version);
     if (!published)
       throw new ProblemError(404, 'PROBLEM_VERSION_NOT_FOUND', 'Problem version not found.');
-    return problemVersionResponseSchema.parse({ version: published });
+    return libraryProblemVersionResponseSchema.parse({ version: published });
   };
 }

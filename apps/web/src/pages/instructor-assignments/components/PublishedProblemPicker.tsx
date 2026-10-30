@@ -19,6 +19,10 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
         <Link to={accountPath(routeDefinitions.problemLibrary.path)}>Open problem library</Link> to
         create and publish it first. Save your assignment draft before leaving to keep your edits.
       </p>
+      <p className="help">
+        Derivation versions are not available for assignments yet. Other published versions remain
+        selectable.
+      </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
       <select
         id="assignment-library-problem"
@@ -72,7 +76,10 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
         !choices.versionLoading &&
         !choices.versionError &&
         choices.versions.length === 0 && (
-          <p>No published versions. Publish this problem in the library first.</p>
+          <p>
+            No assignable versions on this page. Publish a supported problem in the library or load
+            more publications.
+          </p>
         )}
       <ul>
         {choices.versions.map((version) => (

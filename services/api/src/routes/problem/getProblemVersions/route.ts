@@ -1,9 +1,6 @@
+import { libraryProblemVersionListResponseSchema } from '@logiclab/contracts/problem-library';
 import type { FastifyInstance } from 'fastify';
-import {
-  problemParamsSchema,
-  problemVersionListQuerySchema,
-  problemVersionListResponseSchema,
-} from '@logiclab/contracts';
+import { problemParamsSchema, problemVersionListQuerySchema } from '@logiclab/contracts';
 import type { RouteSchema } from '../../setup';
 import type { ProblemContext } from '../context';
 import { problemErrorResponses } from '../../error-responses';
@@ -15,7 +12,7 @@ export const getProblemVersionsSchema = {
     'Owner-only problem publication/history/archive operation; grants no classroom access.',
   params: problemParamsSchema,
   querystring: problemVersionListQuerySchema,
-  response: { 200: problemVersionListResponseSchema, ...problemErrorResponses },
+  response: { 200: libraryProblemVersionListResponseSchema, ...problemErrorResponses },
 } satisfies RouteSchema;
 
 export async function getProblemVersionsRoute(app: FastifyInstance, context: ProblemContext) {

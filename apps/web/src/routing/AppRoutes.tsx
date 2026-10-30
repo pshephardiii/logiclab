@@ -3,7 +3,6 @@ import { Page } from '../components/layout/Page';
 import { ResourceApiProvider } from '../api/ResourceApiProvider';
 import { DemoPage } from '../pages/demo/DemoPage';
 import { InstructorBillingPage } from '../pages/instructor-billing/InstructorBillingPage';
-import { ProblemLibraryPage } from '../pages/problem-library/ProblemLibraryPage';
 import { Route, Routes } from 'react-router';
 import { PracticePage } from '../pages/practice/PracticePage';
 import { AccountPage } from '../pages/account/AccountPage';
@@ -12,6 +11,12 @@ import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage'
 import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { routeDefinitions } from './route-definitions';
+
+const ProblemLibraryPage = lazy(() =>
+  import('../pages/problem-library/ProblemLibraryPage').then((module) => ({
+    default: module.ProblemLibraryPage,
+  })),
+);
 
 const StudentWorkPage = lazy(() =>
   import('../pages/student-work/StudentWorkPage').then((module) => ({

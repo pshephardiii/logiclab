@@ -1,9 +1,6 @@
+import { libraryProblemResponseSchema } from '@logiclab/contracts/problem-library';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import {
-  problemParamsSchema,
-  emptyProblemRequestSchema,
-  problemResponseSchema,
-} from '@logiclab/contracts';
+import { problemParamsSchema, emptyProblemRequestSchema } from '@logiclab/contracts';
 import { parseRequest } from '../../helpers/parse-request';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -16,6 +13,6 @@ export function postProblemRestoreHandler(context: ProblemContext) {
     parseRequest(emptyProblemRequestSchema, request.body ?? {});
     const problem = await context.problems.setArchived(user.id, problemId, false);
     if (!problem) throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
-    return problemResponseSchema.parse({ problem });
+    return libraryProblemResponseSchema.parse({ problem });
   };
 }

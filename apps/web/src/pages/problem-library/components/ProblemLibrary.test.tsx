@@ -14,6 +14,7 @@ vi.mock('../../../api/problems/api', () => ({
   archiveProblem: vi.fn(),
   publishProblem: vi.fn(),
   listVersions: vi.fn(),
+  checkReference: vi.fn(),
 }));
 vi.mock('./ProblemPreview', () => ({
   ProblemPreview: ({ formula }: { formula: string }) => <p>Preview formula: {formula}</p>,
@@ -301,4 +302,76 @@ test('conceptual editing participates in discard protection and previews the sel
   await user.click(screen.getByRole('button', { name: 'Show preview answer' }));
   expect(screen.getAllByText(/Saved explanation/).length).toBeGreaterThan(0);
   expect(screen.getByLabelText('Question')).toHaveValue('Saved question edited');
+});
+
+test('derivation editing keeps private history previews separate from the draft', async () => {
+  const { derivationDraft } = await import('../../../../test/derivation');
+  vi.mocked(api.listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [
+      {
+        ...version,
+        title: 'Pinned derivation',
+        definition: { ...derivationDraft.definition, conclusion: 'Q -> Q' },
+      },
+    ],
+    nextOffset: null,
+  });
+  const user = userEvent.setup();
+  render(<ProblemLibrary />);
+  await user.click(await screen.findByRole('button', { name: derivationDraft.title }));
+  expect(await screen.findByRole('textbox', { name: 'Conclusion' })).toHaveValue('P -> P');
+  expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue(derivationDraft.title);
+  expect(screen.queryByRole('textbox', { name: 'Question' })).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole('heading', { name: 'Version 1: Pinned derivation' }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
+  expect(screen.getByRole('region', { name: 'Derivation version preview' })).toHaveTextContent(
+    'Q -> Q',
+  );
+  expect(api.saveProblem).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('');
+});
+
+test('unsaved derivation edits cancel saved checks, protect selection, and retain fields after failed saves', async () => {
+  const { derivationDraft } = await import('../../../../test/derivation');
+  vi.mocked(api.listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(api.listVersions).mockResolvedValue({ versions: [], nextOffset: null });
+  vi.mocked(api.checkReference).mockResolvedValue({
+    problemId: derivationDraft.id,
+    updatedAt: derivationDraft.updatedAt,
+    check: { status: 'missing' },
+  });
+  vi.mocked(api.saveProblem)
+    .mockRejectedValueOnce(new Error('Save failed'))
+    .mockResolvedValueOnce({
+      ...derivationDraft,
+      updatedAt: '2026-10-30T12:01:00.000Z',
+      definition: { ...derivationDraft.definition, conclusion: 'Q' },
+    });
+  const user = userEvent.setup();
+  render(<ProblemLibrary />);
+  await user.click(await screen.findByRole('button', { name: derivationDraft.title }));
+  await user.click(await screen.findByRole('button', { name: 'Check saved reference' }));
+  await screen.findByRole('status', { name: '' });
+  await user.clear(screen.getByLabelText('Conclusion'));
+  await user.type(screen.getByLabelText('Conclusion'), 'Q');
+  expect(screen.queryByRole('button', { name: 'Check saved reference' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Publish saved draft' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'New problem' }));
+  expect(await screen.findByRole('dialog')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Save failed');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
+  expect(protectedWork()).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  await waitFor(() => expect(protectedWork()).toBe(false));
+  expect(await screen.findByRole('button', { name: 'Check saved reference' })).toBeEnabled();
+  expect(
+    screen.queryByText('No reference proof saved.', { selector: '[role="status"]' }),
+  ).not.toBeInTheDocument();
 });

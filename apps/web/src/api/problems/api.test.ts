@@ -40,3 +40,33 @@ test('uses a safe fallback when a library error payload is malformed', async () 
     'Could not update or load your library. Please try again.',
   );
 });
+
+test.each(['normal', 'demo'] as const)(
+  'reads private derivation drafts and checks the saved reference in %s scope',
+  async (scope) => {
+    const { derivationDraft } = await import('../../../test/derivation');
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ problems: [derivationDraft], nextOffset: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          problemId: derivationDraft.id,
+          updatedAt: derivationDraft.updatedAt,
+          check: { status: 'missing' },
+        }),
+      });
+    vi.stubGlobal('fetch', fetch);
+    const api = createApi(createResourceRequest(scope));
+    const signal = new AbortController().signal;
+    expect((await api.listProblems('all', 0, signal)).problems).toEqual([derivationDraft]);
+    expect((await api.checkReference(derivationDraft.id, signal)).check.status).toBe('missing');
+    expect(fetch).toHaveBeenLastCalledWith(
+      `${scope === 'demo' ? '/api/demo/resources' : '/api'}/problems/${derivationDraft.id}/reference-check`,
+      expect.objectContaining({ method: 'POST', body: '{}' }),
+    );
+  },
+);

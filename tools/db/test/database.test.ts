@@ -1,4 +1,5 @@
 import { registerAssignmentScoringPersistenceTests } from './assignment-scoring-persistence.ts';
+import { registerDerivationPersistenceTests } from './derivation-persistence.ts';
 import { registerConceptualProblemPersistenceTests } from './conceptual-problem-persistence.ts';
 import { registerAssignmentReleasePersistenceTests } from './assignment-release-persistence.ts';
 import { registerAssignmentLearningPersistenceTests } from './assignment-learning-persistence.ts';
@@ -1169,3 +1170,4 @@ registerAssignmentReleasePersistenceTests(orm);
 registerConceptualProblemPersistenceTests(orm);
 
 registerAssignmentScoringPersistenceTests(orm);
+registerDerivationPersistenceTests(orm);

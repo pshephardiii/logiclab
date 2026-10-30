@@ -1,3 +1,4 @@
+import { postProblemReferenceCheckRoute } from './postProblemReferenceCheck/route';
 import { postProblemVersionRoute } from './postProblemVersion/route';
 import { getProblemVersionsRoute } from './getProblemVersions/route';
 import { getProblemVersionRoute } from './getProblemVersion/route';
@@ -39,6 +40,7 @@ export async function problemRoutes(app: FastifyInstance, context: ProblemContex
       }),
     );
   });
+  app.register(postProblemReferenceCheckRoute, context);
   app.register(postProblemRoute, context);
   app.register(getProblemsRoute, context);
   app.register(getProblemRoute, context);
