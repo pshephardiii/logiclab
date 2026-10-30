@@ -23,6 +23,7 @@ Documentation is grouped by purpose:
 - [Logical derivation planning](planning/logical-derivations.md)
 - [Assignment scoring](planning/assignment-scoring.md)
 - [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
+- [Derivation authoring](planning/derivation-authoring.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 

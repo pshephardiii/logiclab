@@ -40,6 +40,11 @@ export {
 } from './types/assignment/enums.ts';
 
 export { ProblemType } from './types/problem/enums.ts';
+export type {
+  DerivationDefinition,
+  DerivationReferenceProof,
+  DerivationProofStep,
+} from './types/problem/derivation.ts';
 export type { UserFields } from './types/user/fields.ts';
 export type { AuthSessionFields } from './types/auth-session/fields.ts';
 export type { ClassroomFields } from './types/classroom/fields.ts';

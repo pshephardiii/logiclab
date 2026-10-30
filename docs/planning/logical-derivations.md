@@ -171,6 +171,8 @@ Keep this engine independently testable; no database, UI, assignment grade write
 
 ### 021: derivation authoring
 
+Implementation has started. The [authoring foundation](derivation-authoring.md) stages versioned private/reference contracts, effective rule labels, redacted projections and JSON persistence compatibility. Normal library and assignment admission remain guarded until their type-specific workflows are implemented. The user confirmed normalized duplicate-label rejection among enabled rules.
+
 This is one of the larger branches. Keep its slices separated rather than delivering persistence, editor and publication in one change:
 
 1. Stage derivation definition/reference-proof contracts and immutable persistence compatibility. Pin required format, rule-set semantics/version, enabled rules and effective labels with the published definition. Keep premature assignment/student acceptance guarded.

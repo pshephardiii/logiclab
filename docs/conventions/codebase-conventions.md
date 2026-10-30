@@ -315,3 +315,7 @@ Dirty unregistration must be visible synchronously to route blocking, so forced 
 ## Web: site and workspace navigation
 
 Keep Navigation focused on site-wide destinations and WorkspaceNavigation focused on the active account's role-specific resource routes. Derive links from route definitions; demo workspace links belong inside the demo notice with explicit `/demo/` destinations, while normal workspaces use normal resource paths. Give the navigation landmarks distinct accessible names and retain active-link cues. Do not use a demo identity to label a normal account, combine both link levels into one menu, or bypass router/unsaved-work guards when switching flows.
+
+## Staged derivation authoring
+
+Keep standalone derivation/reference contracts behind `@logiclab/contracts/derivation` until live owner and assigned-work consumers are ready. Do not infer workflow support from database JSON typing. Publish immutable effective rule IDs/labels and format/catalog/checker versions; labels cannot grant behavior. Use explicit whitelist projections for ordinary content and keep reference/explanation fields behind privileged answer access. Recheck the reference against the locked saved statement/rules before publication rather than trusting client validation flags or a stale preview report. Duplicate effective labels are compared using NFKC, collapsed whitespace and JavaScript lowercase while preserving display spelling apart from outer trimming.

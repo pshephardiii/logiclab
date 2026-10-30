@@ -5,6 +5,18 @@
   "main": "dist/index.js",
   "browser": "dist/browser/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "default": "./dist/index.js"
+    },
+    "./derivation": {
+      "types": "./dist/derivation.d.ts",
+      "browser": "./dist/browser/derivation.js",
+      "default": "./dist/derivation.js"
+    }
+  },
   "files": [
     "dist"
   ],

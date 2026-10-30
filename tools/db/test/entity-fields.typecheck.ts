@@ -43,5 +43,6 @@ type ChangedOptionality = Assert<WithRequiredInstructions>;
 type DefinitionKind = ProblemDefinition['type'];
 type SupportedEnumKind = Assert<ProblemType.TruthTable extends DefinitionKind ? true : false>;
 type SupportedWireKind = Assert<'truth_table' extends DefinitionKind ? true : false>;
+type StoredDerivationKind = Assert<'derivation' extends DefinitionKind ? true : false>;
 // @ts-expect-error Adding an unsupported exercise kind must not bypass the definition model.
-type UnsupportedKind = Assert<'derivation' extends DefinitionKind ? true : false>;
+type UnsupportedKind = Assert<'predicate_derivation' extends DefinitionKind ? true : false>;

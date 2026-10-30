@@ -1,4 +1,5 @@
 import type { ProblemType } from './enums.ts';
+import type { DerivationDefinition } from './derivation.ts';
 
 export type TruthTableDefinition = {
   type: `${ProblemType.TruthTable}`;
@@ -30,4 +31,5 @@ export type ConceptualProblemDefinition = TrueFalseDefinition | MultipleChoiceDe
  * Runtime contracts validate authored data; a TypeScript union alone does not enable routes.
  * Each variant owns its definition version. Student responses remain separate.
  */
-export type ProblemDefinition = TruthTableDefinition | ConceptualProblemDefinition;
+export type ProblemDefinition =
+  TruthTableDefinition | ConceptualProblemDefinition | DerivationDefinition;
