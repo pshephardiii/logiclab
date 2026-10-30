@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 type Props = {
   label: string;
   value: string | null;
@@ -8,10 +10,15 @@ type Props = {
 
 /** Retain unresolved IDs as explicit choices instead of silently selecting another target. */
 export function ReferenceChoice({ label, value, choices, empty = 'None', onChange }: Props) {
+  const id = useId();
   return (
-    <label>
-      {label}
-      <select value={value ?? ''} onChange={(event) => onChange(event.target.value || null)}>
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <select
+        id={id}
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value || null)}
+      >
         <option value="">{empty}</option>
         {value && !choices.some((choice) => choice.id === value) && (
           <option value={value}>Missing or unavailable target — choose a replacement</option>
@@ -22,6 +29,6 @@ export function ReferenceChoice({ label, value, choices, empty = 'None', onChang
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }

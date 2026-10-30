@@ -1,6 +1,6 @@
 # Derivation authoring
 
-Status: first five slices of `021-feat-derivation-authoring`. Private contracts, JSON compatibility, owner-store authoring/preview and checked immutable publication now have matching HTTP routes and frontend consumers. The frontend creates/edits derivation statements, rule permissions, labels and explanations; reference lines, citations and subproof boundaries are now editable with explicit local checks. Assignment/student admission stays guarded and no demo derivations are seeded.
+Status: `021-feat-derivation-authoring` implementation and focused final verification are complete. Private definitions, owner HTTP/persistence workflows, statement/rule/reference editing, explicit checks and checked immutable publication are implemented. Assignment/student admission remains guarded and no derivation demo template is seeded. See [final evidence and limits](../verification/derivation-authoring-verification.md).
 
 See the [derivation sequence](logical-derivations.md) and [proof-checker specification](propositional-proof-checker.md) for the agreed product direction and checker semantics.
 
@@ -75,9 +75,9 @@ Shape-valid malformed references remain inspectable and saveable. Duplicate/coll
 
 **Check current proof** runs the shared bounded engine against the complete current local statement, permissions and reference. It writes nothing, checks only on explicit action and distinguishes accepted, needs correction and unassessable outcomes with positioned line diagnostics. A report is displayed only for the exact definition that was checked; it is not a publication credential. The saved-reference HTTP check remains available when the editor is clean. Publication independently checks the locked saved draft on the server. No comparison with a canned proof or proof search is introduced.
 
-## Remaining branch work
+## Next milestone
 
-Verify complete owner/workspace authoring/publication journeys, reference privacy, concurrent edit/publication, and unchanged published format/rules/labels/solutions after draft edits. Finish branch verification and PR notes afterward. The editor's flat line cards and explicit block controls need focused keyboard/mobile/browser review as part of that pass.
+Proceed with the planned `022-feat-derivation-student-work`: separate redacted assigned content from student proof responses, enforce pinned server-owned statements/rules, revisioned saves and appropriate practice/completion checks. Graded derivations remain guarded through the 022–023 student/review milestone. Current authoring controls use private owner definitions and must not be supplied wholesale to student views. The final focused browser run covered owner authoring, publication, privacy, mobile layout and cleanup; broader visual/accessibility and performance QA remains deferred.
 
 Student proof workflows and graded assignment availability remain guarded through the planned 022–023 student/review milestone. This branch does not add instructor grade adjustments, numerical proof partial credit, alternative formats or general proof search.
 
@@ -116,3 +116,7 @@ Built ESM/CommonJS smoke confirmed the new data-only rule entry exposes 19 immut
 `npm run check` passed type checks, 1,324 tests (357 engine, 699 API, 268 web) and production builds. Twelve added frontend/helper cases cover a UI-authored conditional proof accepted by the real engine, an accepted modus-ponens proof, local report invalidation, explicit save of incomplete/unassessable work, citation identity through insertion/moves, confirmed line/subproof/reference deletion, visible missing targets, nested-block removal, ambiguous-identity inspection, bounded missing/cyclic scope handling and line/block/depth limits. Existing authoring, archive, history and unsaved-work regressions passed.
 
 The lazy library chunk is 58.45 kB and the public entry is 487.91 kB; warning thresholds are unchanged. Formatting, whitespace and local Markdown file targets passed. No API, persistence or migration behavior changed, so PostgreSQL checks were not repeated in this slice. No user development database was migrated/reset and no browser walkthrough or infrastructure work was performed. DOM tests and pure engine checks do not establish real-browser keyboard/focus/mobile behavior or performance at every allowed proof size. Existing Jest VM-module advisories remain. Final owner/API/browser verification and branch PR notes remain; live student derivations are still guarded.
+
+## Final branch verification — October 30, 2026
+
+Final `npm run check` passed 1,324 tests, type checks and builds; `npm run db:test` passed 221 PostgreSQL checks. The focused real-API Chrome journey passed after fixing linked CommonJS proof prebundling in Vite and explicit select-label associations. It included one synthetic failed-save response; other application responses used the real backend. Temporary servers/schema were cleaned up. Formatting, whitespace and documentation links passed. See [the full evidence](../verification/derivation-authoring-verification.md) for the screenshot, exact scope and limitations. A local ignored PR draft is prepared; no PR was published, commit made or next branch created by the agent.

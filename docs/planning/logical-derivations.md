@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring branch 019 is complete and proof-checker branch 020 has started. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for the confirmed classical direction and concrete catalog variants under review. Future authoring/student/review branches are not started by this document.
+Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring 019, proof-checker 020 and private authoring 021 are complete. Next is the guarded 022–023 student/review milestone. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for confirmed catalog variants and [authoring verification](../verification/derivation-authoring-verification.md) for delivered behavior and limits. This document does not start a future branch.
 
 ## Product direction and scope
 
@@ -171,7 +171,7 @@ Keep this engine independently testable; no database, UI, assignment grade write
 
 ### 021: derivation authoring
 
-Implementation has started. The [authoring foundation](derivation-authoring.md) includes versioned private/reference contracts, effective rule labels, redacted projections, owner-store draft/preview/history workflows and checked immutable publication under the parent lock. Private owner HTTP routes now support saved derivations, statement/premise/rule-label editing and explicit saved-reference checking. Reference-line/citation/subproof editing and explicit local checking are now implemented; assignment/student use stays guarded. The user confirmed normalized duplicate-label rejection among enabled rules.
+Implementation and focused final verification are complete; see [evidence and limits](../verification/derivation-authoring-verification.md). The [authoring foundation](derivation-authoring.md) includes versioned private/reference contracts, effective rule labels, redacted projections, owner-store draft/preview/history workflows and checked immutable publication under the parent lock. Private owner HTTP routes now support saved derivations, statement/premise/rule-label editing and explicit saved-reference checking. Reference-line/citation/subproof editing and explicit local checking are now implemented; assignment/student use stays guarded. The user confirmed normalized duplicate-label rejection among enabled rules.
 
 This is one of the larger branches. Keep its slices separated rather than delivering persistence, editor and publication in one change:
 

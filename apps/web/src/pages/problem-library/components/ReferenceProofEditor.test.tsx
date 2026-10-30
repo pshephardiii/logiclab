@@ -28,7 +28,9 @@ async function conditionalProof() {
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
-  const scope = screen.getByLabelText('New line scope') as HTMLSelectElement;
+  const scope = screen.getByRole('combobox', {
+    name: 'New line scope',
+  }) as HTMLSelectElement;
   const block = scope.value;
   const endpoint = screen.getByLabelText('Final line of Subproof 1 at line 1') as HTMLSelectElement;
   await user.selectOptions(endpoint, endpoint.options[1]!.value);

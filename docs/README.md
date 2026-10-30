@@ -78,6 +78,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Derivation authoring, checked publication and browser evidence](verification/derivation-authoring-verification.md)
+
 - [Propositional proof-checker foundation](verification/propositional-proof-checker-verification.md)
 
 - [Assignment scoring and weighted demo workflows](verification/assignment-scoring-verification.md)
