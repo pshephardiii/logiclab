@@ -45,3 +45,7 @@ No infrastructure was provisioned or external messages sent. Instructor override
 ## Review follow-up: assignment form extraction
 
 Extract item-order comparison, point validation/change detection and total calculation to `helpers/assignment-item-state.ts`, and the explanatory/error/total presentation to `AssignmentPointsSummary`. Ordered occurrence IDs are compared directly instead of JSON-stringifying arrays; repeated-version identity remains preserved. The form retains state, callbacks and submission orchestration. All 239 web tests and the frontend type check/production build passed after extraction, including invalid/reverted weights, failed writes, repeated-item reordering and publication locks. Formatting and whitespace checks passed. No API/database behavior changed; broader suites and the browser walkthrough were not repeated for this refactor.
+
+## Review follow-up: assignment update payload
+
+Extract the hook's update-payload construction to `helpers/assignment-update.ts`. It selects metadata-only updates, occurrence-preserving weight changes or explicit content replacement; request cancellation, mutation guards, state and list refresh remain in `useAssignments`. Early returns replace the nested payload conditional. All 239 web tests and the frontend type check/production build passed again, including existing metadata, weight-only, reorder and failed-save cases. Formatting and whitespace checks passed. No API/database changes or separate browser rerun were needed.
