@@ -57,3 +57,7 @@ UI regression checks cover invalid allocations, dirty/reverted state, failed-sav
 ### UI slice verification — October 30, 2026
 
 `npm run check` passed type checks, 975 tests (104 engine, 632 API, 239 web) and production builds. All 57 API PostgreSQL integration checks passed, including the weighted demo assertions. The first sandboxed full check hit an existing watcher-test file-limit error; the permitted rerun passed. No database-schema change was made in this UI slice, so the database-package suite was not repeated. No browser walkthrough or user development-database migration/reset was performed. Format and whitespace checks passed.
+
+## Branch completion
+
+Final automated checks and a focused real-API Chrome walkthrough passed. See [verification evidence and limits](../verification/assignment-scoring-verification.md) for the weighted authoring/submission/release/reset journey, mobile screenshot, test counts and rollout requirements. The feature is ready for review; no PR was published or merge performed. Next planned branch: `020-feat-propositional-proof-checker`, with the rule catalog and structural semantics settled before implementation.

@@ -76,6 +76,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Assignment scoring and weighted demo workflows](verification/assignment-scoring-verification.md)
+
 - [Conceptual questions and mixed demo workflows](verification/conceptual-questions-verification.md)
 
 - [Biconditional and tilde notation](verification/biconditional-verification.md)
