@@ -18,12 +18,18 @@ const symbols: Readonly<Record<string, TokenKind>> = {
   ']': 'close',
 };
 
-export function tokenize(source: string): Token[] {
+export function tokenize(source: string, allowContradiction = false): Token[] {
   const tokens: Token[] = [];
   for (let position = 0; position < source.length;) {
     const text = source[position]!;
     if (/\s/u.test(text)) {
       position++;
+      continue;
+    }
+    if (allowContradiction && (text === '⊥' || source.startsWith('_|_', position))) {
+      const spelling = text === '⊥' ? text : '_|_';
+      tokens.push({ kind: 'bottom', text: spelling, position });
+      position += spelling.length;
       continue;
     }
     // Match the longer alias before implication so <-> is one token.
@@ -42,7 +48,7 @@ export function tokenize(source: string): Token[] {
       throw new FormulaParseError(
         'INVALID_CHARACTER',
         position,
-        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!/~, ∧/&, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets`,
+        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!/~, ∧/&, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets${allowContradiction ? ', and ⊥/_|_' : ''}`,
       );
     }
     tokens.push({ kind, text, position });

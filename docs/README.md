@@ -22,6 +22,7 @@ Documentation is grouped by purpose:
 
 - [Logical derivation planning](planning/logical-derivations.md)
 - [Assignment scoring](planning/assignment-scoring.md)
+- [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
@@ -75,6 +76,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Propositional proof-checker foundation](verification/propositional-proof-checker-verification.md)
 
 - [Assignment scoring and weighted demo workflows](verification/assignment-scoring-verification.md)
 

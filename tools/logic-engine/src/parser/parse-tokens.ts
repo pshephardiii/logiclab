@@ -1,24 +1,34 @@
 import { FormulaParseError } from './errors';
 import { FORMULA_LIMITS } from './limits';
-import type { Formula, Token } from './types';
+import type { FormulaNode, Token } from './types';
+
+type ParseOptions<Atom> = {
+  limits: { maxNesting: number; maxVariables: number };
+  extraAtom: (token: Token) => Atom | undefined;
+  expectedExpression: string;
+};
 
 /** Recursive-descent parsing: each precedence level consumes the tighter level. */
-export function parseTokens(tokens: readonly Token[]): Formula {
+export function parseTokens<Atom = never>(
+  tokens: readonly Token[],
+  options?: ParseOptions<Atom>,
+): FormulaNode<Atom> {
+  const limits = options?.limits ?? FORMULA_LIMITS;
   const variables = new Set<string>();
   let cursor = 0;
   const current = (): Token => tokens[cursor]!;
 
   function checkDepth(depth: number): void {
-    if (depth > FORMULA_LIMITS.maxNesting) {
+    if (depth > limits.maxNesting) {
       throw new FormulaParseError(
         'NESTING_LIMIT',
         current().position,
-        `Formula exceeds ${FORMULA_LIMITS.maxNesting} nested groups, negations, or implications`,
+        `Formula exceeds ${limits.maxNesting} nested groups, negations, or implications`,
       );
     }
   }
 
-  function parseBiconditional(depth: number): Formula {
+  function parseBiconditional(depth: number): FormulaNode<Atom> {
     const left = parseImplication(depth);
     if (current().kind !== 'iff') return left;
     cursor++;
@@ -33,7 +43,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return { type: 'binary', operator: 'iff', left, right };
   }
 
-  function parseImplication(depth: number): Formula {
+  function parseImplication(depth: number): FormulaNode<Atom> {
     checkDepth(depth);
     const left = parseDisjunction(depth);
     if (current().kind === 'implies') {
@@ -45,7 +55,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return left;
   }
 
-  function parseDisjunction(depth: number): Formula {
+  function parseDisjunction(depth: number): FormulaNode<Atom> {
     // Repeatedly replacing the left side makes disjunction left-associative.
     let left = parseConjunction(depth);
     while (current().kind === 'or') {
@@ -55,7 +65,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return left;
   }
 
-  function parseConjunction(depth: number): Formula {
+  function parseConjunction(depth: number): FormulaNode<Atom> {
     // Conjunction binds more tightly than disjunction, and associates left.
     let left = parseUnary(depth);
     while (current().kind === 'and') {
@@ -65,7 +75,7 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return left;
   }
 
-  function parseUnary(depth: number): Formula {
+  function parseUnary(depth: number): FormulaNode<Atom> {
     checkDepth(depth);
     const token = current();
     if (token.kind === 'not') {
@@ -74,14 +84,19 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     }
     if (token.kind === 'open') return parseGroup(depth, token);
     if (token.kind === 'variable') return parseVariable(token);
+    const atom = options?.extraAtom(token);
+    if (atom !== undefined) {
+      cursor++;
+      return atom;
+    }
     throw new FormulaParseError(
       'EXPECTED_EXPRESSION',
       token.position,
-      'Expected a variable, negation, or grouped expression',
+      options?.expectedExpression ?? 'Expected a variable, negation, or grouped expression',
     );
   }
 
-  function parseGroup(depth: number, openingToken: Token): Formula {
+  function parseGroup(depth: number, openingToken: Token): FormulaNode<Atom> {
     cursor++;
     const expression = parseBiconditional(depth + 1);
     const closingSymbol = openingToken.text === '[' ? ']' : ')';
@@ -96,13 +111,13 @@ export function parseTokens(tokens: readonly Token[]): Formula {
     return expression;
   }
 
-  function parseVariable(token: Token): Formula {
+  function parseVariable(token: Token): FormulaNode<Atom> {
     variables.add(token.text);
-    if (variables.size > FORMULA_LIMITS.maxVariables) {
+    if (variables.size > limits.maxVariables) {
       throw new FormulaParseError(
         'VARIABLE_LIMIT',
         token.position,
-        `Use at most ${FORMULA_LIMITS.maxVariables} distinct variables`,
+        `Use at most ${limits.maxVariables} distinct variables`,
       );
     }
     cursor++;

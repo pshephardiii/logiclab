@@ -4,6 +4,16 @@
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./proof": {
+      "types": "./dist/proof/index.d.ts",
+      "default": "./dist/proof/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -11,8 +21,12 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm run build -w @logiclab/contracts",
     "test": "jest",
     "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@logiclab/contracts": "*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

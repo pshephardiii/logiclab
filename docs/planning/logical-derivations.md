@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: planning on `018-docs-derivation-planning`. This document records the discussion and will evolve before implementation. The user has accepted the provisional branch sequence below as the planning direction. No derivation code, final rule catalog or proof schema is authorized by this document alone; implementation branches are not created or started here.
+Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring branch 019 is complete and proof-checker branch 020 has started. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for the confirmed classical direction and concrete catalog variants under review. Future authoring/student/review branches are not started by this document.
 
 ## Product direction and scope
 
@@ -158,6 +158,8 @@ Small slices:
 This branch should be useful for existing exercise types without requiring derivation UI. If compatibility and authoring prove too large for one branch, split before implementation and allocate a fresh number rather than dropping those requirements.
 
 ### 020: proof checker foundation
+
+Branch 020 implements a versioned, separately selectable classical catalog, structural equality, proof-only contradiction parsing, bounded standalone proof/report contracts local formula-pattern checks for all 19 rules, bounded Fitch layout/reference analysis, and standalone whole-proof evaluation. The user confirmed classical natural deduction with independent classical-rule permissions. The [concrete rule/convention document](propositional-proof-checker.md) records exact variants, flat Fitch serialization, budgets and remaining structural checks. Local rule matching is available over trusted resolved formulas. Fitch identities, scopes, closed-child citations and structural limits are now checked. The standalone checker now validates premise correspondence, propagates invalid/unknown support, checks the final root target and reviews unused errors. Final automated/package verification passed; see the [evidence](../verification/propositional-proof-checker-verification.md). Public endpoints, derivation definitions, authoring/student workflows and grading remain unavailable. Next is the planned 021 authoring branch, with graded student access guarded through the later student/review milestone.
 
 Small slices:
 
