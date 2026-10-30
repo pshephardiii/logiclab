@@ -1,4 +1,11 @@
 export { sameFormula } from './formula-equality';
+export { analyzeFitchStructure } from './fitch-structure';
+export type {
+  FitchStructureResult,
+  FitchReferenceCheck,
+  FitchBlockSpan,
+  ClosedFitchBlockSpan,
+} from './fitch-types';
 export { checkLocalRule } from './local-rule';
 export type { LocalRuleApplication, LocalRuleResult } from './local-rule';
 export type { LocalSubproof } from './types';

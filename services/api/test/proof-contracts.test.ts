@@ -11,6 +11,7 @@ import {
 import {
   PROOF_FORMULA_LIMITS,
   checkLocalRule,
+  analyzeFitchStructure,
   parseProofFormula,
   type LocalRuleApplication,
 } from '@logiclab/logic-engine/proof';
@@ -237,4 +238,16 @@ test('local rule outcomes map to diagnostic contracts without becoming whole-pro
   const local = checkLocalRule(application);
   expect(local).toEqual({ status: 'valid' });
   expect(proofCheckReportSchema.safeParse(local).success).toBe(false);
+});
+
+test('Fitch structure diagnostics share contracts but resolved structure is not an accepted report', () => {
+  const result = analyzeFitchStructure(fitchProofSchema.parse(proof));
+  expect(result.status).toBe('resolved');
+  expect(proofCheckReportSchema.safeParse(result).success).toBe(false);
+  const invalid = analyzeFitchStructure(
+    fitchProofSchema.parse({ ...proof, steps: [{ ...proof.steps[0], lineReferences: [a] }] }),
+  );
+  expect(invalid.diagnostics.length).toBeGreaterThan(0);
+  for (const diagnostic of invalid.diagnostics)
+    expect(proofDiagnosticSchema.safeParse(diagnostic).success).toBe(true);
 });

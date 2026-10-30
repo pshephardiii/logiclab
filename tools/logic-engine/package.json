@@ -21,8 +21,12 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm run build -w @logiclab/contracts",
     "test": "jest",
     "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@logiclab/contracts": "*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
