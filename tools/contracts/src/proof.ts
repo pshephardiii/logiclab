@@ -9,6 +9,7 @@ export const PROOF_LIMITS = Object.freeze({
   maxFormulaLength: 256,
   maxPermittedRules: 64,
   maxDiagnostics: 500,
+  maxCheckWork: 500_000,
 });
 
 const id = z.uuid().transform((value) => value.toLowerCase());

@@ -1,8 +1,8 @@
 # Propositional proof checker
 
-Status: fourth slice of `020-feat-propositional-proof-checker`. The user confirmed the classical catalog and accepted the starting foundation. Version-1 rule identities/labels/citation arities now have bounded proof/report contracts and proof-only contradiction parsing alongside structural equality. All 19 rule obligations below have local application checks over parsed formulas. Fitch layout/reference analysis is now implemented; no complete proof checker is available yet.
+Status: fifth slice of `020-feat-propositional-proof-checker`. The user confirmed the classical catalog and accepted the starting foundation. Version-1 rule identities/labels/citation arities now have bounded proof/report contracts and proof-only contradiction parsing alongside structural equality. All 19 rule obligations below have local application checks over parsed formulas. Fitch layout/reference analysis and a complete standalone `checkProof` pipeline are now implemented. Live derivation workflows remain guarded.
 
-No proof-validation entry point, authoring/student UI, grading operation or endpoint is enabled yet. The new contracts are standalone foundations; existing problem-definition schemas still reject derivations. The catalog itself does not grant permission or certify a proof; local rule checks require explicit permissions and do not establish whole-proof validity. The [derivation plan](logical-derivations.md) remains the delivery sequence.
+The pure engine exposes a proof-validation entry point. No authoring/student UI, grading operation or HTTP endpoint is enabled yet. The new contracts are standalone foundations; existing problem-definition schemas still reject derivations. The catalog itself does not grant permission or certify a proof; local rule checks require explicit permissions and do not establish whole-proof validity. The [derivation plan](logical-derivations.md) remains the delivery sequence.
 
 ## Catalog and permissions
 
@@ -87,7 +87,7 @@ Budgets: 200 steps, 64 blocks, 50 premises, 64 permitted-rule entries, 256 chara
 
 Diagnostics carry a stable category, bounded message and optional step index, block ID or UTF-16 formula position. Categories distinguish version/limit failures, structure, formula syntax, unknown/disabled rules, references, rule mismatch, dependencies, incomplete work and target failure. An accepted report must have an established target, nonempty uniquely identified/in-order step results, valid local/dependency states and no diagnostics. An unassessable report must explain the failure. Reports carry no awarded points; grade/review/release policy remains outside the engine.
 
-These guards validate report consistency, not the truth of a caller-supplied acceptance claim. Only a future engine evaluation over authoritative input can produce trusted validation evidence. No report producer or public checking endpoint is enabled in this slice.
+These guards validate report consistency, not the truth of a caller-supplied acceptance claim. Only engine evaluation over authoritative problem input can produce trusted validation evidence. Slice 5 now produces these reports; no public checking endpoint is enabled.
 
 ## Local rule application (slice 3)
 
@@ -130,12 +130,44 @@ Result status is `resolved`, `invalid` or `unassessable`. Invalid layout and res
 
 This layer checks where cited material comes from and whether a child block is closed. The local matcher checks formula-level discharge obligations. The future whole-proof checker must still validate premise declarations against the supplied statement, parse every formula, check enabled rules and endpoints, propagate invalid/unresolved dependencies, include unused errors and determine whether the final root line establishes the target. Neither structural resolution nor a local rule match is a grade or an accepted report.
 
-## Remaining work on 020
+## Whole-proof evaluation (slice 5)
 
-1. Add the whole-proof entry point over unknown input with safe preflight/schema/version handling, authoritative premise/configuration validation and bounded formula/rule/dependency work.
-2. Parse all formulas and connect resolved Fitch citations to local rule matching. Preserve local validity separately from invalid/unresolved dependencies and verify discharge obligations under the actual block context.
-3. Add the Fitch traversal, stable-reference resolution, dependency propagation and deterministic whole-proof report. Keep incomplete/unassessable distinct from accepted.
-4. Verify alternate correct proofs, locally correct work downstream of errors, unused errors, inaccessible references, nesting/limits and malformed inputs. Finish branch evidence and PR notes then.
+`checkProof(value: unknown)` is the public version-1 Fitch checker, exported through `@logiclab/logic-engine/proof`. It returns a report validated against `proofCheckReportSchema`. It neither compares against a reference proof nor searches for another proof. Alternate complete derivations are accepted under the exact supplied rules.
+
+The pipeline is separated by responsibility:
+
+1. `proof-input.ts` checks plain-data objects, supported versions, list bounds and string/reference lengths before Zod visits elements, then applies the strict transport schema. Oversized arrays are rejected before reading their elements; unknown fields are not traversed recursively. Invalid transport/configuration does not become partially trusted proof work. This is a plain-data interface, not a sandbox for executing arbitrary hostile JavaScript objects.
+2. `proof-formulas.ts` checks distinct problem premise IDs and distinct supported permitted-rule IDs, then parses the stated premises/target and every student formula. Blank work remains incomplete; invalid syntax has a positioned diagnostic. The checker matches premise declarations to their cited supplied premises structurally. It cannot authenticate who supplied the problem: assigned-work callers must load authoritative premises/rules from the pinned problem version, never accept a replacement problem from the student's request.
+3. The existing Fitch analyzer establishes coherent scope and safe citations. Invalid layout produces review-needed work with unknown per-step validity; structural limits return unassessable. Invalid citations retain diagnostics and cannot be passed as safe inputs to local rules.
+4. `proof-steps.ts` checks each local inference and propagates support validity in input order. Dependencies include cited lines, cited subproof assumptions/endpoints and active ancestor assumptions. A malformed active assumption therefore affects the scope even if no explicit citation mentions it. Earlier invalid local work or invalid dependencies contaminate support; unresolved earlier work leaves support unknown.
+5. `check-proof.ts` checks the final root-level line against the stated target and assembles the deterministic report. There is no numerical partial-credit computation or awarded-score field.
+
+Local status and dependency status deliberately answer different questions. A wrong local inference can have valid incoming support. A later valid modus-ponens shape can have invalid incoming support. Invalid syntax that prevents matching leaves downstream local checks unassessable; a missing earlier justification with an otherwise parsed formula can still allow a later local match with unknown support. Dependency diagnostics identify these cases without relabeling every downstream inference as another local-rule error.
+
+The target is established only when the final root-level line structurally matches and has valid local reasoning and support. A target derived only inside an assumption, an earlier target followed by an unrelated final root line, or contaminated support does not establish it. Unknown formulas/support produce an unknown target when matching cannot be assessed.
+
+All submitted work is checked, including unused lines and subproof interiors. An independent valid route can establish the target while an unused error still requires review; unused errors do not falsely contaminate an otherwise independent endpoint. An unused open block can similarly leave an earlier valid final root target established while making the whole submission incomplete. Whole-proof acceptance requires an established target, every step locally/support-valid, and no diagnostics anywhere.
+
+| Overall status | Meaning                                                                                                                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accepted`     | The entire supplied proof satisfies this checker version and establishes the target.                                                                           |
+| `needs_review` | Supported student work is incorrect, incomplete or structurally malformed. The target may separately be established, not established or unknown.               |
+| `unassessable` | Input/problem configuration/version cannot be trusted or a resource limit prevents complete checking. This is not a zero grade or a proof of non-derivability. |
+
+Reports identify the supported checker/catalog versions, not a successful reinterpretation of unsupported input versions. Failure reports remain bounded and do not invent identities for invalid raw input. The original source object is not mutated; IDs normalize through the existing contract while formulas retain their source spelling.
+
+### Checking work and failure limits
+
+Existing shape, text, step, block, nesting and diagnostic bounds remain in force. `PROOF_LIMITS.maxCheckWork` adds 500,000 deterministic work units: formula source characters/AST nodes, conservative structural-comparison charges, and dependency visits. Structural graph work is separately bounded by the step/block/depth limits. Units are an implementation budget, not elapsed time or an exact CPU-instruction count. No caller override is accepted.
+
+`proof-budget.ts` stops evaluation explicitly on exhaustion. Parser nesting/length/variable bounds also produce resource-limit outcomes rather than invented logical mistakes. Resource/version/invalid-transport failures return `unassessable` with unknown target and no successful partial step report. Diagnostic overflow reserves a resource-limit explanation within the 500-diagnostic cap. These outcomes must not be treated as unsolvable problems or automatic zeros.
+
+No report is itself an application grade, enrollment check or disclosure decision. Later authoring must require an accepted instructor reference; student grading and visibility must use the planned assignment/review/release workflows. Existing exercise-definition schemas continue to reject derivations.
+
+## Remaining verification on 020
+
+1. Review whole-proof edge cases, dependency and resource behavior across the supported rules. Preserve explicit unknown/review outcomes and existing table/parser behavior.
+2. Finish branch-level automated checks, public-module verification, verification evidence and local PR notes. Authoring/persistence, editors, live student work and instructor grading stay in branches 021–023.
 
 No database migration, frontend flow, assigned derivation acceptance, automatic grade or reference-proof publication is introduced by these foundations. Graded derivation availability remains guarded until the planned authoring/student/review branches are complete.
 
@@ -162,3 +194,9 @@ No database checks or browser walkthrough were run: there is no persistence, rou
 `npm run check` passed type checks, 1,204 tests (305 engine, 660 API, 239 web) and production builds. The 41 new engine cases cover resolved inputs feeding local rules, single-line/nested/sibling subproofs, current/ancestor access, inaccessible/forward/self/wrong-kind citations, distinct cases versus reusable lines, open drafts, duplicate/malformed/cyclic layouts, exact depth boundaries, step/block/diagnostic limits, stable IDs through insertion and input/result isolation. API contract coverage confirms that structural diagnostics match the shared schema and resolved structure is not an accepted report. Public-module smoke, formatting, whitespace and local Markdown file-link checks passed. The lockfile change records only the existing workspace dependency; the offline metadata update added no external packages. The frontend entry remains 499.23 kB with no raised warning threshold.
 
 No database check, migration, browser walkthrough, whole-proof acceptance or grading workflow is claimed. Premise authority, formula checking, actual dependency propagation and target/report orchestration remain the next slice. Existing Jest VM-module advisories remain.
+
+### Slice 5 verification — October 30, 2026
+
+`npm run check` passed type checks, 1,257 tests (357 engine, 661 API, 239 web) and production builds. The 52 new engine cases cover all line-rule variants in complete proofs, nested/one-line conditional proofs, actual cases/negation/contradiction subproofs, alternate derivations, invalid and unknown dependency chains, active assumptions, forged premises, disabled/unknown/missing rules, unsafe citations, final-root targeting, unused errors/open work, malformed layout/configuration/raw data, preflight element limits, diagnostic overflow, parser/work limits, source preservation and deterministic reports. An API consumer test validates built whole-proof reports and continued rejection of authored derivation definitions; it confirms that accepted validation reports contain no awarded score.
+
+Built public-module smoke, formatting, whitespace and local Markdown file-link checks passed. Existing root/parser and assignment regressions remain included, with the frontend entry at 499.24 kB and no changed warning threshold. No database suite, migration or browser walkthrough was run: this slice adds no persistence, routes or UI. Existing Jest VM-module advisories remain. Final branch review/verification and PR notes follow; authoring, student access, grading and disclosure integration remain guarded for later branches.

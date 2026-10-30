@@ -1,4 +1,5 @@
 export { sameFormula } from './formula-equality';
+export { checkProof, PROOF_CHECKER_VERSION } from './check-proof';
 export { analyzeFitchStructure } from './fitch-structure';
 export type {
   FitchStructureResult,

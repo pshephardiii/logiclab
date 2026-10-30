@@ -22,7 +22,7 @@ export function structureDiagnostics() {
       return exhausted
         ? [
             ...items.slice(0, PROOF_LIMITS.maxDiagnostics - 1),
-            { code: 'RESOURCE_LIMIT', message: 'Structural diagnostic limit exceeded.' },
+            { code: 'RESOURCE_LIMIT', message: 'Proof diagnostic limit exceeded.' },
           ]
         : [...items];
     },
