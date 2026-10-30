@@ -1,8 +1,8 @@
 # Propositional proof checker
 
-Status: second slice of `020-feat-propositional-proof-checker`. The user confirmed the classical catalog and accepted the starting foundation. Version-1 rule identities/labels/citation arities now have bounded proof/report contracts and proof-only contradiction parsing alongside structural equality. The rule obligations below remain the specification for application checks; no complete checker is available yet.
+Status: third slice of `020-feat-propositional-proof-checker`. The user confirmed the classical catalog and accepted the starting foundation. Version-1 rule identities/labels/citation arities now have bounded proof/report contracts and proof-only contradiction parsing alongside structural equality. All 19 rule obligations below now have local application checks over parsed formulas; no complete proof checker is available yet.
 
-No proof-validation entry point, authoring/student UI, grading operation or endpoint is enabled yet. The new contracts are standalone foundations; existing problem-definition schemas still reject derivations. A catalog entry is not an implemented checker or permission to use a rule. The [derivation plan](logical-derivations.md) remains the delivery sequence.
+No proof-validation entry point, authoring/student UI, grading operation or endpoint is enabled yet. The new contracts are standalone foundations; existing problem-definition schemas still reject derivations. The catalog itself does not grant permission or certify a proof; local rule checks require explicit permissions and do not establish whole-proof validity. The [derivation plan](logical-derivations.md) remains the delivery sequence.
 
 ## Catalog and permissions
 
@@ -89,10 +89,35 @@ Diagnostics carry a stable category, bounded message and optional step index, bl
 
 These guards validate report consistency, not the truth of a caller-supplied acceptance claim. Only a future engine evaluation over authoritative input can produce trusted validation evidence. No report producer or public checking endpoint is enabled in this slice.
 
+## Local rule application (slice 3)
+
+`checkLocalRule` is available from `@logiclab/logic-engine/proof`. Its input contains:
+
+- `ruleCatalogVersion`, nullable `ruleId` and explicit `permittedRuleIds`.
+- A parsed conclusion, an ordered array of parsed cited line formulas, and subproof obligations as `{ assumption, conclusion }` parsed formula pairs.
+
+The input is a trusted, resolved local application, not raw proof JSON. Parse formulas and resolve IDs before calling it. `local-rule.ts` checks the catalog version, known identity, permission and exact citation counts before calling the private pattern functions in `rule-patterns.ts`. The pattern table covers every catalog rule ID at compile time. Matching is structural and does not mutate inputs or reference order.
+
+Local results are deliberately different from whole-proof reports:
+
+| Status         | Meaning/code                                                                             |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `valid`        | This rule's formula pattern matches the supplied local obligations.                      |
+| `invalid`      | `UNKNOWN_RULE`, `RULE_DISABLED`, `INVALID_REFERENCE` (wrong counts), or `RULE_MISMATCH`. |
+| `unassessable` | `UNSUPPORTED_VERSION` or `INCOMPLETE_PROOF` (no rule selected).                          |
+
+There are no default permissions, label-to-ID guessing or implied extra rule applications. The version check precedes rule lookup, then permission, citation counts and formula matching. Code categories match the shared diagnostic contract; no local result is itself an accepted proof report or grade.
+
+Citation roles can be matched in either order where the exact rule allows it. Either conjunct can be eliminated, disjunction can be introduced on either side, either biconditional direction can be extracted, and disjunctive syllogism handles either explicitly negated disjunct. Metavariables accept arbitrary compound formulas, including falsity. Reusing a line formula can support A ∧ A; reference identity/accessibility still belongs to the next layer.
+
+The exact variant boundaries remain enforced. Biconditional introduction consumes two conditional lines, while elimination produces a conditional rather than applying it directly. Negation introduction and proof by contradiction require explicit ⊥ endpoints, not merely a formula of the form A ∧ ¬A. Excluded middle directly produces A ∨ ¬A, not its commuted spelling. Disjunctive syllogism does not silently perform double-negation introduction/elimination. Such transformations need their own permitted steps.
+
+A local match cannot certify that a line is accessible, a subproof is closed, two disjunction cases are distinct blocks, an assumption has actually been discharged, or any upstream reasoning is valid. Identical case formulas may match locally while duplicate block IDs must fail the future structural check. Likewise, a correct modus-ponens shape can depend on an earlier invalid line. The Fitch layer must preserve local validity separately from dependency failure, validate all structure, check the root target and include unused erroneous work before reporting acceptance. These obligations are not relaxed by this slice.
+
 ## Remaining work on 020
 
 1. Consume the bounded input/report contracts in the pure checker. Enforce identity/reference coherence, block depth, cycle and work budgets, including safe failure reporting for malformed/unsupported input.
-2. Implement/test local line-rule checks and subproof/discharge checks against the catalog above; reject unknown versions, unsupported rules and disabled citations.
+2. Resolve exact line/block citations into local applications and connect the implemented rule matcher to structural scope/discharge checks. Preserve local versus dependency outcomes; apply no implicit equivalence rules.
 3. Add the Fitch traversal, stable-reference resolution, dependency propagation and deterministic whole-proof report. Keep incomplete/unassessable distinct from accepted.
 4. Verify alternate correct proofs, locally correct work downstream of errors, unused errors, inaccessible references, nesting/limits and malformed inputs. Finish branch evidence and PR notes then.
 
@@ -109,3 +134,9 @@ Foundation tests exercise notation/grouping identity, distinctions between equiv
 `npm run check` passed type checks, 1,047 tests (150 engine, 658 API, 239 web) and production builds. The 53 additional cases cover proof-only falsity/aliases, compound use, positioned syntax errors, unchanged ordinary ASTs/table identifiers/limits, bounded incomplete transport, strict versions/fields, normalized IDs, acceptance consistency, local-versus-dependency reports and continued rejection of authored derivation definitions. Built Node ESM imports of root parsing, proof parsing and proof contracts passed. Formatting, whitespace and local Markdown file links passed. The frontend entry remains under the existing chunk threshold (499.23 kB); no size threshold was raised.
 
 No database checks, migration, browser walkthrough, proof rule application or whole-proof validation is claimed. Existing Jest VM-module advisories remain. Only standalone foundations are enabled; report consistency validation does not certify a user-supplied proof or award points.
+
+### Slice 3 verification — October 30, 2026
+
+`npm run check` passed type checks, 1,162 tests (264 engine, 659 API, 239 web) and production builds. The 114 new engine cases cover every rule's valid pattern, reversed citation roles, arbitrary compound substitutions, an invalid near-miss, exact reference counts and explicit permissions, plus alternate variants, forbidden implicit rewrites, identity/label/version distinctions and input immutability. Catalog coverage checks require valid and invalid examples for every supported ID. An API contract-boundary test verifies local diagnostic-code compatibility and rejects a local success as a whole-proof report. Built public-module smoke and formatting/whitespace/local Markdown file-link checks passed.
+
+No database checks or browser walkthrough were run: there is no persistence, route or UI change. Existing parser/table behavior remains covered, and the frontend entry remains 499.23 kB without changing its warning threshold. Existing Jest VM-module advisories remain. Scope/accessibility, actual subproof closure/discharge, dependency propagation, root-target acceptance and whole-proof resource handling are still unimplemented; no local result can award a grade or enable derivation publication/submission.

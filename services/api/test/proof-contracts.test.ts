@@ -2,12 +2,18 @@ import {
   fitchProofSchema,
   proofCheckInputSchema,
   proofCheckReportSchema,
+  proofDiagnosticSchema,
   PROOF_LIMITS,
   problemDefinitionSchema,
   type FitchProof,
   type ProofCheckReport,
 } from '@logiclab/contracts';
-import { PROOF_FORMULA_LIMITS } from '@logiclab/logic-engine/proof';
+import {
+  PROOF_FORMULA_LIMITS,
+  checkLocalRule,
+  parseProofFormula,
+  type LocalRuleApplication,
+} from '@logiclab/logic-engine/proof';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
@@ -199,4 +205,36 @@ test('foundation contracts do not enable authored derivation definitions', () =>
     problemDefinitionSchema.safeParse({ type: 'derivation', definitionVersion: 1, ...input })
       .success,
   ).toBe(false);
+});
+
+test('local rule outcomes map to diagnostic contracts without becoming whole-proof reports', () => {
+  const application: LocalRuleApplication = {
+    ruleCatalogVersion: 1,
+    ruleId: 'reiteration',
+    permittedRuleIds: ['reiteration'],
+    conclusion: parseProofFormula('P'),
+    lines: [parseProofFormula('P')],
+    subproofs: [],
+  };
+  for (const input of [
+    { ...application, ruleCatalogVersion: 2 },
+    { ...application, ruleId: null },
+    { ...application, ruleId: 'unknown_rule' },
+    { ...application, permittedRuleIds: [] },
+    { ...application, lines: [] },
+    { ...application, conclusion: parseProofFormula('Q') },
+  ]) {
+    const result = checkLocalRule(input);
+    expect(result.status).not.toBe('valid');
+    if (result.status !== 'valid')
+      expect(
+        proofDiagnosticSchema.safeParse({
+          code: result.code,
+          message: 'Local inference diagnostic.',
+        }).success,
+      ).toBe(true);
+  }
+  const local = checkLocalRule(application);
+  expect(local).toEqual({ status: 'valid' });
+  expect(proofCheckReportSchema.safeParse(local).success).toBe(false);
 });

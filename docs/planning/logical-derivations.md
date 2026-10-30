@@ -159,7 +159,7 @@ This branch should be useful for existing exercise types without requiring deriv
 
 ### 020: proof checker foundation
 
-The first two slices declare a versioned, separately selectable classical catalog, structural equality, proof-only contradiction parsing and bounded standalone proof/report contracts. The user confirmed classical natural deduction with independent classical-rule permissions. The [concrete rule/convention document](propositional-proof-checker.md) records exact variants, flat Fitch serialization, budgets and remaining structural checks. No rule application, complete proof checker, public endpoint or live proof workflow is enabled yet.
+The first three slices implement a versioned, separately selectable classical catalog, structural equality, proof-only contradiction parsing, bounded standalone proof/report contracts and local formula-pattern checks for all 19 rules. The user confirmed classical natural deduction with independent classical-rule permissions. The [concrete rule/convention document](propositional-proof-checker.md) records exact variants, flat Fitch serialization, budgets and remaining structural checks. Local rule matching is available over trusted resolved formulas. Complete Fitch structure/dependency validation, public endpoints and live proof workflows remain unavailable.
 
 Small slices:
 
