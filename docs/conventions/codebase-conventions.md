@@ -12,11 +12,11 @@ Keep structural refactors separate from product changes and broad mechanical for
 
 ## Tools: package responsibilities
 
-| Package              | Responsibility                                                           | Keep outside it                                                           |
-| -------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `tools/contracts`    | Zod API data contracts and inferred TypeScript types shared by consumers | Database entities, Fastify registration/configuration, endpoint execution |
-| `tools/db`           | MikroORM entity mappings, database configuration/client, migrations      | API contracts, authentication-provider calls, HTTP handling               |
-| `tools/logic-engine` | Pure parsing, evaluation, and deterministic truth-table generation       | Database access, network requests, account/assignment policy, React state |
+| Package              | Responsibility                                                                        | Keep outside it                                                           |
+| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `tools/contracts`    | Zod API data contracts and inferred TypeScript types shared by consumers              | Database entities, Fastify registration/configuration, endpoint execution |
+| `tools/db`           | MikroORM entity mappings, database configuration/client, migrations                   | API contracts, authentication-provider calls, HTTP handling               |
+| `tools/logic-engine` | Pure parsing, evaluation, deterministic truth tables and propositional proof checking | Database access, network requests, account/assignment policy, React state |
 
 Keep dependencies directed toward these shared capabilities. Tools must not import application or service implementation modules. Consumers import the supported API through `@logiclab/contracts`, `@logiclab/db`, or `@logiclab/logic-engine`, rather than reaching into their source directories.
 

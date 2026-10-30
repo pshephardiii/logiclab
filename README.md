@@ -44,20 +44,20 @@ services/
   worker/         Future background worker (not created yet)
 tools/
   contracts/      Shared API contracts
-  logic-engine/   Pure parser, evaluator, and truth-table generator
+  logic-engine/   Pure parser, evaluator, truth tables and proof checker
   db/             PostgreSQL schema, client, and migrations
 docs/
 ```
 
 An admin app can be added as `apps/admin` with package name `@logiclab/admin`, its own Vite configuration and development port, and a dependency on `@logiclab/contracts`. It can deploy independently and use the same API. Root development/build scripts currently target the existing apps explicitly; add admin to those scripts when it is introduced. Server-side permissions will govern access to admin operations.
 
-| Directory            | Package                  | Purpose                                                              |
-| -------------------- | ------------------------ | -------------------------------------------------------------------- |
-| `apps/web`           | `@logiclab/web`          | React + TypeScript, served and built with Vite                       |
-| `services/api`       | `@logiclab/api`          | Node.js + TypeScript API using Fastify; Jest tests                   |
-| `tools/contracts`    | `@logiclab/contracts`    | Shared Zod request/response schemas and inferred types               |
-| `tools/logic-engine` | `@logiclab/logic-engine` | Pure TypeScript parser, evaluator, and truth tables, with Jest tests |
-| `tools/db`           | `@logiclab/db`           | MikroORM/PostgreSQL entities, client, and SQL migrations             |
+| Directory            | Package                  | Purpose                                                                 |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------- |
+| `apps/web`           | `@logiclab/web`          | React + TypeScript, served and built with Vite                          |
+| `services/api`       | `@logiclab/api`          | Node.js + TypeScript API using Fastify; Jest tests                      |
+| `tools/contracts`    | `@logiclab/contracts`    | Shared Zod request/response schemas and inferred types                  |
+| `tools/logic-engine` | `@logiclab/logic-engine` | Pure parser, evaluator, truth tables and proof checker, with Jest tests |
+| `tools/db`           | `@logiclab/db`           | MikroORM/PostgreSQL entities, client, and SQL migrations                |
 
 The contracts package contains API contracts, not database migrations. Each domain file groups reusable shapes, request contracts, and response contracts, with inferred TypeScript types beside public schemas. `index.ts` only re-exports domain modules. Named type exports are conveniences; parsed values are already inferred from their Zod schemas. It builds JavaScript and type declarations consumed by both apps. Changes are recompiled during root development; API routes can later add domain-specific schemas here.
 
@@ -139,3 +139,5 @@ Instructors can publish graded, completion-only or private-practice assignments 
 ### Duplicate assignments
 
 Instructors can use **Duplicate as draft** on a saved draft, publication or archived assignment to create an editable copy in the same class. Ordered pinned problems and learning policies are preserved; student work, publication/archive status and billing are not copied. Unsaved source edits require confirmation. See [duplication behavior and recovery](docs/planning/duplicate-assignment.md) and [automated verification](docs/verification/duplicate-assignment-verification.md). Manual browser QA remains pending.
+
+The standalone propositional proof-checker foundation is available through `@logiclab/logic-engine/proof`. It validates bounded Fitch proofs with configurable rule permissions and versioned diagnostic reports. Instructor/student derivation exercises and grading remain planned integrations. See [proof-checker design](docs/planning/propositional-proof-checker.md) and [verification](docs/verification/propositional-proof-checker-verification.md).

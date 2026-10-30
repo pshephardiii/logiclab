@@ -9,7 +9,7 @@ LogicLab is a TypeScript monorepo for teaching propositional logic. It implement
 | `apps/web`           | React pages, routing, account/demo state, and typed HTTP clients                               |
 | `services/api`       | Fastify HTTP boundary, application workflows, provider adapters, persistence, and operator CLI |
 | `tools/contracts`    | Shared Zod request/response validation and inferred TypeScript types                           |
-| `tools/logic-engine` | Pure formula parsing, evaluation, and deterministic truth-table generation                     |
+| `tools/logic-engine` | Pure formula parsing, evaluation, truth tables and standalone propositional proof checking     |
 | `tools/db`           | MikroORM entities, field interfaces/enums, migrations, and database constraints                |
 
 Contracts describe data crossing the API boundary; entities describe stored data and relationships. They intentionally differ: a database row can contain credentials, ownership, or expected answers that must never appear in its public response.
@@ -74,3 +74,9 @@ Demo cleanup removes one bounded batch of expired workspaces. Expiration denies 
 - Public hosting, installed scheduling triggers, shared rate limiting, real payments, institutions/subscriptions, an admin interface, and derivation exercises remain outside the implemented release.
 
 See [codebase conventions](../conventions/codebase-conventions.md) for implementation rules, [data design](../planning/data-design.md) for entity decisions, and [public demo setup](../development/public-demo.md) for local operation.
+
+## Standalone proof-checker foundation
+
+`@logiclab/logic-engine/proof` provides the versioned propositional catalog, proof-only parsing and deterministic Fitch checker. It separates structural scope/reference checks, local inference patterns, upstream support and whole-proof acceptance. The public entry validates bounded input and returns versioned reports; unused errors require review even if an independent target is established. Contracts define serialized proof/report shapes, while the engine owns reasoning. Application callers will supply authoritative pinned problems and enforce ownership, grading and disclosure separately.
+
+This is a library capability, not an enabled derivation exercise workflow. Existing problem-definition guards remain until later authoring/student/review branches deliver the complete experience. See [design](../planning/propositional-proof-checker.md) and [verification](../verification/propositional-proof-checker-verification.md).

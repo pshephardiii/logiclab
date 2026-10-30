@@ -164,10 +164,11 @@ Existing shape, text, step, block, nesting and diagnostic bounds remain in force
 
 No report is itself an application grade, enrollment check or disclosure decision. Later authoring must require an accepted instructor reference; student grading and visibility must use the planned assignment/review/release workflows. Existing exercise-definition schemas continue to reject derivations.
 
-## Remaining verification on 020
+## Branch completion
 
-1. Review whole-proof edge cases, dependency and resource behavior across the supported rules. Preserve explicit unknown/review outcomes and existing table/parser behavior.
-2. Finish branch-level automated checks, public-module verification, verification evidence and local PR notes. Authoring/persistence, editors, live student work and instructor grading stay in branches 021–023.
+The standalone checker foundation is ready for review. Final automated and built-package checks passed; see the [verification record](../verification/propositional-proof-checker-verification.md) for counts, evidence, rollout and limits. Broader QA and smaller issues remain deferred as requested. No PR has been published or branch merged by the agent.
+
+Next planned branch is `021-feat-derivation-authoring`: stage immutable derivation definitions and private instructor reference data, pin format/catalog/permissions/labels, and require an accepted reference for publication. Instructor editor and label-collision decisions belong to that branch. Student access, grading/review and disclosure integration stay guarded for their planned later branches.
 
 No database migration, frontend flow, assigned derivation acceptance, automatic grade or reference-proof publication is introduced by these foundations. Graded derivation availability remains guarded until the planned authoring/student/review branches are complete.
 
@@ -200,3 +201,7 @@ No database check, migration, browser walkthrough, whole-proof acceptance or gra
 `npm run check` passed type checks, 1,257 tests (357 engine, 661 API, 239 web) and production builds. The 52 new engine cases cover all line-rule variants in complete proofs, nested/one-line conditional proofs, actual cases/negation/contradiction subproofs, alternate derivations, invalid and unknown dependency chains, active assumptions, forged premises, disabled/unknown/missing rules, unsafe citations, final-root targeting, unused errors/open work, malformed layout/configuration/raw data, preflight element limits, diagnostic overflow, parser/work limits, source preservation and deterministic reports. An API consumer test validates built whole-proof reports and continued rejection of authored derivation definitions; it confirms that accepted validation reports contain no awarded score.
 
 Built public-module smoke, formatting, whitespace and local Markdown file-link checks passed. Existing root/parser and assignment regressions remain included, with the frontend entry at 499.24 kB and no changed warning threshold. No database suite, migration or browser walkthrough was run: this slice adds no persistence, routes or UI. Existing Jest VM-module advisories remain. Final branch review/verification and PR notes follow; authoring, student access, grading and disclosure integration remain guarded for later branches.
+
+### Final branch verification — October 30, 2026
+
+`npm run check` passed all 1,257 tests, type checks and production builds. `npm run db:test` passed all 212 existing PostgreSQL regression checks. Built ESM/CommonJS public-entry smoke passed eight synthetic acceptance/review/unassessable cases with shared-schema conformance and unchanged input. Formatting, branch/working-tree whitespace and local Markdown file links passed. No migration, browser UI/QA, clean installation or remote CI query is claimed; see the [complete evidence and limits](../verification/propositional-proof-checker-verification.md).

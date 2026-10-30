@@ -77,6 +77,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Propositional proof-checker foundation](verification/propositional-proof-checker-verification.md)
+
 - [Assignment scoring and weighted demo workflows](verification/assignment-scoring-verification.md)
 
 - [Conceptual questions and mixed demo workflows](verification/conceptual-questions-verification.md)
