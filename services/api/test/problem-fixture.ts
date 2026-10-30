@@ -31,6 +31,7 @@ export const publishedVersion: PublishedProblemVersion = {
 export function problemFixture() {
   const auth = authFixture();
   const problems = {
+    previewReference: jest.fn(async (_ownerId: string, _problemId: string) => null),
     publish: jest.fn(
       async (
         _ownerId: string,
