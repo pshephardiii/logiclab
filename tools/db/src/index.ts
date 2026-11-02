@@ -115,3 +115,9 @@ export type { AssignmentItemScore, AssignmentScore } from './types/assignment-at
 
 export type { FitchProof, FitchProofStep } from './types/proof/work.ts';
 export type { DerivationAnswer } from './types/assignment-attempt/derivation-work.ts';
+
+export type { ProofCheckReport, ProofDiagnosticCode } from './types/proof/report.ts';
+export type {
+  ProofSubmissionResult,
+  DerivationEvaluationEvidence,
+} from './types/assignment-attempt/proof-result.ts';

@@ -1,3 +1,4 @@
+import { proofSubmissionResultSchema } from './proof-submission';
 import { z } from 'zod';
 import { assignmentSummarySchema } from './assignment';
 import { assignmentResponseValueSchema } from './assignment-responses';
@@ -10,6 +11,7 @@ import {
 import { derivationContentSchema, derivationSolutionSchema } from './derivation';
 import {
   studentAttemptSchema,
+  submissionResultSchema,
   studentAssignmentItemSchema,
   studentAssignmentItemFields,
   saveStudentAnswersSchema,
@@ -27,9 +29,21 @@ export const savedStudentResponsesSchema = z
   .record(z.uuid(), savedStudentResponseValueSchema)
   .refine((responses) => Object.keys(responses).length <= 50, 'At most 50 assigned occurrences.');
 export type SavedStudentResponses = z.infer<typeof savedStudentResponsesSchema>;
-export const savedStudentAttemptSchema = studentAttemptSchema.extend({
-  answers: savedStudentResponsesSchema,
-});
+export const savedStudentAttemptSchema = studentAttemptSchema
+  .extend({
+    answers: savedStudentResponsesSchema,
+    result: z.union([submissionResultSchema, proofSubmissionResultSchema]).nullable(),
+  })
+  .superRefine((attempt, context) => {
+    if (
+      attempt.result?.gradingVersion === 'proof_mixed_v1' &&
+      (!attempt.submittedAt || !attempt.score)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Retained proof results require final submission and a point snapshot.',
+      });
+  });
 export type SavedStudentAttempt = z.infer<typeof savedStudentAttemptSchema>;
 export const savedStudentAssignmentSchema = assignmentSummarySchema.safeExtend({
   items: z

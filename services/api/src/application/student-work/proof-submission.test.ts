@@ -268,6 +268,7 @@ test('allocation mismatches and objective-only use are rejected while live submi
       answers: f.answers,
       submittedAt: new Date().toISOString(),
       result,
+      score: scoreProofSubmission(f.allocations, result),
     }).success,
-  ).toBe(false);
+  ).toBe(true);
 });

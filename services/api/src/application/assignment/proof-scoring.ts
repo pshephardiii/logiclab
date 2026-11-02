@@ -1,4 +1,8 @@
-import type { AssignmentPointAllocation, AssignmentScore } from '@logiclab/contracts';
+import {
+  assignmentScoreSchema,
+  type AssignmentPointAllocation,
+  type AssignmentScore,
+} from '@logiclab/contracts';
 import { proofSubmissionResultSchema } from '@logiclab/contracts/proof-submission';
 import {
   scoreAssignment,
@@ -32,4 +36,16 @@ export function scoreProofSubmission(
       });
   }
   return scoreAssignment(allocations, outcomes);
+}
+
+/** Validate retained arithmetic/review state only; never rerun the proof engine or replace evidence. */
+export function validateProofSubmissionScore(result: unknown, input: unknown): AssignmentScore {
+  const parsed = assignmentScoreSchema.safeParse(input);
+  if (!parsed.success) throw new AssignmentScoringError();
+  const expected = scoreProofSubmission(
+    parsed.data.items.map(({ itemId, maxPoints }) => ({ itemId, maxPoints })),
+    result,
+  );
+  if (JSON.stringify(expected) !== JSON.stringify(parsed.data)) throw new AssignmentScoringError();
+  return parsed.data;
 }

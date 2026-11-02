@@ -1,4 +1,9 @@
-import { assignmentScoreSchema, assignmentResponsesSchema } from '@logiclab/contracts';
+import {
+  assignmentScoreSchema,
+  assignmentResponsesSchema,
+  submissionSummarySchema,
+  submissionResultSchema,
+} from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
 import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -21,13 +26,13 @@ export interface SubmissionReviewStore {
 }
 function summary(attempt: AssignmentAttempt): SubmissionSummary {
   if (!attempt.submittedAt || !attempt.result) throw new AssignmentOperationError('not_found');
-  return {
+  return submissionSummarySchema.parse({
     id: attempt.id,
     student: { id: attempt.student.id, email: attempt.student.email ?? null },
     submittedAt: attempt.submittedAt.toISOString(),
     summary: attempt.result.summary,
     ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
-  };
+  });
 }
 
 /** Only retained final submissions are visible; draft answers never cross the instructor boundary. */
@@ -88,7 +93,7 @@ export async function createSubmissionReviewStore(
           revision: attempt.revision,
           answers: assignmentResponsesSchema.parse(attempt.answers),
           submittedAt: attempt.submittedAt?.toISOString() ?? null,
-          result: attempt.result ?? null,
+          result: attempt.result ? submissionResultSchema.parse(attempt.result) : null,
           ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
           gradePending: false,
         },

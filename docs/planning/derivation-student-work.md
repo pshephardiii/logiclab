@@ -1,6 +1,6 @@
 # Derivation student work
 
-Status: four slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation, practice-only draft persistence/redaction and transient proof checking with independently authorized reference access, plus pure graded-result/scoring foundations. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
+Status: five slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation, practice-only draft persistence/redaction and transient proof checking with independently authorized reference access, plus graded-result/scoring foundations and compatible retained-result storage/projections. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
 ## Student work versus private authored content
 
@@ -24,7 +24,7 @@ The checker retains distinct local/dependency validity, target state and accepte
 
 ## Staged persistence and projections
 
-`@logiclab/contracts/saved-student-work` describes the combined saved-response/attempt/assignment projections for existing work and proof drafts. The database JSON response union matches these types exactly and shares a format-specific Fitch proof shape with private references. No database column, constraint, migration or snapshot changes are needed. Current root HTTP contracts remain narrower; they do not silently omit proof work or expose unsupported payloads to old consumers.
+`@logiclab/contracts/saved-student-work` describes the combined saved-response/attempt/assignment projections for existing work and proof drafts. The database JSON response union matches these types exactly and shares a format-specific Fitch proof shape with private references. Proof drafts require no database column changes; retained graded proof results now require the migration described below. Current root HTTP contracts remain narrower; they do not silently omit proof work or expose unsupported payloads to old consumers.
 
 The existing student store's `read`/`save` methods support proof drafts only for `ungraded_practice`. They retain shared assignment/enrollment locks, occurrence membership checks, submitted-work denial, attempt-row locking and revision comparisons. Incomplete/incorrect work is shape-validated, saved under the occurrence ID and returned without checker feedback, results or points. Separate occurrences and students keep separate work. Proof configuration is validated against supported semantics, and reads project only pinned statement/rule content: no reference or explanation. Later owner draft edits cannot change the pinned statement.
 
@@ -48,11 +48,21 @@ The staged saved-work entry now includes strict check request/response and solut
 
 `scoreProofSubmission` consumes freshly computed server evidence and authoritative allocations. Accepted proofs earn their full allocation. Incorrect, incomplete, unused-error or unassessable proofs have `needs_review` with null earned points; any such item keeps assignment earned points/percentage null. Objective items retain their normal weighted correctness and rounding, using the shared objective-outcome calculation. Proofs receive no numerical automatic partial credit. Checker evidence remains separate from later instructor-awarded grading. Pending review is also distinct from withheld grade release (`gradePending`).
 
-This is a pure foundation, not persisted finalization. Active result/attempt contracts and the database score-state constraint still reject the new format. The next slice must add compatible stored result types, constraints and projections before transactionally freezing evidence/points. Graded availability stays guarded through 023 review; no completion-only semantics are implied by this graded format. Callers must authorize and recompute under the assignment/attempt transaction rather than accepting a client result or cached check.
+The staged saved-attempt contract and database now support this result format, but transactional proof finalization is not enabled. Active HTTP result/attempt contracts remain narrower. Graded availability stays guarded through 023 review; no completion-only semantics are implied by this graded format. Callers must authorize and recompute under the assignment/attempt transaction rather than accepting a client result or cached check.
+
+## Retained proof results and disclosure
+
+The database JSON types now describe the exact versioned proof report, occurrence-bound evidence and mixed result. `Migration20261102120000` permits `proof_mixed_v1` point snapshots and requires a score for retained proof results. Existing final-answer/result/score immutability remains enforced. The migration does not rewrite objective results or awarded points; rollback locks the table and refuses while any retained proof results exist.
+
+Apply this migration before future code writes proof finals, and rebuild matching contracts/database/API consumers. No user development database has been migrated or reset by this slice. Database constraints establish storage state and format tags; strict application contracts validate report shape and summary integrity.
+
+The staged student projection validates retained proof-score arithmetic and pending-review state without rerunning the checker, replacing evidence or writing a new grade. It withholds both reports and points until the independent grade-release policy permits them, even if answers have already been revealed. Released review-needed work retains null earned totals/percentage; grade release and instructor review remain separate states. Missing/inconsistent snapshots or proof results in an unsupported assessment state fail closed.
+
+Active root student and instructor-review contracts remain narrower. Instructor review explicitly validates its supported result/summary shapes rather than leaking staged proof results through an older response. Full instructor proof review belongs to 023. These changes provide compatible storage, not an enabled proof submission workflow.
 
 ## Next delivery slices
 
-1. Add compatible proof-result storage/score-state constraints and redacted projections, then transactional finalization with immutable retries, rollback and revision checks. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
+1. Add transactional finalization with immutable retries, rollback and revision checks, building on compatible retained-result storage and redacted projections. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
 2. Deliver student editing, explicit saves/navigation protection and read-only final work. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
 
 Before enabling completion-only derivations, settle what counts as completed proof work and the permitted feedback behavior while preserving score-free completion. Also settle mixed immediate-feedback assignments: the agreed proof interaction is explicit **Check proof**, rather than automatic proof-error display. Neither checkpoint blocks the current transport/evaluation foundation.
@@ -84,3 +94,11 @@ Built ESM/CommonJS public-entry smoke, formatting, whitespace and primary docume
 `npm run check` passed type checks, 1,371 tests (357 engine, 746 API, 268 web) and production builds. Eighteen new cases cover mixed weighted results, objective partial credit/rounding, full-credit proofs, missing/incorrect/unused-error/resource-limited proofs with pending totals, independent repeated occurrences, provenance and source preservation, response/identity mismatches, strict summary integrity and continued active result rejection.
 
 `npm run db:test` passed 229 existing PostgreSQL checks (159 database, 70 API/workflow), including objective finalization/scoring regressions after the shared outcome extraction. No new database behavior is introduced in this pure slice. Built ESM/CommonJS public-entry smoke, formatting, whitespace and primary documentation file targets passed. No migration, browser change, new live submission format or user development-database reset is claimed. Existing Jest VM-module advisories remain.
+
+## Slice 5 verification — November 2, 2026
+
+`npm run check` passed type checks, 1,379 tests (357 engine, 754 API, 268 web) and production builds. Eight new projection/type cases cover exact database/transport symmetry, withheld reports/points despite answer reveal, accepted and pending-review release, submission-time release, malformed/missing score snapshots and unsupported final states. Active HTTP contracts still reject proof results; projection leaves retained evidence unchanged.
+
+`npm run db:test` passed 237 PostgreSQL checks (167 database, 70 API/workflow). Eight new database cases cover accepted/review-needed JSON round trips, immutable submitted answers/results/points, required proof scores and score tags, rollback refusal over proof history, down/up preservation of objective snapshots and rejection under the older constraint. Schema comparison and existing objective/demo workflows passed.
+
+Formatting and whitespace checks passed. No browser walkthrough was repeated for this storage-only slice. No user development database was migrated/reset; tests used the disposable test database. Proof finalization, live graded availability and instructor proof review remain guarded. Existing Jest VM-module advisories remain.
