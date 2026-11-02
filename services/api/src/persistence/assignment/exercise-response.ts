@@ -4,7 +4,7 @@ import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolutio
 import { studentAssignmentSchema, type StudentAssignment } from '@logiclab/contracts';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import { derivationContent } from '../../application/problem/derivation-authoring';
-import { StudentWorkError } from '../../application/student-work/errors';
+import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import { exerciseResponse } from '../../application/truth-table/exercise';
 import { assignmentSummary } from './summary';
@@ -18,8 +18,7 @@ export function savedAssignmentExercises(
     ...assignmentSummary(assignment),
     items: items.map((item) => {
       const stored = item.problemVersion.definition;
-      if (stored.type === 'derivation' && assignment.assessmentMode === 'completion_only')
-        throw new StudentWorkError('unsupported_policy');
+      if (stored.type === 'derivation') assertProofWorkPolicy(assignment);
       const definition =
         stored.type === 'derivation'
           ? derivationContent(stored)

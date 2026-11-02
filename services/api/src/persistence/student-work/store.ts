@@ -1,5 +1,7 @@
 import { scoreObjectiveSubmission } from '../../application/assignment/scoring';
 import { scoreProofSubmission } from '../../application/assignment/proof-scoring';
+import { evaluateProofCompletion } from '../../application/student-work/proof-completion';
+import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
 import { evaluateProofSubmission } from '../../application/student-work/proof-submission';
 import { libraryProblemDefinition } from '../../application/problem/library-definition';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
@@ -184,8 +186,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
-          if (assignment.assessmentMode === 'completion_only')
-            throw new StudentWorkError('unsupported_policy');
+          assertProofWorkPolicy(assignment);
           validateDerivationDefinition(definition);
         }
         const attempt = await lockedAttempt(em, studentId, assignmentId);
@@ -226,6 +227,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
+          assertProofWorkPolicy(assignment);
           if (assignment.assessmentMode !== 'ungraded_practice')
             throw new StudentWorkError('unsupported_policy');
           const evidence = evaluateDerivationAnswer(
@@ -262,24 +264,25 @@ export async function createStudentWorkStore(
         const containsProof = assigned.some(
           (item) => item.problemVersion.definition.type === 'derivation',
         );
-        if (containsProof && assignment.assessmentMode !== 'graded')
-          throw new StudentWorkError('unsupported_policy');
+        if (containsProof) assertProofWorkPolicy(assignment);
         const allocations = assigned.map((item) => ({
           itemId: item.id,
           maxPoints: item.maxPoints!,
         }));
         if (containsProof) {
           // Graded proof finalization stays staged until instructor grading/review enables assignment admission.
-          const result = evaluateProofSubmission(
-            assigned.map((item) => ({
-              id: item.id,
-              problemVersionId: item.problemVersion.id,
-              definition: libraryProblemDefinition(item.problemVersion.definition),
-            })),
-            attempt.answers,
-          );
-          attempt.result = result;
-          attempt.score = scoreProofSubmission(allocations, result);
+          const occurrences = assigned.map((item) => ({
+            id: item.id,
+            problemVersionId: item.problemVersion.id,
+            definition: libraryProblemDefinition(item.problemVersion.definition),
+          }));
+          if (assignment.assessmentMode === 'completion_only') {
+            attempt.result = evaluateProofCompletion(occurrences, attempt.answers);
+          } else {
+            const result = evaluateProofSubmission(occurrences, attempt.answers);
+            attempt.result = result;
+            attempt.score = scoreProofSubmission(allocations, result);
+          }
         } else {
           const evaluate =
             assignment.assessmentMode === 'completion_only'
@@ -324,7 +327,8 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
-          if (assignment.assessmentMode !== 'ungraded_practice')
+          assertProofWorkPolicy(assignment);
+          if (assignment.assessmentMode === 'graded')
             throw new StudentWorkError('unsupported_policy');
           return { itemId, solution: derivationReferenceSolution(definition) };
         }

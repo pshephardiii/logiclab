@@ -87,7 +87,7 @@ async function seed(
   });
   const published = await problems.publish(owner.id, problem.id);
   if (published.status !== 'published') throw new Error('Fixture publication failed');
-  // Internal staged assignment: live authoring/publication still rejects derivations.
+  // Internal fixture: graded admission stays guarded; practice admission is supported.
   const assignment = em.create(db.Assignment, {
     classroom,
     title: 'Proof practice fixture',
@@ -210,7 +210,7 @@ test('staged proof drafts retain invalid/incomplete work, pin content and keep p
     );
   }));
 
-test('proof draft saves reject foreign access, stale revisions, mismatched response types and unsupported modes atomically', async () =>
+test('proof draft saves reject foreign access, stale revisions, mismatched response types and unsupported proof feedback policies atomically', async () =>
   fixture(async (orm, db) => {
     const f = await seed(orm, db);
     await assert.rejects(
@@ -251,7 +251,7 @@ test('proof draft saves reject foreign access, stale revisions, mismatched respo
     for (const mode of [db.AssessmentMode.CompletionOnly]) {
       await orm.em.fork().nativeUpdate(db.Assignment, f.assignment.id, {
         assessmentMode: mode,
-        feedbackTiming: db.FeedbackTiming.OnSubmission,
+        feedbackTiming: db.FeedbackTiming.OnCheck,
       });
       await assert.rejects(
         f.store.save(f.other.id, f.assignment.id, {
@@ -856,7 +856,7 @@ test('missing proof work is retained as review-needed evidence rather than zero 
     assert.equal(await orm.em.fork().count(db.AssignmentAttempt, {}), 1);
   }));
 
-test('proof finalization rejects stale revisions, foreign access, archives and completion-only mode without partial writes', async () =>
+test('proof finalization rejects stale revisions, foreign access, archives and unfinished completion work without partial writes', async () =>
   fixture(async (orm, db) => {
     const f = await seed(orm, db, true);
     const revision = await saveGradedWork(f);
@@ -879,7 +879,7 @@ test('proof finalization rejects stale revisions, foreign access, archives and c
     });
     await assert.rejects(
       f.store.submit(f.other.id, f.assignment.id, 0),
-      failure('unsupported_policy'),
+      failure('incomplete_work'),
     );
     const retained = await orm.em.fork().findOneOrFail(db.AssignmentAttempt, before.id);
     assert.equal(retained.submittedAt, null);

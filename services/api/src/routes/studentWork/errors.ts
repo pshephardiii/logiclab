@@ -20,7 +20,8 @@ const failures = {
   incomplete_work: {
     status: 409,
     code: 'ATTEMPT_INCOMPLETE',
-    message: 'Fill and save every answer cell before submitting completion-only work.',
+    message:
+      'Fill and save every answer and finish each proof before submitting completion-only work.',
   },
   submission_unavailable: {
     status: 403,
