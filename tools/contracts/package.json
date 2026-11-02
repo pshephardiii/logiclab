@@ -20,6 +20,21 @@
       "types": "./dist/problem-library.d.ts",
       "browser": "./dist/browser/problem-library.js",
       "default": "./dist/problem-library.js"
+    },
+    "./derivation-work": {
+      "types": "./dist/derivation-work.d.ts",
+      "browser": "./dist/browser/derivation-work.js",
+      "default": "./dist/derivation-work.js"
+    },
+    "./saved-student-work": {
+      "types": "./dist/saved-student-work.d.ts",
+      "browser": "./dist/browser/saved-student-work.js",
+      "default": "./dist/saved-student-work.js"
+    },
+    "./proof-submission": {
+      "types": "./dist/proof-submission.d.ts",
+      "browser": "./dist/browser/proof-submission.js",
+      "default": "./dist/proof-submission.js"
     }
   },
   "files": [

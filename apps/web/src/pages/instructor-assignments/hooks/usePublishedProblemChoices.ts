@@ -1,19 +1,22 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
-import { problemVersionSchema, type PublishedProblemVersion } from '@logiclab/contracts';
-import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
+import {
+  libraryProblemVersionSchema,
+  type LibraryProblemVersion,
+  type LibraryProblemDraft,
+} from '@logiclab/contracts/problem-library';
 import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Paginated library choices; switching problems cancels stale version reads. */
-export function usePublishedProblemChoices() {
+export function usePublishedProblemChoices(includeDerivations = false) {
   const { listProblems, listVersions } = useResourceApi(problemsApi);
   const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
   const [problemNext, setProblemNext] = useState<number | null>(null);
   const [problemLoading, setProblemLoading] = useState(false);
   const [problemError, setProblemError] = useState<string | null>(null);
   const [problemId, setProblemId] = useState('');
-  const [versions, setVersions] = useState<PublishedProblemVersion[]>([]);
+  const [versions, setVersions] = useState<LibraryProblemVersion[]>([]);
   const [versionNext, setVersionNext] = useState<number | null>(null);
   const [versionLoading, setVersionLoading] = useState(false);
   const [versionError, setVersionError] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export function usePublishedProblemChoices() {
         const page = await listVersions(problemId, offset, signal);
         if (!signal.aborted) {
           const assignable = page.versions.flatMap((version) => {
-            const parsed = problemVersionSchema.safeParse(version);
+            const parsed = libraryProblemVersionSchema.safeParse(version);
             return parsed.success ? [parsed.data] : [];
           });
           setVersions((previous) => (offset ? [...previous, ...assignable] : assignable));
@@ -90,7 +93,9 @@ export function usePublishedProblemChoices() {
     loadProblems,
     problemId,
     selectProblem,
-    versions,
+    versions: includeDerivations
+      ? versions
+      : versions.filter((version) => version.definition.type !== 'derivation'),
     versionNext,
     versionLoading,
     versionError,

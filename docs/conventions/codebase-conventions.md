@@ -10,6 +10,21 @@ Extract a component/helper when it is reused or isolates a meaningful responsibi
 
 Keep structural refactors separate from product changes and broad mechanical formatting where practical. Preserve public contracts, exports, error precedence, authorization, state-reset/cancellation behavior, and persistence guarantees. Update imports, comments, documentation, and relevant behavior tests together. Filename conventions follow the owning area: React components/pages and hooks retain names such as `AccountForm.tsx` and `useAccount.ts`; API domain/operation directories retain the existing camelCase layout.
 
+## General: proportional effort
+
+Take the time needed for correctness, privacy, authorization, data integrity and meaningful regression coverage. Keep routine organization, documentation and verification overhead proportional to the significance of the change; do not reduce necessary checks just to finish faster.
+
+- Reuse established context and inspect the dependencies that changed rather than repeatedly surveying the whole codebase or reopening settled decisions.
+- Prefer straightforward implementation choices. Design for agreed MVP requirements; avoid generalized frameworks for hypothetical requirements, cosmetic refactoring or extensive planning for small changes.
+- During implementation slices, record important decisions, changed behavior and necessary setup guidance in one primary source. Consolidate broader documentation/status updates during final verification and PR preparation; avoid repeating the same detail across planning documents.
+- Batch independent checks, use focused tests while developing/debugging, and retain full checks at slice/branch boundaries. After relevant checks pass, repeat them for new edits, failures or unresolved concerns rather than by habit.
+
+## General: planned evolution and extension points
+
+Agreed MVP features are concrete design inputs, not speculative requirements. Account for them when choosing identities, contracts, persistence boundaries and shared logic, even when their implementation is scheduled for a later branch. Keep those boundaries flexible enough to add a format or capability without rewriting unrelated workflows. Share machinery where responsibilities and semantics align; keep format-specific assumptions contained rather than building a universal framework in advance.
+
+For derivations, anticipate the planned Fitch, dependency-style and natural-deduction tree formats now. Preserve reusable formula parsing/equality, versioned content/response boundaries, authorization, revisioned saving, grading review and disclosure policies. Future truth trees/tableaux should be able to use those foundations with their own representation and checker. They may require branches, decomposition rules and branch-closure outcomes; do not require every exercise to use Fitch lines, assumption discharge or a final-root target. Supporting a future format means leaving appropriate extension points, not claiming that current natural-deduction rules or reports already validate it.
+
 ## Tools: package responsibilities
 
 | Package              | Responsibility                                                                        | Keep outside it                                                           |

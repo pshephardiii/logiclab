@@ -1,12 +1,12 @@
 import {
-  studentAssignmentListResponseSchema,
-  studentAssignmentResponseSchema,
-  studentAttemptResponseSchema,
-  studentSolutionResponseSchema,
-  studentCheckResponseSchema,
-  type CheckStudentAnswers,
-  type SaveStudentAnswers,
-} from '@logiclab/contracts';
+  savedStudentAssignmentResponseSchema,
+  savedStudentAttemptResponseSchema,
+  savedStudentSolutionResponseSchema,
+  savedStudentCheckResponseSchema,
+  type SavedStudentCheck,
+  type SavedStudentAnswers,
+} from '@logiclab/contracts/saved-student-work';
+import { studentAssignmentListResponseSchema } from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
 
 /** Bind resource operations to a supplied account request transport. */
@@ -21,15 +21,15 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
   }
   function readAssignedWork(id: string, signal: AbortSignal) {
     return request(`/api/student/assignments/${id}`, {
-      schema: studentAssignmentResponseSchema,
+      schema: savedStudentAssignmentResponseSchema,
       fallback,
       signal,
     });
   }
-  async function saveAssignedAnswers(id: string, input: SaveStudentAnswers, signal: AbortSignal) {
+  async function saveAssignedAnswers(id: string, input: SavedStudentAnswers, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/attempt`, {
-        schema: studentAttemptResponseSchema,
+        schema: savedStudentAttemptResponseSchema,
         fallback,
         signal,
         method: 'PATCH',
@@ -40,16 +40,16 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
   async function submitAssignedWork(id: string, revision: number, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/submission`, {
-        schema: studentAttemptResponseSchema,
+        schema: savedStudentAttemptResponseSchema,
         fallback,
         signal,
         body: { revision },
       })
     ).attempt;
   }
-  async function checkAssignedAnswers(id: string, input: CheckStudentAnswers, signal: AbortSignal) {
+  async function checkAssignedAnswers(id: string, input: SavedStudentCheck, signal: AbortSignal) {
     return request(`/api/student/assignments/${id}/check`, {
-      schema: studentCheckResponseSchema,
+      schema: savedStudentCheckResponseSchema,
       fallback,
       signal,
       body: input,
@@ -58,7 +58,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
   async function readAssignedSolution(id: string, itemId: string, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/items/${itemId}/solution`, {
-        schema: studentSolutionResponseSchema,
+        schema: savedStudentSolutionResponseSchema,
         fallback,
         signal,
       })

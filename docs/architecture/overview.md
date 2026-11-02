@@ -71,7 +71,7 @@ Demo cleanup removes one bounded batch of expired workspaces. Expiration denies 
 - The pure logic engine is shared by practice and grading, keeping deterministic logic independent of HTTP, React, and storage.
 - The demo creates a separate graph per visitor instead of sharing mutable demo accounts. This costs storage, so admission capacity, expiry, and cleanup are required.
 - Tests cover pure logic, HTTP handlers/routes, React behavior, and real PostgreSQL invariants/concurrency. Local browser walkthroughs are evidence, not a browser CI suite.
-- Public hosting, installed scheduling triggers, shared rate limiting, real payments, institutions/subscriptions, an admin interface, and derivation exercises remain outside the implemented release.
+- Public hosting, installed scheduling triggers, shared rate limiting, real payments, institutions/subscriptions, an admin interface, and graded derivation exercises remain outside the implemented release. Fitch practice and completion-only proof assignments are supported.
 
 See [codebase conventions](../conventions/codebase-conventions.md) for implementation rules, [data design](../planning/data-design.md) for entity decisions, and [public demo setup](../development/public-demo.md) for local operation.
 
@@ -79,4 +79,6 @@ See [codebase conventions](../conventions/codebase-conventions.md) for implement
 
 `@logiclab/logic-engine/proof` provides the versioned propositional catalog, proof-only parsing and deterministic Fitch checker. It separates structural scope/reference checks, local inference patterns, upstream support and whole-proof acceptance. The public entry validates bounded input and returns versioned reports; unused errors require review even if an independent target is established. Contracts define serialized proof/report shapes, while the engine owns reasoning. Application callers will supply authoritative pinned problems and enforce ownership, grading and disclosure separately.
 
-This is a library capability, not an enabled derivation exercise workflow. Existing problem-definition guards remain until later authoring/student/review branches deliver the complete experience. See [design](../planning/propositional-proof-checker.md) and [verification](../verification/propositional-proof-checker-verification.md).
+Private instructor authoring checks reference proofs before publication. Student practice and completion workflows use pinned redacted statements, revisioned explicit saves and separate reference-reveal authorization. Practice checks are explicit; completion requires a finished attempt and freezes post-submission diagnostics without points. Instructor review exposes only completion finals and retained verification flags. Graded proof finalization/scoring is internal groundwork; assignment admission remains guarded until instructor grading/review can resolve flagged work. See [design](../planning/propositional-proof-checker.md) and [verification](../verification/propositional-proof-checker-verification.md).
+
+See [student-work boundaries and transactions](../planning/derivation-student-work.md) and [verification](../verification/derivation-student-work-verification.md) for the delivered paths, disclosure rules and limits.

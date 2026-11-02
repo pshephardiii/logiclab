@@ -119,3 +119,9 @@ The durable-jobs foundation adds `job_schedules`, `durable_jobs`, `job_runs`, an
 5. Restart `npm run dev`. Create fresh demo workspaces/accounts as needed. A Cognito identity can still exist remotely while its local application-user row does not exist in this new database; follow the normal account provisioning flow rather than assuming old local data was copied.
 
 The old database remains available through its original connection. No reset, deletion or development-database migration is performed automatically by this code change. Database integration tests migrate only their configured disposable test database.
+
+## Derivation result storage (022)
+
+Apply `Migration20261102120000` with `npm run db:migrate` before running matching new builds. It extends scored-result constraints for the guarded `proof_mixed_v1` foundation and requires its frozen point snapshot; it does not rewrite existing objective work. Completion's `proof_completion_v1` remains score-free under existing constraints. No disposable-data reset is required by this migration.
+
+Rebuild matching contracts, engine, database package, API and frontend outputs and restart the development session. Vite explicitly prebundles the linked CommonJS proof subpaths, including `/proof/completion` used for student readiness. Older applications cannot read saved proof responses/results; coordinate application rollback even if the migration rollback succeeds. The down migration refuses retained scored proof finals. Integration verification uses a separate disposable test database; no user development database was migrated/reset by the agent.

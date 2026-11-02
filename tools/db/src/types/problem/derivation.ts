@@ -1,25 +1,9 @@
 import type { ProblemType } from './enums.ts';
 
-export type DerivationProofStep =
-  | { kind: 'premise'; id: string; blockId: null; formula: string; premiseId: string | null }
-  | { kind: 'assumption'; id: string; blockId: string; formula: string }
-  | {
-      kind: 'inference';
-      id: string;
-      blockId: string | null;
-      formula: string;
-      ruleId: string | null;
-      lineReferences: string[];
-      subproofReferences: string[];
-    };
+import type { FitchProof, FitchProofStep } from '../proof/work.ts';
 
-/** Private saved reference work; publication validation belongs to the application workflow. */
-export type DerivationReferenceProof = {
-  proofVersion: 1;
-  format: 'fitch';
-  steps: DerivationProofStep[];
-  blocks: { id: string; parentId: string | null; assumptionId: string; endId: string | null }[];
-};
+export type DerivationProofStep = FitchProofStep;
+export type DerivationReferenceProof = FitchProof;
 
 /** Versioned instructor JSON, shared by mutable drafts and immutable published snapshots. */
 export type DerivationDefinition = {

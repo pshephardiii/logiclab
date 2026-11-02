@@ -18,3 +18,4 @@ export {
   getPropositionalRule,
 } from './rule-catalog';
 export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
+export { isFinishedProofAttempt } from './attempt-completeness';

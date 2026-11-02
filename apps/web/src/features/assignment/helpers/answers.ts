@@ -1,8 +1,8 @@
 import type {
-  StudentAssignment,
-  StudentAttempt,
-  AssignmentResponseValue,
-} from '@logiclab/contracts';
+  SavedStudentAssignment as StudentAssignment,
+  SavedStudentAttempt as StudentAttempt,
+  SavedStudentResponseValue as AssignmentResponseValue,
+} from '@logiclab/contracts/saved-student-work';
 import { cellKey, type Answers } from '../../truthTable/types';
 import { submittedAnswers } from '../../truthTable/helpers/submitted-answers';
 

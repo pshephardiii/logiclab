@@ -81,9 +81,9 @@ Open the mixed graded assignment as instructor: its three problems carry 20, 5 a
 
 For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 5's starting weights and clears submissions.
 
-## Optional: author a private Fitch derivation
+## Optional: author and assign a Fitch derivation
 
-Derivations are instructor-library content at this milestone, with no seeded example or student assignment availability. Allow extra time for this authoring check:
+There is no seeded derivation yet. Create a disposable example to explore practice and completion-only proofs; graded proofs remain guarded. Allow extra time for these steps:
 
 1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation (Fitch)**. Leave premises empty and enter `P -> P` as the conclusion.
 2. Enable **Allow Implication introduction**. Keep its label or choose a suggested/custom label; no other rule needs permission for this example.
@@ -91,6 +91,11 @@ Derivations are instructor-library content at this milestone, with no seeded exa
 4. Set **New line scope** to **Root proof**, select **Add inference line**, and enter `P -> P` on line 2. Choose the enabled implication-introduction label under **Rule for line 2**, and select the first subproof under **Line 2 subproof 1**.
 5. Select **Check current proof** and expect acceptance. This checks unsaved local work. Select **Save draft**, then **Check saved reference** and expect acceptance from the server. Select **Publish saved draft** to create version 1.
 6. Change the conclusion to `Q`. The reference remains unchanged, and checking now requires correction. Save this draft and try publication; it must be rejected. Version 1 still shows its original target, rules, labels and private reference in history. Restore `P -> P` and save to keep the example valid.
-7. Inspect the assignment picker: derivation versions remain unavailable. Resetting the demo discards this example and restores the existing seeded content.
+7. Open **Assignments**, choose **Demo: Introduction to Logic**, start a new assignment and select **Ungraded practice**. Under **Add published problems**, choose the proof and **Add version 1**. Set **Answer reveal** to **Anytime**, save and publish. Graded mode remains unavailable while a proof is selected.
+8. Use the demo controls to switch to student, open **Assigned work**, select the class and assignment, then **Start proof**. Recreate the subproof/reference steps from above. Use **Check proof** explicitly, save with **Save problem**, reload and confirm the saved proof remains. **Show assigned solution** reveals the instructor reference separately. Practice has no final-submission control.
+9. Switch to instructor and duplicate the assignment as a draft. Give the copy a distinct title, choose **Completion only** and **When I reveal answers**, then save and publish. Completion proof feedback is at submission, not immediate/manual checking.
+10. As student, open the completion copy. Start the proof. Enter a finished but incorrect attempt: use `Q` for the assumption, close that block on its assumption line, and add root `P -> P` with implication introduction citing that block. This fills required fields and reaches the target, but the inference is wrong. There must be no **Check proof** or pre-submission diagnostics. Save, confirm final submission and submit.
+11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
+12. Reset discards these owner-authored examples and student work, restoring seed template 5 while retaining the original workspace deadline. Do not expect proofs in the default seeded list.
 
-This demonstrates instructor terminology, explicit rule permissions, stable proof references and authoritative checked publication. See [authoring verification](../verification/derivation-authoring-verification.md) for focused browser evidence and the remaining student/review work.
+This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; other proof formats and graded instructor review remain future branches.

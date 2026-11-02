@@ -1,9 +1,12 @@
+import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import {
   submissionFeedback,
   conceptualSubmissionFeedback,
+  proofSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
@@ -28,9 +31,19 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       </section>
     );
   const item = work.assignment.items[position] ?? work.assignment.items[0];
+  const isProof = item && 'content' in item && item.content.type === 'derivation';
   const currentFeedback = item ? work.feedback[item.id] : undefined;
   const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
+  const proofAnswer = item ? work.proofAnswers[item.id] : undefined;
+  const proofReport = item ? proofSubmissionFeedback(work.attempt?.result, item.id) : null;
+  const proofFeedback = submitted
+    ? proofReport
+      ? { proof: (proofAnswer ?? blankDerivationAnswer()).proof, report: proofReport }
+      : null
+    : item
+      ? work.proofFeedback[item.id]
+      : null;
   const busy = work.action !== null;
   const submissionBlocked =
     busy || work.dirty.length > 0 || (work.requiresCompleteAnswers && !work.completionReady);
@@ -62,7 +75,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           {submitted
             ? 'Final answers are read-only.'
             : work.allowsImmediateFeedback
-              ? 'Incorrect entries are highlighted shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
+              ? 'Truth-table and question entries are checked shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
               : work.allowsExplicitCheck
                 ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
                 : work.assignment.assessmentMode === 'graded' &&
@@ -70,6 +83,15 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                   ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
                   : 'Use Save problem to persist changes. Results arrive after final submission.'}
         </p>
+        {work.assignment.items.some(
+          (value) => 'content' in value && value.content.type === 'derivation',
+        ) && (
+          <p>
+            {work.assignment.assessmentMode === 'ungraded_practice'
+              ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
+              : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
+          </p>
+        )}
         {!work.hasFinalSubmission && (
           <p>
             Ungraded practice: no final submission or official score. Your practice answers stay
@@ -175,9 +197,37 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeAnswer(item.id, row, column, value);
               }}
             />
+          ) : item.content.type === 'derivation' ? (
+            <AssignedDerivation
+              key={item.id}
+              item={{ ...item, content: item.content }}
+              answer={proofAnswer ?? (submitted ? blankDerivationAnswer() : undefined)}
+              feedback={proofFeedback}
+              solution={
+                currentSolution &&
+                'type' in currentSolution &&
+                currentSolution.type === 'derivation'
+                  ? currentSolution
+                  : null
+              }
+              readOnly={submitted}
+              disabled={busy}
+              checking={work.checkingItem === item.id}
+              onAnswer={(answer) => {
+                setConfirmed(false);
+                work.changeProofAnswer(item.id, answer);
+              }}
+              onCheck={
+                !submitted &&
+                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.allowsExplicitCheck
+                  ? () => void work.check(item.id)
+                  : undefined
+              }
+            />
           ) : (
             <AssignedConceptualQuestion
-              item={item}
+              item={{ ...item, content: item.content }}
               answer={work.choiceAnswers[item.id]}
               feedback={
                 submitted
@@ -186,7 +236,13 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                     ? currentFeedback
                     : null
               }
-              solution={currentSolution && 'type' in currentSolution ? currentSolution : null}
+              solution={
+                currentSolution &&
+                'type' in currentSolution &&
+                currentSolution.type !== 'derivation'
+                  ? currentSolution
+                  : null
+              }
               neutralBlanks={!submitted && work.allowsImmediateFeedback}
               readOnly={busy || submitted}
               onAnswer={(answer) => {
@@ -206,7 +262,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               {work.action === 'save' ? 'Saving problem…' : 'Save problem'}
             </button>
           )}
-          {!submitted && work.allowsExplicitCheck && (
+          {!submitted && !isProof && work.allowsExplicitCheck && (
             <button
               disabled={busy || work.checkingItem !== null}
               onClick={() => void work.check(item.id)}
@@ -226,7 +282,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <h2>Final submission</h2>
           <p>
             {work.requiresCompleteAnswers
-              ? 'Fill every answer cell and select an answer for every question, then save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
+              ? 'Fill every answer cell, answer every question and finish each proof with formulas, rules, citations, closed subproofs and the requested final root conclusion. Save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
               : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
           </p>
           <label className="final-confirmation">

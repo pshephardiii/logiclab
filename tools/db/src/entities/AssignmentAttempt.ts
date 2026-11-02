@@ -39,12 +39,16 @@ import type { Assert, SameEntityFields } from '../types/shared/entity-fields.ts'
   expression: `
     score is null or coalesce(
       submitted_at is not null
-      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')
+      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1', 'proof_mixed_v1')
       and jsonb_typeof(score) = 'object'
       and score->>'scoringVersion' = 'points_v1',
       false
     )
   `,
+})
+@Check({
+  name: 'assignment_attempts_proof_score_required',
+  expression: "result->>'gradingVersion' is distinct from 'proof_mixed_v1' or score is not null",
 })
 export class AssignmentAttempt implements AssignmentAttemptFields {
   [OptionalProps]?: 'id' | 'answers' | 'revision' | 'createdAt' | 'updatedAt';

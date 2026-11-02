@@ -8,7 +8,7 @@ import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 import { DerivationPublicationError } from '../../src/application/problem/library-definition';
 import { checkDerivationReference } from '../../src/application/problem/derivation-authoring';
-import { UnsupportedProblemDefinitionError } from '../../src/application/problem/definition-support';
+import { AssignmentOperationError } from '../../src/application/assignment/errors';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 const url = process.env.TEST_DATABASE_URL;
@@ -109,7 +109,7 @@ test('owner drafts/preview/checked snapshots preserve history and reject stale r
     assert.equal(await store.setArchived(foreign.id, draft.id, true), null);
   }));
 
-test('invalid owner edits roll back metadata and derivation snapshots remain excluded from assignments', async () =>
+test('invalid owner edits roll back metadata and derivation snapshots remain excluded from graded assignments', async () =>
   fixture(async (orm, db) => {
     const em = orm.em.fork();
     const owner = em.create(db.User, {
@@ -141,7 +141,8 @@ test('invalid owner edits roll back metadata and derivation snapshots remain exc
         feedbackTiming: 'on_submission',
         solutionAccess: 'never',
       }),
-      UnsupportedProblemDefinitionError,
+      (error: unknown) =>
+        error instanceof AssignmentOperationError && error.reason === 'proof_mode_unavailable',
     );
     assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 0);
   }));

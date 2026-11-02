@@ -1,6 +1,7 @@
-import { ASSIGNMENT_POINT_LIMITS, type PublishedProblemVersion } from '@logiclab/contracts';
+import { ASSIGNMENT_POINT_LIMITS } from '@logiclab/contracts';
+import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 
-export type SelectedProblem = { key: string; maxPoints?: number; version: PublishedProblemVersion };
+export type SelectedProblem = { key: string; maxPoints?: number; version: LibraryProblemVersion };
 type Props = {
   items: SelectedProblem[];
   readOnly: boolean;
@@ -31,7 +32,9 @@ export function AssignmentItems({ items, readOnly, graded, onPoints, onMove, onR
             <code>
               {item.version.definition.type === 'truth_table'
                 ? item.version.definition.formula
-                : item.version.definition.question}
+                : item.version.definition.type === 'derivation'
+                  ? `Prove: ${item.version.definition.conclusion}`
+                  : item.version.definition.question}
             </code>
             {graded && (
               <label>

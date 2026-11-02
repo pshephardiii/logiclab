@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
+import { studentAssignmentParamsSchema } from '@logiclab/contracts';
 import {
-  studentAssignmentParamsSchema,
-  studentAttemptResponseSchema,
-  saveStudentAnswersSchema,
-} from '@logiclab/contracts';
+  savedStudentAttemptResponseSchema,
+  savedStudentAnswersSchema,
+} from '@logiclab/contracts/saved-student-work';
 import type { RouteSchema } from '../../setup';
 import type { StudentWorkContext } from '../context';
 import { studentWorkErrorResponses } from '../../error-responses';
@@ -13,8 +13,8 @@ export const patchStudentAttemptSchema = {
   summary: 'Save answers for one assigned occurrence',
   description: 'Enrollment-scoped student work; feedback and solutions are enforced server-side.',
   params: studentAssignmentParamsSchema,
-  body: saveStudentAnswersSchema,
-  response: { 200: studentAttemptResponseSchema, ...studentWorkErrorResponses },
+  body: savedStudentAnswersSchema,
+  response: { 200: savedStudentAttemptResponseSchema, ...studentWorkErrorResponses },
 } satisfies RouteSchema;
 
 export async function patchStudentAttemptRoute(app: FastifyInstance, context: StudentWorkContext) {

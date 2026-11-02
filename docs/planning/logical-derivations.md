@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring 019, proof-checker 020 and private authoring 021 are complete. Next is the guarded 022–023 student/review milestone. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for confirmed catalog variants and [authoring verification](../verification/derivation-authoring-verification.md) for delivered behavior and limits. This document does not start a future branch.
+Status: scoring 019, proof-checker 020 and private authoring 021 are complete. Branch 022 delivers Fitch practice and completion-only student work, revisioned saves, independent references and frozen completion diagnostics with owner review. Graded proof finalization/scoring remains guarded groundwork until 024 instructor grading/review, following the agreed 023 context-assembly refactor. See [student-work behavior](derivation-student-work.md) and [verification](../verification/derivation-student-work-verification.md). This document does not start another branch.
 
 ## Product direction and scope
 
@@ -128,18 +128,19 @@ Instructor control of per-problem weights is agreed. Decide the concrete represe
 
 ## Agreed implementation sequence
 
-The user accepted this breakdown. Numbers `019`–`026` are provisional reservations: no matching local branch exists at this planning check, but remote history was not queried. Confirm availability before creation. Do not reuse an occupied number or silently renumber branches already started. These are feature boundaries; each should be delivered in small reviewable slices with its own tests, compatibility notes and local PR description.
+The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–021 are merged and 022 is ready for review; proposed branches 023–027 have not been started locally. The unstarted derivation reservations move up one number to accommodate 023. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
 
-| Proposed branch                         | Depends on                                                        | Reviewable outcome                                                                                                                                                                            |
-| --------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `019-feat-assignment-scoring`           | Existing assignment/results workflows                             | Instructor-controlled maximum points/weight per assignment item, awarded-score representation and weighted totals, with compatibility for existing results.                                   |
-| `020-feat-propositional-proof-checker`  | Existing formula parser; can be designed independently of scoring | Curated versioned rules, stable proof identities, Fitch-compatible structural validation and deterministic reports; no student UI.                                                            |
-| `021-feat-derivation-authoring`         | 020                                                               | Immutable derivation definitions and instructor Fitch/reference-proof editing, permitted rules and labels, draft validation and checked publication.                                          |
-| `022-feat-derivation-student-work`      | 019–021                                                           | Fitch student editing, revisioned saves, assigned practice checking, completion/finalization plumbing and protected feedback/reference projections. Graded release remains guarded until 023. |
-| `023-feat-derivation-grading-review`    | 019 and 022                                                       | Instructor reports/comments, awarded-score adjustments and review resolution; complete assignment grading and release behavior. Enable graded derivations only when this workflow is ready.   |
-| `024-feat-dependency-proof-format`      | 020–023                                                           | Dependency-style structural validation, reference/student editors and final review through the existing grading/release flow.                                                                 |
-| `025-feat-natural-deduction-trees`      | 020–023; scheduled after 024                                      | Natural-deduction tree structure/editor, assumption discharge, reference validation and student/review integration. Not truth trees/tableaux.                                                 |
-| `026-feat-derivation-practice-and-demo` | All preceding derivation branches                                 | Student-created practice setup and confirmed full resets, representative synthetic demo examples and cross-format workflow verification.                                                      |
+| Proposed branch                          | Depends on                                                        | Reviewable outcome                                                                                                                                                                            |
+| ---------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `019-feat-assignment-scoring`            | Existing assignment/results workflows                             | Instructor-controlled maximum points/weight per assignment item, awarded-score representation and weighted totals, with compatibility for existing results.                                   |
+| `020-feat-propositional-proof-checker`   | Existing formula parser; can be designed independently of scoring | Curated versioned rules, stable proof identities, Fitch-compatible structural validation and deterministic reports; no student UI.                                                            |
+| `021-feat-derivation-authoring`          | 020                                                               | Immutable derivation definitions and instructor Fitch/reference-proof editing, permitted rules and labels, draft validation and checked publication.                                          |
+| `022-feat-derivation-student-work`       | 019–021                                                           | Fitch student editing, revisioned saves, assigned practice checking, completion/finalization plumbing and protected feedback/reference projections. Graded release remains guarded until 024. |
+| `023-refactor-explicit-context-assembly` | 022                                                               | Assemble named stores explicitly in bootstrap/context wiring so handler dependencies map directly to their implementations; preserve normal/demo transactions and behavior.                   |
+| `024-feat-derivation-grading-review`     | 019 and 022                                                       | Instructor reports/comments, awarded-score adjustments and review resolution; complete assignment grading and release behavior. Enable graded derivations only when this workflow is ready.   |
+| `025-feat-dependency-proof-format`       | 020–024                                                           | Dependency-style structural validation, reference/student editors and final review through the existing grading/release flow.                                                                 |
+| `026-feat-natural-deduction-trees`       | 020–024; scheduled after 025                                      | Natural-deduction tree structure/editor, assumption discharge, reference validation and student/review integration. Not truth trees/tableaux.                                                 |
+| `027-feat-derivation-practice-and-demo`  | All preceding derivation branches                                 | Student-created practice setup and confirmed full resets, representative synthetic demo examples and cross-format workflow verification.                                                      |
 
 After these, return to the UI/visual audit and inexpensive portfolio sandbox preparation. Assign fresh numbers for those branches when scheduled. A separate broad code audit is not silently added as a release prerequisite by this sequence.
 
@@ -183,17 +184,25 @@ Additional formats become authorable only when their own reference validation an
 
 ### 022: student work and finalization
 
+The [student-work implementation](derivation-student-work.md) now connects strict proof responses, pinned redacted statements, revisioned persistence, practice checks, independent references and completion finalization/review. Normal/demo access and focused browser journeys are verified. Graded proof admission remains guarded through 024.
+
 This is also a larger branch; preserve the boundary between the checker and request/state coordination:
 
 1. Extend typed saved work and immutable submission/report snapshots, enrollment/workspace authorization and existing revision/transaction protections. Safely retain incomplete/incorrect proof content within structural/size bounds.
 2. Add assigned practice Check proof and protected graded finalization. A complete accepted graded proof gets its full allocation; any error, incomplete work or unresolved evaluation records review-needed state for the problem and assignment. Include unused erroneous steps. No numerical automatic partial credit or finalized overall grade while review is pending.
 3. Add student Fitch editing, explicit saves, unsaved-navigation protection, manual checks and read-only submitted views. Keep syntax/rule diagnostics hidden before graded submission. Preserve independent result-feedback and reference-proof access; reject stale responses after edits/lifecycle changes.
 
-Instructor-assigned practice belongs here; student-created practice setup belongs to 026. Completion-only semantics need an explicit design checkpoint before enabling derivations in that mode, preserving score-free completion rather than assuming correctness grading.
+Instructor-assigned practice belongs here; student-created practice setup belongs to 027. The completion checkpoint is resolved: require a finished attempt, allow logical mistakes, expose diagnostics only after submission and flag verified/error/unavailable outcomes independently from score-free completion. Instructors can inspect frozen completion proofs; reference reveal stays separately controlled.
 
-022 and 023 are a single functional release milestone. Keep graded derivation assignment creation/publication or student availability guarded until instructors can inspect and resolve every flagged submission. Internal fixtures may test the staged paths, but users must not accumulate submissions that have no usable grading workflow.
+022 and 024 are a single functional release milestone. Keep graded derivation assignment creation/publication or student availability guarded until instructors can inspect and resolve every flagged submission. Internal fixtures may test the staged paths, but users must not accumulate submissions that have no usable grading workflow.
 
-### 023: instructor review and awarded grades
+### 023: explicit context assembly
+
+After completing 022, make the request-context wiring easier to trace before resuming derivation features. Assemble focused stores explicitly at the bootstrap/context boundary instead of spreading submission-review operations into the assignment store. For example, handlers should call `context.submissionReviews.findSubmission(...)`, while assignment mutations remain under `context.assignments`.
+
+Update context interfaces, ordinary bootstrap and demo transaction-bound construction together, plus affected handler fixtures/tests. Keep queries, authorization, result disclosure and transaction ownership unchanged. Inspect similar composition sites and apply the same pattern where straightforward; this is a focused dependency-wiring cleanup, not a database redesign or general architecture audit. Do not create or start the branch as part of this planning update. Resume with 024 instructor grading/review afterward; graded proofs remain guarded until that workflow is complete.
+
+### 024: instructor review and awarded grades
 
 Small slices:
 
@@ -203,7 +212,7 @@ Small slices:
 
 Then remove the graded rollout guard only after the complete normal/demo flow passes. No automatic partial-credit engine is required.
 
-### 024 and 025: additional formats
+### 025 and 026: additional formats
 
 Each format branch must deliver a complete vertical addition:
 
@@ -213,7 +222,7 @@ Each format branch must deliver a complete vertical addition:
 
 Do not duplicate the rule library just to change presentation. Do not silently permit unsupported format/rule combinations, and do not add lossless mid-proof conversion as a dependency.
 
-### 026: student-created practice, demo and feature verification
+### 027: student-created practice, demo and feature verification
 
 Small slices:
 
@@ -229,9 +238,9 @@ The sequence is ready without pretending every detail is settled. Resolve these 
 - In 019: point/weight representation, defaults, bounds, precision, immutability and historical-result compatibility.
 - In 020: exact supported rules/variants, formula equality, assumption/discharge conventions, report versions and resource limits.
 - In 021: editor interactions, label collision handling and reference-proof authoring/publication constraints.
-- In 022–023: safe incomplete-proof serialization, completion-only behavior, review-state visibility, release-before-review transitions, score/comment adjustment history and student aggregate projections.
-- In 024–025: exact dependency/tree representations and applicability of each supported rule variant.
-- In 026: student-created practice ownership/persistence and how an unsolvable self-created target is presented without a proof-search guarantee.
+- In 022–024: safe incomplete-proof serialization, completion-only behavior, review-state visibility, release-before-review transitions, score/comment adjustment history and student aggregate projections.
+- In 025–026: exact dependency/tree representations and applicability of each supported rule variant.
+- In 027: student-created practice ownership/persistence and how an unsolvable self-created target is presented without a proof-search guarantee.
 
 ## Background references
 

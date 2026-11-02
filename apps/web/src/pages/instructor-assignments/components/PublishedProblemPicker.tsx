@@ -1,15 +1,19 @@
 import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
-import type { PublishedProblemVersion } from '@logiclab/contracts';
+import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 import { usePublishedProblemChoices } from '../hooks/usePublishedProblemChoices';
 import { routeDefinitions } from '../../../routing/route-definitions';
 
-type Props = { disabled: boolean; onAdd: (version: PublishedProblemVersion) => void };
+type Props = {
+  disabled: boolean;
+  allowDerivations?: boolean;
+  onAdd: (version: LibraryProblemVersion) => void;
+};
 
 /** Selects immutable publications, including retained versions of archived library problems. */
-export function PublishedProblemPicker({ disabled, onAdd }: Props) {
+export function PublishedProblemPicker({ disabled, allowDerivations = false, onAdd }: Props) {
   const accountPath = useAccountPath();
-  const choices = usePublishedProblemChoices();
+  const choices = usePublishedProblemChoices(allowDerivations);
   return (
     <section aria-label="Add published problems">
       <h3>Add published problems</h3>
@@ -20,8 +24,9 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
         create and publish it first. Save your assignment draft before leaving to keep your edits.
       </p>
       <p className="help">
-        Derivation versions are not available for assignments yet. Other published versions remain
-        selectable.
+        {allowDerivations
+          ? 'Published Fitch proofs are available for practice and completion-only work. Practice checks are explicit; completion proof diagnostics appear after submission.'
+          : 'Choose Ungraded practice or Completion only with feedback at submission to assign Fitch proofs. Graded proofs are not available yet.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
       <select
@@ -90,7 +95,9 @@ export function PublishedProblemPicker({ disabled, onAdd }: Props) {
             <code>
               {version.definition.type === 'truth_table'
                 ? version.definition.formula
-                : version.definition.question}
+                : version.definition.type === 'derivation'
+                  ? `Prove: ${version.definition.conclusion}`
+                  : version.definition.question}
             </code>
             <button type="button" disabled={disabled} onClick={() => onAdd(version)}>
               Add version {version.version}

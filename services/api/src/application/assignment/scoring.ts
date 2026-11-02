@@ -78,11 +78,8 @@ export function scoreAssignment(
   return assignmentScoreSchema.parse({ scoringVersion: 'points_v1', items, summary });
 }
 
-/** Convert objective evidence to points without rewriting the retained correctness report. */
-export function scoreObjectiveSubmission(
-  allocations: AssignmentPointAllocation[],
-  input: unknown,
-): AssignmentScore {
+/** Validate objective evidence and derive outcomes shared by objective-only and proof-mixed scoring. */
+export function objectiveScoringOutcomes(input: unknown): AssignmentScoringOutcome[] {
   const parsed = z
     .union([gradedSubmissionResultSchema, mixedGradedSubmissionResultSchema])
     .safeParse(input);
@@ -109,5 +106,13 @@ export function scoreObjectiveSubmission(
   });
   if (summaryKeys.some((key) => counts[key] !== result.summary[key]))
     throw new AssignmentScoringError();
-  return scoreAssignment(allocations, outcomes);
+  return outcomes;
+}
+
+/** Convert objective evidence to points without rewriting the retained correctness report. */
+export function scoreObjectiveSubmission(
+  allocations: AssignmentPointAllocation[],
+  input: unknown,
+): AssignmentScore {
+  return scoreAssignment(allocations, objectiveScoringOutcomes(input));
 }

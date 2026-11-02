@@ -198,3 +198,63 @@ test('score-free modes hide allocations and restoring graded mode retains the dr
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'graded');
   expect(screen.getByLabelText('Points for problem 1')).toHaveValue(20);
 });
+
+test('proof-containing practice drafts retain failed saves and permit completion while locking graded mode until the proof is removed', async () => {
+  const { derivationDefinition } = await import('../../../../test/derivation');
+  const user = userEvent.setup();
+  const onSave = vi.fn().mockResolvedValue(false);
+  const version = {
+    id: '33333333-3333-4333-8333-333333333333',
+    problemId: '44444444-4444-4444-8444-444444444444',
+    version: 1,
+    title: 'Proof',
+    instructions: null,
+    definition: derivationDefinition,
+    publishedAt: assignment.createdAt,
+  };
+  render(
+    <AssignmentForm
+      assignment={{
+        ...assignment,
+        items: [{ id: version.id, position: 1, problemVersion: version }],
+      }}
+      busy={false}
+      onSave={onSave}
+      onDirty={vi.fn()}
+    />,
+  );
+  expect(screen.getByRole('option', { name: 'Graded' })).toBeDisabled();
+  expect(screen.getByRole('option', { name: 'Completion only' })).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      problemVersionIds: [version.id],
+    }),
+    false,
+  );
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
+  expect(screen.getByText('Prove: P -> P')).toBeInTheDocument();
+  expect(screen.queryByText('Private instructor explanation')).not.toBeInTheDocument();
+  await user.type(screen.getByLabelText('Assignment title'), ' revised');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      assessmentMode: 'ungraded_practice',
+      problemVersionIds: [version.id],
+    }),
+    false,
+  );
+  expect(screen.getByLabelText('Assessment mode')).toHaveValue('ungraded_practice');
+  expect(screen.getByLabelText('Assignment title')).toHaveValue('Immediate practice revised');
+  await user.click(screen.getByRole('button', { name: 'Remove problem 1' }));
+  expect(screen.getByRole('option', { name: 'Graded' })).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'graded');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({ assessmentMode: 'graded', items: [] }),
+    true,
+  );
+});

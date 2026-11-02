@@ -1,6 +1,9 @@
+import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import {
   submissionFeedback,
+  proofSubmissionFeedback,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
@@ -21,6 +24,11 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
   const review = state.review;
   const item = review?.assignment.items[position];
   const response = item ? review?.attempt.answers[item.id] : undefined;
+  const proofAnswer =
+    response && !Array.isArray(response) && response.type === 'derivation'
+      ? response
+      : blankDerivationAnswer();
+  const proofReport = item ? proofSubmissionFeedback(review?.attempt.result, item.id) : null;
   return (
     <section aria-label="Final submission review">
       <section className="panel">
@@ -52,6 +60,27 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
                     ? `Completed ${submission.summary.completedResponses} of ${submission.summary.totalResponses} responses · No correctness score`
                     : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
               </p>
+              {'proofVerification' in submission.summary && (
+                <p>
+                  {submission.summary.proofVerification.verified > 0 && (
+                    <span>
+                      Completed — verified: {submission.summary.proofVerification.verified}.{' '}
+                    </span>
+                  )}
+                  {submission.summary.proofVerification.errorsFound > 0 && (
+                    <span>
+                      Completed — errors found: {submission.summary.proofVerification.errorsFound}
+                      .{' '}
+                    </span>
+                  )}
+                  {submission.summary.proofVerification.unavailable > 0 && (
+                    <span>
+                      Completed — verification unavailable:{' '}
+                      {submission.summary.proofVerification.unavailable}.{' '}
+                    </span>
+                  )}
+                </p>
+              )}
             </li>
           ))}
         </ul>
@@ -106,10 +135,22 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
                 readOnly
                 onAnswer={() => {}}
               />
+            ) : item.content.type === 'derivation' ? (
+              <AssignedDerivation
+                item={{ ...item, content: item.content }}
+                answer={proofAnswer}
+                feedback={proofReport ? { proof: proofAnswer.proof, report: proofReport } : null}
+                readOnly
+                onAnswer={() => {}}
+              />
             ) : (
               <AssignedConceptualQuestion
-                item={item}
-                answer={response && !Array.isArray(response) ? response : undefined}
+                item={{ ...item, content: item.content }}
+                answer={
+                  response && !Array.isArray(response) && response.type !== 'derivation'
+                    ? response
+                    : undefined
+                }
                 feedback={conceptualSubmissionFeedback(review.attempt.result, item.id)}
                 readOnly
                 onAnswer={() => {}}

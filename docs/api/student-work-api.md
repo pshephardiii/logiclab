@@ -84,7 +84,7 @@ Shared assignment/enrollment locks serialize access with archive/removal. Per-st
 
 See [learning-mode verification](../verification/assignment-learning-modes-verification.md). Run `npm run check` and `npm run db:test` for contracts, policies, UI, authorization, migration, retention and concurrency coverage. Apply committed migrations first on development checkouts.
 
-Immediate per-cell feedback, deadlines, late-work rules, multiple final submissions and alternate scoring weights remain deferred. Official results retain their version; later engine/library changes do not recompute them. Completion uses the existing JSON result column, so older application versions need deliberate rollback handling once completion results exist.
+Deadlines, late-work rules and multiple final submissions remain deferred. Immediate objective feedback and instructor point allocations are implemented as described below; proof feedback follows its separate mode restrictions. Official results retain their version; later engine/library changes do not recompute them. Completion uses the existing JSON result column, so older application versions need deliberate rollback handling once completion results exist.
 
 ## Grade disclosure and independent answers
 
@@ -123,3 +123,44 @@ For every graded assignment, assigned items include `maxPoints`. Finalization re
 The student `score` is null before finalization and while grades are withheld. Grade release controls scores and correctness together; answer reveal remains independent. Finalization/retry/read return the retained snapshot without recomputation. Submitted graded attempts must have a score; missing snapshots fail closed. Instructor final submission lists/detail include retained scores independently of student release; private drafts/practice stay excluded. Scoring and final result commit atomically with the revision change. See [point policy and rollout](../planning/assignment-scoring.md).
 
 Student graded work displays problem allocations and total available points. Released final summaries show retained item points, earned/max totals and percentage; withheld results show no point score. Instructor lists/detail display the same frozen scores independently of student release. Completion/private work has no numeric grade. No client-provided earned-score or manual-override endpoint is accepted.
+
+## Assigned Fitch proofs (022)
+
+Practice and completion-only assignments can contain pinned version-1 Fitch derivations alongside tables and conceptual questions. Graded proof assignment admission remains guarded until instructor grading/review is ready. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
+
+A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
+
+Save a full bounded proof response for one occurrence using the existing revision protocol:
+
+```json
+{
+  "revision": 0,
+  "itemId": "<occurrence UUID>",
+  "answers": {
+    "type": "derivation",
+    "proof": { "proofVersion": 1, "format": "fitch", "steps": [], "blocks": [] }
+  }
+}
+```
+
+This empty proof is saveable unfinished work, not a finished completion attempt. Steps and blocks retain UUID identities across insertion/reordering; line numbers are presentation positions. Bounded unfinished formulas, missing citations, open blocks and incorrect reasoning remain saveable. Saves perform transport/configuration validation without returning checker diagnostics, persisting check reports or awarding points. Duplicate/foreign occurrence IDs, wrong response types, unsupported versions and injected reports/keys/scores are rejected. Existing locks, revision conflicts, submitted-work protection and demo transaction fencing apply.
+
+### Practice checks and references
+
+The existing check endpoint accepts `{ itemId, answers: { type: "derivation", proof } }` and returns `{ itemId, feedback: { type: "derivation", report } }`. Reports distinguish local validity, upstream dependencies, target state and `accepted`, `needs_review` or `unassessable` outcomes. They do not include a private reference, explanation or numerical grade. Checks evaluate the current transient proof, create no attempt and change no revision. The browser offers explicit **Check proof** even if companion questions use immediate feedback; editing never schedules a proof check. Edits/lifecycle changes invalidate old feedback and cancel stale requests. Practice has no final submission or instructor draft review.
+
+The solution endpoint returns `{ itemId, solution }`, where the authorized proof solution includes the pinned reference proof and optional explanation. Practice supports `never`/`anytime`; completion supports the existing independent answer policies. Revealing the reference never overwrites the student's proof or releases diagnostics early. Graded proof reference access remains guarded.
+
+### Completion finalization and review
+
+Proof-containing completion assignments require `feedbackTiming: "on_submission"`; legacy objective-only pre-submission completion assistance does not enable proof checking. The browser and server share a bounded finished-attempt predicate: nonblank formulas, selected premises/known permitted rules, required numbers of existing citations, closed valid block layout and an actual final root line structurally matching the requested target. Notation aliases are accepted, not arbitrary logical-equivalence rewrites. Wrong premise formulas, nonfinal syntax errors and invalid inference/scope/order citations can still be finished work; full proof verification is separate.
+
+Every objective companion must also be filled. Students save all edits and confirm before submitting. Incomplete work returns `409 ATTEMPT_INCOMPLETE` without partial writes. Once all work is finished, the server checks the saved proof against the pinned statement/rules and atomically freezes `proof_completion_v1`, final answers, report evidence, timestamp and revision. Each proof contributes one completed response; objective companions retain their completion units. No point score or pending-grade state is created. Logical mistakes or unavailable verification do not revoke completion.
+
+The result's `summary` contains `completedResponses`, `totalResponses` and `proofVerification: { verified, errorsFound, unavailable, total }`. Derivation items retain `itemId`, `problemVersionId`, `evaluationVersion: "derivation_v1"`, full `report` and completed/total counts of 1. Verification flags are derived from reports, not claims about effort or misconduct. Students receive these diagnostics only after submission; instructors can inspect frozen finals and verification counts through the owner submission routes. Private practice drafts and reference answers do not enter those review responses. Final retries return the same evidence without rechecking; answer reveal does not modify it.
+
+### Guarded graded foundation and compatibility
+
+Internal tests exercise `proof_mixed_v1` with atomic frozen point scores: wholly accepted proofs earn full credit, and incorrect/incomplete/unassessable proofs retain unresolved null points and assignment totals. Student grade withholding still redacts reports and scores independently of answer reveal. This does not enable live graded proof assignments or instructor grade adjustment; those remain guarded for 024.
+
+Apply `Migration20261102120000` and rebuild matching contracts/engine/database/API/frontend outputs. Existing objective result formats are unchanged. Older readers cannot interpret proof responses or new result tags; coordinate application rollback. See [verification and limits](../verification/derivation-student-work-verification.md).

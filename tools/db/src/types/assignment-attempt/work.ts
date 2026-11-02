@@ -1,3 +1,5 @@
+import type { ProofSubmissionResult, ProofCompletionSubmissionResult } from './proof-result.ts';
+import type { DerivationAnswer } from './derivation-work.ts';
 import type {
   ConceptualResponse,
   MixedGradedSubmissionResult,
@@ -10,7 +12,10 @@ export interface AttemptAnswer {
   columnId: string;
   value: boolean | null;
 }
-export type AttemptAnswers = Record<string, AttemptAnswer[] | ConceptualResponse>;
+export type AttemptAnswers = Record<
+  string,
+  AttemptAnswer[] | ConceptualResponse | DerivationAnswer
+>;
 
 export interface SubmissionCounts {
   correct: number;
@@ -42,4 +47,6 @@ export type SubmissionResult =
   | GradedSubmissionResult
   | CompletionSubmissionResult
   | MixedGradedSubmissionResult
-  | MixedCompletionSubmissionResult;
+  | MixedCompletionSubmissionResult
+  | ProofSubmissionResult
+  | ProofCompletionSubmissionResult;

@@ -86,3 +86,36 @@ test('unresolved review has no invented zero total or percentage', () => {
   expect(screen.getByText('Needs instructor review · 25 points available')).toBeInTheDocument();
   expect(screen.queryByText(/%/)).not.toBeInTheDocument();
 });
+
+test('proof completion shows independent verification flags without displaying supplied point scores or objective correctness', async () => {
+  const { proofFinal } = await import('../../../../test/proof-work-fixture');
+  const { proofSubmissionFeedback, conceptualSubmissionFeedback } =
+    await import('../helpers/submission-feedback');
+  const original = proofFinal.result;
+  if (original?.gradingVersion !== 'proof_mixed_v1') throw new Error('Expected proof');
+  const result = {
+    gradingVersion: 'proof_completion_v1' as const,
+    items: original.items
+      .filter((item) => item.type === 'derivation')
+      .map((item) => ({ ...item, completedResponses: 1 as const, totalResponses: 1 as const })),
+    summary: {
+      completedResponses: 2,
+      totalResponses: 2,
+      proofVerification: { verified: 1, errorsFound: 1, unavailable: 0, total: 2 },
+    },
+  };
+  render(
+    <SubmissionSummary result={result} score={pointScore} submittedAt="2026-11-02T12:00:00Z" />,
+  );
+  expect(
+    screen.getByText('Completed 2 of 2 responses. No correctness score is recorded.'),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/1 verified · 1 with errors found · 0 with verification unavailable/),
+  ).toBeInTheDocument();
+  expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
+  expect(submissionFeedback(result, result.items[0]!.itemId)).toBeNull();
+  expect(conceptualSubmissionFeedback(result, result.items[0]!.itemId)).toBeNull();
+  expect(proofSubmissionFeedback(result, result.items[0]!.itemId)?.status).toBe('accepted');
+  expect(proofSubmissionFeedback(null, result.items[0]!.itemId)).toBeNull();
+});

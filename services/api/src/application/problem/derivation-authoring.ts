@@ -20,9 +20,9 @@ export class DerivationAuthoringError extends Error {
   }
 }
 
-/** Validate declarative configuration while retaining incomplete formulas/reference work. */
-export function validateDerivationDefinition(value: unknown): DerivationDefinition {
-  const parsed = derivationDefinitionSchema.safeParse(value);
+/** Validate public statement/configuration without admitting private reference fields. */
+export function validateDerivationContent(value: unknown): DerivationContent {
+  const parsed = derivationContentSchema.safeParse(value);
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
   if (
     parsed.data.checkerVersion !== PROOF_CHECKER_VERSION ||
@@ -31,6 +31,15 @@ export function validateDerivationDefinition(value: unknown): DerivationDefiniti
     throw new DerivationAuthoringError('invalid_definition');
   if (parsed.data.rules.some((rule) => !getPropositionalRule(rule.id)))
     throw new DerivationAuthoringError('unknown_rule');
+  return parsed.data;
+}
+
+/** Validate declarative configuration while retaining incomplete formulas/reference work. */
+export function validateDerivationDefinition(value: unknown): DerivationDefinition {
+  const parsed = derivationDefinitionSchema.safeParse(value);
+  if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
+  const { referenceProof: _reference, explanation: _explanation, ...content } = parsed.data;
+  validateDerivationContent(content);
   return parsed.data;
 }
 

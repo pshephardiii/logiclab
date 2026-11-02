@@ -87,3 +87,20 @@ test('mixed library pages retain supported history but exclude derivation versio
   expect(hook.result.current.versions).toEqual([version]);
   expect(hook.result.current.versionNext).toBeNull();
 });
+
+test('practice choices include published proofs and disappear immediately when practice is disabled', async () => {
+  const { derivationDraft } = await import('../../../../test/derivation');
+  const proof = { ...version, definition: derivationDraft.definition };
+  vi.mocked(listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(listVersions).mockResolvedValue({ versions: [proof, version], nextOffset: null });
+  const hook = renderHook(({ practice }) => usePublishedProblemChoices(practice), {
+    initialProps: { practice: true },
+  });
+  await waitFor(() => expect(hook.result.current.problems).toHaveLength(1));
+  act(() => hook.result.current.selectProblem(derivationDraft.id));
+  await waitFor(() => expect(hook.result.current.versions).toHaveLength(2));
+  hook.rerender({ practice: false });
+  expect(hook.result.current.versions).toEqual([version]);
+  hook.rerender({ practice: true });
+  expect(hook.result.current.versions).toEqual([proof, version]);
+});

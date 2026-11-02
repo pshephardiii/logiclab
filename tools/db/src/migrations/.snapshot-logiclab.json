@@ -204,14 +204,19 @@
       ],
       "checks": [
         {
+          "name": "assignment_attempts_proof_score_required",
+          "expression": "result->>'gradingVersion' is distinct from 'proof_mixed_v1' or score is not null",
+          "definition": "check (result->>'gradingVersion' is distinct from 'proof_mixed_v1' or score is not null)"
+        },
+        {
           "name": "assignment_attempts_revision_nonnegative",
           "expression": "revision >= 0",
           "definition": "check (revision >= 0)"
         },
         {
           "name": "assignment_attempts_score_state_check",
-          "expression": "\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  ",
-          "definition": "check (\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  )"
+          "expression": "\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1', 'proof_mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  ",
+          "definition": "check (\n    score is null or coalesce(\n      submitted_at is not null\n      and result->>'gradingVersion' in ('truth_table_v1', 'mixed_v1', 'proof_mixed_v1')\n      and jsonb_typeof(score) = 'object'\n      and score->>'scoringVersion' = 'points_v1',\n      false\n    )\n  )"
         },
         {
           "name": "assignment_attempts_submission_result_check",

@@ -92,7 +92,7 @@ export const submitted: StudentAttempt = {
     summary: { correct: 0, incorrect: 1, unanswered: 3, total: 4 },
   },
 };
-export const review: SubmissionReview = {
+export const review = {
   submission: {
     id: submitted.id,
     student: { id: 'a6666666-6666-4666-8666-666666666666', email: 'student@example.test' },
@@ -101,4 +101,4 @@ export const review: SubmissionReview = {
   },
   assignment: work,
   attempt: submitted,
-};
+} satisfies SubmissionReview;

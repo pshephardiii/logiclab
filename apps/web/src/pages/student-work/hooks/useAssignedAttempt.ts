@@ -1,13 +1,16 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type {
-  StudentAssignment,
-  StudentAttempt,
-  StudentSolutionResponse,
-  StudentCheckResponse,
-  ConceptualAnswer,
-  AssignmentResponseValue,
-} from '@logiclab/contracts';
+import type { ConceptualAnswer, FitchProof, ProofCheckReport } from '@logiclab/contracts';
+import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import {
+  savedStudentAnswersSchema,
+  savedStudentCheckSchema,
+  type SavedStudentAssignment as StudentAssignment,
+  type SavedStudentAttempt as StudentAttempt,
+  type SavedStudentSolutionResponse as StudentSolutionResponse,
+  type SavedStudentCheckResponse as StudentCheckResponse,
+  type SavedStudentResponseValue as AssignmentResponseValue,
+} from '@logiclab/contracts/saved-student-work';
 import { cellKey } from '../../../features/truthTable/types';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 import { useAssignedAnswers } from './useAssignedAnswers';
@@ -24,11 +27,13 @@ export function useAssignedAttempt(assignmentId: string) {
   const {
     answers,
     choiceAnswers,
+    proofAnswers,
     dirty,
     completionReady,
     resetAnswers,
     changeTableAnswers,
     changeChoiceAnswers,
+    changeProofAnswers,
     markSaved,
     responseFor,
   } = useAssignedAnswers(assignment);
@@ -36,6 +41,9 @@ export function useAssignedAttempt(assignmentId: string) {
     {},
   );
   const [feedback, setFeedback] = useState<Record<string, StudentCheckResponse['feedback']>>({});
+  const [proofFeedback, setProofFeedback] = useState<
+    Record<string, { proof: FitchProof; report: ProofCheckReport }>
+  >({});
   const [checkingItem, setCheckingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<'save' | 'submit' | 'solution' | null>(null);
@@ -67,6 +75,7 @@ export function useAssignedAttempt(assignmentId: string) {
     writes.cancelRequest();
     cancelCheck();
     setFeedback({});
+    setProofFeedback({});
     setAction(null);
     setLoading(true);
     setError(null);
@@ -136,6 +145,26 @@ export function useAssignedAttempt(assignmentId: string) {
         void check(itemId, snapshot);
       }, IMMEDIATE_CHECK_DELAY_MS);
   }
+  function changeProofAnswer(itemId: string, snapshot: DerivationAnswer) {
+    if (loading || action || attempt?.submittedAt) return;
+    const item = assignment?.items.find((value) => value.id === itemId);
+    if (!item || !('content' in item) || item.content.type !== 'derivation') return;
+    cancelCheck();
+    setFeedback((previous) => {
+      const next = { ...previous };
+      delete next[itemId];
+      return next;
+    });
+    setProofFeedback((previous) => {
+      const next = { ...previous };
+      delete next[itemId];
+      return next;
+    });
+    setError(null);
+    setNotice(null);
+    changeProofAnswers(itemId, snapshot);
+    // Proof diagnostics are always explicit, including mixed immediate-feedback assignments.
+  }
   async function save(itemId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
     const item = assignment.items.find((value) => value.id === itemId);
@@ -150,11 +179,11 @@ export function useAssignedAttempt(assignmentId: string) {
     try {
       const saved = await api.saveAssignedAnswers(
         assignmentId,
-        {
+        savedStudentAnswersSchema.parse({
           revision: attempt?.revision ?? 0,
           itemId,
           answers: response,
-        },
+        }),
         signal,
       );
       if (!signal.aborted) {
@@ -210,16 +239,28 @@ export function useAssignedAttempt(assignmentId: string) {
     setError(null);
     setNotice(null);
     try {
+      const checkedAnswer = snapshot ?? responseFor(item);
       const response = await api.checkAssignedAnswers(
         assignmentId,
-        {
-          itemId,
-          answers: snapshot ?? responseFor(item),
-        },
+        savedStudentCheckSchema.parse({ itemId, answers: checkedAnswer }),
         signal,
       );
+      if (response.itemId !== itemId)
+        throw new Error('The check response did not match this problem.');
       const feedback = response.feedback;
-      if (!signal.aborted) setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
+      if (!signal.aborted) {
+        setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
+        if (
+          'type' in feedback &&
+          feedback.type === 'derivation' &&
+          !Array.isArray(checkedAnswer) &&
+          checkedAnswer.type === 'derivation'
+        )
+          setProofFeedback((previous) => ({
+            ...previous,
+            [itemId]: { proof: checkedAnswer.proof, report: feedback.report },
+          }));
+      }
     } catch (caught) {
       if (!signal.aborted)
         setError(caught instanceof Error ? caught.message : 'Could not check answers.');
@@ -255,6 +296,7 @@ export function useAssignedAttempt(assignmentId: string) {
     assignment,
     attempt,
     feedback,
+    proofFeedback,
     checkingItem,
     check,
     hasFinalSubmission,
@@ -266,6 +308,7 @@ export function useAssignedAttempt(assignmentId: string) {
     solutionAvailable,
     answers,
     choiceAnswers,
+    proofAnswers,
     solutions,
     loading,
     action,
@@ -275,6 +318,7 @@ export function useAssignedAttempt(assignmentId: string) {
     load,
     changeAnswer,
     changeConceptualAnswer,
+    changeProofAnswer,
     save,
     submit,
     toggleSolution,

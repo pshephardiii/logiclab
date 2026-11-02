@@ -1,11 +1,21 @@
-import { assignmentScoreSchema } from '@logiclab/contracts';
+import {
+  proofCompletionReviewSummary,
+  proofCompletionReviewResponse,
+} from './proof-completion-response';
+import {
+  assignmentScoreSchema,
+  assignmentResponsesSchema,
+  submissionSummarySchema,
+  submissionResultSchema,
+  submissionReviewSchema,
+} from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
 import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type { SubmissionListQuery, SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
 import { AssignmentOperationError } from '../../application/assignment/errors';
-import { assignmentExercises } from '../assignment/exercise-response';
+import { assignmentExercises, savedAssignmentExercises } from '../assignment/exercise-response';
 
 export interface SubmissionReviewStore {
   listSubmissions(
@@ -21,13 +31,13 @@ export interface SubmissionReviewStore {
 }
 function summary(attempt: AssignmentAttempt): SubmissionSummary {
   if (!attempt.submittedAt || !attempt.result) throw new AssignmentOperationError('not_found');
-  return {
+  return submissionSummarySchema.parse({
     id: attempt.id,
     student: { id: attempt.student.id, email: attempt.student.email ?? null },
     submittedAt: attempt.submittedAt.toISOString(),
     summary: attempt.result.summary,
     ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
-  };
+  });
 }
 
 /** Only retained final submissions are visible; draft answers never cross the instructor boundary. */
@@ -45,7 +55,7 @@ export async function createSubmissionReviewStore(
   return {
     async listSubmissions(ownerId, assignmentId, query) {
       const em = transaction ?? orm.em.fork();
-      await owned(em, ownerId, assignmentId);
+      const assignment = await owned(em, ownerId, assignmentId);
       const submissions = await em.find(
         AssignmentAttempt,
         {
@@ -59,7 +69,11 @@ export async function createSubmissionReviewStore(
           populate: ['student'],
         },
       );
-      return submissions.map(summary);
+      return submissions.map((attempt) =>
+        attempt.result?.gradingVersion === 'proof_completion_v1'
+          ? submissionSummarySchema.parse(proofCompletionReviewSummary(attempt, assignment))
+          : summary(attempt),
+      );
     },
     async findSubmission(ownerId, assignmentId, submissionId) {
       const em = transaction ?? orm.em.fork();
@@ -79,6 +93,11 @@ export async function createSubmissionReviewStore(
         { assignment: assignmentId },
         { orderBy: { position: 'ASC' }, populate: ['problemVersion'] },
       );
+      if (attempt.result?.gradingVersion === 'proof_completion_v1')
+        return submissionReviewSchema.parse({
+          ...proofCompletionReviewResponse(attempt, assignment),
+          assignment: savedAssignmentExercises(assignment, items),
+        });
       return {
         submission: summary(attempt),
         assignment: assignmentExercises(assignment, items),
@@ -86,9 +105,9 @@ export async function createSubmissionReviewStore(
         attempt: {
           id: attempt.id,
           revision: attempt.revision,
-          answers: attempt.answers,
+          answers: assignmentResponsesSchema.parse(attempt.answers),
           submittedAt: attempt.submittedAt?.toISOString() ?? null,
-          result: attempt.result ?? null,
+          result: attempt.result ? submissionResultSchema.parse(attempt.result) : null,
           ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
           gradePending: false,
         },

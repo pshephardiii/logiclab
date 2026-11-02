@@ -1,11 +1,12 @@
-import type { AttemptAnswer, GradedSubmissionResult, SubmissionCounts } from './work.ts';
+import type { AttemptAnswers } from './work.ts';
+import type { GradedSubmissionResult, SubmissionCounts } from './work.ts';
 
 export type ConceptualResponse =
   | { type: 'true_false'; answer: boolean | null }
   | { type: 'multiple_choice'; optionId: string | null };
 
 /** Mixed JSON response shapes, keyed by pinned assignment occurrence. */
-export type AssignmentResponses = Record<string, AttemptAnswer[] | ConceptualResponse>;
+export type AssignmentResponses = AttemptAnswers;
 export type MixedGradedItem =
   | {
       type: 'truth_table';

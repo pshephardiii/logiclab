@@ -12,6 +12,12 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  proof_mode_unavailable: {
+    status: 409,
+    code: 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE',
+    message:
+      'Derivations require ungraded practice or completion-only work with feedback at submission. Remove them before choosing graded work or pre-submission completion feedback.',
+  },
   invalid_scoring: {
     status: 400,
     code: 'ASSIGNMENT_SCORING_INVALID',

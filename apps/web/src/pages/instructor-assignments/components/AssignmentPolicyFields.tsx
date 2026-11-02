@@ -9,6 +9,7 @@ import {
 
 type Props = {
   policy: AssignmentLearningPolicy;
+  containsProof?: boolean;
   onChange: (policy: AssignmentLearningPolicy) => void;
   gradeReleaseTiming: GradeReleaseTiming;
   onGradeReleaseChange: (timing: GradeReleaseTiming) => void;
@@ -17,6 +18,7 @@ type Props = {
 /** Mode changes establish valid defaults; restored legacy assistance remains explicit. */
 export function AssignmentPolicyFields({
   policy,
+  containsProof = false,
   onChange,
   gradeReleaseTiming,
   onGradeReleaseChange,
@@ -28,6 +30,7 @@ export function AssignmentPolicyFields({
     policy.assessmentMode === 'completion_only' && policy.feedbackTiming !== 'on_submission';
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
+    if (containsProof && assessmentMode === 'graded') return;
     const resetSolutions =
       assessmentMode === 'ungraded_practice' &&
       !['never', 'anytime'].includes(policy.solutionAccess);
@@ -73,7 +76,9 @@ export function AssignmentPolicyFields({
         onChange={changeMode}
         aria-describedby="assignment-mode-help"
       >
-        <option value="graded">Graded</option>
+        <option value="graded" disabled={containsProof}>
+          Graded
+        </option>
         <option value="completion_only">Completion only</option>
         <option value="ungraded_practice">Ungraded practice</option>
       </select>
@@ -82,7 +87,9 @@ export function AssignmentPolicyFields({
           ? 'Final submission records correctness and a score. Grade release and answer reveal are independent.'
           : practice
             ? 'Students can save and check repeatedly. There is no final submission or official score; practice answers stay private.'
-            : 'Every cell must be filled; correctness does not affect completion. Completion is acknowledged at submission, with no grade-release control.'}
+            : containsProof
+              ? 'Fill every cell, answer every question and finish each proof attempt before submission. Proof diagnostics appear after submission; logical mistakes do not remove completion credit. No correctness score or grade-release control.'
+              : 'Fill every cell and answer every question. Correctness does not affect completion. No correctness score or grade-release control.'}
       </p>
       {graded && (
         <>

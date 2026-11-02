@@ -9,7 +9,7 @@ type Props = {
 };
 
 /** Retain unresolved IDs as explicit choices instead of silently selecting another target. */
-export function ReferenceChoice({ label, value, choices, empty = 'None', onChange }: Props) {
+export function ProofChoice({ label, value, choices, empty = 'None', onChange }: Props) {
   const id = useId();
   return (
     <div>

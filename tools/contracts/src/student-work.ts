@@ -50,7 +50,7 @@ export const studentAttemptSchema = z.strictObject({
   gradePending: z.boolean().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;
-const assignedItemFields = {
+export const studentAssignmentItemFields = {
   id: z.uuid(),
   position: z.number().int().positive(),
   title: z.string(),
@@ -60,11 +60,11 @@ const assignedItemFields = {
 /** Legacy table shape remains unchanged; conceptual content is explicitly redacted. */
 export const studentAssignmentItemSchema = z.union([
   z.strictObject({
-    ...assignedItemFields,
+    ...studentAssignmentItemFields,
     formula: z.string(),
     exercise: truthTableExerciseResponseSchema,
   }),
-  z.strictObject({ ...assignedItemFields, content: conceptualQuestionContentSchema }),
+  z.strictObject({ ...studentAssignmentItemFields, content: conceptualQuestionContentSchema }),
 ]);
 export const studentAssignmentSchema = assignmentSummarySchema.safeExtend({
   items: z.array(studentAssignmentItemSchema).max(50),

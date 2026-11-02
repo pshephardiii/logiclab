@@ -1,9 +1,9 @@
 import type { FastifyInstance } from 'fastify';
+import { studentAssignmentParamsSchema } from '@logiclab/contracts';
 import {
-  studentAssignmentParamsSchema,
-  checkStudentAnswersSchema,
-  studentCheckResponseSchema,
-} from '@logiclab/contracts';
+  savedStudentCheckSchema,
+  savedStudentCheckResponseSchema,
+} from '@logiclab/contracts/saved-student-work';
 import type { RouteSchema } from '../../setup';
 import type { StudentWorkContext } from '../context';
 import { studentWorkErrorResponses } from '../../error-responses';
@@ -14,8 +14,8 @@ export const postStudentCheckSchema = {
   description:
     'Enrollment-scoped feedback only; does not save answers, submit work, or record a grade.',
   params: studentAssignmentParamsSchema,
-  body: checkStudentAnswersSchema,
-  response: { 200: studentCheckResponseSchema, ...studentWorkErrorResponses },
+  body: savedStudentCheckSchema,
+  response: { 200: savedStudentCheckResponseSchema, ...studentWorkErrorResponses },
 } satisfies RouteSchema;
 
 export async function postStudentCheckRoute(app: FastifyInstance, context: StudentWorkContext) {
