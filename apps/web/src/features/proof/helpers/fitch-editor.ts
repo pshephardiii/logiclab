@@ -1,12 +1,12 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { DerivationContent } from '@logiclab/contracts/derivation';
 
-export function startReference(definition: DerivationDefinition): FitchProof {
+export function startProof(statement: Pick<DerivationContent, 'premises'>): FitchProof {
   return {
     proofVersion: 1,
     format: 'fitch',
     blocks: [],
-    steps: definition.premises.map((premise) => ({
+    steps: statement.premises.map((premise) => ({
       kind: 'premise',
       id: crypto.randomUUID(),
       blockId: null,
@@ -16,13 +16,13 @@ export function startReference(definition: DerivationDefinition): FitchProof {
   };
 }
 
-export function uniqueReferenceIds(proof: FitchProof): boolean {
+export function uniqueProofIds(proof: FitchProof): boolean {
   const ids = [...proof.steps.map((step) => step.id), ...proof.blocks.map((block) => block.id)];
   return new Set(ids).size === ids.length;
 }
 
 /** Bound malformed parent walks; never recurse over a draft supplied by the server. */
-export function referenceDepth(proof: FitchProof, blockId: string | null): number | null {
+export function proofDepth(proof: FitchProof, blockId: string | null): number | null {
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
   const seen = new Set<string>();
   while (blockId !== null) {
@@ -35,19 +35,19 @@ export function referenceDepth(proof: FitchProof, blockId: string | null): numbe
   return seen.size;
 }
 
-export function insertReferenceStep(
+export function insertProofStep(
   proof: FitchProof,
   index: number,
   blockId: string | null,
   subproof = false,
 ): FitchProof {
-  if (!uniqueReferenceIds(proof))
-    throw new Error('Repair duplicate reference identities before inserting lines.');
+  if (!uniqueProofIds(proof))
+    throw new Error('Repair duplicate proof identities before inserting lines.');
   if (index < 0 || index > proof.steps.length || !Number.isInteger(index))
     throw new Error('Choose an existing insertion position.');
   if (proof.steps.length >= PROOF_LIMITS.maxSteps)
-    throw new Error('The reference line limit has been reached.');
-  const depth = referenceDepth(proof, blockId);
+    throw new Error('The proof line limit has been reached.');
+  const depth = proofDepth(proof, blockId);
   if (depth === null) throw new Error('Choose a scope with a valid parent chain.');
   if (
     subproof &&
@@ -76,7 +76,7 @@ export function insertReferenceStep(
   };
 }
 
-export function moveReferenceStep(proof: FitchProof, index: number, delta: -1 | 1): FitchProof {
+export function moveProofStep(proof: FitchProof, index: number, delta: -1 | 1): FitchProof {
   const next = index + delta;
   if (!proof.steps[index] || !proof.steps[next]) return proof;
   const steps = [...proof.steps];
@@ -85,13 +85,13 @@ export function moveReferenceStep(proof: FitchProof, index: number, delta: -1 | 
 }
 
 /** Preserve incoming citations/endpoints as missing IDs; never redirect them to a neighbor. */
-export function removeReferenceStep(proof: FitchProof, index: number): FitchProof {
+export function removeProofStep(proof: FitchProof, index: number): FitchProof {
   if (proof.steps[index]?.kind === 'assumption')
     throw new Error('Delete the assumption’s entire subproof instead.');
   return { ...proof, steps: proof.steps.filter((_, position) => position !== index) };
 }
 
-export function referenceSubtree(proof: FitchProof, id: string): Set<string> {
+export function proofSubtree(proof: FitchProof, id: string): Set<string> {
   const ids = new Set([id]);
   for (let pass = 0; pass < proof.blocks.length; pass++) {
     const count = ids.size;
@@ -102,8 +102,8 @@ export function referenceSubtree(proof: FitchProof, id: string): Set<string> {
   return ids;
 }
 
-export function removeReferenceSubproof(proof: FitchProof, id: string): FitchProof {
-  const ids = referenceSubtree(proof, id);
+export function removeProofSubproof(proof: FitchProof, id: string): FitchProof {
+  const ids = proofSubtree(proof, id);
   return {
     ...proof,
     steps: proof.steps.filter((step) => !step.blockId || !ids.has(step.blockId)),
@@ -111,8 +111,8 @@ export function removeReferenceSubproof(proof: FitchProof, id: string): FitchPro
   };
 }
 
-export function insertReferencePremise(proof: FitchProof, index: number): FitchProof {
-  const next = insertReferenceStep(proof, index, null);
+export function insertProofPremise(proof: FitchProof, index: number): FitchProof {
+  const next = insertProofStep(proof, index, null);
   const line = next.steps[index]!;
   return {
     ...next,

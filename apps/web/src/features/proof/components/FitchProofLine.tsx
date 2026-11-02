@@ -1,11 +1,12 @@
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { DerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof, ProofStep } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
-import { ReferenceChoice } from './ReferenceChoice';
+import { ProofChoice } from './ProofChoice';
 
 type Props = {
-  definition: DerivationDefinition;
+  statement: Pick<DerivationContent, 'premises' | 'rules'>;
+  purpose: 'reference' | 'student';
   proof: FitchProof;
   index: number;
   blocks: { id: string; label: string }[];
@@ -13,8 +14,9 @@ type Props = {
   onMove: (delta: -1 | 1) => void;
   onDelete: () => void;
 };
-export function ReferenceProofLine({
-  definition,
+export function FitchProofLine({
+  statement,
+  purpose,
   proof,
   index,
   blocks,
@@ -26,7 +28,10 @@ export function ReferenceProofLine({
   const rule =
     step.kind === 'inference' && step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
   return (
-    <section className="problem-option" aria-label={`Reference line ${index + 1}`}>
+    <section
+      className="problem-option"
+      aria-label={`${purpose === 'reference' ? 'Reference' : 'Proof'} line ${index + 1}`}
+    >
       <h4>
         Line {index + 1}
         {step.kind === 'assumption' ? ' — assumption' : ''}
@@ -57,10 +62,10 @@ export function ReferenceProofLine({
             Match this line’s formula to its selected statement premise. Linking a premise does not
             rewrite the formula.
           </p>
-          <ReferenceChoice
+          <ProofChoice
             label={`Statement premise for line ${index + 1}`}
             value={step.premiseId}
-            choices={definition.premises.map((premise, position) => ({
+            choices={statement.premises.map((premise, position) => ({
               id: premise.id,
               label: `${position + 1}. ${premise.formula || '(blank)'}`,
             }))}
@@ -69,23 +74,23 @@ export function ReferenceProofLine({
         </>
       ) : step.kind === 'inference' ? (
         <>
-          <ReferenceChoice
+          <ProofChoice
             label={`Scope for line ${index + 1}`}
             value={step.blockId}
             empty="Root proof"
             choices={blocks}
             onChange={(blockId) => onChange({ ...step, blockId })}
           />
-          <ReferenceChoice
+          <ProofChoice
             label={`Rule for line ${index + 1}`}
             value={step.ruleId}
-            choices={definition.rules.map((rule) => ({ id: rule.id, label: rule.label }))}
+            choices={statement.rules.map((rule) => ({ id: rule.id, label: rule.label }))}
             onChange={(ruleId) => onChange({ ...step, ruleId })}
           />
           {Array.from(
             { length: Math.max(rule?.lineReferences ?? 0, step.lineReferences.length) },
             (_, slot) => (
-              <ReferenceChoice
+              <ProofChoice
                 key={`line-${slot}`}
                 label={`Line ${index + 1} citation ${slot + 1}`}
                 value={step.lineReferences[slot] ?? null}
@@ -105,7 +110,7 @@ export function ReferenceProofLine({
           {Array.from(
             { length: Math.max(rule?.subproofReferences ?? 0, step.subproofReferences.length) },
             (_, slot) => (
-              <ReferenceChoice
+              <ProofChoice
                 key={`block-${slot}`}
                 label={`Line ${index + 1} subproof ${slot + 1}`}
                 value={step.subproofReferences[slot] ?? null}
