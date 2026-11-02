@@ -1,4 +1,7 @@
 import { scoreObjectiveSubmission } from '../../application/assignment/scoring';
+import { scoreProofSubmission } from '../../application/assignment/proof-scoring';
+import { evaluateProofSubmission } from '../../application/student-work/proof-submission';
+import { libraryProblemDefinition } from '../../application/problem/library-definition';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import {
@@ -181,7 +184,7 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
-          if (assignment.assessmentMode !== 'ungraded_practice')
+          if (assignment.assessmentMode === 'completion_only')
             throw new StudentWorkError('unsupported_policy');
           validateDerivationDefinition(definition);
         }
@@ -254,24 +257,44 @@ export async function createStudentWorkStore(
         if (attempt.submittedAt) return attemptResponse(attempt, assignment);
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
-        const evaluate =
-          assignment.assessmentMode === 'completion_only'
-            ? evaluateAssignmentCompletion
-            : evaluateAssignmentSubmission;
-        attempt.result = evaluate(
-          assigned.map((item) => ({
-            id: item.id,
-            definition: supportedProblemDefinition(item.problemVersion.definition),
-          })),
-          assignmentResponsesSchema.parse(attempt.answers),
-        );
         if (!validAssignmentScoring(assignment, assigned))
           throw new StudentWorkError('unsupported_policy');
-        if (assignment.assessmentMode === 'graded')
-          attempt.score = scoreObjectiveSubmission(
-            assigned.map((item) => ({ itemId: item.id, maxPoints: item.maxPoints! })),
-            attempt.result,
+        const containsProof = assigned.some(
+          (item) => item.problemVersion.definition.type === 'derivation',
+        );
+        if (containsProof && assignment.assessmentMode !== 'graded')
+          throw new StudentWorkError('unsupported_policy');
+        const allocations = assigned.map((item) => ({
+          itemId: item.id,
+          maxPoints: item.maxPoints!,
+        }));
+        if (containsProof) {
+          // Internal staged path: live assignment/HTTP contracts still exclude proofs until review is ready.
+          const result = evaluateProofSubmission(
+            assigned.map((item) => ({
+              id: item.id,
+              problemVersionId: item.problemVersion.id,
+              definition: libraryProblemDefinition(item.problemVersion.definition),
+            })),
+            attempt.answers,
           );
+          attempt.result = result;
+          attempt.score = scoreProofSubmission(allocations, result);
+        } else {
+          const evaluate =
+            assignment.assessmentMode === 'completion_only'
+              ? evaluateAssignmentCompletion
+              : evaluateAssignmentSubmission;
+          attempt.result = evaluate(
+            assigned.map((item) => ({
+              id: item.id,
+              definition: supportedProblemDefinition(item.problemVersion.definition),
+            })),
+            assignmentResponsesSchema.parse(attempt.answers),
+          );
+          if (assignment.assessmentMode === 'graded')
+            attempt.score = scoreObjectiveSubmission(allocations, attempt.result);
+        }
         attempt.submittedAt = new Date();
         attempt.revision++;
         await em.flush();

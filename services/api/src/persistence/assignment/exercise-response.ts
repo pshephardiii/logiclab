@@ -18,7 +18,7 @@ export function savedAssignmentExercises(
     ...assignmentSummary(assignment),
     items: items.map((item) => {
       const stored = item.problemVersion.definition;
-      if (stored.type === 'derivation' && assignment.assessmentMode !== 'ungraded_practice')
+      if (stored.type === 'derivation' && assignment.assessmentMode === 'completion_only')
         throw new StudentWorkError('unsupported_policy');
       const definition =
         stored.type === 'derivation'
