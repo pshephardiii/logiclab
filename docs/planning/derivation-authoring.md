@@ -77,9 +77,9 @@ Shape-valid malformed references remain inspectable and saveable. Duplicate/coll
 
 ## Next milestone
 
-Proceed with the planned `022-feat-derivation-student-work`: separate redacted assigned content from student proof responses, enforce pinned server-owned statements/rules, revisioned saves and appropriate practice/completion checks. Graded derivations remain guarded through the 022–023 student/review milestone. Current authoring controls use private owner definitions and must not be supplied wholesale to student views. The final focused browser run covered owner authoring, publication, privacy, mobile layout and cleanup; broader visual/accessibility and performance QA remains deferred.
+Proceed with the planned `022-feat-derivation-student-work`: separate redacted assigned content from student proof responses, enforce pinned server-owned statements/rules, revisioned saves and appropriate practice/completion checks. Graded derivations remain guarded through the 022–024 student/review milestone. Current authoring controls use private owner definitions and must not be supplied wholesale to student views. The final focused browser run covered owner authoring, publication, privacy, mobile layout and cleanup; broader visual/accessibility and performance QA remains deferred.
 
-Student proof workflows and graded assignment availability remain guarded through the planned 022–023 student/review milestone. This branch does not add instructor grade adjustments, numerical proof partial credit, alternative formats or general proof search.
+Student proof workflows and graded assignment availability remain guarded through the planned 022–024 student/review milestone. This branch does not add instructor grade adjustments, numerical proof partial credit, alternative formats or general proof search.
 
 ## Slice 1 verification — October 30, 2026
 

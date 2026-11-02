@@ -48,7 +48,7 @@ The staged saved-work entry now includes strict check request/response and solut
 
 `scoreProofSubmission` consumes freshly computed server evidence and authoritative allocations. Accepted proofs earn their full allocation. Incorrect, incomplete, unused-error or unassessable proofs have `needs_review` with null earned points; any such item keeps assignment earned points/percentage null. Objective items retain their normal weighted correctness and rounding, using the shared objective-outcome calculation. Proofs receive no numerical automatic partial credit. Checker evidence remains separate from later instructor-awarded grading. Pending review is also distinct from withheld grade release (`gradePending`).
 
-The staged saved-attempt contract and database now support this result format, but transactional proof finalization is not enabled. Active HTTP result/attempt contracts remain narrower. Graded availability stays guarded through 023 review; no completion-only semantics are implied by this graded format. Callers must authorize and recompute under the assignment/attempt transaction rather than accepting a client result or cached check.
+The staged saved-attempt contract and database now support this result format, but transactional proof finalization is not enabled. Active HTTP result/attempt contracts remain narrower. Graded availability stays guarded through 024 review; no completion-only semantics are implied by this graded format. Callers must authorize and recompute under the assignment/attempt transaction rather than accepting a client result or cached check.
 
 ## Retained proof results and disclosure
 
@@ -58,11 +58,15 @@ Apply this migration before future code writes proof finals, and rebuild matchin
 
 The staged student projection validates retained proof-score arithmetic and pending-review state without rerunning the checker, replacing evidence or writing a new grade. It withholds both reports and points until the independent grade-release policy permits them, even if answers have already been revealed. Released review-needed work retains null earned totals/percentage; grade release and instructor review remain separate states. Missing/inconsistent snapshots or proof results in an unsupported assessment state fail closed.
 
-Active root student and instructor-review contracts remain narrower. Instructor review explicitly validates its supported result/summary shapes rather than leaking staged proof results through an older response. Full instructor proof review belongs to 023. These changes provide compatible storage, not an enabled proof submission workflow.
+Active root student and instructor-review contracts remain narrower. Instructor review explicitly validates its supported result/summary shapes rather than leaking staged proof results through an older response. Full instructor proof review belongs to 024. These changes provide compatible storage, not an enabled proof submission workflow.
+
+## Next branch after 022
+
+Complete this student-work branch, then deliver `023-refactor-explicit-context-assembly` before resuming derivation features with `024-feat-derivation-grading-review`. The refactor will make named context properties map directly to focused stores, starting with `context.submissionReviews` rather than review methods hidden inside `context.assignments`. Preserve existing behavior, authorization and normal/demo transaction binding; see the [updated sequence](logical-derivations.md#023-explicit-context-assembly). This schedules work only and does not start another branch.
 
 ## Next delivery slices
 
-1. Add transactional finalization with immutable retries, rollback and revision checks, building on compatible retained-result storage and redacted projections. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
+1. Add transactional finalization with immutable retries, rollback and revision checks, building on compatible retained-result storage and redacted projections. Keep graded authoring/publication/student availability guarded through the complete 022–024 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
 2. Deliver student editing, explicit saves/navigation protection and read-only final work. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
 
 Before enabling completion-only derivations, settle what counts as completed proof work and the permitted feedback behavior while preserving score-free completion. Also settle mixed immediate-feedback assignments: the agreed proof interaction is explicit **Check proof**, rather than automatic proof-error display. Neither checkpoint blocks the current transport/evaluation foundation.
