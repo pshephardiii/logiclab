@@ -1,20 +1,29 @@
 import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { StudentAssignment } from '@logiclab/contracts';
+import { studentAssignmentSchema, type StudentAssignment } from '@logiclab/contracts';
+import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
+import { derivationContent } from '../../application/problem/derivation-authoring';
+import { StudentWorkError } from '../../application/student-work/errors';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import { exerciseResponse } from '../../application/truth-table/exercise';
 import { assignmentSummary } from './summary';
 
 /** Shape pinned assignment content for work/review tables without embedding solutions. */
-export function assignmentExercises(
+export function savedAssignmentExercises(
   assignment: Assignment,
   items: AssignmentItem[],
-): StudentAssignment {
+): SavedStudentAssignment {
   return {
     ...assignmentSummary(assignment),
     items: items.map((item) => {
-      const definition = supportedProblemDefinition(item.problemVersion.definition);
+      const stored = item.problemVersion.definition;
+      if (stored.type === 'derivation' && assignment.assessmentMode !== 'ungraded_practice')
+        throw new StudentWorkError('unsupported_policy');
+      const definition =
+        stored.type === 'derivation'
+          ? derivationContent(stored)
+          : supportedProblemDefinition(stored);
       const common = {
         id: item.id,
         position: item.position,
@@ -22,6 +31,7 @@ export function assignmentExercises(
         title: item.problemVersion.title,
         instructions: item.problemVersion.instructions ?? null,
       };
+      if (definition.type === 'derivation') return { ...common, content: definition };
       return definition.type === 'truth_table'
         ? {
             ...common,
@@ -31,4 +41,12 @@ export function assignmentExercises(
         : { ...common, content: conceptualQuestionContent(definition) };
     }),
   };
+}
+
+/** Narrow active/instructor response until staged proof work is ready for those consumers. */
+export function assignmentExercises(
+  assignment: Assignment,
+  items: AssignmentItem[],
+): StudentAssignment {
+  return studentAssignmentSchema.parse(savedAssignmentExercises(assignment, items));
 }

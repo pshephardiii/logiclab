@@ -7,8 +7,15 @@ import {
 } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
-import { assignmentExercises } from '../assignment/exercise-response';
-import { assignmentLearningPolicySchema } from '@logiclab/contracts';
+import { savedAssignmentExercises } from '../assignment/exercise-response';
+import { validateDerivationAnswer } from '../../application/student-work/derivation-response';
+import { validateDerivationDefinition } from '../../application/problem/derivation-authoring';
+import { assignmentLearningPolicySchema, assignmentResponsesSchema } from '@logiclab/contracts';
+import type {
+  SavedStudentAttempt,
+  SavedStudentAssignmentResponse,
+  SavedStudentAnswers,
+} from '@logiclab/contracts/saved-student-work';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -16,9 +23,6 @@ import type {
   AssignmentSummary,
   CheckStudentAnswers,
   StudentCheckResponse,
-  StudentAssignmentResponse,
-  StudentAttempt,
-  SaveStudentAnswers,
   StudentSolutionResponse,
   StudentAssignmentListQuery,
 } from '@logiclab/contracts';
@@ -40,14 +44,18 @@ export interface StudentWorkStore {
     classId: string,
     query: StudentAssignmentListQuery,
   ): Promise<AssignmentSummary[]>;
-  read(studentId: string, assignmentId: string): Promise<StudentAssignmentResponse>;
-  save(studentId: string, assignmentId: string, input: SaveStudentAnswers): Promise<StudentAttempt>;
+  read(studentId: string, assignmentId: string): Promise<SavedStudentAssignmentResponse>;
+  save(
+    studentId: string,
+    assignmentId: string,
+    input: SavedStudentAnswers,
+  ): Promise<SavedStudentAttempt>;
   check(
     studentId: string,
     assignmentId: string,
     input: CheckStudentAnswers,
   ): Promise<StudentCheckResponse>;
-  submit(studentId: string, assignmentId: string, revision: number): Promise<StudentAttempt>;
+  submit(studentId: string, assignmentId: string, revision: number): Promise<SavedStudentAttempt>;
   solution(
     studentId: string,
     assignmentId: string,
@@ -153,7 +161,7 @@ export async function createStudentWorkStore(
           student: studentId,
         });
         return {
-          assignment: assignmentExercises(assignment, assigned),
+          assignment: savedAssignmentExercises(assignment, assigned),
           attempt: attempt ? attemptResponse(attempt, assignment) : null,
         };
       });
@@ -167,13 +175,19 @@ export async function createStudentWorkStore(
           { populate: ['problemVersion'] },
         );
         if (!item) throw new StudentWorkError('not_found');
+        const definition = item.problemVersion.definition;
+        if (definition.type === 'derivation') {
+          if (assignment.assessmentMode !== 'ungraded_practice')
+            throw new StudentWorkError('unsupported_policy');
+          validateDerivationDefinition(definition);
+        }
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
-        const answers = validateItemResponse(
-          supportedProblemDefinition(item.problemVersion.definition),
-          input.answers,
-        );
+        const answers =
+          definition.type === 'derivation'
+            ? validateDerivationAnswer(input.answers)
+            : validateItemResponse(supportedProblemDefinition(definition), input.answers);
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
         await em.flush();
@@ -228,7 +242,7 @@ export async function createStudentWorkStore(
             id: item.id,
             definition: supportedProblemDefinition(item.problemVersion.definition),
           })),
-          attempt.answers,
+          assignmentResponsesSchema.parse(attempt.answers),
         );
         if (!validAssignmentScoring(assignment, assigned))
           throw new StudentWorkError('unsupported_policy');

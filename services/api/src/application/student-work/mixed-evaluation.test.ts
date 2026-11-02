@@ -26,7 +26,7 @@ type Equal<A, B> =
 type Assert<T extends true> = T;
 type GradeFormatMatches = Assert<Equal<StoredGrade, MixedGradedSubmissionResult>>;
 type CompletionFormatMatches = Assert<Equal<StoredCompletion, MixedCompletionSubmissionResult>>;
-type ResponseFormatMatches = Assert<Equal<StoredResponses, AssignmentResponses>>;
+type ObjectiveResponseSubset = Assert<AssignmentResponses extends StoredResponses ? true : false>;
 
 const tableId = 'a1111111-1111-4111-8111-111111111111';
 const truthId = 'a2222222-2222-4222-8222-222222222222';

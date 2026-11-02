@@ -25,6 +25,11 @@
       "types": "./dist/derivation-work.d.ts",
       "browser": "./dist/browser/derivation-work.js",
       "default": "./dist/derivation-work.js"
+    },
+    "./saved-student-work": {
+      "types": "./dist/saved-student-work.d.ts",
+      "browser": "./dist/browser/saved-student-work.js",
+      "default": "./dist/saved-student-work.js"
     }
   },
   "files": [

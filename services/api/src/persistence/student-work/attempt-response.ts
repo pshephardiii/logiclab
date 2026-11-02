@@ -3,11 +3,17 @@ import { assignmentScoreSchema } from '@logiclab/contracts';
 import type { Assignment, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import type { StudentAttempt } from '@logiclab/contracts';
+import {
+  savedStudentAttemptSchema,
+  type SavedStudentAttempt,
+} from '@logiclab/contracts/saved-student-work';
 import { canViewAssignmentResults } from '../../application/assignment/results-release';
 
 /** Student projection only: never serialize retained grades before their independent release. */
-export function attemptResponse(attempt: AttemptEntity, assignment: Assignment): StudentAttempt {
+export function attemptResponse(
+  attempt: AttemptEntity,
+  assignment: Assignment,
+): SavedStudentAttempt {
   const submitted = Boolean(attempt.submittedAt);
   if (submitted && assignment.assessmentMode === 'graded' && !attempt.score)
     throw new StudentWorkError('unsupported_policy');
@@ -20,7 +26,7 @@ export function attemptResponse(attempt: AttemptEntity, assignment: Assignment):
           gradesReleased: Boolean(assignment.gradesReleasedAt),
         })
       : canViewAssignmentResults({ assessmentMode: assignment.assessmentMode, submitted });
-  return {
+  return savedStudentAttemptSchema.parse({
     id: attempt.id,
     revision: attempt.revision,
     answers: attempt.answers,
@@ -30,5 +36,5 @@ export function attemptResponse(attempt: AttemptEntity, assignment: Assignment):
       ? { score: visible && attempt.score ? assignmentScoreSchema.parse(attempt.score) : null }
       : {}),
     gradePending: submitted && assignment.assessmentMode === 'graded' && !visible,
-  };
+  });
 }

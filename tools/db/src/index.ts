@@ -112,3 +112,6 @@ export type { DemoSessionFields } from './types/demo-session/fields.ts';
 export { seedDemoBillingPlan } from './seeds/billing-plan.ts';
 
 export type { AssignmentItemScore, AssignmentScore } from './types/assignment-attempt/scoring.ts';
+
+export type { FitchProof, FitchProofStep } from './types/proof/work.ts';
+export type { DerivationAnswer } from './types/assignment-attempt/derivation-work.ts';

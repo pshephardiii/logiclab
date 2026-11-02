@@ -1,4 +1,4 @@
-import { assignmentScoreSchema } from '@logiclab/contracts';
+import { assignmentScoreSchema, assignmentResponsesSchema } from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
 import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
@@ -86,7 +86,7 @@ export async function createSubmissionReviewStore(
         attempt: {
           id: attempt.id,
           revision: attempt.revision,
-          answers: attempt.answers,
+          answers: assignmentResponsesSchema.parse(attempt.answers),
           submittedAt: attempt.submittedAt?.toISOString() ?? null,
           result: attempt.result ?? null,
           ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
