@@ -1,3 +1,5 @@
+import { FinalSubmissionPanel } from './FinalSubmissionPanel';
+import { AssignedProblemNavigation } from './AssignedProblemNavigation';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
@@ -139,45 +141,14 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       )}
       {item && (
         <>
-          <section className="panel">
-            {work.assignment.assessmentMode === 'graded' && item.maxPoints != null && (
-              <p>This problem: {item.maxPoints} points.</p>
-            )}
-            <label htmlFor="assigned-item">Problem</label>
-            <select
-              className="assignment-choice"
-              id="assigned-item"
-              value={item.id}
-              disabled={busy}
-              onChange={(event) =>
-                changeItem(
-                  work.assignment!.items.findIndex((value) => value.id === event.target.value),
-                )
-              }
-            >
-              {work.assignment.items.map((value, index) => (
-                <option key={value.id} value={value.id}>
-                  {index + 1}. {value.title}
-                </option>
-              ))}
-            </select>
-            <div className="action-row">
-              <button
-                className="secondary"
-                disabled={busy || position === 0}
-                onClick={() => changeItem(position - 1)}
-              >
-                Previous problem
-              </button>
-              <button
-                className="secondary"
-                disabled={busy || position >= work.assignment.items.length - 1}
-                onClick={() => changeItem(position + 1)}
-              >
-                Next problem
-              </button>
-            </div>
-          </section>
+          <AssignedProblemNavigation
+            items={work.assignment.items}
+            selectedId={item.id}
+            position={position}
+            busy={busy}
+            maxPoints={work.assignment.assessmentMode === 'graded' ? item.maxPoints : undefined}
+            onSelect={changeItem}
+          />
           {'exercise' in item ? (
             <AssignedItemTable
               item={item}
@@ -278,26 +249,14 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         </>
       )}
       {!submitted && work.hasFinalSubmission && (
-        <section className="panel">
-          <h2>Final submission</h2>
-          <p>
-            {work.requiresCompleteAnswers
-              ? 'Fill every answer cell, answer every question and finish each proof with formulas, rules, citations, closed subproofs and the requested final root conclusion. Save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
-              : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
-          </p>
-          <label className="final-confirmation">
-            <input
-              type="checkbox"
-              checked={confirmed}
-              disabled={submissionBlocked}
-              onChange={(event) => setConfirmed(event.target.checked)}
-            />{' '}
-            I understand submission is final and cannot be edited.
-          </label>
-          <button disabled={submissionBlocked || !confirmed} onClick={() => void work.submit()}>
-            {work.action === 'submit' ? 'Submitting…' : 'Submit final answers'}
-          </button>
-        </section>
+        <FinalSubmissionPanel
+          requiresCompleteAnswers={work.requiresCompleteAnswers}
+          confirmed={confirmed}
+          blocked={submissionBlocked}
+          submitting={work.action === 'submit'}
+          onConfirmChange={setConfirmed}
+          onSubmit={() => void work.submit()}
+        />
       )}
     </>
   );

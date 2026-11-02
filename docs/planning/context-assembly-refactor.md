@@ -55,6 +55,20 @@ Existing coverage already includes save/check failures, cancellation, incomplete
 
 ## Next slices
 
-1. Review and implement the inexpensive presentation extractions above where the final dependencies remain straightforward; keep state/request semantics unchanged.
+1. Frontend presentation extractions are implemented as recorded below. The user narrowed this pass to frontend production files; leave test files unchanged unless an extraction requires an adjustment.
 2. Complete the test-gap pass, add focused cases for confirmed holes and fix reproduced defects separately from speculative concerns.
 3. Consolidate final branch documentation/verification and prepare the local PR draft. The next feature remains `024-feat-derivation-grading-review`; graded proof admission remains guarded until that workflow is ready.
+
+## Slice 2: five frontend presentation extractions
+
+Extracted the five user-approved components without moving parent state or request lifecycles:
+
+- `FitchProofBlockControls`: block parent/endpoint/delete controls, with eligible choices supplied by `FitchProofEditor`. The editor retains full-proof updates and deletion confirmation.
+- `DerivationRuleFields`: permitted-rule toggles, effective labels and suggestions. `DerivationProblemFields` retains the full definition and disabled-rule label drafts.
+- `AssignmentPublicationControls`: publication/archive information and duplicate/publish/archive/restore/reload controls. `ClassAssignments` retains requests and unsaved-work confirmation.
+- `FinalSubmissionPanel`: instructions, controlled confirmation checkbox and submission button. `AssignedAttempt` retains confirmation state and eligibility/request handling.
+- `AssignedProblemNavigation`: problem selection, previous/next controls and current allocation display. `AssignedAttempt` retains position, check cancellation and confirmation resets.
+
+Existing labels, markup structure, disabled conditions and callbacks are preserved. No hook/request logic, backend behavior, schema or styles changed. No test files were added or modified.
+
+Verification on November 2, 2026: frontend type checking, all 304 existing web tests and the production web build passed. Formatting and whitespace checks passed. The existing component suites exercise the extracted controls through their parents, including authoring labels, subproof editing/deletion, lifecycle controls, navigation and completion confirmation. PostgreSQL/backend checks and a real-browser walkthrough were not repeated for this frontend-only extraction. Logs: `/private/tmp/frontend-extraction-types.log`, `frontend-extraction-tests.log` and `frontend-extraction-build.log`. The next requested pass is the focused test-gap review; new coverage is not part of this extraction slice.

@@ -1,3 +1,4 @@
+import { FitchProofBlockControls } from './FitchProofBlockControls';
 import { useState } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
@@ -184,51 +185,23 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
               onDelete={() => setDeletion({ kind: 'line', index })}
             />
           ))}
-          {proof.blocks.map((block) => (
-            <section
+          {proof.blocks.map((block, index) => (
+            <FitchProofBlockControls
               key={block.id}
-              className="problem-option"
-              aria-label={blockChoices.find((value) => value.id === block.id)!.label}
-            >
-              <h4>{blockChoices.find((value) => value.id === block.id)!.label}</h4>
-              <ProofChoice
-                label={`Parent of ${blockChoices.find((value) => value.id === block.id)!.label}`}
-                value={block.parentId}
-                empty="Root proof"
-                choices={blockChoices.filter(
-                  (value) => !proofSubtree(proof, block.id).has(value.id),
-                )}
-                onChange={(parentId) =>
-                  change({
-                    ...proof,
-                    blocks: proof.blocks.map((value) =>
-                      value.id === block.id ? { ...value, parentId } : value,
-                    ),
-                  })
-                }
-              />
-              <ProofChoice
-                label={`Final line of ${blockChoices.find((value) => value.id === block.id)!.label}`}
-                value={block.endId}
-                empty="Open / unfinished"
-                choices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
-                onChange={(endId) =>
-                  change({
-                    ...proof,
-                    blocks: proof.blocks.map((value) =>
-                      value.id === block.id ? { ...value, endId } : value,
-                    ),
-                  })
-                }
-              />
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setDeletion({ kind: 'block', id: block.id })}
-              >
-                Delete {blockChoices.find((value) => value.id === block.id)!.label}
-              </button>
-            </section>
+              block={block}
+              label={blockChoices[index]!.label}
+              parentChoices={blockChoices.filter(
+                (value) => !proofSubtree(proof, block.id).has(value.id),
+              )}
+              finalLineChoices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
+              onChange={(next) =>
+                change({
+                  ...proof,
+                  blocks: proof.blocks.map((value) => (value.id === block.id ? next : value)),
+                })
+              }
+              onDelete={() => setDeletion({ kind: 'block', id: block.id })}
+            />
           ))}
         </>
       )}
