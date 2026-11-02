@@ -20,6 +20,11 @@
       "types": "./dist/problem-library.d.ts",
       "browser": "./dist/browser/problem-library.js",
       "default": "./dist/problem-library.js"
+    },
+    "./derivation-work": {
+      "types": "./dist/derivation-work.d.ts",
+      "browser": "./dist/browser/derivation-work.js",
+      "default": "./dist/derivation-work.js"
     }
   },
   "files": [

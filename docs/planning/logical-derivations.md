@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring 019, proof-checker 020 and private authoring 021 are complete. Next is the guarded 022–023 student/review milestone. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for confirmed catalog variants and [authoring verification](../verification/derivation-authoring-verification.md) for delivered behavior and limits. This document does not start a future branch.
+Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring 019, proof-checker 020 and private authoring 021 are complete. The guarded 022–023 student/review milestone has started with staged student-proof contracts and pure validation/evaluation; live proof work remains unavailable. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for confirmed catalog variants and [authoring verification](../verification/derivation-authoring-verification.md) for delivered behavior and limits. This document does not start a future branch.
 
 ## Product direction and scope
 
@@ -182,6 +182,8 @@ This is one of the larger branches. Keep its slices separated rather than delive
 Additional formats become authorable only when their own reference validation and complete workflows are implemented. If editor complexity exceeds a reviewable branch, split it explicitly with new numbering; do not enable publication with an incomplete validator.
 
 ### 022: student work and finalization
+
+Implementation has started with [staged proof responses and checker evidence](derivation-student-work.md). The first small delivery defines strict save/check requests, retains bounded incomplete work, checks against trusted redacted statements and binds fresh reports to occurrence/version IDs. Persistence/revision wiring follows; live assignment/student admission remains guarded.
 
 This is also a larger branch; preserve the boundary between the checker and request/state coordination:
 

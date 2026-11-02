@@ -24,6 +24,7 @@ Documentation is grouped by purpose:
 - [Assignment scoring](planning/assignment-scoring.md)
 - [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
 - [Derivation authoring](planning/derivation-authoring.md)
+- [Derivation student-work foundation](planning/derivation-student-work.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
