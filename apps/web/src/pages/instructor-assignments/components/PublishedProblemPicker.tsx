@@ -25,8 +25,8 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
       </p>
       <p className="help">
         {allowDerivations
-          ? 'Published Fitch proofs are available here. Proofs use explicit Check proof, even when other questions use immediate feedback.'
-          : 'Choose Ungraded practice to assign published Fitch proofs. Graded and completion-only proofs are not available yet.'}
+          ? 'Published Fitch proofs are available for practice and completion-only work. Practice checks are explicit; completion proof diagnostics appear after submission.'
+          : 'Choose Ungraded practice or Completion only with feedback at submission to assign Fitch proofs. Graded proofs are not available yet.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
       <select

@@ -185,3 +185,52 @@ test('assignment changes abort pending saves and cannot mark a new draft saved f
   expect(result.current.proofAnswers).toEqual({});
   expect(result.current.dirty).toEqual([]);
 });
+
+test('completion readiness uses filled work rather than correctness, requires each occurrence and retains explicit saves', async () => {
+  const { proofCompletionWork } = await import('../../../../test/proof-work-fixture');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: proofCompletionWork,
+    attempt: proofSaved,
+  });
+  const { result } = await open();
+  expect(result.current.completionReady).toBe(false);
+  const shortcut = structuredClone(proofAnswer);
+  shortcut.proof.steps = [
+    {
+      kind: 'inference',
+      id: proofAnswer.proof.steps[0]!.id,
+      blockId: null,
+      formula: 'P',
+      ruleId: 'reiteration',
+      lineReferences: [proofAnswer.proof.steps[0]!.id],
+      subproofReferences: [],
+    },
+  ];
+  act(() => result.current.changeProofAnswer(itemB, shortcut));
+  expect(result.current.completionReady).toBe(true);
+  expect(result.current.dirty).toEqual([itemB]);
+  await act(async () => vi.advanceTimersByTimeAsync(2 * IMMEDIATE_CHECK_DELAY_MS));
+  await act(async () => result.current.check(itemB));
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  vi.mocked(api.saveAssignedAnswers).mockResolvedValue({
+    ...proofSaved,
+    revision: 2,
+    answers: { [itemA]: proofAnswer, [itemB]: shortcut },
+  });
+  await act(async () => result.current.save(itemB));
+  expect(result.current.completionReady).toBe(true);
+  expect(result.current.dirty).toEqual([]);
+  for (const formula of ['', 'Q', 'P &']) {
+    const unfinished = structuredClone(shortcut);
+    unfinished.proof.steps[0]!.formula = formula;
+    act(() => result.current.changeProofAnswer(itemB, unfinished));
+    expect(result.current.completionReady).toBe(false);
+  }
+  const missingCitation = structuredClone(shortcut);
+  const line = missingCitation.proof.steps[0]!;
+  if (line.kind !== 'inference') throw new Error('Expected inference');
+  line.lineReferences = [];
+  act(() => result.current.changeProofAnswer(itemB, missingCitation));
+  expect(result.current.completionReady).toBe(false);
+});

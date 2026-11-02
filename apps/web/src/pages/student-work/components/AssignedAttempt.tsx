@@ -87,8 +87,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           (value) => 'content' in value && value.content.type === 'derivation',
         ) && (
           <p>
-            Proofs are checked only when you choose Check proof. Editing never checks a proof
-            automatically.
+            {work.assignment.assessmentMode === 'ungraded_practice'
+              ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
+              : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
           </p>
         )}
         {!work.hasFinalSubmission && (
@@ -217,7 +218,11 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeProofAnswer(item.id, answer);
               }}
               onCheck={
-                !submitted && work.allowsExplicitCheck ? () => void work.check(item.id) : undefined
+                !submitted &&
+                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.allowsExplicitCheck
+                  ? () => void work.check(item.id)
+                  : undefined
               }
             />
           ) : (
@@ -277,7 +282,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <h2>Final submission</h2>
           <p>
             {work.requiresCompleteAnswers
-              ? 'Fill every answer cell and select an answer for every question, then save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
+              ? 'Fill every answer cell, answer every question and finish each proof with formulas, rules, citations, closed subproofs and the requested final root conclusion. Save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
               : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
           </p>
           <label className="final-confirmation">

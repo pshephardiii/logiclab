@@ -42,7 +42,10 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
   const containsProof = items.some((item) => item.version.definition.type === 'derivation');
-  const invalidProofMode = containsProof && policy.assessmentMode !== 'ungraded_practice';
+  const allowsProofs =
+    policy.assessmentMode === 'ungraded_practice' ||
+    (policy.assessmentMode === 'completion_only' && policy.feedbackTiming === 'on_submission');
+  const invalidProofMode = containsProof && !allowsProofs;
   const graded = policy.assessmentMode === 'graded';
   const { itemsChanged, invalidPoints, pointsChanged, totalPoints } = assignmentItemState(
     items,
@@ -63,8 +66,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   }, [dirty, onDirty]);
 
   function add(version: LibraryProblemVersion) {
-    if (version.definition.type === 'derivation' && policy.assessmentMode !== 'ungraded_practice')
-      return;
+    if (version.definition.type === 'derivation' && !allowsProofs) return;
     setItems((previous) =>
       previous.length >= 50 ? previous : [...previous, { key: crypto.randomUUID(), version }],
     );
@@ -130,15 +132,15 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
           />
           <AssignmentPolicyFields
             policy={policy}
-            practiceOnly={containsProof}
+            containsProof={containsProof}
             onChange={setPolicy}
             gradeReleaseTiming={gradeReleaseTiming}
             onGradeReleaseChange={setGradeReleaseTiming}
           />
           {containsProof && (
             <p className="help">
-              Remove all derivations before choosing graded or completion-only mode. Practice proofs
-              have no official score or final submission.
+              Remove all derivations before choosing graded mode. Practice proofs have no official
+              score or final submission.
             </p>
           )}
           <AssignmentItems
@@ -161,7 +163,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
           {!readOnly && (
             <PublishedProblemPicker
               disabled={busy || items.length >= 50}
-              allowDerivations={policy.assessmentMode === 'ungraded_practice'}
+              allowDerivations={allowsProofs}
               onAdd={add}
             />
           )}

@@ -16,7 +16,7 @@ const failures = {
     status: 409,
     code: 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE',
     message:
-      'Derivations are currently available only in ungraded practice assignments. Remove them before changing assessment mode.',
+      'Derivations require ungraded practice or completion-only work with feedback at submission. Remove them before choosing graded work or pre-submission completion feedback.',
   },
   invalid_scoring: {
     status: 400,

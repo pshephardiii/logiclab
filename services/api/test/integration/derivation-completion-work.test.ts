@@ -1,3 +1,5 @@
+import { createAssignmentStore } from '../../src/persistence/assignment/store';
+import { submissionReviewSchema, submissionListResponseSchema } from '@logiclab/contracts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -127,23 +129,46 @@ async function seed(
     if (value.status !== 'published') throw new Error('Expected publication');
     return em.getReference(db.ProblemVersion, value.version.id);
   });
-  // Completion proof admission remains guarded; only internal fixtures exercise the staged path.
-  const assignment = em.create(db.Assignment, {
-    classroom,
+  if (!useDemo) {
+    em.persist(
+      em.create(db.ClassEntitlement, {
+        classroom,
+        provider: db.BillingProvider.Simulator,
+        source: db.EntitlementSource.ClassPurchase,
+        sourceReference: randomUUID(),
+        startsAt: new Date(Date.now() - 60000),
+        endsAt: new Date(Date.now() + 86400000),
+      }),
+    );
+    await em.flush();
+  }
+  const assignments = await createAssignmentStore(orm);
+  const draft = await assignments.create(owner.id, classroom.id, {
     title: 'Mixed proof completion',
-    assessmentMode: db.AssessmentMode.CompletionOnly,
-    feedbackTiming: db.FeedbackTiming.OnSubmission,
-    solutionAccess: db.SolutionAccess.AfterSubmission,
+    assessmentMode: 'completion_only',
+    feedbackTiming: 'on_submission',
+    solutionAccess: 'after_submission',
+    problemVersionIds: [versions[0]!.id, versions[0]!.id, versions[1]!.id, versions[2]!.id],
   });
-  const items = [versions[0]!, versions[0]!, versions[1]!, versions[2]!].map((version, index) =>
-    em.create(db.AssignmentItem, { assignment, problemVersion: version, position: index + 1 }),
+  await assignments.publish(owner.id, draft.id);
+  const assignment = await em.findOneOrFail(db.Assignment, draft.id);
+  const items = await em.find(
+    db.AssignmentItem,
+    { assignment: assignment.id },
+    { orderBy: { position: 'ASC' } },
   );
-  em.persist([assignment, ...items]);
-  await em.flush();
-  assignment.publishedAt = new Date();
-  await em.flush();
   const store = await createStudentWorkStore(orm);
   const app = buildApp({
+    assignment: {
+      config: { APP_ORIGIN: origin, secureCookies: false },
+      service: {
+        authenticate: async (id) => ({
+          id: id === 'c'.repeat(43) ? owner.id : outsider.id,
+          role: id === 'a'.repeat(43) ? ('student' as const) : ('instructor' as const),
+        }),
+      },
+      assignments,
+    },
     studentWork: {
       config: { APP_ORIGIN: origin, secureCookies: false },
       service: {
@@ -228,6 +253,7 @@ async function seed(
     cookie,
     otherCookie,
     app,
+    assignments,
     request,
     responses,
     saveAll,
@@ -563,3 +589,61 @@ test('demo completion finalization joins the workspace transaction and rolls bac
     assert.equal(final.result?.gradingVersion, 'proof_completion_v1');
     assert.equal(final.score, undefined);
   }, true));
+
+for (const demo of [false, true])
+  test(`${demo ? 'demo' : 'normal'} owner completion review exposes only frozen finals and independent verification`, async () =>
+    fixture(async (f) => {
+      const ownerCookie = demo
+        ? `logiclab_demo=${(await f.runtime.sessions.issue(f.owner.demoWorkspace!.id, 'instructor')).sessionId}`
+        : `logiclab_session=${'c'.repeat(43)}`;
+      const root = `/api/${demo ? 'demo/resources/' : ''}assignments/${f.assignment.id}`;
+      let address = 100;
+      const review = (suffix = '', cookie = ownerCookie) =>
+        f.app.inject({
+          method: 'GET',
+          url: root + '/submissions' + suffix,
+          headers: { origin, cookie },
+          remoteAddress: `127.0.0.${address++}`,
+        });
+      const list = await review();
+      assert.equal(list.statusCode, 200, list.body);
+      assert.equal(list.json().submissions.length, 0);
+      const revision = await f.saveAll();
+      assert.equal((await review()).json().submissions.length, 0);
+      const final = await f.store.submit(f.student.id, f.assignment.id, revision);
+      const listed = await review();
+      assert.equal(listed.statusCode, 200, listed.body);
+      const summaries = submissionListResponseSchema.parse(listed.json()).submissions;
+      assert.equal(summaries.length, 1);
+      assert.deepEqual(summaries[0]!.summary, final.result!.summary);
+      assert(!('score' in summaries[0]!));
+      const detail = await review(`/${final.id}`);
+      assert.equal(detail.statusCode, 200, detail.body);
+      const body = submissionReviewSchema.parse(detail.json());
+      assert.deepEqual(body.attempt.result, final.result);
+      assert.deepEqual(body.attempt.answers, final.answers);
+      assert(!detail.body.includes('referenceProof'));
+      assert(!detail.body.includes('explanation'));
+      assert(!detail.body.includes('PRIVATE_OBJECTIVE_KEY'));
+      assert(!detail.body.includes('earnedPoints'));
+      assert.equal(body.attempt.gradePending, false);
+      assert.equal((await review('', f.cookie)).statusCode, 403);
+      assert.equal((await review(`/${final.id}`, f.otherCookie)).statusCode, demo ? 403 : 404);
+      // A different instructor in another workspace cannot read the retained proof either.
+      if (demo) {
+        const visitor = await f.runtime.workspaces.provision();
+        const foreign = await f.runtime.sessions.issue(visitor.workspaceId, 'instructor');
+        assert.equal(
+          (await review(`/${final.id}`, `logiclab_demo=${foreign.sessionId}`)).statusCode,
+          404,
+        );
+      }
+      await f.problems.update(f.owner.id, f.proof.id, {
+        definition: {
+          ...derivationDefinitionFixture(),
+          referenceProof: null,
+          explanation: 'CHANGED_PRIVATE_REFERENCE',
+        },
+      });
+      assert.deepEqual((await review(`/${final.id}`)).json(), detail.json());
+    }, demo));

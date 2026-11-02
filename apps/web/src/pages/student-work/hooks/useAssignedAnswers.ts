@@ -1,3 +1,4 @@
+import { isFinishedProofAttempt } from '@logiclab/logic-engine/proof/completion';
 import { useCallback, useMemo, useState } from 'react';
 import type { ConceptualAnswer } from '@logiclab/contracts';
 import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
@@ -51,11 +52,19 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
                 (answer) => answer.value !== null,
               )
             : item.content.type === 'derivation'
-              ? false
+              ? isFinishedProofAttempt({
+                  problem: {
+                    ruleCatalogVersion: item.content.ruleCatalogVersion,
+                    premises: item.content.premises,
+                    conclusion: item.content.conclusion,
+                    permittedRuleIds: item.content.rules.map((rule) => rule.id),
+                  },
+                  proof: proofAnswers[item.id]?.proof,
+                })
               : conceptualAnswerFilled(choiceAnswers[item.id]),
         ),
       ),
-    [assignment, answers, choiceAnswers],
+    [assignment, answers, choiceAnswers, proofAnswers],
   );
 
   const resetAnswers = useCallback((source: StudentAssignment, attempt: StudentAttempt | null) => {

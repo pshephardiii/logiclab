@@ -61,8 +61,10 @@ export const assignmentSchema = assignmentSummarySchema
   .refine(
     (assignment) =>
       assignment.assessmentMode === 'ungraded_practice' ||
+      (assignment.assessmentMode === 'completion_only' &&
+        assignment.feedbackTiming === 'on_submission') ||
       !assignment.items.some((item) => item.problemVersion.definition.type === 'derivation'),
-    'Derivations are available only in ungraded practice assignments.',
+    'Derivations require ungraded practice or completion-only work with feedback at submission.',
   );
 export type AssignmentDetail = z.infer<typeof assignmentSchema>;
 

@@ -158,7 +158,7 @@ test('practice admission pins repeated proof versions, keeps student content pri
 test('proof mode guards validate the complete merged draft and roll back rejected creates and policy edits', async () =>
   fixture(async (f) => {
     const { assignments, owner, classroom, orm, db } = f;
-    for (const assessmentMode of ['graded', 'completion_only'] as const) {
+    for (const assessmentMode of ['graded'] as const) {
       await assert.rejects(
         assignments.create(owner.id, classroom.id, {
           ...f.practice,
@@ -170,7 +170,7 @@ test('proof mode guards validate the complete merged draft and roll back rejecte
     }
     assert.equal(await orm.em.fork().count(db.Assignment, {}), 0);
     const draft = await assignments.create(owner.id, classroom.id, f.practice);
-    for (const assessmentMode of ['graded', 'completion_only'] as const) {
+    for (const assessmentMode of ['graded'] as const) {
       await assert.rejects(
         assignments.update(owner.id, draft.id, {
           assessmentMode,
@@ -180,6 +180,19 @@ test('proof mode guards validate the complete merged draft and roll back rejecte
         failure('proof_mode_unavailable'),
       );
       assert.deepEqual(await assignments.findOwned(owner.id, draft.id), draft);
+    }
+    const completion = await assignments.update(owner.id, draft.id, {
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+    });
+    assert.equal(completion.assessmentMode, 'completion_only');
+    assert(assignmentSchema.safeParse(completion).success);
+    for (const feedbackTiming of ['on_check', 'immediate'] as const) {
+      await assert.rejects(
+        assignments.update(owner.id, draft.id, { feedbackTiming }),
+        failure('proof_mode_unavailable'),
+      );
+      assert.deepEqual(await assignments.findOwned(owner.id, draft.id), completion);
     }
     // Removing proofs and changing mode in one PATCH is allowed; an intermediate old item set must not block it.
     const graded = await assignments.update(owner.id, draft.id, {

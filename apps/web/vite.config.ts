@@ -12,6 +12,7 @@ export default defineConfig({
       '@logiclab/logic-engine',
       '@logiclab/logic-engine/proof',
       '@logiclab/logic-engine/proof/rules',
+      '@logiclab/logic-engine/proof/completion',
     ],
   },
   server: { port: 5173, proxy: { '/api': 'http://localhost:3000' } },

@@ -94,8 +94,8 @@ test.each(['accepted', 'needs_review', 'unassessable'] as const)(
     expect(JSON.stringify(f.attempt)).toBe(snapshot);
     expect(savedStudentAttemptSchema.safeParse(student).success).toBe(true);
     expect(studentAttemptSchema.safeParse(student).success).toBe(false);
-    // Existing live instructor contracts remain narrow until route/UI integration is complete.
-    expect(submissionSummarySchema.safeParse(instructor.submission).success).toBe(false);
+    // Owner list summaries expose completion verification without a point score.
+    expect(submissionSummarySchema.safeParse(instructor.submission).success).toBe(true);
   },
 );
 test.each(['premature', 'graded', 'practice', 'score'] as const)(

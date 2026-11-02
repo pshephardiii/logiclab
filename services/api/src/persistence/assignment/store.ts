@@ -112,7 +112,7 @@ export async function createAssignmentStore(
     em: Manager,
     ownerId: string,
     ids: string[],
-    assessmentMode: string,
+    policy: Pick<AssignmentEntity, 'assessmentMode' | 'feedbackTiming'>,
   ) {
     const uniqueIds = [...new Set(ids)];
     const versions = await em.find(ProblemVersion, {
@@ -121,9 +121,7 @@ export async function createAssignmentStore(
     });
     if (versions.length !== uniqueIds.length)
       throw new AssignmentOperationError('version_not_found');
-    versions.forEach((version) =>
-      supportedAssignmentDefinition(version.definition, assessmentMode),
-    );
+    versions.forEach((version) => supportedAssignmentDefinition(version.definition, policy));
     return new Map(versions.map((version) => [version.id, version]));
   }
   async function detail(em: Manager, assignment: AssignmentEntity): Promise<AssignmentDetail> {
@@ -133,7 +131,7 @@ export async function createAssignmentStore(
       { orderBy: { position: 'ASC' }, populate: ['problemVersion.problem'] },
     );
     items.forEach((item) =>
-      supportedAssignmentDefinition(item.problemVersion.definition, assignment.assessmentMode),
+      supportedAssignmentDefinition(item.problemVersion.definition, assignment),
     );
     return {
       ...assignmentSummary(assignment),
@@ -152,7 +150,7 @@ export async function createAssignmentStore(
     ids: string[],
     points?: number[],
   ) {
-    const versions = await ownedVersions(em, ownerId, ids, assignment.assessmentMode);
+    const versions = await ownedVersions(em, ownerId, ids, assignment);
     // Validate all references before replacement; the transaction rolls back the entire draft on failure.
     await em.nativeDelete(AssignmentItem, { assignment: assignment.id });
     ids.forEach((id, index) =>
@@ -222,7 +220,7 @@ export async function createAssignmentStore(
       em,
       ownerId,
       items.map((item) => item.problemVersion.id),
-      assignment.assessmentMode,
+      assignment,
     );
     if (input.pointAllocations !== undefined) {
       const parsed = assignmentPointAllocationsSchema.safeParse(input.pointAllocations);
@@ -416,7 +414,7 @@ export async function createAssignmentStore(
             em,
             ownerId,
             items.map((item) => item.problemVersion.id),
-            assignment.assessmentMode,
+            assignment,
           );
           if (
             !(await hasClassCapability(

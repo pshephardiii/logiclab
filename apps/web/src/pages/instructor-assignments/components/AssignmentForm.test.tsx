@@ -199,7 +199,7 @@ test('score-free modes hide allocations and restoring graded mode retains the dr
   expect(screen.getByLabelText('Points for problem 1')).toHaveValue(20);
 });
 
-test('proof-containing practice drafts retain failed saves and lock other modes until the proof is removed', async () => {
+test('proof-containing practice drafts retain failed saves and permit completion while locking graded mode until the proof is removed', async () => {
   const { derivationDefinition } = await import('../../../../test/derivation');
   const user = userEvent.setup();
   const onSave = vi.fn().mockResolvedValue(false);
@@ -224,7 +224,18 @@ test('proof-containing practice drafts retain failed saves and lock other modes 
     />,
   );
   expect(screen.getByRole('option', { name: 'Graded' })).toBeDisabled();
-  expect(screen.getByRole('option', { name: 'Completion only' })).toBeDisabled();
+  expect(screen.getByRole('option', { name: 'Completion only' })).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'completion_only');
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      problemVersionIds: [version.id],
+    }),
+    false,
+  );
+  await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
   expect(screen.getByText('Prove: P -> P')).toBeInTheDocument();
   expect(screen.queryByText('Private instructor explanation')).not.toBeInTheDocument();
   await user.type(screen.getByLabelText('Assignment title'), ' revised');

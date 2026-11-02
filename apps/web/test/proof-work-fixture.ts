@@ -116,3 +116,47 @@ export const proofFinal: SavedStudentAttempt = {
     summary: { maxPoints: 35, earnedPoints: null, percentage: null, status: 'needs_review' },
   },
 };
+
+export const proofCompletionWork: SavedStudentAssignment = {
+  ...proofWork,
+  assessmentMode: 'completion_only',
+  feedbackTiming: 'on_submission',
+  solutionAccess: 'instructor_release',
+  items: proofWork.items.slice(0, 2),
+};
+export const proofCompletionFinal: SavedStudentAttempt = {
+  ...proofSaved,
+  submittedAt: proofFinal.submittedAt,
+  gradePending: false,
+  answers: { [itemA]: proofAnswer, [itemB]: proofAnswer },
+  result: {
+    gradingVersion: 'proof_completion_v1',
+    items: [itemA, itemB].map((itemId, index) => ({
+      type: 'derivation',
+      evaluationVersion: 'derivation_v1',
+      itemId,
+      problemVersionId: itemA,
+      completedResponses: 1,
+      totalResponses: 1,
+      report:
+        index === 0
+          ? proofReport
+          : {
+              ...proofReport,
+              status: 'needs_review',
+              target: 'not_established',
+              steps: [
+                { stepId, stepIndex: 0, localStatus: 'invalid', dependencyStatus: 'invalid' },
+              ],
+              diagnostics: [
+                { code: 'RULE_MISMATCH', stepId, message: 'Premise does not match the statement.' },
+              ],
+            },
+    })),
+    summary: {
+      completedResponses: 2,
+      totalResponses: 2,
+      proofVerification: { verified: 1, errorsFound: 1, unavailable: 0, total: 2 },
+    },
+  },
+};

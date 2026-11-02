@@ -4,17 +4,22 @@ import type { Assignment, AssignmentAttempt } from '@logiclab/db' with {
 import { retainedProofCompletion } from '../student-work/proof-completion-response';
 import { savedStudentResponsesSchema } from '@logiclab/contracts/saved-student-work';
 
-/** Staged owner projection. Caller must authorize the assignment owner and load the related student. */
+/** Owner projection. Caller must authorize the assignment owner and load the related student. */
+export function proofCompletionReviewSummary(attempt: AssignmentAttempt, assignment: Assignment) {
+  const result = retainedProofCompletion(attempt, assignment);
+  return {
+    id: attempt.id,
+    student: { id: attempt.student.id, email: attempt.student.email ?? null },
+    submittedAt: attempt.submittedAt!.toISOString(),
+    summary: result.summary,
+  };
+}
+
 export function proofCompletionReviewResponse(attempt: AssignmentAttempt, assignment: Assignment) {
   const result = retainedProofCompletion(attempt, assignment);
   const submittedAt = attempt.submittedAt!.toISOString();
   return {
-    submission: {
-      id: attempt.id,
-      student: { id: attempt.student.id, email: attempt.student.email ?? null },
-      submittedAt,
-      summary: result.summary,
-    },
+    submission: proofCompletionReviewSummary(attempt, assignment),
     attempt: {
       id: attempt.id,
       revision: attempt.revision,
