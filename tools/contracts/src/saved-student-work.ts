@@ -1,13 +1,21 @@
 import { z } from 'zod';
 import { assignmentSummarySchema } from './assignment';
 import { assignmentResponseValueSchema } from './assignment-responses';
-import { derivationAnswerSchema, saveDerivationAnswersSchema } from './derivation-work';
-import { derivationContentSchema } from './derivation';
+import {
+  derivationAnswerSchema,
+  saveDerivationAnswersSchema,
+  checkDerivationAnswersSchema,
+  derivationCheckFeedbackSchema,
+} from './derivation-work';
+import { derivationContentSchema, derivationSolutionSchema } from './derivation';
 import {
   studentAttemptSchema,
   studentAssignmentItemSchema,
   studentAssignmentItemFields,
   saveStudentAnswersSchema,
+  checkStudentAnswersSchema,
+  studentCheckResponseSchema,
+  studentSolutionResponseSchema,
 } from './student-work';
 
 /** Staged persistence projections. Active HTTP contracts remain narrower until consumers are ready. */
@@ -44,3 +52,17 @@ export const savedStudentAnswersSchema = z.union([
   saveDerivationAnswersSchema,
 ]);
 export type SavedStudentAnswers = z.infer<typeof savedStudentAnswersSchema>;
+
+export const savedStudentCheckSchema = z.union([
+  checkStudentAnswersSchema,
+  checkDerivationAnswersSchema,
+]);
+export type SavedStudentCheck = z.infer<typeof savedStudentCheckSchema>;
+export const savedStudentCheckResponseSchema = studentCheckResponseSchema.extend({
+  feedback: z.union([studentCheckResponseSchema.shape.feedback, derivationCheckFeedbackSchema]),
+});
+export type SavedStudentCheckResponse = z.infer<typeof savedStudentCheckResponseSchema>;
+export const savedStudentSolutionResponseSchema = studentSolutionResponseSchema.extend({
+  solution: z.union([studentSolutionResponseSchema.shape.solution, derivationSolutionSchema]),
+});
+export type SavedStudentSolutionResponse = z.infer<typeof savedStudentSolutionResponseSchema>;

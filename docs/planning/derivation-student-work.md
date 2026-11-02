@@ -1,6 +1,6 @@
 # Derivation student work
 
-Status: two slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation plus practice-only draft persistence and redacted projections. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
+Status: three slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation, practice-only draft persistence/redaction and transient proof checking with independently authorized reference access. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
 ## Student work versus private authored content
 
@@ -9,6 +9,7 @@ The separate `@logiclab/contracts/derivation-work` entry contains:
 - `DerivationAnswer`: `{ type: "derivation", proof }`, using the existing bounded, versioned Fitch serialization. Empty steps/blocks are an explicit empty response; no answer is distinct from a response with an empty proof. Missing references, unfinished blocks, bad formulas and logically incorrect steps remain saveable within transport limits.
 - `SaveDerivationAnswers`: `{ revision, itemId, answers }`, using the existing nonnegative revision bounds. The request cannot choose a problem version, owner, workspace, permitted rule set or replacement statement.
 - `CheckDerivationAnswers`: `{ itemId, answers }`, for future transient explicit checking, with no save/revision mutation implied.
+- `DerivationCheckFeedback`: `{ type: "derivation", report }`, containing student-specific diagnostics without the private reference/explanation.
 - `DerivationEvaluationEvidence`: `{ evaluationVersion: "derivation_v1", type: "derivation", itemId, problemVersionId, report }`. Server-supplied occurrence/version provenance and the full versioned checker report are retained separately from the student's proof and awarded grading. This is an evidence component, not a new live submission-result format.
 
 All shapes are strict. Student answers cannot inject a report, acceptance flag, reference proof, explanation or score. Shape validation is not proof acceptance, authorization or a signature on checker evidence. Future callers must generate evidence themselves, never trust a client-supplied report. The contracts are not re-exported through the active root student-work union, avoiding accidental route/frontend admission before compatible workflows exist.
@@ -29,13 +30,20 @@ The existing student store's `read`/`save` methods support proof drafts only for
 
 Ordinary calls own their transaction; demo/request-scoped calls join the supplied workspace transaction. Failed validation/revisions and caller failures roll back writes. Saves waiting behind archive/enrollment removal recheck access before writing. Existing submitted-record retention is unchanged; proof finalization is not enabled. Instructor practice review remains private/unavailable. Objective finalization/review still validates its narrower answer union rather than dropping proof fields.
 
-This is internal persistence support, not rollout authorization: live create/publication/save/read schemas and the frontend cannot yet accept assigned proofs. Do not seed these staged assignment fixtures into user-facing data. Checking/reference access, graded finalization and completion-only semantics remain separate work.
+This is internal persistence support, not rollout authorization: live create/publication/save/read schemas and the frontend cannot yet accept assigned proofs. Do not seed these staged assignment fixtures into user-facing data. Graded finalization, completion-only semantics and live HTTP/frontend admission remain separate work.
+
+## Staged practice checking and reference access
+
+The existing store's `check` method now accepts proof responses for assigned practice. It enforces enrollment, published/nonarchived assignment access, check capability, attempt state and occurrence membership before evaluating current unsaved work. The statement, enabled rules and version ID come from the pinned server publication. Checks create no attempt, do not save the submitted proof and do not change revisions, results, scores or update timestamps. An incorrect saved proof and a different checked proof remain separate. A later owner draft edit cannot change the checked statement. The same workspace-bound methods deny cross-visitor calls.
+
+`solution` separately enforces the existing answer-access policy and practice-only rollout guard before projecting the accepted pinned reference/explanation. `never` stays locked even when checking is allowed; `anytime` permits reference access independently of proof correctness or whether a draft exists. Revealing a reference does not save work or release feedback/grades. Neither response contains the other's private fields. These operations reuse existing assignment/enrollment locks and transaction binding.
+
+The staged saved-work entry now includes strict check request/response and solution response schemas for all supported work variants. Active HTTP schemas remain narrower; checks, responses and solutions cannot be passed as save requests. Graded proof checks remain locked, and completion-only proof checking/reference access remain unsupported even where the older general policy allows them. This slice changes no policy, migration or frontend behavior and performs no automatic proof checks.
 
 ## Next delivery slices
 
-1. Add assigned-practice explicit **Check proof** and separately authorized reference projections through the staged store; enforce feedback/answer policies without saving checks or releasing private reference content early.
-2. Add staged finalization/evidence/score integration. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
-3. Deliver student editing, explicit saves/navigation protection and read-only final work. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
+1. Add staged finalization/evidence/score integration. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
+2. Deliver student editing, explicit saves/navigation protection and read-only final work. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
 
 Before enabling completion-only derivations, settle what counts as completed proof work and the permitted feedback behavior while preserving score-free completion. Also settle mixed immediate-feedback assignments: the agreed proof interaction is explicit **Check proof**, rather than automatic proof-error display. Neither checkpoint blocks the current transport/evaluation foundation.
 
@@ -52,3 +60,11 @@ Built ESM/CommonJS package smoke, formatting, whitespace and local Markdown file
 `npm run db:test` passed 226 PostgreSQL checks (159 database, 67 API/workflow). Five new integration cases verify incomplete draft persistence/reload, independent occurrences/students, pinned redaction, instructor practice privacy, unsupported modes, stale revisions/type mismatch rollback, concurrent-save serialization, caller/demo rollback, cross-visitor denial and observed database waits before assignment archive/enrollment removal. Schema comparison and existing immutable-submission regressions passed.
 
 Formatting, whitespace, built public-entry smoke and local Markdown targets passed. No migration, user development-database reset or browser change is introduced. Internal fixtures deliberately bypass guarded assignment authoring to test staged practice persistence; they are not a supported rollout path. No live enrolled-proof HTTP workflow or proof finalization is claimed. Existing Jest VM-module advisories remain.
+
+## Slice 3 verification — November 2, 2026
+
+`npm run check` passed type checks, 1,353 tests (357 engine, 728 API, 268 web) and production builds. One added contract case verifies distinct strict check/solution shapes, exclusion from active HTTP contracts and denial of check/solution payloads as saves.
+
+`npm run db:test` passed 229 PostgreSQL checks (159 database, 70 API/workflow). Three added integration cases verify fresh unsaved checks without attempt creation/mutation, occurrence/version binding, reference policy independence, pinned proof/explanation retention after owner edits, outsider/foreign-item/archive denials and graded/completion guards. The existing demo case also verifies bound proof checking/reference access and cross-visitor denials alongside rollback. Existing objective work/release tests passed.
+
+Built ESM/CommonJS public-entry smoke, formatting, whitespace and primary documentation file targets passed. No migration, browser change or user development-database reset is introduced. Internal staged fixtures remain distinct from a supported live proof workflow. No proof finalization, new release policy or instructor grading operation is enabled. Existing Jest VM-module advisories remain.

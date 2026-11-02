@@ -8,24 +8,28 @@ import {
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { savedAssignmentExercises } from '../assignment/exercise-response';
-import { validateDerivationAnswer } from '../../application/student-work/derivation-response';
-import { validateDerivationDefinition } from '../../application/problem/derivation-authoring';
+import {
+  validateDerivationAnswer,
+  evaluateDerivationAnswer,
+} from '../../application/student-work/derivation-response';
+import {
+  validateDerivationDefinition,
+  derivationContent,
+  derivationReferenceSolution,
+} from '../../application/problem/derivation-authoring';
 import { assignmentLearningPolicySchema, assignmentResponsesSchema } from '@logiclab/contracts';
 import type {
   SavedStudentAttempt,
   SavedStudentAssignmentResponse,
   SavedStudentAnswers,
+  SavedStudentCheck,
+  SavedStudentCheckResponse,
+  SavedStudentSolutionResponse,
 } from '@logiclab/contracts/saved-student-work';
 import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import type {
-  AssignmentSummary,
-  CheckStudentAnswers,
-  StudentCheckResponse,
-  StudentSolutionResponse,
-  StudentAssignmentListQuery,
-} from '@logiclab/contracts';
+import type { AssignmentSummary, StudentAssignmentListQuery } from '@logiclab/contracts';
 import {
   validateItemResponse,
   checkItemResponse,
@@ -53,14 +57,14 @@ export interface StudentWorkStore {
   check(
     studentId: string,
     assignmentId: string,
-    input: CheckStudentAnswers,
-  ): Promise<StudentCheckResponse>;
+    input: SavedStudentCheck,
+  ): Promise<SavedStudentCheckResponse>;
   submit(studentId: string, assignmentId: string, revision: number): Promise<SavedStudentAttempt>;
   solution(
     studentId: string,
     assignmentId: string,
     itemId: string,
-  ): Promise<StudentSolutionResponse>;
+  ): Promise<SavedStudentSolutionResponse>;
 }
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
 export async function createStudentWorkStore(
@@ -217,6 +221,23 @@ export async function createStudentWorkStore(
           { populate: ['problemVersion'] },
         );
         if (!item) throw new StudentWorkError('not_found');
+        const definition = item.problemVersion.definition;
+        if (definition.type === 'derivation') {
+          if (assignment.assessmentMode !== 'ungraded_practice')
+            throw new StudentWorkError('unsupported_policy');
+          const evidence = evaluateDerivationAnswer(
+            {
+              itemId: item.id,
+              problemVersionId: item.problemVersion.id,
+              content: derivationContent(definition),
+            },
+            input.answers,
+          );
+          return {
+            itemId: item.id,
+            feedback: { type: 'derivation' as const, report: evidence.report },
+          };
+        }
         return {
           itemId: item.id,
           feedback: checkItemResponse(
@@ -278,9 +299,15 @@ export async function createStudentWorkStore(
           { populate: ['problemVersion'] },
         );
         if (!item) throw new StudentWorkError('not_found');
+        const definition = item.problemVersion.definition;
+        if (definition.type === 'derivation') {
+          if (assignment.assessmentMode !== 'ungraded_practice')
+            throw new StudentWorkError('unsupported_policy');
+          return { itemId, solution: derivationReferenceSolution(definition) };
+        }
         return {
           itemId,
-          solution: itemSolution(supportedProblemDefinition(item.problemVersion.definition)),
+          solution: itemSolution(supportedProblemDefinition(definition)),
         };
       });
     },

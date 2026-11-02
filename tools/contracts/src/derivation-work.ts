@@ -30,3 +30,10 @@ export const derivationEvaluationEvidenceSchema = z.strictObject({
   report: proofCheckReportSchema,
 });
 export type DerivationEvaluationEvidence = z.infer<typeof derivationEvaluationEvidenceSchema>;
+
+/** Student-specific diagnostics; no private reference or instructor explanation. */
+export const derivationCheckFeedbackSchema = z.strictObject({
+  type: z.literal('derivation'),
+  report: proofCheckReportSchema,
+});
+export type DerivationCheckFeedback = z.infer<typeof derivationCheckFeedbackSchema>;

@@ -1,3 +1,4 @@
+import { evaluateDerivationAnswer } from './derivation-response';
 import type {
   AttemptAnswers,
   DerivationAnswer as StoredProof,
@@ -8,16 +9,22 @@ import {
   studentAssignmentResponseSchema,
   studentAttemptSchema,
   saveStudentAnswersSchema,
+  checkStudentAnswersSchema,
+  studentCheckResponseSchema,
+  studentSolutionResponseSchema,
 } from '@logiclab/contracts';
 import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
 import {
   savedStudentAttemptSchema,
   savedStudentAssignmentResponseSchema,
   savedStudentAnswersSchema,
+  savedStudentCheckSchema,
+  savedStudentCheckResponseSchema,
+  savedStudentSolutionResponseSchema,
   type SavedStudentResponses,
 } from '@logiclab/contracts/saved-student-work';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
-import { derivationContent } from '../problem/derivation-authoring';
+import { derivationContent, derivationReferenceSolution } from '../problem/derivation-authoring';
 import { detail, attempt } from '../../../test/student-work-fixture';
 
 type Assert<T extends true> = T;
@@ -82,6 +89,38 @@ test('staged assigned proof content strictly excludes reference/solution fields 
         ...value.assignment,
         items: [{ ...value.assignment.items[0], content: definition }],
       },
+    }).success,
+  ).toBe(false);
+});
+
+test('staged proof checks and solutions remain distinct, strict and excluded from live HTTP contracts', () => {
+  const definition = derivationDefinitionFixture();
+  const input = { itemId: id, answers: response };
+  expect(savedStudentCheckSchema.safeParse(input).success).toBe(true);
+  expect(savedStudentAnswersSchema.safeParse(input).success).toBe(false);
+  expect(checkStudentAnswersSchema.safeParse(input).success).toBe(false);
+  const evidence = evaluateDerivationAnswer(
+    { itemId: id, problemVersionId: id, content: derivationContent(definition) },
+    response,
+  );
+  const check = { itemId: id, feedback: { type: 'derivation', report: evidence.report } };
+  expect(savedStudentCheckResponseSchema.safeParse(check).success).toBe(true);
+  expect(savedStudentAnswersSchema.safeParse(check).success).toBe(false);
+  expect(studentCheckResponseSchema.safeParse(check).success).toBe(false);
+  expect(
+    savedStudentCheckResponseSchema.safeParse({
+      ...check,
+      feedback: { ...check.feedback, referenceProof: definition.referenceProof },
+    }).success,
+  ).toBe(false);
+  const solution = { itemId: id, solution: derivationReferenceSolution(definition) };
+  expect(savedStudentSolutionResponseSchema.safeParse(solution).success).toBe(true);
+  expect(savedStudentAnswersSchema.safeParse(solution).success).toBe(false);
+  expect(studentSolutionResponseSchema.safeParse(solution).success).toBe(false);
+  expect(
+    savedStudentSolutionResponseSchema.safeParse({
+      ...solution,
+      solution: { ...solution.solution, report: evidence.report },
     }).success,
   ).toBe(false);
 });

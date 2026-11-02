@@ -314,6 +314,37 @@ test('demo proof drafts use workspace transaction binding and reject cross-visit
       }),
     );
     assert.equal(saved.revision, 1);
+    const checked = await runtime.run(one.sessionId, false, (actor) =>
+      runtime.context.studentWork.check(actor.id, assignment.id, {
+        itemId: item.id,
+        answers: { type: 'derivation', proof: derivationDefinitionFixture().referenceProof! },
+      }),
+    );
+    assert('type' in checked.feedback && checked.feedback.type === 'derivation');
+    assert.equal(checked.feedback.report.status, 'accepted');
+    await assert.rejects(
+      runtime.run(two.sessionId, false, (actor) =>
+        runtime.context.studentWork.check(actor.id, assignment.id, {
+          itemId: item.id,
+          answers: answer(),
+        }),
+      ),
+      failure('not_found'),
+    );
+    await orm.em
+      .fork()
+      .nativeUpdate(db.Assignment, assignment.id, { solutionAccess: db.SolutionAccess.Anytime });
+    const reference = await runtime.run(one.sessionId, false, (actor) =>
+      runtime.context.studentWork.solution(actor.id, assignment.id, item.id),
+    );
+    assert('type' in reference.solution && reference.solution.type === 'derivation');
+    await assert.rejects(
+      runtime.run(two.sessionId, false, (actor) =>
+        runtime.context.studentWork.solution(actor.id, assignment.id, item.id),
+      ),
+      failure('not_found'),
+    );
+
     await assert.rejects(
       runtime.run(two.sessionId, true, (actor) =>
         runtime.context.studentWork.save(actor.id, assignment.id, {
@@ -402,5 +433,196 @@ test('proof saves wait for assignment/enrollment locks and recheck archive/remov
     });
     assert(pending);
     await assert.rejects(pending, failure('not_found'));
+    assert.equal(await orm.em.fork().count(db.AssignmentAttempt, {}), 0);
+  }));
+
+test('practice proof checks use pinned content and unsaved answers without creating or changing attempts', async () =>
+  fixture(async (orm, db) => {
+    const f = await seed(orm, db);
+    const valid = {
+      type: 'derivation' as const,
+      proof: derivationDefinitionFixture().referenceProof!,
+    };
+    const checked = await f.store.check(f.student.id, f.assignment.id, {
+      itemId: f.first.id,
+      answers: valid,
+    });
+    assert('type' in checked.feedback && checked.feedback.type === 'derivation');
+    assert.equal(checked.feedback.report.status, 'accepted');
+    assert(!JSON.stringify(checked).includes('referenceProof'));
+    assert(!JSON.stringify(checked).includes('explanation'));
+    assert.equal(await orm.em.fork().count(db.AssignmentAttempt, {}), 0);
+    const repeated = await f.store.check(f.student.id, f.assignment.id, {
+      itemId: f.second.id,
+      answers: valid,
+    });
+    assert.equal(repeated.itemId, f.second.id);
+    assert.deepEqual(repeated.feedback, checked.feedback);
+    const saved = await f.store.save(f.student.id, f.assignment.id, {
+      revision: 0,
+      itemId: f.first.id,
+      answers: answer(),
+    });
+    const before = await orm.em.fork().findOneOrFail(db.AssignmentAttempt, saved.id);
+    const snapshot = {
+      answers: structuredClone(before.answers),
+      revision: before.revision,
+      updatedAt: before.updatedAt.toISOString(),
+      result: before.result,
+      score: before.score,
+    };
+    await f.problems.update(f.owner.id, f.problem.id, {
+      definition: {
+        ...derivationDefinitionFixture(),
+        conclusion: 'Q',
+        referenceProof: null,
+        explanation: 'NEW_PRIVATE_REFERENCE',
+      },
+    });
+    const afterEdit = await f.store.check(f.student.id, f.assignment.id, {
+      itemId: f.first.id,
+      answers: valid,
+    });
+    assert.deepEqual(afterEdit.feedback, checked.feedback);
+    const row = await orm.em.fork().findOneOrFail(db.AssignmentAttempt, saved.id);
+    assert.deepEqual(
+      {
+        answers: row.answers,
+        revision: row.revision,
+        updatedAt: row.updatedAt.toISOString(),
+        result: row.result,
+        score: row.score,
+      },
+      snapshot,
+    );
+    assert.deepEqual(
+      (await f.store.read(f.student.id, f.assignment.id)).attempt!.answers[f.first.id],
+      answer(),
+    );
+    const incomplete = await f.store.check(f.student.id, f.assignment.id, {
+      itemId: f.first.id,
+      answers: answer(),
+    });
+    assert('type' in incomplete.feedback && incomplete.feedback.type === 'derivation');
+    assert.notEqual(incomplete.feedback.report.status, 'accepted');
+  }));
+
+test('reference access is independent from checking and returns only an authorized pinned proof/explanation', async () =>
+  fixture(async (orm, db) => {
+    const f = await seed(orm, db);
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, f.first.id),
+      failure('solution_locked'),
+    );
+    await orm.em
+      .fork()
+      .nativeUpdate(db.Assignment, f.assignment.id, { solutionAccess: db.SolutionAccess.Anytime });
+    const solution = await f.store.solution(f.student.id, f.assignment.id, f.first.id);
+    assert.equal(solution.itemId, f.first.id);
+    assert('type' in solution.solution && solution.solution.type === 'derivation');
+    assert.deepEqual(
+      solution.solution.referenceProof,
+      derivationDefinitionFixture().referenceProof,
+    );
+    assert.equal(solution.solution.explanation, derivationDefinitionFixture().explanation);
+    assert(!('report' in solution.solution));
+    assert(!('rules' in solution.solution));
+    assert.equal(await orm.em.fork().count(db.AssignmentAttempt, {}), 0);
+    await f.problems.update(f.owner.id, f.problem.id, {
+      definition: {
+        ...derivationDefinitionFixture(),
+        conclusion: 'Q',
+        referenceProof: null,
+        explanation: 'DIFFERENT_PRIVATE_KEY',
+      },
+    });
+    assert.deepEqual(await f.store.solution(f.student.id, f.assignment.id, f.first.id), solution);
+    await orm.em
+      .fork()
+      .nativeUpdate(db.Assignment, f.assignment.id, { solutionAccess: db.SolutionAccess.Never });
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, f.first.id),
+      failure('solution_locked'),
+    );
+    const check = await f.store.check(f.student.id, f.assignment.id, {
+      itemId: f.first.id,
+      answers: { type: 'derivation', proof: derivationDefinitionFixture().referenceProof! },
+    });
+    assert('type' in check.feedback && check.feedback.type === 'derivation');
+    assert.equal(check.feedback.report.status, 'accepted');
+  }));
+
+test('proof checking/reference access deny outsiders, foreign occurrences, archives and graded/completion rollout paths', async () =>
+  fixture(async (orm, db) => {
+    const f = await seed(orm, db);
+    await orm.em
+      .fork()
+      .nativeUpdate(db.Assignment, f.assignment.id, { solutionAccess: db.SolutionAccess.Anytime });
+    await assert.rejects(
+      f.store.check(f.outsider.id, f.assignment.id, { itemId: f.first.id, answers: answer() }),
+      failure('not_found'),
+    );
+    await assert.rejects(
+      f.store.solution(f.outsider.id, f.assignment.id, f.first.id),
+      failure('not_found'),
+    );
+    const em = orm.em.fork();
+    const parent = em.create(db.Assignment, {
+      classroom: em.getReference(db.Classroom, f.classroom.id),
+      title: 'Other staged practice',
+      assessmentMode: db.AssessmentMode.UngradedPractice,
+      feedbackTiming: db.FeedbackTiming.OnCheck,
+      solutionAccess: db.SolutionAccess.Anytime,
+    });
+    const ownItem = await em.findOneOrFail(db.AssignmentItem, f.first.id);
+    const foreign = em.create(db.AssignmentItem, {
+      assignment: parent,
+      position: 1,
+      problemVersion: ownItem.problemVersion,
+    });
+    em.persist([parent, foreign]);
+    await em.flush();
+    await assert.rejects(
+      f.store.check(f.student.id, f.assignment.id, { itemId: foreign.id, answers: answer() }),
+      failure('not_found'),
+    );
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, foreign.id),
+      failure('not_found'),
+    );
+    await orm.em.fork().nativeUpdate(db.Assignment, f.assignment.id, { archivedAt: new Date() });
+    await assert.rejects(
+      f.store.check(f.student.id, f.assignment.id, { itemId: f.first.id, answers: answer() }),
+      failure('not_found'),
+    );
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, f.first.id),
+      failure('not_found'),
+    );
+    await orm.em.fork().nativeUpdate(db.Assignment, f.assignment.id, {
+      archivedAt: null,
+      assessmentMode: db.AssessmentMode.Graded,
+      feedbackTiming: db.FeedbackTiming.OnSubmission,
+    });
+    await assert.rejects(
+      f.store.check(f.student.id, f.assignment.id, { itemId: f.first.id, answers: answer() }),
+      failure('check_locked'),
+    );
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, f.first.id),
+      failure('unsupported_policy'),
+    );
+    await orm.em.fork().nativeUpdate(db.Assignment, f.assignment.id, {
+      assessmentMode: db.AssessmentMode.CompletionOnly,
+      feedbackTiming: db.FeedbackTiming.OnCheck,
+    });
+    await assert.rejects(
+      f.store.check(f.student.id, f.assignment.id, { itemId: f.first.id, answers: answer() }),
+      failure('unsupported_policy'),
+    );
+    await assert.rejects(
+      f.store.solution(f.student.id, f.assignment.id, f.first.id),
+      failure('unsupported_policy'),
+    );
     assert.equal(await orm.em.fork().count(db.AssignmentAttempt, {}), 0);
   }));
