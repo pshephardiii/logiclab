@@ -1,6 +1,6 @@
 # Derivation student work
 
-Status: three slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation, practice-only draft persistence/redaction and transient proof checking with independently authorized reference access. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
+Status: four slices of `022-feat-derivation-student-work` are implemented: staged proof contracts/evaluation, practice-only draft persistence/redaction and transient proof checking with independently authorized reference access, plus pure graded-result/scoring foundations. Live assignment authoring/student HTTP contracts still reject derivations. Graded and completion-only proof saves/reads remain guarded. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
 ## Student work versus private authored content
 
@@ -40,9 +40,19 @@ The existing store's `check` method now accepts proof responses for assigned pra
 
 The staged saved-work entry now includes strict check request/response and solution response schemas for all supported work variants. Active HTTP schemas remain narrower; checks, responses and solutions cannot be passed as save requests. Graded proof checks remain locked, and completion-only proof checking/reference access remain unsupported even where the older general policy allows them. This slice changes no policy, migration or frontend behavior and performs no automatic proof checks.
 
+## Staged graded-result and scoring foundation
+
+`@logiclab/contracts/proof-submission` defines `proof_mixed_v1` for graded assignments containing at least one proof. Each proof retains its occurrence/version-bound checker evidence; objective items retain their existing correctness feedback. The summary separates objective response-unit counts from accepted/review/unassessable proof counts rather than treating a whole proof as one truth-table cell. Strict validation rejects duplicate occurrences, inconsistent totals and injected score fields. Objective-only assignments continue using the existing result formats.
+
+`evaluateProofSubmission` takes caller-loaded authoritative occurrences and student responses, validates membership/identity/type boundaries, evaluates proofs against pinned redacted statements and reuses objective evaluation. Missing proof work is checked as an empty proof, not assigned an invented zero. It preserves occurrence order and source data, accepts alternate correct routes without comparing private references and keeps unused errors and resource-limit outcomes in the report.
+
+`scoreProofSubmission` consumes freshly computed server evidence and authoritative allocations. Accepted proofs earn their full allocation. Incorrect, incomplete, unused-error or unassessable proofs have `needs_review` with null earned points; any such item keeps assignment earned points/percentage null. Objective items retain their normal weighted correctness and rounding, using the shared objective-outcome calculation. Proofs receive no numerical automatic partial credit. Checker evidence remains separate from later instructor-awarded grading. Pending review is also distinct from withheld grade release (`gradePending`).
+
+This is a pure foundation, not persisted finalization. Active result/attempt contracts and the database score-state constraint still reject the new format. The next slice must add compatible stored result types, constraints and projections before transactionally freezing evidence/points. Graded availability stays guarded through 023 review; no completion-only semantics are implied by this graded format. Callers must authorize and recompute under the assignment/attempt transaction rather than accepting a client result or cached check.
+
 ## Next delivery slices
 
-1. Add staged finalization/evidence/score integration. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
+1. Add compatible proof-result storage/score-state constraints and redacted projections, then transactional finalization with immutable retries, rollback and revision checks. Keep graded authoring/publication/student availability guarded through the complete 022–023 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode.
 2. Deliver student editing, explicit saves/navigation protection and read-only final work. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
 
 Before enabling completion-only derivations, settle what counts as completed proof work and the permitted feedback behavior while preserving score-free completion. Also settle mixed immediate-feedback assignments: the agreed proof interaction is explicit **Check proof**, rather than automatic proof-error display. Neither checkpoint blocks the current transport/evaluation foundation.
@@ -68,3 +78,9 @@ Formatting, whitespace, built public-entry smoke and local Markdown targets pass
 `npm run db:test` passed 229 PostgreSQL checks (159 database, 70 API/workflow). Three added integration cases verify fresh unsaved checks without attempt creation/mutation, occurrence/version binding, reference policy independence, pinned proof/explanation retention after owner edits, outsider/foreign-item/archive denials and graded/completion guards. The existing demo case also verifies bound proof checking/reference access and cross-visitor denials alongside rollback. Existing objective work/release tests passed.
 
 Built ESM/CommonJS public-entry smoke, formatting, whitespace and primary documentation file targets passed. No migration, browser change or user development-database reset is introduced. Internal staged fixtures remain distinct from a supported live proof workflow. No proof finalization, new release policy or instructor grading operation is enabled. Existing Jest VM-module advisories remain.
+
+## Slice 4 verification — November 2, 2026
+
+`npm run check` passed type checks, 1,371 tests (357 engine, 746 API, 268 web) and production builds. Eighteen new cases cover mixed weighted results, objective partial credit/rounding, full-credit proofs, missing/incorrect/unused-error/resource-limited proofs with pending totals, independent repeated occurrences, provenance and source preservation, response/identity mismatches, strict summary integrity and continued active result rejection.
+
+`npm run db:test` passed 229 existing PostgreSQL checks (159 database, 70 API/workflow), including objective finalization/scoring regressions after the shared outcome extraction. No new database behavior is introduced in this pure slice. Built ESM/CommonJS public-entry smoke, formatting, whitespace and primary documentation file targets passed. No migration, browser change, new live submission format or user development-database reset is claimed. Existing Jest VM-module advisories remain.

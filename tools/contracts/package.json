@@ -30,6 +30,11 @@
       "types": "./dist/saved-student-work.d.ts",
       "browser": "./dist/browser/saved-student-work.js",
       "default": "./dist/saved-student-work.js"
+    },
+    "./proof-submission": {
+      "types": "./dist/proof-submission.d.ts",
+      "browser": "./dist/browser/proof-submission.js",
+      "default": "./dist/proof-submission.js"
     }
   },
   "files": [
