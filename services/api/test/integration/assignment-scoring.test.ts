@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { problemVersionSchema, type PublishedProblemVersion } from '@logiclab/contracts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -97,7 +98,11 @@ async function fixture() {
     },
   } as unknown as AuthContext;
   const app = buildApp({
-    assignment: { ...context, assignments },
+    assignment: {
+      ...context,
+      assignments,
+      submissionReviews: await createSubmissionReviewStore(orm),
+    },
     studentWork: { ...context, studentWork: work },
     demo: await createDemoRuntime(
       orm,

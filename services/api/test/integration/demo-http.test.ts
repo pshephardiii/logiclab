@@ -440,3 +440,71 @@ test('demo release actions remain workspace-scoped and commit independent metada
       await app.close();
     }
   }));
+
+test('explicit demo submission reviews share the request transaction and actor boundary', async () =>
+  fixture(async (orm, db) => {
+    const runtime = await createDemoRuntime(orm, config);
+    const workspace = await runtime.workspaces.provision();
+    const session = await runtime.sessions.issue(workspace.workspaceId, 'instructor');
+    const classroom = await orm.em.fork().findOneOrFail(db.Classroom, { owner: session.actor.id });
+    assert.throws(
+      () =>
+        runtime.context.submissionReviews.listSubmissions(session.actor.id, randomUUID(), {
+          limit: 20,
+          offset: 0,
+        }),
+      /Demo resource transaction is required/,
+    );
+    let draftId = '';
+    const rollback = new Error('Rollback explicit context fixture');
+    await assert.rejects(
+      runtime.run(session.sessionId, false, async (actor) => {
+        assert.throws(
+          () =>
+            runtime.context.submissionReviews.listSubmissions(randomUUID(), randomUUID(), {
+              limit: 20,
+              offset: 0,
+            }),
+          /SESSION_INVALID/,
+        );
+        const draft = await runtime.context.assignments.create(actor.id, classroom.id, {
+          title: 'Uncommitted assignment',
+          problemVersionIds: [],
+          assessmentMode: 'graded',
+          feedbackTiming: 'on_submission',
+          solutionAccess: 'never',
+        });
+        draftId = draft.id;
+        // A separate connection cannot see this assignment until commit. Review must join the same manager.
+        assert.deepEqual(
+          await runtime.context.submissionReviews.listSubmissions(actor.id, draft.id, {
+            limit: 20,
+            offset: 0,
+          }),
+          [],
+        );
+        throw rollback;
+      }),
+      (error: unknown) => error === rollback,
+    );
+    assert(draftId);
+    assert.equal(await orm.em.fork().count(db.Assignment, { id: draftId }), 0);
+    const committed = await runtime.run(session.sessionId, false, async (actor) => {
+      const draft = await runtime.context.assignments.create(actor.id, classroom.id, {
+        title: 'Committed assignment',
+        problemVersionIds: [],
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+        solutionAccess: 'never',
+      });
+      assert.deepEqual(
+        await runtime.context.submissionReviews.listSubmissions(actor.id, draft.id, {
+          limit: 20,
+          offset: 0,
+        }),
+        [],
+      );
+      return draft;
+    });
+    assert.equal(await orm.em.fork().count(db.Assignment, { id: committed.id }), 1);
+  }));

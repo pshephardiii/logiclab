@@ -37,21 +37,21 @@ test('getAssignmentSubmissions requires an instructor and disables caching', asy
 });
 
 test('submission pagination distinguishes following, exactly full final, and empty pages', async () => {
-  const { context, headers, assignments } = submissionReviewFixture();
+  const { context, headers, submissionReviews } = submissionReviewFixture();
   const app = buildApp({ assignment: context });
   const authenticated = { ...headers, cookie: `logiclab_session=${sessionId}` };
   try {
     const row = submissionSummary;
-    assignments.listSubmissions.mockResolvedValue([row, row]);
+    submissionReviews.listSubmissions.mockResolvedValue([row, row]);
     const query = {
       method: 'GET' as const,
       url: `/api/assignments/${assignment.id}/submissions?limit=1&offset=4`,
       headers: authenticated,
     };
     expect((await app.inject(query)).json().nextOffset).toBe(5);
-    assignments.listSubmissions.mockResolvedValue([row]);
+    submissionReviews.listSubmissions.mockResolvedValue([row]);
     expect((await app.inject(query)).json().nextOffset).toBeNull();
-    assignments.listSubmissions.mockResolvedValue([]);
+    submissionReviews.listSubmissions.mockResolvedValue([]);
     expect((await app.inject(query)).json()).toEqual({ submissions: [], nextOffset: null });
   } finally {
     await app.close();

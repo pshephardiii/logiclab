@@ -9,7 +9,7 @@ export function getAssignmentSubmissionHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId, submissionId } = parseRequest(submissionParamsSchema, request.params);
     return submissionReviewSchema.parse(
-      await context.assignments.findSubmission(user.id, assignmentId, submissionId),
+      await context.submissionReviews.findSubmission(user.id, assignmentId, submissionId),
     );
   };
 }

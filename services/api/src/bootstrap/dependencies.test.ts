@@ -1,3 +1,4 @@
+import type { SubmissionReviewStore } from '../persistence/submission-review/store';
 import type { StudentWorkStore } from '../persistence/student-work/store';
 import type { AssignmentStore } from '../persistence/assignment/store';
 import type { ProblemStore } from '../persistence/problem/store';
@@ -21,6 +22,7 @@ const authStore = jest.fn(async () => ({}) as AuthStore);
 const classroomStore = jest.fn(async () => ({}) as ClassroomStore);
 const problemStore = jest.fn(async () => ({}) as ProblemStore);
 const assignmentStore = jest.fn(async () => ({}) as AssignmentStore);
+const submissionReviewStore = jest.fn(async () => ({}) as SubmissionReviewStore);
 const studentWorkStore = jest.fn(async () => ({}) as StudentWorkStore);
 const factories = {
   connectDatabase: connect,
@@ -29,6 +31,7 @@ const factories = {
   createClassroomStore: classroomStore,
   createProblemStore: problemStore,
   createAssignmentStore: assignmentStore,
+  createSubmissionReviewStore: submissionReviewStore,
   createStudentWorkStore: studentWorkStore,
 };
 
@@ -52,6 +55,7 @@ beforeEach(() => {
       ({ destroy: destroyClient, send: sendCommand }) as unknown as CognitoIdentityProviderClient,
   );
   studentWorkStore.mockReset().mockResolvedValue({} as never);
+  submissionReviewStore.mockReset().mockResolvedValue({} as never);
   assignmentStore.mockReset().mockResolvedValue({} as never);
   problemStore.mockReset().mockResolvedValue({} as never);
   authStore.mockReset().mockResolvedValue({} as never);
@@ -78,6 +82,11 @@ test('constructs separate route dependencies using one database and auth service
   expect(classroomStore).toHaveBeenCalledWith(orm);
   expect(problemStore).toHaveBeenCalledWith(orm);
   expect(assignmentStore).toHaveBeenCalledWith(orm);
+  expect(submissionReviewStore).toHaveBeenCalledWith(orm);
+  expect(dependencies!.assignment.assignments).toBe(await assignmentStore.mock.results[0]!.value);
+  expect(dependencies!.assignment.submissionReviews).toBe(
+    await submissionReviewStore.mock.results[0]!.value,
+  );
   expect(studentWorkStore).toHaveBeenCalledWith(orm);
   expect(dependencies!.studentWork.service).toBe(dependencies!.auth.service);
   expect(dependencies!.assignment.service).toBe(dependencies!.auth.service);
@@ -163,4 +172,11 @@ test('billing shares resources and initialization failure closes them', async ()
     ),
   ).rejects.toThrow('Billing initialization failed');
   expect(closeDatabase).toHaveBeenCalledTimes(2);
+});
+
+test('submission-review initialization failure closes shared resources', async () => {
+  submissionReviewStore.mockRejectedValueOnce(new Error('Review store failed'));
+  await expect(createDependencies(env, factories)).rejects.toThrow('Review store failed');
+  expect(closeDatabase).toHaveBeenCalledWith(true);
+  expect(destroyClient).toHaveBeenCalledTimes(1);
 });

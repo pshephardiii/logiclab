@@ -13,7 +13,7 @@ export function getAssignmentSubmissionsHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
     const query = parseRequest(submissionListQuerySchema, request.query);
-    const rows = await context.assignments.listSubmissions(user.id, assignmentId, {
+    const rows = await context.submissionReviews.listSubmissions(user.id, assignmentId, {
       ...query,
       limit: query.limit + 1,
     });

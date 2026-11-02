@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../persistence/submission-review/store';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomBytes } from 'node:crypto';
 import { createDemoAccess } from '../persistence/demo/access';
@@ -26,6 +27,7 @@ type Stores = {
   classrooms: Awaited<ReturnType<typeof createClassroomStore>>;
   problems: Awaited<ReturnType<typeof createProblemStore>>;
   assignments: Awaited<ReturnType<typeof createAssignmentStore>>;
+  submissionReviews: Awaited<ReturnType<typeof createSubmissionReviewStore>>;
   studentWork: Awaited<ReturnType<typeof createStudentWorkStore>>;
   billing: ReturnType<typeof createBillingService>;
 };
@@ -70,6 +72,7 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
     classrooms: scopedStore('classrooms'),
     problems: scopedStore('problems'),
     assignments: scopedStore('assignments'),
+    submissionReviews: scopedStore('submissionReviews'),
     studentWork: scopedStore('studentWork'),
     billing: scopedStore('billing'),
   };
@@ -92,6 +95,7 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
           classrooms: await createClassroomStore(orm, em),
           problems: await createProblemStore(orm, em),
           assignments: await createAssignmentStore(orm, em),
+          submissionReviews: await createSubmissionReviewStore(orm, em),
           studentWork: await createStudentWorkStore(orm, em),
           billing: createBillingService(
             await createBillingStore(orm, em),

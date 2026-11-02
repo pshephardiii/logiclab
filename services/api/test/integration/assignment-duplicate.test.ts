@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { buildApp } from '../../src/app';
 import { readAuthConfig } from '../../src/config/auth';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
@@ -261,7 +262,11 @@ test('normal and demo HTTP duplication enforce ownership, workspace and student 
   })!;
   const auth = { config, service: { authenticate: async () => actor } } as unknown as AuthContext;
   const app = buildApp({
-    assignment: { ...auth, assignments: f.store },
+    assignment: {
+      ...auth,
+      assignments: f.store,
+      submissionReviews: await createSubmissionReviewStore(f.orm),
+    },
     demo: await createDemoRuntime(
       f.orm,
       readDemoConfig({ DEMO_ENABLED: 'true', APP_ORIGIN: origin })!,

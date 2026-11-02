@@ -1,4 +1,4 @@
-import { createAssignmentStore } from '../../src/persistence/assignment/store';
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -192,7 +192,7 @@ async function verifyStudentChecks(databaseUrl: string, timing: 'on_check' | 'im
       demoWorkspace: first.session.workspace.id,
       role: db.UserRole.Instructor,
     });
-    const reviews = await createAssignmentStore(orm);
+    const reviews = await createSubmissionReviewStore(orm);
     await assert.rejects(
       reviews.listSubmissions(owner.id, assignment.id, { limit: 20, offset: 0 }),
       (error: unknown) => error instanceof Error && error.message === 'not_found',
