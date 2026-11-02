@@ -689,8 +689,21 @@ npm run jobs -- findings <job-id> 0 20
 4. Retest each finding's reproduction and its affected workflows. Reopen failures rather than writing a new Pass over old evidence.
 5. Review the final ledger and prepare a branch PR draft only when the agreed pass is ready; summarize final changes and remaining risks.
 
-QA exit requires no unresolved blockers, an explicit disposition for major issues, completed required cases for the supported browser/environment, and documented acceptance of remaining gaps. It does not certify hosted infrastructure, real payments, institutions/subscriptions, autosaving, derivations, deadlines, rosters/removal, or deployment automation—those are outside current scope.
+QA exit requires no unresolved blockers, an explicit disposition for major issues, completed required cases for the supported browser/environment, and documented acceptance of remaining gaps. It does not certify hosted infrastructure, real payments, institutions/subscriptions, autosaving, graded derivations, other proof formats, deadlines, rosters/removal, or deployment automation—those are outside current scope.
 
 ### Advanced cases without a manual control
 
 Use the automated suites as separate evidence for seven-day invitation expiry, parser nesting/length limits, webhook signatures/replay/order, catalog retirement and saved-term validation, refund/publication races, concurrent enrollment/invitation rotation, submitted-work database retention, demo generation fencing/rollback, cleanup lock skipping and job lease fencing/retry exhaustion. Record the exact test file/commit/command actually executed. Do not alter retained financial records or disable retention triggers to manufacture manual cases. If a manual reproduction is required for a finding, add a dedicated disposable fixture and document it before running it.
+
+## 18. Assigned Fitch proofs (022, focused follow-up)
+
+Use a disposable demo workspace; no proof is seeded by default. These are manual follow-up cases, not an exhaustive QA sign-off or claims that the user has executed them. Follow the [step-by-step proof walkthrough](../development/demo-walkthrough.md#optional-author-and-assign-a-fitch-derivation), recording findings in the existing ledger.
+
+1. **DRV-01 — Author and assign:** Complete walkthrough steps 1–7. Verify checked publication, practice-only or completion-only proof admission, unavailable graded mode, and correct instructor labels in the selected publication. Add the same publication twice and confirm separate ordered occurrences.
+2. **DRV-02 — Save and check:** Complete step 8. Change the first proof to unfinished work and save/reload it. Confirm no automatic proof check, retained incomplete fields and private references until the permitted solution action. Edit one occurrence and inspect the other; its work must remain separate.
+3. **DRV-03 — Navigation protection:** With an unsaved proof edit, attempt to change assignment or reload. Choose Stay and confirm the edit remains; try again with Discard and confirm saved work is restored. Moving between problems in the same assignment should retain edits.
+4. **DRV-04 — Completion versus verification:** Complete steps 9–10. Try submitting with an open block, missing citation or wrong final target; finalization must remain unavailable. Restore a finished incorrect attempt, save and confirm submission. Expect no draft diagnostics, then score-free completion plus errors after submission. No further editing/saving is allowed.
+5. **DRV-05 — Instructor review and answers:** Complete step 11. Confirm only final work is listed, errors do not become numerical grades, and the actual submitted proof is visible independently of the reference. Reveal answers separately; the student's refreshed completion/report must stay unchanged. Verification-unavailable handling has automated coverage; do not fabricate or edit retained data to force this state.
+6. **DRV-06 — Isolation and layout:** In context B, try opening context A's assignment URL; expect denial without private content. At 390px, inspect proof controls and read-only feedback for overflow and legibility. Return to context A, perform step 12 and confirm old IDs no longer expose work.
+
+Automated evidence separately covers revision conflicts, cancellation/late responses, immutable retries, database/caller/demo rollback, observed archive/enrollment locks, independent reference policies and guarded graded scoring. See [branch evidence and limits](../verification/derivation-student-work-verification.md).

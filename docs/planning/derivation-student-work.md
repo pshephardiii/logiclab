@@ -1,6 +1,6 @@
 # Derivation student work
 
-Status: fourteen slices of `022-feat-derivation-student-work` are implemented. Instructors can select and publish Fitch proofs in ungraded practice and completion-only assignments. Students explicitly save their work; practice checking is manual, while completion diagnostics appear only after submission. Completion acknowledges finished attempts independently of logical correctness, with retained verification flags and read-only instructor review. Answer reveal stays independently controlled. Graded finalization/disclosure remains internal groundwork, with graded assignment admission guarded until 024 instructor grading/review. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
+Status: `022-feat-derivation-student-work` is ready for review after fourteen implementation slices and final verification. See [branch evidence and rollout](../verification/derivation-student-work-verification.md). Instructors can select and publish Fitch proofs in ungraded practice and completion-only assignments. Students explicitly save their work; practice checking is manual, while completion diagnostics appear only after submission. Completion acknowledges finished attempts independently of logical correctness, with retained verification flags and read-only instructor review. Answer reveal stays independently controlled. Graded finalization/disclosure remains internal groundwork, with graded assignment admission guarded until 024 instructor grading/review. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
 ## Student work versus private authored content
 
@@ -8,7 +8,7 @@ The separate `@logiclab/contracts/derivation-work` entry contains:
 
 - `DerivationAnswer`: `{ type: "derivation", proof }`, using the existing bounded, versioned Fitch serialization. Empty steps/blocks are an explicit empty response; no answer is distinct from a response with an empty proof. Missing references, unfinished blocks, bad formulas and logically incorrect steps remain saveable within transport limits.
 - `SaveDerivationAnswers`: `{ revision, itemId, answers }`, using the existing nonnegative revision bounds. The request cannot choose a problem version, owner, workspace, permitted rule set or replacement statement.
-- `CheckDerivationAnswers`: `{ itemId, answers }`, for future transient explicit checking, with no save/revision mutation implied.
+- `CheckDerivationAnswers`: `{ itemId, answers }`, for transient explicit checking, with no save/revision mutation implied.
 - `DerivationCheckFeedback`: `{ type: "derivation", report }`, containing student-specific diagnostics without the private reference/explanation.
 - `DerivationEvaluationEvidence`: `{ evaluationVersion: "derivation_v1", type: "derivation", itemId, problemVersionId, report }`. Server-supplied occurrence/version provenance and the full versioned checker report are retained separately from the student's proof and awarded grading. This is an evidence component, not a new live submission-result format.
 
@@ -32,13 +32,13 @@ Ordinary calls own their transaction; demo/request-scoped calls join the supplie
 
 Assignment create/publication admits proofs for ungraded practice and completion-only work with `on_submission` feedback. Do not seed staged graded fixtures into user-facing data; internal graded finalization does not enable graded proof assignment publication.
 
-## Staged practice checking and reference access
+## Practice checking and reference access
 
 The existing store's `check` method now accepts proof responses for assigned practice. It enforces enrollment, published/nonarchived assignment access, check capability, attempt state and occurrence membership before evaluating current unsaved work. The statement, enabled rules and version ID come from the pinned server publication. Checks create no attempt, do not save the submitted proof and do not change revisions, results, scores or update timestamps. An incorrect saved proof and a different checked proof remain separate. A later owner draft edit cannot change the checked statement. The same workspace-bound methods deny cross-visitor calls.
 
 `solution` separately enforces the existing answer-access policy and the current practice/completion proof policy guard before projecting the accepted pinned reference/explanation. `never` stays locked even when checking is allowed; `anytime` permits reference access independently of proof correctness or whether a draft exists. Revealing a reference does not save work or release feedback/grades. Neither response contains the other's private fields. These operations reuse existing assignment/enrollment locks and transaction binding.
 
-The staged saved-work entry now includes strict check request/response and solution response schemas for all supported work variants. Student routes now opt into these proof-aware schemas; checks, responses and solutions cannot be passed as save requests. Graded proof checks remain locked. Completion proof diagnostics are submission-time only; independently authorized completion reference access is now supported. Older completion policies that permit pre-submission checks remain unsupported for proof-containing work. This slice changes no policy, migration or frontend behavior and performs no automatic proof checks.
+The proof-aware saved-work entry includes strict check request/response and solution response schemas for all supported work variants. Student routes now opt into these proof-aware schemas; checks, responses and solutions cannot be passed as save requests. Graded proof checks remain locked. Completion proof diagnostics are submission-time only; independently authorized completion reference access is now supported. Older completion policies that permit pre-submission checks remain unsupported for proof-containing work. Proof editing performs no automatic checks.
 
 ## Staged graded-result and scoring foundation
 
@@ -52,13 +52,13 @@ The staged saved-attempt contract and database now support this result format, a
 
 ## Retained proof results and disclosure
 
-The database JSON types now describe the exact versioned proof report, occurrence-bound evidence and mixed result. `Migration20261102120000` permits `proof_mixed_v1` point snapshots and requires a score for retained proof results. Existing final-answer/result/score immutability remains enforced. The migration does not rewrite objective results or awarded points; rollback locks the table and refuses while any retained proof results exist.
+The database JSON types now describe the exact versioned proof report, occurrence-bound evidence and mixed result. `Migration20261102120000` permits `proof_mixed_v1` point snapshots and requires a score for retained graded proof results. Existing final-answer/result/score immutability remains enforced. The migration does not rewrite objective results or awarded points; rollback locks the table and refuses while retained `proof_mixed_v1` results exist.
 
-Apply this migration before future code writes proof finals, and rebuild matching contracts/database/API consumers. No user development database has been migrated or reset by this slice. Database constraints establish storage state and format tags; strict application contracts validate report shape and summary integrity.
+Apply this migration before running the new application, and rebuild matching contracts/database/API consumers. No user development database has been migrated or reset by this slice. Database constraints establish storage state and format tags; strict application contracts validate report shape and summary integrity.
 
 The staged student projection validates retained proof-score arithmetic and pending-review state without rerunning the checker, replacing evidence or writing a new grade. It withholds both reports and points until the independent grade-release policy permits them, even if answers have already been revealed. Released review-needed work retains null earned totals/percentage; grade release and instructor review remain separate states. Missing/inconsistent snapshots or proof results in an unsupported assessment state fail closed.
 
-Active root student and instructor-review contracts remain narrower. Instructor review explicitly validates its supported result/summary shapes rather than leaking staged proof results through an older response. Full instructor proof review belongs to 024. These changes provide compatible storage for staged finalization, not a user-facing proof submission workflow.
+Root objective-only student contracts remain narrower; active student routes explicitly use the proof-aware saved-work entry. Owner review now admits completion proof results and rejects graded proof results. Full graded proof review belongs to 024. Graded finalization remains internal groundwork, while practice and completion workflows are enabled.
 
 ## Transactional graded finalization
 
@@ -102,13 +102,13 @@ Graded HTTP projections are tested only with internal fixtures: a withheld final
 
 No new endpoint, migration, environment variable or demo template is introduced. Deploy matching API/frontend contracts when enabling these paths. Instructor practice selection/publication and a complete real-browser authoring-to-practice journey are now verified as described below.
 
-## Practice-proof assignment admission
+## Practice and completion proof assignment admission
 
-Owner assignment details now use the private library-version shape, including pinned reference definitions. This response is restricted to the owning instructor and is never reused for student content. The assignment contract permits proof-containing details only in `ungraded_practice`; objective definitions retain all existing assessment modes. Student reads use their separate redacted content/answer contracts.
+Owner assignment details now use the private library-version shape, including pinned reference definitions. This response is restricted to the owning instructor and is never reused for student content. The assignment contract permits proof-containing details in `ungraded_practice` or `completion_only` with `on_submission` feedback; objective definitions retain all existing assessment modes. Student reads use their separate redacted content/answer contracts.
 
 The assignment store validates supported definitions against the effective assessment mode for creation, replacement, complete merged PATCH state, duplication, owner detail projection and publication. In particular, a policy-only PATCH cannot retain proofs while changing to graded mode or completion-only pre-submission feedback. Removing every proof and changing mode in the same PATCH is permitted when the resulting objective assignment is valid. Invalid transitions return `DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE` and roll back metadata/items under the parent lock. Publication independently rechecks ownership, supported versions, nonempty content and class coverage; publication/edit races cannot produce a graded proof assignment. Existing published policy locks remain unchanged.
 
-The picker includes published Fitch versions only in practice mode. Selected proofs keep other assessment-mode options disabled until removed, with explanatory text. The ordered list shows their conclusion without automatically expanding the private reference. Failed saves retain selections and edits. Repeated publications get independent occurrence identities; duplication preserves pinned content in a fresh practice draft. Archived library publications remain usable, and later owner edits cannot change assigned rules, statements or reference proofs. Practice check timing remains explicit for proofs even when companion questions use immediate feedback. No seeded demo template is changed.
+The picker includes published Fitch versions for practice and submission-feedback completion. Selected proofs disable graded mode until removed, with explanatory text. The ordered list shows their conclusion without automatically expanding the private reference. Failed saves retain selections and edits. Repeated publications get independent occurrence identities; duplication preserves pinned content in a fresh practice draft. Archived library publications remain usable, and later owner edits cannot change assigned rules, statements or reference proofs. Practice check timing remains explicit for proofs even when companion questions use immediate feedback. No seeded demo template is changed.
 
 A real Chrome walkthrough now covers instructor UI authoring/publication, practice assignment selection/publication, role switching, student proof editing/manual checking, incomplete explicit save/reload, independently authorized reference reveal, Stay/Discard, separate repeated occurrences, hard reload and logout. Normal and demo HTTP tests create/publish through the owner API instead of bypassing assignment admission. Graded proof creation remains denied; completion proof creation requires feedback at submission.
 
@@ -163,7 +163,8 @@ Complete this student-work branch, then deliver `023-refactor-explicit-context-a
 
 ## Next delivery slices
 
-1. Consolidate remaining branch documentation and final verification. Completion-only readiness, owner review and assignment admission are connected; keep graded authoring/publication/student availability guarded through the complete 022–024 instructor-review milestone. Perform the agreed 023 context-assembly refactor before resuming instructor grading/review in 024.
+1. Review and merge this branch after the normal review/CI process. Final documentation, verification evidence and the local PR draft are prepared; nothing has been published or merged by the agent.
+2. Perform the agreed 023 context-assembly refactor, preserving behavior and normal/demo transaction binding, before resuming instructor grading/review in 024. Graded proof admission remains guarded.
 
 Completion-only derivations now use the confirmed finished-attempt and post-submission diagnostic policy with score-free completion. Mixed practice assignments retain explicit **Check proof**, even when objective questions have immediate feedback; there is no automatic proof-error display.
 
@@ -284,3 +285,7 @@ The browser uses the shared bounded finished-attempt predicate, not inference ve
 Focused headless Chrome against temporary real local APIs and an isolated schema verified UI proof authoring/publication and completion assignment publication, two independent proof occurrences, finished incorrect work with no draft diagnostics, explicit saves/confirmation, score-free submission, post-submission feedback, owner flags/read-only review, independent instructor answer reveal, unchanged final evidence, 390px overflow, logout, empty browser storage and no uncaught page errors. All application responses used real APIs. The walkthrough caught a missing Vite development prebundle entry for `@logiclab/logic-engine/proof/completion`; adding it fixed the student-page import failure, and the complete walkthrough passed on rerun. Ignored evidence: `.codex-local/verification/derivation-student-work/slice14-browser.log` and `slice14-mobile.png`. Temporary processes/schema were cleaned up.
 
 Formatting and whitespace checks passed. No migration, new environment variable, demo template change or user development-database reset was introduced. Rebuild matching contracts/API/frontend outputs and restart Vite to pick up its prebundle configuration. This is focused feature verification, not exhaustive product QA, a multi-browser/accessibility audit, hosted verification or a live Cognito journey. Graded proof authoring/review/adjustment remains deferred to 024; existing Jest VM-module advisories remain. Broad branch documentation and PR preparation remain for the finishing pass.
+
+## Branch closeout — November 2, 2026
+
+Final repeated checks passed: `npm run check` (1,471 tests, type checks/builds), `npm run db:test` (266 PostgreSQL checks), formatting, branch/working-tree whitespace and 326 local Markdown file targets. Existing real-API browser evidence from slices 10 and 14 was consolidated rather than repeated for documentation-only changes. API/data/architecture/setup/roadmap guidance, optional demo instructions and focused manual QA cases now describe the supported practice/completion boundary. The [verification record](../verification/derivation-student-work-verification.md) includes the mobile screenshot, rollout and material limits. The local PR draft is `.codex-local/pr/022-feat-derivation-student-work.md`; it is ignored by Git. Nothing was staged, committed, published, merged or provisioned by the agent. The agreed next branch remains 023 explicit context assembly, then 024 instructor grading/review.

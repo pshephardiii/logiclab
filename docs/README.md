@@ -24,7 +24,7 @@ Documentation is grouped by purpose:
 - [Assignment scoring](planning/assignment-scoring.md)
 - [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
 - [Derivation authoring](planning/derivation-authoring.md)
-- [Derivation student-work foundation](planning/derivation-student-work.md)
+- [Derivation student work](planning/derivation-student-work.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
@@ -78,6 +78,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Derivation practice/completion, guarded grading and browser evidence](verification/derivation-student-work-verification.md)
 
 - [Derivation authoring, checked publication and browser evidence](verification/derivation-authoring-verification.md)
 

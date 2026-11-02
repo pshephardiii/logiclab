@@ -104,7 +104,7 @@ Use MikroORM with its PostgreSQL driver and committed TypeScript migrations cont
 
 Use PostgreSQL relational columns, foreign keys, and constraints for identity, ownership, relationships, status, and timestamps. Use validated `JSONB` for exercise-specific definitions and potentially answer payloads. Validate the payload shape by exercise type and format version; JSONB is not a substitute for validation or authorization.
 
-Derivations will eventually need premises, a conclusion, and a proof-system identifier in their definitions, with proof lines in student answers. Their exact representation depends on the chosen axioms/rules and is deferred.
+Version-1 derivations retain premises, conclusion, Fitch format, versioned checker/rule catalog and enabled effective labels in definitions; private references remain separate from student proof answers. See the derivation storage sections below.
 
 Local PostgreSQL will run in Docker, with documented DBeaver connection settings. The completed truth-table slice required no persistence; the classroom-access branch introduces the initial database setup and migrations.
 
@@ -142,9 +142,9 @@ Register publication immutability with MikroORM's `@Trigger` as well as migratio
 
 Keep one `Problem` entity and one `ProblemVersion` entity across truth tables and future derivation exercises. Ownership, draft editing, publication history, and archiving are shared responsibilities. Exercise-specific authored content belongs in the JSONB `definition`, not in truth-table-specific columns on the parent entities.
 
-`ProblemDefinition` currently permits only truth tables because those are the implemented exercise type. When derivations enter scope, extend it into a union discriminated by `type`, with a corresponding runtime validator for each variant and supported definition-format version. Derivations will likely need premises, a conclusion, and a proof-system identifier; exact fields and rules remain deferred. Do not add placeholder entities or accept unsupported definition types in advance.
+Database/private-library definitions now form a union of truth tables, true/false, single-answer multiple choice and Fitch derivations, each with a supported version and runtime validator. Assignment admission and student projections independently restrict supported policies and private fields. Future formats should extend these explicit boundaries; do not accept unsupported definitions in advance.
 
-Student proof lines, truth-table entries, and grading results belong to future attempts/submissions, not authored definitions. Published snapshots retain their original type, format version, and content even as support for additional exercise types is introduced.
+Student proof lines, truth-table entries and frozen results belong to attempts/submissions, not authored definitions. Published snapshots retain their original type, format version, and content even as support for additional exercise types is introduced.
 
 ## Assignment foundation (`006`)
 
@@ -266,4 +266,12 @@ Final graded attempts freeze a separate nullable-until-submission JSONB `score` 
 
 The persisted problem-definition union includes version-1 Fitch derivation data: pinned catalog/checker versions, stable premise IDs/formulas, target, effective enabled rule IDs/labels, nullable private reference proof and optional private explanation. The existing JSONB columns and immutable problem-version trigger retain the full snapshot without schema changes. Database/reference types are separate exact JSON fields, checked against the standalone transport contracts.
 
-The ordinary content projection excludes the reference/explanation; the privileged solution projection requires accepted reference work and caller authorization. Drafts may remain incomplete, but future publication must recheck the reference under the locked saved configuration. The active library/assignment contract union still rejects derivations in this foundation slice; see [authoring boundaries](derivation-authoring.md). Direct fixture persistence is storage evidence, not a live publication workflow.
+The ordinary content projection excludes the reference/explanation; the privileged solution projection requires accepted reference work and caller authorization. Drafts may remain incomplete; publication rechecks the reference under the locked saved configuration. Private library workflows support derivations, and assignment admission now allows practice and submission-feedback completion proofs. Graded proof admission remains guarded; see [authoring boundaries](derivation-authoring.md) and [student work](derivation-student-work.md).
+
+## Derivation answers and frozen results (022)
+
+Saved response JSON adds `{ type: "derivation", proof }` under each occurrence UUID, preserving bounded incomplete/incorrect Fitch work and stable line/block identities. Authoritative pinned statements/rules remain separate from student responses. Saves validate transport and revisions without checking or returning diagnostics. Repeated occurrences keep independent work; enrollment/archive/workspace and attempt locks preserve the existing access and transaction semantics.
+
+`proof_completion_v1` retains mixed completion counts and occurrence/version-bound proof reports with verified/error/unavailable counts, without points or pending-grade state. Every proof must satisfy the shared finished-attempt rule, independently of inference correctness. Final answers/reports/counts/revisions are immutable, and retries return frozen evidence. Existing constraints support score-free completion without an additional migration.
+
+The guarded graded foundation stores `proof_mixed_v1` plus a `points_v1` score atomically. Accepted proofs earn their full allocation; any incorrect/incomplete/unassessable proof retains null earned points and unresolved assignment totals. `Migration20261102120000` permits the new scored result tag and requires its score, preserving objective finals; its rollback refuses retained `proof_mixed_v1` data. Student projections withhold reports/points until grade release. No numerical automatic proof partial credit or instructor adjustment storage is enabled yet. Older application readers cannot interpret proof answers/new result tags; migration rollback alone does not establish application compatibility.

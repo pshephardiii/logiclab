@@ -42,3 +42,7 @@ The web UI keeps demo routes under `/demo`, routes their resource calls to the d
 Provisioning is server-initiated and transactional; a failed seed leaves no workspace graph. Initial starts without a valid cookie may allocate a new workspace. Existing active credentials resume their workspace; a losing concurrent role rotation fails rather than allocating a replacement workspace. A lost reset response may require starting a fresh demo if its new cookie was not received.
 
 Capacity currently includes expired workspaces because automatic cleanup is the next slice. Rate limits are process-local. These controls do not constitute a verified production deployment; see [local setup and remaining work](../development/public-demo.md).
+
+## Assigned Fitch proofs (022)
+
+Owner-authored Fitch proofs can be assigned within a demo workspace for private practice or submission-feedback completion work. The same normal resource contracts apply under `/api/demo/resources`: explicit saves, manual practice checks, independent reference reveal and final-only score-free completion review. Role changes/reset retain existing generation fencing and request-bound transactions; cross-visitor proof IDs grant no access. Graded proof admission remains guarded. Seed template 5 is unchanged and contains no proof assignment; create an example through the [optional walkthrough](../development/demo-walkthrough.md#optional-author-and-assign-a-fitch-derivation). A later branch adds seeded derivation journeys.

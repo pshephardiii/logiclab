@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: implementation sequence agreed on `018-docs-derivation-planning`; scoring 019, proof-checker 020 and private authoring 021 are complete. The guarded 022–024 student/review milestone has started with staged student-proof contracts and pure validation/evaluation; live proof work remains unavailable. This document retains the agreed product direction and future checkpoints. See the [proof-checker foundation](propositional-proof-checker.md) for confirmed catalog variants and [authoring verification](../verification/derivation-authoring-verification.md) for delivered behavior and limits. This document does not start a future branch.
+Status: scoring 019, proof-checker 020 and private authoring 021 are complete. Branch 022 delivers Fitch practice and completion-only student work, revisioned saves, independent references and frozen completion diagnostics with owner review. Graded proof finalization/scoring remains guarded groundwork until 024 instructor grading/review, following the agreed 023 context-assembly refactor. See [student-work behavior](derivation-student-work.md) and [verification](../verification/derivation-student-work-verification.md). This document does not start another branch.
 
 ## Product direction and scope
 
@@ -128,7 +128,7 @@ Instructor control of per-problem weights is agreed. Decide the concrete represe
 
 ## Agreed implementation sequence
 
-The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–021 are complete and 022 is in progress; proposed branches 023–027 have not been started locally. The unstarted derivation reservations move up one number to accommodate 023. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
+The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–021 are merged and 022 is ready for review; proposed branches 023–027 have not been started locally. The unstarted derivation reservations move up one number to accommodate 023. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
 
 | Proposed branch                          | Depends on                                                        | Reviewable outcome                                                                                                                                                                            |
 | ---------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -184,7 +184,7 @@ Additional formats become authorable only when their own reference validation an
 
 ### 022: student work and finalization
 
-Implementation has started with [staged proof responses and checker evidence](derivation-student-work.md). The first small delivery defines strict save/check requests, retains bounded incomplete work, checks against trusted redacted statements and binds fresh reports to occurrence/version IDs. Persistence/revision wiring follows; live assignment/student admission remains guarded.
+The [student-work implementation](derivation-student-work.md) now connects strict proof responses, pinned redacted statements, revisioned persistence, practice checks, independent references and completion finalization/review. Normal/demo access and focused browser journeys are verified. Graded proof admission remains guarded through 024.
 
 This is also a larger branch; preserve the boundary between the checker and request/state coordination:
 
@@ -192,7 +192,7 @@ This is also a larger branch; preserve the boundary between the checker and requ
 2. Add assigned practice Check proof and protected graded finalization. A complete accepted graded proof gets its full allocation; any error, incomplete work or unresolved evaluation records review-needed state for the problem and assignment. Include unused erroneous steps. No numerical automatic partial credit or finalized overall grade while review is pending.
 3. Add student Fitch editing, explicit saves, unsaved-navigation protection, manual checks and read-only submitted views. Keep syntax/rule diagnostics hidden before graded submission. Preserve independent result-feedback and reference-proof access; reject stale responses after edits/lifecycle changes.
 
-Instructor-assigned practice belongs here; student-created practice setup belongs to 027. Completion-only semantics need an explicit design checkpoint before enabling derivations in that mode, preserving score-free completion rather than assuming correctness grading.
+Instructor-assigned practice belongs here; student-created practice setup belongs to 027. The completion checkpoint is resolved: require a finished attempt, allow logical mistakes, expose diagnostics only after submission and flag verified/error/unavailable outcomes independently from score-free completion. Instructors can inspect frozen completion proofs; reference reveal stays separately controlled.
 
 022 and 024 are a single functional release milestone. Keep graded derivation assignment creation/publication or student availability guarded until instructors can inspect and resolve every flagged submission. Internal fixtures may test the staged paths, but users must not accumulate submissions that have no usable grading workflow.
 

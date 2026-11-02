@@ -1,6 +1,6 @@
 # Derivation authoring
 
-Status: `021-feat-derivation-authoring` implementation and focused final verification are complete. Private definitions, owner HTTP/persistence workflows, statement/rule/reference editing, explicit checks and checked immutable publication are implemented. Assignment/student admission remains guarded and no derivation demo template is seeded. See [final evidence and limits](../verification/derivation-authoring-verification.md).
+Status: `021-feat-derivation-authoring` implementation and focused final verification are complete. Private definitions, owner HTTP/persistence workflows, statement/rule/reference editing, explicit checks and checked immutable publication are implemented. The follow-up 022 branch now enables practice/completion proof assignments and student workflows; graded admission remains guarded. No derivation demo template is seeded. See [current student behavior](derivation-student-work.md). See [final evidence and limits](../verification/derivation-authoring-verification.md).
 
 See the [derivation sequence](logical-derivations.md) and [proof-checker specification](propositional-proof-checker.md) for the agreed product direction and checker semantics.
 
