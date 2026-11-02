@@ -119,5 +119,6 @@ export type { DerivationAnswer } from './types/assignment-attempt/derivation-wor
 export type { ProofCheckReport, ProofDiagnosticCode } from './types/proof/report.ts';
 export type {
   ProofSubmissionResult,
+  ProofCompletionSubmissionResult,
   DerivationEvaluationEvidence,
 } from './types/assignment-attempt/proof-result.ts';

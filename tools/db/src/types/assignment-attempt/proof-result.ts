@@ -17,3 +17,27 @@ export interface ProofSubmissionResult {
     proofs: { accepted: number; needsReview: number; unassessable: number; total: number };
   };
 }
+
+/** Finished work is acknowledged independently from the retained verification report. */
+export interface ProofCompletionSubmissionResult {
+  gradingVersion: 'proof_completion_v1';
+  items: (
+    | {
+        itemId: string;
+        type: 'truth_table' | 'true_false' | 'multiple_choice';
+        completedResponses: number;
+        totalResponses: number;
+      }
+    | (DerivationEvaluationEvidence & { completedResponses: 1; totalResponses: 1 })
+  )[];
+  summary: {
+    completedResponses: number;
+    totalResponses: number;
+    proofVerification: {
+      verified: number;
+      errorsFound: number;
+      unavailable: number;
+      total: number;
+    };
+  };
+}

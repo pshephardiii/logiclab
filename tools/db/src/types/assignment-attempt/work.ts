@@ -1,4 +1,4 @@
-import type { ProofSubmissionResult } from './proof-result.ts';
+import type { ProofSubmissionResult, ProofCompletionSubmissionResult } from './proof-result.ts';
 import type { DerivationAnswer } from './derivation-work.ts';
 import type {
   ConceptualResponse,
@@ -48,4 +48,5 @@ export type SubmissionResult =
   | CompletionSubmissionResult
   | MixedGradedSubmissionResult
   | MixedCompletionSubmissionResult
-  | ProofSubmissionResult;
+  | ProofSubmissionResult
+  | ProofCompletionSubmissionResult;

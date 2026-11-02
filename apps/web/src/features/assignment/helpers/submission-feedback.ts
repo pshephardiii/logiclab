@@ -1,6 +1,9 @@
 import type { SubmissionResult as ObjectiveResult } from '@logiclab/contracts';
-import type { ProofSubmissionResult } from '@logiclab/contracts/proof-submission';
-type SubmissionResult = ObjectiveResult | ProofSubmissionResult;
+import type {
+  ProofSubmissionResult,
+  ProofCompletionSubmissionResult,
+} from '@logiclab/contracts/proof-submission';
+type SubmissionResult = ObjectiveResult | ProofSubmissionResult | ProofCompletionSubmissionResult;
 
 /** Completion records intentionally contain no correctness feedback. */
 export function submissionFeedback(result: SubmissionResult | null | undefined, itemId: string) {
@@ -29,7 +32,11 @@ export function proofSubmissionFeedback(
   result: SubmissionResult | null | undefined,
   itemId: string,
 ) {
-  if (result?.gradingVersion !== 'proof_mixed_v1') return null;
+  if (
+    result?.gradingVersion !== 'proof_mixed_v1' &&
+    result?.gradingVersion !== 'proof_completion_v1'
+  )
+    return null;
   const item = result.items.find((item) => item.itemId === itemId);
   return item?.type === 'derivation' ? item.report : null;
 }

@@ -269,7 +269,7 @@ export async function createStudentWorkStore(
           maxPoints: item.maxPoints!,
         }));
         if (containsProof) {
-          // Internal staged path: live assignment/HTTP contracts still exclude proofs until review is ready.
+          // Graded proof finalization stays staged until instructor grading/review enables assignment admission.
           const result = evaluateProofSubmission(
             assigned.map((item) => ({
               id: item.id,

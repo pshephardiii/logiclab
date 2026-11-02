@@ -160,7 +160,7 @@ test('foreign occurrence answers and injected reports/keys are not trusted as co
   ])
     expect(() => evaluateProofCompletion([f.proof, f.question], input)).toThrow(StudentWorkError);
 });
-test('completion contracts reject score/key injection, duplicate occurrences and inconsistent counts; live storage remains guarded', () => {
+test('completion contracts reject score/key injection, duplicate occurrences and inconsistent counts; completion snapshots require final score-free state', () => {
   const f = fixture();
   const result = evaluateProofCompletion([f.proof, f.question], f.answers);
   for (const input of [
@@ -179,7 +179,7 @@ test('completion contracts reject score/key injection, duplicate occurrences and
       submittedAt: new Date().toISOString(),
       result,
     }).success,
-  ).toBe(false);
+  ).toBe(true);
 });
 
 test('an invalid conclusion-only shortcut is completed but flagged separately from a verified attempt', () => {

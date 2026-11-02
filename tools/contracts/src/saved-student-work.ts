@@ -1,4 +1,7 @@
-import { proofSubmissionResultSchema } from './proof-submission';
+import {
+  proofSubmissionResultSchema,
+  proofCompletionSubmissionResultSchema,
+} from './proof-submission';
 import { z } from 'zod';
 import { assignmentSummarySchema } from './assignment';
 import { assignmentResponseValueSchema } from './assignment-responses';
@@ -20,7 +23,7 @@ import {
   studentSolutionResponseSchema,
 } from './student-work';
 
-/** Staged persistence projections. Active HTTP contracts remain narrower until consumers are ready. */
+/** Proof-aware saved-work projections; supported assignment admission is enforced separately. */
 export const savedStudentResponseValueSchema = z.union([
   assignmentResponseValueSchema,
   derivationAnswerSchema,
@@ -33,9 +36,23 @@ export type SavedStudentResponses = z.infer<typeof savedStudentResponsesSchema>;
 export const savedStudentAttemptSchema = studentAttemptSchema
   .extend({
     answers: savedStudentResponsesSchema,
-    result: z.union([submissionResultSchema, proofSubmissionResultSchema]).nullable(),
+    result: z
+      .union([
+        submissionResultSchema,
+        proofSubmissionResultSchema,
+        proofCompletionSubmissionResultSchema,
+      ])
+      .nullable(),
   })
   .superRefine((attempt, context) => {
+    if (
+      attempt.result?.gradingVersion === 'proof_completion_v1' &&
+      (!attempt.submittedAt || attempt.score != null)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Retained proof completion requires final submission without a point score.',
+      });
     if (
       attempt.result?.gradingVersion === 'proof_mixed_v1' &&
       (!attempt.submittedAt || !attempt.score)

@@ -1,4 +1,5 @@
 import { validateProofSubmissionScore } from '../../application/assignment/proof-scoring';
+import { retainedProofCompletion } from './proof-completion-response';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { assignmentScoreSchema } from '@logiclab/contracts';
 import type { Assignment, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
@@ -23,6 +24,8 @@ export function attemptResponse(
     (!submitted || assignment.assessmentMode !== 'graded')
   )
     throw new StudentWorkError('unsupported_policy');
+  if (attempt.result?.gradingVersion === 'proof_completion_v1')
+    retainedProofCompletion(attempt, assignment);
   const score =
     attempt.result?.gradingVersion === 'proof_mixed_v1'
       ? validateProofSubmissionScore(attempt.result, attempt.score)
