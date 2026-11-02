@@ -9,6 +9,8 @@ import {
 } from '@logiclab/contracts/saved-student-work';
 import { buildApp } from '../../src/app';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
+import { createAssignmentStore } from '../../src/persistence/assignment/store';
+import { assignmentResponseSchema } from '@logiclab/contracts';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
@@ -64,6 +66,11 @@ for (const mode of ['normal', 'demo'] as const) {
           service: { authenticate: async () => active },
           studentWork: await createStudentWorkStore(orm),
         },
+        assignment: {
+          config: { APP_ORIGIN: origin, secureCookies: false },
+          service: { authenticate: async () => active },
+          assignments: await createAssignmentStore(orm),
+        },
         demo,
       });
       let address = 1;
@@ -114,29 +121,57 @@ for (const mode of ['normal', 'demo'] as const) {
       const problem = await problems.create(owner.id, { title: 'Pinned HTTP proof', definition });
       const publication = await problems.publish(owner.id, problem.id);
       if (publication.status !== 'published') assert.fail('Expected accepted fixture publication');
-      // Internal assignment fixture: owner assignment admission remains guarded until the next slice.
-      const assignment = em.create(db.Assignment, {
-        classroom,
-        title: 'Assigned proof practice',
-        assessmentMode: db.AssessmentMode.UngradedPractice,
-        feedbackTiming: mode === 'demo' ? db.FeedbackTiming.Immediate : db.FeedbackTiming.OnCheck,
-        solutionAccess: db.SolutionAccess.Never,
-      });
-      const version = em.getReference(db.ProblemVersion, publication.version.id);
-      const first = em.create(db.AssignmentItem, {
-        assignment,
-        position: 1,
-        problemVersion: version,
-      });
-      const second = em.create(db.AssignmentItem, {
-        assignment,
-        position: 2,
-        problemVersion: version,
-      });
-      em.persist([assignment, first, second]);
-      await em.flush();
-      assignment.publishedAt = new Date();
-      await em.flush();
+      const resourcePrefix = `/api/${mode === 'demo' ? 'demo/resources' : ''}`.replace(/\/$/, '');
+      if (mode === 'demo') {
+        const switched = await request('POST', '/api/demo/role', cookie, { role: 'instructor' });
+        assert.equal(switched.statusCode, 200, switched.body);
+        cookie = cookieFrom(switched);
+      } else {
+        active = { id: owner.id, role: 'instructor' };
+        const manager = orm.em.fork();
+        manager.persist(
+          manager.create(db.ClassEntitlement, {
+            classroom: manager.getReference(db.Classroom, classroom.id),
+            provider: db.BillingProvider.Simulator,
+            source: db.EntitlementSource.ClassPurchase,
+            sourceReference: randomUUID(),
+            startsAt: new Date(Date.now() - 60000),
+            endsAt: new Date(Date.now() + 86400000),
+          }),
+        );
+        await manager.flush();
+      }
+      const created = await request(
+        'POST',
+        `${resourcePrefix}/classes/${classroom.id}/assignments`,
+        cookie,
+        {
+          title: 'Assigned proof practice',
+          assessmentMode: 'ungraded_practice',
+          feedbackTiming: mode === 'demo' ? 'immediate' : 'on_check',
+          solutionAccess: 'never',
+          problemVersionIds: [publication.version.id, publication.version.id],
+        },
+      );
+      assert.equal(created.statusCode, 201, created.body);
+      const assignment = assignmentResponseSchema.parse(created.json()).assignment;
+      assert.equal(assignment.items.length, 2);
+      assert(created.body.includes('referenceProof'));
+      const first = assignment.items[0]!;
+      const second = assignment.items[1]!;
+      const published = await request(
+        'POST',
+        `${resourcePrefix}/assignments/${assignment.id}/publish`,
+        cookie,
+        {},
+      );
+      assert.equal(published.statusCode, 200, published.body);
+      assert(published.json().assignment.publishedAt);
+      if (mode === 'demo') {
+        const switched = await request('POST', '/api/demo/role', cookie, { role: 'student' });
+        assert.equal(switched.statusCode, 200, switched.body);
+        cookie = cookieFrom(switched);
+      } else active = { id: student.id, role: 'student' };
       const prefix = `/api/${mode === 'demo' ? 'demo/resources/' : ''}student/assignments/${assignment.id}`;
       const valid = { type: 'derivation' as const, proof: definition.referenceProof! };
       const incomplete = structuredClone(valid);

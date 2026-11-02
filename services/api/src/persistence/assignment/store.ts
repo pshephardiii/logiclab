@@ -4,7 +4,7 @@ import {
   assignmentPointAllocationsSchema,
   weightedAssignmentItemsSchema,
 } from '@logiclab/contracts';
-import { supportedProblemDefinition } from '../../application/problem/definition-support';
+import { supportedAssignmentDefinition } from '../../application/assignment/definition-support';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
@@ -25,7 +25,7 @@ import type {
   AssignmentListQuery,
 } from '@logiclab/contracts';
 import { AssignmentOperationError } from '../../application/assignment/errors';
-import { publishedProblemVersion } from '../problem/version-response';
+import { libraryProblemVersion } from '../problem/version-response';
 
 export interface AssignmentStore extends SubmissionReviewStore {
   create(
@@ -108,7 +108,12 @@ export async function createAssignmentStore(
     if (!assignment) throw new AssignmentOperationError('not_found');
     return assignment;
   }
-  async function ownedVersions(em: Manager, ownerId: string, ids: string[]) {
+  async function ownedVersions(
+    em: Manager,
+    ownerId: string,
+    ids: string[],
+    assessmentMode: string,
+  ) {
     const uniqueIds = [...new Set(ids)];
     const versions = await em.find(ProblemVersion, {
       id: { $in: uniqueIds },
@@ -116,7 +121,9 @@ export async function createAssignmentStore(
     });
     if (versions.length !== uniqueIds.length)
       throw new AssignmentOperationError('version_not_found');
-    versions.forEach((version) => supportedProblemDefinition(version.definition));
+    versions.forEach((version) =>
+      supportedAssignmentDefinition(version.definition, assessmentMode),
+    );
     return new Map(versions.map((version) => [version.id, version]));
   }
   async function detail(em: Manager, assignment: AssignmentEntity): Promise<AssignmentDetail> {
@@ -125,13 +132,16 @@ export async function createAssignmentStore(
       { assignment: assignment.id },
       { orderBy: { position: 'ASC' }, populate: ['problemVersion.problem'] },
     );
+    items.forEach((item) =>
+      supportedAssignmentDefinition(item.problemVersion.definition, assignment.assessmentMode),
+    );
     return {
       ...assignmentSummary(assignment),
       items: items.map((item) => ({
         id: item.id,
         position: item.position,
         maxPoints: item.maxPoints,
-        problemVersion: publishedProblemVersion(item.problemVersion),
+        problemVersion: libraryProblemVersion(item.problemVersion),
       })),
     };
   }
@@ -142,7 +152,7 @@ export async function createAssignmentStore(
     ids: string[],
     points?: number[],
   ) {
-    const versions = await ownedVersions(em, ownerId, ids);
+    const versions = await ownedVersions(em, ownerId, ids, assignment.assessmentMode);
     // Validate all references before replacement; the transaction rolls back the entire draft on failure.
     await em.nativeDelete(AssignmentItem, { assignment: assignment.id });
     ids.forEach((id, index) =>
@@ -206,6 +216,13 @@ export async function createAssignmentStore(
       AssignmentItem,
       { assignment: assignment.id },
       { orderBy: { position: 'ASC' } },
+    );
+    // Validate the complete effective set, including policy-only PATCHes and retained occurrences.
+    await ownedVersions(
+      em,
+      ownerId,
+      items.map((item) => item.problemVersion.id),
+      assignment.assessmentMode,
     );
     if (input.pointAllocations !== undefined) {
       const parsed = assignmentPointAllocationsSchema.safeParse(input.pointAllocations);
@@ -399,6 +416,7 @@ export async function createAssignmentStore(
             em,
             ownerId,
             items.map((item) => item.problemVersion.id),
+            assignment.assessmentMode,
           );
           if (
             !(await hasClassCapability(

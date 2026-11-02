@@ -5,11 +5,8 @@ import {
   createAssignmentRequestSchema,
 } from '@logiclab/contracts';
 import { useEffect, useState, type FormEvent } from 'react';
-import type {
-  AssignmentDetail,
-  CreateAssignmentRequest,
-  PublishedProblemVersion,
-} from '@logiclab/contracts';
+import type { AssignmentDetail, CreateAssignmentRequest } from '@logiclab/contracts';
+import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 import { PublishedProblemPicker } from './PublishedProblemPicker';
 import { AssignmentItems, type SelectedProblem } from './AssignmentItems';
 import { assignmentItemState } from '../helpers/assignment-item-state';
@@ -44,6 +41,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   );
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
+  const containsProof = items.some((item) => item.version.definition.type === 'derivation');
+  const invalidProofMode = containsProof && policy.assessmentMode !== 'ungraded_practice';
   const graded = policy.assessmentMode === 'graded';
   const { itemsChanged, invalidPoints, pointsChanged, totalPoints } = assignmentItemState(
     items,
@@ -63,7 +62,9 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     onDirty(dirty);
   }, [dirty, onDirty]);
 
-  function add(version: PublishedProblemVersion) {
+  function add(version: LibraryProblemVersion) {
+    if (version.definition.type === 'derivation' && policy.assessmentMode !== 'ungraded_practice')
+      return;
     setItems((previous) =>
       previous.length >= 50 ? previous : [...previous, { key: crypto.randomUUID(), version }],
     );
@@ -82,7 +83,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (invalidPoints || busy || readOnly) return;
+    if (invalidPoints || invalidProofMode || busy || readOnly) return;
     await onSave(
       createAssignmentRequestSchema.parse({
         title,
@@ -129,10 +130,17 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
           />
           <AssignmentPolicyFields
             policy={policy}
+            practiceOnly={containsProof}
             onChange={setPolicy}
             gradeReleaseTiming={gradeReleaseTiming}
             onGradeReleaseChange={setGradeReleaseTiming}
           />
+          {containsProof && (
+            <p className="help">
+              Remove all derivations before choosing graded or completion-only mode. Practice proofs
+              have no official score or final submission.
+            </p>
+          )}
           <AssignmentItems
             items={items}
             graded={graded}
@@ -151,10 +159,14 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             <AssignmentPointsSummary invalidPoints={invalidPoints} totalPoints={totalPoints} />
           )}
           {!readOnly && (
-            <PublishedProblemPicker disabled={busy || items.length >= 50} onAdd={add} />
+            <PublishedProblemPicker
+              disabled={busy || items.length >= 50}
+              allowDerivations={policy.assessmentMode === 'ungraded_practice'}
+              onAdd={add}
+            />
           )}
           {!readOnly && (
-            <button type="submit" disabled={invalidPoints}>
+            <button type="submit" disabled={invalidPoints || invalidProofMode}>
               {busy ? 'Saving…' : 'Save assignment draft'}
             </button>
           )}

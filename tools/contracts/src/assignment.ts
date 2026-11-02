@@ -6,7 +6,7 @@ import {
 import { gradeReleaseTimingSchema } from './assignment-results-release';
 import { z } from 'zod';
 import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
-import { problemVersionSchema } from './problem';
+import { libraryProblemVersionSchema } from './problem-library';
 
 // Independent policy dimensions; additional modes require application/database support.
 export const assignmentPolicySchema = z
@@ -50,12 +50,20 @@ export const assignmentItemSchema = z.strictObject({
   id: z.uuid(),
   position: z.number().int().positive(),
   maxPoints: assignmentItemPointsSchema.optional(),
-  problemVersion: problemVersionSchema,
+  problemVersion: libraryProblemVersionSchema,
 });
 export type AssignmentItem = z.infer<typeof assignmentItemSchema>;
-export const assignmentSchema = assignmentSummarySchema.safeExtend({
-  items: z.array(assignmentItemSchema).max(50),
-});
+/** Owner-only details may carry private references. Students use separate redacted work contracts. */
+export const assignmentSchema = assignmentSummarySchema
+  .safeExtend({
+    items: z.array(assignmentItemSchema).max(50),
+  })
+  .refine(
+    (assignment) =>
+      assignment.assessmentMode === 'ungraded_practice' ||
+      !assignment.items.some((item) => item.problemVersion.definition.type === 'derivation'),
+    'Derivations are available only in ungraded practice assignments.',
+  );
 export type AssignmentDetail = z.infer<typeof assignmentSchema>;
 
 export const assignmentClassParamsSchema = z.strictObject({ classId: z.uuid() });

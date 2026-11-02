@@ -12,6 +12,12 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
+  proof_mode_unavailable: {
+    status: 409,
+    code: 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE',
+    message:
+      'Derivations are currently available only in ungraded practice assignments. Remove them before changing assessment mode.',
+  },
   invalid_scoring: {
     status: 400,
     code: 'ASSIGNMENT_SCORING_INVALID',

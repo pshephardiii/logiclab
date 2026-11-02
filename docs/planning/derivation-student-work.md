@@ -1,6 +1,6 @@
 # Derivation student work
 
-Status: nine slices of `022-feat-derivation-student-work` are implemented: proof contracts/evaluation, draft persistence, transient checking and independent reference access, retained graded results and transactional finalization, shared Fitch controls, assigned-work browser state and proof-aware student HTTP routes. Assignment authoring/publication still excludes proofs, so end-to-end public availability remains guarded. Internal graded fixtures exercise safe result disclosure; completion-only proof work and graded instructor review remain unavailable. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
+Status: ten slices of `022-feat-derivation-student-work` are implemented. Instructors can now select and publish Fitch proofs in ungraded practice assignments, and students can explicitly save/check them and reveal references only under the configured policy. Normal/demo HTTP and browser flows are verified. Graded finalization/disclosure remains internal groundwork, with graded assignment admission guarded until 024 instructor review; completion-only proof semantics remain unresolved. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
 ## Student work versus private authored content
 
@@ -30,7 +30,7 @@ The existing student store's `read`/`save` methods support proof drafts for prac
 
 Ordinary calls own their transaction; demo/request-scoped calls join the supplied workspace transaction. Failed validation/revisions and caller failures roll back writes. Saves waiting behind archive/enrollment removal recheck access before writing. Existing submitted-record retention is unchanged; graded proof finalization is supported internally as described below. Instructor practice review remains private/unavailable. Objective finalization/review still validates its narrower answer union rather than dropping proof fields.
 
-Assignment create/publication remains the rollout guard: the student frontend and HTTP endpoints can now exchange proof work, but instructors cannot yet assign it through supported authoring. Do not seed staged graded fixtures into user-facing data. Completion-only semantics and instructor grading/review remain separate work; internal graded finalization does not enable user-facing proof assignment publication.
+Assignment create/publication now admits proofs only for ungraded practice. Do not seed staged graded fixtures into user-facing data. Completion-only semantics and instructor grading/review remain separate work; internal graded finalization does not enable graded proof assignment publication.
 
 ## Staged practice checking and reference access
 
@@ -68,7 +68,7 @@ Shared assignment/enrollment locks prevent archive/removal races, and the existi
 
 Accepted proofs receive full allocation. Missing/incomplete/incorrect proofs retain checker evidence and pending-review points rather than automatic zero or partial credit. Mixed objective items retain their own weighted results while unresolved proofs keep assignment earned totals/percentage null. The proof response itself is not overwritten with a reference or a synthesized empty answer. Grade release controls report/point disclosure independently from answer reveal, including on immutable retries. Pre-submission graded proof checking remains locked; graded reference access and the instructor review workflow remain guarded pending their dependent slices.
 
-Database write failures and caller/demo transaction failures roll back answers, reports, points, timestamps, revisions and any newly inserted attempt. Demo calls use the existing workspace-bound manager and deny other visitors. Only assignment admission remains guarded: the student HTTP/frontend consumers now support internal proof fixtures, but instructors cannot yet publish proof-containing assignments. Do not introduce live graded proofs before 024 review can resolve flagged submissions. The current frozen automatic-score validator is not yet an instructor adjustment workflow.
+Database write failures and caller/demo transaction failures roll back answers, reports, points, timestamps, revisions and any newly inserted attempt. Demo calls use the existing workspace-bound manager and deny other visitors. Practice proof assignment admission and student HTTP/frontend flows are now supported; graded and completion-only admission remains guarded. Do not introduce live graded proofs before 024 review can resolve flagged submissions. The current frozen automatic-score validator is not yet an instructor adjustment workflow.
 
 ## Shared Fitch editor and staged student panel
 
@@ -78,7 +78,7 @@ The Fitch editor, line/citation controls, pure edit operations and read-only sum
 
 An optional explicit **Check proof** callback leaves request authorization/cancellation with the caller. Feedback includes the exact proof snapshot that was checked; the panel hides it when current work differs, including late reports for older edits. Diagnostics show local versus upstream validity and distinct verified/review-needed/unassessable outcomes without inventing a grade. A separate authorized solution prop renders the instructor reference/explanation without overwriting the student's proof or releasing feedback. The panel does not import the proof checker or a private authoring component.
 
-The panel is now connected to `AssignedAttempt` and its answer/request state, as described below. Shared components alone still provide no authorization or persistence guarantee. The parent enforces check/result visibility and resets editor controls by occurrence; assignment admission remains the outstanding practice rollout boundary.
+The panel is now connected to `AssignedAttempt` and its answer/request state, as described below. Shared components alone still provide no authorization or persistence guarantee. The parent enforces check/result visibility and resets editor controls by occurrence; practice admission now uses the guarded authoring flow described below.
 
 ## Assigned-work browser integration
 
@@ -90,7 +90,7 @@ Proof edits never schedule automatic checks, including mixed immediate-feedback 
 
 `AssignedAttempt` now renders the Fitch panel, preserves separate solution retrieval and uses explicit Save problem plus the existing final-submission confirmation. Submitted proof work is read-only. Authorized mixed results show proof verification/review state separately from objective response counts and points. Withheld results expose neither reports nor awarded points; released review-needed totals stay nonnumeric. Missing submitted proofs display explicit empty work with their retained review report. No transient report is used as a substitute for a withheld final result.
 
-The frontend and student HTTP endpoints can now consume staged fixtures. Assignment authoring/publication still rejects proofs, so do not seed unsupported live assignments or claim a complete instructor-to-student proof journey yet. The next slice must settle and implement practice assignment admission, while keeping graded availability guarded until 024 and completion-only proof semantics unresolved. Graded reference access also remains guarded in persistence. No autosaving or browser-storage recovery is introduced.
+The frontend and student HTTP endpoints now participate in the supported instructor-to-student practice proof flow. Graded availability remains guarded until 024 and completion-only proof semantics remain unresolved; do not seed unsupported graded assignments into user-facing data. Graded reference access also remains guarded in persistence. No autosaving or browser-storage recovery is introduced.
 
 ## Proof-aware student HTTP routes
 
@@ -100,7 +100,17 @@ Practice proof saves accept bounded incomplete work, retain revision conflicts a
 
 Graded HTTP projections are tested only with internal fixtures: a withheld final receipt carries neither report nor points, independent answer reveal does not release them, and later authorized grade release exposes retained review-needed reports with nonnumeric totals. Final retries return the retained evidence rather than regrading. Graded pre-submission checks and reference access retain their existing guards. This does not enable graded proof assignment creation or instructor review, and completion-only proofs remain unsupported.
 
-No new endpoint, migration, environment variable or demo template is introduced. Deploy matching API/frontend contracts when enabling these paths. Instructor assignment selection/publication is the next practice delivery slice; a complete real-browser authoring-to-practice journey still needs verification afterward.
+No new endpoint, migration, environment variable or demo template is introduced. Deploy matching API/frontend contracts when enabling these paths. Instructor practice selection/publication and a complete real-browser authoring-to-practice journey are now verified as described below.
+
+## Practice-proof assignment admission
+
+Owner assignment details now use the private library-version shape, including pinned reference definitions. This response is restricted to the owning instructor and is never reused for student content. The assignment contract permits proof-containing details only in `ungraded_practice`; objective definitions retain all existing assessment modes. Student reads use their separate redacted content/answer contracts.
+
+The assignment store validates supported definitions against the effective assessment mode for creation, replacement, complete merged PATCH state, duplication, owner detail projection and publication. In particular, a policy-only PATCH cannot retain proofs while changing to graded/completion-only mode. Removing every proof and changing mode in the same PATCH is permitted when the resulting objective assignment is valid. Invalid transitions return `DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE` and roll back metadata/items under the parent lock. Publication independently rechecks ownership, supported versions, nonempty content and class coverage; publication/edit races cannot produce a graded proof assignment. Existing published policy locks remain unchanged.
+
+The picker includes published Fitch versions only in practice mode. Selected proofs keep other assessment-mode options disabled until removed, with explanatory text. The ordered list shows their conclusion without automatically expanding the private reference. Failed saves retain selections and edits. Repeated publications get independent occurrence identities; duplication preserves pinned content in a fresh practice draft. Archived library publications remain usable, and later owner edits cannot change assigned rules, statements or reference proofs. Practice check timing remains explicit for proofs even when companion questions use immediate feedback. No seeded demo template is changed.
+
+A real Chrome walkthrough now covers instructor UI authoring/publication, practice assignment selection/publication, role switching, student proof editing/manual checking, incomplete explicit save/reload, independently authorized reference reveal, Stay/Discard, separate repeated occurrences, hard reload and logout. Normal and demo HTTP tests create/publish through the owner API instead of bypassing assignment admission. Graded and completion-only proof creation remain denied.
 
 ## Next branch after 022
 
@@ -108,7 +118,7 @@ Complete this student-work branch, then deliver `023-refactor-explicit-context-a
 
 ## Next delivery slices
 
-1. Implement instructor selection/publication of practice proofs and its mode-change guards, preserving ownership, pinned publications and privacy. Verify a real API/browser authoring-to-practice journey. Keep graded authoring/publication/student availability guarded through the complete 022–024 instructor-review milestone; internal fixtures may exercise staged paths. Settle completion-only semantics before enabling proofs in that mode. Keep private reference/explanation access independent from student-specific feedback and grade release; never feed owner DTOs directly to student editors.
+1. Settle completion-only proof semantics and feedback behavior before enabling that mode; preserve score-free completion. Keep graded authoring/publication/student availability guarded through the complete 022–024 instructor-review milestone. Consolidate remaining branch documentation and verification before completion, then perform the agreed 023 context-assembly refactor before resuming instructor review in 024.
 
 Before enabling completion-only derivations, settle what counts as completed proof work and the permitted feedback behavior while preserving score-free completion. Also settle mixed immediate-feedback assignments: the agreed proof interaction is explicit **Check proof**, rather than automatic proof-error display. Neither checkpoint blocks the current transport/evaluation foundation.
 
@@ -175,3 +185,13 @@ Formatting and whitespace checks passed. No server runtime or database behavior 
 `npm run db:test` passed 246 PostgreSQL checks (167 database, 79 API/workflow). Two new real-API cases cover normal and demo scoped reads, saved incomplete proofs/reload, independent occurrences, fresh unsaved checks without writes, pinned content after owner edits, separate locked/allowed references, immutable revision behavior, no practice finalization, malformed/injected fields, origin/session checks, outsider/cross-visitor denial and archives. The cases also use internal graded fixtures to verify HTTP finalization, withheld grade receipts despite answer reveal, later nonnumeric review results and immutable retries. Existing retention, concurrency, transaction-failure and authoring-admission regressions passed.
 
 Formatting and whitespace checks passed. Tests use Fastify injection with real stores and isolated disposable PostgreSQL schemas, not mocked student responses or a real-browser walkthrough. No user development database was migrated/reset, and no new schema change is introduced in this slice. Assignment authoring/publication, completion-only proof semantics and graded instructor review remain guarded. A full instructor-to-student proof journey is not claimed yet. Existing Jest VM-module advisories remain.
+
+## Slice 10 verification — November 2, 2026
+
+`npm run check` passed type checks, 1,415 tests (357 engine, 759 API, 299 web) and production builds. Seven new cases cover practice-only admission/contracts, actionable safe errors, mode-aware picker choices and failed-save retention/mode locks in the instructor form. API type checking passed again after removing the unused objective-only version projection; callers now validate admission separately and use the private owner projection.
+
+`npm run db:test` passed 250 PostgreSQL checks (167 database, 83 API/workflow). Four new integration cases cover repeated/mixed practice versions, coverage, pinned private/redacted student projections, duplication/archive/restore, rejected creates and policy-only changes with full rollback, valid simultaneous proof removal/mode change, foreign ownership, independent publication guards and publication/edit races. Existing normal/demo HTTP cases now use actual owner assignment creation/publication before the student proof flow. Existing objective work and persistence regressions passed.
+
+Focused headless Chrome against temporary local servers and an isolated disposable schema passed instructor UI proof authoring/check/save/publication, practice-only selection/mode controls and assignment publication; student manual-only checking, invalid/incomplete save/reload, separate reference reveal, Stay/Discard, repeated-occurrence identity, hard reload, no practice finalization, 390px overflow check, separate-visitor denial, logout, empty browser storage and no uncaught page errors. All application responses used real local APIs. Ignored evidence: `.codex-local/verification/derivation-student-work/slice10-browser.log` and `slice10-mobile.png`. Temporary processes/schema were cleaned up.
+
+Formatting and whitespace checks passed. No migration, user development-database reset, new environment variable or demo template change is introduced. Match contracts/API/frontend builds for the broadened owner response shape. This is focused feature verification, not full product QA, a multi-browser/accessibility audit or hosted verification. Graded proof admission/instructor adjustment and completion-only proof semantics remain guarded; existing Jest VM-module advisories remain.

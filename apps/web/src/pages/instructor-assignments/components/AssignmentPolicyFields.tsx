@@ -9,6 +9,7 @@ import {
 
 type Props = {
   policy: AssignmentLearningPolicy;
+  practiceOnly?: boolean;
   onChange: (policy: AssignmentLearningPolicy) => void;
   gradeReleaseTiming: GradeReleaseTiming;
   onGradeReleaseChange: (timing: GradeReleaseTiming) => void;
@@ -17,6 +18,7 @@ type Props = {
 /** Mode changes establish valid defaults; restored legacy assistance remains explicit. */
 export function AssignmentPolicyFields({
   policy,
+  practiceOnly = false,
   onChange,
   gradeReleaseTiming,
   onGradeReleaseChange,
@@ -28,6 +30,7 @@ export function AssignmentPolicyFields({
     policy.assessmentMode === 'completion_only' && policy.feedbackTiming !== 'on_submission';
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
+    if (practiceOnly && assessmentMode !== 'ungraded_practice') return;
     const resetSolutions =
       assessmentMode === 'ungraded_practice' &&
       !['never', 'anytime'].includes(policy.solutionAccess);
@@ -73,8 +76,12 @@ export function AssignmentPolicyFields({
         onChange={changeMode}
         aria-describedby="assignment-mode-help"
       >
-        <option value="graded">Graded</option>
-        <option value="completion_only">Completion only</option>
+        <option value="graded" disabled={practiceOnly}>
+          Graded
+        </option>
+        <option value="completion_only" disabled={practiceOnly}>
+          Completion only
+        </option>
         <option value="ungraded_practice">Ungraded practice</option>
       </select>
       <p id="assignment-mode-help" className="help">
