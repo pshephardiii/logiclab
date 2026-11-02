@@ -322,7 +322,9 @@ test('immediate work keeps blanks neutral and manual checking available without 
     attempt: null,
   });
   const { user } = await open();
-  expect(screen.getByText(/Incorrect entries are highlighted shortly/)).toBeInTheDocument();
+  expect(
+    screen.getByText(/Truth-table and question entries are checked shortly/),
+  ).toBeInTheDocument();
   await user.selectOptions(cells()[0]!, 'F');
   await user.click(screen.getByRole('button', { name: 'Check answers' }));
   expect(await screen.findByText('Incorrect', { exact: true })).toBeInTheDocument();

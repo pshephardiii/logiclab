@@ -25,6 +25,7 @@ export const savedStudentResponseValueSchema = z.union([
   assignmentResponseValueSchema,
   derivationAnswerSchema,
 ]);
+export type SavedStudentResponseValue = z.infer<typeof savedStudentResponseValueSchema>;
 export const savedStudentResponsesSchema = z
   .record(z.uuid(), savedStudentResponseValueSchema)
   .refine((responses) => Object.keys(responses).length <= 50, 'At most 50 assigned occurrences.');
@@ -45,6 +46,9 @@ export const savedStudentAttemptSchema = studentAttemptSchema
       });
   });
 export type SavedStudentAttempt = z.infer<typeof savedStudentAttemptSchema>;
+export const savedStudentAttemptResponseSchema = z.strictObject({
+  attempt: savedStudentAttemptSchema,
+});
 export const savedStudentAssignmentSchema = assignmentSummarySchema.safeExtend({
   items: z
     .array(

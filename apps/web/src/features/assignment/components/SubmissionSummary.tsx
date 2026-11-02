@@ -1,4 +1,5 @@
 import type { AssignmentScore, SubmissionResult } from '@logiclab/contracts';
+import type { ProofSubmissionResult } from '@logiclab/contracts/proof-submission';
 import { PointScore } from './PointScore';
 
 export function SubmissionSummary({
@@ -7,7 +8,7 @@ export function SubmissionSummary({
   score,
   items,
 }: {
-  result: SubmissionResult;
+  result: SubmissionResult | ProofSubmissionResult;
   submittedAt: string;
   score?: AssignmentScore | null;
   items?: readonly { id: string; title: string }[];
@@ -26,6 +27,24 @@ export function SubmissionSummary({
           Completed {result.summary.completedResponses} of {result.summary.totalResponses}{' '}
           responses. No correctness score is recorded.
         </p>
+      ) : result.gradingVersion === 'proof_mixed_v1' ? (
+        <>
+          {score && <PointScore score={score} items={items} />}
+          <p>
+            Proofs: {result.summary.proofs.accepted} verified · {result.summary.proofs.needsReview}{' '}
+            need instructor review · {result.summary.proofs.unassessable} could not be fully
+            assessed.
+          </p>
+          <p>
+            Other responses: {result.summary.objective.correct} correct ·{' '}
+            {result.summary.objective.incorrect} incorrect · {result.summary.objective.unanswered}{' '}
+            unanswered.
+          </p>
+          <p className="help">
+            Unverified proofs require instructor grading. They do not receive an automatic zero or
+            partial score.
+          </p>
+        </>
       ) : (
         <>
           {score && <PointScore score={score} items={items} />}

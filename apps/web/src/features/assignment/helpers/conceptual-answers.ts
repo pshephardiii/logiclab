@@ -1,8 +1,12 @@
-import type { ConceptualAnswer, StudentAssignment, StudentAttempt } from '@logiclab/contracts';
+import type { ConceptualAnswer, StudentAssignment } from '@logiclab/contracts';
+import type {
+  SavedStudentAssignment,
+  SavedStudentAttempt,
+} from '@logiclab/contracts/saved-student-work';
 
 type ConceptualItem = Extract<StudentAssignment['items'][number], { content: unknown }>;
 
-export function blankConceptualAnswer(item: ConceptualItem): ConceptualAnswer {
+export function blankConceptualAnswer(item: Pick<ConceptualItem, 'content'>): ConceptualAnswer {
   return item.content.type === 'true_false'
     ? { type: 'true_false', answer: null }
     : { type: 'multiple_choice', optionId: null };
@@ -10,14 +14,17 @@ export function blankConceptualAnswer(item: ConceptualItem): ConceptualAnswer {
 
 /** Keep false distinct from unanswered, and preserve option identity rather than array position. */
 export function savedConceptualAnswers(
-  assignment: StudentAssignment,
-  attempt: StudentAttempt | null,
+  assignment: SavedStudentAssignment,
+  attempt: SavedStudentAttempt | null,
 ) {
   const answers: Record<string, ConceptualAnswer> = {};
   for (const item of assignment.items) {
-    if (!('content' in item)) continue;
+    if (!('content' in item) || item.content.type === 'derivation') continue;
     const saved = attempt?.answers[item.id];
-    answers[item.id] = saved && !Array.isArray(saved) ? saved : blankConceptualAnswer(item);
+    answers[item.id] =
+      saved && !Array.isArray(saved) && saved.type !== 'derivation'
+        ? saved
+        : blankConceptualAnswer({ content: item.content });
   }
   return answers;
 }

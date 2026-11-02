@@ -1,8 +1,10 @@
-import type { SubmissionResult } from '@logiclab/contracts';
+import type { SubmissionResult as ObjectiveResult } from '@logiclab/contracts';
+import type { ProofSubmissionResult } from '@logiclab/contracts/proof-submission';
+type SubmissionResult = ObjectiveResult | ProofSubmissionResult;
 
 /** Completion records intentionally contain no correctness feedback. */
 export function submissionFeedback(result: SubmissionResult | null | undefined, itemId: string) {
-  if (result?.gradingVersion === 'mixed_v1') {
+  if (result?.gradingVersion === 'mixed_v1' || result?.gradingVersion === 'proof_mixed_v1') {
     const item = result.items.find((item) => item.itemId === itemId);
     return item?.type === 'truth_table' ? item.feedback : null;
   }
@@ -16,7 +18,18 @@ export function conceptualSubmissionFeedback(
   result: SubmissionResult | null | undefined,
   itemId: string,
 ) {
-  if (result?.gradingVersion !== 'mixed_v1') return null;
+  if (result?.gradingVersion !== 'mixed_v1' && result?.gradingVersion !== 'proof_mixed_v1')
+    return null;
   const item = result.items.find((item) => item.itemId === itemId);
-  return item && item.type !== 'truth_table' ? item.feedback : null;
+  return item && item.type !== 'truth_table' && item.type !== 'derivation' ? item.feedback : null;
+}
+
+/** Caller supplies only the already-authorized student result projection. */
+export function proofSubmissionFeedback(
+  result: SubmissionResult | null | undefined,
+  itemId: string,
+) {
+  if (result?.gradingVersion !== 'proof_mixed_v1') return null;
+  const item = result.items.find((item) => item.itemId === itemId);
+  return item?.type === 'derivation' ? item.report : null;
 }
