@@ -16,6 +16,10 @@
     "./proof/rules": {
       "types": "./dist/proof/rule-catalog.d.ts",
       "default": "./dist/proof/rule-catalog.js"
+    },
+    "./proof/completion": {
+      "types": "./dist/proof/attempt-completeness.d.ts",
+      "default": "./dist/proof/attempt-completeness.js"
     }
   },
   "files": [
