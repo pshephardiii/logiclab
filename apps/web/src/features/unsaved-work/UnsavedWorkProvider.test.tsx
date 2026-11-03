@@ -168,3 +168,40 @@ test('unmounting a local action owner cancels its pending callback', async () =>
   expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
   expect(unload()).toBe(true);
 });
+
+test('a clean local action runs immediately without requesting discard consent', async () => {
+  const { user } = setup();
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  expect(screen.getByText('Local actions: 1')).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(unload()).toBe(false);
+});
+
+test('becoming clean cancels a pending local action instead of executing it after a save', async () => {
+  const { user } = setup();
+  await user.click(screen.getByLabelText('First editor dirty'));
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  await screen.findByRole('dialog');
+  fireEvent.click(screen.getByLabelText('First editor dirty'));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
+  await user.click(screen.getByLabelText('First editor dirty'));
+  await user.click(screen.getByRole('link', { name: 'Next page' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
+});
+
+test('a superseding route request cancels the pending local discard callback', async () => {
+  const { user, router } = setup();
+  await user.click(screen.getByLabelText('First editor dirty'));
+  await user.click(screen.getByRole('button', { name: 'Replace local work' }));
+  await screen.findByRole('dialog');
+  // Programmatic navigation can occur while a native modal prevents background pointer input.
+  await act(async () => {
+    await router.navigate('/next');
+  });
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(router.state.location.pathname).toBe('/next'));
+  expect(screen.getByText('Local actions: 0')).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});

@@ -205,3 +205,53 @@ test('invalid reset code leaves current local sessions intact', async () => {
   expect(store.deleteSessionsForEmail).not.toHaveBeenCalled();
   expect(sessions.size).toBe(1);
 });
+
+test.each(['unverified', 'missing', 'different-user'] as const)(
+  'refresh rejects a %s identity without replacing the saved session',
+  async (kind) => {
+    const { service, provider, store, sessions, advance } = setup();
+    const login = await service.login('person@example.com', 'password');
+    const hash = sessionHash(login.sessionId);
+    const before = structuredClone(sessions.get(hash)!);
+    advance(tokens.expiresIn * 1000);
+    if (kind === 'unverified')
+      jest.mocked(provider.identity).mockResolvedValue({ subject: user.subject, verified: false });
+    else if (kind === 'missing') jest.mocked(store.findUser).mockResolvedValue(null);
+    else jest.mocked(store.findUser).mockResolvedValue({ ...user, id: 'different-app-user' });
+    await expect(service.authenticate(login.sessionId)).rejects.toMatchObject({
+      code:
+        kind === 'unverified'
+          ? 'EMAIL_NOT_VERIFIED'
+          : kind === 'missing'
+            ? 'ACCOUNT_NOT_PROVISIONED'
+            : 'SESSION_INVALID',
+    });
+    expect(provider.refresh).toHaveBeenCalledTimes(1);
+    expect(store.updateSession).not.toHaveBeenCalled();
+    expect(sessions.get(hash)).toEqual(before);
+  },
+);
+
+test('provider refresh failure leaves retained tokens and expiry unchanged and permits a later retry', async () => {
+  const { service, provider, store, sessions, advance } = setup();
+  const login = await service.login('person@example.com', 'password');
+  const hash = sessionHash(login.sessionId);
+  const before = structuredClone(sessions.get(hash)!);
+  advance(tokens.expiresIn * 1000);
+  jest.mocked(provider.refresh).mockRejectedValueOnce(new Error('Temporary provider outage'));
+  await expect(service.authenticate(login.sessionId)).rejects.toThrow('Temporary provider outage');
+  expect(store.updateSession).not.toHaveBeenCalled();
+  expect(sessions.get(hash)).toEqual(before);
+  expect(await service.authenticate(login.sessionId)).toEqual(user);
+  expect(store.updateSession).toHaveBeenCalledTimes(1);
+  expect(sessions.get(hash)!.expiresAt).toEqual(before.expiresAt);
+});
+
+test('an unexpired access session needs no provider refresh or session rewrite', async () => {
+  const { service, provider, store, advance } = setup();
+  const login = await service.login('person@example.com', 'password');
+  advance(tokens.expiresIn * 1000 - 1);
+  expect(await service.authenticate(login.sessionId)).toEqual(user);
+  expect(provider.refresh).not.toHaveBeenCalled();
+  expect(store.updateSession).not.toHaveBeenCalled();
+});

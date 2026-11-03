@@ -20,7 +20,7 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
 test(
   'billing scopes checkout, freezes terms, processes signed events atomically, and retains revoked coverage',
   { timeout: 30_000 },
-  async () => {
+  async (t) => {
     const {
       createDatabase,
       User,
@@ -89,6 +89,11 @@ test(
         /not_found/,
       );
       assert.equal((await billing.plans({ limit: 1, offset: 0 })).plans[0]!.id, plan.id);
+      assert.equal((await billing.plans({ limit: 1, offset: 0 })).nextOffset, null);
+      assert.deepEqual(await billing.plans({ limit: 1, offset: 1 }), {
+        plans: [],
+        nextOffset: null,
+      });
       await assert.rejects(
         billing.readClass(owner.id, foreignClass.id, { limit: 20, offset: 0 }),
         /not_found/,
@@ -97,7 +102,33 @@ test(
         (await billing.readClass(owner.id, classroom.id, { limit: 20, offset: 0 })).coverage.active,
         false,
       );
-      const requestId = randomUUID();
+      const initialRequestId = randomUUID();
+      await t.test(
+        'failed provider checkout leaves no purchase or consumed request key',
+        async () => {
+          const failedProvider = createBillingService(
+            await createBillingStore(orm),
+            {
+              ...provider,
+              createCheckout: async () => {
+                throw new Error('Provider unavailable');
+              },
+            },
+            config,
+          );
+          await assert.rejects(
+            failedProvider.checkout(owner.id, classroom.id, {
+              planId: plan.id,
+              requestId: initialRequestId,
+            }),
+            /plan_unavailable/,
+          );
+          assert.equal(await em.count(ClassPurchase, {}), 0);
+          assert.equal(await em.count(ClassEntitlement, {}), 0);
+          assert.equal(await em.count(PaymentEvent, {}), 0);
+        },
+      );
+      const requestId = initialRequestId;
       const [first, retry] = await Promise.all([checkout(requestId), checkout(requestId)]);
       assert.equal(first.purchase.id, retry.purchase.id);
       assert.equal(await em.count(ClassPurchase, {}), 1);
@@ -116,6 +147,27 @@ test(
       await em.flush();
 
       const purchase = await em.findOneOrFail(ClassPurchase, first.purchase.id);
+      for (const [name, sequence, occurredAt] of [
+        ['predates purchase', 1, new Date(purchase.createdAt.getTime() - 1000)],
+        ['future event', 1, new Date(Date.now() + 600_000)],
+        ['sequence exceeds database integer', 2147483648, new Date()],
+      ] as const) {
+        await t.test(`invalid payment ${name} rolls back without receipt or coverage`, async () => {
+          const event = createSimulatorEvent(
+            purchase.checkoutReference,
+            sequence,
+            'paid',
+            occurredAt,
+          );
+          const delivery = signSimulatorEvent(wrapper, event);
+          await assert.rejects(billing.webhook(delivery.body, delivery.signature), /invalid_event/);
+          const unchanged = await em.fork().findOneOrFail(ClassPurchase, purchase.id);
+          assert.equal(unchanged.status, 'pending');
+          assert.equal(unchanged.lastEventSequence, 0);
+          assert.equal(await em.count(PaymentEvent, {}), 0);
+          assert.equal(await em.count(ClassEntitlement, {}), 0);
+        });
+      }
       const paid = createSimulatorEvent(purchase.checkoutReference, 1, 'paid');
       const signed = signSimulatorEvent(wrapper, paid);
       const results = await Promise.all([

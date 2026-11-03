@@ -394,3 +394,38 @@ test('mixed table and choice edits retain independent baselines and completion c
   expect(result.current.choiceAnswers[itemA]).toEqual({ type: 'true_false', answer: false });
   expect(result.current.dirty).toEqual([]);
 });
+
+test('pending answer saves block repeat writes and edits, then permit a fresh unsaved edit after success', async () => {
+  const { result } = await open();
+  act(() => result.current.changeAnswer(itemA, 'r1', 'expr:v1:P', false));
+  let finish!: (value: typeof saved) => void;
+  vi.mocked(api.saveAssignedAnswers).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  let pending!: Promise<void>;
+  act(() => {
+    pending = result.current.save(itemA);
+  });
+  expect(result.current.action).toBe('save');
+  act(() => result.current.changeAnswer(itemA, 'r1', 'expr:v1:P', true));
+  await act(async () => {
+    await result.current.save(itemA);
+    await result.current.submit();
+  });
+  expect(api.saveAssignedAnswers).toHaveBeenCalledTimes(1);
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(result.current.answers[itemA]![cellKey('r1', 'expr:v1:P')]).toBe(false);
+  await act(async () => {
+    finish(saved);
+    await pending;
+  });
+  expect(result.current.action).toBeNull();
+  expect(result.current.dirty).toEqual([]);
+  act(() => result.current.changeAnswer(itemA, 'r1', 'expr:v1:P', true));
+  expect(result.current.dirty).toEqual([itemA]);
+  expect(result.current.answers[itemA]![cellKey('r1', 'expr:v1:P')]).toBe(true);
+  expect(api.saveAssignedAnswers).toHaveBeenCalledTimes(1);
+});
