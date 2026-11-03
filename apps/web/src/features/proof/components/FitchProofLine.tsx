@@ -1,8 +1,8 @@
 import type { DerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof, ProofStep } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
-import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
-import { ProofChoice } from './ProofChoice';
+import { FitchPremiseFields } from './FitchPremiseFields';
+import { FitchInferenceFields } from './FitchInferenceFields';
 
 type Props = {
   statement: Pick<DerivationContent, 'premises' | 'rules'>;
@@ -25,8 +25,6 @@ export function FitchProofLine({
   onDelete,
 }: Props) {
   const step = proof.steps[index]!;
-  const rule =
-    step.kind === 'inference' && step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
   return (
     <section
       className="problem-option"
@@ -57,74 +55,21 @@ export function FitchProofLine({
             : 'Assumption'}
       </p>
       {step.kind === 'premise' ? (
-        <>
-          <p className="help">
-            Match this line’s formula to its selected statement premise. Linking a premise does not
-            rewrite the formula.
-          </p>
-          <ProofChoice
-            label={`Statement premise for line ${index + 1}`}
-            value={step.premiseId}
-            choices={statement.premises.map((premise, position) => ({
-              id: premise.id,
-              label: `${position + 1}. ${premise.formula || '(blank)'}`,
-            }))}
-            onChange={(premiseId) => onChange({ ...step, premiseId })}
-          />
-        </>
+        <FitchPremiseFields
+          step={step}
+          index={index}
+          premises={statement.premises}
+          onChange={onChange}
+        />
       ) : step.kind === 'inference' ? (
-        <>
-          <ProofChoice
-            label={`Scope for line ${index + 1}`}
-            value={step.blockId}
-            empty="Root proof"
-            choices={blocks}
-            onChange={(blockId) => onChange({ ...step, blockId })}
-          />
-          <ProofChoice
-            label={`Rule for line ${index + 1}`}
-            value={step.ruleId}
-            choices={statement.rules.map((rule) => ({ id: rule.id, label: rule.label }))}
-            onChange={(ruleId) => onChange({ ...step, ruleId })}
-          />
-          {Array.from(
-            { length: Math.max(rule?.lineReferences ?? 0, step.lineReferences.length) },
-            (_, slot) => (
-              <ProofChoice
-                key={`line-${slot}`}
-                label={`Line ${index + 1} citation ${slot + 1}`}
-                value={step.lineReferences[slot] ?? null}
-                choices={proof.steps.slice(0, index).map((line, position) => ({
-                  id: line.id,
-                  label: `${position + 1}. ${line.formula || '(blank)'}`,
-                }))}
-                onChange={(id) => {
-                  const refs = [...step.lineReferences];
-                  if (id) refs[slot] = id;
-                  else refs.splice(slot, 1);
-                  onChange({ ...step, lineReferences: refs.filter(Boolean) });
-                }}
-              />
-            ),
-          )}
-          {Array.from(
-            { length: Math.max(rule?.subproofReferences ?? 0, step.subproofReferences.length) },
-            (_, slot) => (
-              <ProofChoice
-                key={`block-${slot}`}
-                label={`Line ${index + 1} subproof ${slot + 1}`}
-                value={step.subproofReferences[slot] ?? null}
-                choices={blocks}
-                onChange={(id) => {
-                  const refs = [...step.subproofReferences];
-                  if (id) refs[slot] = id;
-                  else refs.splice(slot, 1);
-                  onChange({ ...step, subproofReferences: refs.filter(Boolean) });
-                }}
-              />
-            ),
-          )}
-        </>
+        <FitchInferenceFields
+          step={step}
+          index={index}
+          steps={proof.steps}
+          rules={statement.rules}
+          blocks={blocks}
+          onChange={onChange}
+        />
       ) : (
         <p className="help">
           Opening assumption of{' '}
