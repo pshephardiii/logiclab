@@ -1,7 +1,11 @@
 import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
-import type { SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
+import type {
+  SubmissionSummary,
+  SubmissionReview,
+  SubmissionGradingResponse,
+} from '@logiclab/contracts';
 import * as submissionReviewApi from '../../../api/submission-review/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
@@ -59,5 +63,53 @@ export function useSubmissionReview(assignmentId: string) {
       if (!signal.aborted) setDetailLoading(false);
     }
   }
-  return { submissions, next, review, selected, loading, detailLoading, error, load, select };
+  const applyGrading = useCallback(
+    (id: string, value: SubmissionGradingResponse) => {
+      reads.cancelRequest();
+      setLoading(false);
+      setSubmissions((previous) =>
+        previous.map((row) => (row.id === id ? { ...row, score: value.score } : row)),
+      );
+      setReview((previous) => {
+        if (!previous || previous.attempt.id !== id) return previous;
+        const { automaticScore, instructorGrading: _grading, ...attempt } = previous.attempt;
+        const original = automaticScore ?? attempt.score;
+        return {
+          ...previous,
+          submission: { ...previous.submission, score: value.score },
+          attempt: {
+            ...attempt,
+            score: value.score,
+            ...(value.grading.revision > 0 && original
+              ? {
+                  automaticScore: original,
+                  instructorGrading: {
+                    gradingVersion: value.grading.gradingVersion,
+                    revision: value.grading.revision,
+                    items: value.grading.items.map(({ itemId, earnedPoints, comment }) => ({
+                      itemId,
+                      earnedPoints,
+                      comment,
+                    })),
+                  },
+                }
+              : {}),
+          },
+        };
+      });
+    },
+    [reads.cancelRequest],
+  );
+  return {
+    submissions,
+    next,
+    review,
+    selected,
+    loading,
+    detailLoading,
+    error,
+    load,
+    select,
+    applyGrading,
+  };
 }

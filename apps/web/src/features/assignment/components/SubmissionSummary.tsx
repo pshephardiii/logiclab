@@ -1,4 +1,9 @@
-import type { AssignmentScore, SubmissionResult } from '@logiclab/contracts';
+import { InstructorGradingFeedback } from './InstructorGradingFeedback';
+import type {
+  AssignmentScore,
+  SubmissionResult,
+  ReleasedInstructorGrading,
+} from '@logiclab/contracts';
 import type {
   ProofSubmissionResult,
   ProofCompletionSubmissionResult,
@@ -10,10 +15,14 @@ export function SubmissionSummary({
   submittedAt,
   score,
   items,
+  automaticScore,
+  instructorGrading,
 }: {
   result: SubmissionResult | ProofSubmissionResult | ProofCompletionSubmissionResult;
   submittedAt: string;
   score?: AssignmentScore | null;
+  automaticScore?: AssignmentScore;
+  instructorGrading?: ReleasedInstructorGrading;
   items?: readonly { id: string; title: string }[];
 }) {
   return (
@@ -77,6 +86,13 @@ export function SubmissionSummary({
             assignment grade.
           </p>
         </>
+      )}
+      {automaticScore && instructorGrading && (
+        <InstructorGradingFeedback
+          grading={instructorGrading}
+          automaticScore={automaticScore}
+          items={items}
+        />
       )}
     </section>
   );

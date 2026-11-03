@@ -524,3 +524,65 @@ test('pending grade hides point results until authoritative refresh and retains 
   expect(await screen.findByText('5 / 25 points (20%)')).toBeInTheDocument();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
+
+test('released instructor comments render as text alongside current and original points; refresh gets corrections', async () => {
+  const { adjustedGrading } = await import('../../../../test/submission-grading-fixture');
+  const current = {
+    ...submitted,
+    score: adjustedGrading.score,
+    automaticScore: pointScore,
+    instructorGrading: {
+      gradingVersion: adjustedGrading.grading.gradingVersion,
+      revision: 1,
+      items: [
+        {
+          itemId: itemA,
+          earnedPoints: 12.25,
+          comment: '<strong>Review this</strong>\nSecond line.',
+        },
+      ],
+    },
+  };
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: work, attempt: current });
+  const { user } = await open();
+  const feedback = within(screen.getByRole('region', { name: 'Instructor feedback' }));
+  expect(feedback.getByText(/Instructor award: 12.25 \/ 20 points/)).toBeInTheDocument();
+  const comment = feedback.getByText('<strong>Review this</strong> Second line.');
+  expect(comment.querySelector('strong')).toBeNull();
+  expect(feedback.getByText(/Original automatic award: 5 \/ 20 points/)).toBeInTheDocument();
+  expect(screen.queryByText(/Reviewer/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+  vi.mocked(api.readAssignedWork).mockResolvedValueOnce({
+    assignment: work,
+    attempt: {
+      ...current,
+      score: pointScore,
+      instructorGrading: {
+        ...current.instructorGrading,
+        revision: 2,
+        items: [{ itemId: itemA, earnedPoints: null, comment: null }],
+      },
+    },
+  });
+  await user.click(screen.getByRole('button', { name: 'Refresh results and answer access' }));
+  await screen.findByText('Automatic award retained/restored.');
+  expect(screen.queryByText(/Second line/)).not.toBeInTheDocument();
+});
+
+test('withheld grades never render instructor feedback even when answer access is released', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: {
+      ...work,
+      gradeReleaseTiming: 'instructor_release',
+      solutionAccess: 'instructor_release',
+      answersRevealedAt: '2026-11-03T12:00:00.000Z',
+    },
+    attempt: { ...submitted, result: null, score: null, gradePending: true },
+  });
+  await open();
+  expect(
+    screen.getByRole('heading', { name: 'Submitted — awaiting grade release' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Instructor feedback' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Show assigned solution' })).toBeInTheDocument();
+});

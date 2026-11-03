@@ -161,7 +161,11 @@ export function ClassAssignments({ classId }: Props) {
             )}
             {state.selected?.publishedAt &&
               state.selected.assessmentMode !== 'ungraded_practice' && (
-                <SubmissionReview key={state.selected.id} assignmentId={state.selected.id} />
+                <SubmissionReview
+                  key={state.selected.id}
+                  assignmentId={state.selected.id}
+                  archived={Boolean(state.selected.archivedAt)}
+                />
               )}
           </>
         )}

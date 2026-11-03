@@ -136,6 +136,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           result={work.attempt.result}
           submittedAt={work.attempt.submittedAt}
           score={work.attempt.score}
+          automaticScore={work.attempt.automaticScore}
+          instructorGrading={work.attempt.instructorGrading}
           items={work.assignment.items}
         />
       )}
