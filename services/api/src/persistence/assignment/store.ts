@@ -1,51 +1,16 @@
-import {
-  validateDraftScoringInput,
-  validatedDraftPointAllocations,
-} from '../../application/assignment/draft-scoring-validation';
 import { duplicateAssignmentTitle } from '../../application/assignment/duplicate-title';
-import { assignmentDetail } from './detail-response';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
-import { ASSIGNMENT_POINT_LIMITS } from '@logiclab/contracts';
-import { supportedAssignmentDefinition } from '../../application/assignment/definition-support';
-import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
+import { assignmentLearningPolicySchema } from '@logiclab/contracts';
 import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { hasClassCapability } from '../billing/class-coverage';
 import { assignmentSummary } from './summary';
-import type { createDatabase, Assignment as AssignmentEntity } from '@logiclab/db' with {
-  'resolution-mode': 'import',
-};
-import type {
-  AssignmentDetail,
-  AssignmentSummary,
-  CreateAssignmentRequest,
-  UpdateAssignmentRequest,
-  AssignmentListQuery,
-} from '@logiclab/contracts';
+import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import { AssignmentOperationError } from '../../application/assignment/errors';
-
-export interface AssignmentStore {
-  create(
-    ownerId: string,
-    classId: string,
-    input: CreateAssignmentRequest,
-  ): Promise<AssignmentDetail>;
-  list(ownerId: string, classId: string, query: AssignmentListQuery): Promise<AssignmentSummary[]>;
-  findOwned(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
-  update(
-    ownerId: string,
-    assignmentId: string,
-    input: UpdateAssignmentRequest,
-  ): Promise<AssignmentDetail>;
-  duplicate(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
-  release(
-    ownerId: string,
-    assignmentId: string,
-    kind: 'grades' | 'answers',
-  ): Promise<AssignmentDetail>;
-  publish(ownerId: string, assignmentId: string): Promise<AssignmentDetail>;
-  setArchived(ownerId: string, assignmentId: string, archived: boolean): Promise<AssignmentDetail>;
-}
+import type { AssignmentStore } from './types';
+import { policyFields } from './policy-fields';
+import { ownedClass, ownedAssignment, ownedVersions, detail } from './queries';
+import { replaceItems, draftScoring } from './draft-items';
 
 /** Parent-row locks serialize every draft mutation with publication and archive transitions. */
 export async function createAssignmentStore(
@@ -58,154 +23,10 @@ export async function createAssignmentStore(
     User,
     GradeReleaseTiming,
     AssignmentItem,
-    Classroom,
-    ProblemVersion,
-    LockMode,
     AssessmentMode,
-    FeedbackTiming,
     SolutionAccess,
     ClassCapability,
   } = await import('@logiclab/db');
-  const modes = {
-    graded: AssessmentMode.Graded,
-    completion_only: AssessmentMode.CompletionOnly,
-    ungraded_practice: AssessmentMode.UngradedPractice,
-  };
-  const timings = {
-    on_submission: FeedbackTiming.OnSubmission,
-    on_check: FeedbackTiming.OnCheck,
-    immediate: FeedbackTiming.Immediate,
-  };
-  const solutions = {
-    instructor_release: SolutionAccess.InstructorRelease,
-    never: SolutionAccess.Never,
-    after_submission: SolutionAccess.AfterSubmission,
-    anytime: SolutionAccess.Anytime,
-  };
-  function policyFields(policy: AssignmentLearningPolicy) {
-    return {
-      assessmentMode: modes[policy.assessmentMode],
-      feedbackTiming: timings[policy.feedbackTiming],
-      solutionAccess: solutions[policy.solutionAccess],
-    };
-  }
-  type Manager = typeof orm.em;
-
-  async function ownedClass(em: Manager, ownerId: string, classId: string) {
-    const classroom = await em.findOne(Classroom, { id: classId, owner: ownerId });
-    if (!classroom) throw new AssignmentOperationError('not_found');
-    return classroom;
-  }
-  async function ownedAssignment(em: Manager, ownerId: string, id: string, lock = false) {
-    const assignment = await em.findOne(
-      Assignment,
-      { id, classroom: { owner: ownerId } },
-      lock ? { lockMode: LockMode.PESSIMISTIC_WRITE } : {},
-    );
-    if (!assignment) throw new AssignmentOperationError('not_found');
-    return assignment;
-  }
-  async function ownedVersions(
-    em: Manager,
-    ownerId: string,
-    ids: string[],
-    policy: Pick<AssignmentEntity, 'assessmentMode' | 'feedbackTiming'>,
-  ) {
-    const uniqueIds = [...new Set(ids)];
-    const versions = await em.find(ProblemVersion, {
-      id: { $in: uniqueIds },
-      problem: { owner: ownerId },
-    });
-    if (versions.length !== uniqueIds.length)
-      throw new AssignmentOperationError('version_not_found');
-    versions.forEach((version) => supportedAssignmentDefinition(version.definition, policy));
-    return new Map(versions.map((version) => [version.id, version]));
-  }
-  async function detail(em: Manager, assignment: AssignmentEntity): Promise<AssignmentDetail> {
-    const items = await em.find(
-      AssignmentItem,
-      { assignment: assignment.id },
-      { orderBy: { position: 'ASC' }, populate: ['problemVersion.problem'] },
-    );
-    return assignmentDetail(assignment, items);
-  }
-  async function replaceItems(
-    em: Manager,
-    ownerId: string,
-    assignment: AssignmentEntity,
-    ids: string[],
-    points?: number[],
-  ) {
-    const versions = await ownedVersions(em, ownerId, ids, assignment);
-    // Validate all references before replacement; the transaction rolls back the entire draft on failure.
-    await em.nativeDelete(AssignmentItem, { assignment: assignment.id });
-    ids.forEach((id, index) =>
-      em.persist(
-        em.create(AssignmentItem, {
-          assignment,
-          problemVersion: versions.get(id)!,
-          position: index + 1,
-          ...(points ? { maxPoints: points[index] } : {}),
-        }),
-      ),
-    );
-  }
-
-  async function draftScoring(
-    em: Manager,
-    ownerId: string,
-    assignment: AssignmentEntity,
-    input: UpdateAssignmentRequest,
-  ) {
-    validateDraftScoringInput(assignment.assessmentMode, input);
-    const graded = assignment.assessmentMode === 'graded';
-    let items = await em.find(
-      AssignmentItem,
-      { assignment: assignment.id },
-      { orderBy: { position: 'ASC' } },
-    );
-    if (input.items !== undefined) {
-      await replaceItems(
-        em,
-        ownerId,
-        assignment,
-        input.items.map((item) => item.problemVersionId),
-        input.items.map((item) => item.maxPoints),
-      );
-    } else if (input.problemVersionIds !== undefined) {
-      const same =
-        input.problemVersionIds.length === items.length &&
-        items.every((item, index) => item.problemVersion.id === input.problemVersionIds![index]);
-      if (graded && !same && items.length > 0)
-        throw new AssignmentOperationError('invalid_scoring');
-      if (!same)
-        await replaceItems(
-          em,
-          ownerId,
-          assignment,
-          input.problemVersionIds,
-          input.problemVersionIds.map(() => ASSIGNMENT_POINT_LIMITS.defaultPoints),
-        );
-    }
-    await em.flush();
-    items = await em.find(
-      AssignmentItem,
-      { assignment: assignment.id },
-      { orderBy: { position: 'ASC' } },
-    );
-    // Validate the complete effective set, including policy-only PATCHes and retained occurrences.
-    await ownedVersions(
-      em,
-      ownerId,
-      items.map((item) => item.problemVersion.id),
-      assignment,
-    );
-    if (input.pointAllocations !== undefined) {
-      const points = validatedDraftPointAllocations(input.pointAllocations, items);
-      for (const item of items) item.maxPoints = points.get(item.id)!;
-    }
-  }
-
   return {
     async create(ownerId, classId, input) {
       return transact(async (em) => {
@@ -220,7 +41,7 @@ export async function createAssignmentStore(
             input.gradeReleaseTiming === 'instructor_release'
               ? GradeReleaseTiming.InstructorRelease
               : GradeReleaseTiming.OnSubmission,
-          ...policyFields(
+          ...(await policyFields(
             resolveAssignmentLearningPolicy(
               {
                 assessmentMode: 'graded',
@@ -233,7 +54,7 @@ export async function createAssignmentStore(
                 solutionAccess: input.solutionAccess,
               },
             ),
-          ),
+          )),
         });
         em.persist(assignment);
         await em.flush();
@@ -267,7 +88,7 @@ export async function createAssignmentStore(
           classroom: source.classroom,
           title,
           instructions: source.instructions,
-          ...policyFields(policy),
+          ...(await policyFields(policy)),
           gradeReleaseTiming: source.gradeReleaseTiming,
         });
         em.persist(copy);
@@ -324,7 +145,7 @@ export async function createAssignmentStore(
           gradeTiming === 'instructor_release'
             ? GradeReleaseTiming.InstructorRelease
             : GradeReleaseTiming.OnSubmission;
-        Object.assign(assignment, policyFields(policy));
+        Object.assign(assignment, await policyFields(policy));
         if (input.title !== undefined) assignment.title = input.title;
         if (input.instructions !== undefined)
           assignment.instructions = input.instructions ?? undefined;

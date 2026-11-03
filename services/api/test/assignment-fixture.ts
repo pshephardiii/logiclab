@@ -1,6 +1,6 @@
 import type { SubmissionReviewStore } from '../src/persistence/submission-review/store';
 import type { AssignmentDetail } from '@logiclab/contracts';
-import type { AssignmentStore } from '../src/persistence/assignment/store';
+import type { AssignmentStore } from '../src/persistence/assignment/types';
 import type { AssignmentContext } from '../src/routes/assignment/context';
 import { authFixture, authUser } from './auth-fixture';
 import { publishedVersion } from './problem-fixture';

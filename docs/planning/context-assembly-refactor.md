@@ -145,3 +145,16 @@ Extracted `validatedPaymentEventTime` into `application/billing/payment-event-va
 The billing store still handles duplicate receipts before calling validation. It retains class/purchase locks, conflicting receipt detection, stale-event/refund handling, purchase transitions, entitlement changes, receipt writes and flushes in their existing order and transaction.
 
 On November 3, 2026, API type checking, all 791 existing API tests, the API production build and all 267 PostgreSQL checks (174 database, 93 API/workflow) passed. Formatting and whitespace checks passed. No test files changed. No schema/environment change or user development-database migration/reset occurred; frontend/browser checks were not repeated for this backend-only extraction. Logs: `/private/tmp/payment-event-validation-types.log`, `payment-event-validation-tests.log`, `payment-event-validation-build.log` and `payment-event-validation-db.log`. This completes the seven approved backend candidates; the separate test-gap review remains pending.
+
+## Slice 10: assignment store structure follow-up
+
+Following the user's review, extracted four more cohesive sections from the assignment store:
+
+- `types.ts` owns the public `AssignmentStore` interface. Route context and test type imports now reference that file directly.
+- `policy-fields.ts` owns the assessment/feedback/solution enum maps and `policyFields` conversion. It retains the existing dynamic database import convention; callers await the conversion.
+- `queries.ts` owns `ownedClass`, `ownedAssignment`, `ownedVersions` and `detail`. Each receives the caller's entity manager, preserving ownership filters, optional write locks, version validation and populated/ordered detail loading.
+- `draft-items.ts` owns `replaceItems` and `draftScoring`. Validation, reference checks, replacement, flush/reload and allocation application retain their order and use the caller's transaction.
+
+`store.ts` decreased from 408 to 229 lines and retains public operation orchestration and transaction ownership. No helper creates a separate manager or transaction. Existing public behavior, error codes, publication/release/archive guards and normal/demo boundaries remain unchanged.
+
+On November 3, 2026, API type checking, all 791 API tests, the API production build and all 267 PostgreSQL checks (174 database, 93 API/workflow) passed. Formatting and whitespace checks passed. Test changes are limited to the two imports required by the interface move; no assertions or cases changed. No schema/environment changes or user development-database migration/reset occurred. Frontend/browser checks were not repeated for this backend-only extraction. Logs: `/private/tmp/assignment-store-extraction-types.log`, `assignment-store-extraction-tests.log`, `assignment-store-extraction-build.log` and `assignment-store-extraction-db.log`. The separate test-gap review remains pending.

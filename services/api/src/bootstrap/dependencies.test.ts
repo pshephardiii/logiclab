@@ -1,6 +1,6 @@
 import type { SubmissionReviewStore } from '../persistence/submission-review/store';
 import type { StudentWorkStore } from '../persistence/student-work/store';
-import type { AssignmentStore } from '../persistence/assignment/store';
+import type { AssignmentStore } from '../persistence/assignment/types';
 import type { ProblemStore } from '../persistence/problem/store';
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
