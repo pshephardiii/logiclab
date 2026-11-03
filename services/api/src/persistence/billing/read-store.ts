@@ -1,23 +1,9 @@
+import type { BillingReadStore } from './types';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type {
-  BillingListQuery,
-  ClassBillingResponse,
-  billingPlansResponseSchema,
-} from '@logiclab/contracts';
-import type { z } from 'zod';
 import { BillingError } from '../../application/billing/errors';
 import { checkoutBlockedReason } from './checkout-availability';
 import { purchaseResponse } from './purchase-response';
-
-export interface BillingReadStore {
-  plans(query: BillingListQuery): Promise<z.infer<typeof billingPlansResponseSchema>>;
-  readClass(
-    ownerId: string,
-    classId: string,
-    query: BillingListQuery,
-  ): Promise<ClassBillingResponse>;
-}
 
 /** Exposes catalog terms and owned history without provider references or event payloads. */
 export async function createBillingReadStore(

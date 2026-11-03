@@ -1,5 +1,5 @@
 import type { BillingConfig } from '../../config/billing';
-import type { BillingStore } from '../../persistence/billing/store';
+import type { BillingStore } from '../../persistence/billing/types';
 import { createHash } from 'node:crypto';
 import type { PaymentProvider } from './provider';
 import { BillingError } from './errors';

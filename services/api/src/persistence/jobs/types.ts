@@ -9,3 +9,8 @@ export interface JobStore {
   claim(): Promise<JobClaim | null>;
   finish(claim: JobClaim, outcome: JobOutcome): Promise<'succeeded' | 'retry' | 'failed' | 'stale'>;
 }
+
+export interface JobPage {
+  offset: number;
+  limit: number;
+}
