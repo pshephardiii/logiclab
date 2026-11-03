@@ -1,4 +1,4 @@
-import type { SubmissionReviewStore } from '../src/persistence/submission-review/store';
+import type { SubmissionReviewStore } from '../src/persistence/submission-review/types';
 import type { AssignmentDetail } from '@logiclab/contracts';
 import type { AssignmentStore } from '../src/persistence/assignment/types';
 import type { AssignmentContext } from '../src/routes/assignment/context';

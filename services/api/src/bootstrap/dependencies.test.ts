@@ -1,11 +1,11 @@
-import type { SubmissionReviewStore } from '../persistence/submission-review/store';
+import type { SubmissionReviewStore } from '../persistence/submission-review/types';
 import type { StudentWorkStore } from '../persistence/student-work/types';
 import type { AssignmentStore } from '../persistence/assignment/types';
 import type { ProblemStore } from '../persistence/problem/types';
 import type { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { AuthStore } from '../application/auth/types';
-import type { ClassroomStore } from '../persistence/classroom/store';
+import type { ClassroomStore } from '../persistence/classroom/types';
 import { createDependencies } from './dependencies';
 
 const closeDatabase = jest.fn(async () => {});

@@ -1,4 +1,4 @@
-import type { SubmissionReviewStore } from '../../persistence/submission-review/store';
+import type { SubmissionReviewStore } from '../../persistence/submission-review/types';
 import type { ResourceContext } from '../resource-context';
 import type { AssignmentStore } from '../../persistence/assignment/types';
 
