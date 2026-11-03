@@ -1,3 +1,8 @@
+import { latestSubmissionGrading } from '../submission-review/grading-state';
+import type {
+  Assignment as AssignmentEntity,
+  AssignmentAttempt as AttemptEntity,
+} from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { StudentWorkStore } from './types';
 import { enrolled, accessible, submittableAssignment, items, lockedAttempt } from './queries';
 import { policyFor, checkRevision } from './validation';
@@ -38,6 +43,14 @@ export async function createStudentWorkStore(
 ): Promise<StudentWorkStore> {
   const transact = transactionRunner(orm, transaction);
   const { Assignment, AssignmentItem, AssignmentAttempt, LockMode } = await import('@logiclab/db');
+  async function response(
+    em: DatabaseManager,
+    attempt: AttemptEntity,
+    assignment: AssignmentEntity,
+  ) {
+    const grading = await latestSubmissionGrading(em, [attempt]);
+    return attemptResponse(attempt, assignment, grading.get(attempt.id));
+  }
   return {
     async list(studentId, classId, query) {
       return transact(async (em) => {
@@ -64,7 +77,7 @@ export async function createStudentWorkStore(
         });
         return {
           assignment: savedAssignmentExercises(assignment, assigned),
-          attempt: attempt ? attemptResponse(attempt, assignment) : null,
+          attempt: attempt ? await response(em, attempt, assignment) : null,
         };
       });
     },
@@ -92,7 +105,7 @@ export async function createStudentWorkStore(
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
         await em.flush();
-        return attemptResponse(attempt, assignment);
+        return response(em, attempt, assignment);
       });
     },
     async check(studentId, assignmentId, input) {
@@ -149,7 +162,7 @@ export async function createStudentWorkStore(
       return transact(async (em) => {
         const assignment = await submittableAssignment(em, studentId, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
-        if (attempt.submittedAt) return attemptResponse(attempt, assignment);
+        if (attempt.submittedAt) return response(em, attempt, assignment);
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
         const calculated = calculateSubmissionResult(assignment, assigned, attempt.answers);
@@ -158,7 +171,7 @@ export async function createStudentWorkStore(
         attempt.submittedAt = new Date();
         attempt.revision++;
         await em.flush();
-        return attemptResponse(attempt, assignment);
+        return response(em, attempt, assignment);
       });
     },
     async solution(studentId, assignmentId, itemId) {

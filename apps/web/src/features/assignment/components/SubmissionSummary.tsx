@@ -50,9 +50,9 @@ export function SubmissionSummary({
         <>
           {score && <PointScore score={score} items={items} />}
           <p>
-            Proofs: {result.summary.proofs.accepted} verified · {result.summary.proofs.needsReview}{' '}
-            need instructor review · {result.summary.proofs.unassessable} could not be fully
-            assessed.
+            Original proof checks: {result.summary.proofs.accepted} verified ·{' '}
+            {result.summary.proofs.needsReview} flagged for review ·{' '}
+            {result.summary.proofs.unassessable} could not be fully assessed.
           </p>
           <p>
             Other responses: {result.summary.objective.correct} correct ·{' '}
@@ -60,8 +60,8 @@ export function SubmissionSummary({
             unanswered.
           </p>
           <p className="help">
-            Unverified proofs require instructor grading. They do not receive an automatic zero or
-            partial score.
+            Unverified proofs receive no automatic zero or partial score. Instructor awards
+            determine their points; the original checker findings stay unchanged.
           </p>
         </>
       ) : (

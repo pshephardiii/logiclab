@@ -58,7 +58,9 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
                   ? `Completed ${submission.summary.completedCells} of ${submission.summary.totalCells} cells · No correctness score`
                   : 'completedResponses' in submission.summary
                     ? `Completed ${submission.summary.completedResponses} of ${submission.summary.totalResponses} responses · No correctness score`
-                    : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
+                    : 'proofs' in submission.summary
+                      ? `Original proof checks: ${submission.summary.proofs.accepted} verified · ${submission.summary.proofs.needsReview} flagged · ${submission.summary.proofs.unassessable} unavailable`
+                      : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
               </p>
               {'proofVerification' in submission.summary && (
                 <p>

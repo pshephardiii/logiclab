@@ -64,6 +64,21 @@ export const instructorGradingSchema = z
   });
 export type InstructorGrading = z.infer<typeof instructorGradingSchema>;
 
+/** Student-safe decisions: reviewer identities, timestamps and history stay owner-only. */
+export const releasedInstructorGradingSchema = z.strictObject({
+  gradingVersion: z.literal('instructor_grading_v1'),
+  revision: revisionSchema.min(1),
+  items: z
+    .array(instructorItemGradeSchema)
+    .min(1)
+    .max(ASSIGNMENT_POINT_LIMITS.maxItems)
+    .refine(
+      (items) => new Set(items.map((item) => item.itemId)).size === items.length,
+      'Instructor grading occurrences must be unique.',
+    ),
+});
+export type ReleasedInstructorGrading = z.infer<typeof releasedInstructorGradingSchema>;
+
 /** Staged owner-only views; student disclosure remains a separate projection. */
 export const submissionGradingResponseSchema = z.strictObject({
   grading: instructorGradingSchema,

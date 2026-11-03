@@ -1,3 +1,4 @@
+import { submissionGradingState } from './grading-state';
 import {
   INSTRUCTOR_GRADING_LIMITS,
   instructorGradingSchema,
@@ -5,15 +6,11 @@ import {
   submissionGradingResponseSchema,
   submissionGradingHistoryEntrySchema,
   submissionListQuerySchema,
-  assignmentScoreSchema,
   type InstructorGrading,
   type UpdateSubmissionGrading,
   type SubmissionListQuery,
 } from '@logiclab/contracts';
-import type {
-  createDatabase,
-  SubmissionGradingRevision as RevisionEntity,
-} from '@logiclab/db' with { 'resolution-mode': 'import' };
+import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { databaseTime } from '../database-time';
 import {
@@ -23,7 +20,7 @@ import {
 import { SubmissionGradingError } from '../../application/assignment/grading-errors';
 import type { SubmissionGradingStore } from './types';
 
-/** Internal until owner routes/projections are ready. All mutations append one immutable revision. */
+/** Owner-scoped grading; every mutation appends one immutable revision. */
 export async function createSubmissionGradingStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
   transaction?: DatabaseManager,
@@ -76,40 +73,11 @@ export async function createSubmissionGradingStore(
       { orderBy: { revision: 'DESC' }, refresh: true },
     );
   }
-  function state(automatic: unknown, record: RevisionEntity | null) {
-    const grading = record?.grading ?? {
-      gradingVersion: 'instructor_grading_v1',
-      revision: 0,
-      items: [],
-    };
-    try {
-      const score = effectiveAssignmentScore(automatic, grading);
-      const parsed = instructorGradingSchema.parse(grading);
-      if (
-        record &&
-        (record.revision !== parsed.revision ||
-          JSON.stringify(assignmentScoreSchema.parse(record.score)) !== JSON.stringify(score))
-      )
-        throw new SubmissionGradingError('invalid_grading');
-      const response = submissionGradingResponseSchema.parse({ grading: parsed, score });
-      if (record)
-        submissionGradingHistoryEntrySchema.parse({
-          ...response,
-          id: record.id,
-          reviewedBy: record.reviewer.id,
-          reviewedAt: record.createdAt.toISOString(),
-          changes: record.changes,
-        });
-      return response;
-    } catch {
-      throw new SubmissionGradingError('invalid_grading');
-    }
-  }
   return {
     read(ownerId: string, assignmentId: string, submissionId: string) {
       return transact(async (em) => {
         const attempt = await finalAttempt(em, ownerId, assignmentId, submissionId);
-        return state(attempt.score, await latest(em, attempt.id));
+        return submissionGradingState(attempt.score, await latest(em, attempt.id));
       });
     },
     update(
@@ -122,7 +90,7 @@ export async function createSubmissionGradingStore(
         const attempt = await finalAttempt(em, ownerId, assignmentId, submissionId, true);
         const parsed = updateSubmissionGradingSchema.safeParse(input);
         if (!parsed.success) throw new SubmissionGradingError('invalid_grading');
-        const previous = state(attempt.score, await latest(em, attempt.id));
+        const previous = submissionGradingState(attempt.score, await latest(em, attempt.id));
         if (previous.grading.revision !== parsed.data.revision)
           throw new SubmissionGradingError('revision_conflict');
         if (previous.grading.revision === INSTRUCTOR_GRADING_LIMITS.maxRevision)
@@ -187,7 +155,7 @@ export async function createSubmissionGradingStore(
         return {
           revisions: records.slice(0, limit).map((record) =>
             submissionGradingHistoryEntrySchema.parse({
-              ...state(attempt.score, record),
+              ...submissionGradingState(attempt.score, record),
               id: record.id,
               reviewedBy: record.reviewer.id,
               reviewedAt: record.createdAt.toISOString(),

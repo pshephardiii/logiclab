@@ -1,3 +1,5 @@
+import { calculateSubmissionResult } from '../../src/persistence/student-work/submission-result';
+import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { buildApp } from '../../src/app';
 import { readAuthConfig } from '../../src/config/auth';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
@@ -123,7 +125,8 @@ async function fixture(demo = false) {
       submittedAt: new Date(),
       revision: 3,
     });
-    em.persist([owner, student, other, classroom, assignment, ...items, attempt]);
+    const enrollment = em.create(db.Enrollment, { classroom, student });
+    em.persist([owner, student, other, classroom, assignment, ...items, attempt, enrollment]);
     await em.flush();
     const store = await createSubmissionGradingStore(orm);
     const update = (
@@ -462,6 +465,7 @@ for (const demo of [false, true]) {
       demo
         ? { demo: f.runtime! }
         : {
+            studentWork: { ...auth, studentWork: await createStudentWorkStore(f.orm) },
             assignment: {
               ...auth,
               assignments: await createAssignmentStore(f.orm),
@@ -499,6 +503,26 @@ for (const demo of [false, true]) {
       assert.equal(saved.statusCode, 200, saved.body);
       assert.equal(saved.json().grading.revision, 1);
       assert.equal(saved.json().score.summary.earnedPoints, 22.25);
+      const detailPath = path.slice(0, -'/grading'.length);
+      const ownerReview = await app.inject({ method: 'GET', url: detailPath, headers: headers() });
+      assert.equal(ownerReview.statusCode, 200, ownerReview.body);
+      assert.deepEqual(ownerReview.json().attempt.result, original.result);
+      assert.deepEqual(ownerReview.json().attempt.automaticScore, original.score);
+      assert.equal(ownerReview.json().attempt.score.summary.earnedPoints, 22.25);
+      assert.equal(
+        ownerReview.json().attempt.instructorGrading.items[0].comment,
+        'Retained owner comment.',
+      );
+      assert(!/referenceProof|correctAnswer|explanation/.test(ownerReview.body));
+      const ownerList = await app.inject({
+        method: 'GET',
+        url: detailPath.slice(0, -('/' + f.attempt.id).length),
+        headers: headers(),
+      });
+      assert.equal(ownerList.statusCode, 200, ownerList.body);
+      assert.deepEqual(ownerList.json().submissions[0].summary, original.result!.summary);
+      assert.equal(ownerList.json().submissions[0].score.summary.earnedPoints, 22.25);
+
       assert.equal(
         (await app.inject({ method: 'GET', url: path, headers: headers() })).json().grading
           .revision,
@@ -583,6 +607,53 @@ for (const demo of [false, true]) {
         { method: 'GET' as const, url: path + '/history' },
       ])
         assert.equal((await app.inject({ ...request, headers: headers() })).statusCode, 403);
+      const workPath = `${demo ? '/api/demo/resources' : '/api'}/student/assignments/${f.assignment.id}`;
+      const readWork = () => app.inject({ method: 'GET', url: workPath, headers: headers() });
+      // Independent answer release must not expose held grading or comments.
+      await f.em.nativeUpdate(f.db.Assignment, f.assignment.id, {
+        solutionAccess: f.db.SolutionAccess.InstructorRelease,
+        answersRevealedAt: new Date(),
+        answersRevealedBy: f.owner,
+      });
+      const held = await readWork();
+      assert.equal(held.statusCode, 200, held.body);
+      assert.equal(held.json().attempt.result, null);
+      assert.equal(held.json().attempt.score, null);
+      assert.equal(held.json().attempt.gradePending, true);
+      assert(!/automaticScore|instructorGrading|Retained owner comment|reviewedBy/.test(held.body));
+      await f.em.nativeUpdate(f.db.Assignment, f.assignment.id, {
+        gradesReleasedAt: new Date(),
+        gradesReleasedBy: f.owner,
+      });
+      const released = await readWork();
+      assert.equal(released.statusCode, 200, released.body);
+      assert.deepEqual(released.json().attempt.result, original.result);
+      assert.deepEqual(released.json().attempt.automaticScore, original.score);
+      assert.equal(released.json().attempt.score.summary.earnedPoints, 22.25);
+      assert.equal(released.json().attempt.instructorGrading.revision, 1);
+      assert(!/reviewedBy|reviewedAt|referenceProof|correctAnswer|explanation/.test(released.body));
+      const retry = await app.inject({
+        method: 'POST',
+        url: workPath + '/submission',
+        headers: headers(),
+        payload: { revision: 0 },
+      });
+      assert.equal(retry.statusCode, 200, retry.body);
+      assert.deepEqual(retry.json().attempt, released.json().attempt);
+      // New corrections follow release immediately; repeated pinned versions stay independent.
+      await f.update(1, [{ itemId: f.items[0]!.id, earnedPoints: 0, comment: 'Zero, resolved.' }]);
+      assert.equal((await readWork()).json().attempt.score.summary.earnedPoints, 10);
+      await f.store.update(f.owner.id, f.assignment.id, f.attempt.id, {
+        revision: 2,
+        items: [{ itemId: f.items[0]!.id, earnedPoints: null, comment: 'Reopened.' }],
+      });
+      const reopened = (await readWork()).json().attempt;
+      assert.equal(reopened.instructorGrading.revision, 3);
+      assert.equal(reopened.score.summary.earnedPoints, null);
+      assert.equal(reopened.score.summary.status, 'needs_review');
+      assert.equal(reopened.score.items[1].earnedPoints, 5);
+      assert.deepEqual(reopened.result, original.result);
+      assert.deepEqual(reopened.automaticScore, original.score);
       const retained = await f.em.fork().findOneOrFail(f.db.AssignmentAttempt, f.attempt.id);
       assert.deepEqual(
         {
@@ -594,8 +665,8 @@ for (const demo of [false, true]) {
         original,
       );
       const assignment = await f.em.fork().findOneOrFail(f.db.Assignment, f.assignment.id);
-      assert.equal(assignment.gradesReleasedAt ?? null, null);
-      assert.equal(assignment.answersRevealedAt ?? null, null);
+      assert(assignment.gradesReleasedAt);
+      assert(assignment.answersRevealedAt);
     } finally {
       await app.close();
       await f.close();
@@ -637,6 +708,99 @@ test('demo grading returns failure when commit fails and leaves neither a revisi
     );
   } finally {
     await app.close();
+    await f.close();
+  }
+});
+
+test('objective review pages use the latest award per submission and keep unfinished work private', async () => {
+  const f = await fixture();
+  try {
+    const assignment = f.em.create(f.db.Assignment, {
+      classroom: f.assignment.classroom,
+      title: 'Objective grading',
+      publishedAt: new Date(),
+    });
+    const table = f.em.create(f.db.Problem, {
+      owner: f.owner,
+      title: 'Table',
+      definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
+    });
+    const version = f.em.create(f.db.ProblemVersion, {
+      problem: table,
+      title: table.title,
+      version: 1,
+      definition: table.definition,
+    });
+    const items = [version, f.items[2]!.problemVersion].map((problemVersion, i) =>
+      f.em.create(f.db.AssignmentItem, {
+        assignment,
+        problemVersion,
+        position: i + 1,
+        maxPoints: 10,
+      }),
+    );
+    const answers = { [items[1]!.id]: { type: 'true_false' as const, answer: false } };
+    const calculated = calculateSubmissionResult(assignment, items, answers);
+    const secondStudent = f.em.create(f.db.User, {
+      cognitoUserPoolId: randomUUID(),
+      cognitoSubject: 'second',
+      role: f.db.UserRole.Student,
+    });
+    const final = [f.student, secondStudent].map((student) =>
+      f.em.create(f.db.AssignmentAttempt, {
+        assignment,
+        student,
+        answers,
+        ...calculated,
+        submittedAt: new Date(),
+        revision: 1,
+      }),
+    );
+    const draft = f.em.create(f.db.AssignmentAttempt, { assignment, student: f.other, answers });
+    f.em.persist([assignment, table, version, ...items, secondStudent, ...final, draft]);
+    await f.em.flush();
+    for (const [index, attempt] of final.entries()) {
+      await f.store.update(f.owner.id, assignment.id, attempt.id, {
+        revision: 0,
+        items: [
+          { itemId: items[0]!.id, earnedPoints: index + 1, comment: 'Table adjustment.' },
+          { itemId: items[1]!.id, earnedPoints: 0, comment: 'Concept adjustment.' },
+        ],
+      });
+    }
+    await f.store.update(f.owner.id, assignment.id, final[0]!.id, {
+      revision: 1,
+      items: [{ itemId: items[0]!.id, earnedPoints: 6.25, comment: 'Latest table correction.' }],
+    });
+    const review = await createSubmissionReviewStore(f.orm);
+    const page = await review.listSubmissions(f.owner.id, assignment.id, { limit: 20, offset: 0 });
+    assert.equal(page.length, 2);
+    assert.equal(page.find((row) => row.id === final[0]!.id)!.score!.summary.earnedPoints, 6.25);
+    assert.equal(page.find((row) => row.id === final[1]!.id)!.score!.summary.earnedPoints, 2);
+    const detail = await review.findSubmission(f.owner.id, assignment.id, final[0]!.id);
+    assert.equal(detail.attempt.instructorGrading!.revision, 2);
+    assert.deepEqual(detail.attempt.result, calculated.result);
+    assert.deepEqual(detail.attempt.automaticScore, calculated.score);
+    assert.equal(
+      (await review.listSubmissions(f.owner.id, assignment.id, { limit: 1, offset: 1 })).length,
+      1,
+    );
+    assert.deepEqual(
+      await review.listSubmissions(f.owner.id, assignment.id, { limit: 1, offset: 2 }),
+      [],
+    );
+    await assert.rejects(review.findSubmission(f.owner.id, assignment.id, draft.id), /not_found/);
+    await assert.rejects(
+      review.findSubmission(f.other.id, assignment.id, final[0]!.id),
+      /not_found/,
+    );
+    const work = await createStudentWorkStore(f.orm);
+    const student = (await work.read(f.student.id, assignment.id)).attempt!;
+    assert.deepEqual(student.score, detail.attempt.score);
+    assert.deepEqual(student.instructorGrading, detail.attempt.instructorGrading);
+    assert.deepEqual(student.automaticScore, calculated.score);
+    assert(!JSON.stringify(student).includes('reviewedBy'));
+  } finally {
     await f.close();
   }
 });

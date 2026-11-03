@@ -1,3 +1,5 @@
+import { releasedGradingFields } from '../submission-review/grading-state';
+import type { SubmissionGradingResponse } from '@logiclab/contracts';
 import { validateProofSubmissionScore } from '../../application/assignment/proof-scoring';
 import { retainedProofCompletion } from './proof-completion-response';
 import { StudentWorkError } from '../../application/student-work/errors';
@@ -15,6 +17,7 @@ import { canViewAssignmentResults } from '../../application/assignment/results-r
 export function attemptResponse(
   attempt: AttemptEntity,
   assignment: Assignment,
+  grading?: SubmissionGradingResponse,
 ): SavedStudentAttempt {
   const submitted = Boolean(attempt.submittedAt);
   if (submitted && assignment.assessmentMode === 'graded' && !attempt.score)
@@ -47,7 +50,11 @@ export function attemptResponse(
     answers: attempt.answers,
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
     result: visible ? (attempt.result ?? null) : null,
-    ...(assignment.assessmentMode === 'graded' ? { score: visible ? score : null } : {}),
+    ...(assignment.assessmentMode === 'graded'
+      ? visible && score
+        ? releasedGradingFields(score, grading)
+        : { score: null }
+      : {}),
     gradePending: submitted && assignment.assessmentMode === 'graded' && !visible,
   });
 }
