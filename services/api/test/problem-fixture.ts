@@ -12,7 +12,7 @@ import type {
 } from '@logiclab/contracts/problem-library';
 import { authFixture, authUser } from './auth-fixture';
 import type { ProblemContext } from '../src/routes/problem/context';
-import type { UpdateProblemResult } from '../src/persistence/problem/store';
+import type { UpdateProblemResult } from '../src/persistence/problem/types';
 
 export const problem: ProblemDraft = {
   id: 'caee0582-e670-47e1-9d3b-31b88dcc78ec',
@@ -46,7 +46,7 @@ export function problemFixture() {
       async (
         _ownerId: string,
         _problemId: string,
-      ): Promise<import('../src/persistence/problem/store').PublishProblemResult> => ({
+      ): Promise<import('../src/persistence/problem/types').PublishProblemResult> => ({
         status: 'published',
         version: publishedVersion,
       }),

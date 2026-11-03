@@ -1,3 +1,6 @@
+import type { StudentWorkStore } from './types';
+import { enrolled, accessible, submittableAssignment, items, lockedAttempt } from './queries';
+import { policyFor, checkRevision } from './validation';
 import { calculateSubmissionResult } from './submission-result';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
@@ -17,19 +20,9 @@ import {
   derivationContent,
   derivationReferenceSolution,
 } from '../../application/problem/derivation-authoring';
-import { assignmentLearningPolicySchema } from '@logiclab/contracts';
-import type {
-  SavedStudentAttempt,
-  SavedStudentAssignmentResponse,
-  SavedStudentAnswers,
-  SavedStudentCheck,
-  SavedStudentCheckResponse,
-  SavedStudentSolutionResponse,
-} from '@logiclab/contracts/saved-student-work';
-import type { createDatabase, AssignmentAttempt as AttemptEntity } from '@logiclab/db' with {
+import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import type { AssignmentSummary, StudentAssignmentListQuery } from '@logiclab/contracts';
 import {
   validateItemResponse,
   checkItemResponse,
@@ -38,104 +31,13 @@ import {
 import { StudentWorkError } from '../../application/student-work/errors';
 import { assignmentSummary } from '../assignment/summary';
 
-export interface StudentWorkStore {
-  list(
-    studentId: string,
-    classId: string,
-    query: StudentAssignmentListQuery,
-  ): Promise<AssignmentSummary[]>;
-  read(studentId: string, assignmentId: string): Promise<SavedStudentAssignmentResponse>;
-  save(
-    studentId: string,
-    assignmentId: string,
-    input: SavedStudentAnswers,
-  ): Promise<SavedStudentAttempt>;
-  check(
-    studentId: string,
-    assignmentId: string,
-    input: SavedStudentCheck,
-  ): Promise<SavedStudentCheckResponse>;
-  submit(studentId: string, assignmentId: string, revision: number): Promise<SavedStudentAttempt>;
-  solution(
-    studentId: string,
-    assignmentId: string,
-    itemId: string,
-  ): Promise<SavedStudentSolutionResponse>;
-}
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
 export async function createStudentWorkStore(
   orm: Awaited<ReturnType<typeof createDatabase>>,
   transaction?: DatabaseManager,
 ): Promise<StudentWorkStore> {
   const transact = transactionRunner(orm, transaction);
-  const { Assignment, AssignmentItem, AssignmentAttempt, Enrollment, User, LockMode } =
-    await import('@logiclab/db');
-  type Manager = typeof orm.em;
-  async function enrolled(em: Manager, studentId: string, classId: string, lock = false) {
-    const enrollment = await em.findOne(
-      Enrollment,
-      { student: studentId, classroom: classId },
-      lock ? { lockMode: LockMode.PESSIMISTIC_READ } : {},
-    );
-    if (!enrollment) throw new StudentWorkError('not_found');
-  }
-  async function accessible(em: Manager, studentId: string, assignmentId: string) {
-    const assignment = await em.findOne(
-      Assignment,
-      { id: assignmentId },
-      { lockMode: LockMode.PESSIMISTIC_READ },
-    );
-    if (!assignment || !assignment.publishedAt || assignment.archivedAt)
-      throw new StudentWorkError('not_found');
-    await enrolled(em, studentId, assignment.classroom.id, true);
-    policyFor(assignment);
-    return assignment;
-  }
-  function policyFor(assignment: {
-    assessmentMode: string;
-    feedbackTiming: string;
-    solutionAccess: string;
-  }) {
-    const policy = assignmentLearningPolicySchema.safeParse({
-      assessmentMode: assignment.assessmentMode,
-      feedbackTiming: assignment.feedbackTiming,
-      solutionAccess: assignment.solutionAccess,
-    });
-    if (!policy.success) throw new StudentWorkError('unsupported_policy');
-    return policy.data;
-  }
-  async function submittableAssignment(em: Manager, studentId: string, assignmentId: string) {
-    const assignment = await accessible(em, studentId, assignmentId);
-    if (!assignmentLearningCapabilities(policyFor(assignment)).hasFinalSubmission)
-      throw new StudentWorkError('submission_unavailable');
-    return assignment;
-  }
-  function items(em: Manager, assignmentId: string) {
-    return em.find(
-      AssignmentItem,
-      { assignment: assignmentId },
-      { orderBy: { position: 'ASC' }, populate: ['problemVersion'] },
-    );
-  }
-  async function lockedAttempt(em: Manager, studentId: string, assignmentId: string) {
-    await em.upsert(
-      AssignmentAttempt,
-      {
-        assignment: em.getReference(Assignment, assignmentId),
-        student: em.getReference(User, studentId),
-      },
-      { onConflictFields: ['assignment', 'student'], onConflictAction: 'ignore' },
-    );
-    // Refresh after any conflicting transaction finishes; never reuse a stale upsert identity-map row.
-    return em.findOneOrFail(
-      AssignmentAttempt,
-      { assignment: assignmentId, student: studentId },
-      { lockMode: LockMode.PESSIMISTIC_WRITE, refresh: true },
-    );
-  }
-  function checkRevision(attempt: AttemptEntity, revision: number) {
-    if (attempt.revision !== revision) throw new StudentWorkError('revision_conflict');
-  }
+  const { Assignment, AssignmentItem, AssignmentAttempt, LockMode } = await import('@logiclab/db');
   return {
     async list(studentId, classId, query) {
       return transact(async (em) => {
