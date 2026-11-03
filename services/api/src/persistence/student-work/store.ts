@@ -1,10 +1,5 @@
-import { scoreObjectiveSubmission } from '../../application/assignment/scoring';
-import { scoreProofSubmission } from '../../application/assignment/proof-scoring';
-import { evaluateProofCompletion } from '../../application/student-work/proof-completion';
+import { calculateSubmissionResult } from './submission-result';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
-import { evaluateProofSubmission } from '../../application/student-work/proof-submission';
-import { libraryProblemDefinition } from '../../application/problem/library-definition';
-import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
@@ -22,7 +17,7 @@ import {
   derivationContent,
   derivationReferenceSolution,
 } from '../../application/problem/derivation-authoring';
-import { assignmentLearningPolicySchema, assignmentResponsesSchema } from '@logiclab/contracts';
+import { assignmentLearningPolicySchema } from '@logiclab/contracts';
 import type {
   SavedStudentAttempt,
   SavedStudentAssignmentResponse,
@@ -41,10 +36,6 @@ import {
   itemSolution,
 } from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
-import {
-  evaluateAssignmentSubmission,
-  evaluateAssignmentCompletion,
-} from '../../application/student-work/mixed-evaluation';
 import { assignmentSummary } from '../assignment/summary';
 
 export interface StudentWorkStore {
@@ -259,45 +250,9 @@ export async function createStudentWorkStore(
         if (attempt.submittedAt) return attemptResponse(attempt, assignment);
         checkRevision(attempt, revision);
         const assigned = await items(em, assignmentId);
-        if (!validAssignmentScoring(assignment, assigned))
-          throw new StudentWorkError('unsupported_policy');
-        const containsProof = assigned.some(
-          (item) => item.problemVersion.definition.type === 'derivation',
-        );
-        if (containsProof) assertProofWorkPolicy(assignment);
-        const allocations = assigned.map((item) => ({
-          itemId: item.id,
-          maxPoints: item.maxPoints!,
-        }));
-        if (containsProof) {
-          // Graded proof finalization stays staged until instructor grading/review enables assignment admission.
-          const occurrences = assigned.map((item) => ({
-            id: item.id,
-            problemVersionId: item.problemVersion.id,
-            definition: libraryProblemDefinition(item.problemVersion.definition),
-          }));
-          if (assignment.assessmentMode === 'completion_only') {
-            attempt.result = evaluateProofCompletion(occurrences, attempt.answers);
-          } else {
-            const result = evaluateProofSubmission(occurrences, attempt.answers);
-            attempt.result = result;
-            attempt.score = scoreProofSubmission(allocations, result);
-          }
-        } else {
-          const evaluate =
-            assignment.assessmentMode === 'completion_only'
-              ? evaluateAssignmentCompletion
-              : evaluateAssignmentSubmission;
-          attempt.result = evaluate(
-            assigned.map((item) => ({
-              id: item.id,
-              definition: supportedProblemDefinition(item.problemVersion.definition),
-            })),
-            assignmentResponsesSchema.parse(attempt.answers),
-          );
-          if (assignment.assessmentMode === 'graded')
-            attempt.score = scoreObjectiveSubmission(allocations, attempt.result);
-        }
+        const calculated = calculateSubmissionResult(assignment, assigned, attempt.answers);
+        attempt.result = calculated.result;
+        if (calculated.score !== undefined) attempt.score = calculated.score;
         attempt.submittedAt = new Date();
         attempt.revision++;
         await em.flush();
