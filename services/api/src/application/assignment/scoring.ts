@@ -6,6 +6,7 @@ import {
   mixedGradedSubmissionResultSchema,
   type AssignmentPointAllocation,
   type AssignmentScore,
+  type AssignmentItemScore,
 } from '@logiclab/contracts';
 
 const summaryKeys = ['correct', 'incorrect', 'unanswered', 'total'] as const;
@@ -62,6 +63,11 @@ export function scoreAssignment(
         : Math.round((item.maxPoints * 100 * outcome.correct) / outcome.total);
     return { ...item, status: 'graded' as const, earnedPoints: earnedHundredths / 100 };
   });
+  return summarizeAssignmentScore(items);
+}
+
+/** Aggregate automatic or instructor-awarded items without changing their scoring evidence. */
+export function summarizeAssignmentScore(items: AssignmentItemScore[]): AssignmentScore {
   const maxPoints = items.reduce((sum, item) => sum + item.maxPoints, 0);
   const hundredths = items.reduce(
     (sum, item) => sum + Math.round((item.earnedPoints ?? 0) * 100),

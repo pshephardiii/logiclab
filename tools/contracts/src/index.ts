@@ -17,4 +17,5 @@ export * from './assignment-results-release';
 export * from './conceptual-question';
 export * from './assignment-responses';
 export * from './assignment-scoring';
+export * from './assignment-grading';
 export * from './proof';
