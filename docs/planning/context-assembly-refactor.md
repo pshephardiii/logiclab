@@ -108,3 +108,16 @@ On November 3, 2026, frontend type checking, all 304 existing web tests and the 
 Extracted the multiple-choice Answer options section into the controlled `ConceptualAnswerOptions` component. It receives options, the correct-option ID and editing callbacks. `ConceptualProblemFields` retains the full fields object, existing pure edit helpers and new-option UUID generation, alongside question, true/false and explanation controls. Existing labels, radio grouping, option limits, order controls and selection-clearing behavior are preserved.
 
 After this follow-up, all 304 existing frontend tests and the production build, including TypeScript checking, passed on November 3, 2026. Formatting and whitespace checks passed. No test files changed. Logs: `/private/tmp/answer-options-tests.log` and `answer-options-build.log`; backend/database and real-browser checks were not repeated for the component extraction.
+
+## Slice 6: first backend extraction pass (candidates 1–4)
+
+The user moved the extraction pass to persistence stores and approved taking the proposed candidates in slices. This first backend slice extracts:
+
+1. `duplicateAssignmentTitle` in the assignment application layer, preserving the copy prefix, 120-code-unit bound, Unicode character iteration and trailing-space trimming.
+2. `libraryProblemDraft` in `persistence/problem/draft-response.ts`, alongside the existing published-version response helper. It preserves private-definition validation, null normalization and timestamp formatting.
+3. `assignmentDetail` in `persistence/assignment/detail-response.ts`, preserving complete definition admission checks and owner-only pinned-version projection. The store retains the ordered/populated item query and all ownership/transaction behavior.
+4. `submissionSummary` and `objectiveReviewAttempt` in `persistence/submission-review/response.ts`. Existing final-summary validation and objective result/score projections remain distinct from student grade-disclosure logic and the existing proof-completion owner projection. Queries, ownership/final-only checks and their ordering remain in the store.
+
+On November 3, 2026, API type checking, all 791 existing API tests, the API production build and all 267 PostgreSQL checks (174 database, 93 API/workflow) passed. Existing database cases cover Unicode-bound duplication, source/pinned snapshot preservation, ownership, normal/demo isolation, grade disclosure, score-free completion review, rollback and concurrency. Formatting and whitespace checks passed. No test files were added or modified. No schema/environment change or user development-database migration/reset occurred. Frontend/browser checks were not repeated for these backend-only extractions. Logs: `/private/tmp/persistence-projections-types.log`, `persistence-projections-tests.log`, `persistence-projections-build.log` and `persistence-projections-db.log`.
+
+The remaining approved backend candidates are draft-scoring validation (5), submission-result calculation (6), and payment-event validation (7), to be taken individually with existing transaction/lock/query order preserved. The separate test-gap review follows the extraction work.

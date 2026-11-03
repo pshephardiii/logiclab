@@ -1,16 +1,11 @@
+import { submissionSummary, objectiveReviewAttempt } from './response';
 import {
   proofCompletionReviewSummary,
   proofCompletionReviewResponse,
 } from './proof-completion-response';
-import {
-  assignmentScoreSchema,
-  assignmentResponsesSchema,
-  submissionSummarySchema,
-  submissionResultSchema,
-  submissionReviewSchema,
-} from '@logiclab/contracts';
+import { submissionSummarySchema, submissionReviewSchema } from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
-import type { createDatabase, AssignmentAttempt } from '@logiclab/db' with {
+import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type { SubmissionListQuery, SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
@@ -28,16 +23,6 @@ export interface SubmissionReviewStore {
     assignmentId: string,
     submissionId: string,
   ): Promise<SubmissionReview>;
-}
-function summary(attempt: AssignmentAttempt): SubmissionSummary {
-  if (!attempt.submittedAt || !attempt.result) throw new AssignmentOperationError('not_found');
-  return submissionSummarySchema.parse({
-    id: attempt.id,
-    student: { id: attempt.student.id, email: attempt.student.email ?? null },
-    submittedAt: attempt.submittedAt.toISOString(),
-    summary: attempt.result.summary,
-    ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
-  });
 }
 
 /** Only retained final submissions are visible; draft answers never cross the instructor boundary. */
@@ -72,7 +57,7 @@ export async function createSubmissionReviewStore(
       return submissions.map((attempt) =>
         attempt.result?.gradingVersion === 'proof_completion_v1'
           ? submissionSummarySchema.parse(proofCompletionReviewSummary(attempt, assignment))
-          : summary(attempt),
+          : submissionSummary(attempt),
       );
     },
     async findSubmission(ownerId, assignmentId, submissionId) {
@@ -99,18 +84,9 @@ export async function createSubmissionReviewStore(
           assignment: savedAssignmentExercises(assignment, items),
         });
       return {
-        submission: summary(attempt),
+        submission: submissionSummary(attempt),
         assignment: assignmentExercises(assignment, items),
-        // Authorized instructor review includes retained grades independently of student release.
-        attempt: {
-          id: attempt.id,
-          revision: attempt.revision,
-          answers: assignmentResponsesSchema.parse(attempt.answers),
-          submittedAt: attempt.submittedAt?.toISOString() ?? null,
-          result: attempt.result ? submissionResultSchema.parse(attempt.result) : null,
-          ...(attempt.score ? { score: assignmentScoreSchema.parse(attempt.score) } : {}),
-          gradePending: false,
-        },
+        attempt: objectiveReviewAttempt(attempt),
       };
     },
   };

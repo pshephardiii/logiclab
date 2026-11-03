@@ -1,3 +1,4 @@
+import { libraryProblemDraft } from './draft-response';
 import {
   libraryProblemDefinition,
   publicationDefinition,
@@ -9,7 +10,7 @@ import {
 import { UnsupportedProblemDefinitionError } from '../../application/problem/definition-support';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { libraryProblemVersion } from './version-response';
-import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
+import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type { ProblemArchiveFilter } from '@logiclab/contracts';
@@ -65,18 +66,6 @@ export interface ProblemStore {
     problemId: string,
     input: UpdateLibraryProblemRequest,
   ): Promise<UpdateProblemResult>;
-}
-
-function draft(problem: ProblemEntity): LibraryProblemDraft {
-  return {
-    id: problem.id,
-    title: problem.title,
-    instructions: problem.instructions ?? null,
-    definition: libraryProblemDefinition(problem.definition),
-    archivedAt: problem.archivedAt?.toISOString() ?? null,
-    createdAt: problem.createdAt.toISOString(),
-    updatedAt: problem.updatedAt.toISOString(),
-  };
 }
 
 /** Every query scopes ownership; updates lock the row before checking archive state. */
@@ -141,7 +130,7 @@ export async function createProblemStore(
         if (archived && !problem.archivedAt) problem.archivedAt = new Date();
         if (!archived && problem.archivedAt) problem.archivedAt = undefined;
         await em.flush();
-        return draft(problem);
+        return libraryProblemDraft(problem);
       });
     },
     async listVersions(ownerId, problemId, limit, offset) {
@@ -171,7 +160,7 @@ export async function createProblemStore(
       });
       em.persist(problem);
       await em.flush();
-      return draft(problem);
+      return libraryProblemDraft(problem);
     },
     async list(ownerId, limit, offset, archive = 'active') {
       const rows = await (transaction ?? orm.em.fork()).find(
@@ -186,14 +175,14 @@ export async function createProblemStore(
           orderBy: { createdAt: 'DESC', id: 'DESC' },
         },
       );
-      return rows.map(draft);
+      return rows.map(libraryProblemDraft);
     },
     async findOwned(ownerId, problemId) {
       const problem = await (transaction ?? orm.em.fork()).findOne(Problem, {
         id: problemId,
         owner: ownerId,
       });
-      return problem ? draft(problem) : null;
+      return problem ? libraryProblemDraft(problem) : null;
     },
     async update(ownerId, problemId, input) {
       return transact(async (em) => {
@@ -206,7 +195,7 @@ export async function createProblemStore(
         if (input.definition !== undefined)
           problem.definition = libraryProblemDefinition(input.definition);
         await em.flush();
-        return { status: 'updated' as const, problem: draft(problem) };
+        return { status: 'updated' as const, problem: libraryProblemDraft(problem) };
       });
     },
   };

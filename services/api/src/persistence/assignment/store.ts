@@ -1,3 +1,5 @@
+import { duplicateAssignmentTitle } from '../../application/assignment/duplicate-title';
+import { assignmentDetail } from './detail-response';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import {
   ASSIGNMENT_POINT_LIMITS,
@@ -21,7 +23,6 @@ import type {
   AssignmentListQuery,
 } from '@logiclab/contracts';
 import { AssignmentOperationError } from '../../application/assignment/errors';
-import { libraryProblemVersion } from '../problem/version-response';
 
 export interface AssignmentStore {
   create(
@@ -126,18 +127,7 @@ export async function createAssignmentStore(
       { assignment: assignment.id },
       { orderBy: { position: 'ASC' }, populate: ['problemVersion.problem'] },
     );
-    items.forEach((item) =>
-      supportedAssignmentDefinition(item.problemVersion.definition, assignment),
-    );
-    return {
-      ...assignmentSummary(assignment),
-      items: items.map((item) => ({
-        id: item.id,
-        position: item.position,
-        maxPoints: item.maxPoints,
-        problemVersion: libraryProblemVersion(item.problemVersion),
-      })),
-    };
+    return assignmentDetail(assignment, items);
   }
   async function replaceItems(
     em: Manager,
@@ -282,12 +272,7 @@ export async function createAssignmentStore(
         );
         if (items.length && !validAssignmentScoring(source, items))
           throw new AssignmentOperationError('invalid_scoring');
-        let title = 'Copy of ';
-        // Respect the API's 120-code-unit limit without splitting a Unicode character.
-        for (const character of source.title) {
-          if (title.length + character.length > 120) break;
-          title += character;
-        }
+        const title = duplicateAssignmentTitle(source.title);
         const policy = assignmentLearningPolicySchema.parse({
           assessmentMode: source.assessmentMode,
           feedbackTiming: source.feedbackTiming,
@@ -295,7 +280,7 @@ export async function createAssignmentStore(
         });
         const copy = em.create(Assignment, {
           classroom: source.classroom,
-          title: title.trimEnd(),
+          title,
           instructions: source.instructions,
           ...policyFields(policy),
           gradeReleaseTiming: source.gradeReleaseTiming,
