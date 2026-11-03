@@ -654,7 +654,7 @@ test('reference access is independent from checking and returns only an authoriz
     assert.equal(check.feedback.report.status, 'accepted');
   }));
 
-test('proof checking/reference access deny outsiders, foreign occurrences, archives and graded/completion rollout paths', async () =>
+test('proof checking/reference access enforce ownership, graded feedback locks and completion policy', async () =>
   fixture(async (orm, db) => {
     const f = await seed(orm, db);
     await orm.em
@@ -710,10 +710,8 @@ test('proof checking/reference access deny outsiders, foreign occurrences, archi
       f.store.check(f.student.id, f.assignment.id, { itemId: f.first.id, answers: answer() }),
       failure('check_locked'),
     );
-    await assert.rejects(
-      f.store.solution(f.student.id, f.assignment.id, f.first.id),
-      failure('unsupported_policy'),
-    );
+    const revealed = (await f.store.solution(f.student.id, f.assignment.id, f.first.id)).solution;
+    assert('type' in revealed && revealed.type === 'derivation');
     await orm.em.fork().nativeUpdate(db.Assignment, f.assignment.id, {
       assessmentMode: db.AssessmentMode.CompletionOnly,
       feedbackTiming: db.FeedbackTiming.OnCheck,

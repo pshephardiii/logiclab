@@ -31,7 +31,6 @@ export function AssignmentPolicyFields({
     policy.assessmentMode === 'completion_only' && policy.feedbackTiming !== 'on_submission';
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
-    if (containsProof && assessmentMode === 'graded') return;
     const next = assignmentPolicyTransition(policy, assessmentMode);
     onChange(next.policy);
     if (assessmentMode !== 'graded') onGradeReleaseChange('on_submission');
@@ -64,9 +63,7 @@ export function AssignmentPolicyFields({
         onChange={changeMode}
         aria-describedby="assignment-mode-help"
       >
-        <option value="graded" disabled={containsProof}>
-          Graded
-        </option>
+        <option value="graded">Graded</option>
         <option value="completion_only">Completion only</option>
         <option value="ungraded_practice">Ungraded practice</option>
       </select>

@@ -667,6 +667,138 @@ for (const demo of [false, true]) {
       const assignment = await f.em.fork().findOneOrFail(f.db.Assignment, f.assignment.id);
       assert(assignment.gradesReleasedAt);
       assert(assignment.answersRevealedAt);
+      // Create, publish and finalize through public normal/demo routes; no internal assignment edits.
+      const base = demo ? '/api/demo/resources' : '/api';
+      async function role(next: 'instructor' | 'student') {
+        if (demo) credential = (await f.runtime!.sessions.switchRole(credential, next)).sessionId;
+        else actor = next === 'instructor' ? f.owner : f.student;
+      }
+      const request = (method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) =>
+        app.inject({ method, url, payload, headers: headers() });
+      f.em.persist(
+        f.em.create(f.db.ClassEntitlement, {
+          classroom: f.assignment.classroom,
+          provider: f.db.BillingProvider.Simulator,
+          source: f.db.EntitlementSource.ClassPurchase,
+          sourceReference: randomUUID(),
+          startsAt: new Date(Date.now() - 60000),
+          endsAt: new Date(Date.now() + 86400000),
+        }),
+      );
+      await f.em.flush();
+      await role('instructor');
+      const created = await request(
+        'POST',
+        `${base}/classes/${f.assignment.classroom.id}/assignments`,
+        {
+          title: 'Public graded proofs',
+          assessmentMode: 'graded',
+          feedbackTiming: 'on_submission',
+          gradeReleaseTiming: 'instructor_release',
+          solutionAccess: 'instructor_release',
+          items: f.items.map((item) => ({
+            problemVersionId: item.problemVersion.id,
+            maxPoints: item.maxPoints,
+          })),
+        },
+      );
+      assert.equal(created.statusCode, 201, created.body);
+      const authored = created.json().assignment;
+      const assignmentPath = `${base}/assignments/${authored.id}`;
+      assert.equal((await request('POST', assignmentPath + '/publish', {})).statusCode, 200);
+      const copy = await request('POST', assignmentPath + '/duplicate', {});
+      assert.equal(copy.statusCode, 201, copy.body);
+      assert.deepEqual(
+        copy.json().assignment.items.map((item: { maxPoints: number }) => item.maxPoints),
+        [20, 5, 5],
+      );
+      await role('student');
+      const studentPath = `${base}/student/assignments/${authored.id}`;
+      const empty = await request('GET', studentPath);
+      assert.equal(empty.statusCode, 200, empty.body);
+      assert.equal(empty.json().attempt, null);
+      assert(!empty.body.includes('referenceProof'));
+      const responses = [
+        { type: 'derivation', proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] } },
+        { type: 'derivation', proof: derivationDefinitionFixture().referenceProof },
+        { type: 'true_false', answer: false },
+      ];
+      let revision = 0;
+      for (const [index, item] of authored.items.entries()) {
+        const saved = await request('PATCH', studentPath + '/attempt', {
+          revision,
+          itemId: item.id,
+          answers: responses[index],
+        });
+        assert.equal(saved.statusCode, 200, saved.body);
+        revision = saved.json().attempt.revision;
+        assert.equal(saved.json().attempt.result, null);
+      }
+      const locked = await request('POST', studentPath + '/check', {
+        itemId: authored.items[0].id,
+        answers: responses[0],
+      });
+      assert.equal(locked.statusCode, 403, locked.body);
+      assert.equal(
+        (await request('GET', `${studentPath}/items/${authored.items[0].id}/solution`)).statusCode,
+        403,
+      );
+      const final = await request('POST', studentPath + '/submission', { revision });
+      assert.equal(final.statusCode, 200, final.body);
+      assert.equal(final.json().attempt.gradePending, true);
+      const finalId = final.json().attempt.id;
+      await role('instructor');
+      const reviewPath = `${assignmentPath}/submissions/${finalId}`;
+      const review = await request('GET', reviewPath);
+      assert.equal(review.statusCode, 200, review.body);
+      assert.equal(review.json().attempt.score.summary.status, 'needs_review');
+      assert.equal(review.json().attempt.result.summary.proofs.accepted, 1);
+      const decision = await request('PATCH', reviewPath + '/grading', {
+        revision: 0,
+        items: [
+          { itemId: authored.items[0].id, earnedPoints: 12.25, comment: 'Public review comment.' },
+        ],
+      });
+      assert.equal(decision.statusCode, 200, decision.body);
+      assert.equal(decision.json().score.summary.earnedPoints, 22.25);
+      if (demo) {
+        assert.equal(
+          (await request('POST', assignmentPath + '/release-grades', {})).statusCode,
+          200,
+        );
+        await role('student');
+        const gradesFirst = await request('GET', studentPath);
+        assert.equal(gradesFirst.json().attempt.score.summary.earnedPoints, 22.25);
+        assert(!gradesFirst.body.includes('referenceProof'));
+        assert.equal(
+          (await request('GET', `${studentPath}/items/${authored.items[0].id}/solution`))
+            .statusCode,
+          403,
+        );
+        await role('instructor');
+      }
+      assert.equal((await request('POST', assignmentPath + '/reveal-answers', {})).statusCode, 200);
+      await role('student');
+      assert.equal((await request('GET', studentPath)).json().attempt.gradePending, !demo);
+      const solution = await request(
+        'GET',
+        `${studentPath}/items/${authored.items[0].id}/solution`,
+      );
+      assert.equal(solution.statusCode, 200, solution.body);
+      assert(solution.json().solution.referenceProof);
+      assert(!solution.body.includes('Public review comment.'));
+      await role('instructor');
+      assert.equal((await request('POST', assignmentPath + '/release-grades', {})).statusCode, 200);
+      await role('student');
+      const visible = await request('GET', studentPath);
+      assert.equal(visible.json().attempt.score.summary.earnedPoints, 22.25);
+      assert.equal(visible.json().attempt.automaticScore.summary.status, 'needs_review');
+      assert.equal(
+        visible.json().attempt.instructorGrading.items[0].comment,
+        'Public review comment.',
+      );
+      const repeated = await request('POST', studentPath + '/submission', { revision: 0 });
+      assert.deepEqual(repeated.json().attempt, visible.json().attempt);
     } finally {
       await app.close();
       await f.close();

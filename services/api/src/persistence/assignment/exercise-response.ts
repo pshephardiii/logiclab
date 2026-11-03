@@ -1,7 +1,6 @@
 import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import { studentAssignmentSchema, type StudentAssignment } from '@logiclab/contracts';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import { derivationContent } from '../../application/problem/derivation-authoring';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
@@ -40,12 +39,4 @@ export function savedAssignmentExercises(
         : { ...common, content: conceptualQuestionContent(definition) };
     }),
   };
-}
-
-/** Narrow active/instructor response until staged proof work is ready for those consumers. */
-export function assignmentExercises(
-  assignment: Assignment,
-  items: AssignmentItem[],
-): StudentAssignment {
-  return studentAssignmentSchema.parse(savedAssignmentExercises(assignment, items));
 }

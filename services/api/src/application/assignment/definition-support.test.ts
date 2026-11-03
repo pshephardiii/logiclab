@@ -5,7 +5,7 @@ import { supportedAssignmentDefinition } from './definition-support';
 import { AssignmentOperationError } from './errors';
 import { mapAssignmentError } from '../../routes/assignment/errors';
 
-test('published proof definitions admit practice and submission-time completion; objective definitions retain every mode', () => {
+test('published proof definitions admit graded work with submission-time feedback', () => {
   const proof = derivationDefinitionFixture();
   expect(
     supportedAssignmentDefinition(proof, {
@@ -13,20 +13,18 @@ test('published proof definitions admit practice and submission-time completion;
       feedbackTiming: 'on_check',
     }),
   ).toEqual(proof);
-  for (const mode of ['graded']) {
-    expect(() =>
-      supportedAssignmentDefinition(proof, {
-        assessmentMode: mode,
-        feedbackTiming: 'on_submission',
-      }),
-    ).toThrow(AssignmentOperationError);
-    expect(
-      supportedAssignmentDefinition(
-        { type: 'truth_table', definitionVersion: 1, formula: 'P' },
-        { assessmentMode: mode, feedbackTiming: 'on_submission' },
-      ).type,
-    ).toBe('truth_table');
-  }
+  expect(
+    supportedAssignmentDefinition(proof, {
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+    }),
+  ).toEqual(proof);
+  expect(
+    supportedAssignmentDefinition(
+      { type: 'truth_table', definitionVersion: 1, formula: 'P' },
+      { assessmentMode: 'graded', feedbackTiming: 'on_submission' },
+    ).type,
+  ).toBe('truth_table');
 });
 test.each(['graded', 'completion_only', 'ungraded_practice'] as const)(
   'owner assignment contracts enforce proof mode for %s without changing published snapshots',
@@ -42,7 +40,7 @@ test.each(['graded', 'completion_only', 'ungraded_practice'] as const)(
       })),
     };
     const snapshot = structuredClone(input);
-    expect(assignmentSchema.safeParse(input).success).toBe(mode !== 'graded');
+    expect(assignmentSchema.safeParse(input).success).toBe(true);
     expect(input).toEqual(snapshot);
   },
 );
@@ -56,16 +54,19 @@ test('proof mode errors provide an actionable safe response', () => {
   expect(JSON.stringify(response)).not.toContain('PRIVATE');
 });
 
-test('completion proof admission excludes pre-submission feedback policies', () => {
-  const proof = derivationDefinitionFixture();
-  expect(
-    supportedAssignmentDefinition(proof, {
-      assessmentMode: 'completion_only',
-      feedbackTiming: 'on_submission',
-    }),
-  ).toEqual(proof);
-  for (const feedbackTiming of ['on_check', 'immediate'])
-    expect(() =>
-      supportedAssignmentDefinition(proof, { assessmentMode: 'completion_only', feedbackTiming }),
-    ).toThrow(AssignmentOperationError);
-});
+test.each(['graded', 'completion_only'])(
+  '%s proof admission excludes pre-submission feedback policies',
+  (assessmentMode) => {
+    const proof = derivationDefinitionFixture();
+    expect(
+      supportedAssignmentDefinition(proof, {
+        assessmentMode,
+        feedbackTiming: 'on_submission',
+      }),
+    ).toEqual(proof);
+    for (const feedbackTiming of ['on_check', 'immediate'])
+      expect(() =>
+        supportedAssignmentDefinition(proof, { assessmentMode, feedbackTiming }),
+      ).toThrow(AssignmentOperationError);
+  },
+);

@@ -121,8 +121,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
           />
           {containsProof && (
             <p className="help">
-              Remove all derivations before choosing graded mode. Practice proofs have no official
-              score or final submission.
+              Verified graded proofs receive full points; other proofs need instructor grading.
+              Practice proofs have no official score or final submission.
             </p>
           )}
           <AssignmentItems

@@ -158,29 +158,14 @@ test('practice admission pins repeated proof versions, keeps student content pri
 test('proof mode guards validate the complete merged draft and roll back rejected creates and policy edits', async () =>
   fixture(async (f) => {
     const { assignments, owner, classroom, orm, db } = f;
-    for (const assessmentMode of ['graded'] as const) {
-      await assert.rejects(
-        assignments.create(owner.id, classroom.id, {
-          ...f.practice,
-          assessmentMode,
-          feedbackTiming: 'on_submission',
-        }),
-        failure('proof_mode_unavailable'),
-      );
-    }
-    assert.equal(await orm.em.fork().count(db.Assignment, {}), 0);
     const draft = await assignments.create(owner.id, classroom.id, f.practice);
-    for (const assessmentMode of ['graded'] as const) {
-      await assert.rejects(
-        assignments.update(owner.id, draft.id, {
-          assessmentMode,
-          feedbackTiming: 'on_submission',
-          title: 'Must roll back',
-        }),
-        failure('proof_mode_unavailable'),
-      );
-      assert.deepEqual(await assignments.findOwned(owner.id, draft.id), draft);
-    }
+    const weighted = await assignments.update(owner.id, draft.id, {
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+    });
+    assert.equal(weighted.assessmentMode, 'graded');
+    assert(weighted.items.every((item) => item.maxPoints === 10));
+    assert(assignmentSchema.safeParse(weighted).success);
     const completion = await assignments.update(owner.id, draft.id, {
       assessmentMode: 'completion_only',
       feedbackTiming: 'on_submission',
@@ -202,13 +187,11 @@ test('proof mode guards validate the complete merged draft and roll back rejecte
     });
     assert.equal(graded.assessmentMode, 'graded');
     assert.equal(graded.items.length, 1);
-    await assert.rejects(
-      assignments.update(owner.id, draft.id, {
-        items: [{ problemVersionId: f.proofVersion.id, maxPoints: 10 }],
-      }),
-      failure('proof_mode_unavailable'),
-    );
-    assert.deepEqual(await assignments.findOwned(owner.id, draft.id), graded);
+    const proofGraded = await assignments.update(owner.id, draft.id, {
+      items: [{ problemVersionId: f.proofVersion.id, maxPoints: 20 }],
+    });
+    assert.equal(proofGraded.items[0]!.problemVersion.definition.type, 'derivation');
+    assert.equal(proofGraded.items[0]!.maxPoints, 20);
   }));
 test('publication independently rejects unsupported proof modes, and foreign publications or archived drafts stay protected', async () =>
   fixture(async (f) => {
@@ -237,7 +220,9 @@ test('publication independently rejects unsupported proof modes, and foreign pub
     await assert.rejects(assignments.publish(f.owner.id, draft.id), failure('archived'));
     const bypass = manager.create(db.Assignment, {
       classroom: manager.getReference(db.Classroom, f.classroom.id),
-      title: 'Internal invalid graded fixture',
+      title: 'Internal invalid completion fixture',
+      assessmentMode: db.AssessmentMode.CompletionOnly,
+      feedbackTiming: db.FeedbackTiming.OnCheck,
     });
     manager.persist([
       bypass,
@@ -256,7 +241,7 @@ test('publication independently rejects unsupported proof modes, and foreign pub
     );
     assert.equal((await orm.em.fork().findOneOrFail(db.Assignment, bypass.id)).publishedAt, null);
   }));
-test('racing publication and mode/item replacement never produce a graded proof assignment', async () =>
+test('racing publication and mode/item replacement preserve one coherent frozen assignment', async () =>
   fixture(async (f) => {
     await f.cover();
     const draft = await f.assignments.create(f.owner.id, f.classroom.id, f.practice);

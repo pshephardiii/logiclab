@@ -198,8 +198,6 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
-          if (assignment.assessmentMode === 'graded')
-            throw new StudentWorkError('unsupported_policy');
           return { itemId, solution: derivationReferenceSolution(definition) };
         }
         return {
