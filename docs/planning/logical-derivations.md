@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: scoring 019, proof-checker 020 and private authoring 021 are complete. Branch 022 delivers Fitch practice and completion-only student work, revisioned saves, independent references and frozen completion diagnostics with owner review. Graded proof finalization/scoring remains guarded groundwork until 024 instructor grading/review, following the agreed 023 context-assembly refactor. See [student-work behavior](derivation-student-work.md) and [verification](../verification/derivation-student-work-verification.md). This document does not start another branch.
+Status: scoring, the Fitch checker, checked private authoring, student practice/completion, explicit context assembly and instructor grading/review are implemented through 024. Graded Fitch assignments are now available with immutable automatic evidence, instructor point/comment adjustments, retained history and independent grade/reference release. See [current grading behavior](derivation-grading-review.md) and [verification](../verification/derivation-grading-review-verification.md). The next planned format is dependency-style proofs (025), followed by natural-deduction trees (026) and student-created practice/seeded demos (027). This document does not start another branch.
 
 ## Product direction and scope
 
@@ -184,7 +184,7 @@ Additional formats become authorable only when their own reference validation an
 
 ### 022: student work and finalization
 
-The [student-work implementation](derivation-student-work.md) now connects strict proof responses, pinned redacted statements, revisioned persistence, practice checks, independent references and completion finalization/review. Normal/demo access and focused browser journeys are verified. Graded proof admission remains guarded through 024.
+The [student-work implementation](derivation-student-work.md) now connects strict proof responses, pinned redacted statements, revisioned persistence, practice checks, independent references and completion finalization/review. Normal/demo access and focused browser journeys are verified. The 022 branch kept graded admission guarded; 024 now enables it with instructor grading/review.
 
 This is also a larger branch; preserve the boundary between the checker and request/state coordination:
 
@@ -210,7 +210,7 @@ Small slices:
 2. Add owner-authorized report/review/score/comment operations with concurrency protection, adjustment history and mixed-assignment total recomputation. Instructor grading resolves the review requirement without rewriting the student's proof or original report.
 3. Add the review interface and student released feedback. Reports distinguish original errors, locally correct downstream work and whether the target is established. Student-proof reports/comments follow result release; references follow answer reveal. Verify incomplete overall grades are never exposed as final totals, including when an instructor has already released results.
 
-Then remove the graded rollout guard only after the complete normal/demo flow passes. No automatic partial-credit engine is required.
+Delivered in 024: graded admission is enabled with independent reference access, immutable automatic evidence, per-occurrence point/comment adjustments, append-only revision history and released student feedback. Normal/demo public HTTP journeys cover authoring through grading and independent release; focused browser evidence is recorded in [grading/review verification](../verification/derivation-grading-review-verification.md). No automatic partial-credit engine is introduced.
 
 ### 025 and 026: additional formats
 

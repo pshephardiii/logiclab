@@ -1,4 +1,10 @@
-import { submissionListResponseSchema, submissionReviewSchema } from '@logiclab/contracts';
+import {
+  submissionListResponseSchema,
+  submissionReviewSchema,
+  submissionGradingResponseSchema,
+  submissionGradingHistorySchema,
+  type UpdateSubmissionGrading,
+} from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
 
 /** Bind resource operations to a supplied account request transport. */
@@ -19,7 +25,44 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
     });
   }
 
-  return { listSubmissions, readSubmission };
+  function readGrading(assignmentId: string, submissionId: string, signal: AbortSignal) {
+    return request(`/api/assignments/${assignmentId}/submissions/${submissionId}/grading`, {
+      schema: submissionGradingResponseSchema,
+      fallback,
+      signal,
+    });
+  }
+  function saveGrading(
+    assignmentId: string,
+    submissionId: string,
+    input: UpdateSubmissionGrading,
+    signal: AbortSignal,
+  ) {
+    return request(`/api/assignments/${assignmentId}/submissions/${submissionId}/grading`, {
+      schema: submissionGradingResponseSchema,
+      fallback: 'Could not confirm the grading save. Reload current grading before saving again.',
+      signal,
+      method: 'PATCH',
+      body: input,
+    });
+  }
+  function readGradingHistory(
+    assignmentId: string,
+    submissionId: string,
+    offset: number,
+    signal: AbortSignal,
+  ) {
+    return request(
+      `/api/assignments/${assignmentId}/submissions/${submissionId}/grading/history?offset=${offset}`,
+      {
+        schema: submissionGradingHistorySchema,
+        fallback: 'Could not load grading history. Please try again.',
+        signal,
+      },
+    );
+  }
+  return { listSubmissions, readSubmission, readGrading, saveGrading, readGradingHistory };
 }
 
-export const { listSubmissions, readSubmission } = createApi();
+export const { listSubmissions, readSubmission, readGrading, saveGrading, readGradingHistory } =
+  createApi();

@@ -83,7 +83,7 @@ For a submitted graded example, inspect instructor final submissions and select 
 
 ## Optional: author and assign a Fitch derivation
 
-There is no seeded derivation yet. Create a disposable example to explore practice and completion-only proofs; graded proofs remain guarded. Allow extra time for these steps:
+There is no seeded derivation yet. Create a disposable example to explore practice, completion-only and graded proofs. Allow extra time for these steps:
 
 1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation (Fitch)**. Leave premises empty and enter `P -> P` as the conclusion.
 2. Enable **Allow Implication introduction**. Keep its label or choose a suggested/custom label; no other rule needs permission for this example.
@@ -98,4 +98,20 @@ There is no seeded derivation yet. Create a disposable example to explore practi
 11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
 12. Reset discards these owner-authored examples and student work, restoring seed template 5 while retaining the original workspace deadline. Do not expect proofs in the default seeded list.
 
-This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; other proof formats and graded instructor review remain future branches.
+This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; other proof formats remain future branches. For graded instructor review, continue below.
+
+## Optional: grade a Fitch submission
+
+Use a published Fitch problem from the preceding section. Proofs are owner-authored; demo seed template 5 is unchanged.
+
+1. As instructor, open **Assignments**, choose the funded demo class, and create a graded assignment. Add the proof version twice, set the first occurrence to 20 points and the second to 10, select **When I release grades** and **When I reveal answers**, save and publish.
+2. Switch to student and open the new assignment. Start each proof; leave one incomplete/incorrect and finish the other correctly. Save each problem. There is no **Check proof** for graded work. Confirm final submission. Expect an awaiting-release receipt with no reports, points or instructor comments.
+3. Return as instructor, open the published assignment and select the final submission. The accepted proof has its automatic points; the other needs review, keeping the assignment total unresolved. Inspect the original report under **Submitted problem**.
+4. In **Instructor grading**, uncheck **Use automatic award** for the flagged occurrence, enter 12.25 and a comment, then **Save instructor grading**. Expect 22.25/30 points. Load grading history to inspect the saved change/reviewer/time. Changing the viewed problem retains grading edits; changing submissions or navigating away protects unsaved edits.
+5. Confirm **Release grades** while leaving answers hidden. Switch to student, reopen/refresh results, and expect the points/comment and original diagnostics. The instructor reference is still unavailable.
+6. Return as instructor and change the award to zero, then save: zero is a resolved grade, not pending. Check **Use automatic award** and save to reopen the unverified occurrence; the overall total returns to pending. Set an explicit award again and save. Corrections follow the existing release policy on the next student refresh.
+7. Confirm **Reveal answers** separately. Switch to student and refresh answer access, then **Show assigned solution**. The reference/explanation appears without replacing submitted work or original diagnostics.
+8. If a save conflicts or its outcome is uncertain, retain/copy the edits as needed and choose **Reload current grading**. Stay preserves the draft; Discard rereads current grading. Inspect history before reapplying a change because a disconnected write may have committed.
+9. Reset the demo to discard these examples and their retained grading history. End the demo when finished.
+
+See [grading/review verification](../verification/derivation-grading-review-verification.md) for the focused automated/browser evidence and limits.

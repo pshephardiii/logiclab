@@ -1,6 +1,7 @@
+import { latestSubmissionGrading } from './grading-state';
 import type { SubmissionReviewStore } from './types';
 import { ownedReviewAssignment } from './queries';
-import { submissionSummary, objectiveReviewAttempt } from './response';
+import { submissionSummary, finalReviewAttempt } from './response';
 import {
   proofCompletionReviewSummary,
   proofCompletionReviewResponse,
@@ -11,7 +12,7 @@ import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import { AssignmentOperationError } from '../../application/assignment/errors';
-import { assignmentExercises, savedAssignmentExercises } from '../assignment/exercise-response';
+import { savedAssignmentExercises } from '../assignment/exercise-response';
 
 /** Only retained final submissions are visible; draft answers never cross the instructor boundary. */
 export async function createSubmissionReviewStore(
@@ -36,10 +37,11 @@ export async function createSubmissionReviewStore(
           populate: ['student'],
         },
       );
+      const grading = await latestSubmissionGrading(em, submissions);
       return submissions.map((attempt) =>
         attempt.result?.gradingVersion === 'proof_completion_v1'
           ? submissionSummarySchema.parse(proofCompletionReviewSummary(attempt, assignment))
-          : submissionSummary(attempt),
+          : submissionSummary(attempt, grading.get(attempt.id)),
       );
     },
     async findSubmission(ownerId, assignmentId, submissionId) {
@@ -65,11 +67,12 @@ export async function createSubmissionReviewStore(
           ...proofCompletionReviewResponse(attempt, assignment),
           assignment: savedAssignmentExercises(assignment, items),
         });
-      return {
-        submission: submissionSummary(attempt),
-        assignment: assignmentExercises(assignment, items),
-        attempt: objectiveReviewAttempt(attempt),
-      };
+      const grading = (await latestSubmissionGrading(em, [attempt])).get(attempt.id);
+      return submissionReviewSchema.parse({
+        submission: submissionSummary(attempt, grading),
+        assignment: savedAssignmentExercises(assignment, items),
+        attempt: finalReviewAttempt(attempt, grading),
+      });
     },
   };
 }

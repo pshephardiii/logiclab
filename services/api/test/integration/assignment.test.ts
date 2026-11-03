@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,6 +71,7 @@ test(
         ...context,
         assignments: store,
         submissionReviews: await createSubmissionReviewStore(orm),
+        submissionGrading: await createSubmissionGradingStore(orm),
       },
     });
     let address = 1;

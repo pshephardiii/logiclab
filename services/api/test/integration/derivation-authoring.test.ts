@@ -8,7 +8,6 @@ import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 import { DerivationPublicationError } from '../../src/application/problem/library-definition';
 import { checkDerivationReference } from '../../src/application/problem/derivation-authoring';
-import { AssignmentOperationError } from '../../src/application/assignment/errors';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 const url = process.env.TEST_DATABASE_URL;
@@ -109,7 +108,7 @@ test('owner drafts/preview/checked snapshots preserve history and reject stale r
     assert.equal(await store.setArchived(foreign.id, draft.id, true), null);
   }));
 
-test('invalid owner edits roll back metadata and derivation snapshots remain excluded from graded assignments', async () =>
+test('invalid owner edits roll back metadata and accepted derivation snapshots enter graded assignments', async () =>
   fixture(async (orm, db) => {
     const em = orm.em.fork();
     const owner = em.create(db.User, {
@@ -133,18 +132,16 @@ test('invalid owner edits roll back metadata and derivation snapshots remain exc
     const published = await store.publish(owner.id, draft.id);
     if (published.status !== 'published') throw new Error('Expected publication');
     const assignments = await createAssignmentStore(orm);
-    await assert.rejects(
-      assignments.create(owner.id, classroom.id, {
-        title: 'Blocked assignment',
-        problemVersionIds: [published.version.id],
-        assessmentMode: 'graded',
-        feedbackTiming: 'on_submission',
-        solutionAccess: 'never',
-      }),
-      (error: unknown) =>
-        error instanceof AssignmentOperationError && error.reason === 'proof_mode_unavailable',
-    );
-    assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 0);
+    const graded = await assignments.create(owner.id, classroom.id, {
+      title: 'Graded derivation',
+      problemVersionIds: [published.version.id],
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+      solutionAccess: 'never',
+    });
+    assert.equal(graded.items[0]!.problemVersion.id, published.version.id);
+    assert.equal(graded.items[0]!.maxPoints, 10);
+    assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 1);
   }));
 
 test('concurrent publication numbers snapshots atomically and edit races never publish rejected references', async () =>

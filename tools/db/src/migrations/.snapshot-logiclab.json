@@ -3871,6 +3871,231 @@
       "comment": null
     },
     {
+      "name": "submission_grading_revisions",
+      "schema": "public",
+      "columns": {
+        "attempt_id": {
+          "name": "attempt_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "changes": {
+          "name": "changes",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "grading": {
+          "name": "grading",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "reviewer_id": {
+          "name": "reviewer_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "score": {
+          "name": "score",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "attempt_id",
+            "revision"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "submission_grading_revisions_attempt_revision_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "submission_grading_revisions_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "submission_grading_revisions_revision_check",
+          "expression": "revision >= 1",
+          "definition": "check (revision >= 1)"
+        },
+        {
+          "name": "submission_grading_revisions_state_check",
+          "expression": "\n  coalesce(\n    jsonb_typeof(grading) = 'object'\n    and grading->>'gradingVersion' = 'instructor_grading_v1'\n    and grading->'revision' = to_jsonb(revision)\n    and jsonb_typeof(grading->'items') = 'array'\n    and jsonb_array_length(grading->'items') >= 1 and jsonb_array_length(grading->'items') <= 50\n    and jsonb_typeof(changes) = 'array'\n    and jsonb_array_length(changes) >= 1 and jsonb_array_length(changes) <= 50\n    and jsonb_typeof(score) = 'object'\n    and score->>'scoringVersion' = 'points_v1', false\n  )",
+          "definition": "check (\n  coalesce(\n    jsonb_typeof(grading) = 'object'\n    and grading->>'gradingVersion' = 'instructor_grading_v1'\n    and grading->'revision' = to_jsonb(revision)\n    and jsonb_typeof(grading->'items') = 'array'\n    and jsonb_array_length(grading->'items') >= 1 and jsonb_array_length(grading->'items') <= 50\n    and jsonb_typeof(changes) = 'array'\n    and jsonb_array_length(changes) >= 1 and jsonb_array_length(changes) <= 50\n    and jsonb_typeof(score) = 'object'\n    and score->>'scoringVersion' = 'points_v1', false\n  ))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "grading_immutable",
+          "timing": "before",
+          "events": [
+            "update",
+            "delete"
+          ],
+          "forEach": "row",
+          "body": "\nif TG_OP = 'DELETE' then\n  declare permitted boolean := false;\n  begin\n    execute format(\n      'select true\n       from %I.assignment_attempts attempt\n       join %I.assignments assignment on assignment.id = attempt.assignment_id\n       join %I.classrooms classroom on classroom.id = assignment.classroom_id\n       join %I.users owner_user on owner_user.id = classroom.owner_id\n       join %I.users student_user on student_user.id = attempt.student_id\n       join %I.users reviewer on reviewer.id = $2\n       join %I.demo_workspaces workspace on workspace.id = owner_user.demo_workspace_id\n        and workspace.id = student_user.demo_workspace_id\n        and workspace.id = reviewer.demo_workspace_id\n       where attempt.id = $1\n         and owner_user.identity_provider = ''demo''\n         and student_user.identity_provider = ''demo''\n         and reviewer.identity_provider = ''demo''\n         and workspace.status in (''resetting'', ''expired'')\n       for update of workspace',\n      TG_TABLE_SCHEMA, TG_TABLE_SCHEMA, TG_TABLE_SCHEMA, TG_TABLE_SCHEMA,\n      TG_TABLE_SCHEMA, TG_TABLE_SCHEMA, TG_TABLE_SCHEMA\n    ) into permitted using OLD.attempt_id, OLD.reviewer_id;\n    if permitted then return OLD; end if;\n  end;\nend if;\nraise exception 'Grading history is immutable' using errcode = '23514';"
+        },
+        {
+          "name": "grading_insert",
+          "timing": "before",
+          "events": [
+            "insert"
+          ],
+          "forEach": "row",
+          "body": "\ndeclare eligible boolean := false;\nprevious_revision integer;\nbegin\n  execute format(\n    'select true\n     from %I.assignment_attempts attempt\n     join %I.assignments assignment on assignment.id = attempt.assignment_id\n     join %I.classrooms classroom on classroom.id = assignment.classroom_id\n     join %I.users reviewer on reviewer.id = $2\n     where attempt.id = $1\n       and attempt.submitted_at is not null\n       and attempt.score is not null\n       and attempt.result->>''gradingVersion'' in (''truth_table_v1'', ''mixed_v1'', ''proof_mixed_v1'')\n       and assignment.assessment_mode = ''graded''\n       and assignment.published_at is not null\n       and assignment.archived_at is null\n       and classroom.owner_id = reviewer.id\n       and reviewer.role = ''instructor''\n     for update of attempt',\n    TG_TABLE_SCHEMA, TG_TABLE_SCHEMA, TG_TABLE_SCHEMA, TG_TABLE_SCHEMA\n  ) into eligible using NEW.attempt_id, NEW.reviewer_id;\n  if not coalesce(eligible, false) then\n    raise exception 'Grading requires an owned active final graded submission' using errcode = '23514';\n  end if;\n  execute format(\n    'select coalesce(max(revision), 0) from %I.submission_grading_revisions where attempt_id = $1',\n    TG_TABLE_SCHEMA\n  ) into previous_revision using NEW.attempt_id;\n  if NEW.revision::bigint <> previous_revision::bigint + 1 then\n    raise exception 'Grading revisions must be appended in order' using errcode = '23514';\n  end if;\n  return NEW;\nend;"
+        }
+      ],
+      "foreignKeys": {
+        "submission_grading_revisions_attempt_id_fkey": {
+          "columnNames": [
+            "attempt_id"
+          ],
+          "constraintName": "submission_grading_revisions_attempt_id_fkey",
+          "localTableName": "public.submission_grading_revisions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.assignment_attempts",
+          "deleteRule": "restrict"
+        },
+        "submission_grading_revisions_reviewer_id_fkey": {
+          "columnNames": [
+            "reviewer_id"
+          ],
+          "constraintName": "submission_grading_revisions_reviewer_id_fkey",
+          "localTableName": "public.submission_grading_revisions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "restrict"
+        }
+      },
+      "comment": null
+    },
+    {
       "name": "users",
       "schema": "public",
       "columns": {

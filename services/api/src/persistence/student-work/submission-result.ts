@@ -38,7 +38,7 @@ export function calculateSubmissionResult(
     maxPoints: item.maxPoints!,
   }));
   if (containsProof) {
-    // Graded proof finalization stays staged until instructor grading/review enables assignment admission.
+    // Proof evidence and automatic points are frozen separately from later instructor awards.
     const occurrences = assigned.map((item) => ({
       id: item.id,
       problemVersionId: item.problemVersion.id,

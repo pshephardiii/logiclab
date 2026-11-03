@@ -46,7 +46,8 @@ export function allowsAssignmentProofs(
 ) {
   return (
     policy.assessmentMode === 'ungraded_practice' ||
-    (policy.assessmentMode === 'completion_only' && policy.feedbackTiming === 'on_submission')
+    (['graded', 'completion_only'].includes(policy.assessmentMode) &&
+      policy.feedbackTiming === 'on_submission')
   );
 }
 

@@ -1,3 +1,6 @@
+import { getSubmissionGradingRoute } from './getSubmissionGrading/route';
+import { patchSubmissionGradingRoute } from './patchSubmissionGrading/route';
+import { getSubmissionGradingHistoryRoute } from './getSubmissionGradingHistory/route';
 import { postAssignmentRevealAnswersRoute } from './postAssignmentRevealAnswers/route';
 import { postAssignmentReleaseGradesRoute } from './postAssignmentReleaseGrades/route';
 import { postAssignmentDuplicateRoute } from './postAssignmentDuplicate/route';
@@ -36,6 +39,9 @@ export async function assignmentRoutes(app: FastifyInstance, context: Assignment
       }),
     );
   });
+  app.register(getSubmissionGradingRoute, context);
+  app.register(patchSubmissionGradingRoute, context);
+  app.register(getSubmissionGradingHistoryRoute, context);
   app.register(getAssignmentSubmissionsRoute, context);
   app.register(getAssignmentSubmissionRoute, context);
   app.register(postAssignmentRoute, context);

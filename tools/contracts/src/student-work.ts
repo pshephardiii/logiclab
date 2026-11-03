@@ -1,4 +1,5 @@
 import { assignmentScoreSchema, assignmentItemPointsSchema } from './assignment-scoring';
+import { releasedInstructorGradingSchema } from './assignment-grading';
 import { z } from 'zod';
 import {
   assignmentResponsesSchema,
@@ -47,6 +48,8 @@ export const studentAttemptSchema = z.strictObject({
   submittedAt: z.iso.datetime().nullable(),
   result: submissionResultSchema.nullable(),
   score: assignmentScoreSchema.nullable().optional(),
+  automaticScore: assignmentScoreSchema.optional(),
+  instructorGrading: releasedInstructorGradingSchema.optional(),
   gradePending: z.boolean().optional(),
 });
 export type StudentAttempt = z.infer<typeof studentAttemptSchema>;

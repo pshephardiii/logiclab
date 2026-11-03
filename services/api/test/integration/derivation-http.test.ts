@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-test('private normal/demo derivation HTTP authoring checks saved references and preserves assignment guards', async () => {
+test('private normal/demo derivation HTTP authoring checks saved references and admits graded assignments with ownership guards', async () => {
   const db = await import('@logiclab/db');
   const schema = `derivation_http_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -47,6 +48,7 @@ test('private normal/demo derivation HTTP authoring checks saved references and 
         ...context,
         assignments: await createAssignmentStore(orm),
         submissionReviews: await createSubmissionReviewStore(orm),
+        submissionGrading: await createSubmissionGradingStore(orm),
       },
       demo: await createDemoRuntime(
         orm,
@@ -153,7 +155,7 @@ test('private normal/demo derivation HTTP authoring checks saved references and 
             `${scope.prefix}/classes/${scope.classroom}/assignments`,
             scope.cookie,
             {
-              title: 'Guarded',
+              title: 'Graded proof',
               problemVersionIds: [version.id],
               assessmentMode: 'graded',
               feedbackTiming: 'on_submission',
@@ -161,7 +163,7 @@ test('private normal/demo derivation HTTP authoring checks saved references and 
             },
           )
         ).statusCode,
-        409,
+        201,
       );
       await request('POST', `${path}/${id}/archive`, scope.cookie, {});
       assert.equal(

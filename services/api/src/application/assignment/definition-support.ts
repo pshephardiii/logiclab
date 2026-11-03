@@ -1,7 +1,7 @@
 import { libraryProblemDefinition } from '../problem/library-definition';
 import { AssignmentOperationError } from './errors';
 
-/** Assignment admission is narrower than private library authoring until grading/review is ready. */
+/** Proofs in final-submission modes expose diagnostics only under result-release policy. */
 export function supportedAssignmentDefinition(
   input: unknown,
   policy: { assessmentMode: string; feedbackTiming: string },
@@ -10,7 +10,10 @@ export function supportedAssignmentDefinition(
   if (
     definition.type === 'derivation' &&
     policy.assessmentMode !== 'ungraded_practice' &&
-    !(policy.assessmentMode === 'completion_only' && policy.feedbackTiming === 'on_submission')
+    !(
+      ['graded', 'completion_only'].includes(policy.assessmentMode) &&
+      policy.feedbackTiming === 'on_submission'
+    )
   )
     throw new AssignmentOperationError('proof_mode_unavailable');
   return definition;

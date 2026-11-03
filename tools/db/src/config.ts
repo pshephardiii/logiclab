@@ -1,3 +1,4 @@
+import { SubmissionGradingRevision } from './entities/SubmissionGradingRevision.ts';
 import { DemoSession } from './entities/DemoSession.ts';
 import { DemoWorkspace } from './entities/DemoWorkspace.ts';
 import { JobSchedule } from './entities/JobSchedule.ts';
@@ -41,6 +42,7 @@ export function databaseOptions(
       Assignment,
       AssignmentItem,
       AssignmentAttempt,
+      SubmissionGradingRevision,
       BillingPlan,
       ClassPurchase,
       ClassEntitlement,

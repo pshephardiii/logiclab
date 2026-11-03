@@ -1,4 +1,9 @@
-import type { AssignmentScore, SubmissionResult } from '@logiclab/contracts';
+import { InstructorGradingFeedback } from './InstructorGradingFeedback';
+import type {
+  AssignmentScore,
+  SubmissionResult,
+  ReleasedInstructorGrading,
+} from '@logiclab/contracts';
 import type {
   ProofSubmissionResult,
   ProofCompletionSubmissionResult,
@@ -10,10 +15,14 @@ export function SubmissionSummary({
   submittedAt,
   score,
   items,
+  automaticScore,
+  instructorGrading,
 }: {
   result: SubmissionResult | ProofSubmissionResult | ProofCompletionSubmissionResult;
   submittedAt: string;
   score?: AssignmentScore | null;
+  automaticScore?: AssignmentScore;
+  instructorGrading?: ReleasedInstructorGrading;
   items?: readonly { id: string; title: string }[];
 }) {
   return (
@@ -50,9 +59,9 @@ export function SubmissionSummary({
         <>
           {score && <PointScore score={score} items={items} />}
           <p>
-            Proofs: {result.summary.proofs.accepted} verified · {result.summary.proofs.needsReview}{' '}
-            need instructor review · {result.summary.proofs.unassessable} could not be fully
-            assessed.
+            Original proof checks: {result.summary.proofs.accepted} verified ·{' '}
+            {result.summary.proofs.needsReview} flagged for review ·{' '}
+            {result.summary.proofs.unassessable} could not be fully assessed.
           </p>
           <p>
             Other responses: {result.summary.objective.correct} correct ·{' '}
@@ -60,8 +69,8 @@ export function SubmissionSummary({
             unanswered.
           </p>
           <p className="help">
-            Unverified proofs require instructor grading. They do not receive an automatic zero or
-            partial score.
+            Unverified proofs receive no automatic zero or partial score. Instructor awards
+            determine their points; the original checker findings stay unchanged.
           </p>
         </>
       ) : (
@@ -77,6 +86,13 @@ export function SubmissionSummary({
             assignment grade.
           </p>
         </>
+      )}
+      {automaticScore && instructorGrading && (
+        <InstructorGradingFeedback
+          grading={instructorGrading}
+          automaticScore={automaticScore}
+          items={items}
+        />
       )}
     </section>
   );

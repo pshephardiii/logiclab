@@ -91,7 +91,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <p>
             {work.assignment.assessmentMode === 'ungraded_practice'
               ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
-              : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
+              : work.assignment.assessmentMode === 'graded'
+                ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
+                : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
           </p>
         )}
         {!work.hasFinalSubmission && (
@@ -136,6 +138,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           result={work.attempt.result}
           submittedAt={work.attempt.submittedAt}
           score={work.attempt.score}
+          automaticScore={work.attempt.automaticScore}
+          instructorGrading={work.attempt.instructorGrading}
           items={work.assignment.items}
         />
       )}

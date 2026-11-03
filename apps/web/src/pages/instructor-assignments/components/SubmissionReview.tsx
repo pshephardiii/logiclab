@@ -1,3 +1,5 @@
+import { SubmissionGradingPanel } from './SubmissionGradingPanel';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
@@ -14,12 +16,21 @@ import { SubmissionSummary } from '../../../features/assignment/components/Submi
 import { PointScore } from '../../../features/assignment/components/PointScore';
 
 /** Owner-scoped review uses frozen answers/results; unsaved student work is never requested. */
-export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
+export function SubmissionReview({
+  assignmentId,
+  archived,
+}: {
+  assignmentId: string;
+  archived?: boolean;
+}) {
   const state = useSubmissionReview(assignmentId);
+  const confirmDiscard = useConfirmDiscard();
   const [position, setPosition] = useState(0);
   function select(id: string) {
-    setPosition(0);
-    void state.select(id);
+    confirmDiscard(() => {
+      setPosition(0);
+      void state.select(id);
+    });
   }
   const review = state.review;
   const item = review?.assignment.items[position];
@@ -58,7 +69,9 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
                   ? `Completed ${submission.summary.completedCells} of ${submission.summary.totalCells} cells · No correctness score`
                   : 'completedResponses' in submission.summary
                     ? `Completed ${submission.summary.completedResponses} of ${submission.summary.totalResponses} responses · No correctness score`
-                    : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
+                    : 'proofs' in submission.summary
+                      ? `Original proof checks: ${submission.summary.proofs.accepted} verified · ${submission.summary.proofs.needsReview} flagged · ${submission.summary.proofs.unassessable} unavailable`
+                      : `${submission.summary.correct} correct · ${submission.summary.incorrect} incorrect · ${submission.summary.unanswered} unanswered`}
               </p>
               {'proofVerification' in submission.summary && (
                 <p>
@@ -104,7 +117,20 @@ export function SubmissionReview({ assignmentId }: { assignmentId: string }) {
               result={review.attempt.result}
               submittedAt={review.attempt.submittedAt}
               score={review.attempt.score}
+              automaticScore={review.attempt.automaticScore}
+              instructorGrading={review.attempt.instructorGrading}
               items={review.assignment.items}
+            />
+          )}
+          {review.assignment.assessmentMode === 'graded' && review.attempt.score && (
+            <SubmissionGradingPanel
+              key={review.attempt.id}
+              assignmentId={assignmentId}
+              submissionId={review.attempt.id}
+              automaticScore={review.attempt.automaticScore ?? review.attempt.score}
+              items={review.assignment.items}
+              archived={archived ?? Boolean(review.assignment.archivedAt)}
+              onUpdated={state.applyGrading}
             />
           )}
           <section className="panel">

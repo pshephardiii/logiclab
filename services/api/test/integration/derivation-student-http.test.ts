@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -72,6 +73,7 @@ for (const mode of ['normal', 'demo'] as const) {
           service: { authenticate: async () => active },
           assignments: await createAssignmentStore(orm),
           submissionReviews: await createSubmissionReviewStore(orm),
+          submissionGrading: await createSubmissionGradingStore(orm),
         },
         demo,
       });
@@ -345,7 +347,7 @@ for (const mode of ['normal', 'demo'] as const) {
         1,
       );
       active = { id: normalStudent.id, role: 'student' };
-      // Internal-only graded fixture: these HTTP projections must be safe before future admission.
+      // Reuse the retained work to verify independent graded release projections.
       await orm.em.fork().nativeUpdate(db.Assignment, assignment.id, {
         assessmentMode: db.AssessmentMode.Graded,
         feedbackTiming: db.FeedbackTiming.OnSubmission,
@@ -367,7 +369,7 @@ for (const mode of ['normal', 'demo'] as const) {
       assert.deepEqual((await request('GET', prefix, cookie)).json().attempt, receipt);
       assert.equal(
         (await request('GET', `${prefix}/items/${first.id}/solution`, cookie)).statusCode,
-        409,
+        200,
       );
       await orm.em.fork().nativeUpdate(db.Assignment, assignment.id, {
         gradesReleasedAt: new Date(),

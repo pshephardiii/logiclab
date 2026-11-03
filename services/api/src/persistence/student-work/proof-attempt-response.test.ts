@@ -1,3 +1,7 @@
+import { submissionReviewSchema } from '@logiclab/contracts';
+import { assignment as assignmentFixtureData } from '../../../test/assignment-fixture';
+import { derivationContent } from '../../application/problem/derivation-authoring';
+import { effectiveAssignmentScore } from '../../application/assignment/instructor-grading';
 import { randomUUID } from 'node:crypto';
 import type {
   Assignment,
@@ -127,3 +131,134 @@ test.each(['missing', 'mismatched', 'premature', 'wrong_mode'] as const)(
     expect(JSON.stringify(f.attempt)).toBe(source);
   },
 );
+
+function reviewed(pending = true, earnedPoints: number | null = 8.5) {
+  const f = fixture(pending);
+  const itemId = f.score.items[0]!.itemId;
+  const grading = {
+    gradingVersion: 'instructor_grading_v1' as const,
+    revision: 1,
+    items: [
+      {
+        itemId,
+        earnedPoints,
+        comment: 'Review this justification.',
+        reviewedBy: randomUUID(),
+        reviewedAt: new Date().toISOString(),
+      },
+    ],
+  };
+  return { ...f, grading: { grading, score: effectiveAssignmentScore(f.score, grading) } };
+}
+
+test('manual points and comments remain withheld independently of revealed answers', () => {
+  const f = reviewed();
+  const value = attemptResponse(f.attempt, f.assignment, f.grading);
+  expect(value).toMatchObject({ result: null, score: null, gradePending: true });
+  expect(value).not.toHaveProperty('automaticScore');
+  expect(value).not.toHaveProperty('instructorGrading');
+  expect(JSON.stringify(value)).not.toContain('Review this justification.');
+});
+
+test.each([0, 8.5, null])(
+  'released award %s retains automatic evidence and excludes private review metadata',
+  (earnedPoints) => {
+    const f = reviewed(true, earnedPoints);
+    f.assignment.gradesReleasedAt = new Date();
+    f.assignment.answersRevealedAt = undefined;
+    const before = JSON.stringify(f.attempt);
+    const value = attemptResponse(f.attempt, f.assignment, f.grading);
+    expect(value.score).toEqual(f.grading.score);
+    expect(value.automaticScore).toEqual(f.score);
+    expect(value.result).toEqual(f.result);
+    expect(value.instructorGrading?.items).toEqual([
+      { itemId: f.score.items[0]!.itemId, earnedPoints, comment: 'Review this justification.' },
+    ]);
+    expect(value.score!.summary.status).toBe(earnedPoints === null ? 'needs_review' : 'graded');
+    expect(JSON.stringify(value)).not.toMatch(/reviewedBy|reviewedAt|referenceProof|revisions/);
+    expect(JSON.stringify(f.attempt)).toBe(before);
+  },
+);
+
+test.each(['withheld', 'orphan', 'wrong-award', 'foreign', 'metadata', 'wrong-automatic'] as const)(
+  'released grading contracts reject %s mismatches',
+  (kind) => {
+    const f = reviewed();
+    f.assignment.gradesReleasedAt = new Date();
+    const value = structuredClone(attemptResponse(f.attempt, f.assignment, f.grading));
+    if (kind === 'withheld') value.gradePending = true;
+    if (kind === 'orphan') delete value.automaticScore;
+    if (kind === 'wrong-award') value.instructorGrading!.items[0]!.earnedPoints = 9;
+    if (kind === 'foreign') value.instructorGrading!.items[0]!.itemId = randomUUID();
+    if (kind === 'metadata')
+      Object.assign(value.instructorGrading!.items[0]!, { reviewedBy: randomUUID() });
+    if (kind === 'wrong-automatic')
+      value.automaticScore = {
+        ...f.score,
+        items: f.score.items.map((item) => ({ ...item, itemId: randomUUID() })),
+      };
+    expect(savedStudentAttemptSchema.safeParse(value).success).toBe(false);
+  },
+);
+
+function ownerReview() {
+  const f = reviewed();
+  f.assignment.gradesReleasedAt = new Date();
+  const attempt = attemptResponse(f.attempt, f.assignment, f.grading);
+  return {
+    submission: {
+      id: attempt.id,
+      submittedAt: attempt.submittedAt,
+      student: { id: randomUUID(), email: null },
+      summary: f.result.summary,
+      score: attempt.score,
+    },
+    assignment: {
+      ...assignmentFixtureData,
+      items: [
+        {
+          id: f.score.items[0]!.itemId,
+          position: 1,
+          title: 'Proof',
+          instructions: null,
+          maxPoints: 20,
+          content: derivationContent(derivationDefinitionFixture()),
+        },
+      ],
+    },
+    attempt,
+  };
+}
+
+test('owner graded proof contract preserves the original report and independent instructor award', () => {
+  const review = ownerReview();
+  expect(submissionReviewSchema.parse(review)).toEqual(review);
+  expect(review.attempt.result).toMatchObject({ summary: { proofs: { needsReview: 1 } } });
+  expect(review.attempt.score?.summary.earnedPoints).toBe(8.5);
+  expect(review.attempt.automaticScore?.summary.earnedPoints).toBeNull();
+});
+
+test.each([
+  'private-reference',
+  'wrong-summary',
+  'wrong-attempt',
+  'wrong-score',
+  'missing-score',
+  'wrong-mode',
+  'premature',
+  'held',
+])('owner graded proof contract rejects %s', (kind) => {
+  const review = ownerReview();
+  if (kind === 'private-reference')
+    Object.assign(review.assignment.items[0]!.content, {
+      referenceProof: derivationDefinitionFixture().referenceProof,
+    });
+  if (kind === 'wrong-summary') review.submission.summary.proofs.needsReview = 9;
+  if (kind === 'wrong-attempt') review.submission.id = randomUUID();
+  if (kind === 'wrong-score') review.submission.score = review.attempt.automaticScore;
+  if (kind === 'missing-score') delete review.submission.score;
+  if (kind === 'wrong-mode') review.assignment.assessmentMode = 'completion_only';
+  if (kind === 'premature') review.attempt.submittedAt = null;
+  if (kind === 'held') review.attempt.gradePending = true;
+  expect(submissionReviewSchema.safeParse(review).success).toBe(false);
+});

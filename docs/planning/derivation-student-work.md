@@ -2,6 +2,8 @@
 
 Status: `022-feat-derivation-student-work` is ready for review after fourteen implementation slices and final verification. See [branch evidence and rollout](../verification/derivation-student-work-verification.md). Instructors can select and publish Fitch proofs in ungraded practice and completion-only assignments. Students explicitly save their work; practice checking is manual, while completion diagnostics appear only after submission. Completion acknowledges finished attempts independently of logical correctness, with retained verification flags and read-only instructor review. Answer reveal stays independently controlled. Graded finalization/disclosure remains internal groundwork, with graded assignment admission guarded until 024 instructor grading/review. See [the agreed sequence](logical-derivations.md#022-student-work-and-finalization) and [private authoring](derivation-authoring.md) for the existing boundaries.
 
+Current follow-up: branch 024 enables graded Fitch admission, instructor points/comments/history and released student feedback. The implementation record below describes the staged 022 boundary; see [current grading/review](derivation-grading-review.md) and [verification](../verification/derivation-grading-review-verification.md) for the delivered extension.
+
 ## Student work versus private authored content
 
 The separate `@logiclab/contracts/derivation-work` entry contains:

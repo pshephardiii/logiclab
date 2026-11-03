@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { problemVersionSchema, type PublishedProblemVersion } from '@logiclab/contracts';
 import { test } from 'node:test';
@@ -102,6 +103,7 @@ async function fixture() {
       ...context,
       assignments,
       submissionReviews: await createSubmissionReviewStore(orm),
+      submissionGrading: await createSubmissionGradingStore(orm),
     },
     studentWork: { ...context, studentWork: work },
     demo: await createDemoRuntime(

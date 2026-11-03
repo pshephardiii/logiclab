@@ -1,13 +1,12 @@
-import { proofCompletionSubmissionResultSchema } from './proof-submission';
-import { savedStudentAssignmentSchema, savedStudentResponsesSchema } from './saved-student-work';
+import {
+  proofSubmissionResultSchema,
+  proofCompletionSubmissionResultSchema,
+} from './proof-submission';
+import { savedStudentAssignmentSchema, savedStudentAttemptSchema } from './saved-student-work';
 import { assignmentScoreSchema } from './assignment-scoring';
 import { z } from 'zod';
 import { mixedCompletionSubmissionResultSchema } from './assignment-responses';
-import {
-  gradedSubmissionResultSchema,
-  completionCountsSchema,
-  studentAttemptSchema,
-} from './student-work';
+import { gradedSubmissionResultSchema, completionCountsSchema } from './student-work';
 import { assignmentParamsSchema } from './assignment';
 
 export const submissionSummarySchema = z
@@ -21,45 +20,54 @@ export const submissionSummarySchema = z
       completionCountsSchema,
       mixedCompletionSubmissionResultSchema.shape.summary,
       proofCompletionSubmissionResultSchema.shape.summary,
+      proofSubmissionResultSchema.shape.summary,
     ]),
   })
   .refine(
     (value) => !('proofVerification' in value.summary) || value.score === undefined,
     'Completion verification cannot carry a point score.',
+  )
+  .refine(
+    (value) => !('proofs' in value.summary) || Boolean(value.score),
+    'Graded proof review requires points.',
   );
 export type SubmissionSummary = z.infer<typeof submissionSummarySchema>;
-const completedProofAttemptSchema = studentAttemptSchema.extend({
-  answers: savedStudentResponsesSchema,
-  submittedAt: z.iso.datetime(),
-  result: proofCompletionSubmissionResultSchema,
-  score: z.never().optional(),
-  gradePending: z.literal(false),
-});
-
 export const submissionReviewSchema = z
   .strictObject({
     submission: submissionSummarySchema,
     assignment: savedStudentAssignmentSchema,
-    attempt: z.union([studentAttemptSchema, completedProofAttemptSchema]),
+    attempt: savedStudentAttemptSchema,
   })
   .superRefine((review, context) => {
     const hasProof = review.assignment.items.some(
       (item) => 'content' in item && item.content.type === 'derivation',
     );
-    const proofResult = review.attempt.result?.gradingVersion === 'proof_completion_v1';
-    if (hasProof || proofResult || 'proofVerification' in review.submission.summary) {
+    const completion = review.attempt.result?.gradingVersion === 'proof_completion_v1';
+    const graded = review.attempt.result?.gradingVersion === 'proof_mixed_v1';
+    if (
+      hasProof ||
+      completion ||
+      graded ||
+      'proofVerification' in review.submission.summary ||
+      'proofs' in review.submission.summary
+    ) {
       if (
         !hasProof ||
-        !proofResult ||
-        review.assignment.assessmentMode !== 'completion_only' ||
-        review.assignment.feedbackTiming !== 'on_submission' ||
+        !(completion || graded) ||
+        (completion
+          ? review.assignment.assessmentMode !== 'completion_only' ||
+            review.assignment.feedbackTiming !== 'on_submission'
+          : review.assignment.assessmentMode !== 'graded') ||
+        review.attempt.gradePending !== false ||
         review.submission.id !== review.attempt.id ||
         review.submission.submittedAt !== review.attempt.submittedAt ||
-        JSON.stringify(review.submission.summary) !== JSON.stringify(review.attempt.result?.summary)
+        JSON.stringify(review.submission.summary) !==
+          JSON.stringify(review.attempt.result?.summary) ||
+        JSON.stringify(review.submission.score) !== JSON.stringify(review.attempt.score)
       )
         context.addIssue({
           code: 'custom',
-          message: 'Proof review requires a matching final completion submission.',
+          message: 'Proof review requires a matching final graded or completion submission.',
         });
     }
   });

@@ -14,6 +14,7 @@ export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: 
     Assignment,
     AssignmentItem,
     AssignmentAttempt,
+    SubmissionGradingRevision,
     Problem,
     ProblemVersion,
     ClassPurchase,
@@ -42,6 +43,12 @@ export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: 
   const own = { $in: userIds };
   const outside = { $nin: userIds };
   const unsafe = await Promise.all([
+    em.count(SubmissionGradingRevision, {
+      $or: [
+        { attempt: { student: own }, reviewer: outside },
+        { reviewer: own, attempt: { student: outside } },
+      ],
+    }),
     em.count(Enrollment, {
       $or: [
         { classroom: { owner: own }, student: outside },
@@ -100,6 +107,7 @@ export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: 
     throw new Error('Demo data has unowned entitlement references.');
 
   // Guards on immutable versions/submissions permit only demo reset/expiry deletion.
+  await em.nativeDelete(SubmissionGradingRevision, { attempt: { student: own } });
   await em.nativeDelete(AssignmentAttempt, { student: own });
   await em.nativeDelete(AssignmentItem, { assignment: { classroom: { owner: own } } });
   await em.nativeDelete(Assignment, { classroom: { owner: own } });

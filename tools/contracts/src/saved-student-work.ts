@@ -45,6 +45,45 @@ export const savedStudentAttemptSchema = studentAttemptSchema
       .nullable(),
   })
   .superRefine((attempt, context) => {
+    const reject = (message: string) => context.addIssue({ code: 'custom', message });
+    if (
+      attempt.gradePending &&
+      (attempt.result !== null ||
+        attempt.score != null ||
+        attempt.automaticScore ||
+        attempt.instructorGrading)
+    )
+      reject('Withheld results cannot include scores, reports or instructor decisions.');
+    if (Boolean(attempt.automaticScore) !== Boolean(attempt.instructorGrading))
+      reject('Instructor decisions require their separate automatic score.');
+    if (attempt.instructorGrading && attempt.automaticScore) {
+      if (
+        !attempt.submittedAt ||
+        !attempt.result ||
+        !['truth_table_v1', 'mixed_v1', 'proof_mixed_v1'].includes(attempt.result.gradingVersion) ||
+        !attempt.score
+      )
+        reject('Instructor grading requires visible final graded work.');
+      const automatic = new Map(attempt.automaticScore.items.map((item) => [item.itemId, item]));
+      const decisions = new Map(attempt.instructorGrading.items.map((item) => [item.itemId, item]));
+      if (
+        attempt.instructorGrading.items.some((item) => !automatic.has(item.itemId)) ||
+        attempt.score?.items.length !== automatic.size
+      )
+        reject('Instructor decisions must match frozen scored occurrences.');
+      for (const item of attempt.score?.items ?? []) {
+        const original = automatic.get(item.itemId);
+        const award = decisions.get(item.itemId)?.earnedPoints;
+        if (
+          !original ||
+          item.maxPoints !== original.maxPoints ||
+          (award != null
+            ? item.status !== 'graded' || item.earnedPoints !== award
+            : item.status !== original.status || item.earnedPoints !== original.earnedPoints)
+        )
+          reject('Effective points must match automatic scores and instructor awards.');
+      }
+    }
     if (
       attempt.result?.gradingVersion === 'proof_completion_v1' &&
       (!attempt.submittedAt || attempt.score != null)

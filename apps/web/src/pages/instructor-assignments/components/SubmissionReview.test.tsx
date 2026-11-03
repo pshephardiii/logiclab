@@ -1,17 +1,27 @@
+import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
+import { initialGrading, adjustedGrading } from '../../../../test/submission-grading-fixture';
 import { pointScore } from '../../../../test/assignment-score-fixture';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import * as api from '../../../api/submission-review/api';
 import { review } from '../../../../test/assignment-work-fixture';
 import { SubmissionReview } from './SubmissionReview';
 
+installDialogStub();
+
 vi.mock('../../../api/submission-review/api', () => ({
   listSubmissions: vi.fn(),
   readSubmission: vi.fn(),
+  readGrading: vi.fn(),
+  saveGrading: vi.fn(),
+  readGradingHistory: vi.fn(),
 }));
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(api.readGrading).mockImplementation(async () => structuredClone(initialGrading));
+  vi.mocked(api.saveGrading).mockResolvedValue(adjustedGrading);
+  vi.mocked(api.readGradingHistory).mockResolvedValue({ revisions: [], nextOffset: null });
   vi.mocked(api.listSubmissions).mockResolvedValue({
     submissions: [review.submission],
     nextOffset: null,
@@ -163,4 +173,106 @@ test('unavailable completion verification is labeled separately from logical mis
   expect(await screen.findByText(/Completed — verification unavailable: 1/)).toBeInTheDocument();
   expect(screen.queryByText(/Completed — errors found/)).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
+});
+
+test('grading edits survive problem selection and Stay, while a saved correction updates list and detail', async () => {
+  const scored = {
+    ...review,
+    submission: { ...review.submission, score: pointScore },
+    attempt: { ...review.attempt, score: pointScore },
+  };
+  vi.mocked(api.listSubmissions).mockResolvedValue({
+    submissions: [scored.submission],
+    nextOffset: null,
+  });
+  vi.mocked(api.readSubmission).mockResolvedValue(scored);
+  const user = userEvent.setup();
+  render(<SubmissionReview assignmentId={review.assignment.id} />);
+  await user.click(await screen.findByRole('button', { name: 'student@example.test' }));
+  await screen.findByText('Grading revision 0.');
+  await user.type(screen.getByLabelText('Comment for problem 1'), 'Keep draft');
+  await user.selectOptions(
+    screen.getByLabelText('Submitted problem'),
+    review.assignment.items[1]!.id,
+  );
+  expect(screen.getByLabelText('Comment for problem 1')).toHaveValue('Keep draft');
+  await user.click(screen.getByRole('button', { name: 'student@example.test' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(api.readSubmission).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('Submitted problem')).toHaveValue(review.assignment.items[1]!.id);
+  await user.click(screen.getByLabelText('Use automatic award for problem 1'));
+  await user.type(screen.getByLabelText('Points for problem 1'), '12.25');
+  await user.clear(screen.getByLabelText('Comment for problem 1'));
+  await user.type(screen.getByLabelText('Comment for problem 1'), 'Review the justification.');
+  await user.click(screen.getByRole('button', { name: 'Save instructor grading' }));
+  await screen.findByText('Instructor grading saved.');
+  expect(screen.getAllByText('12.25 / 25 points (49%)')).toHaveLength(2);
+  await user.selectOptions(
+    screen.getByLabelText('Submitted problem'),
+    review.assignment.items[0]!.id,
+  );
+  expect(screen.getByText('Incorrect', { exact: true })).toBeInTheDocument();
+});
+
+test('an explicit zero resolves a flagged proof, while restoring automatic grading reopens review without changing diagnostics', async () => {
+  const { proofWork, proofFinal, itemB } = await import('../../../../test/proof-work-fixture');
+  if (!proofFinal.score || proofFinal.result?.gradingVersion !== 'proof_mixed_v1')
+    throw new Error('Expected graded proof fixture.');
+  const assignment = {
+    ...proofWork,
+    assessmentMode: 'graded' as const,
+    feedbackTiming: 'on_submission' as const,
+  };
+  const submission = {
+    ...review.submission,
+    id: proofFinal.id,
+    submittedAt: proofFinal.submittedAt!,
+    summary: proofFinal.result.summary,
+    score: proofFinal.score,
+  };
+  vi.mocked(api.listSubmissions).mockResolvedValue({ submissions: [submission], nextOffset: null });
+  vi.mocked(api.readSubmission).mockResolvedValue({ submission, assignment, attempt: proofFinal });
+  vi.mocked(api.readGrading).mockResolvedValue({ ...initialGrading, score: proofFinal.score });
+  const decision = {
+    itemId: itemB,
+    earnedPoints: 0,
+    comment: 'Missing the derivation.',
+    reviewedBy: review.submission.student.id,
+    reviewedAt: '2026-11-03T12:00:00.000Z',
+  };
+  const resolved = {
+    grading: { ...initialGrading.grading, revision: 1, items: [decision] },
+    score: {
+      ...proofFinal.score,
+      items: proofFinal.score.items.map((item) =>
+        item.itemId === itemB ? { ...item, status: 'graded' as const, earnedPoints: 0 } : item,
+      ),
+      summary: { status: 'graded' as const, maxPoints: 35, earnedPoints: 20, percentage: 57.14 },
+    },
+  };
+  vi.mocked(api.saveGrading)
+    .mockResolvedValueOnce(resolved)
+    .mockResolvedValueOnce({
+      grading: { ...resolved.grading, revision: 2, items: [{ ...decision, earnedPoints: null }] },
+      score: proofFinal.score,
+    });
+  const user = userEvent.setup();
+  render(<SubmissionReview assignmentId={assignment.id} />);
+  await user.click(await screen.findByRole('button', { name: 'student@example.test' }));
+  await screen.findByText('Grading revision 0.');
+  await user.selectOptions(screen.getByLabelText('Submitted problem'), itemB);
+  expect(screen.getByText('No proof entered.')).toBeInTheDocument();
+  await user.click(screen.getByLabelText('Use automatic award for problem 2'));
+  await user.type(screen.getByLabelText('Points for problem 2'), '0');
+  await user.type(screen.getByLabelText('Comment for problem 2'), 'Missing the derivation.');
+  await user.click(screen.getByRole('button', { name: 'Save instructor grading' }));
+  await screen.findByText('Grading revision 1.');
+  expect(screen.getAllByText('20 / 35 points (57.14%)')).toHaveLength(2);
+  expect(screen.getByText('No proof entered.')).toBeInTheDocument();
+  await user.click(screen.getByLabelText('Use automatic award for problem 2'));
+  await user.click(screen.getByRole('button', { name: 'Save instructor grading' }));
+  await screen.findByText('Grading revision 2.');
+  expect(screen.getAllByText('Needs instructor review · 35 points available')).toHaveLength(2);
+  expect(screen.getByText('No proof entered.')).toBeInTheDocument();
+  expect(api.readGrading).toHaveBeenCalledTimes(1);
 });

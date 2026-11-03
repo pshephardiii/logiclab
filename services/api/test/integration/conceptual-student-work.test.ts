@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -93,7 +94,12 @@ async function fixture() {
     },
   } as unknown as AuthContext;
   const app = buildApp({
-    assignment: { ...context, assignments, submissionReviews },
+    assignment: {
+      ...context,
+      assignments,
+      submissionReviews,
+      submissionGrading: await createSubmissionGradingStore(orm),
+    },
     studentWork: { ...context, studentWork: work },
     demo: await createDemoRuntime(
       orm,
