@@ -1,11 +1,11 @@
+import {
+  validateDraftScoringInput,
+  validatedDraftPointAllocations,
+} from '../../application/assignment/draft-scoring-validation';
 import { duplicateAssignmentTitle } from '../../application/assignment/duplicate-title';
 import { assignmentDetail } from './detail-response';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
-import {
-  ASSIGNMENT_POINT_LIMITS,
-  assignmentPointAllocationsSchema,
-  weightedAssignmentItemsSchema,
-} from '@logiclab/contracts';
+import { ASSIGNMENT_POINT_LIMITS } from '@logiclab/contracts';
 import { supportedAssignmentDefinition } from '../../application/assignment/definition-support';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 import { resolveAssignmentLearningPolicy } from '../../application/assignment/learning-policy';
@@ -157,16 +157,8 @@ export async function createAssignmentStore(
     assignment: AssignmentEntity,
     input: UpdateAssignmentRequest,
   ) {
-    if (
-      input.items !== undefined &&
-      (!weightedAssignmentItemsSchema.safeParse(input.items).success ||
-        input.pointAllocations !== undefined ||
-        (input.problemVersionIds?.length ?? 0) > 0)
-    )
-      throw new AssignmentOperationError('invalid_scoring');
+    validateDraftScoringInput(assignment.assessmentMode, input);
     const graded = assignment.assessmentMode === 'graded';
-    if ((input.items !== undefined || input.pointAllocations !== undefined) && !graded)
-      throw new AssignmentOperationError('invalid_scoring');
     let items = await em.find(
       AssignmentItem,
       { assignment: assignment.id },
@@ -209,14 +201,7 @@ export async function createAssignmentStore(
       assignment,
     );
     if (input.pointAllocations !== undefined) {
-      const parsed = assignmentPointAllocationsSchema.safeParse(input.pointAllocations);
-      if (
-        !parsed.success ||
-        parsed.data.length !== items.length ||
-        parsed.data.some((value) => !items.some((item) => item.id === value.itemId))
-      )
-        throw new AssignmentOperationError('invalid_scoring');
-      const points = new Map(parsed.data.map((value) => [value.itemId, value.maxPoints]));
+      const points = validatedDraftPointAllocations(input.pointAllocations, items);
       for (const item of items) item.maxPoints = points.get(item.id)!;
     }
   }
