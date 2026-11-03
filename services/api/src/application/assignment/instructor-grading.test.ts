@@ -2,8 +2,13 @@ import {
   INSTRUCTOR_GRADING_LIMITS,
   instructorGradingSchema,
   updateSubmissionGradingSchema,
+  submissionGradingHistoryEntrySchema,
+  type InstructorGrading,
   type InstructorGradingEntry,
 } from '@logiclab/contracts';
+import type { InstructorGrading as StoredInstructorGrading } from '@logiclab/db' with {
+  'resolution-mode': 'import',
+};
 import { effectiveAssignmentScore, InstructorGradingError } from './instructor-grading';
 import { scoreAssignment } from './scoring';
 
@@ -43,6 +48,35 @@ function grading(items: InstructorGradingEntry[]) {
     items,
   };
 }
+
+test('persisted instructor grading JSON and shared contracts remain mutually assignable', () => {
+  const stored: StoredInstructorGrading = grading([entry(a, 5)]);
+  const contract: InstructorGrading = stored;
+  expect(instructorGradingSchema.parse(JSON.parse(JSON.stringify(contract)))).toEqual(stored);
+});
+
+test('history binds each recorded change to the same saved decision, actor and timestamp', () => {
+  const decision = entry(a, 5, 'Instructor comment.');
+  const snapshot = grading([decision]);
+  const record = {
+    id: c,
+    reviewedBy: actor,
+    reviewedAt: decision.reviewedAt,
+    changes: [{ itemId: a, earnedPoints: 5, comment: decision.comment }],
+    grading: snapshot,
+    score: effectiveAssignmentScore(automatic, snapshot),
+  };
+  expect(submissionGradingHistoryEntrySchema.parse(record)).toEqual(record);
+  for (const invalid of [
+    { ...record, reviewedBy: b },
+    { ...record, reviewedAt: '2026-11-03T13:00:00.000Z' },
+    { ...record, changes: [{ ...record.changes[0]!, earnedPoints: 6 }] },
+    { ...record, changes: [{ ...record.changes[0]!, itemId: b }] },
+    { ...record, changes: [...record.changes, ...record.changes] },
+    { ...record, grading: grading([]) },
+  ])
+    expect(submissionGradingHistoryEntrySchema.safeParse(invalid).success).toBe(false);
+});
 
 test('no instructor decisions retain a detached automatic score without turning pending points into zero', () => {
   const result = effectiveAssignmentScore(automatic, grading([]));

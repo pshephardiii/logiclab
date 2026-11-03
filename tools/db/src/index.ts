@@ -122,3 +122,11 @@ export type {
   ProofCompletionSubmissionResult,
   DerivationEvaluationEvidence,
 } from './types/assignment-attempt/proof-result.ts';
+
+export { SubmissionGradingRevision } from './entities/SubmissionGradingRevision.ts';
+export type { SubmissionGradingRevisionFields } from './types/submission-grading-revision/fields.ts';
+export type {
+  InstructorItemGrade,
+  InstructorGradingEntry,
+  InstructorGrading,
+} from './types/submission-grading-revision/grading.ts';

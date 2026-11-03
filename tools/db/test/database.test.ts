@@ -1,3 +1,4 @@
+import { registerSubmissionGradingPersistenceTests } from './submission-grading-persistence.ts';
 import { registerProofResultPersistenceTests } from './proof-result-persistence.ts';
 import { registerAssignmentScoringPersistenceTests } from './assignment-scoring-persistence.ts';
 import { registerDerivationPersistenceTests } from './derivation-persistence.ts';
@@ -1174,3 +1175,5 @@ registerAssignmentScoringPersistenceTests(orm);
 registerDerivationPersistenceTests(orm);
 
 registerProofResultPersistenceTests(orm);
+
+registerSubmissionGradingPersistenceTests(orm);

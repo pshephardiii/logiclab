@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ASSIGNMENT_POINT_LIMITS } from './assignment-scoring';
+import { ASSIGNMENT_POINT_LIMITS, assignmentScoreSchema } from './assignment-scoring';
 
 export const INSTRUCTOR_GRADING_LIMITS = {
   maxCommentLength: 4000,
@@ -63,3 +63,50 @@ export const instructorGradingSchema = z
       });
   });
 export type InstructorGrading = z.infer<typeof instructorGradingSchema>;
+
+/** Staged owner-only views; student disclosure remains a separate projection. */
+export const submissionGradingResponseSchema = z.strictObject({
+  grading: instructorGradingSchema,
+  score: assignmentScoreSchema,
+});
+export type SubmissionGradingResponse = z.infer<typeof submissionGradingResponseSchema>;
+
+export const submissionGradingHistoryEntrySchema = submissionGradingResponseSchema
+  .extend({
+    id: z.uuid(),
+    reviewedBy: z.uuid().transform((id) => id.toLowerCase()),
+    reviewedAt: z.iso.datetime(),
+    changes: z.array(instructorItemGradeSchema).min(1).max(ASSIGNMENT_POINT_LIMITS.maxItems),
+  })
+  .superRefine((record, context) => {
+    const entries = new Map(record.grading.items.map((item) => [item.itemId, item]));
+    if (
+      record.grading.revision < 1 ||
+      new Set(record.changes.map((item) => item.itemId)).size !== record.changes.length
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'History requires a saved revision and distinct changes.',
+      });
+    for (const change of record.changes) {
+      const entry = entries.get(change.itemId);
+      if (
+        !entry ||
+        entry.earnedPoints !== change.earnedPoints ||
+        entry.comment !== change.comment ||
+        entry.reviewedBy !== record.reviewedBy ||
+        entry.reviewedAt !== record.reviewedAt
+      )
+        context.addIssue({
+          code: 'custom',
+          message: 'History changes must match their saved decisions and reviewer metadata.',
+        });
+    }
+  });
+export type SubmissionGradingHistoryEntry = z.infer<typeof submissionGradingHistoryEntrySchema>;
+
+export const submissionGradingHistorySchema = z.strictObject({
+  revisions: z.array(submissionGradingHistoryEntrySchema).max(50),
+  nextOffset: z.number().int().nonnegative().nullable(),
+});
+export type SubmissionGradingHistory = z.infer<typeof submissionGradingHistorySchema>;
