@@ -123,16 +123,15 @@ export function SubmissionGradingPanel({
                       />
                     </label>
                   )}
-                  <label>
+                  <label htmlFor={`grading-comment-${row.itemId}`}>
                     Comment for problem {position + 1}
-                    <textarea
-                      value={row.comment}
-                      maxLength={INSTRUCTOR_GRADING_LIMITS.maxCommentLength}
-                      onChange={(event) =>
-                        state.change(row.itemId, { comment: event.target.value })
-                      }
-                    />
                   </label>
+                  <textarea
+                    id={`grading-comment-${row.itemId}`}
+                    value={row.comment}
+                    maxLength={INSTRUCTOR_GRADING_LIMITS.maxCommentLength}
+                    onChange={(event) => state.change(row.itemId, { comment: event.target.value })}
+                  />
                   {state.errors[row.itemId] && (
                     <p id={`grading-error-${row.itemId}`} className="error" role="alert">
                       {state.errors[row.itemId]}

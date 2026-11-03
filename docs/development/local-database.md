@@ -122,6 +122,10 @@ The old database remains available through its original connection. No reset, de
 
 ## Derivation result storage (022)
 
-Apply `Migration20261102120000` with `npm run db:migrate` before running matching new builds. It extends scored-result constraints for the guarded `proof_mixed_v1` foundation and requires its frozen point snapshot; it does not rewrite existing objective work. Completion's `proof_completion_v1` remains score-free under existing constraints. No disposable-data reset is required by this migration.
+Apply `Migration20261102120000` with `npm run db:migrate` before running matching new builds. It extends scored-result constraints for the `proof_mixed_v1` result and requires its frozen point snapshot; it does not rewrite existing objective work. Completion's `proof_completion_v1` remains score-free under existing constraints. No disposable-data reset is required by this migration.
 
 Rebuild matching contracts, engine, database package, API and frontend outputs and restart the development session. Vite explicitly prebundles the linked CommonJS proof subpaths, including `/proof/completion` used for student readiness. Older applications cannot read saved proof responses/results; coordinate application rollback even if the migration rollback succeeds. The down migration refuses retained scored proof finals. Integration verification uses a separate disposable test database; no user development database was migrated/reset by the agent.
+
+## Instructor grading history (024)
+
+Run `npm run db:migrate` to apply `Migration20261103120000` before the matching contracts/database/API/frontend builds. It adds append-only `submission_grading_revisions`; existing automatic scores and final work are preserved, with no reset/backfill/regrading required. Saved adjustments and comments are separate from original evidence. Rollback refuses retained grading history. Older applications omit effective instructor grades and cannot safely delete demo history, so coordinate application rollback independently of schema rollback. No new environment variable or demo template is needed. See [grading verification](../verification/derivation-grading-review-verification.md).

@@ -27,12 +27,12 @@ Result tags such as `truth_table_v1` and `mixed_v1` describe evaluation structur
 `scoreObjectiveSubmission` validates objective report counts and occurrence correspondence, then creates the score without changing correctness evidence. The pure scorer requires exactly one outcome per allocation:
 
 - `correctness`: award the fraction established by the objective evaluator.
-- `full_credit`: award the full allocation after the caller verifies the entire response. Future proof callers must include unused steps in that decision.
+- `full_credit`: award the full allocation after the caller verifies the entire response. Proof callers include unused steps in that decision.
 - `needs_review`: keep earned points null rather than zero. Any unresolved occurrence makes assignment earned points and percentage null while retaining known item scores for authorized review.
 
-Missing/duplicate/foreign identities fail rather than disappear from the denominator. Legitimate zero grades remain distinct from unresolved review. Instructor adjustments and proof evaluation remain later branches; do not enable proof submission before usable review exists.
+Missing/duplicate/foreign identities fail rather than disappear from the denominator. Legitimate zero grades remain distinct from unresolved review. Proof evaluation and instructor adjustments are now delivered through 020–024; see [current grading/review](derivation-grading-review.md).
 
-Student grade-release rules gate both correctness and points. Before finalization or while grades are withheld, the student score is null. Answer reveal remains independent. Authorized instructor final review includes frozen scores regardless of student release. Completion/private work stays score-free.
+Student grade-release rules gate both correctness and points. Before finalization or while grades are withheld, the student score is null. Answer reveal remains independent. Authorized instructor final review includes original automatic scores and current effective awards regardless of student release. Completion/private work stays score-free.
 
 ## Pre-launch data and migration
 

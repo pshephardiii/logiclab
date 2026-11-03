@@ -25,6 +25,7 @@ Documentation is grouped by purpose:
 - [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
 - [Derivation authoring](planning/derivation-authoring.md)
 - [Derivation student work](planning/derivation-student-work.md)
+- [Instructor grading and derivation review](planning/derivation-grading-review.md)
 
 - [Biconditional and tilde notation](planning/biconditional-support.md)
 
@@ -79,7 +80,9 @@ Documentation is grouped by purpose:
 
 ## Verification
 
-- [Derivation practice/completion, guarded grading and browser evidence](verification/derivation-student-work-verification.md)
+- [Derivation grading, instructor adjustments and browser evidence](verification/derivation-grading-review-verification.md)
+
+- [Historical derivation practice/completion and guarded-foundation evidence](verification/derivation-student-work-verification.md)
 
 - [Derivation authoring, checked publication and browser evidence](verification/derivation-authoring-verification.md)
 
