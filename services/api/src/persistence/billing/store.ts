@@ -12,6 +12,7 @@ import type {
   CheckoutSession,
 } from '../../application/billing/provider';
 import { purchaseTerms } from '../../application/billing/purchase-terms';
+import { validatedPaymentEventTime } from '../../application/billing/payment-event-validation';
 import { BillingError } from '../../application/billing/errors';
 
 export type VerifiedDelivery = { event: PaymentEvent; hash: string };
@@ -62,15 +63,7 @@ export async function createBillingStore(
         throw new BillingError('event_conflict');
       return { result: 'duplicate' as const };
     }
-    const occurred = new Date(event.occurredAt);
-    if (
-      event.sourceReference !== purchase.checkoutReference ||
-      !Number.isSafeInteger(event.sequence) ||
-      event.sequence > 2147483647 ||
-      occurred.getTime() < purchase.createdAt.getTime() ||
-      occurred.getTime() > Date.now() + 300_000
-    )
-      throw new BillingError('invalid_event');
+    const occurred = validatedPaymentEventTime(purchase, event);
     // Ignore older deliveries even when their event ID differs. Refunded coverage cannot be restored.
     const ignored = event.sequence <= purchase.lastEventSequence && event.outcome !== 'refunded';
     if (!ignored) {
