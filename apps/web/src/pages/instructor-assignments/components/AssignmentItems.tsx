@@ -1,7 +1,6 @@
 import { ASSIGNMENT_POINT_LIMITS } from '@logiclab/contracts';
-import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
+import type { SelectedProblem } from '../helpers/assignment-form-state';
 
-export type SelectedProblem = { key: string; maxPoints?: number; version: LibraryProblemVersion };
 type Props = {
   items: SelectedProblem[];
   readOnly: boolean;

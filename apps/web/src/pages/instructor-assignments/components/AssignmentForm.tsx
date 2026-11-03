@@ -8,8 +8,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 import type { AssignmentDetail, CreateAssignmentRequest } from '@logiclab/contracts';
 import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 import { PublishedProblemPicker } from './PublishedProblemPicker';
-import { AssignmentItems, type SelectedProblem } from './AssignmentItems';
-import { assignmentItemState } from '../helpers/assignment-item-state';
+import { AssignmentItems } from './AssignmentItems';
+import {
+  assignmentFormDefaults,
+  assignmentFormState,
+  type SelectedProblem,
+} from '../helpers/assignment-form-state';
 import { AssignmentPointsSummary } from './AssignmentPointsSummary';
 
 type Props = {
@@ -21,46 +25,24 @@ type Props = {
 
 /** Retains unsaved input after failed writes; published/archived content is read-only. */
 export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
-  const [title, setTitle] = useState(assignment?.title ?? '');
-  const [instructions, setInstructions] = useState(assignment?.instructions ?? '');
-  const originalPolicy = {
-    assessmentMode: assignment?.assessmentMode ?? 'graded',
-    feedbackTiming: assignment?.feedbackTiming ?? 'on_submission',
-    solutionAccess: assignment?.solutionAccess ?? 'never',
-  };
-  const [policy, setPolicy] = useState(() => assignmentLearningPolicySchema.parse(originalPolicy));
-  const [gradeReleaseTiming, setGradeReleaseTiming] = useState(
-    assignment?.gradeReleaseTiming ?? 'on_submission',
-  );
-  const [items, setItems] = useState<SelectedProblem[]>(
-    assignment?.items.map((item) => ({
-      key: item.id,
-      version: item.problemVersion,
-      maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
-    })) ?? [],
-  );
+  const defaults = assignmentFormDefaults(assignment);
+  const [title, setTitle] = useState(defaults.title);
+  const [instructions, setInstructions] = useState(defaults.instructions);
+  const [policy, setPolicy] = useState(() => assignmentLearningPolicySchema.parse(defaults.policy));
+  const [gradeReleaseTiming, setGradeReleaseTiming] = useState(defaults.gradeReleaseTiming);
+  const [items, setItems] = useState<SelectedProblem[]>(defaults.items);
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
-  const containsProof = items.some((item) => item.version.definition.type === 'derivation');
-  const allowsProofs =
-    policy.assessmentMode === 'ungraded_practice' ||
-    (policy.assessmentMode === 'completion_only' && policy.feedbackTiming === 'on_submission');
-  const invalidProofMode = containsProof && !allowsProofs;
   const graded = policy.assessmentMode === 'graded';
-  const { itemsChanged, invalidPoints, pointsChanged, totalPoints } = assignmentItemState(
-    items,
-    assignment?.items ?? [],
-    graded,
-  );
-  const dirty =
-    title !== (assignment?.title ?? '') ||
-    instructions !== (assignment?.instructions ?? '') ||
-    policy.assessmentMode !== originalPolicy.assessmentMode ||
-    policy.feedbackTiming !== originalPolicy.feedbackTiming ||
-    policy.solutionAccess !== originalPolicy.solutionAccess ||
-    gradeReleaseTiming !== (assignment?.gradeReleaseTiming ?? 'on_submission') ||
-    itemsChanged ||
-    pointsChanged;
+  const {
+    itemsChanged,
+    invalidPoints,
+    totalPoints,
+    containsProof,
+    allowsProofs,
+    invalidProofMode,
+    dirty,
+  } = assignmentFormState(assignment, { title, instructions, policy, gradeReleaseTiming, items });
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
