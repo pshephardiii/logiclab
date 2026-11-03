@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { buildApp } from '../../src/app';
 import { readAuthConfig } from '../../src/config/auth';
@@ -266,6 +267,7 @@ test('normal and demo HTTP duplication enforce ownership, workspace and student 
       ...auth,
       assignments: f.store,
       submissionReviews: await createSubmissionReviewStore(f.orm),
+      submissionGrading: await createSubmissionGradingStore(f.orm),
     },
     demo: await createDemoRuntime(
       f.orm,

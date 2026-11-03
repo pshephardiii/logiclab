@@ -1,3 +1,4 @@
+import { SubmissionGradingError } from '../../application/assignment/grading-errors';
 import { mapProblemDefinitionError } from '../problem-definition-error';
 import { AssignmentOperationError } from '../../application/assignment/errors';
 import { mapAuthError } from '../auth/errors';
@@ -66,7 +67,32 @@ const failures = {
     message: 'Add at least one published problem before publishing.',
   },
 };
+const gradingFailures = {
+  not_found: { status: 404, code: 'SUBMISSION_NOT_FOUND', message: 'Submission not found.' },
+  archived: {
+    status: 409,
+    code: 'ASSIGNMENT_ARCHIVED',
+    message: 'Restore this assignment before changing grading.',
+  },
+  grading_unavailable: {
+    status: 409,
+    code: 'SUBMISSION_GRADING_UNAVAILABLE',
+    message: 'Instructor grading is not available for this submission.',
+  },
+  revision_conflict: {
+    status: 409,
+    code: 'SUBMISSION_GRADING_REVISION_CONFLICT',
+    message: 'Grading has changed. Reload the submission before saving again.',
+  },
+  invalid_grading: {
+    status: 400,
+    code: 'SUBMISSION_GRADING_INVALID',
+    message: 'Provide valid points and comments for this submission’s problems.',
+  },
+};
+
 export function mapAssignmentError(error: unknown) {
+  if (error instanceof SubmissionGradingError) return gradingFailures[error.reason];
   const unsupported = mapProblemDefinitionError(error);
   if (unsupported) return unsupported;
   if (error instanceof AssignmentError)

@@ -1,4 +1,7 @@
-import type { SubmissionReviewStore } from '../persistence/submission-review/types';
+import type {
+  SubmissionReviewStore,
+  SubmissionGradingStore,
+} from '../persistence/submission-review/types';
 import type { StudentWorkStore } from '../persistence/student-work/types';
 import type { AssignmentStore } from '../persistence/assignment/types';
 import type { ProblemStore } from '../persistence/problem/types';
@@ -23,6 +26,7 @@ const classroomStore = jest.fn(async () => ({}) as ClassroomStore);
 const problemStore = jest.fn(async () => ({}) as ProblemStore);
 const assignmentStore = jest.fn(async () => ({}) as AssignmentStore);
 const submissionReviewStore = jest.fn(async () => ({}) as SubmissionReviewStore);
+const submissionGradingStore = jest.fn(async () => ({}) as SubmissionGradingStore);
 const studentWorkStore = jest.fn(async () => ({}) as StudentWorkStore);
 const factories = {
   connectDatabase: connect,
@@ -32,6 +36,7 @@ const factories = {
   createProblemStore: problemStore,
   createAssignmentStore: assignmentStore,
   createSubmissionReviewStore: submissionReviewStore,
+  createSubmissionGradingStore: submissionGradingStore,
   createStudentWorkStore: studentWorkStore,
 };
 
@@ -56,6 +61,7 @@ beforeEach(() => {
   );
   studentWorkStore.mockReset().mockResolvedValue({} as never);
   submissionReviewStore.mockReset().mockResolvedValue({} as never);
+  submissionGradingStore.mockReset().mockResolvedValue({} as never);
   assignmentStore.mockReset().mockResolvedValue({} as never);
   problemStore.mockReset().mockResolvedValue({} as never);
   authStore.mockReset().mockResolvedValue({} as never);
@@ -83,6 +89,10 @@ test('constructs separate route dependencies using one database and auth service
   expect(problemStore).toHaveBeenCalledWith(orm);
   expect(assignmentStore).toHaveBeenCalledWith(orm);
   expect(submissionReviewStore).toHaveBeenCalledWith(orm);
+  expect(submissionGradingStore).toHaveBeenCalledWith(orm);
+  expect(dependencies!.assignment.submissionGrading).toBe(
+    await submissionGradingStore.mock.results[0]!.value,
+  );
   expect(dependencies!.assignment.assignments).toBe(await assignmentStore.mock.results[0]!.value);
   expect(dependencies!.assignment.submissionReviews).toBe(
     await submissionReviewStore.mock.results[0]!.value,
@@ -177,6 +187,13 @@ test('billing shares resources and initialization failure closes them', async ()
 test('submission-review initialization failure closes shared resources', async () => {
   submissionReviewStore.mockRejectedValueOnce(new Error('Review store failed'));
   await expect(createDependencies(env, factories)).rejects.toThrow('Review store failed');
+  expect(closeDatabase).toHaveBeenCalledWith(true);
+  expect(destroyClient).toHaveBeenCalledTimes(1);
+});
+
+test('submission-grading initialization failure closes shared resources', async () => {
+  submissionGradingStore.mockRejectedValueOnce(new Error('Grading initialization failed'));
+  await expect(createDependencies(env, factories)).rejects.toThrow('Grading initialization failed');
   expect(closeDatabase).toHaveBeenCalledWith(true);
   expect(destroyClient).toHaveBeenCalledTimes(1);
 });

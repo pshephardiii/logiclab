@@ -1,3 +1,7 @@
+import { buildApp } from '../../src/app';
+import { readAuthConfig } from '../../src/config/auth';
+import { createAssignmentStore } from '../../src/persistence/assignment/store';
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -422,6 +426,217 @@ test('grading waits for assignment archive and rechecks the locked state before 
   } finally {
     if (lock.isInTransaction()) await lock.rollback();
     await pending;
+    await f.close();
+  }
+});
+
+for (const demo of [false, true]) {
+  test(`${demo ? 'demo' : 'normal'} owner HTTP grading is scoped, revisioned and independent from submission evidence/release`, async () => {
+    const f = await fixture(demo);
+    const origin = 'http://localhost:5173';
+    let actor = f.owner;
+    let credential = 'x'.repeat(43);
+    const config = readAuthConfig({
+      AUTH_ENABLED: 'true',
+      AWS_REGION: 'us-east-1',
+      COGNITO_USER_POOL_ID: 'us-east-1_test',
+      COGNITO_CLIENT_ID: 'synthetic',
+      COGNITO_CLIENT_SECRET: 'synthetic',
+      AUTH_TOKEN_KEY: 'ab'.repeat(32),
+      APP_ORIGIN: origin,
+    })!;
+    const auth = {
+      config,
+      service: {
+        authenticate: async () => ({
+          id: actor.id,
+          subject: actor.cognitoSubject!,
+          role: actor.role,
+        }),
+      },
+    } as unknown as import('../../src/routes/auth/context').AuthContext;
+    if (demo)
+      credential = (await f.runtime!.sessions.issue(f.workspace!.workspaceId, 'instructor'))
+        .sessionId;
+    const app = buildApp(
+      demo
+        ? { demo: f.runtime! }
+        : {
+            assignment: {
+              ...auth,
+              assignments: await createAssignmentStore(f.orm),
+              submissionReviews: await createSubmissionReviewStore(f.orm),
+              submissionGrading: f.store,
+            },
+          },
+    );
+    const path = `${demo ? '/api/demo/resources' : '/api'}/assignments/${f.assignment.id}/submissions/${f.attempt.id}/grading`;
+    const headers = () => ({
+      origin,
+      cookie: `${demo ? 'logiclab_demo' : 'logiclab_session'}=${credential}`,
+    });
+    const input = {
+      revision: 0,
+      items: [{ itemId: f.items[0]!.id, earnedPoints: 12.25, comment: 'Retained owner comment.' }],
+    };
+    const original = structuredClone({
+      answers: f.attempt.answers,
+      result: f.attempt.result,
+      score: f.attempt.score,
+      revision: f.attempt.revision,
+    });
+    try {
+      const initial = await app.inject({ method: 'GET', url: path, headers: headers() });
+      assert.equal(initial.statusCode, 200, initial.body);
+      assert.equal(initial.headers['cache-control'], 'no-store');
+      assert.equal(initial.json().grading.revision, 0);
+      const saved = await app.inject({
+        method: 'PATCH',
+        url: path,
+        headers: headers(),
+        payload: input,
+      });
+      assert.equal(saved.statusCode, 200, saved.body);
+      assert.equal(saved.json().grading.revision, 1);
+      assert.equal(saved.json().score.summary.earnedPoints, 22.25);
+      assert.equal(
+        (await app.inject({ method: 'GET', url: path, headers: headers() })).json().grading
+          .revision,
+        1,
+      );
+      const history = await app.inject({
+        method: 'GET',
+        url: path + '/history?limit=1',
+        headers: headers(),
+      });
+      assert.equal(history.statusCode, 200, history.body);
+      assert.equal(history.json().revisions[0].changes[0].comment, 'Retained owner comment.');
+      assert.equal(history.json().nextOffset, null);
+      const stale = await app.inject({
+        method: 'PATCH',
+        url: path,
+        headers: headers(),
+        payload: input,
+      });
+      assert.equal(stale.statusCode, 409, stale.body);
+      assert.equal(stale.json().error.code, 'SUBMISSION_GRADING_REVISION_CONFLICT');
+      const invalid = await app.inject({
+        method: 'PATCH',
+        url: path,
+        headers: headers(),
+        payload: { revision: 1, items: [{ ...input.items[0], earnedPoints: 20.01 }] },
+      });
+      assert.equal(invalid.statusCode, 400, invalid.body);
+      assert.equal(invalid.json().error.code, 'SUBMISSION_GRADING_INVALID');
+      assert.equal(
+        (
+          await app.inject({
+            method: 'PATCH',
+            url: path,
+            headers: { cookie: headers().cookie },
+            payload: input,
+          })
+        ).statusCode,
+        403,
+      );
+      assert.equal(await f.em.count(f.db.SubmissionGradingRevision, {}), 1);
+      if (demo) {
+        assert.throws(
+          () =>
+            f.runtime!.context.submissionGrading.read(f.owner.id, f.assignment.id, f.attempt.id),
+          /Demo resource transaction is required/,
+        );
+        await f.runtime!.run(credential, false, async () => {
+          assert.throws(
+            () =>
+              f.runtime!.context.submissionGrading.read(
+                randomUUID(),
+                f.assignment.id,
+                f.attempt.id,
+              ),
+            /SESSION_INVALID/,
+          );
+        });
+        const otherWorkspace = await f.runtime!.workspaces.provision();
+        const otherSession = await f.runtime!.sessions.issue(
+          otherWorkspace.workspaceId,
+          'instructor',
+        );
+        const ownerCredential = credential;
+        credential = otherSession.sessionId;
+        assert.equal(
+          (await app.inject({ method: 'GET', url: path, headers: headers() })).statusCode,
+          404,
+        );
+        credential = (await f.runtime!.sessions.switchRole(ownerCredential, 'student')).sessionId;
+      } else {
+        actor = f.other;
+        assert.equal(
+          (await app.inject({ method: 'GET', url: path, headers: headers() })).statusCode,
+          404,
+        );
+        actor = f.student;
+      }
+      for (const request of [
+        { method: 'GET' as const, url: path },
+        { method: 'PATCH' as const, url: path, payload: input },
+        { method: 'GET' as const, url: path + '/history' },
+      ])
+        assert.equal((await app.inject({ ...request, headers: headers() })).statusCode, 403);
+      const retained = await f.em.fork().findOneOrFail(f.db.AssignmentAttempt, f.attempt.id);
+      assert.deepEqual(
+        {
+          answers: retained.answers,
+          result: retained.result,
+          score: retained.score,
+          revision: retained.revision,
+        },
+        original,
+      );
+      const assignment = await f.em.fork().findOneOrFail(f.db.Assignment, f.assignment.id);
+      assert.equal(assignment.gradesReleasedAt ?? null, null);
+      assert.equal(assignment.answersRevealedAt ?? null, null);
+    } finally {
+      await app.close();
+      await f.close();
+    }
+  });
+}
+
+test('demo grading returns failure when commit fails and leaves neither a revision nor an effective award', async () => {
+  const f = await fixture(true);
+  const session = await f.runtime!.sessions.issue(f.workspace!.workspaceId, 'instructor');
+  const app = buildApp({ demo: f.runtime! });
+  const schema = f.orm.config.get('schema')!;
+  try {
+    await f.em.execute(`
+      create function "${schema}".reject_grading_commit() returns trigger language plpgsql as $$
+      begin
+        raise exception 'Synthetic private grading commit failure';
+      end;
+      $$;
+    `);
+    await f.em.execute(`
+      create constraint trigger reject_grading_commit
+        after insert on "${schema}".submission_grading_revisions
+        deferrable initially deferred
+        for each row execute function "${schema}".reject_grading_commit();
+    `);
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/api/demo/resources/assignments/${f.assignment.id}/submissions/${f.attempt.id}/grading`,
+      headers: { origin: 'http://localhost:5173', cookie: `logiclab_demo=${session.sessionId}` },
+      payload: { revision: 0, items: [{ itemId: f.items[0]!.id, earnedPoints: 5, comment: null }] },
+    });
+    assert.equal(response.statusCode, 503, response.body);
+    assert(!response.body.includes('Synthetic private'));
+    assert.equal(await f.em.count(f.db.SubmissionGradingRevision, {}), 0);
+    assert.equal(
+      (await f.store.read(f.owner.id, f.assignment.id, f.attempt.id)).grading.revision,
+      0,
+    );
+  } finally {
+    await app.close();
     await f.close();
   }
 });

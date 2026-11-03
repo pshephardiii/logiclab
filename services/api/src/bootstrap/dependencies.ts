@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../persistence/submission-review/store';
 import { readBillingConfig } from '../config/billing';
 import { createBillingStore } from '../persistence/billing/store';
@@ -39,6 +40,7 @@ type DependencyFactories = {
   createProblemStore: typeof createProblemStore;
   createAssignmentStore: typeof createAssignmentStore;
   createSubmissionReviewStore: typeof createSubmissionReviewStore;
+  createSubmissionGradingStore: typeof createSubmissionGradingStore;
   createStudentWorkStore: typeof createStudentWorkStore;
   createBillingStore?: typeof createBillingStore;
 };
@@ -52,6 +54,7 @@ const defaultFactories: DependencyFactories = {
   createProblemStore,
   createAssignmentStore,
   createSubmissionReviewStore,
+  createSubmissionGradingStore,
   createStudentWorkStore,
   createBillingStore,
 };
@@ -84,6 +87,7 @@ export async function createDependencies(
     const problems = await factories.createProblemStore(orm);
     const assignments = await factories.createAssignmentStore(orm);
     const submissionReviews = await factories.createSubmissionReviewStore(orm);
+    const submissionGrading = await factories.createSubmissionGradingStore(orm);
     const studentWork = await factories.createStudentWorkStore(orm);
     const billing = billingConfig
       ? createBillingService(
@@ -95,7 +99,7 @@ export async function createDependencies(
     return {
       ...(billing ? { billing: { config, service, billing } } : {}),
       studentWork: { config, service, studentWork },
-      assignment: { config, service, assignments, submissionReviews },
+      assignment: { config, service, assignments, submissionReviews, submissionGrading },
       problem: { config, service, problems },
       auth: { config, service },
       classroom: { config, service, classrooms },

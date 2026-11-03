@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { submissionReviewSchema, submissionListResponseSchema } from '@logiclab/contracts';
@@ -170,6 +171,7 @@ async function seed(
       },
       assignments,
       submissionReviews: await createSubmissionReviewStore(orm),
+      submissionGrading: await createSubmissionGradingStore(orm),
     },
     studentWork: {
       config: { APP_ORIGIN: origin, secureCookies: false },

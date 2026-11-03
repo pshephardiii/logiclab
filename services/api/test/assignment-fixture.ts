@@ -1,4 +1,7 @@
-import type { SubmissionReviewStore } from '../src/persistence/submission-review/types';
+import type {
+  SubmissionReviewStore,
+  SubmissionGradingStore,
+} from '../src/persistence/submission-review/types';
 import type { AssignmentDetail } from '@logiclab/contracts';
 import type { AssignmentStore } from '../src/persistence/assignment/types';
 import type { AssignmentContext } from '../src/routes/assignment/context';
@@ -73,6 +76,29 @@ export function assignmentFixture() {
       throw new Error('No fixture submission');
     }),
   };
-  const context: AssignmentContext = { ...auth.context, assignments, submissionReviews };
-  return { ...auth, context, assignments, submissionReviews, user: authUser };
+  const submissionGrading = {
+    read: jest.fn<
+      ReturnType<SubmissionGradingStore['read']>,
+      Parameters<SubmissionGradingStore['read']>
+    >(async () => {
+      throw new Error('No fixture grading');
+    }),
+    update: jest.fn<
+      ReturnType<SubmissionGradingStore['update']>,
+      Parameters<SubmissionGradingStore['update']>
+    >(async () => {
+      throw new Error('No fixture grading');
+    }),
+    history: jest.fn<
+      ReturnType<SubmissionGradingStore['history']>,
+      Parameters<SubmissionGradingStore['history']>
+    >(async () => ({ revisions: [], nextOffset: null })),
+  };
+  const context: AssignmentContext = {
+    ...auth.context,
+    assignments,
+    submissionReviews,
+    submissionGrading,
+  };
+  return { ...auth, context, assignments, submissionReviews, submissionGrading, user: authUser };
 }

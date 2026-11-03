@@ -1,3 +1,4 @@
+import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -72,6 +73,7 @@ for (const mode of ['normal', 'demo'] as const) {
           service: { authenticate: async () => active },
           assignments: await createAssignmentStore(orm),
           submissionReviews: await createSubmissionReviewStore(orm),
+          submissionGrading: await createSubmissionGradingStore(orm),
         },
         demo,
       });
