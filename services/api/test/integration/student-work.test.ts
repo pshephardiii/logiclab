@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -94,7 +95,11 @@ test(
     } as unknown as AuthContext;
     const app = buildApp({
       studentWork: { ...context, studentWork: store },
-      assignment: { ...context, assignments },
+      assignment: {
+        ...context,
+        assignments,
+        submissionReviews: await createSubmissionReviewStore(orm),
+      },
     });
     let address = 1;
     const request = (method: 'GET' | 'PATCH' | 'POST', path: string, payload?: object) =>

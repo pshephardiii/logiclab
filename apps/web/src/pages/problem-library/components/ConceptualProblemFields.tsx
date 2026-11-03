@@ -1,3 +1,9 @@
+import { ConceptualAnswerOptions } from './ConceptualAnswerOptions';
+import {
+  changeConceptualOption,
+  moveConceptualOption,
+  removeConceptualOption,
+} from '../helpers/conceptual-editor';
 import { CONCEPTUAL_QUESTION_LIMITS } from '@logiclab/contracts';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
@@ -5,17 +11,6 @@ type Props = { fields: ProblemEditorFields; onChange: (fields: ProblemEditorFiel
 
 /** Option edits and moves retain IDs; new options always receive a fresh identity. */
 export function ConceptualProblemFields({ fields, onChange }: Props) {
-  function changeOption(id: string, text: string) {
-    onChange({
-      ...fields,
-      options: fields.options.map((option) => (option.id === id ? { ...option, text } : option)),
-    });
-  }
-  function moveOption(index: number, delta: number) {
-    const options = [...fields.options];
-    [options[index], options[index + delta]] = [options[index + delta]!, options[index]!];
-    onChange({ ...fields, options });
-  }
   return (
     <>
       <label htmlFor="problem-question">Question</label>
@@ -46,81 +41,20 @@ export function ConceptualProblemFields({ fields, onChange }: Props) {
           </select>
         </>
       ) : (
-        <section aria-label="Answer options">
-          <h3>Answer options</h3>
-          <p className="help">
-            Add 2–6 distinct options and select exactly one correct answer. Editing or reordering an
-            option preserves its identity.
-          </p>
-          {fields.options.map((option, index) => (
-            <div className="problem-option" key={option.id}>
-              <label htmlFor={`option-${option.id}`}>Option {index + 1}</label>
-              <input
-                id={`option-${option.id}`}
-                required
-                maxLength={CONCEPTUAL_QUESTION_LIMITS.option}
-                value={option.text}
-                onChange={(event) => changeOption(option.id, event.target.value)}
-              />
-              <label className="correct-option">
-                <input
-                  type="radio"
-                  name="problem-correct-option"
-                  required
-                  value={option.id}
-                  checked={fields.correctOptionId === option.id}
-                  onChange={() => onChange({ ...fields, correctOptionId: option.id })}
-                />
-                Correct option {index + 1}
-              </label>
-              <div className="action-row">
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={index === 0}
-                  onClick={() => moveOption(index, -1)}
-                >
-                  Move option {index + 1} up
-                </button>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={index === fields.options.length - 1}
-                  onClick={() => moveOption(index, 1)}
-                >
-                  Move option {index + 1} down
-                </button>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={fields.options.length <= CONCEPTUAL_QUESTION_LIMITS.minOptions}
-                  onClick={() =>
-                    onChange({
-                      ...fields,
-                      options: fields.options.filter((value) => value.id !== option.id),
-                      correctOptionId:
-                        fields.correctOptionId === option.id ? '' : fields.correctOptionId,
-                    })
-                  }
-                >
-                  Remove option {index + 1}
-                </button>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            disabled={fields.options.length >= CONCEPTUAL_QUESTION_LIMITS.maxOptions}
-            onClick={() =>
-              onChange({
-                ...fields,
-                options: [...fields.options, { id: crypto.randomUUID(), text: '' }],
-              })
-            }
-          >
-            Add option
-          </button>
-        </section>
+        <ConceptualAnswerOptions
+          options={fields.options}
+          correctOptionId={fields.correctOptionId}
+          onTextChange={(id, text) => onChange(changeConceptualOption(fields, id, text))}
+          onCorrectOptionChange={(correctOptionId) => onChange({ ...fields, correctOptionId })}
+          onMove={(index, direction) => onChange(moveConceptualOption(fields, index, direction))}
+          onRemove={(id) => onChange(removeConceptualOption(fields, id))}
+          onAdd={() =>
+            onChange({
+              ...fields,
+              options: [...fields.options, { id: crypto.randomUUID(), text: '' }],
+            })
+          }
+        />
       )}
       <label htmlFor="problem-explanation">Explanation (optional)</label>
       <textarea

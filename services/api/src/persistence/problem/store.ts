@@ -1,83 +1,17 @@
+import type { ProblemStore } from './types';
+import { ownedProblem, lockedProblem } from './queries';
+import { libraryProblemDraft } from './draft-response';
 import {
   libraryProblemDefinition,
   publicationDefinition,
 } from '../../application/problem/library-definition';
-import {
-  checkDerivationReference,
-  type DerivationReferenceCheck,
-} from '../../application/problem/derivation-authoring';
+import { checkDerivationReference } from '../../application/problem/derivation-authoring';
 import { UnsupportedProblemDefinitionError } from '../../application/problem/definition-support';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { libraryProblemVersion } from './version-response';
-import type { createDatabase, Problem as ProblemEntity } from '@logiclab/db' with {
+import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import type { ProblemArchiveFilter } from '@logiclab/contracts';
-import type {
-  CreateLibraryProblemRequest,
-  UpdateLibraryProblemRequest,
-  LibraryProblemDraft,
-  LibraryProblemVersion,
-} from '@logiclab/contracts/problem-library';
-
-export type UpdateProblemResult =
-  | { status: 'updated'; problem: LibraryProblemDraft }
-  | { status: 'not_found' }
-  | { status: 'archived' };
-
-export type PublishProblemResult =
-  | { status: 'published'; version: LibraryProblemVersion }
-  | { status: 'not_found' }
-  | { status: 'archived' };
-
-export interface ProblemStore {
-  previewReference(
-    ownerId: string,
-    problemId: string,
-  ): Promise<{ problemId: string; updatedAt: string; check: DerivationReferenceCheck } | null>;
-  publish(ownerId: string, problemId: string): Promise<PublishProblemResult>;
-  setArchived(
-    ownerId: string,
-    problemId: string,
-    archived: boolean,
-  ): Promise<LibraryProblemDraft | null>;
-  listVersions(
-    ownerId: string,
-    problemId: string,
-    limit: number,
-    offset: number,
-  ): Promise<LibraryProblemVersion[] | null>;
-  findVersion(
-    ownerId: string,
-    problemId: string,
-    version: number,
-  ): Promise<LibraryProblemVersion | null>;
-  create(ownerId: string, input: CreateLibraryProblemRequest): Promise<LibraryProblemDraft>;
-  list(
-    ownerId: string,
-    limit: number,
-    offset: number,
-    archive?: ProblemArchiveFilter,
-  ): Promise<LibraryProblemDraft[]>;
-  findOwned(ownerId: string, problemId: string): Promise<LibraryProblemDraft | null>;
-  update(
-    ownerId: string,
-    problemId: string,
-    input: UpdateLibraryProblemRequest,
-  ): Promise<UpdateProblemResult>;
-}
-
-function draft(problem: ProblemEntity): LibraryProblemDraft {
-  return {
-    id: problem.id,
-    title: problem.title,
-    instructions: problem.instructions ?? null,
-    definition: libraryProblemDefinition(problem.definition),
-    archivedAt: problem.archivedAt?.toISOString() ?? null,
-    createdAt: problem.createdAt.toISOString(),
-    updatedAt: problem.updatedAt.toISOString(),
-  };
-}
 
 /** Every query scopes ownership; updates lock the row before checking archive state. */
 export async function createProblemStore(
@@ -85,21 +19,10 @@ export async function createProblemStore(
   transaction?: DatabaseManager,
 ): Promise<ProblemStore> {
   const transact = transactionRunner(orm, transaction);
-  const { Problem, ProblemVersion, User, LockMode } = await import('@logiclab/db');
-  type TransactionManager = typeof orm.em;
-  function lockedProblem(em: TransactionManager, ownerId: string, problemId: string) {
-    return em.findOne(
-      Problem,
-      { id: problemId, owner: ownerId },
-      { lockMode: LockMode.PESSIMISTIC_WRITE },
-    );
-  }
+  const { Problem, ProblemVersion, User } = await import('@logiclab/db');
   return {
     async previewReference(ownerId, problemId) {
-      const problem = await (transaction ?? orm.em.fork()).findOne(Problem, {
-        id: problemId,
-        owner: ownerId,
-      });
+      const problem = await ownedProblem(transaction ?? orm.em.fork(), ownerId, problemId);
       if (!problem) return null;
       const definition = libraryProblemDefinition(problem.definition);
       if (definition.type !== 'derivation') throw new UnsupportedProblemDefinitionError();
@@ -141,12 +64,12 @@ export async function createProblemStore(
         if (archived && !problem.archivedAt) problem.archivedAt = new Date();
         if (!archived && problem.archivedAt) problem.archivedAt = undefined;
         await em.flush();
-        return draft(problem);
+        return libraryProblemDraft(problem);
       });
     },
     async listVersions(ownerId, problemId, limit, offset) {
       const em = transaction ?? orm.em.fork();
-      if (!(await em.findOne(Problem, { id: problemId, owner: ownerId }))) return null;
+      if (!(await ownedProblem(em, ownerId, problemId))) return null;
       const versions = await em.find(
         ProblemVersion,
         { problem: { id: problemId, owner: ownerId } },
@@ -171,7 +94,7 @@ export async function createProblemStore(
       });
       em.persist(problem);
       await em.flush();
-      return draft(problem);
+      return libraryProblemDraft(problem);
     },
     async list(ownerId, limit, offset, archive = 'active') {
       const rows = await (transaction ?? orm.em.fork()).find(
@@ -186,14 +109,11 @@ export async function createProblemStore(
           orderBy: { createdAt: 'DESC', id: 'DESC' },
         },
       );
-      return rows.map(draft);
+      return rows.map(libraryProblemDraft);
     },
     async findOwned(ownerId, problemId) {
-      const problem = await (transaction ?? orm.em.fork()).findOne(Problem, {
-        id: problemId,
-        owner: ownerId,
-      });
-      return problem ? draft(problem) : null;
+      const problem = await ownedProblem(transaction ?? orm.em.fork(), ownerId, problemId);
+      return problem ? libraryProblemDraft(problem) : null;
     },
     async update(ownerId, problemId, input) {
       return transact(async (em) => {
@@ -206,7 +126,7 @@ export async function createProblemStore(
         if (input.definition !== undefined)
           problem.definition = libraryProblemDefinition(input.definition);
         await em.flush();
-        return { status: 'updated' as const, problem: draft(problem) };
+        return { status: 'updated' as const, problem: libraryProblemDraft(problem) };
       });
     },
   };

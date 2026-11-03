@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -70,6 +71,7 @@ async function fixture() {
   await em.flush();
   const work = await createStudentWorkStore(orm);
   const assignments = await createAssignmentStore(orm);
+  const submissionReviews = await createSubmissionReviewStore(orm);
   let active = owner;
   const config = readAuthConfig({
     AUTH_ENABLED: 'true',
@@ -91,7 +93,7 @@ async function fixture() {
     },
   } as unknown as AuthContext;
   const app = buildApp({
-    assignment: { ...context, assignments },
+    assignment: { ...context, assignments, submissionReviews },
     studentWork: { ...context, studentWork: work },
     demo: await createDemoRuntime(
       orm,
@@ -160,7 +162,20 @@ async function fixture() {
     await em.execute(`drop schema if exists "${schema}" cascade`);
     await orm.close(true);
   };
-  return { db, orm, em, owner, student, outsider, work, assignments, request, pinned, close };
+  return {
+    db,
+    orm,
+    em,
+    owner,
+    student,
+    outsider,
+    work,
+    assignments,
+    submissionReviews,
+    request,
+    pinned,
+    close,
+  };
 }
 
 function noSecrets(value: unknown) {
@@ -228,7 +243,7 @@ test('mixed graded HTTP work persists typed answers and freezes independent grad
       (await f.request(f.student, 'GET', path + `/items/${items[1]!.id}/solution`)).statusCode,
       403,
     );
-    const reviews = await f.assignments.listSubmissions(f.owner.id, assignment.id, {
+    const reviews = await f.submissionReviews.listSubmissions(f.owner.id, assignment.id, {
       limit: 20,
       offset: 0,
     });
@@ -368,7 +383,7 @@ test('mixed completion and practice enforce filled responses without exposing co
           403,
         );
         await assert.rejects(() =>
-          f.assignments.listSubmissions(f.owner.id, assignment.id, { offset: 0, limit: 20 }),
+          f.submissionReviews.listSubmissions(f.owner.id, assignment.id, { offset: 0, limit: 20 }),
         );
         const solution = await f.request(
           f.student,

@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -100,7 +101,11 @@ test('normal/demo conceptual authoring validates keys, scopes private snapshots 
     } as unknown as AuthContext;
     app = buildApp({
       problem: { ...context, problems: await createProblemStore(orm) },
-      assignment: { ...context, assignments: await createAssignmentStore(orm) },
+      assignment: {
+        ...context,
+        assignments: await createAssignmentStore(orm),
+        submissionReviews: await createSubmissionReviewStore(orm),
+      },
       demo: await createDemoRuntime(
         orm,
         readDemoConfig({ DEMO_ENABLED: 'true', APP_ORIGIN: origin })!,

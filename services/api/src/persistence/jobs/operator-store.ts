@@ -1,42 +1,10 @@
-import type {
-  createDatabase,
-  DurableJob as JobEntity,
-  JobSchedule as ScheduleEntity,
-} from '@logiclab/db' with { 'resolution-mode': 'import' };
+import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
+import type { JobPage } from './types';
+import { jobSummary, scheduleSummary, runSummary, findingSummary } from './operator-response';
 import { databaseTime } from '../database-time';
 
-export interface JobPage {
-  offset: number;
-  limit: number;
-}
 function pageNext(length: number, page: JobPage) {
   return length > page.limit ? page.offset + page.limit : null;
-}
-function jobSummary(job: JobEntity) {
-  return {
-    id: job.id,
-    jobType: job.jobType,
-    status: job.status,
-    attempts: job.attempts,
-    maxAttempts: job.maxAttempts,
-    scheduleId: job.schedule?.id ?? null,
-    scheduledFor: job.scheduledFor?.toISOString() ?? null,
-    availableAt: job.availableAt.toISOString(),
-    leaseExpiresAt: job.leaseExpiresAt?.toISOString() ?? null,
-    completedAt: job.completedAt?.toISOString() ?? null,
-    createdAt: job.createdAt.toISOString(),
-  };
-}
-function scheduleSummary(schedule: ScheduleEntity) {
-  return {
-    id: schedule.id,
-    name: schedule.name,
-    jobType: schedule.jobType,
-    enabled: schedule.enabled,
-    intervalSeconds: schedule.intervalSeconds,
-    maxAttempts: schedule.maxAttempts,
-    nextRunAt: schedule.nextRunAt.toISOString(),
-  };
 }
 export class JobOperatorError extends Error {}
 
@@ -96,16 +64,7 @@ export async function createJobOperatorStore(orm: Awaited<ReturnType<typeof crea
           job: jobSummary(job),
           leaseExpired: Boolean(job.leaseExpiresAt && job.leaseExpiresAt <= now),
           findingCount: await em.count(ReconciliationFinding, { job: id }),
-          runs: runs.map((run) => ({
-            id: run.id,
-            attempt: run.attempt,
-            status: run.status,
-            startedAt: run.startedAt.toISOString(),
-            finishedAt: run.finishedAt?.toISOString() ?? null,
-            errorCode: run.errorCode ?? null,
-            recordsChecked: run.recordsChecked,
-            findingsCount: run.findingsCount,
-          })),
+          runs: runs.map(runSummary),
         };
       });
     },
@@ -123,14 +82,7 @@ export async function createJobOperatorStore(orm: Awaited<ReturnType<typeof crea
       );
       return {
         jobId: id,
-        findings: rows.slice(0, page.limit).map((row) => ({
-          id: row.id,
-          kind: row.kind,
-          purchaseId: row.purchaseId,
-          classId: row.classId,
-          grantId: row.grantId ?? null,
-          detectedAt: row.detectedAt.toISOString(),
-        })),
+        findings: rows.slice(0, page.limit).map(findingSummary),
         nextOffset: pageNext(rows.length, page),
       };
     },

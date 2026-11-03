@@ -5,7 +5,7 @@ import {
   signSimulatorEvent,
 } from '../../integrations/payments/simulator/events';
 import { createSimulatorWrapper } from '../../integrations/payments/simulator/wrapper';
-import type { BillingStore } from '../../persistence/billing/store';
+import type { BillingStore } from '../../persistence/billing/types';
 import { randomUUID } from 'node:crypto';
 
 const config = { signingSecret: 'ab'.repeat(32) };

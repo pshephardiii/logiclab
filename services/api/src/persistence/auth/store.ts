@@ -1,6 +1,6 @@
-import type { User as UserEntity } from '@logiclab/db' with { 'resolution-mode': 'import' };
+import { appUser } from './app-user';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import type { AuthStore, AppUser } from '../../application/auth/types';
+import type { AuthStore } from '../../application/auth/types';
 
 /**
  * Implements pool-scoped users and session persistence through forked EntityManagers.
@@ -11,15 +11,6 @@ export async function createAuthStore(
   poolId: string,
 ): Promise<AuthStore> {
   const { User, AuthSession, UserRole, UserIdentityProvider } = await import('@logiclab/db');
-  const appUser = (user: UserEntity): AppUser => {
-    if (
-      user.identityProvider !== UserIdentityProvider.Cognito ||
-      !user.cognitoSubject ||
-      user.cognitoUserPoolId !== poolId
-    )
-      throw new Error('Expected a Cognito identity in the configured pool.');
-    return { id: user.id, subject: user.cognitoSubject, role: user.role };
-  };
   return {
     async createUser(subject, role, email) {
       const em = orm.em.fork();
@@ -31,7 +22,7 @@ export async function createAuthStore(
       });
       em.persist(user);
       await em.flush();
-      return appUser(user);
+      return appUser(user, poolId);
     },
     async findUser(subject) {
       const user = await orm.em.fork().findOne(User, {
@@ -39,7 +30,7 @@ export async function createAuthStore(
         cognitoUserPoolId: poolId,
         cognitoSubject: subject,
       });
-      return user ? appUser(user) : null;
+      return user ? appUser(user, poolId) : null;
     },
     async saveSession(id, session) {
       const em = orm.em.fork();
@@ -75,7 +66,7 @@ export async function createAuthStore(
       )
         return null;
       return {
-        user: appUser(record.user),
+        user: await appUser(record.user, poolId),
         encryptedTokens: record.encryptedTokens,
         accessExpiresAt: record.accessExpiresAt,
         expiresAt: record.expiresAt,

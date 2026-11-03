@@ -1,3 +1,4 @@
+import { assignmentPolicyTransition } from '../helpers/assignment-policy-transition';
 import { useState, type ChangeEvent } from 'react';
 import {
   assignmentLearningPolicySchema,
@@ -31,24 +32,11 @@ export function AssignmentPolicyFields({
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
     if (containsProof && assessmentMode === 'graded') return;
-    const resetSolutions =
-      assessmentMode === 'ungraded_practice' &&
-      !['never', 'anytime'].includes(policy.solutionAccess);
-    onChange(
-      assignmentLearningPolicySchema.parse({
-        assessmentMode,
-        feedbackTiming:
-          assessmentMode === 'ungraded_practice'
-            ? policy.feedbackTiming === 'immediate'
-              ? 'immediate'
-              : 'on_check'
-            : 'on_submission',
-        solutionAccess: resetSolutions ? 'never' : policy.solutionAccess,
-      }),
-    );
+    const next = assignmentPolicyTransition(policy, assessmentMode);
+    onChange(next.policy);
     if (assessmentMode !== 'graded') onGradeReleaseChange('on_submission');
     setNotice(
-      resetSolutions
+      next.resetSolutions
         ? 'Practice has no final submission or instructor answer release. Answer reveal was changed to Never.'
         : null,
     );

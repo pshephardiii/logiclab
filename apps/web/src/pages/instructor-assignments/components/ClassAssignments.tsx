@@ -1,3 +1,4 @@
+import { AssignmentPublicationControls } from './AssignmentPublicationControls';
 import { AssignmentReleaseControls } from './AssignmentReleaseControls';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -138,59 +139,17 @@ export function ClassAssignments({ classId }: Props) {
               onSave={state.save}
             />
             {state.selected && (
-              <section className="panel" aria-label="Assignment publication">
-                <h2>Publication and archive</h2>
-                {state.selected.publishedAt && (
-                  <p>Published {new Date(state.selected.publishedAt).toLocaleString()}</p>
-                )}
-                {!state.selected.publishedAt && (
-                  <p>
-                    Publish the saved draft to lock its problem order and policy. At least one
-                    problem is required.
-                  </p>
-                )}
-                <p className="help">
-                  Published, active assignments are available to enrolled students.
-                </p>
-                <p className="help">
-                  Duplicate as draft copies saved content into this class and opens a new editable
-                  draft. Unsaved edits are not copied; the source is unchanged.
-                </p>
-                <div className="action-row">
-                  <button className="secondary" disabled={state.busy} onClick={duplicate}>
-                    Duplicate as draft
-                  </button>
-                  {!state.selected.publishedAt && (
-                    <button
-                      disabled={
-                        dirty ||
-                        state.busy ||
-                        Boolean(state.selected.archivedAt) ||
-                        !state.selected.items.length
-                      }
-                      onClick={() => void state.act('publish')}
-                    >
-                      Publish assignment
-                    </button>
-                  )}
-                  <button
-                    className="secondary"
-                    disabled={dirty || state.busy}
-                    onClick={() =>
-                      void state.act(state.selected!.archivedAt ? 'restore' : 'archive')
-                    }
-                  >
-                    {state.selected.archivedAt ? 'Restore assignment' : 'Archive assignment'}
-                  </button>
-                  <button
-                    className="secondary"
-                    disabled={state.busy}
-                    onClick={() => select(state.selected!.id)}
-                  >
-                    Reload saved assignment
-                  </button>
-                </div>
-              </section>
+              <AssignmentPublicationControls
+                assignment={state.selected}
+                dirty={dirty}
+                busy={state.busy}
+                onDuplicate={duplicate}
+                onPublish={() => void state.act('publish')}
+                onToggleArchive={() =>
+                  void state.act(state.selected!.archivedAt ? 'restore' : 'archive')
+                }
+                onReload={() => select(state.selected!.id)}
+              />
             )}
             {state.selected && (
               <AssignmentReleaseControls

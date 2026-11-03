@@ -1,5 +1,5 @@
 import { truthTableSolutionResponseSchema } from '@logiclab/contracts';
-import type { StudentWorkStore } from '../src/persistence/student-work/store';
+import type { StudentWorkStore } from '../src/persistence/student-work/types';
 import type { StudentWorkContext } from '../src/routes/studentWork/context';
 import { authFixture, authUser } from './auth-fixture';
 import { assignment, assignmentSummary, classId } from './assignment-fixture';

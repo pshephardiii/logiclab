@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -53,6 +54,7 @@ async function fixture() {
   ]);
   await em.flush();
   const assignments = await createAssignmentStore(orm);
+  const submissionReviews = await createSubmissionReviewStore(orm);
   const work = await createStudentWorkStore(orm);
   let active = owner;
   const config = readAuthConfig({
@@ -75,7 +77,7 @@ async function fixture() {
     },
   } as unknown as AuthContext;
   const app = buildApp({
-    assignment: { ...context, assignments },
+    assignment: { ...context, assignments, submissionReviews },
     studentWork: { ...context, studentWork: work },
   });
   let address = 1;
@@ -124,6 +126,7 @@ async function fixture() {
     outsider,
     request,
     assignments,
+    submissionReviews,
     work,
     draft,
     publish,
@@ -178,7 +181,8 @@ test('HTTP grade release withholds every student result projection while retaini
     assert(retained.result);
     const frozen = structuredClone(retained.result);
     assert(
-      (await f.assignments.findSubmission(f.owner.id, assignment.id, submitted.id)).attempt.result,
+      (await f.submissionReviews.findSubmission(f.owner.id, assignment.id, submitted.id)).attempt
+        .result,
     );
     await assert.rejects(
       f.work.solution(f.student.id, assignment.id, assignment.items[0]!.id),

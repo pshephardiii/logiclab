@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { test, expect, vi } from 'vitest';
 import { useDemo } from './useDemo';
-import { loadDemoSession, demoAction } from '../../../api/demo/api';
+import { loadDemoSession, demoAction, endDemo } from '../../../api/demo/api';
 vi.mock('../../../api/demo/api', () => ({
   loadDemoSession: vi.fn(),
   demoAction: vi.fn(),
@@ -44,4 +44,56 @@ test('leaving demo pages cancels pending restoration and ignores its late respon
   });
   expect(result.current.session).toBeNull();
   expect(result.current.busy).toBe(false);
+});
+
+test('successful role switching and logout update the session without a reconciliation read', async () => {
+  vi.mocked(loadDemoSession).mockResolvedValueOnce(initial);
+  const { result } = renderHook(() => useDemo(true));
+  await waitFor(() => expect(result.current.busy).toBe(false));
+  const reads = vi.mocked(loadDemoSession).mock.calls.length;
+  const student = { ...initial, user: { ...initial.user, role: 'student' as const } };
+  vi.mocked(demoAction).mockResolvedValueOnce(student);
+  await act(async () => {
+    expect(await result.current.run('role', 'student')).toBe(true);
+  });
+  expect(result.current.session).toEqual(student);
+  expect(demoAction).toHaveBeenLastCalledWith('role', expect.any(AbortSignal), 'student');
+  vi.mocked(endDemo).mockResolvedValueOnce({ message: 'Demo ended.' });
+  await act(async () => {
+    expect(await result.current.run('logout')).toBe(true);
+  });
+  expect(result.current.session).toBeNull();
+  expect(result.current.error).toBeNull();
+  expect(result.current.busy).toBe(false);
+  expect(loadDemoSession).toHaveBeenCalledTimes(reads);
+});
+
+test('a superseded role response cannot restore the session after logout', async () => {
+  vi.mocked(loadDemoSession).mockResolvedValueOnce(initial);
+  const { result } = renderHook(() => useDemo(true));
+  await waitFor(() => expect(result.current.busy).toBe(false));
+  let resolve!: (value: typeof initial) => void;
+  vi.mocked(demoAction).mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  let pending!: Promise<boolean>;
+  act(() => {
+    pending = result.current.run('role', 'instructor');
+  });
+  const signal = vi.mocked(demoAction).mock.calls.at(-1)![1];
+  vi.mocked(endDemo).mockResolvedValueOnce({ message: 'Demo ended.' });
+  await act(async () => {
+    await result.current.run('logout');
+  });
+  expect(signal.aborted).toBe(true);
+  await act(async () => {
+    resolve(initial);
+    expect(await pending).toBe(false);
+  });
+  expect(result.current.session).toBeNull();
+  expect(result.current.busy).toBe(false);
+  expect(result.current.error).toBeNull();
 });

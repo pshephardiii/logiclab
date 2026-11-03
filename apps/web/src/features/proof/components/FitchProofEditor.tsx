@@ -1,6 +1,9 @@
+import { FitchProofInsertControls } from './FitchProofInsertControls';
+import { FitchProofDeletionConfirmation } from './FitchProofDeletionConfirmation';
+import { proofEditorChoices } from '../helpers/proof-editor-choices';
+import { FitchProofBlockControls } from './FitchProofBlockControls';
 import { useState } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
-import { PROOF_LIMITS } from '@logiclab/contracts';
 import type { DerivationContent } from '@logiclab/contracts/derivation';
 import {
   startProof,
@@ -11,9 +14,7 @@ import {
   removeProofSubproof,
   proofSubtree,
   uniqueProofIds,
-  proofDepth,
 } from '../helpers/fitch-editor';
-import { ProofChoice } from './ProofChoice';
 import { FitchProofLine } from './FitchProofLine';
 import { FitchProofSummary } from './FitchProofSummary';
 import '../proof.css';
@@ -62,15 +63,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
       </section>
     );
   const safe = uniqueProofIds(proof);
-  const lines = proof.steps.map((line, index) => ({
-    id: line.id,
-    label: `${index + 1}. ${line.formula || '(blank)'}`,
-  }));
-  const lineScopes = new Map(proof.steps.map((step) => [step.id, step.blockId]));
-  const blockChoices = proof.blocks.map((block, index) => ({
-    id: block.id,
-    label: `Subproof ${index + 1} at line ${proof.steps.findIndex((step) => step.id === block.assumptionId) + 1 || '?'}`,
-  }));
+  const { lines, lineScopes, blockChoices } = proofEditorChoices(proof);
   const affected = deletion?.kind === 'block' ? proofSubtree(proof, deletion.id) : null;
   const deletedCount = affected
     ? proof.steps.filter((step) => step.blockId && affected.has(step.blockId)).length
@@ -118,54 +111,22 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
         </>
       ) : (
         <>
-          <ProofChoice
-            label="New line scope"
-            value={scope}
-            choices={blockChoices}
-            empty="Root proof"
-            onChange={(id) => {
+          <FitchProofInsertControls
+            proof={proof}
+            scope={scope}
+            before={before}
+            lines={lines}
+            blockChoices={blockChoices}
+            onScopeChange={(id) => {
               setDeletion(null);
               setScope(id);
             }}
-          />
-          <ProofChoice
-            label="Insert before"
-            value={before}
-            choices={lines}
-            empty="Append at end"
-            onChange={(id) => {
+            onBeforeChange={(id) => {
               setDeletion(null);
               setBefore(id);
             }}
+            onInsert={insert}
           />
-          <div className="action-row">
-            <button
-              type="button"
-              disabled={proof.steps.length >= PROOF_LIMITS.maxSteps}
-              onClick={() => insert(false, true)}
-            >
-              Add premise line at root
-            </button>
-            <button
-              type="button"
-              disabled={proof.steps.length >= PROOF_LIMITS.maxSteps}
-              onClick={() => insert(false)}
-            >
-              Add inference line
-            </button>
-            <button
-              type="button"
-              disabled={
-                proof.steps.length >= PROOF_LIMITS.maxSteps ||
-                proof.blocks.length >= PROOF_LIMITS.maxBlocks ||
-                (proofDepth(proof, scope) ?? PROOF_LIMITS.maxBlockDepth) >=
-                  PROOF_LIMITS.maxBlockDepth
-              }
-              onClick={() => insert(true)}
-            >
-              Open subproof
-            </button>
-          </div>
           {proof.steps.map((step, index) => (
             <FitchProofLine
               key={step.id}
@@ -184,51 +145,23 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
               onDelete={() => setDeletion({ kind: 'line', index })}
             />
           ))}
-          {proof.blocks.map((block) => (
-            <section
+          {proof.blocks.map((block, index) => (
+            <FitchProofBlockControls
               key={block.id}
-              className="problem-option"
-              aria-label={blockChoices.find((value) => value.id === block.id)!.label}
-            >
-              <h4>{blockChoices.find((value) => value.id === block.id)!.label}</h4>
-              <ProofChoice
-                label={`Parent of ${blockChoices.find((value) => value.id === block.id)!.label}`}
-                value={block.parentId}
-                empty="Root proof"
-                choices={blockChoices.filter(
-                  (value) => !proofSubtree(proof, block.id).has(value.id),
-                )}
-                onChange={(parentId) =>
-                  change({
-                    ...proof,
-                    blocks: proof.blocks.map((value) =>
-                      value.id === block.id ? { ...value, parentId } : value,
-                    ),
-                  })
-                }
-              />
-              <ProofChoice
-                label={`Final line of ${blockChoices.find((value) => value.id === block.id)!.label}`}
-                value={block.endId}
-                empty="Open / unfinished"
-                choices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
-                onChange={(endId) =>
-                  change({
-                    ...proof,
-                    blocks: proof.blocks.map((value) =>
-                      value.id === block.id ? { ...value, endId } : value,
-                    ),
-                  })
-                }
-              />
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setDeletion({ kind: 'block', id: block.id })}
-              >
-                Delete {blockChoices.find((value) => value.id === block.id)!.label}
-              </button>
-            </section>
+              block={block}
+              label={blockChoices[index]!.label}
+              parentChoices={blockChoices.filter(
+                (value) => !proofSubtree(proof, block.id).has(value.id),
+              )}
+              finalLineChoices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
+              onChange={(next) =>
+                change({
+                  ...proof,
+                  blocks: proof.blocks.map((value) => (value.id === block.id ? next : value)),
+                })
+              }
+              onDelete={() => setDeletion({ kind: 'block', id: block.id })}
+            />
           ))}
         </>
       )}
@@ -236,37 +169,20 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
         {reference ? 'Remove reference proof' : 'Clear proof'}
       </button>
       {deletion && (
-        <div
-          role="group"
-          aria-label={reference ? 'Confirm reference deletion' : 'Confirm proof deletion'}
-        >
-          <p>
-            Delete {deletedCount} {reference ? 'reference' : 'proof'} line(s)
-            {affected
-              ? ' and this subproof with its nested blocks'
-              : deletion.kind === 'proof'
-                ? ' and all subproofs'
-                : ''}
-            ? Surviving citations will remain missing until you repair them. This changes the local
-            draft; save explicitly to persist.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              if (deletion.kind === 'proof') {
-                setScope(null);
-                setBefore(null);
-                change(null);
-              } else if (deletion.kind === 'line') change(removeProofStep(proof, deletion.index));
-              else change(removeProofSubproof(proof, deletion.id));
-            }}
-          >
-            Confirm deletion
-          </button>
-          <button type="button" className="secondary" onClick={() => setDeletion(null)}>
-            {reference ? 'Keep reference work' : 'Keep proof work'}
-          </button>
-        </div>
+        <FitchProofDeletionConfirmation
+          reference={reference}
+          kind={deletion.kind}
+          deletedCount={deletedCount}
+          onConfirm={() => {
+            if (deletion.kind === 'proof') {
+              setScope(null);
+              setBefore(null);
+              change(null);
+            } else if (deletion.kind === 'line') change(removeProofStep(proof, deletion.index));
+            else change(removeProofSubproof(proof, deletion.id));
+          }}
+          onCancel={() => setDeletion(null)}
+        />
       )}
     </section>
   );

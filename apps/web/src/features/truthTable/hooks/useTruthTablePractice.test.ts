@@ -61,3 +61,43 @@ test('preview formulas and answers stay independent of the practice session', as
   expect(practice.result.current.exercise).toBeNull();
   expect(practice.result.current.answers).toEqual({});
 });
+
+test.each(['resolve', 'reject'] as const)(
+  'formula replacement aborts table creation and ignores its late %s',
+  async (outcome) => {
+    let resolve!: (value: TruthTableExerciseResponse) => void;
+    let reject!: (error: Error) => void;
+    vi.mocked(createExercise).mockImplementationOnce(
+      () =>
+        new Promise((done, fail) => {
+          resolve = done;
+          reject = fail;
+        }),
+    );
+    const { result } = renderHook(() => useTruthTablePractice());
+    let pending!: Promise<void>;
+    act(() => {
+      pending = result.current.createTable();
+    });
+    const signal = vi.mocked(createExercise).mock.calls.at(-1)![1];
+    expect(result.current.loading).toBe(true);
+    act(() => result.current.changeFormula('Q'));
+    expect(signal.aborted).toBe(true);
+    await act(async () => {
+      if (outcome === 'resolve') resolve(exercise);
+      else reject(new Error('Obsolete request failed'));
+      await pending;
+    });
+    expect(result.current.formula).toBe('Q');
+    expect(result.current.exercise).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.answers).toEqual({});
+    vi.mocked(createExercise).mockResolvedValueOnce(exercise);
+    await act(async () => {
+      await result.current.createTable();
+    });
+    expect(createExercise).toHaveBeenLastCalledWith('Q', expect.any(AbortSignal));
+    expect(result.current.exercise).toEqual(exercise);
+  },
+);

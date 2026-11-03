@@ -1,5 +1,6 @@
+import type { SubmissionReviewStore } from '../src/persistence/submission-review/types';
 import type { AssignmentDetail } from '@logiclab/contracts';
-import type { AssignmentStore } from '../src/persistence/assignment/store';
+import type { AssignmentStore } from '../src/persistence/assignment/types';
 import type { AssignmentContext } from '../src/routes/assignment/context';
 import { authFixture, authUser } from './auth-fixture';
 import { publishedVersion } from './problem-fixture';
@@ -30,16 +31,6 @@ export function assignmentFixture() {
       ReturnType<AssignmentStore['release']>,
       Parameters<AssignmentStore['release']>
     >(async () => assignment),
-    listSubmissions: jest.fn<
-      ReturnType<AssignmentStore['listSubmissions']>,
-      Parameters<AssignmentStore['listSubmissions']>
-    >(async () => []),
-    findSubmission: jest.fn<
-      ReturnType<AssignmentStore['findSubmission']>,
-      Parameters<AssignmentStore['findSubmission']>
-    >(async () => {
-      throw new Error('No fixture submission');
-    }),
     create: jest.fn<ReturnType<AssignmentStore['create']>, Parameters<AssignmentStore['create']>>(
       async () => assignment,
     ),
@@ -70,6 +61,18 @@ export function assignmentFixture() {
       Parameters<AssignmentStore['setArchived']>
     >(async () => assignment),
   };
-  const context: AssignmentContext = { ...auth.context, assignments };
-  return { ...auth, context, assignments, user: authUser };
+  const submissionReviews = {
+    listSubmissions: jest.fn<
+      ReturnType<SubmissionReviewStore['listSubmissions']>,
+      Parameters<SubmissionReviewStore['listSubmissions']>
+    >(async () => []),
+    findSubmission: jest.fn<
+      ReturnType<SubmissionReviewStore['findSubmission']>,
+      Parameters<SubmissionReviewStore['findSubmission']>
+    >(async () => {
+      throw new Error('No fixture submission');
+    }),
+  };
+  const context: AssignmentContext = { ...auth.context, assignments, submissionReviews };
+  return { ...auth, context, assignments, submissionReviews, user: authUser };
 }

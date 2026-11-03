@@ -78,3 +78,13 @@ test('rejects signed malformed JSON and unsupported event versions/fields', () =
 test.each([0, -1, 1.5])('rejects invalid source sequence %s', (sequence) => {
   expect(() => createSimulatorEvent(randomUUID(), sequence, 'paid', time)).toThrow();
 });
+
+test.each([-300, 300])(
+  'accepts delivery signatures exactly at the tolerance boundary (%s seconds)',
+  (seconds) => {
+    const remote = createSimulatorWrapper(config, () => new Date(time.getTime() + seconds * 1000));
+    const event = createSimulatorEvent(randomUUID(), 1, 'paid', time);
+    const signed = signSimulatorEvent(remote, event);
+    expect(provider.verifyEvent(signed.body, signed.signature)).toEqual(event);
+  },
+);

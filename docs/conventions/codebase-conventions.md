@@ -10,6 +10,10 @@ Extract a component/helper when it is reused or isolates a meaningful responsibi
 
 Keep structural refactors separate from product changes and broad mechanical formatting where practical. Preserve public contracts, exports, error precedence, authorization, state-reset/cancellation behavior, and persistence guarantees. Update imports, comments, documentation, and relevant behavior tests together. Filename conventions follow the owning area: React components/pages and hooks retain names such as `AccountForm.tsx` and `useAccount.ts`; API domain/operation directories retain the existing camelCase layout.
 
+When reviewing a large file, inspect its interface/types, mapping constants, response projections, derived state, scoped queries and cohesive groups of helper functions. A helper need not have multiple callers or be pure to justify extraction. Move a responsibility that can be named and understood independently; keep closely related stages together. Judge the result by whether the main workflow and its details are easier to trace, rather than by the number of lines removed.
+
+Keep mapping constants with the function that uses them instead of creating an unrelated constants file. Put shared internal interfaces in a domain's `types.ts` when this removes imports from implementation or component files; reuse an existing application-level interface where one already owns the boundary. Update internal consumers directly when moving types, without adding compatibility re-exports solely to preserve an old internal path. Preserve supported package exports and external contracts.
+
 ## General: proportional effort
 
 Take the time needed for correctness, privacy, authorization, data integrity and meaningful regression coverage. Keep routine organization, documentation and verification overhead proportional to the significance of the change; do not reduce necessary checks just to finish faster.
@@ -205,6 +209,8 @@ Auth/classroom groups apply `routes/account-http.ts` directly to their existing 
 
 Use a domain's `context.ts` to describe the dependencies its routes receive. Construct those dependencies in bootstrap and pass them into registration and handler factories. Handlers should use the supplied capabilities rather than initialize SDK clients or database connections.
 
+Expose distinct route responsibilities as named context dependencies when that makes their implementation traceable. For example, `AssignmentContext` has separate `assignments` and `submissionReviews` stores; do not hide review methods by spreading them into the assignment store. Trace the dependency from bootstrap construction through route registration/context to the handler. Cohesive composition, such as billing reads/mutations or job scheduling/execution, does not require splitting solely for symmetry. Demo assembly must supply every extracted store with the same request transaction and preserve its actor fence and outside-request rejection.
+
 Keep domain-specific transport concerns in the route group: cookies, role checks, and response/error policy. Put transport capabilities used by multiple groups in focused modules under `routes/`. A cohesive `helpers.ts` is sufficient until distinct responsibilities justify splitting it. Use descriptive filenames or a helper directory when extracting; avoid an unrelated general utilities collection. Local indexes can simplify imports, while files within a group import their supporting modules directly to avoid circular dependencies.
 
 Keep reusable application workflows in `application/<domain>/`, provider-specific requests in `integrations/<provider>/`, and database operations in `persistence/<domain>/`. Add an application layer when there is a workflow to coordinate; do not require every simple route/store call to pass through an otherwise empty service. Keep SDK response interpretation in the integration and persistence guarantees in the store.
@@ -214,6 +220,14 @@ Place cross-domain request parsing and error inspection in `routes/helpers/`: `p
 Keep status-to-error-contract mappings together in `routes/error-responses.ts`. Routes import their named group mapping directly and keep success responses local. Preserve the group-specific status codes and contracts, including optional parser positions; shared mappings do not install error handlers, authorization, or rate limits. Import `RouteSchema` from `routes/setup.ts` rather than introducing domain aliases or `schemas.ts` files that only repeat error status maps.
 
 Keep route error classification in each group's `errors.ts`; registration keeps cookie clearing and sanitized logging explicit. Preserve classification precedence when extracting it. Name substantial session-refresh and invitation-redemption stages, retaining expiry checks and shared transaction managers.
+
+## API: persistence refactoring
+
+Keep store factories focused on assembling public operations and showing their transaction boundaries. Domain-local `types.ts`, `queries.ts`, response projections and named workflow helpers can hold their supporting details. These filenames describe useful responsibilities, not a required template for every store. Keep contract-to-entity enum conversion in persistence; transport-neutral policy/calculation belongs in application modules.
+
+Extracted persistence helpers may query, acquire locks, mutate entities and flush. Pass the caller's `DatabaseManager` explicitly; the helper must not fork a new manager or open an independent transaction to perform part of an atomic operation. Preserve filters, population, ordering, lock modes, refresh options, validation/error precedence and flush sequence. Retain dynamic `@logiclab/db` runtime imports where required by the API's module setup, alongside type-only imports for entity shapes.
+
+Keep operations whose order establishes correctness together even when moving them to another file. For example, attempt creation/upsert and locked refresh belong together; payment-event application keeps duplicate handling, validation, purchase/entitlement effects and receipt persistence in one function. The public store retains the surrounding transaction and prerequisite locks. Document caller obligations when a helper relies on an existing transaction, authorization or lock. Extracting a helper does not authorize changing those guarantees or making it available through another route.
 
 ## API: security and lifecycle invariants
 
@@ -228,6 +242,8 @@ Bootstrap owns shared resource construction and cleanup, including partial initi
 Colocate tests with the module they cover; keep reusable fixtures and invocation helpers in `services/api/test`. Use injected dependencies and mocked SDK calls for deterministic unit/route checks. Bootstrap tests should verify resource ownership and failure cleanup without making external requests.
 
 Use existing behavior tests to validate structural changes, adding coverage for material gaps rather than every new file. Run `npm run check` for API code refactors; run database integration/schema checks when persistence mappings or guarantees are involved. Live Cognito checks are separate, intentional verification steps and must not be implied by passing mocked tests. Documentation-only changes need relevant link and whitespace checks.
+
+For a focused gap review, inspect existing cases and neighboring suites before adding coverage. A single-operation handler test may rely on group security tests or database integration tests for failures and ownership. Fill concrete omissions such as exactly-full final pages, rejected refreshes that must not rewrite sessions, stale request/confirmation cancellation and failed transactions that must leave no writes. Prefer regression assertions about these observable guarantees over direct tests of every extracted mapper or helper; leave adequately covered files unchanged.
 
 ## Web: routing and page composition
 
@@ -266,6 +282,8 @@ Keep resets, typography, and base form controls in `styles/global.css`, and reus
 Keep account-specific form/link styling beside the account page and truth-table styling beside the truth-table feature, imported by their composition components. Put responsive rules beside the selectors they modify. These remain ordinary global CSS stylesheets; use descriptive selectors and account for cascade order. Split by actual ownership rather than creating empty stylesheets for every page.
 
 ## Web: state-hook readability
+
+When extracting from a large editor or hook, start with controlled field groups, action/confirmation panels and pure calculations for defaults, dirty baselines, capabilities or option changes. Pass values and callbacks explicitly. Keep state and request ownership with the existing component/hook unless a separate state responsibility is clear; avoid introducing a request framework for a readability change. For discriminated inputs, narrow child props with the matching union member, such as `Extract<ProofStep, { kind: 'inference' }>`, rather than casts. Preserve identities, explicit saves, blank/false distinctions, dirty notifications, cancellation and late-response guards. Promote helpers across pages only when their existing semantics actually match; sharing pagination code must not silently change deduplication, ordering or replacement behavior.
 
 Keep hooks in a local `hooks/` directory within their owning page or feature. Reserve a root hooks directory for behavior shared across unrelated features if that need arises. Keep domain state and request lifecycles visible in each hook. Use named operations for session restoration, account transitions/logout reconciliation, class mutations, and page loading. Extract pure answer serialization and classroom-page merging into focused feature helpers; do not combine unrelated workflows into a generic state hook.
 

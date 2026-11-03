@@ -1,3 +1,4 @@
+import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -70,6 +71,7 @@ for (const mode of ['normal', 'demo'] as const) {
           config: { APP_ORIGIN: origin, secureCookies: false },
           service: { authenticate: async () => active },
           assignments: await createAssignmentStore(orm),
+          submissionReviews: await createSubmissionReviewStore(orm),
         },
         demo,
       });

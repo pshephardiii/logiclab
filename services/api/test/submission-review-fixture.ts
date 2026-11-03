@@ -14,7 +14,7 @@ export const review = {
 };
 export function submissionReviewFixture() {
   const fixture = assignmentFixture();
-  fixture.assignments.listSubmissions.mockResolvedValue([submissionSummary]);
-  fixture.assignments.findSubmission.mockResolvedValue(review);
+  fixture.submissionReviews.listSubmissions.mockResolvedValue([submissionSummary]);
+  fixture.submissionReviews.findSubmission.mockResolvedValue(review);
   return fixture;
 }

@@ -9,13 +9,13 @@ import {
 import { sessionId } from '../../../../test/auth-fixture';
 
 test('delegates owner scope for getAssignmentSubmissions', async () => {
-  const { context, assignments, user } = submissionReviewFixture();
+  const { context, submissionReviews, user } = submissionReviewFixture();
   const response = await getAssignmentSubmissionsHandler(context)({
     cookies: { logiclab_session: sessionId },
     params: { assignmentId: assignment.id },
     query: {},
   } as unknown as FastifyRequest);
-  expect(assignments.listSubmissions).toHaveBeenCalledWith(user.id, assignment.id, {
+  expect(submissionReviews.listSubmissions).toHaveBeenCalledWith(user.id, assignment.id, {
     limit: 21,
     offset: 0,
   });

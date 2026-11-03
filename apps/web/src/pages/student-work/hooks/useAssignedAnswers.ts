@@ -1,4 +1,4 @@
-import { isFinishedProofAttempt } from '@logiclab/logic-engine/proof/completion';
+import { assignmentCompletionReady } from '../helpers/assigned-work-state';
 import { useCallback, useMemo, useState } from 'react';
 import type { ConceptualAnswer } from '@logiclab/contracts';
 import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
@@ -19,7 +19,6 @@ import {
   blankConceptualAnswer,
   savedConceptualAnswers,
   sameConceptualAnswer,
-  conceptualAnswerFilled,
 } from '../../../features/assignment/helpers/conceptual-answers';
 
 /** Local drafts and saved baselines only; requests and feedback lifecycles stay with the caller. */
@@ -43,27 +42,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     [answers, baseline, choiceAnswers, choiceBaseline, proofAnswers, proofBaseline],
   );
   const completionReady = useMemo(
-    () =>
-      Boolean(assignment?.items.length) &&
-      Boolean(
-        assignment?.items.every((item) =>
-          'exercise' in item
-            ? submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
-                (answer) => answer.value !== null,
-              )
-            : item.content.type === 'derivation'
-              ? isFinishedProofAttempt({
-                  problem: {
-                    ruleCatalogVersion: item.content.ruleCatalogVersion,
-                    premises: item.content.premises,
-                    conclusion: item.content.conclusion,
-                    permittedRuleIds: item.content.rules.map((rule) => rule.id),
-                  },
-                  proof: proofAnswers[item.id]?.proof,
-                })
-              : conceptualAnswerFilled(choiceAnswers[item.id]),
-        ),
-      ),
+    () => assignmentCompletionReady(assignment, { answers, choiceAnswers, proofAnswers }),
     [assignment, answers, choiceAnswers, proofAnswers],
   );
 
