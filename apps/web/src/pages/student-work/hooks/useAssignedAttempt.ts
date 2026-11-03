@@ -1,3 +1,4 @@
+import { assignedWorkCapabilities } from '../helpers/assigned-work-state';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ConceptualAnswer, FitchProof, ProofCheckReport } from '@logiclab/contracts';
@@ -53,16 +54,13 @@ export function useAssignedAttempt(assignmentId: string) {
   const checks = useAbortableRequest();
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
-  const hasFinalSubmission =
-    assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
-  const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
-  const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
-  const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
-  const solutionAvailable =
-    assignment?.solutionAccess === 'anytime' ||
-    (assignment?.solutionAccess === 'instructor_release' &&
-      Boolean(assignment.answersRevealedAt)) ||
-    (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
+  const {
+    hasFinalSubmission,
+    requiresCompleteAnswers,
+    allowsImmediateFeedback,
+    allowsExplicitCheck,
+    solutionAvailable,
+  } = assignedWorkCapabilities(assignment, attempt);
 
   const cancelCheck = useCallback(() => {
     if (checkTimer.current !== null) clearTimeout(checkTimer.current);

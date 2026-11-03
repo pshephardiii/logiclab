@@ -1,3 +1,4 @@
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
@@ -59,10 +60,7 @@ export function useClassBilling(classId: string) {
       if (kind === 'plans') {
         const page = await api.listPlans(signal, offset);
         if (!signal.aborted) {
-          setPlans((old) => [
-            ...old,
-            ...page.plans.filter((row) => !old.some((item) => item.id === row.id)),
-          ]);
+          setPlans((old) => appendPageById(old, page.plans));
           setPlanNext(page.nextOffset);
         }
       } else {
@@ -70,10 +68,7 @@ export function useClassBilling(classId: string) {
         if (!signal.aborted)
           setData((old) => ({
             ...page,
-            purchases: [
-              ...(old?.purchases ?? []),
-              ...page.purchases.filter((row) => !old?.purchases.some((item) => item.id === row.id)),
-            ],
+            purchases: appendPageById(old?.purchases ?? [], page.purchases),
           }));
       }
     } catch (caught) {

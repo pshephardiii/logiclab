@@ -1,3 +1,4 @@
+import { ACCOUNT_FORM_TITLES } from '../constants/account-copy';
 import { PasswordFields } from './PasswordFields';
 import type { FormEvent, MouseEvent } from 'react';
 import type { AccountView } from '../../../features/auth/hooks/useAccount';
@@ -8,14 +9,6 @@ type Props = {
   busy: boolean;
   onSubmit: (fields: Record<string, string>) => Promise<void>;
   onResend: (email: string) => Promise<void>;
-};
-
-const titles: Record<AccountView, string> = {
-  login: 'Sign in',
-  signup: 'Create account',
-  confirm: 'Confirm email',
-  'forgot-password': 'Send reset code',
-  'reset-password': 'Reset password',
 };
 
 /**
@@ -85,7 +78,7 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
         )}
         {needsPassword && <PasswordFields newPassword={newPassword} />}
         <div className="action-row">
-          <button type="submit">{busy ? 'Please wait…' : titles[view]}</button>
+          <button type="submit">{busy ? 'Please wait…' : ACCOUNT_FORM_TITLES[view]}</button>
           {view === 'confirm' && (
             <button type="button" className="secondary" onClick={handleResend}>
               Resend code

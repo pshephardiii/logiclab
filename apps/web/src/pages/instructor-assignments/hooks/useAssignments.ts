@@ -1,3 +1,5 @@
+import { assignmentActionNotice } from '../helpers/assignment-action-notice';
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
@@ -37,12 +39,7 @@ export function useAssignments(classId: string) {
         const page = await api.listAssignments(classId, filter, offset, signal);
         if (!signal.aborted) {
           setAssignments((previous) =>
-            offset
-              ? [
-                  ...previous,
-                  ...page.assignments.filter((item) => !previous.some((old) => old.id === item.id)),
-                ]
-              : page.assignments,
+            offset ? appendPageById(previous, page.assignments) : page.assignments,
           );
           setNext(page.nextOffset);
         }
@@ -146,17 +143,7 @@ export function useAssignments(classId: string) {
     if (!selected) return false;
     return mutate(
       (signal) => api.assignmentAction(selected.id, action, signal),
-      action === 'release-grades'
-        ? 'Grades released. Answer access is unchanged.'
-        : action === 'reveal-answers'
-          ? selected.assessmentMode === 'completion_only'
-            ? 'Answers revealed. Completion status is unchanged.'
-            : 'Answers revealed. Grade release is unchanged.'
-          : action === 'publish'
-            ? 'Assignment published. Content and policy are locked.'
-            : action === 'archive'
-              ? 'Assignment archived.'
-              : 'Assignment restored.',
+      assignmentActionNotice(action, selected.assessmentMode),
     );
   }
   return {

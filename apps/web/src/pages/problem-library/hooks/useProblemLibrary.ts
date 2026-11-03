@@ -1,3 +1,4 @@
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { ProblemArchiveFilter } from '@logiclab/contracts';
@@ -31,12 +32,7 @@ export function useProblemLibrary() {
         const page = await api.listProblems(filter, offset, signal);
         if (!signal.aborted) {
           setProblems((previous) =>
-            offset === 0
-              ? page.problems
-              : [
-                  ...previous,
-                  ...page.problems.filter((item) => !previous.some((old) => old.id === item.id)),
-                ],
+            offset === 0 ? page.problems : appendPageById(previous, page.problems),
           );
           setNextOffset(page.nextOffset);
         }

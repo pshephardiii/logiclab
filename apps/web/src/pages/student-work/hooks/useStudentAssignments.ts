@@ -1,3 +1,4 @@
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { AssignmentSummary } from '@logiclab/contracts';
@@ -20,12 +21,7 @@ export function useStudentAssignments(classId: string) {
         const page = await listAssignedWork(classId, offset, signal);
         if (!signal.aborted) {
           setAssignments((previous) =>
-            offset
-              ? [
-                  ...previous,
-                  ...page.assignments.filter((item) => !previous.some((old) => old.id === item.id)),
-                ]
-              : page.assignments,
+            offset ? appendPageById(previous, page.assignments) : page.assignments,
           );
           setNext(page.nextOffset);
         }

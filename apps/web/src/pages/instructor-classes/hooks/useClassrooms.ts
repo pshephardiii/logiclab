@@ -1,6 +1,6 @@
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
-import { appendClassroomPage } from '../../../features/classroom/helpers/classroom-pages';
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useEffect, useState } from 'react';
 import type { ClassroomSummary } from '@logiclab/contracts';
 import { AccountApiError } from '../../../api/errors';
@@ -32,7 +32,7 @@ export function useClassrooms() {
     const result = await listClassrooms(signal, append ? (nextOffset ?? 0) : 0);
     if (signal.aborted) return;
     setClassrooms((current) =>
-      append ? appendClassroomPage(current, result.classrooms) : result.classrooms,
+      append ? appendPageById(current, result.classrooms) : result.classrooms,
     );
     setNextOffset(result.nextOffset);
   }

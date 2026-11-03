@@ -1,16 +1,9 @@
+import { ACCOUNT_VIEW_HEADINGS, ACCOUNT_NAVIGATION_ITEMS } from '../constants/account-copy';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AccountForm } from './AccountForm';
-import type { useAccount, AccountView } from '../../../features/auth/hooks/useAccount';
+import type { useAccount } from '../../../features/auth/hooks/useAccount';
 
 type Props = { account: ReturnType<typeof useAccount> };
-
-const headings: Record<AccountView, string> = {
-  login: 'Welcome back',
-  signup: 'Join LogicLab',
-  confirm: 'Check your email',
-  'forgot-password': 'Recover your account',
-  'reset-password': 'Choose a new password',
-};
 
 /**
  * Composes account status, workflow navigation, and forms from provider-owned state.
@@ -21,7 +14,9 @@ export function AccountPanel({ account }: Props) {
     <>
       <section className="panel" aria-labelledby="account-heading" aria-busy={account.busy}>
         <p className="eyebrow">LogicLab / Your account</p>
-        <h1 id="account-heading">{account.user ? 'You’re signed in' : headings[account.view]}</h1>
+        <h1 id="account-heading">
+          {account.user ? 'You’re signed in' : ACCOUNT_VIEW_HEADINGS[account.view]}
+        </h1>
         {account.error && (
           <p className="error" role="alert">
             {account.error}
@@ -54,25 +49,18 @@ export function AccountPanel({ account }: Props) {
               onResend={(email) => account.run('resend', { email })}
             />
             <div className="account-links">
-              {(['login', 'signup', 'confirm', 'forgot-password'] as const)
-                .filter((view) => view !== account.view)
-                .map((view) => (
+              {ACCOUNT_NAVIGATION_ITEMS.filter(({ view }) => view !== account.view).map(
+                ({ view, label }) => (
                   <button
                     className="text-button"
                     key={view}
                     disabled={account.busy}
                     onClick={() => account.navigate(view)}
                   >
-                    {
-                      {
-                        login: 'Sign in',
-                        signup: 'Create account',
-                        confirm: 'Confirm email',
-                        'forgot-password': 'Forgot password?',
-                      }[view]
-                    }
+                    {label}
                   </button>
-                ))}
+                ),
+              )}
             </div>
           </>
         )}

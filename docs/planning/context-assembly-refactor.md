@@ -88,3 +88,23 @@ After the line-field extractions, all 304 existing frontend tests and the produc
 Added the cohesive `assignment-form-state.ts` helper module for normalized assignment defaults, proof-policy eligibility and dirty/derived form checks. A private metadata helper supplies the same baseline for initialization and comparison; `assignmentItemState` remains responsible for occurrence identity, point validity/change detection and totals. `AssignmentForm` retains React state, initialization-time policy validation, its dirty-notification effect, short `readOnly`/`graded`/ID expressions and event/request handlers. The shared `SelectedProblem` type now lives with the form helpers instead of being exported by a UI component; `AssignmentItems` imports it as a type. No constants file or new limits were introduced.
 
 On November 3, 2026, all 304 existing frontend tests and the production build, including TypeScript checking, passed. Formatting and whitespace checks passed. No test files were added or modified; existing form tests cover dirty/reverted state, policy transitions, point bounds, retained failed saves, read-only work and proof-mode restrictions through the extracted helpers. Backend/database checks and a browser walkthrough were not repeated for this pure frontend refactor. Logs: `/private/tmp/assignment-form-extraction-tests.log` and `assignment-form-extraction-build.log`.
+
+## Slice 5: seven remaining page-helper extractions
+
+Implemented the seven user-approved frontend candidates:
+
+1. `assignmentPolicyTransition` derives the next learning policy and answer-reset flag. `AssignmentPolicyFields` retains proof-mode guards, event handling and notice/grade-timing updates.
+2. `assignedWorkCapabilities` and `assignmentCompletionReady` derive student-work eligibility/readiness. Hook state, memo dependencies, requests, cancellation and timers remain in their original owners.
+3. `conceptualPreviewData` shapes instructor preview content and its separate privileged answer payload. Preview answer/reveal state and ordinary content redaction remain unchanged.
+4. Conceptual option helpers perform text changes, moves and removal while preserving IDs and clearing a removed correct selection. React updates and add-option identity generation remain in the component.
+5. Shared `appendPageById` replaces existing append/dedup calculations in assignment, submission, problem, billing and classroom lists. The old classroom-only helper was removed after its callers migrated. Existing rows are preserved; only incoming IDs already in the current list are excluded. Order and duplicates within the incoming page are unchanged. Call sites that previously appended without filtering remain unchanged, as do first-page replacement and request lifecycles.
+6. `assignmentActionNotice` selects existing publish/archive/restore/release messages independently from mutation handling.
+7. Account-specific constants group existing form titles, headings and navigation items. Labels, navigation order, field visibility and account actions are unchanged.
+
+On November 3, 2026, frontend type checking, all 304 existing web tests and the production build passed. Formatting and whitespace checks passed. No test files were added or modified. Backend/database suites and a real-browser walkthrough were not repeated for these frontend-only pure extractions. Logs: `/private/tmp/page-helpers-types.log`, `page-helpers-tests.log`, `page-helpers-build.log` and `page-helpers-format-check.log`. The separate test-gap review remains pending.
+
+### Answer-options component follow-up
+
+Extracted the multiple-choice Answer options section into the controlled `ConceptualAnswerOptions` component. It receives options, the correct-option ID and editing callbacks. `ConceptualProblemFields` retains the full fields object, existing pure edit helpers and new-option UUID generation, alongside question, true/false and explanation controls. Existing labels, radio grouping, option limits, order controls and selection-clearing behavior are preserved.
+
+After this follow-up, all 304 existing frontend tests and the production build, including TypeScript checking, passed on November 3, 2026. Formatting and whitespace checks passed. No test files changed. Logs: `/private/tmp/answer-options-tests.log` and `answer-options-build.log`; backend/database and real-browser checks were not repeated for the component extraction.

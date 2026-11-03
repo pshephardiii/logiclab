@@ -1,3 +1,4 @@
+import { appendPageById } from '../../../helpers/append-page-by-id';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import type { SubmissionSummary, SubmissionReview } from '@logiclab/contracts';
@@ -25,12 +26,7 @@ export function useSubmissionReview(assignmentId: string) {
         const page = await listSubmissions(assignmentId, offset, signal);
         if (!signal.aborted) {
           setSubmissions((previous) =>
-            offset
-              ? [
-                  ...previous,
-                  ...page.submissions.filter((item) => !previous.some((old) => old.id === item.id)),
-                ]
-              : page.submissions,
+            offset ? appendPageById(previous, page.submissions) : page.submissions,
           );
           setNext(page.nextOffset);
         }
