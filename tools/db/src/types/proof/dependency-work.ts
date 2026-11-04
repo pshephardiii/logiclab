@@ -17,7 +17,7 @@ export type DependencyProofStep =
       discharges: { assumptionId: string | null; conclusionId: string | null }[];
     };
 
-/** Staged exact JSON reference type, not admission into persisted problem/answer unions. */
+/** Exact dependency JSON used by private references and staged student answer types. */
 export type DependencyProof = {
   proofVersion: 1;
   format: 'dependency';

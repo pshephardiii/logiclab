@@ -132,3 +132,4 @@ export type {
 } from './types/submission-grading-revision/grading.ts';
 export type { DependencyProof, DependencyProofStep } from './types/proof/dependency-work.ts';
 export type { DependencyDerivationDefinition } from './types/problem/dependency-derivation.ts';
+export type { DependencyDerivationAnswer } from './types/assignment-attempt/dependency-derivation-work.ts';
