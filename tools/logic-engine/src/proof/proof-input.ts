@@ -1,48 +1,10 @@
+import { InputFailure, record, array, stringLimit, ids } from './proof-input-fields';
 import {
   PROOF_LIMITS,
   proofCheckInputSchema,
   type ProofCheckInput,
   type ProofDiagnostic,
 } from '@logiclab/contracts';
-
-class InputFailure extends Error {
-  constructor(
-    readonly code: ProofDiagnostic['code'],
-    message: string,
-  ) {
-    super(message);
-  }
-}
-function record(value: unknown, keys: readonly string[]): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value))
-    throw new InputFailure('INVALID_STRUCTURE', 'Proof input must contain plain data objects.');
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null)
-    throw new InputFailure('INVALID_STRUCTURE', 'Proof input must contain plain data objects.');
-  for (const key in value) {
-    if (!Object.hasOwn(value, key)) continue;
-    if (!keys.includes(key))
-      throw new InputFailure('INVALID_STRUCTURE', 'Proof input contains unsupported fields.');
-    const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-    if (descriptor.get || descriptor.set)
-      throw new InputFailure('INVALID_STRUCTURE', 'Proof input must not contain accessors.');
-  }
-  return value as Record<string, unknown>;
-}
-function array(value: unknown, maximum: number): unknown[] {
-  if (!Array.isArray(value))
-    throw new InputFailure('INVALID_STRUCTURE', 'Expected a proof data list.');
-  if (value.length > maximum)
-    throw new InputFailure('RESOURCE_LIMIT', 'Proof input list limit exceeded.');
-  return value;
-}
-function stringLimit(value: unknown, maximum: number): void {
-  if (typeof value === 'string' && value.length > maximum)
-    throw new InputFailure('RESOURCE_LIMIT', 'Proof input text limit exceeded.');
-}
-function ids(value: Record<string, unknown>, keys: readonly string[]): void {
-  for (const key of keys) stringLimit(value[key], 36);
-}
 
 /** Check list/text bounds before Zod visits elements; never recursively traverse unknown fields. */
 export function readProofInput(

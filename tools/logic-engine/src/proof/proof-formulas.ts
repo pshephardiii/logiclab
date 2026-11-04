@@ -1,4 +1,4 @@
-import type { ProofCheckInput } from '@logiclab/contracts';
+import type { ProofProblem } from '@logiclab/contracts';
 import { FormulaParseError } from '../parser/errors';
 import { getPropositionalRule } from './rule-catalog';
 import { parseProofFormula } from './parse-formula';
@@ -56,7 +56,7 @@ export function readFormula(
 }
 
 export function readProblem(
-  input: ProofCheckInput,
+  input: { problem: ProofProblem },
   budget: ProofBudget,
   diagnostics: StructureDiagnostics,
 ) {

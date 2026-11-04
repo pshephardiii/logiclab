@@ -2,6 +2,8 @@
 
 Branch: `025-feat-dependency-proof-format`, following completed Fitch checking/authoring/student work and instructor grading/review (020–024). See [the agreed sequence](logical-derivations.md#025-and-026-additional-formats). This document is the implementation-slice record; broader API/data/product documentation will be consolidated at branch closeout.
 
+Current status: slices 1–2 provide staged contracts, dependency-set arithmetic and a standalone bounded checker. Instructor definitions, saved assigned work and UI still admit only Fitch. The remaining branch work will connect dependency authoring/reference certification and student/review workflows before application admission.
+
 ## Confirmed direction — November 4, 2026
 
 The user approved explicit textbook-style dependency annotations: students list the premise/assumption line IDs supporting each line, the checker validates those sets, and discharge cites a temporary assumption plus a concluding line. An accepted final proof may depend only on the stated premises. This is a separate proof representation, not a renderer over nested Fitch boxes or automatic conversion of existing work.
@@ -33,12 +35,12 @@ The structural/checker slice must enforce:
 5. Treat discharge as local to that inference. Other lines can reuse the earlier assumption only while retaining it in their own computed dependency sets. There is no global marking that makes a source disappear from unrelated derivations.
 6. Require the actual final line to match the target with no remaining temporary-assumption dependencies. Unused mistakes still prevent automatic acceptance, as in Fitch. An incomplete proof is review-needed; unsupported/resource/configuration failures remain unassessable, not invented zero grades. Preserve deterministic budgets and the existing report/grading distinctions.
 
-These are implementation requirements for the next slice, not guarantees already supplied by the transport contracts or set helpers.
+The standalone checker delivered in slice 2 enforces these requirements. The transport contracts and set helpers alone do not certify a proof.
 
 ## Slice boundaries
 
 1. **This slice:** separate bounded draft/input contracts, shared proof field validators, pure dependency-set arithmetic/comparison and regression tests. Existing Fitch public exports and acceptance remain unchanged.
-2. Add bounded structural/reference resolution and a dependency checker using shared formula parsing/equality, rule patterns and diagnostic/support semantics. Test valid proofs and invalid near-misses, including discharge/cross-context cases and resource failures.
+2. **Completed:** bounded structural/reference resolution and a standalone dependency checker using shared formula parsing/equality, rule patterns and diagnostic/support semantics. Valid/invalid proofs, discharge/cross-context cases and resource failures have regression coverage.
 3. Add immutable dependency-format instructor definitions, accepted-reference publication, rule/label controls and authoring editors. Keep student admission guarded until the remaining workflow is complete.
 4. Extend saved student work, explicit checks, completion/graded finalization, independent references and read-only instructor grading/review. Verify normal/demo journeys and retained evidence, then finish docs/PR notes.
 
@@ -51,3 +53,25 @@ No database/migration, authoring/student UI, new report/result version, live for
 Formatting, whitespace and this document's local Markdown target were checked. Logs: `/private/tmp/dependency-slice1-contracts.log`, `dependency-slice1-engine.log`, `dependency-slice1-api.log`, `dependency-slice1-check.log` and `dependency-slice1-format-check.log`. Existing Jest VM-module and Vitest test-environment advisories remain.
 
 No database/entity/migration, HTTP handler, authoring/student UI or persisted proof/result type changed, so PostgreSQL checks and browser walkthroughs were not repeated. No user development database, environment setting, external provider or infrastructure was changed. The set helpers assume resolved trusted citations; structural validity, shared-rule application, support propagation and target checking remain for the next slice. The branch is not complete and no PR draft or next branch was created.
+
+## Slice 2: dependency structure, checking and reports
+
+`checkDependencyProof` is available through the existing `@logiclab/logic-engine/proof` public entry. It accepts bounded plain data and returns the existing version-1 `ProofCheckReport`; it does not award points, authorize a request or reveal private references. Callers must supply the authoritative problem. The existing `checkProof` entry remains Fitch-only, and no authoring/student contract or endpoint admits dependency work yet.
+
+The implementation separates these responsibilities:
+
+- `dependency-input.ts`: format/version, strict field and bounded-list/text preflight before schema parsing. Shared `proof-input-fields.ts` rejects object accessors, non-enumerable accessor fields, list holes/accessors and custom list properties/iterators without invoking them. These guards also harden the existing Fitch input boundary while retaining valid JSON behavior.
+- `dependency-structure.ts`: unique source identities, available source annotations, earlier ordinary citations, assumption/conclusion chronology and distinct discharge assumptions. Null discharge fields remain incomplete work; invalid references are not exposed as partially resolved citations.
+- `dependency-steps.ts`: computed source sets independent of written annotations, exact annotation validation, authoritative premise formulas, local rule checking and upstream invalid/unknown support propagation. Missing computed support stays unknown rather than becoming an invented empty set. Ordinary repeated line citations remain legal when the rule permits them; dependency annotations must still be sets.
+- `parsed-rule.ts`: shared formula obligations, permissions, arity, diagnostics and conservative comparison charging over the existing 19 catalog variants. Fitch and dependency adapters resolve their own structure and invoke the same rule library. The shared formula/problem reader accepts either input's common problem shape without changing parsing semantics.
+- `check-dependency-proof.ts`: composes preflight, authoritative configuration, structure, formula parsing, step/support checking and the actual last-line target. Final computed dependencies must contain no temporary assumption. An independently established target still requires review if any unused line is wrong. The shared deterministic work/diagnostic budgets return explicit unassessable reports on exhaustion, never successful partial checking.
+
+No global box closure is inferred. An earlier assumption can be reused by a later inference if that inference retains the assumption in its computed support. An unused valid assumption does not itself impose a global scope on an otherwise independent final theorem. Discharge still requires actual earlier assumption/conclusion endpoints and cannot erase support from another citation or branch.
+
+### Slice 2 verification — November 4, 2026
+
+`npm run check` passed type checks, 1,675 tests (448 engine, 899 API, 328 web) and production builds. The 58 new checker/boundary cases cover all 19 rules, direct-rule parity with Fitch, conditional/negative/classical/case discharge, nested/vacuous and locally reused assumptions, cross-context support retention, wrong/duplicate/missing/forward annotations, authoritative premise failures, invalid/unfinished citations, actual final-line targets, unused errors, disabled/unknown/arity failures, malformed configurations, resource/diagnostic exhaustion, input preservation and safe raw-object/list rejection in both checkers. Focused proof runs passed before full checks; the final full run also includes two regression cases for downstream unknown/invalid support.
+
+Built public ESM/CommonJS imports passed six accepted/review/unassessable smoke cases, report-schema validation, input preservation and continued rejection by the Fitch-only entry. Formatting, whitespace and this document's local Markdown target were checked. Logs: `/private/tmp/dependency-slice2-focused.log`, `dependency-slice2-check.log`, `dependency-slice2-final-check.log` and `dependency-slice2-format-check.log`. Existing Jest VM-module and Vitest performance advisories remain.
+
+No database, migration, API route, authored definition, saved-result type, UI or template changed. PostgreSQL checks and browser walks were not repeated for this standalone engine slice; existing Fitch engine/API/UI regressions passed in the full check. No user development database, environment, provider or infrastructure was changed. Next: versioned dependency-format owner definitions/private references and checked publication, followed by editors/student/review integration. Live format admission stays guarded until the complete workflow passes.

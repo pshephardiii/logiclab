@@ -21,3 +21,6 @@ export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
 export { isFinishedProofAttempt } from './attempt-completeness';
 export { inferenceDependencyIds, dependencySetsMatch } from './dependency-sets';
 export type { DischargedDependencySet } from './dependency-sets';
+export { analyzeDependencyStructure } from './dependency-structure';
+export type { DependencyStructureResult, DependencyReferences } from './dependency-structure';
+export { checkDependencyProof } from './check-dependency-proof';
