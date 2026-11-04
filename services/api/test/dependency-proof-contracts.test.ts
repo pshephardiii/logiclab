@@ -120,7 +120,7 @@ test.each(['steps', 'dependencies', 'lineReferences', 'discharges'] as const)(
   },
 );
 
-test('staged dependency contracts do not enable current checking, authored definitions or assigned responses', () => {
+test('Fitch-only contracts keep rejecting dependency input after shared workflows support both formats', () => {
   expect(proofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
   expect(derivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
   expect(

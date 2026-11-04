@@ -87,7 +87,7 @@ async function seed(
   });
   const published = await problems.publish(owner.id, problem.id);
   if (published.status !== 'published') throw new Error('Fixture publication failed');
-  // Internal fixture: graded admission stays guarded; practice admission is supported.
+  // Internal fixture isolates draft behavior from assignment authoring.
   const assignment = em.create(db.Assignment, {
     classroom,
     title: 'Proof practice fixture',

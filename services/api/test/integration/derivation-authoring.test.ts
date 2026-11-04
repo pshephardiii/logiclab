@@ -12,7 +12,6 @@ import {
   libraryProblemDefinition,
   libraryReferenceCheck,
 } from '../../src/application/problem/library-definition';
-import { AssignmentOperationError } from '../../src/application/assignment/errors';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 const url = process.env.TEST_DATABASE_URL;
@@ -122,7 +121,7 @@ for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixtu
       assert.equal(await store.setArchived(foreign.id, draft.id, true), null);
     }));
 
-  test(`${format}: invalid owner edits roll back metadata and accepted derivation snapshots enter graded assignments (when supported)`, async () =>
+  test(`${format}: invalid owner edits roll back metadata and accepted derivation snapshots enter graded assignments`, async () =>
     fixture(async (orm, db) => {
       const em = orm.em.fork();
       const owner = em.create(db.User, {
@@ -153,19 +152,6 @@ for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixtu
         feedbackTiming: 'on_submission',
         solutionAccess: 'never',
       } as const;
-      if (format === 'dependency') {
-        await assert.rejects(
-          assignments.create(owner.id, classroom.id, {
-            ...input,
-            problemVersionIds: [...input.problemVersionIds],
-          }),
-          (error) =>
-            error instanceof AssignmentOperationError &&
-            error.reason === 'proof_format_unavailable',
-        );
-        assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 0);
-        return;
-      }
       const graded = await assignments.create(owner.id, classroom.id, {
         ...input,
         problemVersionIds: [...input.problemVersionIds],

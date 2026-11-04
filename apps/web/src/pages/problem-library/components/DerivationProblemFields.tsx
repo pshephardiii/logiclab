@@ -74,8 +74,8 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       )}
       <p className="help">
         Save an unfinished statement now. Publication requires an accepted reference under these
-        exact premises, conclusion and permitted rules. Dependency derivations cannot be assigned
-        yet.
+        exact premises, conclusion and permitted rules. Published snapshots can be added to
+        assignments.
       </p>
       <section aria-label="Derivation premises">
         <h3>Premises</h3>

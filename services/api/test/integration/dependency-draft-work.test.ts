@@ -109,7 +109,7 @@ for (const mode of ['normal', 'demo'] as const) {
       const draft = await problems.create(owner.id, { title: 'Pinned dependency', definition });
       const published = await problems.publish(owner.id, draft.id);
       if (published.status !== 'published') assert.fail('Expected fixture publication');
-      // Deliberate persistence fixture: public assignment admission stays guarded in this slice.
+      // Direct persistence fixture isolates draft HTTP behavior from assignment authoring.
       const assignment = em.create(db.Assignment, {
         classroom,
         title: 'Staged dependency practice',

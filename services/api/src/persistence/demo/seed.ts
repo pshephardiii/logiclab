@@ -1,7 +1,11 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import type { DemoWorkspace } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import { DEMO_TEMPLATE, DEMO_CONCEPTUAL_QUESTIONS } from '../../application/demo/template';
+import {
+  DEMO_TEMPLATE,
+  DEMO_CONCEPTUAL_QUESTIONS,
+  DEMO_DERIVATIONS,
+} from '../../application/demo/template';
 import { createBillingStore } from '../billing/store';
 import { createBillingService } from '../../application/billing/service';
 import { createSimulatorProvider } from '../../integrations/payments/simulator/provider';
@@ -118,5 +122,49 @@ export async function seedDemoWorkspace(
     solutionAccess: 'instructor_release',
   });
   await assignments.publish(instructor.id, mixed.id);
+  const proofVersionIds: string[] = [];
+  for (const example of DEMO_DERIVATIONS) {
+    const draft = await problems.create(instructor.id, example);
+    const publication = await problems.publish(instructor.id, draft.id);
+    if (publication.status !== 'published') throw new Error('Demo derivation publication failed.');
+    proofVersionIds.push(publication.version.id);
+  }
+  for (const example of [
+    {
+      title: DEMO_TEMPLATE.proofPracticeAssignmentTitle,
+      instructions: DEMO_TEMPLATE.proofPracticeInstructions,
+      assessmentMode: 'ungraded_practice' as const,
+      feedbackTiming: 'on_check' as const,
+      solutionAccess: 'anytime' as const,
+    },
+    {
+      title: DEMO_TEMPLATE.proofGradedAssignmentTitle,
+      instructions: DEMO_TEMPLATE.proofGradedInstructions,
+      assessmentMode: 'graded' as const,
+      feedbackTiming: 'on_submission' as const,
+      solutionAccess: 'instructor_release' as const,
+    },
+    {
+      title: DEMO_TEMPLATE.proofCompletionAssignmentTitle,
+      instructions: DEMO_TEMPLATE.proofCompletionInstructions,
+      assessmentMode: 'completion_only' as const,
+      feedbackTiming: 'on_submission' as const,
+      solutionAccess: 'instructor_release' as const,
+    },
+  ]) {
+    const proofAssignment = await assignments.create(instructor.id, funded.id, {
+      ...example,
+      ...(example.assessmentMode === 'graded'
+        ? { gradeReleaseTiming: 'instructor_release' as const }
+        : {}),
+      ...(example.assessmentMode === 'graded'
+        ? {
+            problemVersionIds: [],
+            items: proofVersionIds.map((problemVersionId) => ({ problemVersionId, maxPoints: 20 })),
+          }
+        : { problemVersionIds: proofVersionIds }),
+    });
+    await assignments.publish(instructor.id, proofAssignment.id);
+  }
   return { instructorId: instructor.id, studentId: student.id };
 }

@@ -1,6 +1,5 @@
 export type AssignmentFailure =
   | 'proof_mode_unavailable'
-  | 'proof_format_unavailable'
   | 'release_unavailable'
   | 'invalid_scoring'
   | 'invalid_policy'

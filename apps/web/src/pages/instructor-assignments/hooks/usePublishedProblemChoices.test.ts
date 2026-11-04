@@ -105,7 +105,7 @@ test('practice choices include published proofs and disappear immediately when p
   expect(hook.result.current.versions).toEqual([proof, version]);
 });
 
-test('dependency publications stay unavailable even when Fitch derivations are permitted', async () => {
+test('dependency publications appear when derivations are permitted and preserve pagination', async () => {
   const { derivationDraft } = await import('../../../../test/derivation');
   if (derivationDraft.definition.type !== 'derivation') throw new Error('Expected derivation');
   const dependency = {
@@ -122,10 +122,10 @@ test('dependency publications stay unavailable even when Fitch derivations are p
   const hook = renderHook(() => usePublishedProblemChoices(true));
   act(() => hook.result.current.selectProblem(version.problemId));
   await waitFor(() => expect(hook.result.current.versionNext).toBe(20));
-  expect(hook.result.current.versions).toEqual([]);
+  expect(hook.result.current.versions).toEqual([dependency]);
   await act(async () => {
     await hook.result.current.loadVersions(20);
   });
-  expect(hook.result.current.versions).toEqual([version]);
+  expect(hook.result.current.versions).toEqual([dependency, version]);
   expect(hook.result.current.versionNext).toBeNull();
 });

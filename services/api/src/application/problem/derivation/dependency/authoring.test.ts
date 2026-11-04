@@ -30,7 +30,6 @@ import {
 } from './authoring';
 import { DerivationAuthoringError, DerivationPublicationError } from '../errors';
 import { libraryProblemDefinition } from '../../library-definition';
-import { AssignmentOperationError } from '../../../assignment/errors';
 import { supportedAssignmentDefinition } from '../../../assignment/definition-support';
 
 type Assert<T extends true> = T;
@@ -239,7 +238,7 @@ test('format certification never reuses or converts an accepted Fitch reference'
   );
   expect(derivationDefinitionSchema.safeParse(definition()).success).toBe(false);
 });
-test('owner library admits dependency definitions while assignment and student admission remain guarded', () => {
+test('owner library and assignment admission accept dependency definitions while Fitch-only contracts stay separate', () => {
   const value = dependencyPublicationDefinition(definition());
   expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
@@ -247,12 +246,12 @@ test('owner library admits dependency definitions while assignment and student a
       .success,
   ).toBe(true);
   expect(libraryProblemDefinition(value)).toEqual(value);
-  expect(() =>
+  expect(
     supportedAssignmentDefinition(value, {
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
     }),
-  ).toThrow(AssignmentOperationError);
+  ).toEqual(value);
   expect(
     derivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof }).success,
   ).toBe(false);

@@ -97,7 +97,7 @@ for (const mode of ['normal', 'demo'] as const)
             explanation: 'PRIVATE_CONCEPTUAL_KEY',
           },
         ];
-        // Explicit staging fixture: assignment admission is still closed to dependency publications.
+        // Direct persistence fixture isolates finalization/review from authoring.
         const assignment = em.create(db.Assignment, {
           classroom,
           title: 'Mixed dependency final',

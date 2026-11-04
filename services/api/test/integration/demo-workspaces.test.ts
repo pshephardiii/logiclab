@@ -1,3 +1,4 @@
+import { savedStudentCheckSchema } from '@logiclab/contracts/saved-student-work';
 import { createBillingStore } from '../../src/persistence/billing/store';
 import { createBillingService } from '../../src/application/billing/service';
 import { createSimulatorProvider } from '../../src/integrations/payments/simulator/provider';
@@ -12,7 +13,11 @@ import { createDemoWorkspaceService } from '../../src/application/demo/workspace
 import { createDemoAccess } from '../../src/persistence/demo/access';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
-import { DEMO_TEMPLATE, DEMO_CONCEPTUAL_QUESTIONS } from '../../src/application/demo/template';
+import {
+  DEMO_TEMPLATE,
+  DEMO_CONCEPTUAL_QUESTIONS,
+  DEMO_DERIVATIONS,
+} from '../../src/application/demo/template';
 import { readDemoPolicy } from '../../src/config/demo';
 import { demoSessionHash } from '../../src/application/demo/service';
 
@@ -50,7 +55,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     assert.equal(await em.count(db.User, { demoWorkspace: id }), 2);
     assert.equal(await em.count(db.Classroom, {}), 2);
     assert.equal(await em.count(db.Enrollment, {}), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 3);
+    assert.equal(await em.count(db.ProblemVersion, {}), 5);
     assert.equal(
       await em.count(db.ClassPurchase, { status: db.PurchaseStatus.Paid, lastEventSequence: 1 }),
       1,
@@ -202,7 +207,7 @@ test('reset restores the template, clears submitted work and billing history, an
         owner: { demoWorkspace: first.workspaceId },
         title: 'Visitor changed this',
       }),
-      3,
+      5,
     );
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
@@ -231,7 +236,7 @@ test('reset restores the template, clears submitted work and billing history, an
         classroom: { owner: { demoWorkspace: first.workspaceId } },
         publishedAt: { $ne: null },
       }),
-      3,
+      6,
     );
     assert.equal(
       await em.count(db.Assignment, {
@@ -290,7 +295,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
       db.DemoWorkspaceStatus.Active,
     );
     assert.equal(await em.count(db.User, { demoWorkspace: first.workspaceId }), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 3);
+    assert.equal(await em.count(db.ProblemVersion, {}), 5);
     assert.equal(await em.count(db.ClassPurchase, {}), 1);
     assert.equal(await em.count(db.AssignmentAttempt, { submittedAt: { $ne: null } }), 1);
     const nextId = randomUUID();
@@ -485,7 +490,7 @@ test('reset cannot revive an idle-expired workspace or extend its absolute deadl
     assert.equal(await em.count(db.User, { demoWorkspace: workspace.workspaceId }), 2);
   }));
 
-test('template 5 seeds weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
+test('template 6 preserves weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -561,4 +566,96 @@ test('template 5 seeds weighted graded assignments and score-free private practi
       'mixed_v1',
     );
     assert.equal((await work.submit(student.id, graded.id, 0)).gradePending, false);
+  }));
+
+test('template 6 certifies both proof formats and seeds explicit practice, weighted grading and score-free completion', async () =>
+  fixture(async (orm, db) => {
+    const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
+    const em = orm.em.fork();
+    const owner = await em.findOneOrFail(db.User, {
+      demoWorkspace: workspace.workspaceId,
+      role: db.UserRole.Instructor,
+    });
+    const student = await em.findOneOrFail(db.User, {
+      demoWorkspace: workspace.workspaceId,
+      role: db.UserRole.Student,
+    });
+    const assignments = await createAssignmentStore(orm),
+      work = await createStudentWorkStore(orm);
+    for (const [title, mode] of [
+      [DEMO_TEMPLATE.proofPracticeAssignmentTitle, 'ungraded_practice'],
+      [DEMO_TEMPLATE.proofGradedAssignmentTitle, 'graded'],
+      [DEMO_TEMPLATE.proofCompletionAssignmentTitle, 'completion_only'],
+    ] as const) {
+      const row = await em.findOneOrFail(db.Assignment, { classroom: { owner }, title });
+      const detail = await assignments.findOwned(owner.id, row.id);
+      assert(row.publishedAt);
+      assert.equal(detail.assessmentMode, mode);
+      assert.deepEqual(
+        detail.items.map((item) =>
+          item.problemVersion.definition.type === 'derivation'
+            ? item.problemVersion.definition.format
+            : null,
+        ),
+        ['fitch', 'dependency'],
+      );
+      const read = await work.read(student.id, row.id);
+      assert(!JSON.stringify(read).includes('referenceProof'));
+      assert(!JSON.stringify(read).includes('Discharge that assumption'));
+      let revision = 0;
+      for (const [index, item] of read.assignment.items.entries()) {
+        const example = DEMO_DERIVATIONS[index]!;
+        const answers = { type: 'derivation' as const, proof: example.definition.referenceProof! };
+        if (mode === 'ungraded_practice') {
+          const checked = await work.check(
+            student.id,
+            row.id,
+            savedStudentCheckSchema.parse({ itemId: item.id, answers }),
+          );
+          assert('type' in checked.feedback && checked.feedback.type === 'derivation');
+          assert.equal(checked.feedback.report.status, 'accepted');
+          assert.equal(await em.fork().count(db.AssignmentAttempt, { assignment: row.id }), 0);
+          const solution = await work.solution(student.id, row.id, item.id);
+          assert('type' in solution.solution && solution.solution.type === 'derivation');
+          assert.equal(solution.solution.format, example.definition.format);
+        } else {
+          const { savedStudentAnswersSchema } =
+            await import('@logiclab/contracts/saved-student-work');
+          const saved = await work.save(
+            student.id,
+            row.id,
+            savedStudentAnswersSchema.parse({ revision, itemId: item.id, answers }),
+          );
+          revision = saved.revision;
+        }
+      }
+      if (mode === 'ungraded_practice') {
+        assert.equal(detail.feedbackTiming, 'on_check');
+        await assert.rejects(work.submit(student.id, row.id, 0), /submission_unavailable/);
+      } else {
+        const final = await work.submit(student.id, row.id, revision);
+        if (mode === 'graded') {
+          assert(final.gradePending);
+          assert.equal(final.result, null);
+          await assignments.release(owner.id, row.id, 'answers');
+          assert((await work.read(student.id, row.id)).attempt!.gradePending);
+          await assignments.release(owner.id, row.id, 'grades');
+          assert.equal(
+            (await work.read(student.id, row.id)).attempt!.score!.summary.earnedPoints,
+            40,
+          );
+        } else {
+          assert.equal(final.score, undefined);
+          assert.equal(final.result?.gradingVersion, 'proof_completion_v1');
+          if (final.result?.gradingVersion !== 'proof_completion_v1')
+            assert.fail('Expected proof completion');
+          assert.deepEqual(final.result.summary.proofVerification, {
+            verified: 2,
+            errorsFound: 0,
+            unavailable: 0,
+            total: 2,
+          });
+        }
+      }
+    }
   }));

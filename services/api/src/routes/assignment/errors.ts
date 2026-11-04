@@ -13,11 +13,6 @@ export class AssignmentError extends Error {
   }
 }
 const failures = {
-  proof_format_unavailable: {
-    status: 409,
-    code: 'DERIVATION_ASSIGNMENT_FORMAT_UNAVAILABLE',
-    message: 'Dependency derivations cannot be assigned yet. Choose a supported published version.',
-  },
   proof_mode_unavailable: {
     status: 409,
     code: 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE',

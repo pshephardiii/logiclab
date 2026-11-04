@@ -8,7 +8,7 @@ Allow roughly five to ten minutes. Labels below match the current demo template;
 
 Choose **Explore as instructor**. Under **Classes**, find:
 
-- **Demo: Introduction to Logic** — funded, with an enrolled student and three published assignments.
+- **Demo: Introduction to Logic** — funded, with an enrolled student and six published assignments.
 - **Demo: Try simulated checkout** — initially unpaid.
 
 Open **Problem library** to inspect **Implication and disjunction**. It has an editable draft and an immutable published version. Its formula is `(P -> Q) & (!P | Q)`. Open **Assignments**, select the funded class, and inspect **Your first truth-table assignment**. The assignment pins a published version rather than following future draft edits.
@@ -33,7 +33,7 @@ Try several quick edits: checking waits until you pause. **Check answers** runs 
 
 Use the **Problem** selector to open **Recognize a contradiction**. Select True to see Incorrect, then False to see Correct. This is a filled answer, not a blank. Open **Classify a formula** and try Contradiction before Tautology. **Save problem** persists only the selected occurrence; switching problems retains local edits. **Clear answer** restores an unanswered choice. **Show assigned solution** reveals the correct answer and explanation; hiding it does not change your selected answer.
 
-New visitors receive template 4. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
+New visitors receive template 6. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
 
 ## 4. Review the submission as the instructor
 
@@ -79,13 +79,21 @@ Operational limits and cleanup commands are in [local demo setup](public-demo.md
 
 Open the mixed graded assignment as instructor: its three problems carry 20, 5 and 5 points. Published allocations are locked. Choose **Duplicate as draft**, change **Points for problem 1**, and save. Verify the total updates and the saved value survives reload. Reordering carries each problem's allocation; repeated copies can have different weights. Completion-only and practice hide point controls.
 
-For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 5's starting weights and clears submissions.
+For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 6's starting weights and clears submissions.
+
+## Seeded Fitch and dependency proofs
+
+1. As student, open **Practice proofs in two formats**. Each problem proves `P -> P`; its format is pinned by the instructor. Editing never checks automatically. Use **Check proof** explicitly, **Save problem** to persist and **Show assigned solution** for the separate reference.
+2. For the dependency problem, start the proof, add an assumption line `P`, and leave its self-dependency selected. Add an inference `P -> P`, choose **Conditional proof**, and select line 1 as both the discharge assumption and conclusion. Leave the final dependency set empty. Check, save and reload.
+3. Compare the Fitch problem: open a subproof with assumption `P`, set its endpoint to that assumption, then use **Conditional proof** at root citing the closed subproof. Save each occurrence separately.
+4. Open **Derivations: separate grade and answer release** to try graded submission (40 points total). Pre-submission checks are unavailable. Switch to instructor to review finals, adjust a flagged proof's points/comments and independently choose **Release grades** and **Reveal answers**.
+5. Open **Complete a Fitch and dependency proof** for completion-only work. Finished attempts may contain logical mistakes; final diagnostics flag those mistakes without a score. Instructor reference reveal remains separate.
 
 ## Optional: author and assign a Fitch derivation
 
 There is no seeded derivation yet. Create a disposable example to explore practice, completion-only and graded proofs. Allow extra time for these steps:
 
-1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation (Fitch)**. Leave premises empty and enter `P -> P` as the conclusion.
+1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation** and choose **Fitch** under **Proof format**. Leave premises empty and enter `P -> P` as the conclusion.
 2. Enable **Allow Implication introduction**. Keep its label or choose a suggested/custom label; no other rule needs permission for this example.
 3. Select **Start reference proof**, then **Open subproof**. Enter `P` in **Formula for line 1**. Set **Final line of Subproof 1 at line 1** to `1. P`.
 4. Set **New line scope** to **Root proof**, select **Add inference line**, and enter `P -> P` on line 2. Choose the enabled implication-introduction label under **Rule for line 2**, and select the first subproof under **Line 2 subproof 1**.
@@ -96,13 +104,13 @@ There is no seeded derivation yet. Create a disposable example to explore practi
 9. Switch to instructor and duplicate the assignment as a draft. Give the copy a distinct title, choose **Completion only** and **When I reveal answers**, then save and publish. Completion proof feedback is at submission, not immediate/manual checking.
 10. As student, open the completion copy. Start the proof. Enter a finished but incorrect attempt: use `Q` for the assumption, close that block on its assumption line, and add root `P -> P` with implication introduction citing that block. This fills required fields and reaches the target, but the inference is wrong. There must be no **Check proof** or pre-submission diagnostics. Save, confirm final submission and submit.
 11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
-12. Reset discards these owner-authored examples and student work, restoring seed template 5 while retaining the original workspace deadline. Do not expect proofs in the default seeded list.
+12. Reset discards these owner-authored examples and student work, restoring seed template 6 while retaining the original workspace deadline, including the seeded Fitch/dependency proof journeys.
 
-This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; other proof formats remain future branches. For graded instructor review, continue below.
+This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency proofs are also available; natural-deduction trees remain a later branch. For graded instructor review, continue below.
 
 ## Optional: grade a Fitch submission
 
-Use a published Fitch problem from the preceding section. Proofs are owner-authored; demo seed template 5 is unchanged.
+Use a published Fitch problem from the preceding section. You can author a new proof or use the Fitch version in the seeded proof assignments.
 
 1. As instructor, open **Assignments**, choose the funded demo class, and create a graded assignment. Add the proof version twice, set the first occurrence to 20 points and the second to 10, select **When I release grades** and **When I reveal answers**, save and publish.
 2. Switch to student and open the new assignment. Start each proof; leave one incomplete/incorrect and finish the other correctly. Save each problem. There is no **Check proof** for graded work. Confirm final submission. Expect an awaiting-release receipt with no reports, points or instructor comments.

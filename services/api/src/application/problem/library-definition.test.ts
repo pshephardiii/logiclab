@@ -1,6 +1,5 @@
 import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
 import { supportedAssignmentDefinition } from '../assignment/definition-support';
-import { mapAssignmentError } from '../../routes/assignment/errors';
 import { DerivationPublicationError, DerivationAuthoringError } from './derivation/errors';
 import {
   createLibraryProblemRequestSchema,
@@ -69,18 +68,15 @@ test.each([
 });
 
 test.each(['graded', 'completion_only', 'ungraded_practice'])(
-  'dependency publication does not enable %s assignment admission',
+  'published dependency definitions support %s assignment admission under the shared policy',
   (assessmentMode) => {
     const value = dependencyDefinitionFixture();
     expect(publicationDefinition(value)).toEqual(value);
-    try {
-      supportedAssignmentDefinition(value, { assessmentMode, feedbackTiming: 'on_submission' });
-      throw new Error('Expected admission rejection');
-    } catch (error) {
-      expect(mapAssignmentError(error)).toMatchObject({
-        status: 409,
-        code: 'DERIVATION_ASSIGNMENT_FORMAT_UNAVAILABLE',
-      });
-    }
+    expect(
+      supportedAssignmentDefinition(value, {
+        assessmentMode,
+        feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
+      }),
+    ).toEqual(value);
   },
 );
