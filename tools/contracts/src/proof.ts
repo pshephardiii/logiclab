@@ -1,24 +1,13 @@
 import { z } from 'zod';
 
-/** Transport budgets, not a claim that a structurally bounded proof is valid. */
-export const PROOF_LIMITS = Object.freeze({
-  maxSteps: 200,
-  maxBlocks: 64,
-  maxBlockDepth: 16,
-  maxPremises: 50,
-  maxFormulaLength: 256,
-  maxPermittedRules: 64,
-  maxDiagnostics: 500,
-  maxCheckWork: 500_000,
-});
+import {
+  PROOF_LIMITS,
+  proofReferenceIdSchema as id,
+  proofFormulaTextSchema as formula,
+  proofRuleIdSchema as ruleId,
+} from './proof-fields';
+export { PROOF_LIMITS } from './proof-fields';
 
-const id = z.uuid().transform((value) => value.toLowerCase());
-const formula = z.string().max(PROOF_LIMITS.maxFormulaLength);
-const ruleId = z
-  .string()
-  .min(1)
-  .max(64)
-  .regex(/^[a-z][a-z0-9_]*$/);
 const scope = { id, blockId: id.nullable(), formula };
 
 /** Blank fields are retained draft work; syntax and references are checked by the engine later. */
