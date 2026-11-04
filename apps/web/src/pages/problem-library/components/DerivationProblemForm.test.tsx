@@ -184,16 +184,16 @@ test('premise bounds and archived locks prevent further authoring without trunca
   expect(screen.getByRole('button', { name: 'Add premise' })).toBeDisabled();
 });
 
-test('saved dependency drafts cannot be opened or overwritten by the Fitch editor', () => {
+test('saved dependency drafts open in their own editor without mutation', () => {
   const saved: LibraryProblemDraft = {
     ...derivationDraft,
     definition: { ...derivationDefinition, format: 'dependency', referenceProof: null },
   };
   const before = structuredClone(saved);
   const { onSave, onPreview } = setup(saved);
-  expect(screen.getByText(/Its editor is not available yet/)).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
-  expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
+  expect(screen.getByRole('button', { name: 'Start reference proof' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Open subproof' })).not.toBeInTheDocument();
   expect(onSave).not.toHaveBeenCalled();
   expect(onPreview).not.toHaveBeenCalled();
   expect(saved).toEqual(before);

@@ -3,24 +3,16 @@ import {
   type LibraryProblemDraft,
   type LibraryProblemDefinition,
 } from '@logiclab/contracts/problem-library';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
-
-export type EditableLibraryProblem = Omit<LibraryProblemDraft, 'definition'> & {
-  definition: Exclude<LibraryProblemDefinition, { format: 'dependency' }>;
-};
-
-/** Dependency editor support is staged separately; never reinterpret it as a Fitch draft. */
-export function isEditableLibraryProblem(
-  problem: LibraryProblemDraft,
-): problem is EditableLibraryProblem {
-  return problem.definition.type !== 'derivation' || problem.definition.format === 'fitch';
-}
+export type AuthoringDerivationDefinition = Extract<
+  LibraryProblemDefinition,
+  { type: 'derivation' }
+>;
 
 export type ProblemEditorFields = {
   title: string;
   instructions: string;
   type: LibraryProblemDefinition['type'];
-  derivation: DerivationDefinition;
+  derivation: AuthoringDerivationDefinition;
   derivationLabels: Record<string, string>;
   formula: string;
   question: string;
@@ -30,7 +22,7 @@ export type ProblemEditorFields = {
   correctOptionId: string;
 };
 
-export function initialProblemFields(problem: EditableLibraryProblem | null): ProblemEditorFields {
+export function initialProblemFields(problem: LibraryProblemDraft | null): ProblemEditorFields {
   const definition = problem?.definition;
   return {
     title: problem?.title ?? '',

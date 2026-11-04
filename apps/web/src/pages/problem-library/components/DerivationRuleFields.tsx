@@ -6,6 +6,7 @@ import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
 type Props = {
+  format: 'fitch' | 'dependency';
   rules: DerivationDefinition['rules'];
   labels: ProblemEditorFields['derivationLabels'];
   onChange: (
@@ -15,7 +16,7 @@ type Props = {
 };
 
 /** Preserve label drafts for disabled rules; the parent retains the full authored definition. */
-export function DerivationRuleFields({ rules, labels, onChange }: Props) {
+export function DerivationRuleFields({ format, rules, labels, onChange }: Props) {
   return (
     <section aria-label="Derivation rules">
       <h3>Permitted rules and labels</h3>
@@ -45,7 +46,8 @@ export function DerivationRuleFields({ rules, labels, onChange }: Props) {
             </label>
             <p className="help">
               {rule.category === 'classical' ? 'Classical rule. ' : ''}Cites {rule.lineReferences}{' '}
-              line(s) and {rule.subproofReferences} subproof(s).
+              line(s) and {rule.subproofReferences}{' '}
+              {format === 'dependency' ? 'assumption/conclusion discharge pair(s)' : 'subproof(s)'}.
             </p>
             <label htmlFor={`rule-label-${rule.id}`}>Label for {rule.label}</label>
             <input

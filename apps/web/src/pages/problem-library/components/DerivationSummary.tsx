@@ -37,11 +37,7 @@ export function DerivationSummary({
       ) : (
         <p>No rules enabled.</p>
       )}
-      {definition.format === 'fitch' ? (
-        <DerivationReferenceSummary definition={definition} />
-      ) : (
-        <p className="help">Dependency proof preview is not available yet.</p>
-      )}
+      <DerivationReferenceSummary definition={definition} />
     </div>
   );
 }

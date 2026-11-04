@@ -42,7 +42,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
   if (!proof)
     return (
       <section
-        className="fitch-proof"
+        className="proof-editor"
         aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
       >
         <h3>{heading}</h3>
@@ -87,7 +87,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
   }
   return (
     <section
-      className="fitch-proof"
+      className="proof-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
       <h3>{heading}</h3>
