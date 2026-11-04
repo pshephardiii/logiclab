@@ -214,6 +214,8 @@ Delivered in 024: graded admission is enabled with independent reference access,
 
 ### 025 and 026: additional formats
 
+025 is implemented: [dependency-style proofs](dependency-proof-format.md) now support authoring, published-format admission, student work and retained review through the existing grading/release rules. [Final verification](../verification/dependency-proof-format-verification.md) records the checks and limits. Template 6 seeds Fitch/dependency practice, graded and completion examples. 026 natural-deduction trees remain next; 027 still adds student-created practice and remaining cross-format/demo coverage rather than recreating the delivered seed work.
+
 Each format branch must deliver a complete vertical addition:
 
 1. Define its precise structure, references, assumptions/dependencies/discharge and supported rule variants; add an independently tested structural adapter over shared logical checks.

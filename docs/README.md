@@ -20,6 +20,7 @@ Documentation is grouped by purpose:
 
 ## Planning
 
+- [Dependency proof format](planning/dependency-proof-format.md)
 - [Logical derivation planning](planning/logical-derivations.md)
 - [Assignment scoring](planning/assignment-scoring.md)
 - [Propositional proof-checker foundation](planning/propositional-proof-checker.md)
@@ -79,6 +80,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Dependency proofs, cross-format workflows and demo template 6](verification/dependency-proof-format-verification.md)
 
 - [Derivation grading, instructor adjustments and browser evidence](verification/derivation-grading-review-verification.md)
 

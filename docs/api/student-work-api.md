@@ -126,9 +126,9 @@ Student graded work displays problem allocations and total available points. Rel
 
 ## Assigned Fitch proofs (022)
 
-Graded, practice and completion-only assignments can contain pinned version-1 Fitch derivations alongside tables and conceptual questions. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
+Graded, practice and completion-only assignments can contain pinned version-1 Fitch or dependency derivations alongside tables and conceptual questions. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
 
-A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
+A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"` or `"dependency"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
 
 Save a full bounded proof response for one occurrence using the existing revision protocol:
 
@@ -153,7 +153,7 @@ The solution endpoint returns `{ itemId, solution }`, where the authorized proof
 
 ### Completion finalization and review
 
-Proof-containing completion assignments require `feedbackTiming: "on_submission"`; legacy objective-only pre-submission completion assistance does not enable proof checking. The browser and server share a bounded finished-attempt predicate: nonblank formulas, selected premises/known permitted rules, required numbers of existing citations, closed valid block layout and an actual final root line structurally matching the requested target. Notation aliases are accepted, not arbitrary logical-equivalence rewrites. Wrong premise formulas, nonfinal syntax errors and invalid inference/scope/order citations can still be finished work; full proof verification is separate.
+Proof-containing completion assignments require `feedbackTiming: "on_submission"`; legacy objective-only pre-submission completion assistance does not enable proof checking. The browser and server share format-specific bounded finished-attempt predicates: nonblank formulas, selected premises/known permitted rules, required numbers of existing citations and an actual final target. Fitch requires closed valid block layout and a root target. Dependency requires filled assumption/conclusion discharge pairs and identifiable source annotations, ending at the target on a premise or inference line. Notation aliases are accepted, not arbitrary logical-equivalence rewrites. Wrong premise formulas, nonfinal syntax errors and invalid inference/scope/order citations can still be finished work; full proof verification is separate.
 
 Every objective companion must also be filled. Students save all edits and confirm before submitting. Incomplete work returns `409 ATTEMPT_INCOMPLETE` without partial writes. Once all work is finished, the server checks the saved proof against the pinned statement/rules and atomically freezes `proof_completion_v1`, final answers, report evidence, timestamp and revision. Each proof contributes one completed response; objective companions retain their completion units. No point score or pending-grade state is created. Logical mistakes or unavailable verification do not revoke completion.
 
@@ -170,3 +170,13 @@ Held final attempts expose `result: null`, `score: null`, `gradePending: true`, 
 Apply `Migration20261103120000` before using instructor decisions and rebuild matching packages. Older applications ignore adjusted scores/comments and cannot safely manage their retained demo history; coordinate rollback. See [owner grading operations](assignment-api.md#instructor-grading-and-adjustment-history-024) and [verification](../verification/derivation-grading-review-verification.md).
 
 Apply `Migration20261102120000` and rebuild matching contracts/engine/database/API/frontend outputs. Existing objective result formats are unchanged. Older readers cannot interpret proof responses or new result tags; coordinate application rollback. See [verification and limits](../verification/derivation-student-work-verification.md).
+
+## Dependency-format extension (025)
+
+The proof-aware saved-work schemas now carry both formats; `SavedDerivationAnswer`, `SavedDerivationContent` and `SavedDerivationSolution` describe those unions. `@logiclab/contracts/dependency-derivation-work` supplies the separate dependency answer/save/check shapes. Existing Fitch-only schemas continue rejecting dependency input; they are not substitutes for shared route schemas.
+
+The existing save/check/solution/submission URLs and revision envelope are unchanged. A dependency answer is `{ type: "derivation", proof: { proofVersion: 1, format: "dependency", steps: [...] } }`. Every step has stable `id`, `formula` and `dependencies` source-line IDs. Premises also have nullable `premiseId`; inferences have nullable `ruleId`, up to two `lineReferences` and up to two nullable assumption/conclusion discharge pairs. Drafts may be unfinished or wrong within shape/text/list limits. Statements, permissions, private references, reports and scores cannot be supplied as student work. The pinned definition chooses validation/checking; cross-format answers fail without partial writes.
+
+Student format is fixed by the publication, with separate occurrence drafts and explicit saving/checking. Reference reveal never replaces entries. Graded/completion proofs have no pre-submission check. Dependency completion allows filled logical errors, wrong source sets and forward/self citations for later feedback, but rejects missing targets, blank fields, unlinked/unknown identities, unfilled discharge fields or a final assumption alone. Completion is not verification of effort or logical correctness.
+
+Graded finalization retains the existing `proof_mixed_v1`/`points_v1`; completion retains `proof_completion_v1` without a score. Current result/grade/reveal rules, immutable retries and instructor award/history behavior apply to mixed-format assignments. No new migration or result version is introduced. Rebuild matching consumers; older applications cannot read dependency drafts/definitions and must not be rolled back onto them without compatibility review. See [verification and rollout](../verification/dependency-proof-format-verification.md).
