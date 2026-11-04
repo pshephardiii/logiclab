@@ -1,11 +1,14 @@
-import { isFinishedProofAttempt } from '@logiclab/logic-engine/proof/completion';
+import {
+  isFinishedProofAttempt,
+  isFinishedDependencyProofAttempt,
+} from '@logiclab/logic-engine/proof/completion';
 import {
   proofCompletionSubmissionResultSchema,
   summarizeProofCompletionVerification,
   type ProofCompletionSubmissionResult,
 } from '@logiclab/contracts/proof-submission';
-import { derivationContent } from '../problem/derivation-authoring';
-import { evaluateDerivationAnswer, validateDerivationAnswer } from './derivation-response';
+import { publicDerivationContent } from '../problem/derivation/projections';
+import { evaluateProofAnswer, validateProofAnswer } from './proof-response';
 import { evaluateAssignmentCompletion } from './mixed-evaluation';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 import { StudentWorkError } from './errors';
@@ -20,10 +23,12 @@ export function evaluateProofCompletion(
     if (item.definition.type !== 'derivation') return [];
     const value = responses.get(item.id);
     if (value === undefined) throw new StudentWorkError('incomplete_work');
-    const answer = validateDerivationAnswer(value);
-    const content = derivationContent(item.definition);
+    const content = publicDerivationContent(item.definition);
+    const answer = validateProofAnswer(content, value);
     if (
-      !isFinishedProofAttempt({
+      !(
+        content.format === 'dependency' ? isFinishedDependencyProofAttempt : isFinishedProofAttempt
+      )({
         problem: {
           ruleCatalogVersion: content.ruleCatalogVersion,
           premises: content.premises,
@@ -65,7 +70,7 @@ export function evaluateProofCompletion(
   }
   // Only after every proof/objective response is complete, generate fresh feedback for retained final work.
   for (const { item, answer, content } of proofs) {
-    const evidence = evaluateDerivationAnswer(
+    const evidence = evaluateProofAnswer(
       { itemId: item.id, problemVersionId: item.problemVersionId, content },
       answer,
     );

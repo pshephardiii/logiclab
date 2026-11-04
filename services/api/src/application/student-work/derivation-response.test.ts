@@ -1,3 +1,4 @@
+import { DerivationAuthoringError } from '../problem/derivation/errors';
 import { randomUUID } from 'node:crypto';
 import {
   saveDerivationAnswersSchema,
@@ -12,7 +13,7 @@ import {
   PROOF_LIMITS,
 } from '@logiclab/contracts';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
-import { derivationContent, DerivationAuthoringError } from '../problem/derivation-authoring';
+import { fitchContent } from '../problem/derivation/fitch/authoring';
 import { supportedProblemDefinition } from '../problem/definition-support';
 import { evaluateDerivationAnswer, validateDerivationAnswer } from './derivation-response';
 import { StudentWorkError } from './errors';
@@ -23,7 +24,7 @@ function fixture() {
   const authoritative = {
     itemId: randomUUID(),
     problemVersionId: randomUUID(),
-    content: derivationContent(definition),
+    content: fitchContent(definition),
   };
   return { definition, answer, authoritative };
 }

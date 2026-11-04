@@ -1,8 +1,19 @@
+import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 /** Versioned synthetic content only; billing terms come from the saved simulator plan. */
 export const DEMO_TEMPLATE = {
-  version: 5,
+  version: 6,
+  proofPracticeAssignmentTitle: 'Practice proofs in two formats',
+  proofGradedAssignmentTitle: 'Derivations: separate grade and answer release',
+  proofCompletionAssignmentTitle: 'Complete a Fitch and dependency proof',
+  proofPracticeInstructions:
+    'Try the same conditional proof in Fitch and dependency format. Check proof is explicit; save each problem separately. Instructor references are available anytime. There is no final submission.',
+  proofGradedInstructions:
+    'Each proof is worth 20 points (40 total). Save each problem before submitting. Verified proofs earn full credit; other work needs instructor review. Switch to the instructor to adjust points and release grades and answers independently.',
+  proofCompletionInstructions:
+    'Finish and save both proofs, then submit. Completion records no correctness score; proof diagnostics become available after submission. Switch to the instructor to reveal the reference answers.',
+
   assignmentPoints: 20,
   mixedPoints: [20, 5, 5],
   fundedClassName: 'Demo: Introduction to Logic',
@@ -54,6 +65,79 @@ export const DEMO_CONCEPTUAL_QUESTIONS: {
       correctOptionId: 'c1111111-1111-4111-8111-111111111111',
       explanation:
         'A tautology is true under every interpretation; a contradiction is always false; a contingency is true under some interpretations and false under others.',
+    },
+  },
+];
+
+/** Reference identities are local to each immutable proof; there are no global row references here. */
+const assumptionId = 'd1111111-1111-4111-8111-111111111111';
+const conclusionId = 'd2222222-2222-4222-8222-222222222222';
+const blockId = 'd3333333-3333-4333-8333-333333333333';
+const proofStatement = {
+  type: 'derivation' as const,
+  definitionVersion: 1 as const,
+  ruleCatalogVersion: 1 as const,
+  checkerVersion: 1 as const,
+  premises: [],
+  conclusion: 'P -> P',
+  rules: [{ id: 'implication_introduction', label: 'Conditional proof' }],
+  explanation:
+    'Assume P. The assumption itself supplies P. Discharge that assumption to conclude P → P without remaining assumptions.',
+};
+export const DEMO_DERIVATIONS: {
+  title: string;
+  instructions: string;
+  definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>;
+}[] = [
+  {
+    title: 'Conditional identity — Fitch',
+    instructions:
+      'Prove P → P using a Fitch subproof. Open an assumption P, set its endpoint, then cite the closed subproof with Conditional proof.',
+    definition: {
+      ...proofStatement,
+      format: 'fitch',
+      referenceProof: {
+        proofVersion: 1,
+        format: 'fitch',
+        steps: [
+          { kind: 'assumption', id: assumptionId, blockId, formula: 'P' },
+          {
+            kind: 'inference',
+            id: conclusionId,
+            blockId: null,
+            formula: 'P -> P',
+            ruleId: 'implication_introduction',
+            lineReferences: [],
+            subproofReferences: [blockId],
+          },
+        ],
+        blocks: [{ id: blockId, parentId: null, assumptionId, endId: assumptionId }],
+      },
+    },
+  },
+  {
+    title: 'Conditional identity — Dependency',
+    instructions:
+      'Prove P → P with explicit dependency sets. The assumption P depends on itself. Cite it as both assumption and conclusion in a discharge pair; the final line has an empty dependency set.',
+    definition: {
+      ...proofStatement,
+      format: 'dependency',
+      referenceProof: {
+        proofVersion: 1,
+        format: 'dependency',
+        steps: [
+          { kind: 'assumption', id: assumptionId, formula: 'P', dependencies: [assumptionId] },
+          {
+            kind: 'inference',
+            id: conclusionId,
+            formula: 'P -> P',
+            dependencies: [],
+            ruleId: 'implication_introduction',
+            lineReferences: [],
+            discharges: [{ assumptionId, conclusionId: assumptionId }],
+          },
+        ],
+      },
     },
   },
 ];

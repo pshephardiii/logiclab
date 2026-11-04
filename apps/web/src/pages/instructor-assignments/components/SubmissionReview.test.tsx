@@ -115,45 +115,74 @@ test('instructor list and detail show the retained point score', async () => {
   expect(screen.getAllByText('5 / 25 points (20%)')).toHaveLength(2);
 });
 
-test('completion review flags retained proof mistakes and displays read-only diagnostics without points or reference answers', async () => {
-  const { proofCompletionWork, proofCompletionFinal } =
-    await import('../../../../test/proof-work-fixture');
-  if (proofCompletionFinal.result?.gradingVersion !== 'proof_completion_v1')
-    throw new Error('Expected completion');
-  const submission = {
-    ...review.submission,
-    id: proofCompletionFinal.id,
-    submittedAt: proofCompletionFinal.submittedAt!,
-    summary: proofCompletionFinal.result.summary,
-  };
-  vi.mocked(api.listSubmissions).mockResolvedValue({ submissions: [submission], nextOffset: null });
-  vi.mocked(api.readSubmission).mockResolvedValue({
-    submission,
-    assignment: proofCompletionWork,
-    attempt: {
-      ...proofCompletionFinal,
-      result: proofCompletionFinal.result,
+test.each(['fitch', 'dependency'] as const)(
+  'completion review flags retained proof mistakes and displays read-only diagnostics without points or reference answers (%s)',
+  async (format) => {
+    const source = await import('../../../../test/proof-work-fixture');
+    const { dependencyAnswer } = await import('../../../../test/dependency-work-fixture');
+    const proofCompletionWork =
+      format === 'fitch'
+        ? source.proofCompletionWork
+        : {
+            ...source.proofCompletionWork,
+            items: source.proofCompletionWork.items.map((item) =>
+              'content' in item && item.content.type === 'derivation'
+                ? { ...item, content: { ...item.content, format: 'dependency' as const } }
+                : item,
+            ),
+          };
+    const proofCompletionFinal =
+      format === 'fitch'
+        ? source.proofCompletionFinal
+        : {
+            ...source.proofCompletionFinal,
+            answers: Object.fromEntries(
+              Object.keys(source.proofCompletionFinal.answers).map((id) => [
+                id,
+                structuredClone(dependencyAnswer),
+              ]),
+            ),
+          };
+    if (proofCompletionFinal.result?.gradingVersion !== 'proof_completion_v1')
+      throw new Error('Expected completion');
+    const submission = {
+      ...review.submission,
+      id: proofCompletionFinal.id,
       submittedAt: proofCompletionFinal.submittedAt!,
-      gradePending: false,
-      score: undefined,
-    },
-  });
-  const user = userEvent.setup();
-  render(<SubmissionReview assignmentId={proofCompletionWork.id} />);
-  expect(await screen.findByText(/Completed — verified: 1/)).toBeInTheDocument();
-  expect(screen.getByText(/Completed — errors found: 1/)).toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'student@example.test' }));
-  await screen.findByRole('heading', { name: 'Problem 1: First proof' });
-  await user.selectOptions(
-    screen.getByLabelText('Submitted problem'),
-    proofCompletionWork.items[1]!.id,
-  );
-  expect(await screen.findByText(/Premise does not match/)).toBeInTheDocument();
-  expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
-  expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
-  expect(screen.queryByText('Instructor solution')).not.toBeInTheDocument();
-});
+      summary: proofCompletionFinal.result.summary,
+    };
+    vi.mocked(api.listSubmissions).mockResolvedValue({
+      submissions: [submission],
+      nextOffset: null,
+    });
+    vi.mocked(api.readSubmission).mockResolvedValue({
+      submission,
+      assignment: proofCompletionWork,
+      attempt: {
+        ...proofCompletionFinal,
+        result: proofCompletionFinal.result,
+        submittedAt: proofCompletionFinal.submittedAt!,
+        gradePending: false,
+        score: undefined,
+      },
+    });
+    const user = userEvent.setup();
+    render(<SubmissionReview assignmentId={proofCompletionWork.id} />);
+    expect(await screen.findByText(/Completed — verified: 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Completed — errors found: 1/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'student@example.test' }));
+    await screen.findByRole('heading', { name: 'Problem 1: First proof' });
+    await user.selectOptions(
+      screen.getByLabelText('Submitted problem'),
+      proofCompletionWork.items[1]!.id,
+    );
+    expect(await screen.findByText(/Premise does not match/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Instructor solution')).not.toBeInTheDocument();
+  },
+);
 
 test('unavailable completion verification is labeled separately from logical mistakes', async () => {
   vi.mocked(api.listSubmissions).mockResolvedValue({

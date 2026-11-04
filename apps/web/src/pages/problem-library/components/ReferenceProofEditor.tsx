@@ -1,21 +1,29 @@
-import type { FitchProof } from '@logiclab/contracts';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
+import { DependencyProofEditor } from '../../../features/proof/dependency/DependencyProofEditor';
 
-/** Private definition stays at the authoring boundary; shared controls receive no key/explanation. */
+/** Private definition stays at the authoring boundary; controls receive no explanation/key. */
 export function ReferenceProofEditor({
   definition,
   onChange,
 }: {
-  definition: DerivationDefinition;
-  onChange: (proof: FitchProof | null) => void;
+  definition: AuthoringDerivationDefinition;
+  onChange: (definition: AuthoringDerivationDefinition) => void;
 }) {
-  return (
+  return definition.format === 'dependency' ? (
+    <DependencyProofEditor
+      key="dependency"
+      statement={definition}
+      proof={definition.referenceProof}
+      onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
+    />
+  ) : (
     <FitchProofEditor
-      statement={{ premises: definition.premises, rules: definition.rules }}
+      key="fitch"
+      statement={definition}
       proof={definition.referenceProof}
       purpose="reference"
-      onChange={onChange}
+      onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
     />
   );
 }

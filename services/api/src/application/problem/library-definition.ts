@@ -1,28 +1,42 @@
+import { DerivationPublicationError } from './derivation/errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { supportedProblemDefinition } from './definition-support';
-import { validateDerivationDefinition, checkDerivationReference } from './derivation-authoring';
-
-export class DerivationPublicationError extends Error {
-  constructor(readonly code: 'missing_reference' | 'rejected_reference') {
-    super('Derivation publication requires an accepted reference proof.');
-  }
-}
+import { validateFitchDefinition, checkFitchReference } from './derivation/fitch/authoring';
+import {
+  validateDependencyDefinition,
+  checkDependencyReference,
+} from './derivation/dependency/authoring';
+import type { DerivationReferenceCheck } from './derivation/reference-check';
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
-  return typeof value === 'object' &&
+  if (
+    typeof value === 'object' &&
     value !== null &&
     'type' in value &&
     value.type === 'derivation'
-    ? validateDerivationDefinition(value)
-    : supportedProblemDefinition(value);
+  ) {
+    return 'format' in value && value.format === 'dependency'
+      ? validateDependencyDefinition(value)
+      : validateFitchDefinition(value);
+  }
+  return supportedProblemDefinition(value);
+}
+
+/** Check the authoritative saved definition with its own format's checker. */
+export function libraryReferenceCheck(
+  definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
+): DerivationReferenceCheck {
+  return definition.format === 'dependency'
+    ? checkDependencyReference(definition)
+    : checkFitchReference(definition);
 }
 
 /** Call under the saved problem's lock immediately before creating its immutable snapshot. */
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
   const definition = libraryProblemDefinition(value);
   if (definition.type === 'derivation') {
-    const check = checkDerivationReference(definition);
+    const check = libraryReferenceCheck(definition);
     if (check.status === 'missing') throw new DerivationPublicationError('missing_reference');
     if (check.report.status !== 'accepted')
       throw new DerivationPublicationError('rejected_reference');

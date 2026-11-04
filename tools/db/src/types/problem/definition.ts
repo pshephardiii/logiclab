@@ -1,5 +1,6 @@
 import type { ProblemType } from './enums.ts';
 import type { DerivationDefinition } from './derivation.ts';
+import type { DependencyDerivationDefinition } from './dependency-derivation.ts';
 
 export type TruthTableDefinition = {
   type: `${ProblemType.TruthTable}`;
@@ -32,4 +33,7 @@ export type ConceptualProblemDefinition = TrueFalseDefinition | MultipleChoiceDe
  * Each variant owns its definition version. Student responses remain separate.
  */
 export type ProblemDefinition =
-  TruthTableDefinition | ConceptualProblemDefinition | DerivationDefinition;
+  | TruthTableDefinition
+  | ConceptualProblemDefinition
+  | DerivationDefinition
+  | DependencyDerivationDefinition;

@@ -1,8 +1,8 @@
 import { assignedWorkCapabilities } from '../helpers/assigned-work-state';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ConceptualAnswer, FitchProof, ProofCheckReport } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { ConceptualAnswer, ProofCheckReport } from '@logiclab/contracts';
+import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import {
   savedStudentAnswersSchema,
   savedStudentCheckSchema,
@@ -43,7 +43,7 @@ export function useAssignedAttempt(assignmentId: string) {
   );
   const [feedback, setFeedback] = useState<Record<string, StudentCheckResponse['feedback']>>({});
   const [proofFeedback, setProofFeedback] = useState<
-    Record<string, { proof: FitchProof; report: ProofCheckReport }>
+    Record<string, { proof: DerivationAnswer['proof']; report: ProofCheckReport }>
   >({});
   const [checkingItem, setCheckingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +146,13 @@ export function useAssignedAttempt(assignmentId: string) {
   function changeProofAnswer(itemId: string, snapshot: DerivationAnswer) {
     if (loading || action || attempt?.submittedAt) return;
     const item = assignment?.items.find((value) => value.id === itemId);
-    if (!item || !('content' in item) || item.content.type !== 'derivation') return;
+    if (
+      !item ||
+      !('content' in item) ||
+      item.content.type !== 'derivation' ||
+      item.content.format !== snapshot.proof.format
+    )
+      return;
     cancelCheck();
     setFeedback((previous) => {
       const next = { ...previous };

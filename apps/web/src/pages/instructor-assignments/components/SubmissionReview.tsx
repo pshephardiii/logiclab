@@ -38,7 +38,11 @@ export function SubmissionReview({
   const proofAnswer =
     response && !Array.isArray(response) && response.type === 'derivation'
       ? response
-      : blankDerivationAnswer();
+      : blankDerivationAnswer(
+          item && 'content' in item && item.content.type === 'derivation'
+            ? item.content.format
+            : 'fitch',
+        );
   const proofReport = item ? proofSubmissionFeedback(review?.attempt.result, item.id) : null;
   return (
     <section aria-label="Final submission review">

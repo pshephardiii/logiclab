@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import {
-  derivationDefinitionSchema,
-  type DerivationDefinition,
-} from '@logiclab/contracts/derivation';
+import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
-import { checkProof } from '@logiclab/logic-engine/proof';
+import { checkProof, checkDependencyProof } from '@logiclab/logic-engine/proof';
+import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
+import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
-export function LocalReferenceCheck({ definition }: { definition: DerivationDefinition }) {
+export function LocalReferenceCheck({ definition }: { definition: AuthoringDerivationDefinition }) {
   const snapshot = JSON.stringify(definition);
   const [checked, setChecked] = useState<{
     snapshot: string;
@@ -16,7 +15,11 @@ export function LocalReferenceCheck({ definition }: { definition: DerivationDefi
   } | null>(null);
   const current = checked?.snapshot === snapshot ? checked : null;
   function check() {
-    const parsed = derivationDefinitionSchema.safeParse(definition);
+    const parsed = (
+      definition.format === 'dependency'
+        ? dependencyDerivationDefinitionSchema
+        : derivationDefinitionSchema
+    ).safeParse(definition);
     if (!parsed.success) {
       setChecked({
         snapshot,
@@ -34,7 +37,7 @@ export function LocalReferenceCheck({ definition }: { definition: DerivationDefi
     }
     setChecked({
       snapshot,
-      report: checkProof({
+      report: (value.format === 'dependency' ? checkDependencyProof : checkProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
           premises: value.premises,

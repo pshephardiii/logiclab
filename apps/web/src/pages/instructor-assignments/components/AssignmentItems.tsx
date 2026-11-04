@@ -32,7 +32,7 @@ export function AssignmentItems({ items, readOnly, graded, onPoints, onMove, onR
               {item.version.definition.type === 'truth_table'
                 ? item.version.definition.formula
                 : item.version.definition.type === 'derivation'
-                  ? `Prove: ${item.version.definition.conclusion}`
+                  ? `${item.version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${item.version.definition.conclusion}`
                   : item.version.definition.question}
             </code>
             {graded && (

@@ -3,13 +3,16 @@ import {
   type LibraryProblemDraft,
   type LibraryProblemDefinition,
 } from '@logiclab/contracts/problem-library';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+export type AuthoringDerivationDefinition = Extract<
+  LibraryProblemDefinition,
+  { type: 'derivation' }
+>;
 
 export type ProblemEditorFields = {
   title: string;
   instructions: string;
   type: LibraryProblemDefinition['type'];
-  derivation: DerivationDefinition;
+  derivation: AuthoringDerivationDefinition;
   derivationLabels: Record<string, string>;
   formula: string;
   question: string;

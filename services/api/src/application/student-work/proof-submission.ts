@@ -5,8 +5,8 @@ import {
   type ProofSubmissionResult,
   type ProofSubmissionItem,
 } from '@logiclab/contracts/proof-submission';
-import { derivationContent } from '../problem/derivation-authoring';
-import { evaluateDerivationAnswer } from './derivation-response';
+import { publicDerivationContent } from '../problem/derivation/projections';
+import { evaluateProofAnswer } from './proof-response';
 import { evaluateAssignmentSubmission } from './mixed-evaluation';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
@@ -36,12 +36,18 @@ export function evaluateProofSubmission(
     if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
     const answer = responses.has(item.id)
       ? responses.get(item.id)
-      : { type: 'derivation', proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] } };
-    const evidence = evaluateDerivationAnswer(
+      : {
+          type: 'derivation',
+          proof:
+            item.definition.format === 'dependency'
+              ? { proofVersion: 1, format: 'dependency', steps: [] }
+              : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+        };
+    const evidence = evaluateProofAnswer(
       {
         itemId: item.id,
         problemVersionId: item.problemVersionId,
-        content: derivationContent(item.definition),
+        content: publicDerivationContent(item.definition),
       },
       answer,
     );

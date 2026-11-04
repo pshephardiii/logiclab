@@ -1,10 +1,13 @@
 import type { ConceptualAnswer } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentAssignment as StudentAssignment,
   SavedStudentAttempt as StudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
-import { isFinishedProofAttempt } from '@logiclab/logic-engine/proof/completion';
+import {
+  isFinishedProofAttempt,
+  isFinishedDependencyProofAttempt,
+} from '@logiclab/logic-engine/proof/completion';
 import type { Answers } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
 import { conceptualAnswerFilled } from '../../../features/assignment/helpers/conceptual-answers';
@@ -56,7 +59,9 @@ export function assignmentCompletionReady(
               (answer) => answer.value !== null,
             )
           : item.content.type === 'derivation'
-            ? isFinishedProofAttempt({
+            ? (item.content.format === 'dependency'
+                ? isFinishedDependencyProofAttempt
+                : isFinishedProofAttempt)({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

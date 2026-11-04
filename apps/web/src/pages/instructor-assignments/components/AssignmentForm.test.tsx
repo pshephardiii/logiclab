@@ -236,7 +236,7 @@ test('proof-containing drafts retain failed saves and switch among completion, p
     false,
   );
   await user.selectOptions(screen.getByLabelText('Assessment mode'), 'ungraded_practice');
-  expect(screen.getByText('Prove: P -> P')).toBeInTheDocument();
+  expect(screen.getByText('Fitch · Prove: P -> P')).toBeInTheDocument();
   expect(screen.queryByText('Private instructor explanation')).not.toBeInTheDocument();
   await user.type(screen.getByLabelText('Assignment title'), ' revised');
   await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));

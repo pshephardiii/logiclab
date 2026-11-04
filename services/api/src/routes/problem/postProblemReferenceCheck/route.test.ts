@@ -2,13 +2,13 @@ import { buildApp } from '../../../app';
 import { problemFixture, problem } from '../../../../test/problem-fixture';
 import { sessionId } from '../../../../test/auth-fixture';
 import { derivationDefinitionFixture } from '../../../../test/derivation-fixture';
-import { checkDerivationReference } from '../../../application/problem/derivation-authoring';
+import { checkFitchReference } from '../../../application/problem/derivation/fitch/authoring';
 
 const url = `/api/problems/${problem.id}/reference-check`;
 const result = {
   problemId: problem.id,
   updatedAt: problem.updatedAt,
-  check: checkDerivationReference(derivationDefinitionFixture()),
+  check: checkFitchReference(derivationDefinitionFixture()),
 };
 
 test('checks the saved owner reference, returns bounded diagnostics and never mutates library data', async () => {

@@ -1,6 +1,6 @@
 import { submissionReviewSchema } from '@logiclab/contracts';
 import { assignment as assignmentFixtureData } from '../../../test/assignment-fixture';
-import { derivationContent } from '../../application/problem/derivation-authoring';
+import { fitchContent } from '../../application/problem/derivation/fitch/authoring';
 import { effectiveAssignmentScore } from '../../application/assignment/instructor-grading';
 import { randomUUID } from 'node:crypto';
 import type {
@@ -222,7 +222,7 @@ function ownerReview() {
           title: 'Proof',
           instructions: null,
           maxPoints: 20,
-          content: derivationContent(derivationDefinitionFixture()),
+          content: fitchContent(derivationDefinitionFixture()),
         },
       ],
     },

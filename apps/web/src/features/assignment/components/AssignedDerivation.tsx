@@ -1,6 +1,10 @@
-import type { FitchProof, ProofCheckReport } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
-import type { DerivationSolution } from '@logiclab/contracts/derivation';
+import type { ProofCheckReport } from '@logiclab/contracts';
+import type {
+  SavedDerivationAnswer as DerivationAnswer,
+  SavedDerivationSolution as DerivationSolution,
+} from '@logiclab/contracts/saved-student-work';
+import { DependencyProofEditor } from '../../proof/dependency/DependencyProofEditor';
+import { DependencyProofSummary } from '../../proof/dependency/DependencyProofSummary';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
 import { FitchProofSummary } from '../../proof/components/FitchProofSummary';
@@ -11,7 +15,7 @@ type Props = {
   item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'derivation' } }>;
   answer?: DerivationAnswer;
   /** The caller must capture the checked proof and enforce checking/result-release permissions. */
-  feedback?: { proof: FitchProof; report: ProofCheckReport } | null;
+  feedback?: { proof: DerivationAnswer['proof']; report: ProofCheckReport } | null;
   /** Only supply after independently authorized answer reveal. */
   solution?: DerivationSolution | null;
   readOnly: boolean;
@@ -36,17 +40,20 @@ export function AssignedDerivation({
 }: Props) {
   const proof = answer?.proof ?? null;
   const report =
-    proof && feedback && JSON.stringify(proof) === JSON.stringify(feedback.proof)
+    proof &&
+    proof.format === item.content.format &&
+    feedback &&
+    JSON.stringify(proof) === JSON.stringify(feedback.proof)
       ? feedback.report
       : null;
   return (
-    <section className="panel assigned-item fitch-proof">
+    <section className="panel assigned-item proof-editor">
       <h2>
         Problem {item.position}: {item.title}
       </h2>
       {item.instructions && <p>{item.instructions}</p>}
       <p>
-        <strong>Format:</strong> Fitch
+        <strong>Format:</strong> {item.content.format === 'fitch' ? 'Fitch' : 'Dependency'}
       </p>
       <h3>Premises</h3>
       {item.content.premises.length ? (
@@ -73,8 +80,24 @@ export function AssignedDerivation({
       ) : (
         <p>No rules enabled.</p>
       )}
-      {readOnly ? (
-        <FitchProofSummary proof={proof} rules={item.content.rules} label="Your submitted proof" />
+      {proof && proof.format !== item.content.format ? (
+        <p role="alert" className="error">
+          The saved proof format does not match this problem. Reload saved work before editing.
+        </p>
+      ) : readOnly ? (
+        proof?.format === 'dependency' || item.content.format === 'dependency' ? (
+          <DependencyProofSummary
+            proof={proof?.format === 'dependency' ? proof : null}
+            rules={item.content.rules}
+            label="Your submitted proof"
+          />
+        ) : (
+          <FitchProofSummary
+            proof={proof?.format === 'fitch' ? proof : null}
+            rules={item.content.rules}
+            label="Your submitted proof"
+          />
+        )
       ) : (
         <>
           <p className="help">
@@ -83,18 +106,33 @@ export function AssignedDerivation({
             {onCheck && ' Check proof evaluates your current work without saving it.'}
           </p>
           <fieldset disabled={disabled} aria-label="Edit proof">
-            <FitchProofEditor
-              statement={item.content}
-              proof={proof}
-              purpose="student"
-              onChange={(next) => {
-                if (!readOnly && !disabled)
-                  onAnswer({
-                    type: 'derivation',
-                    proof: next ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
-                  });
-              }}
-            />
+            {item.content.format === 'dependency' ? (
+              <DependencyProofEditor
+                statement={item.content}
+                proof={proof?.format === 'dependency' ? proof : null}
+                purpose="student"
+                onChange={(next) => {
+                  if (!readOnly && !disabled)
+                    onAnswer({
+                      type: 'derivation',
+                      proof: next ?? { proofVersion: 1, format: 'dependency', steps: [] },
+                    });
+                }}
+              />
+            ) : (
+              <FitchProofEditor
+                statement={item.content}
+                proof={proof?.format === 'fitch' ? proof : null}
+                purpose="student"
+                onChange={(next) => {
+                  if (!readOnly && !disabled)
+                    onAnswer({
+                      type: 'derivation',
+                      proof: next ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+                    });
+                }}
+              />
+            )}
             {onCheck && (
               <button type="button" disabled={checking || disabled} onClick={onCheck}>
                 {checking ? 'Checking proof…' : 'Check proof'}
@@ -104,14 +142,22 @@ export function AssignedDerivation({
         </>
       )}
       {report && <ProofFeedback report={report} />}
-      {solution && (
+      {solution && solution.format === item.content.format && (
         <div className="conceptual-solution">
           <h3>Instructor solution</h3>
-          <FitchProofSummary
-            proof={solution.referenceProof}
-            rules={item.content.rules}
-            label="Instructor reference proof"
-          />
+          {solution.format === 'dependency' ? (
+            <DependencyProofSummary
+              proof={solution.referenceProof}
+              rules={item.content.rules}
+              label="Instructor reference proof"
+            />
+          ) : (
+            <FitchProofSummary
+              proof={solution.referenceProof}
+              rules={item.content.rules}
+              label="Instructor reference proof"
+            />
+          )}
           {solution.explanation && <p>{solution.explanation}</p>}
         </div>
       )}

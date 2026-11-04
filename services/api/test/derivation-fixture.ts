@@ -1,3 +1,4 @@
+import type { DependencyDerivationDefinition } from '@logiclab/contracts/dependency-derivation';
 import type { DerivationDefinition } from '@logiclab/contracts/derivation';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
@@ -31,5 +32,28 @@ export function derivationDefinitionFixture(): DerivationDefinition {
       blocks: [{ id: c, parentId: null, assumptionId: a, endId: a }],
     },
     explanation: 'Assuming P permits deriving P and discharging the assumption.',
+  };
+}
+
+export function dependencyDefinitionFixture(): DependencyDerivationDefinition {
+  return {
+    ...derivationDefinitionFixture(),
+    format: 'dependency',
+    referenceProof: {
+      proofVersion: 1,
+      format: 'dependency',
+      steps: [
+        { kind: 'assumption', id: a, formula: 'P', dependencies: [a] },
+        {
+          kind: 'inference',
+          id: b,
+          formula: 'P -> P',
+          dependencies: [],
+          ruleId: 'implication_introduction',
+          lineReferences: [],
+          discharges: [{ assumptionId: a, conclusionId: a }],
+        },
+      ],
+    },
   };
 }

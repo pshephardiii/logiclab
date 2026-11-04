@@ -1,12 +1,13 @@
 export { sameFormula } from './formula-equality';
-export { checkProof, PROOF_CHECKER_VERSION } from './check-proof';
-export { analyzeFitchStructure } from './fitch-structure';
+export { checkProof } from './fitch/check-proof';
+export { PROOF_CHECKER_VERSION } from './report';
+export { analyzeFitchStructure } from './fitch/structure';
 export type {
   FitchStructureResult,
   FitchReferenceCheck,
   FitchBlockSpan,
   ClosedFitchBlockSpan,
-} from './fitch-types';
+} from './fitch/types';
 export { checkLocalRule } from './local-rule';
 export type { LocalRuleApplication, LocalRuleResult } from './local-rule';
 export type { LocalSubproof } from './types';
@@ -18,4 +19,9 @@ export {
   getPropositionalRule,
 } from './rule-catalog';
 export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
-export { isFinishedProofAttempt } from './attempt-completeness';
+export { isFinishedProofAttempt, isFinishedDependencyProofAttempt } from './completion';
+export { inferenceDependencyIds, dependencySetsMatch } from './dependency/sets';
+export type { DischargedDependencySet } from './dependency/sets';
+export { analyzeDependencyStructure } from './dependency/structure';
+export type { DependencyStructureResult, DependencyReferences } from './dependency/structure';
+export { checkDependencyProof } from './dependency/check-proof';

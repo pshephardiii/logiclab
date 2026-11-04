@@ -1,15 +1,14 @@
+import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
+import { supportedAssignmentDefinition } from '../assignment/definition-support';
+import { DerivationPublicationError, DerivationAuthoringError } from './derivation/errors';
 import {
   createLibraryProblemRequestSchema,
   updateLibraryProblemRequestSchema,
 } from '@logiclab/contracts/problem-library';
 import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
-import {
-  libraryProblemDefinition,
-  publicationDefinition,
-  DerivationPublicationError,
-} from './library-definition';
+import { libraryProblemDefinition, publicationDefinition } from './library-definition';
 import { mapProblemError } from '../../routes/problem/errors';
-import { DerivationAuthoringError } from './derivation-authoring';
+
 import { supportedProblemDefinition } from './definition-support';
 
 test('owner definitions accept incomplete derivations while assignment admission stays closed', () => {
@@ -67,3 +66,17 @@ test.each([
   expect(result).toMatchObject({ status, code });
   expect(JSON.stringify(result)).not.toContain('SECRET_REFERENCE');
 });
+
+test.each(['graded', 'completion_only', 'ungraded_practice'])(
+  'published dependency definitions support %s assignment admission under the shared policy',
+  (assessmentMode) => {
+    const value = dependencyDefinitionFixture();
+    expect(publicationDefinition(value)).toEqual(value);
+    expect(
+      supportedAssignmentDefinition(value, {
+        assessmentMode,
+        feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
+      }),
+    ).toEqual(value);
+  },
+);

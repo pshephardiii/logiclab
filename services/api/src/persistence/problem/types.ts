@@ -1,4 +1,4 @@
-import type { DerivationReferenceCheck } from '../../application/problem/derivation-authoring';
+import type { DerivationReferenceCheck } from '../../application/problem/derivation/reference-check';
 import type { ProblemArchiveFilter } from '@logiclab/contracts';
 import type {
   CreateLibraryProblemRequest,

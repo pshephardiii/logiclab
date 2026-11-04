@@ -1,3 +1,4 @@
+import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
 import { assignmentSchema } from '@logiclab/contracts';
 import { assignment } from '../../../test/assignment-fixture';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
@@ -70,3 +71,13 @@ test.each(['graded', 'completion_only'])(
       ).toThrow(AssignmentOperationError);
   },
 );
+
+test('dependency admission supports submission-time feedback and rejects pre-submission graded checks', () => {
+  const definition = dependencyDefinitionFixture();
+  const policy = { assessmentMode: 'graded', feedbackTiming: 'on_submission' };
+  expect(supportedAssignmentDefinition(definition, policy)).toEqual(definition);
+  expect(supportedAssignmentDefinition(definition, policy)).toEqual(definition);
+  expect(() =>
+    supportedAssignmentDefinition(definition, { ...policy, feedbackTiming: 'on_check' }),
+  ).toThrow(AssignmentOperationError);
+});

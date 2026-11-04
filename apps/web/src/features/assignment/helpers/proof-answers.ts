@@ -1,11 +1,13 @@
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentAssignment,
   SavedStudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
 
 /** An explicit empty response stays distinct from never starting a proof. */
-export function blankDerivationAnswer(): DerivationAnswer {
+export function blankDerivationAnswer(format: 'fitch' | 'dependency' = 'fitch'): DerivationAnswer {
+  if (format === 'dependency')
+    return { type: 'derivation', proof: { proofVersion: 1, format, steps: [] } };
   return { type: 'derivation', proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] } };
 }
 export function savedProofAnswers(

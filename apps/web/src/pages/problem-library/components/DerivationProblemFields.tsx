@@ -1,7 +1,8 @@
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { DerivationRuleFields } from './DerivationRuleFields';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import { useState } from 'react';
+import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 import { ReferenceProofEditor } from './ReferenceProofEditor';
 import { LocalReferenceCheck } from './LocalReferenceCheck';
@@ -18,7 +19,12 @@ const formulaInput = {
 /** Statement edits preserve premise identities and the private reference, even when incomplete. */
 export function DerivationProblemFields({ fields, onChange }: Props) {
   const definition = fields.derivation;
-  function change(patch: Partial<DerivationDefinition>) {
+  const [pendingFormat, setPendingFormat] = useState<'fitch' | 'dependency' | null>(null);
+  function change(
+    patch: Partial<
+      Pick<AuthoringDerivationDefinition, 'premises' | 'conclusion' | 'rules' | 'explanation'>
+    >,
+  ) {
     onChange({ ...fields, derivation: { ...definition, ...patch } });
   }
   function movePremise(index: number, delta: number) {
@@ -28,12 +34,48 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
   }
   return (
     <>
-      <p>
-        <strong>Proof format:</strong> Fitch
-      </p>
+      <label htmlFor="derivation-format">Proof format</label>
+      <select
+        id="derivation-format"
+        value={definition.format}
+        onChange={(event) => {
+          const format = event.target.value as 'fitch' | 'dependency';
+          setPendingFormat(null);
+          if (format === definition.format) return;
+          if (definition.referenceProof) setPendingFormat(format);
+          else onChange({ ...fields, derivation: { ...definition, format, referenceProof: null } });
+        }}
+      >
+        <option value="fitch">Fitch</option>
+        <option value="dependency">Dependency</option>
+      </select>
+      {pendingFormat && (
+        <div role="group" aria-label="Confirm proof format change">
+          <p>
+            Changing format discards the entire reference proof. Premises, conclusion, rules and
+            explanation stay. No proof conversion is performed.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              onChange({
+                ...fields,
+                derivation: { ...definition, format: pendingFormat, referenceProof: null },
+              });
+              setPendingFormat(null);
+            }}
+          >
+            Change format and discard reference
+          </button>
+          <button type="button" className="secondary" onClick={() => setPendingFormat(null)}>
+            Keep current format
+          </button>
+        </div>
+      )}
       <p className="help">
         Save an unfinished statement now. Publication requires an accepted reference under these
-        exact premises, conclusion and permitted rules. Derivations cannot be assigned yet.
+        exact premises, conclusion and permitted rules. Published snapshots can be added to
+        assignments.
       </p>
       <section aria-label="Derivation premises">
         <h3>Premises</h3>
@@ -104,6 +146,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
         onChange={(event) => change({ conclusion: event.target.value })}
       />
       <DerivationRuleFields
+        format={definition.format}
         rules={definition.rules}
         labels={fields.derivationLabels}
         onChange={(rules, derivationLabels) =>
@@ -127,7 +170,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       </p>
       <ReferenceProofEditor
         definition={definition}
-        onChange={(referenceProof) => change({ referenceProof })}
+        onChange={(derivation) => onChange({ ...fields, derivation })}
       />
       <LocalReferenceCheck definition={definition} />
     </>

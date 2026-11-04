@@ -234,3 +234,62 @@ test('completion readiness uses filled work rather than correctness, requires ea
   act(() => result.current.changeProofAnswer(itemB, missingCitation));
   expect(result.current.completionReady).toBe(false);
 });
+
+test('dependency baselines, explicit saves and checks preserve sibling drafts and do not trigger automatic checking', async () => {
+  const { dependencyAnswer, dependencyWork, dependencySaved, dependencyChecked } =
+    await import('../../../../test/dependency-work-fixture');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...dependencyWork, feedbackTiming: 'immediate' },
+    attempt: dependencySaved,
+  });
+  vi.mocked(api.checkAssignedAnswers).mockResolvedValue(dependencyChecked);
+  const { result } = await open();
+  const first = structuredClone(dependencyAnswer);
+  first.proof.steps[0]!.formula = 'P &';
+  act(() => result.current.changeProofAnswer(itemA, first));
+  act(() => result.current.changeProofAnswer(itemB, structuredClone(dependencyAnswer)));
+  await act(async () => vi.advanceTimersByTimeAsync(IMMEDIATE_CHECK_DELAY_MS * 2));
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  vi.mocked(api.saveAssignedAnswers)
+    .mockRejectedValueOnce(new Error('Conflict'))
+    .mockResolvedValueOnce({ ...dependencySaved, revision: 2, answers: { [itemA]: first } });
+  await act(async () => result.current.save(itemA));
+  expect(result.current.dirty).toEqual([itemA, itemB]);
+  await act(async () => result.current.save(itemA));
+  expect(result.current.dirty).toEqual([itemB]);
+  expect(result.current.proofAnswers[itemB]).toEqual(dependencyAnswer);
+  await act(async () => result.current.check(itemA));
+  expect(api.checkAssignedAnswers).toHaveBeenLastCalledWith(
+    dependencyWork.id,
+    { itemId: itemA, answers: first },
+    expect.any(AbortSignal),
+  );
+  expect(result.current.proofFeedback[itemA]?.proof).toEqual(first.proof);
+  act(() => result.current.changeProofAnswer(itemA, proofAnswer));
+  expect(result.current.proofAnswers[itemA]).toEqual(first);
+});
+
+test('dependency reload keeps its format and clears captured reports while graded checks remain locked', async () => {
+  const { dependencyWork, dependencySaved, dependencyChecked } =
+    await import('../../../../test/dependency-work-fixture');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...dependencyWork, assessmentMode: 'graded', feedbackTiming: 'on_submission' },
+    attempt: dependencySaved,
+  });
+  const { result } = await open();
+  expect(result.current.hasFinalSubmission).toBe(true);
+  await act(async () => result.current.check(itemA));
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: dependencyWork,
+    attempt: dependencySaved,
+  });
+  await act(async () => result.current.load());
+  vi.mocked(api.checkAssignedAnswers).mockResolvedValue(dependencyChecked);
+  await act(async () => result.current.check(itemA));
+  expect(result.current.proofFeedback[itemA]).toBeDefined();
+  await act(async () => result.current.load());
+  expect(result.current.proofAnswers[itemA]!.proof.format).toBe('dependency');
+  expect(result.current.proofFeedback).toEqual({});
+  expect(result.current.dirty).toEqual([]);
+});

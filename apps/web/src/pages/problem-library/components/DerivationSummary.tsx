@@ -1,12 +1,16 @@
 import { DerivationReferenceSummary } from './DerivationReferenceSummary';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 
 /** Private read-only authoring view; never use this reference-bearing view for students. */
-export function DerivationSummary({ definition }: { definition: DerivationDefinition }) {
+export function DerivationSummary({
+  definition,
+}: {
+  definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>;
+}) {
   return (
     <div>
       <p>
-        <strong>Format:</strong> Fitch
+        <strong>Format:</strong> {definition.format === 'fitch' ? 'Fitch' : 'Dependency'}
       </p>
       <h3>Premises</h3>
       {definition.premises.length ? (

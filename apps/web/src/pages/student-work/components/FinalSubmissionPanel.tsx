@@ -21,7 +21,7 @@ export function FinalSubmissionPanel({
       <h2>Final submission</h2>
       <p>
         {requiresCompleteAnswers
-          ? 'Fill every answer cell, answer every question and finish each proof with formulas, rules, citations, closed subproofs and the requested final root conclusion. Save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
+          ? 'Fill every answer cell, answer every question and finish each proof with formulas, rules, citations and any required discharge fields. Close Fitch subproofs and end each proof with the requested conclusion. Save all edits before submitting. Correctness does not affect completion; no correctness score is recorded.'
           : 'Save all edited problems first. Blank cells count as unanswered. You may submit only once.'}
       </p>
       <label className="final-confirmation">

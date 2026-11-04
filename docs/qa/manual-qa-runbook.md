@@ -719,3 +719,14 @@ These cases remain manual follow-up, not a claim of exhaustive QA or user execut
 5. **DGR-05 — Retention/layout:** Archive the assignment and confirm grading inputs disable while history stays readable. Restore it to resume grading. Inspect comment wrapping and point fields at 390px. Perform step 9 and confirm reset removes old grading access.
 
 Recorded agent browser/API/DB evidence and its limits are in [grading/review verification](../verification/derivation-grading-review-verification.md). Broader product, browser and accessibility QA remains deferred.
+
+## Dependency proof follow-up (025)
+
+These cases are pending deliberate manual QA. Focused automated/browser evidence is in [dependency verification](../verification/dependency-proof-format-verification.md); it is not a completed run of this runbook.
+
+1. **DEP-01 — Authoring:** As instructor, create a Derivation, choose Dependency, enter premises/conclusion and enable named rules. Save incomplete reference work and reload. Check the current/saved proof explicitly; verify a missing/incorrect reference cannot publish and corrected work can. Inspect the private immutable version.
+2. **DEP-02 — Format change:** With a reference present, choose Fitch. Keep the current format and verify every line remains. Repeat, confirm discard, and verify the reference is cleared while statement/rules/explanation remain. Save explicitly. Published versions must retain the prior format/reference.
+3. **DEP-03 — Assignment:** Add published Fitch and dependency versions to one graded draft, repeat a version and allocate different points. Reorder/save/reload, duplicate and publish. Confirm published policy/items are locked and unsupported completion/graded pre-submission feedback cannot admit proofs.
+4. **DEP-04 — Student:** Open the assignment as student. Confirm no format switch or pre-submission check. Save a correct and a wrong/incomplete proof separately, reload, and submit with confirmation. Before grade release, expect a receipt without reports/points/comments. Independently reveal references and verify entries do not change or release the grade.
+5. **DEP-05 — Review:** As instructor, inspect frozen submitted source sets, citations and reports. Award points/comments to a flagged proof and review history. Release grades; confirm current points/comments appear to the student, with original automatic evidence retained and no reference access beyond its own policy.
+6. **DEP-06 — Completion/practice/demo:** Reset only a disposable demo to load template 6. In proof practice, verify explicit checks do not save and references remain independent. In completion, save a filled but invalid proof and finalize: expect completion/error flags without a score. Test Stay/Discard, missing-reference repair, keyboard controls and mobile layout. Reset must clear that workspace's work and restore all six assignments without changing another visitor.

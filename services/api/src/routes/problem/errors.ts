@@ -1,8 +1,10 @@
+import {
+  DerivationAuthoringError,
+  DerivationPublicationError,
+} from '../../application/problem/derivation/errors';
 import { mapProblemDefinitionError } from '../problem-definition-error';
 import { FormulaParseError } from '@logiclab/logic-engine';
 import { mapAuthError } from '../auth/errors';
-import { DerivationAuthoringError } from '../../application/problem/derivation-authoring';
-import { DerivationPublicationError } from '../../application/problem/library-definition';
 
 export class ProblemError extends Error {
   constructor(

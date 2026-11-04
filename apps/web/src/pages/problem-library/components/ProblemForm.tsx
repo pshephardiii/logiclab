@@ -116,7 +116,7 @@ export function ProblemForm({
             <option value="truth_table">Truth table</option>
             <option value="true_false">True/false</option>
             <option value="multiple_choice">Multiple choice</option>
-            <option value="derivation">Derivation (Fitch)</option>
+            <option value="derivation">Derivation</option>
           </select>
           <p className="help">
             Only the selected problem type is saved. Switching types keeps your fields until you

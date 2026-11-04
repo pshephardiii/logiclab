@@ -5,7 +5,7 @@ import {
   submissionSummarySchema,
 } from '@logiclab/contracts';
 import { derivationDefinitionFixture } from './derivation-fixture';
-import { derivationContent } from '../src/application/problem/derivation-authoring';
+import { fitchContent } from '../src/application/problem/derivation/fitch/authoring';
 import { evaluateProofCompletion } from '../src/application/student-work/proof-completion';
 import { assignment } from './assignment-fixture';
 
@@ -42,7 +42,7 @@ function fixture() {
           position: 1,
           title: 'Proof',
           instructions: null,
-          content: derivationContent(definition),
+          content: fitchContent(definition),
         },
       ],
     },

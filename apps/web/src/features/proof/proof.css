@@ -1,24 +1,37 @@
-.fitch-proof {
+.proof-editor {
   min-width: 0;
 }
-.fitch-proof fieldset {
+.proof-editor fieldset {
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
-.fitch-proof code,
-.fitch-proof p,
-.fitch-proof li,
-.fitch-proof h4 {
+.proof-editor code,
+.proof-editor p,
+.proof-editor li,
+.proof-editor h4 {
   overflow-wrap: anywhere;
 }
-.fitch-proof input,
-.fitch-proof select {
+.proof-editor input,
+.proof-editor select {
   max-width: 100%;
 }
 .proof-feedback {
   border-left: 3px solid #64748b;
   padding-left: 0.75rem;
   margin-block: 1rem;
+}
+
+.proof-editor .dependency-sources {
+  margin-block: 1rem;
+}
+.dependency-source {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dependency-source input {
+  flex: none;
+  width: auto;
 }

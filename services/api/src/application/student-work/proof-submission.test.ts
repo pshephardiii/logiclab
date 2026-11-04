@@ -253,7 +253,7 @@ test.each(['summary', 'proof_counts', 'duplicate', 'client_score'] as const)(
   },
 );
 
-test('allocation mismatches and objective-only use are rejected while live submission admission stays guarded', () => {
+test('allocation mismatches and objective-only use are rejected while proof-aware saved contracts accept final evidence', () => {
   const f = fixture();
   const result = evaluateProofSubmission([f.proof, f.truth], f.answers);
   expect(() => scoreProofSubmission([f.allocations[0]!], result)).toThrow(AssignmentScoringError);
