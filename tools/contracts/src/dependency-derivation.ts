@@ -5,7 +5,7 @@ import {
   derivationExplanationSchema as explanation,
 } from './derivation-statement';
 
-/** Staged dependency content; deliberately not part of live assigned-work contracts yet. */
+/** Dependency statement content; assignment admission is enforced separately from transport. */
 export const dependencyDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('dependency'),
 });

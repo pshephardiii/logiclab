@@ -13,6 +13,31 @@ import {
 } from './derivation-work';
 import { derivationContentSchema, derivationSolutionSchema } from './derivation';
 import {
+  dependencyDerivationContentSchema,
+  dependencyDerivationSolutionSchema,
+} from './dependency-derivation';
+import {
+  dependencyDerivationAnswerSchema,
+  saveDependencyAnswersSchema,
+  checkDependencyAnswersSchema,
+} from './dependency-derivation-work';
+
+export const savedDerivationAnswerSchema = z.union([
+  derivationAnswerSchema,
+  dependencyDerivationAnswerSchema,
+]);
+export type SavedDerivationAnswer = z.infer<typeof savedDerivationAnswerSchema>;
+export const savedDerivationContentSchema = z.discriminatedUnion('format', [
+  derivationContentSchema,
+  dependencyDerivationContentSchema,
+]);
+export type SavedDerivationContent = z.infer<typeof savedDerivationContentSchema>;
+export const savedDerivationSolutionSchema = z.discriminatedUnion('format', [
+  derivationSolutionSchema,
+  dependencyDerivationSolutionSchema,
+]);
+export type SavedDerivationSolution = z.infer<typeof savedDerivationSolutionSchema>;
+import {
   studentAttemptSchema,
   submissionResultSchema,
   studentAssignmentItemSchema,
@@ -26,7 +51,7 @@ import {
 /** Proof-aware saved-work projections; supported assignment admission is enforced separately. */
 export const savedStudentResponseValueSchema = z.union([
   assignmentResponseValueSchema,
-  derivationAnswerSchema,
+  savedDerivationAnswerSchema,
 ]);
 export type SavedStudentResponseValue = z.infer<typeof savedStudentResponseValueSchema>;
 export const savedStudentResponsesSchema = z
@@ -110,7 +135,7 @@ export const savedStudentAssignmentSchema = assignmentSummarySchema.safeExtend({
     .array(
       z.union([
         studentAssignmentItemSchema,
-        z.strictObject({ ...studentAssignmentItemFields, content: derivationContentSchema }),
+        z.strictObject({ ...studentAssignmentItemFields, content: savedDerivationContentSchema }),
       ]),
     )
     .max(50),
@@ -124,12 +149,14 @@ export type SavedStudentAssignmentResponse = z.infer<typeof savedStudentAssignme
 export const savedStudentAnswersSchema = z.union([
   saveStudentAnswersSchema,
   saveDerivationAnswersSchema,
+  saveDependencyAnswersSchema,
 ]);
 export type SavedStudentAnswers = z.infer<typeof savedStudentAnswersSchema>;
 
 export const savedStudentCheckSchema = z.union([
   checkStudentAnswersSchema,
   checkDerivationAnswersSchema,
+  checkDependencyAnswersSchema,
 ]);
 export type SavedStudentCheck = z.infer<typeof savedStudentCheckSchema>;
 export const savedStudentCheckResponseSchema = studentCheckResponseSchema.extend({
@@ -137,6 +164,6 @@ export const savedStudentCheckResponseSchema = studentCheckResponseSchema.extend
 });
 export type SavedStudentCheckResponse = z.infer<typeof savedStudentCheckResponseSchema>;
 export const savedStudentSolutionResponseSchema = studentSolutionResponseSchema.extend({
-  solution: z.union([studentSolutionResponseSchema.shape.solution, derivationSolutionSchema]),
+  solution: z.union([studentSolutionResponseSchema.shape.solution, savedDerivationSolutionSchema]),
 });
 export type SavedStudentSolutionResponse = z.infer<typeof savedStudentSolutionResponseSchema>;

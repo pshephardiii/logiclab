@@ -1,5 +1,5 @@
 import type { ConceptualAnswer } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentAssignment as StudentAssignment,
   SavedStudentAttempt as StudentAttempt,
@@ -15,7 +15,14 @@ export function assignedWorkCapabilities(
   attempt: StudentAttempt | null,
 ) {
   const hasFinalSubmission =
-    assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
+    assignment !== null &&
+    assignment.assessmentMode !== 'ungraded_practice' &&
+    !assignment.items.some(
+      (item) =>
+        'content' in item &&
+        item.content.type === 'derivation' &&
+        item.content.format === 'dependency',
+    );
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
   const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
   const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
@@ -56,7 +63,8 @@ export function assignmentCompletionReady(
               (answer) => answer.value !== null,
             )
           : item.content.type === 'derivation'
-            ? isFinishedProofAttempt({
+            ? item.content.format === 'fitch' &&
+              isFinishedProofAttempt({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

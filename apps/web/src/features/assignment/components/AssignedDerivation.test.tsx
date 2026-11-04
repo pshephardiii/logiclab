@@ -69,7 +69,8 @@ function setup(initial?: DerivationAnswer, options: Partial<Props> = {}) {
         answer={answer}
         onAnswer={(next) => {
           onAnswer(next);
-          setAnswer(next);
+          if (next.proof.format !== 'fitch') throw new Error('Expected Fitch answer');
+          setAnswer({ type: 'derivation', proof: next.proof });
         }}
       />
     );

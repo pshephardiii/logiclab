@@ -41,7 +41,17 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const proofReport = item ? proofSubmissionFeedback(work.attempt?.result, item.id) : null;
   const proofFeedback = submitted
     ? proofReport
-      ? { proof: (proofAnswer ?? blankDerivationAnswer()).proof, report: proofReport }
+      ? {
+          proof: (
+            proofAnswer ??
+            blankDerivationAnswer(
+              item && 'content' in item && item.content.type === 'derivation'
+                ? item.content.format
+                : 'fitch',
+            )
+          ).proof,
+          report: proofReport,
+        }
       : null
     : item
       ? work.proofFeedback[item.id]
@@ -176,7 +186,16 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             <AssignedDerivation
               key={item.id}
               item={{ ...item, content: item.content }}
-              answer={proofAnswer ?? (submitted ? blankDerivationAnswer() : undefined)}
+              answer={
+                proofAnswer ??
+                (submitted
+                  ? blankDerivationAnswer(
+                      item && 'content' in item && item.content.type === 'derivation'
+                        ? item.content.format
+                        : 'fitch',
+                    )
+                  : undefined)
+              }
               feedback={proofFeedback}
               solution={
                 currentSolution &&

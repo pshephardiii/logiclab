@@ -1,7 +1,7 @@
 import { assignmentCompletionReady } from '../helpers/assigned-work-state';
 import { useCallback, useMemo, useState } from 'react';
 import type { ConceptualAnswer } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentResponseValue as AssignmentResponseValue,
   SavedStudentAssignment as StudentAssignment,
@@ -84,7 +84,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     return 'exercise' in item
       ? submittedAnswers(item.exercise, tableSnapshot)
       : item.content.type === 'derivation'
-        ? (proofAnswers[item.id] ?? blankDerivationAnswer())
+        ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
         : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
   }
   return {

@@ -2,7 +2,7 @@ import { conceptualQuestionContent } from '../../application/problem/conceptual-
 import { supportedProblemDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
-import { fitchContent } from '../../application/problem/derivation/fitch/authoring';
+import { publicDerivationContent } from '../../application/problem/derivation/projections';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import { exerciseResponse } from '../../application/truth-table/exercise';
@@ -19,7 +19,9 @@ export function savedAssignmentExercises(
       const stored = item.problemVersion.definition;
       if (stored.type === 'derivation') assertProofWorkPolicy(assignment);
       const definition =
-        stored.type === 'derivation' ? fitchContent(stored) : supportedProblemDefinition(stored);
+        stored.type === 'derivation'
+          ? publicDerivationContent(stored)
+          : supportedProblemDefinition(stored);
       const common = {
         id: item.id,
         position: item.position,

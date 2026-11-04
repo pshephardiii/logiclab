@@ -16,14 +16,18 @@ export function DependencyProofEditor({
   statement,
   proof,
   onChange,
+  purpose = 'reference',
 }: {
   statement: {
     premises: { id: string; formula: string }[];
     rules: { id: string; label: string }[];
   };
   proof: DependencyProof | null;
+  purpose?: 'reference' | 'student';
   onChange: (proof: DependencyProof | null) => void;
 }) {
+  const reference = purpose === 'reference';
+  const heading = reference ? 'Reference proof' : 'Your proof';
   const [before, setBefore] = useState<string | null>(null);
   const [deletion, setDeletion] = useState<{ kind: 'line'; id: string } | { kind: 'proof' } | null>(
     null,
@@ -51,8 +55,11 @@ export function DependencyProofEditor({
     }
   }
   return (
-    <section className="proof-editor" aria-label="Reference proof editor">
-      <h3>Reference proof</h3>
+    <section
+      className="proof-editor"
+      aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
+    >
+      <h3>{heading}</h3>
       <p className="help">
         Dependency proofs use explicit source sets and assumption/conclusion discharge pairs. Line
         numbers are display positions; references retain their identity through moves. Removing a
@@ -62,8 +69,8 @@ export function DependencyProofEditor({
       {!proof ? (
         <>
           <p>
-            No reference proof yet. Starting copies the current premises once; later statement edits
-            do not rewrite them.
+            {reference ? 'No reference proof yet.' : 'No proof started yet.'} Starting copies the
+            current premises once; later statement edits do not rewrite them.
           </p>
           <button
             type="button"
@@ -72,7 +79,7 @@ export function DependencyProofEditor({
               change(startDependencyProof(statement.premises));
             }}
           >
-            Start reference proof
+            {reference ? 'Start reference proof' : 'Start proof'}
           </button>
         </>
       ) : (
@@ -88,11 +95,7 @@ export function DependencyProofEditor({
                 This proof has duplicate identities. Structural editing is disabled; remove it
                 explicitly to start fresh.
               </p>
-              <DependencyProofSummary
-                proof={proof}
-                rules={statement.rules}
-                label="Reference proof"
-              />
+              <DependencyProofSummary proof={proof} rules={statement.rules} label={heading} />
             </>
           ) : (
             <>
@@ -127,6 +130,7 @@ export function DependencyProofEditor({
                   proof={proof}
                   index={index}
                   statement={statement}
+                  purpose={purpose}
                   onChange={(next) =>
                     change({
                       ...proof,
@@ -146,13 +150,15 @@ export function DependencyProofEditor({
             className="secondary"
             onClick={() => setDeletion({ kind: 'proof' })}
           >
-            Remove reference proof
+            {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
             <div role="group" aria-label="Confirm proof deletion">
               <p>
                 {deletion.kind === 'proof'
-                  ? 'Remove the entire reference proof?'
+                  ? reference
+                    ? 'Remove the entire reference proof?'
+                    : 'Clear the entire proof?'
                   : 'Delete this line? Citations and dependency sets referring to it will need repair.'}
               </p>
               <button

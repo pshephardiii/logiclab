@@ -1,5 +1,6 @@
 import type { ProofSubmissionResult, ProofCompletionSubmissionResult } from './proof-result.ts';
 import type { DerivationAnswer } from './derivation-work.ts';
+import type { DependencyDerivationAnswer } from './dependency-derivation-work.ts';
 import type {
   ConceptualResponse,
   MixedGradedSubmissionResult,
@@ -14,7 +15,7 @@ export interface AttemptAnswer {
 }
 export type AttemptAnswers = Record<
   string,
-  AttemptAnswer[] | ConceptualResponse | DerivationAnswer
+  AttemptAnswer[] | ConceptualResponse | DerivationAnswer | DependencyDerivationAnswer
 >;
 
 export interface SubmissionCounts {

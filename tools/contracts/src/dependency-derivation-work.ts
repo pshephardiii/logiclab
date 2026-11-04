@@ -8,7 +8,7 @@ export const dependencyDerivationAnswerSchema = z.strictObject({
 });
 export type DependencyDerivationAnswer = z.infer<typeof dependencyDerivationAnswerSchema>;
 
-/** Staged requests; live saved-work admission stays separate until its consumers support both formats. */
+/** Revisioned save and explicit-check transport; assignment admission remains a separate policy. */
 export const saveDependencyAnswersSchema = z.strictObject({
   revision: z.number().int().nonnegative().max(2147483646),
   itemId: z.uuid(),

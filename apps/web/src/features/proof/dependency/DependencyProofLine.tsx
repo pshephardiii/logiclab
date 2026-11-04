@@ -9,8 +9,10 @@ export function DependencyProofLine({
   onChange,
   onMove,
   onDelete,
+  purpose = 'reference',
 }: {
   proof: DependencyProof;
+  purpose?: 'reference' | 'student';
   index: number;
   statement: {
     premises: { id: string; formula: string }[];
@@ -30,7 +32,10 @@ export function DependencyProofLine({
     );
   const unavailable = step.dependencies.filter((id) => !sources.some((source) => source.id === id));
   return (
-    <section className="problem-option" aria-label={`Reference line ${index + 1}`}>
+    <section
+      className="problem-option"
+      aria-label={`${purpose === 'reference' ? 'Reference' : 'Proof'} line ${index + 1}`}
+    >
       <h4>
         Line {index + 1} — {step.kind}
       </h4>

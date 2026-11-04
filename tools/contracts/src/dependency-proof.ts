@@ -43,7 +43,7 @@ export const dependencyProofSchema = z.strictObject({
 });
 export type DependencyProof = z.infer<typeof dependencyProofSchema>;
 
-/** Staged engine input; live checker/definition/answer contracts remain Fitch-only in this slice. */
+/** Format-specific checker input; callers enforce workflow admission and authoritative statements. */
 export const dependencyProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
   proof: dependencyProofSchema,

@@ -17,14 +17,14 @@ import { transactionRunner, type DatabaseManager } from '../transactions';
 import { attemptResponse } from './attempt-response';
 import { savedAssignmentExercises } from '../assignment/exercise-response';
 import {
-  validateDerivationAnswer,
-  evaluateDerivationAnswer,
-} from '../../application/student-work/derivation-response';
+  validateProofAnswer,
+  evaluateProofAnswer,
+} from '../../application/student-work/proof-response';
+import { libraryProblemDefinition } from '../../application/problem/library-definition';
 import {
-  validateFitchDefinition,
-  fitchContent,
-  fitchReferenceSolution,
-} from '../../application/problem/derivation/fitch/authoring';
+  publicDerivationContent,
+  derivationReferenceSolution,
+} from '../../application/problem/derivation/projections';
 import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -93,14 +93,14 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
-          validateFitchDefinition(definition);
+          libraryProblemDefinition(definition);
         }
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
         checkRevision(attempt, input.revision);
         const answers =
           definition.type === 'derivation'
-            ? validateDerivationAnswer(input.answers)
+            ? validateProofAnswer(definition, input.answers)
             : validateItemResponse(supportedProblemDefinition(definition), input.answers);
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
@@ -136,11 +136,11 @@ export async function createStudentWorkStore(
           assertProofWorkPolicy(assignment);
           if (assignment.assessmentMode !== 'ungraded_practice')
             throw new StudentWorkError('unsupported_policy');
-          const evidence = evaluateDerivationAnswer(
+          const evidence = evaluateProofAnswer(
             {
               itemId: item.id,
               problemVersionId: item.problemVersion.id,
-              content: fitchContent(definition),
+              content: publicDerivationContent(definition),
             },
             input.answers,
           );
@@ -198,7 +198,7 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
-          return { itemId, solution: fitchReferenceSolution(definition) };
+          return { itemId, solution: derivationReferenceSolution(definition) };
         }
         return {
           itemId,

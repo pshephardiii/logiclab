@@ -262,14 +262,14 @@ test('premise correspondence is authoritative even when student annotations and 
   );
 });
 
-test('formats and live saved-work admission stay distinct while dependency support is staged', () => {
+test('format-specific validators stay distinct while saved-work transport accepts both formats', () => {
   const { authoritative, answer } = fixture();
   const fitch = { type: 'derivation', proof: derivationDefinitionFixture().referenceProof };
   expect(() => validateDependencyAnswer(fitch)).toThrow(StudentWorkError);
   expect(() => validateDerivationAnswer(answer)).toThrow(StudentWorkError);
   expect(derivationAnswerSchema.safeParse(answer).success).toBe(false);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
-    false,
+    true,
   );
   expect(
     savedStudentAnswersSchema.safeParse({
@@ -277,10 +277,10 @@ test('formats and live saved-work admission stay distinct while dependency suppo
       itemId: authoritative.itemId,
       answers: answer,
     }).success,
-  ).toBe(false);
+  ).toBe(true);
   expect(
     savedStudentCheckSchema.safeParse({ itemId: authoritative.itemId, answers: answer }).success,
-  ).toBe(false);
+  ).toBe(true);
 });
 
 test('authoritative content cannot contain a private reference or unsupported configuration', () => {
