@@ -1,3 +1,4 @@
+import { DerivationPublicationError } from '../../src/application/problem/derivation-errors';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -6,7 +7,7 @@ import { createProblemStore } from '../../src/persistence/problem/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
-import { DerivationPublicationError } from '../../src/application/problem/library-definition';
+
 import { checkDerivationReference } from '../../src/application/problem/derivation-authoring';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 

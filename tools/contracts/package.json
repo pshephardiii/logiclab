@@ -35,6 +35,11 @@
       "types": "./dist/proof-submission.d.ts",
       "browser": "./dist/browser/proof-submission.js",
       "default": "./dist/proof-submission.js"
+    },
+    "./dependency-derivation": {
+      "types": "./dist/dependency-derivation.d.ts",
+      "browser": "./dist/browser/dependency-derivation.js",
+      "default": "./dist/dependency-derivation.js"
     }
   },
   "files": [

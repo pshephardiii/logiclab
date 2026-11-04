@@ -1,3 +1,5 @@
+import { DerivationAuthoringError } from './derivation-errors';
+import { assertDerivationConfiguration } from './derivation-configuration';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import {
   derivationDefinitionSchema,
@@ -7,30 +9,13 @@ import {
   type DerivationContent,
   type DerivationSolution,
 } from '@logiclab/contracts/derivation';
-import {
-  checkProof,
-  getPropositionalRule,
-  PROOF_CHECKER_VERSION,
-  PROPOSITIONAL_RULE_CATALOG_VERSION,
-} from '@logiclab/logic-engine/proof';
-
-export class DerivationAuthoringError extends Error {
-  constructor(readonly code: 'invalid_definition' | 'unknown_rule' | 'reference_unavailable') {
-    super('Derivation authoring data is invalid or its reference is unavailable.');
-  }
-}
+import { checkProof } from '@logiclab/logic-engine/proof';
 
 /** Validate public statement/configuration without admitting private reference fields. */
 export function validateDerivationContent(value: unknown): DerivationContent {
   const parsed = derivationContentSchema.safeParse(value);
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
-  if (
-    parsed.data.checkerVersion !== PROOF_CHECKER_VERSION ||
-    parsed.data.ruleCatalogVersion !== PROPOSITIONAL_RULE_CATALOG_VERSION
-  )
-    throw new DerivationAuthoringError('invalid_definition');
-  if (parsed.data.rules.some((rule) => !getPropositionalRule(rule.id)))
-    throw new DerivationAuthoringError('unknown_rule');
+  assertDerivationConfiguration(parsed.data);
   return parsed.data;
 }
 

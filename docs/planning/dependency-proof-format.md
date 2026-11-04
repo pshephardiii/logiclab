@@ -2,7 +2,7 @@
 
 Branch: `025-feat-dependency-proof-format`, following completed Fitch checking/authoring/student work and instructor grading/review (020–024). See [the agreed sequence](logical-derivations.md#025-and-026-additional-formats). This document is the implementation-slice record; broader API/data/product documentation will be consolidated at branch closeout.
 
-Current status: slices 1–2 provide staged contracts, dependency-set arithmetic and a standalone bounded checker. Instructor definitions, saved assigned work and UI still admit only Fitch. The remaining branch work will connect dependency authoring/reference certification and student/review workflows before application admission.
+Current status: slices 1–3 provide staged proof/authoring contracts, dependency-set arithmetic, a standalone bounded checker and private-reference certification helpers. Live library definitions, saved assigned work and UI still admit only Fitch. The remaining branch work will connect dependency authoring/reference certification and student/review workflows before application admission.
 
 ## Confirmed direction — November 4, 2026
 
@@ -75,3 +75,25 @@ No global box closure is inferred. An earlier assumption can be reused by a late
 Built public ESM/CommonJS imports passed six accepted/review/unassessable smoke cases, report-schema validation, input preservation and continued rejection by the Fitch-only entry. Formatting, whitespace and this document's local Markdown target were checked. Logs: `/private/tmp/dependency-slice2-focused.log`, `dependency-slice2-check.log`, `dependency-slice2-final-check.log` and `dependency-slice2-format-check.log`. Existing Jest VM-module and Vitest performance advisories remain.
 
 No database, migration, API route, authored definition, saved-result type, UI or template changed. PostgreSQL checks and browser walks were not repeated for this standalone engine slice; existing Fitch engine/API/UI regressions passed in the full check. No user development database, environment, provider or infrastructure was changed. Next: versioned dependency-format owner definitions/private references and checked publication, followed by editors/student/review integration. Live format admission stays guarded until the complete workflow passes.
+
+## Slice 3: staged private definitions and reference certification
+
+`@logiclab/contracts/dependency-derivation` now exposes separate version-1 dependency content, private definition and privileged solution schemas. The statement and its reference must both use `format: "dependency"`; an accepted Fitch reference cannot be reused or relabeled as certification. Null references, blank formulas and unfinished proof fields remain draft data, while unsupported versions, extra/cached checker fields, duplicate premise/rule identities and normalized rule-label collisions are rejected.
+
+Shared `derivation-statement.ts` owns statement limits, premise/rule identity validation, label normalization and explanation bounds. Each public format schema narrows its own format explicitly. Existing Fitch exports and field ordering are preserved. Separate exact database JSON types describe dependency steps/proofs/definitions independently of transport contracts; they are staged exports, not additions to the entity problem-definition or saved-answer unions yet.
+
+`dependency-authoring.ts` validates supported configuration, checks references with `checkDependencyProof`, requires an accepted reference for publication certification, and supplies explicit ordinary-content/private-solution projections. Missing, erroneous or unassessable reference work cannot publish; solution projection also requires acceptance, while its caller still owns authorization. Content never contains the private reference/explanation. Display labels cannot define inference behavior.
+
+Fitch and dependency authoring share engine-version/rule-ID validation through `derivation-configuration.ts` and the existing safe error categories in `derivation-errors.ts`. Internal imports were updated to those owners; API error behavior is unchanged. Format-specific reference checking remains explicit so neither format can accidentally use the other's checker or treat schema parsing as proof acceptance.
+
+The existing live library union, problem store/publication dispatcher, assignment admission and student responses remain Fitch-only. No dependency HTTP authoring/editor is introduced by this slice. The next persistence/library slice will connect the new definition and certification helper under the saved problem lock, with owner/draft/version/rollback tests and appropriate client compatibility guards. The subsequent editor/student/review slices must pass before dependency assignment admission is enabled.
+
+### Slice 3 verification — November 4, 2026
+
+`npm run check` passed type checks, 1,698 tests (448 engine, 922 API, 328 web) and production builds. The 23 new cases cover exact stored/transported JSON compatibility, draft retention, matching format versions, accepted/rejected/missing/unassessable references, current-rule/statement checks, input preservation, ordinary/private projections, Unicode label collisions, unsupported/custom rules, strict fields/bounds and continued rejection by current library/assignment/student admission. Earlier focused authoring/Fitch/configuration regressions passed before the final full check; existing error-mapping tests cover the relocated shared classes.
+
+Built ESM/CommonJS subpath imports and compiled application helpers passed accepted-reference publication, rejected-target checks, ordinary-content redaction, privileged solution projection, input preservation and the live-library guard. Formatting, whitespace and this document's local Markdown target were checked. Logs: `/private/tmp/dependency-slice3-contracts.log`, `dependency-slice3-db-build.log`, `dependency-slice3-types.log`, `dependency-slice3-focused.log`, `dependency-slice3-check.log` and `dependency-slice3-format-check.log`.
+
+The production entry is 500.08 kB minified (152.24 kB gzip), just above Vite's unchanged 500 kB warning threshold; the build passes. Record this for the branch's frontend/bundle closeout rather than increasing the threshold. Existing Jest VM-module and Vitest performance advisories remain.
+
+No entity/migration, live persisted union, HTTP handler, UI or demo template changed; PostgreSQL/browser checks were not repeated. No user database, environment, provider or infrastructure was modified. Publication certification here is a pure helper, not proof that a live owner request has loaded/locked the correct saved record. That transaction-bound integration is next. No PR draft or new branch was created.

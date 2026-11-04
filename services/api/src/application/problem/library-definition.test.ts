@@ -1,15 +1,12 @@
+import { DerivationPublicationError, DerivationAuthoringError } from './derivation-errors';
 import {
   createLibraryProblemRequestSchema,
   updateLibraryProblemRequestSchema,
 } from '@logiclab/contracts/problem-library';
 import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
-import {
-  libraryProblemDefinition,
-  publicationDefinition,
-  DerivationPublicationError,
-} from './library-definition';
+import { libraryProblemDefinition, publicationDefinition } from './library-definition';
 import { mapProblemError } from '../../routes/problem/errors';
-import { DerivationAuthoringError } from './derivation-authoring';
+
 import { supportedProblemDefinition } from './definition-support';
 
 test('owner definitions accept incomplete derivations while assignment admission stays closed', () => {

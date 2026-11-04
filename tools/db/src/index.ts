@@ -130,3 +130,5 @@ export type {
   InstructorGradingEntry,
   InstructorGrading,
 } from './types/submission-grading-revision/grading.ts';
+export type { DependencyProof, DependencyProofStep } from './types/proof/dependency-work.ts';
+export type { DependencyDerivationDefinition } from './types/problem/dependency-derivation.ts';

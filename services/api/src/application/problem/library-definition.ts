@@ -1,12 +1,7 @@
+import { DerivationPublicationError } from './derivation-errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { supportedProblemDefinition } from './definition-support';
 import { validateDerivationDefinition, checkDerivationReference } from './derivation-authoring';
-
-export class DerivationPublicationError extends Error {
-  constructor(readonly code: 'missing_reference' | 'rejected_reference') {
-    super('Derivation publication requires an accepted reference proof.');
-  }
-}
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {

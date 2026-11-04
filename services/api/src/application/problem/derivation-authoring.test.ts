@@ -1,3 +1,4 @@
+import { DerivationAuthoringError } from './derivation-errors';
 import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
 import {
   derivationDefinitionSchema,
@@ -21,7 +22,6 @@ import {
   checkDerivationReference,
   derivationContent,
   derivationReferenceSolution,
-  DerivationAuthoringError,
 } from './derivation-authoring';
 import {
   supportedProblemDefinition,
