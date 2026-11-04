@@ -7,9 +7,9 @@ import {
   type DependencyDerivationSolution,
 } from '@logiclab/contracts/dependency-derivation';
 import { checkDependencyProof } from '@logiclab/logic-engine/proof';
-import { assertDerivationConfiguration } from './derivation-configuration';
-import { DerivationAuthoringError, DerivationPublicationError } from './derivation-errors';
-import type { DerivationReferenceCheck } from './derivation-authoring';
+import { assertDerivationConfiguration } from '../configuration';
+import { DerivationAuthoringError, DerivationPublicationError } from '../errors';
+import type { DerivationReferenceCheck } from '../reference-check';
 
 export function validateDependencyContent(value: unknown): DependencyDerivationContent {
   const parsed = dependencyDerivationContentSchema.safeParse(value);

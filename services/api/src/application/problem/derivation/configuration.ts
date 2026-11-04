@@ -3,7 +3,7 @@ import {
   PROOF_CHECKER_VERSION,
   PROPOSITIONAL_RULE_CATALOG_VERSION,
 } from '@logiclab/logic-engine/proof';
-import { DerivationAuthoringError } from './derivation-errors';
+import { DerivationAuthoringError } from './errors';
 
 /** Call after format-specific schema validation; labels never select or define inference behavior. */
 export function assertDerivationConfiguration(value: {

@@ -1,7 +1,7 @@
-import { DerivationPublicationError } from './derivation-errors';
+import { DerivationPublicationError } from './derivation/errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { supportedProblemDefinition } from './definition-support';
-import { validateDerivationDefinition, checkDerivationReference } from './derivation-authoring';
+import { validateFitchDefinition, checkFitchReference } from './derivation/fitch/authoring';
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
@@ -9,7 +9,7 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
     value !== null &&
     'type' in value &&
     value.type === 'derivation'
-    ? validateDerivationDefinition(value)
+    ? validateFitchDefinition(value)
     : supportedProblemDefinition(value);
 }
 
@@ -17,7 +17,7 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
   const definition = libraryProblemDefinition(value);
   if (definition.type === 'derivation') {
-    const check = checkDerivationReference(definition);
+    const check = checkFitchReference(definition);
     if (check.status === 'missing') throw new DerivationPublicationError('missing_reference');
     if (check.report.status !== 'accepted')
       throw new DerivationPublicationError('rejected_reference');

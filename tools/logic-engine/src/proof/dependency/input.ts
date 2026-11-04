@@ -1,15 +1,15 @@
-import { InputFailure, record, array, stringLimit, ids } from './proof-input-fields';
 import {
   PROOF_LIMITS,
-  proofCheckInputSchema,
-  type ProofCheckInput,
+  dependencyProofCheckInputSchema,
+  type DependencyProofCheckInput,
   type ProofDiagnostic,
 } from '@logiclab/contracts';
+import { InputFailure, record, array, stringLimit, ids } from '../proof-input-fields';
 
-/** Check list/text bounds before Zod visits elements; never recursively traverse unknown fields. */
-export function readProofInput(
+/** Inspect bounded plain data before schema parsing; never follow unknown fields recursively. */
+export function readDependencyInput(
   value: unknown,
-): { input: ProofCheckInput } | { diagnostic: ProofDiagnostic } {
+): { input: DependencyProofCheckInput } | { diagnostic: ProofDiagnostic } {
   try {
     const outer = record(value, ['problem', 'proof']);
     const problem = record(outer.problem, [
@@ -18,13 +18,16 @@ export function readProofInput(
       'conclusion',
       'permittedRuleIds',
     ]);
-    const proof = record(outer.proof, ['proofVersion', 'format', 'steps', 'blocks']);
+    const proof = record(outer.proof, ['proofVersion', 'format', 'steps']);
     if (
       (problem.ruleCatalogVersion !== undefined && problem.ruleCatalogVersion !== 1) ||
       (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
-      (proof.format !== undefined && proof.format !== 'fitch')
+      (proof.format !== undefined && proof.format !== 'dependency')
     )
-      throw new InputFailure('UNSUPPORTED_VERSION', 'Unsupported proof format or version.');
+      throw new InputFailure(
+        'UNSUPPORTED_VERSION',
+        'Unsupported dependency proof format or version.',
+      );
     stringLimit(problem.conclusion, PROOF_LIMITS.maxFormulaLength);
     for (const item of array(problem.premises, PROOF_LIMITS.maxPremises)) {
       const premise = record(item, ['id', 'formula']);
@@ -33,37 +36,38 @@ export function readProofInput(
     }
     for (const rule of array(problem.permittedRuleIds, PROOF_LIMITS.maxPermittedRules))
       stringLimit(rule, 64);
-    for (const item of array(proof.blocks, PROOF_LIMITS.maxBlocks)) {
-      const block = record(item, ['id', 'parentId', 'assumptionId', 'endId']);
-      ids(block, ['id', 'parentId', 'assumptionId', 'endId']);
-    }
     for (const item of array(proof.steps, PROOF_LIMITS.maxSteps)) {
       const step = record(item, [
         'kind',
         'id',
-        'blockId',
         'formula',
+        'dependencies',
         'premiseId',
         'ruleId',
         'lineReferences',
-        'subproofReferences',
+        'discharges',
       ]);
-      ids(step, ['id', 'blockId', 'premiseId']);
-      stringLimit(step.formula, PROOF_LIMITS.maxFormulaLength);
+      ids(step, ['id', 'premiseId']);
       stringLimit(step.kind, 16);
+      stringLimit(step.formula, PROOF_LIMITS.maxFormulaLength);
       stringLimit(step.ruleId, 64);
-      for (const key of ['lineReferences', 'subproofReferences']) {
-        if (step[key] !== undefined)
-          for (const reference of array(step[key], 2)) stringLimit(reference, 36);
-      }
+      for (const dependency of array(step.dependencies, PROOF_LIMITS.maxSteps))
+        stringLimit(dependency, 36);
+      if (step.lineReferences !== undefined)
+        for (const reference of array(step.lineReferences, 2)) stringLimit(reference, 36);
+      if (step.discharges !== undefined)
+        for (const value of array(step.discharges, 2)) {
+          const discharge = record(value, ['assumptionId', 'conclusionId']);
+          ids(discharge, ['assumptionId', 'conclusionId']);
+        }
     }
-    const parsed = proofCheckInputSchema.safeParse(value);
+    const parsed = dependencyProofCheckInputSchema.safeParse(value);
     return parsed.success
       ? { input: parsed.data }
       : {
           diagnostic: {
             code: 'INVALID_STRUCTURE',
-            message: 'Proof input does not match the supported contract.',
+            message: 'Dependency proof input does not match the supported contract.',
           },
         };
   } catch (error) {
@@ -73,7 +77,7 @@ export function readProofInput(
           ? { code: error.code, message: error.message }
           : {
               code: 'INVALID_STRUCTURE',
-              message: 'Proof input could not be inspected as plain data.',
+              message: 'Dependency proof input could not be inspected as plain data.',
             },
     };
   }

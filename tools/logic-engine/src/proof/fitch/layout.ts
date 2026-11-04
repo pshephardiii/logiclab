@@ -1,6 +1,6 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import type { FitchBlockSpan, FitchLayout } from './fitch-types';
-import type { StructureDiagnostics } from './structure-diagnostics';
+import type { FitchBlockSpan, FitchLayout } from './types';
+import type { StructureDiagnostics } from '../structure-diagnostics';
 
 /** Establish unambiguous block intervals before resolving any citations. */
 export function buildFitchLayout(

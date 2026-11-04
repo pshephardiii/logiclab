@@ -1,8 +1,8 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import { buildFitchLayout } from './fitch-layout';
-import { resolveFitchReferences } from './fitch-references';
-import { structureDiagnostics } from './structure-diagnostics';
-import type { FitchStructureResult } from './fitch-types';
+import { buildFitchLayout } from './layout';
+import { resolveFitchReferences } from './references';
+import { structureDiagnostics } from '../structure-diagnostics';
+import type { FitchStructureResult } from './types';
 
 /** Analyze transport-validated Fitch data; this does not parse formulas or accept a proof. */
 export function analyzeFitchStructure(proof: FitchProof): FitchStructureResult {

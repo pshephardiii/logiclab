@@ -1,4 +1,4 @@
-import { dependencySetsMatch, inferenceDependencyIds } from '../src/proof';
+import { dependencySetsMatch, inferenceDependencyIds } from '../../../src/proof';
 
 const premise = 'premise';
 const a = 'assumption-a';

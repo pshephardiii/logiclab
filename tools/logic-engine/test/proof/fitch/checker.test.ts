@@ -4,7 +4,11 @@ import {
   type ProofCheckInput,
   type ProofStep,
 } from '@logiclab/contracts';
-import { checkProof, PROPOSITIONAL_RULE_CATALOG, type PropositionalRuleId } from '../src/proof';
+import {
+  checkProof,
+  PROPOSITIONAL_RULE_CATALOG,
+  type PropositionalRuleId,
+} from '../../../src/proof';
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 const given = (n: number, slot: number, formula: string): ProofStep => ({
   kind: 'premise',

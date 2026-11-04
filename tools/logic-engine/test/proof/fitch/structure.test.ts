@@ -5,7 +5,7 @@ import {
   type FitchProof,
   type ProofStep,
 } from '@logiclab/contracts';
-import { analyzeFitchStructure, checkLocalRule, parseProofFormula } from '../src/proof';
+import { analyzeFitchStructure, checkLocalRule, parseProofFormula } from '../../../src/proof';
 
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 const premise = (n: number, formula = 'P'): ProofStep => ({

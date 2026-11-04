@@ -24,7 +24,7 @@ import {
   type SavedStudentResponses,
 } from '@logiclab/contracts/saved-student-work';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
-import { derivationContent, derivationReferenceSolution } from '../problem/derivation-authoring';
+import { fitchContent, fitchReferenceSolution } from '../problem/derivation/fitch/authoring';
 import { detail, attempt } from '../../../test/student-work-fixture';
 
 type Assert<T extends true> = T;
@@ -74,7 +74,7 @@ test('staged assigned proof content strictly excludes reference/solution fields 
           position: 1,
           title: 'Proof',
           instructions: null,
-          content: derivationContent(definition),
+          content: fitchContent(definition),
         },
       ],
     },
@@ -100,7 +100,7 @@ test('staged proof checks and solutions remain distinct, strict and excluded fro
   expect(savedStudentAnswersSchema.safeParse(input).success).toBe(false);
   expect(checkStudentAnswersSchema.safeParse(input).success).toBe(false);
   const evidence = evaluateDerivationAnswer(
-    { itemId: id, problemVersionId: id, content: derivationContent(definition) },
+    { itemId: id, problemVersionId: id, content: fitchContent(definition) },
     response,
   );
   const check = { itemId: id, feedback: { type: 'derivation', report: evidence.report } };
@@ -113,7 +113,7 @@ test('staged proof checks and solutions remain distinct, strict and excluded fro
       feedback: { ...check.feedback, referenceProof: definition.referenceProof },
     }).success,
   ).toBe(false);
-  const solution = { itemId: id, solution: derivationReferenceSolution(definition) };
+  const solution = { itemId: id, solution: fitchReferenceSolution(definition) };
   expect(savedStudentSolutionResponseSchema.safeParse(solution).success).toBe(true);
   expect(savedStudentAnswersSchema.safeParse(solution).success).toBe(false);
   expect(studentSolutionResponseSchema.safeParse(solution).success).toBe(false);

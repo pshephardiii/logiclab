@@ -5,7 +5,7 @@ import {
   libraryProblemDefinition,
   publicationDefinition,
 } from '../../application/problem/library-definition';
-import { checkDerivationReference } from '../../application/problem/derivation-authoring';
+import { checkFitchReference } from '../../application/problem/derivation/fitch/authoring';
 import { UnsupportedProblemDefinitionError } from '../../application/problem/definition-support';
 import { transactionRunner, type DatabaseManager } from '../transactions';
 import { libraryProblemVersion } from './version-response';
@@ -29,7 +29,7 @@ export async function createProblemStore(
       return {
         problemId: problem.id,
         updatedAt: problem.updatedAt.toISOString(),
-        check: checkDerivationReference(definition),
+        check: checkFitchReference(definition),
       };
     },
     async publish(ownerId, problemId) {

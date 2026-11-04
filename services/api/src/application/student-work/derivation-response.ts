@@ -6,7 +6,7 @@ import {
   type DerivationEvaluationEvidence,
 } from '@logiclab/contracts/derivation-work';
 import { checkProof } from '@logiclab/logic-engine/proof';
-import { validateDerivationContent } from '../problem/derivation-authoring';
+import { validateFitchContent } from '../problem/derivation/fitch/authoring';
 import { StudentWorkError } from './errors';
 
 /** Validate only bounded transport. Incorrect, unfinished and structurally invalid proofs can save. */
@@ -25,7 +25,7 @@ export function evaluateDerivationAnswer(
   authoritative: { itemId: string; problemVersionId: string; content: DerivationContent },
   value: unknown,
 ): DerivationEvaluationEvidence {
-  const content = validateDerivationContent(authoritative.content);
+  const content = validateFitchContent(authoritative.content);
   const answer = validateDerivationAnswer(value);
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',

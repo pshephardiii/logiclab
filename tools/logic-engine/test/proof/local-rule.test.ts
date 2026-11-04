@@ -5,7 +5,7 @@ import {
   PROPOSITIONAL_RULE_CATALOG_VERSION,
   type LocalRuleApplication,
   type PropositionalRuleId,
-} from '../src/proof';
+} from '../../src/proof';
 
 type Example = {
   rule: PropositionalRuleId;

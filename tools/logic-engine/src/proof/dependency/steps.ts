@@ -1,11 +1,11 @@
 import type { DependencyProofCheckInput, ProofCheckReport } from '@logiclab/contracts';
-import type { DependencyStructureResult } from './dependency-structure';
-import { inferenceDependencyIds, dependencySetsMatch } from './dependency-sets';
-import { sameFormula } from './formula-equality';
-import { checkParsedRule } from './parsed-rule';
-import type { ParsedProofFormula } from './proof-formulas';
-import type { ProofBudget } from './proof-budget';
-import type { StructureDiagnostics } from './structure-diagnostics';
+import type { DependencyStructureResult } from './structure';
+import { inferenceDependencyIds, dependencySetsMatch } from './sets';
+import { sameFormula } from '../formula-equality';
+import { checkParsedRule } from '../parsed-rule';
+import type { ParsedProofFormula } from '../proof-formulas';
+import type { ProofBudget } from '../proof-budget';
+import type { StructureDiagnostics } from '../structure-diagnostics';
 
 type StepReport = ProofCheckReport['steps'][number];
 type Structure = Extract<DependencyStructureResult, { status: 'resolved' }>;

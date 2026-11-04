@@ -1,4 +1,4 @@
-import { DerivationPublicationError } from '../../src/application/problem/derivation-errors';
+import { DerivationPublicationError } from '../../src/application/problem/derivation/errors';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -8,7 +8,7 @@ import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 
-import { checkDerivationReference } from '../../src/application/problem/derivation-authoring';
+import { checkFitchReference } from '../../src/application/problem/derivation/fitch/authoring';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 const url = process.env.TEST_DATABASE_URL;
@@ -62,7 +62,7 @@ test('owner drafts/preview/checked snapshots preserve history and reject stale r
     assert.equal(valid.status, 'updated');
     const preview = await store.previewReference(owner.id, draft.id);
     assert.equal(preview!.problemId, draft.id);
-    assert.deepEqual(preview!.check, checkDerivationReference(definition()));
+    assert.deepEqual(preview!.check, checkFitchReference(definition()));
     assert.equal(preview!.updatedAt, (await store.findOwned(owner.id, draft.id))!.updatedAt);
     // A valid preview never authorizes later changed saved data.
     await store.update(owner.id, draft.id, { definition: { ...definition(), rules: [] } });
@@ -179,7 +179,7 @@ test('concurrent publication numbers snapshots atomically and edit races never p
     else assert.equal(publication.value.status, 'published');
     const versions = await store.listVersions(owner.id, draft.id, 20, 0);
     for (const version of versions!) {
-      const check = checkDerivationReference(version.definition);
+      const check = checkFitchReference(version.definition);
       assert.equal(check.status, 'checked');
       if (check.status === 'checked') assert.equal(check.report.status, 'accepted');
     }

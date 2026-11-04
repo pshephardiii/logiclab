@@ -1,5 +1,5 @@
 import { PROOF_LIMITS, type DependencyProof, type ProofDiagnostic } from '@logiclab/contracts';
-import { structureDiagnostics } from './structure-diagnostics';
+import { structureDiagnostics } from '../structure-diagnostics';
 
 export type DependencyReferences =
   | {

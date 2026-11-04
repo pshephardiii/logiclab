@@ -1,4 +1,4 @@
-import { DerivationPublicationError, DerivationAuthoringError } from './derivation-errors';
+import { DerivationPublicationError, DerivationAuthoringError } from './derivation/errors';
 import {
   createLibraryProblemRequestSchema,
   updateLibraryProblemRequestSchema,

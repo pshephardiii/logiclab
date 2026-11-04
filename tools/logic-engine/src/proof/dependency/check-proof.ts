@@ -1,12 +1,12 @@
-import { proofCheckReportSchema, type ProofCheckReport } from '@logiclab/contracts';
-import { readDependencyInput } from './dependency-input';
-import { analyzeDependencyStructure } from './dependency-structure';
-import { evaluateDependencySteps } from './dependency-steps';
-import { readProblem, readFormula } from './proof-formulas';
-import { proofBudget, ProofBudgetExceeded } from './proof-budget';
-import { structureDiagnostics } from './structure-diagnostics';
-import { sameFormula } from './formula-equality';
-import { PROOF_CHECKER_VERSION } from './check-proof';
+import type { ProofCheckReport } from '@logiclab/contracts';
+import { readDependencyInput } from './input';
+import { analyzeDependencyStructure } from './structure';
+import { evaluateDependencySteps } from './steps';
+import { readProblem, readFormula } from '../proof-formulas';
+import { proofBudget, ProofBudgetExceeded } from '../proof-budget';
+import { structureDiagnostics } from '../structure-diagnostics';
+import { finishProofReport } from '../report';
+import { sameFormula } from '../formula-equality';
 
 /** Standalone staged checker. Callers own authoritative statements, admission and disclosure. */
 export function checkDependencyProof(value: unknown): ProofCheckReport {
@@ -16,14 +16,7 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
     target: ProofCheckReport['target'] = 'unknown',
     steps: ProofCheckReport['steps'] = [],
   ): ProofCheckReport {
-    return proofCheckReportSchema.parse({
-      checkerVersion: PROOF_CHECKER_VERSION,
-      ruleCatalogVersion: 1,
-      status: diagnostics.limited ? 'unassessable' : status,
-      target: diagnostics.limited ? 'unknown' : target,
-      steps: diagnostics.limited ? [] : steps,
-      diagnostics: diagnostics.result(),
-    });
+    return finishProofReport(diagnostics, status, target, steps);
   }
   const read = readDependencyInput(value);
   if ('diagnostic' in read) {

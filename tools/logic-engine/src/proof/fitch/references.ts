@@ -1,6 +1,6 @@
 import type { FitchProof } from '@logiclab/contracts';
-import type { ClosedFitchBlockSpan, FitchLayout, FitchReferenceCheck } from './fitch-types';
-import type { StructureDiagnostics } from './structure-diagnostics';
+import type { ClosedFitchBlockSpan, FitchLayout, FitchReferenceCheck } from './types';
+import type { StructureDiagnostics } from '../structure-diagnostics';
 
 /** Never expose resolved citations for an inference with an inaccessible or incomplete reference. */
 export function resolveFitchReferences(

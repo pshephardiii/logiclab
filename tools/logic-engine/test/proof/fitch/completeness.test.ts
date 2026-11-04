@@ -1,5 +1,5 @@
 import { PROOF_LIMITS, type ProofCheckInput } from '@logiclab/contracts';
-import { isFinishedProofAttempt, checkProof } from '../src/proof';
+import { isFinishedProofAttempt, checkProof } from '../../../src/proof';
 
 let sequence = 0;
 const nextId = () => `${(++sequence).toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;

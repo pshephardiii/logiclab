@@ -1,7 +1,7 @@
 import {
   DerivationAuthoringError,
   DerivationPublicationError,
-} from '../../application/problem/derivation-errors';
+} from '../../application/problem/derivation/errors';
 import { mapProblemDefinitionError } from '../problem-definition-error';
 import { FormulaParseError } from '@logiclab/logic-engine';
 import { mapAuthError } from '../auth/errors';

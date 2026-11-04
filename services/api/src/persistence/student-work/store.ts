@@ -21,10 +21,10 @@ import {
   evaluateDerivationAnswer,
 } from '../../application/student-work/derivation-response';
 import {
-  validateDerivationDefinition,
-  derivationContent,
-  derivationReferenceSolution,
-} from '../../application/problem/derivation-authoring';
+  validateFitchDefinition,
+  fitchContent,
+  fitchReferenceSolution,
+} from '../../application/problem/derivation/fitch/authoring';
 import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -93,7 +93,7 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
-          validateDerivationDefinition(definition);
+          validateFitchDefinition(definition);
         }
         const attempt = await lockedAttempt(em, studentId, assignmentId);
         if (attempt.submittedAt) throw new StudentWorkError('submitted');
@@ -140,7 +140,7 @@ export async function createStudentWorkStore(
             {
               itemId: item.id,
               problemVersionId: item.problemVersion.id,
-              content: derivationContent(definition),
+              content: fitchContent(definition),
             },
             input.answers,
           );
@@ -198,7 +198,7 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
-          return { itemId, solution: derivationReferenceSolution(definition) };
+          return { itemId, solution: fitchReferenceSolution(definition) };
         }
         return {
           itemId,

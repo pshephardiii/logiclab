@@ -1,10 +1,10 @@
-import { readProofInput } from './proof-input';
-import { readFormula, readProblem } from './proof-formulas';
-import { proofBudget, ProofBudgetExceeded } from './proof-budget';
-import { structureDiagnostics } from './structure-diagnostics';
-import { buildFitchLayout } from './fitch-layout';
-import { getPropositionalRule } from './rule-catalog';
-import { sameFormula } from './formula-equality';
+import { readFitchInput } from './input';
+import { readFormula, readProblem } from '../proof-formulas';
+import { proofBudget, ProofBudgetExceeded } from '../proof-budget';
+import { structureDiagnostics } from '../structure-diagnostics';
+import { buildFitchLayout } from './layout';
+import { getPropositionalRule } from '../rule-catalog';
+import { sameFormula } from '../formula-equality';
 
 /**
  * Filled, closed Fitch work with a final root target, not proof verification.
@@ -12,7 +12,7 @@ import { sameFormula } from './formula-equality';
  * Nonfinal formulas need only be nonblank; diagnostics belong to explicit/post-submission checking.
  */
 export function isFinishedProofAttempt(value: unknown): boolean {
-  const read = readProofInput(value);
+  const read = readFitchInput(value);
   if ('diagnostic' in read) return false;
   const { input } = read;
   const proof = input.proof;

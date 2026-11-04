@@ -4,7 +4,7 @@ import {
   type DependencyProofCheckInput,
   type DependencyProofStep,
 } from '@logiclab/contracts';
-import { checkDependencyProof, checkProof, analyzeDependencyStructure } from '../src/proof';
+import { checkDependencyProof, checkProof, analyzeDependencyStructure } from '../../../src/proof';
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 const given = (n: number, slot: number, formula: string): DependencyProofStep => ({
   kind: 'premise',

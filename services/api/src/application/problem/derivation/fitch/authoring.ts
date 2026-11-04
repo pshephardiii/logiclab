@@ -1,6 +1,6 @@
-import { DerivationAuthoringError } from './derivation-errors';
-import { assertDerivationConfiguration } from './derivation-configuration';
-import type { ProofCheckReport } from '@logiclab/contracts';
+import { DerivationAuthoringError } from '../errors';
+import { assertDerivationConfiguration } from '../configuration';
+import type { DerivationReferenceCheck } from '../reference-check';
 import {
   derivationDefinitionSchema,
   derivationContentSchema,
@@ -12,7 +12,7 @@ import {
 import { checkProof } from '@logiclab/logic-engine/proof';
 
 /** Validate public statement/configuration without admitting private reference fields. */
-export function validateDerivationContent(value: unknown): DerivationContent {
+export function validateFitchContent(value: unknown): DerivationContent {
   const parsed = derivationContentSchema.safeParse(value);
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
   assertDerivationConfiguration(parsed.data);
@@ -20,20 +20,17 @@ export function validateDerivationContent(value: unknown): DerivationContent {
 }
 
 /** Validate declarative configuration while retaining incomplete formulas/reference work. */
-export function validateDerivationDefinition(value: unknown): DerivationDefinition {
+export function validateFitchDefinition(value: unknown): DerivationDefinition {
   const parsed = derivationDefinitionSchema.safeParse(value);
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
   const { referenceProof: _reference, explanation: _explanation, ...content } = parsed.data;
-  validateDerivationContent(content);
+  validateFitchContent(content);
   return parsed.data;
 }
 
-export type DerivationReferenceCheck =
-  { status: 'missing' } | { status: 'checked'; report: ProofCheckReport };
-
 /** Recompute against the current saved statement/rules; never accept a client validation flag. */
-export function checkDerivationReference(value: unknown): DerivationReferenceCheck {
-  const definition = validateDerivationDefinition(value);
+export function checkFitchReference(value: unknown): DerivationReferenceCheck {
+  const definition = validateFitchDefinition(value);
   if (definition.referenceProof === null) return { status: 'missing' };
   return {
     status: 'checked',
@@ -50,8 +47,8 @@ export function checkDerivationReference(value: unknown): DerivationReferenceChe
 }
 
 /** Whitelist only ordinary content, even when given a private instructor definition. */
-export function derivationContent(value: unknown): DerivationContent {
-  const definition = validateDerivationDefinition(value);
+export function fitchContent(value: unknown): DerivationContent {
+  const definition = validateFitchDefinition(value);
   return derivationContentSchema.parse({
     type: definition.type,
     definitionVersion: definition.definitionVersion,
@@ -65,9 +62,9 @@ export function derivationContent(value: unknown): DerivationContent {
 }
 
 /** Caller must authorize answer reveal; this helper does not grant access or release grades. */
-export function derivationReferenceSolution(value: unknown): DerivationSolution {
-  const definition = validateDerivationDefinition(value);
-  const check = checkDerivationReference(definition);
+export function fitchReferenceSolution(value: unknown): DerivationSolution {
+  const definition = validateFitchDefinition(value);
+  const check = checkFitchReference(definition);
   if (check.status !== 'checked' || check.report.status !== 'accepted')
     throw new DerivationAuthoringError('reference_unavailable');
   return derivationSolutionSchema.parse({

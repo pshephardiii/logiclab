@@ -19,7 +19,7 @@ import {
   libraryProblemDefinitionSchema,
 } from '@logiclab/contracts/problem-library';
 import { derivationAnswerSchema } from '@logiclab/contracts/derivation-work';
-import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
+import { derivationDefinitionFixture } from '../../../../../test/derivation-fixture';
 import {
   validateDependencyContent,
   validateDependencyDefinition,
@@ -27,10 +27,10 @@ import {
   dependencyPublicationDefinition,
   dependencyContent,
   dependencyReferenceSolution,
-} from './dependency-authoring';
-import { DerivationAuthoringError, DerivationPublicationError } from './derivation-errors';
-import { libraryProblemDefinition } from './library-definition';
-import { supportedAssignmentDefinition } from '../assignment/definition-support';
+} from './authoring';
+import { DerivationAuthoringError, DerivationPublicationError } from '../errors';
+import { libraryProblemDefinition } from '../../library-definition';
+import { supportedAssignmentDefinition } from '../../../assignment/definition-support';
 
 type Assert<T extends true> = T;
 type DefinitionTypesMatch = Assert<

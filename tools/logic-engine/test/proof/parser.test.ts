@@ -4,8 +4,8 @@ import {
   generateTruthTable,
   FORMULA_LIMITS,
   type FormulaErrorCode,
-} from '../src';
-import { parseProofFormula, sameFormula, PROOF_FORMULA_LIMITS } from '../src/proof';
+} from '../../src';
+import { parseProofFormula, sameFormula, PROOF_FORMULA_LIMITS } from '../../src/proof';
 
 test.each(['⊥', '_|_', ' [ _|_ ] '])('parses proof falsity %s as a distinct atom', (source) => {
   expect(parseProofFormula(source)).toEqual({ type: 'bottom' });

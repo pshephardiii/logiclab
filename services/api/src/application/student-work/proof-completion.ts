@@ -4,7 +4,7 @@ import {
   summarizeProofCompletionVerification,
   type ProofCompletionSubmissionResult,
 } from '@logiclab/contracts/proof-submission';
-import { derivationContent } from '../problem/derivation-authoring';
+import { fitchContent } from '../problem/derivation/fitch/authoring';
 import { evaluateDerivationAnswer, validateDerivationAnswer } from './derivation-response';
 import { evaluateAssignmentCompletion } from './mixed-evaluation';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
@@ -21,7 +21,7 @@ export function evaluateProofCompletion(
     const value = responses.get(item.id);
     if (value === undefined) throw new StudentWorkError('incomplete_work');
     const answer = validateDerivationAnswer(value);
-    const content = derivationContent(item.definition);
+    const content = fitchContent(item.definition);
     if (
       !isFinishedProofAttempt({
         problem: {

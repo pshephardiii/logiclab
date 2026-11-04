@@ -1,13 +1,12 @@
-import { proofCheckReportSchema, type ProofCheckReport } from '@logiclab/contracts';
-import { analyzeFitchStructure } from './fitch-structure';
-import { sameFormula } from './formula-equality';
-import { readProofInput } from './proof-input';
-import { readProblem, readFormula } from './proof-formulas';
-import { evaluateProofSteps } from './proof-steps';
-import { proofBudget, ProofBudgetExceeded } from './proof-budget';
-import { structureDiagnostics } from './structure-diagnostics';
-
-export const PROOF_CHECKER_VERSION = 1;
+import type { ProofCheckReport } from '@logiclab/contracts';
+import { analyzeFitchStructure } from './structure';
+import { sameFormula } from '../formula-equality';
+import { readFitchInput } from './input';
+import { readProblem, readFormula } from '../proof-formulas';
+import { evaluateFitchSteps } from './steps';
+import { proofBudget, ProofBudgetExceeded } from '../proof-budget';
+import { structureDiagnostics } from '../structure-diagnostics';
+import { finishProofReport } from '../report';
 
 /** Deterministic Fitch checking of bounded plain data; no proof search, grades or disclosure policy. */
 export function checkProof(value: unknown): ProofCheckReport {
@@ -17,16 +16,9 @@ export function checkProof(value: unknown): ProofCheckReport {
     target: ProofCheckReport['target'] = 'unknown',
     steps: ProofCheckReport['steps'] = [],
   ): ProofCheckReport {
-    return proofCheckReportSchema.parse({
-      checkerVersion: PROOF_CHECKER_VERSION,
-      ruleCatalogVersion: 1,
-      status: diagnostics.limited ? 'unassessable' : status,
-      target: diagnostics.limited ? 'unknown' : target,
-      steps: diagnostics.limited ? [] : steps,
-      diagnostics: diagnostics.result(),
-    });
+    return finishProofReport(diagnostics, status, target, steps);
   }
-  const read = readProofInput(value);
+  const read = readFitchInput(value);
   if ('diagnostic' in read) {
     diagnostics.add(read.diagnostic);
     return finish('unassessable');
@@ -54,7 +46,7 @@ export function checkProof(value: unknown): ProofCheckReport {
     const formulas = input.proof.steps.map((step, index) =>
       readFormula(step.formula, budget, diagnostics, index),
     );
-    const steps = evaluateProofSteps(
+    const steps = evaluateFitchSteps(
       input,
       structure,
       formulas,

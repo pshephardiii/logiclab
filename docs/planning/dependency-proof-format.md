@@ -97,3 +97,32 @@ Built ESM/CommonJS subpath imports and compiled application helpers passed accep
 The production entry is 500.08 kB minified (152.24 kB gzip), just above Vite's unchanged 500 kB warning threshold; the build passes. Record this for the branch's frontend/bundle closeout rather than increasing the threshold. Existing Jest VM-module and Vitest performance advisories remain.
 
 No entity/migration, live persisted union, HTTP handler, UI or demo template changed; PostgreSQL/browser checks were not repeated. No user database, environment, provider or infrastructure was modified. Publication certification here is a pure helper, not proof that a live owner request has loaded/locked the correct saved record. That transaction-bound integration is next. No PR draft or new branch was created.
+
+## Organization slice: shared and format-specific ownership
+
+Derivation authoring now lives under `services/api/src/application/problem/derivation/`:
+
+```text
+derivation/
+  configuration.ts
+  errors.ts
+  reference-check.ts
+  fitch/
+    authoring.ts
+    authoring.test.ts
+  dependency/
+    authoring.ts
+    authoring.test.ts
+```
+
+Configuration validation, error categories and reference-check result types belong to both formats. Each format owns its definition validation, checker invocation and content/solution projections. Internal Fitch functions now explicitly say `Fitch`/`fitch` rather than implying that they handle every derivation format. The library dispatcher and existing consumers import the appropriate owner directly.
+
+The engine follows the same organization under `tools/logic-engine/src/proof/fitch/` and `dependency/`. Each owns input, structure and step evaluation; Fitch also owns layout, block references and attempt completeness, while dependency owns dependency-set arithmetic. Formula parsing, local rule patterns, budgets, diagnostics and report construction/versioning remain shared in the proof directory. Engine tests are grouped under `test/proof/`, with format-specific subdirectories and shared foundation/parser/rule tests alongside them.
+
+Public contracts and engine imports remain unchanged, including `@logiclab/logic-engine/proof`, `/proof/rules` and `/proof/completion`. The completion subpath now resolves directly to the relocated Fitch implementation. This slice changes organization and internal names, without enabling dependency library/student admission or changing proof rules, disclosure, persistence or grading behavior.
+
+### Organization verification — November 4, 2026
+
+`npm run check` passed type checks, the unchanged 1,698 tests (448 engine, 922 API, 328 web) and production builds. Existing test assertions were preserved while relocating format-specific suites and updating imports/internal function names. Built ESM/CommonJS smoke checks passed both checkers, shared version exports, Fitch-only admission and completion detection; the completion export resolved to the new Fitch path rather than a stale build artifact. Log: `/private/tmp/dependency-org-check.log`.
+
+Formatting and whitespace checks passed. Existing Jest VM-module/Vitest advisories and Vite's just-over-threshold entry warning remain (500.07 kB minified, 152.23 kB gzip). No database/migration or UI behavior changed, so PostgreSQL and browser walkthroughs were not repeated. The next feature slice remains transaction-bound library/persistence integration; this organization slice does not finish the branch.

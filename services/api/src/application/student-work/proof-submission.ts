@@ -5,7 +5,7 @@ import {
   type ProofSubmissionResult,
   type ProofSubmissionItem,
 } from '@logiclab/contracts/proof-submission';
-import { derivationContent } from '../problem/derivation-authoring';
+import { fitchContent } from '../problem/derivation/fitch/authoring';
 import { evaluateDerivationAnswer } from './derivation-response';
 import { evaluateAssignmentSubmission } from './mixed-evaluation';
 
@@ -41,7 +41,7 @@ export function evaluateProofSubmission(
       {
         itemId: item.id,
         problemVersionId: item.problemVersionId,
-        content: derivationContent(item.definition),
+        content: fitchContent(item.definition),
       },
       answer,
     );

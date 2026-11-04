@@ -1,10 +1,10 @@
 import type { ProofCheckInput, ProofCheckReport, ProofStep } from '@logiclab/contracts';
-import { sameFormula } from './formula-equality';
-import { checkParsedRule } from './parsed-rule';
-import type { FitchReferenceCheck, FitchStructureResult } from './fitch-types';
-import type { ParsedProofFormula } from './proof-formulas';
-import type { ProofBudget } from './proof-budget';
-import type { StructureDiagnostics } from './structure-diagnostics';
+import { sameFormula } from '../formula-equality';
+import { checkParsedRule } from '../parsed-rule';
+import type { FitchReferenceCheck, FitchStructureResult } from './types';
+import type { ParsedProofFormula } from '../proof-formulas';
+import type { ProofBudget } from '../proof-budget';
+import type { StructureDiagnostics } from '../structure-diagnostics';
 
 type StepReport = ProofCheckReport['steps'][number];
 type ResolvedStructure = Extract<FitchStructureResult, { status: 'resolved' }>;
@@ -67,7 +67,7 @@ function localStatus(
 }
 
 /** Propagate support validity separately from whether this step's own pattern is correct. */
-export function evaluateProofSteps(
+export function evaluateFitchSteps(
   input: ProofCheckInput,
   structure: ResolvedStructure,
   formulas: ParsedProofFormula[],

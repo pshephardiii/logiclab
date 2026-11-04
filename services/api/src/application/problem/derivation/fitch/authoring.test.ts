@@ -1,5 +1,5 @@
-import { DerivationAuthoringError } from './derivation-errors';
-import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
+import { DerivationAuthoringError } from '../errors';
+import { derivationDefinitionFixture as definition } from '../../../../../test/derivation-fixture';
 import {
   derivationDefinitionSchema,
   derivationContentSchema,
@@ -18,16 +18,16 @@ import type {
   DerivationReferenceProof,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import {
-  validateDerivationDefinition,
-  checkDerivationReference,
-  derivationContent,
-  derivationReferenceSolution,
-} from './derivation-authoring';
+  validateFitchDefinition,
+  checkFitchReference,
+  fitchContent,
+  fitchReferenceSolution,
+} from './authoring';
 import {
   supportedProblemDefinition,
   requireTruthTableDefinition,
   UnsupportedProblemDefinitionError,
-} from './definition-support';
+} from '../../definition-support';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
@@ -53,13 +53,13 @@ test('incomplete statement/reference work is retained without certifying publica
     referenceProof: null,
     explanation: null,
   };
-  expect(validateDerivationDefinition(draft)).toEqual(draft);
-  expect(checkDerivationReference(draft)).toEqual({ status: 'missing' });
+  expect(validateFitchDefinition(draft)).toEqual(draft);
+  expect(checkFitchReference(draft)).toEqual({ status: 'missing' });
   const partial = definition();
   partial.referenceProof!.steps[1]!.formula = 'P &';
   partial.referenceProof!.blocks[0]!.endId = null;
-  expect(validateDerivationDefinition(partial)).toEqual(partial);
-  const check = checkDerivationReference(partial);
+  expect(validateFitchDefinition(partial)).toEqual(partial);
+  const check = checkFitchReference(partial);
   expect(check.status).toBe('checked');
   if (check.status === 'checked') expect(check.report.status).not.toBe('accepted');
 });
@@ -67,28 +67,28 @@ test('incomplete statement/reference work is retained without certifying publica
 test('reference checking uses the saved configuration and is independent of display labels', () => {
   const value = definition();
   const before = structuredClone(value);
-  const accepted = checkDerivationReference(value);
+  const accepted = checkFitchReference(value);
   expect(accepted).toMatchObject({ status: 'checked', report: { status: 'accepted' } });
   value.rules[0]!.label = '→ Introduction';
-  expect(checkDerivationReference(value)).toEqual(accepted);
+  expect(checkFitchReference(value)).toEqual(accepted);
   value.rules = [];
-  expect(checkDerivationReference(value)).toMatchObject({
+  expect(checkFitchReference(value)).toMatchObject({
     status: 'checked',
     report: { status: 'needs_review' },
   });
   value.rules = before.rules;
   value.conclusion = 'Q -> Q';
-  expect(checkDerivationReference(value)).toMatchObject({
+  expect(checkFitchReference(value)).toMatchObject({
     status: 'checked',
     report: { status: 'needs_review', target: 'not_established' },
   });
-  expect(checkDerivationReference(before)).toEqual(accepted);
+  expect(checkFitchReference(before)).toEqual(accepted);
 });
 
 test('ordinary content whitelists statements/labels and excludes private references and explanations', () => {
   const value = definition();
   const before = structuredClone(value);
-  const content = derivationContent(value);
+  const content = fitchContent(value);
   expect(content).toEqual({
     type: value.type,
     definitionVersion: 1,
@@ -108,7 +108,7 @@ test('ordinary content whitelists statements/labels and excludes private referen
 
 test('privileged solution contains only a freshly accepted reference and its explanation', () => {
   const value = definition();
-  const solution = derivationReferenceSolution(value);
+  const solution = fitchReferenceSolution(value);
   expect(derivationSolutionSchema.parse(solution)).toEqual({
     type: 'derivation',
     definitionVersion: 1,
@@ -120,10 +120,10 @@ test('privileged solution contains only a freshly accepted reference and its exp
   });
   solution.referenceProof.steps[0]!.formula = 'Q';
   expect(value.referenceProof!.steps[0]!.formula).toBe('P');
-  expect(() => derivationReferenceSolution({ ...value, referenceProof: null })).toThrow(
+  expect(() => fitchReferenceSolution({ ...value, referenceProof: null })).toThrow(
     DerivationAuthoringError,
   );
-  expect(() => derivationReferenceSolution({ ...value, conclusion: 'Q' })).toThrow(
+  expect(() => fitchReferenceSolution({ ...value, conclusion: 'Q' })).toThrow(
     DerivationAuthoringError,
   );
 });
@@ -154,7 +154,7 @@ test('effective label spelling is preserved and distinct enabled rules remain se
       { id: 'and_elimination', label: '∧E' },
     ],
   };
-  expect(validateDerivationDefinition(value).rules.map((rule) => rule.label)).toEqual([
+  expect(validateFitchDefinition(value).rules.map((rule) => rule.label)).toEqual([
     'Conditional proof',
     '∧E',
   ]);
@@ -199,7 +199,7 @@ test.each([
 
 test('supported IDs are checked against the engine catalog, not labels or custom behavior', () => {
   expect(() =>
-    validateDerivationDefinition({ ...definition(), rules: [{ id: 'custom_rule', label: 'MP' }] }),
+    validateFitchDefinition({ ...definition(), rules: [{ id: 'custom_rule', label: 'MP' }] }),
   ).toThrow(DerivationAuthoringError);
   expect(
     derivationDefinitionSchema.safeParse({

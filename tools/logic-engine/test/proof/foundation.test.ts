@@ -3,8 +3,8 @@ import {
   PROPOSITIONAL_RULE_CATALOG,
   PROPOSITIONAL_RULE_CATALOG_VERSION,
   getPropositionalRule,
-} from '../src/proof';
-import { parseFormula } from '../src';
+} from '../../src/proof';
+import { parseFormula } from '../../src';
 
 test.each([
   ['P', ' (P) '],
