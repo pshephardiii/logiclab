@@ -50,7 +50,8 @@ test('authors, locally checks and saves a valid single-assumption conditional pr
   expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   const definition = onSave.mock.calls[0]![0].definition;
-  if (definition.type !== 'derivation') throw new Error('Expected derivation');
+  if (definition.type !== 'derivation' || definition.format !== 'fitch')
+    throw new Error('Expected derivation');
   expect(definition.referenceProof!.steps).toHaveLength(2);
   expect(definition.referenceProof!.blocks[0]!.endId).toBe(definition.referenceProof!.steps[0]!.id);
   await user.type(screen.getByLabelText('Formula for line 2'), ' &');

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { derivationDefinitionSchema } from './derivation';
+import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
 import {
   problemDefinitionSchema,
   problemDraftSchema,
@@ -10,7 +11,10 @@ import {
 /** Owner-only library shapes; assignment definitions retain their separate supported union. */
 export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
   ...problemDefinitionSchema.options,
-  derivationDefinitionSchema,
+  z.discriminatedUnion('format', [
+    derivationDefinitionSchema,
+    dependencyDerivationDefinitionSchema,
+  ]),
 ]);
 export type LibraryProblemDefinition = z.infer<typeof libraryProblemDefinitionSchema>;
 export const libraryProblemDraftSchema = problemDraftSchema

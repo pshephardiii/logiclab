@@ -73,14 +73,17 @@ export function problemFixture() {
         _version: number,
       ): Promise<LibraryProblemVersion | null> => publishedVersion,
     ),
-    create: jest.fn(async (_ownerId: string, _input: CreateProblemRequest) => problem),
+    create: jest.fn(
+      async (_ownerId: string, _input: CreateProblemRequest): Promise<LibraryProblemDraft> =>
+        problem,
+    ),
     list: jest.fn(
       async (
         _ownerId: string,
         _limit: number,
         _offset: number,
         _archive?: ProblemArchiveFilter,
-      ) => [problem],
+      ): Promise<LibraryProblemDraft[]> => [problem],
     ),
     findOwned: jest.fn(
       async (_ownerId: string, _problemId: string): Promise<LibraryProblemDraft | null> => problem,

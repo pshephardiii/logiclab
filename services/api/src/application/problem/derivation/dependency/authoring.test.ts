@@ -30,6 +30,7 @@ import {
 } from './authoring';
 import { DerivationAuthoringError, DerivationPublicationError } from '../errors';
 import { libraryProblemDefinition } from '../../library-definition';
+import { AssignmentOperationError } from '../../../assignment/errors';
 import { supportedAssignmentDefinition } from '../../../assignment/definition-support';
 
 type Assert<T extends true> = T;
@@ -79,7 +80,7 @@ function definition(): DependencyDerivationDefinition {
   };
 }
 
-test('private dependency JSON and exact database types round-trip without enabling storage', () => {
+test('private dependency JSON and exact database types round-trip as exact JSON', () => {
   const stored: StoredDefinition = dependencyDerivationDefinitionSchema.parse(definition());
   const transported: DependencyDerivationDefinition = stored;
   expect(
@@ -238,19 +239,20 @@ test('format certification never reuses or converts an accepted Fitch reference'
   );
   expect(derivationDefinitionSchema.safeParse(definition()).success).toBe(false);
 });
-test('staged definitions do not enable current owner library, assignment or student admission', () => {
+test('owner library admits dependency definitions while assignment and student admission remain guarded', () => {
   const value = dependencyPublicationDefinition(definition());
-  expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(false);
+  expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
-    createLibraryProblemRequestSchema.safeParse({ title: 'Premature', definition: value }).success,
-  ).toBe(false);
-  expect(() => libraryProblemDefinition(value)).toThrow(DerivationAuthoringError);
+    createLibraryProblemRequestSchema.safeParse({ title: 'Owner draft', definition: value })
+      .success,
+  ).toBe(true);
+  expect(libraryProblemDefinition(value)).toEqual(value);
   expect(() =>
     supportedAssignmentDefinition(value, {
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
     }),
-  ).toThrow(DerivationAuthoringError);
+  ).toThrow(AssignmentOperationError);
   expect(
     derivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof }).success,
   ).toBe(false);

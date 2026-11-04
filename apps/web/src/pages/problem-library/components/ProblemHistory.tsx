@@ -22,7 +22,7 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       <h2>Published versions</h2>
       <p>
         Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
-        Publication does not grant student access. Derivations cannot be assigned yet.
+        Publication does not grant student access. Dependency derivations cannot be assigned yet.
       </p>
       <div className="action-row">
         <button

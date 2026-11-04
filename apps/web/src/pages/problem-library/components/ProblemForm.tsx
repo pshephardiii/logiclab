@@ -8,6 +8,8 @@ import {
 import { DerivationProblemFields } from './DerivationProblemFields';
 import {
   initialProblemFields,
+  isEditableLibraryProblem,
+  type EditableLibraryProblem,
   editorDefinition,
   editorSnapshot,
   type ProblemEditorFields,
@@ -23,15 +25,32 @@ type Props = {
   onDirty: (dirty: boolean) => void;
 };
 
+/** Keep saved dependency definitions intact until their editor is available. */
+export function ProblemForm(props: Props) {
+  const problem = props.problem;
+  if (problem && !isEditableLibraryProblem(problem)) {
+    return (
+      <section className="panel">
+        <h2>Dependency derivation</h2>
+        <p>
+          This format is saved in your library. Its editor is not available yet; the draft has not
+          been changed.
+        </p>
+      </section>
+    );
+  }
+  return <EditableProblemForm {...props} problem={problem} />;
+}
+
 /** Keeps each draft local through failures and type changes; archived records remain read-only. */
-export function ProblemForm({
+function EditableProblemForm({
   problem,
   busy,
   saveError = null,
   onSave,
   onPreview,
   onDirty,
-}: Props) {
+}: Omit<Props, 'problem'> & { problem: EditableLibraryProblem | null }) {
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
   const [validationError, setValidationError] = useState<string | null>(null);
