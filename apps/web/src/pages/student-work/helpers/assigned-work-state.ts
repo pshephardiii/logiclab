@@ -4,7 +4,10 @@ import type {
   SavedStudentAssignment as StudentAssignment,
   SavedStudentAttempt as StudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
-import { isFinishedProofAttempt } from '@logiclab/logic-engine/proof/completion';
+import {
+  isFinishedProofAttempt,
+  isFinishedDependencyProofAttempt,
+} from '@logiclab/logic-engine/proof/completion';
 import type { Answers } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
 import { conceptualAnswerFilled } from '../../../features/assignment/helpers/conceptual-answers';
@@ -15,14 +18,7 @@ export function assignedWorkCapabilities(
   attempt: StudentAttempt | null,
 ) {
   const hasFinalSubmission =
-    assignment !== null &&
-    assignment.assessmentMode !== 'ungraded_practice' &&
-    !assignment.items.some(
-      (item) =>
-        'content' in item &&
-        item.content.type === 'derivation' &&
-        item.content.format === 'dependency',
-    );
+    assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
   const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
   const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
@@ -63,8 +59,9 @@ export function assignmentCompletionReady(
               (answer) => answer.value !== null,
             )
           : item.content.type === 'derivation'
-            ? item.content.format === 'fitch' &&
-              isFinishedProofAttempt({
+            ? (item.content.format === 'dependency'
+                ? isFinishedDependencyProofAttempt
+                : isFinishedProofAttempt)({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

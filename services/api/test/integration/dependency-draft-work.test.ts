@@ -7,7 +7,6 @@ import { createStudentWorkStore } from '../../src/persistence/student-work/store
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 import { buildApp } from '../../src/app';
-import { StudentWorkError } from '../../src/application/student-work/errors';
 import {
   savedStudentAssignmentResponseSchema,
   savedStudentAttemptResponseSchema,
@@ -283,16 +282,11 @@ for (const mode of ['normal', 'demo'] as const) {
           .statusCode,
         403,
       );
-      await assert.rejects(
-        store.submit(student.id, assignment.id, 3),
-        (error) => error instanceof StudentWorkError && error.reason === 'unsupported_policy',
-      );
-      const final = await orm.em
-        .fork()
-        .findOneOrFail(db.AssignmentAttempt, { student: student.id, assignment: assignment.id });
-      assert.equal(final.submittedAt, null);
-      assert.equal(final.result, null);
-      assert.equal(final.revision, 3);
+      const submitted = await store.submit(student.id, assignment.id, 3);
+      assert(submitted.submittedAt);
+      assert.equal(submitted.result?.gradingVersion, 'proof_mixed_v1');
+      assert.equal(submitted.revision, 4);
+      assert.deepEqual(await store.submit(student.id, assignment.id, 0), submitted);
     } finally {
       await app?.close();
       await orm.em.execute(`drop schema if exists "${schema}" cascade`);

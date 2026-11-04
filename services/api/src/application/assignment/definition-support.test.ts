@@ -1,7 +1,8 @@
+import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
 import { assignmentSchema } from '@logiclab/contracts';
 import { assignment } from '../../../test/assignment-fixture';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
-import { supportedAssignmentDefinition } from './definition-support';
+import { supportedAssignmentDefinition, readableAssignmentDefinition } from './definition-support';
 import { AssignmentOperationError } from './errors';
 import { mapAssignmentError } from '../../routes/assignment/errors';
 
@@ -70,3 +71,13 @@ test.each(['graded', 'completion_only'])(
       ).toThrow(AssignmentOperationError);
   },
 );
+
+test('owner reads support staged dependency releases without enabling assignment admission', () => {
+  const definition = dependencyDefinitionFixture();
+  const policy = { assessmentMode: 'graded', feedbackTiming: 'on_submission' };
+  expect(readableAssignmentDefinition(definition, policy)).toEqual(definition);
+  expect(() => supportedAssignmentDefinition(definition, policy)).toThrow(AssignmentOperationError);
+  expect(() =>
+    readableAssignmentDefinition(definition, { ...policy, feedbackTiming: 'on_check' }),
+  ).toThrow(AssignmentOperationError);
+});

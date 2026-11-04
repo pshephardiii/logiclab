@@ -29,15 +29,6 @@ export function calculateSubmissionResult(
 ): CalculatedSubmission {
   if (!validAssignmentScoring(assignment, assigned))
     throw new StudentWorkError('unsupported_policy');
-  // Dependency finalization/review are introduced separately from draft save/check support.
-  if (
-    assigned.some(
-      (item) =>
-        item.problemVersion.definition.type === 'derivation' &&
-        item.problemVersion.definition.format === 'dependency',
-    )
-  )
-    throw new StudentWorkError('unsupported_policy');
   const containsProof = assigned.some(
     (item) => item.problemVersion.definition.type === 'derivation',
   );

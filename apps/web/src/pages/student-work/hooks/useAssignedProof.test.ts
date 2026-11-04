@@ -269,7 +269,7 @@ test('dependency baselines, explicit saves and checks preserve sibling drafts an
   expect(result.current.proofAnswers[itemA]).toEqual(first);
 });
 
-test('dependency reload keeps its format and clears captured reports while final submission remains guarded', async () => {
+test('dependency reload keeps its format and clears captured reports while graded checks remain locked', async () => {
   const { dependencyWork, dependencySaved, dependencyChecked } =
     await import('../../../../test/dependency-work-fixture');
   vi.mocked(api.readAssignedWork).mockResolvedValue({
@@ -277,9 +277,9 @@ test('dependency reload keeps its format and clears captured reports while final
     attempt: dependencySaved,
   });
   const { result } = await open();
-  expect(result.current.hasFinalSubmission).toBe(false);
-  await act(async () => result.current.submit());
-  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(result.current.hasFinalSubmission).toBe(true);
+  await act(async () => result.current.check(itemA));
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
   vi.mocked(api.readAssignedWork).mockResolvedValue({
     assignment: dependencyWork,
     attempt: dependencySaved,

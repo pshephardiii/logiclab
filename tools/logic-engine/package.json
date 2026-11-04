@@ -18,8 +18,8 @@
       "default": "./dist/proof/rule-catalog.js"
     },
     "./proof/completion": {
-      "types": "./dist/proof/fitch/completeness.d.ts",
-      "default": "./dist/proof/fitch/completeness.js"
+      "types": "./dist/proof/completion.d.ts",
+      "default": "./dist/proof/completion.js"
     }
   },
   "files": [

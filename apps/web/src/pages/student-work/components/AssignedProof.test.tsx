@@ -202,26 +202,56 @@ test('graded proof submission requires explicitly saved edits and final confirma
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
 
-test('completion hides pre-submission checks, requires confirmation, and displays post-submission diagnostics without revealing references', async () => {
-  const { proofCompletionWork, proofCompletionFinal } =
-    await import('../../../../test/proof-work-fixture');
-  vi.mocked(api.readAssignedWork).mockResolvedValue({
-    assignment: proofCompletionWork,
-    attempt: { ...proofCompletionFinal, submittedAt: null, result: null },
-  });
-  vi.mocked(api.submitAssignedWork).mockResolvedValue(proofCompletionFinal);
-  const { user } = await open();
-  expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
-  expect(screen.queryByText(/Premise does not match/)).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Show solution/ })).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
-  await user.click(screen.getByRole('checkbox'));
-  await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
-  await screen.findByText(/Completed 2 of 2 responses/);
-  expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Next problem' }));
-  expect(await screen.findByText(/Premise does not match/)).toBeInTheDocument();
-  expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
-  expect(api.readAssignedSolution).not.toHaveBeenCalled();
-  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
-});
+test.each(['fitch', 'dependency'] as const)(
+  'completion hides pre-submission checks, requires confirmation, and displays post-submission diagnostics without revealing references (%s)',
+  async (format) => {
+    const source = await import('../../../../test/proof-work-fixture');
+    const { dependencyAnswer } = await import('../../../../test/dependency-work-fixture');
+    const proofCompletionWork =
+      format === 'fitch'
+        ? source.proofCompletionWork
+        : {
+            ...source.proofCompletionWork,
+            items: source.proofCompletionWork.items.map((item) =>
+              'content' in item && item.content.type === 'derivation'
+                ? { ...item, content: { ...item.content, format: 'dependency' as const } }
+                : item,
+            ),
+          };
+    const proofCompletionFinal =
+      format === 'fitch'
+        ? source.proofCompletionFinal
+        : {
+            ...source.proofCompletionFinal,
+            answers: Object.fromEntries(
+              Object.keys(source.proofCompletionFinal.answers).map((id) => [
+                id,
+                structuredClone(dependencyAnswer),
+              ]),
+            ),
+          };
+    vi.mocked(api.readAssignedWork).mockResolvedValue({
+      assignment: proofCompletionWork,
+      attempt: { ...proofCompletionFinal, submittedAt: null, result: null },
+    });
+    vi.mocked(api.submitAssignedWork).mockResolvedValue(proofCompletionFinal);
+    const { user } = await open();
+    expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Premise does not match/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show solution/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'I understand submission is final and cannot be edited.',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+    await screen.findByText(/Completed 2 of 2 responses/);
+    expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next problem' }));
+    expect(await screen.findByText(/Premise does not match/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
+    expect(api.readAssignedSolution).not.toHaveBeenCalled();
+    expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  },
+);

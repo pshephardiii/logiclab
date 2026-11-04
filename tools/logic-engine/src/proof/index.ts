@@ -19,7 +19,7 @@ export {
   getPropositionalRule,
 } from './rule-catalog';
 export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
-export { isFinishedProofAttempt } from './fitch/completeness';
+export { isFinishedProofAttempt, isFinishedDependencyProofAttempt } from './completion';
 export { inferenceDependencyIds, dependencySetsMatch } from './dependency/sets';
 export type { DischargedDependencySet } from './dependency/sets';
 export { analyzeDependencyStructure } from './dependency/structure';
