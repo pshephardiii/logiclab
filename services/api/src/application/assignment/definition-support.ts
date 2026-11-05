@@ -7,6 +7,8 @@ export function supportedAssignmentDefinition(
   policy: { assessmentMode: string; feedbackTiming: string },
 ) {
   const definition = libraryProblemDefinition(input);
+  if (definition.type === 'derivation' && definition.format === 'tree')
+    throw new AssignmentOperationError('proof_mode_unavailable');
   if (
     definition.type === 'derivation' &&
     policy.assessmentMode !== 'ungraded_practice' &&

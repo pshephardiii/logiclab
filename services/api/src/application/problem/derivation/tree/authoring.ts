@@ -44,7 +44,7 @@ export function checkTreeReference(value: unknown): DerivationReferenceCheck {
   };
 }
 
-/** Future persistence callers must invoke this under the saved problem lock before snapshotting. */
+/** Certification helper; publication must recheck under the saved problem lock before snapshotting. */
 export function treePublicationDefinition(value: unknown): TreeDerivationDefinition {
   const definition = validateTreeDefinition(value);
   const check = checkTreeReference(definition);

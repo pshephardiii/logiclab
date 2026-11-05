@@ -183,7 +183,7 @@ test('tree inputs retain authoritative statement bounds and reject student repla
   );
 });
 
-test('existing standalone and live derivation boundaries do not admit trees yet', () => {
+test('Fitch/dependency/student boundaries stay separate while the owner library admits trees', () => {
   expect(proofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
   expect(dependencyProofSchema.safeParse(proof).success).toBe(false);
   expect(derivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
@@ -202,5 +202,5 @@ test('existing standalone and live derivation boundaries do not admit trees yet'
       format: 'tree',
       referenceProof: proof,
     }).success,
-  ).toBe(false);
+  ).toBe(true);
 });

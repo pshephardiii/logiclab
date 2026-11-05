@@ -1,7 +1,7 @@
 import type { ProblemType } from './enums.ts';
 import type { TreeProof } from '../proof/tree-work.ts';
 
-/** Staged private reference JSON; this type alone does not widen the live entity union. */
+/** Private tree JSON stored in owner drafts and immutable published versions. */
 export type TreeDerivationDefinition = {
   type: `${ProblemType.Derivation}`;
   definitionVersion: 1;

@@ -26,7 +26,7 @@ A fully accepted proof must establish the target at the selected root with no op
 
 1. **Completed:** bounded standalone draft/input contracts and transport/admission regression tests. Retain blank/null edits and stable IDs; keep live definitions and student work unchanged.
 2. **Completed:** iterative tree structure/reference analysis, branch-local discharge/open-assumption propagation and standalone checking through the existing formulas, catalog and reports. Test all catalog variants, repeated/vacuous/nested assumptions, cycles/shared children/disconnected work, support failures and resource limits.
-3. **In progress:** staged tree definitions, exact database JSON types and private reference certification are complete. Next connect persistence/library admission alongside compatible editor handling. Require an accepted reference in the selected format; never relabel an existing Fitch/dependency reference.
+3. **Completed:** tree definitions, exact database JSON types, private reference certification and owner persistence/library admission with compatible read-only reference handling. Require an accepted reference in the selected format; never relabel an existing Fitch/dependency reference.
 4. Add instructor/reference editing and preview, rule labels and authoring validation. Preserve unsaved work and failed-write recovery.
 5. Add student editing, revisioned saves, explicit checks, completion/finalization and instructor review through existing independent release/grading policies. Enable live assignment admission only after these workflows are verified.
 6. Complete focused cross-format/demo/browser verification, rollout notes and the local PR draft. Keep student-created practice's remaining work in 027.
@@ -81,3 +81,19 @@ Persistence/library admission is deliberately a separate next slice: the current
 Contracts (Node/browser) and database-package builds passed, along with contracts, database, API and web type checks. Focused authoring/library/tree-contract tests passed **112 cases**, including **26 new tree-authoring cases** for exact types/JSON, incomplete drafts, acceptance rechecking, open assumptions, resource rejection, private projections, terminology/identity constraints, cross-format rejection and unchanged live admission. The complete engine regression suite passed **558 tests**.
 
 The new package subpath passed Node ESM/CommonJS and bundled browser smoke. Formatting, whitespace and local documentation targets were checked. No PostgreSQL/browser journey or full workspace check was repeated for these staged contracts/helpers; no entity metadata, persisted data, UI, environment or demo template changed. No development database was migrated/reset. Branch work remains in progress.
+
+## Slice 3b: owner persistence, publication and client compatibility
+
+The owner library and database definition unions now include trees. Existing save/read/archive/history routes use format-specific validation, and saved reference checks dispatch to `checkTreeProof`. Publication rechecks the authoritative saved statement, rules and reference under the existing problem lock before constructing an immutable version. No new endpoint or migration is required; tree definitions use the existing JSON storage.
+
+The frontend can read and retain saved tree definitions, edit their statement/rules/explanation, explicitly check the current or saved reference, and display draft/version references safely. A flat read-only node summary tolerates unfinished/cyclic draft references without recursive rendering; it identifies root, supporting nodes and explicit discharge. Tree references never reach the Fitch editor. Tree construction/selection as a new format waits for the next editor slice. Confirmed format changes can discard a saved tree reference, while cancellation preserves it and failed saves retain edits.
+
+Tree assignment admission remains explicitly unavailable for graded, completion-only and private practice. The assignment picker filters tree versions while retaining pagination and supported publications. Server assignment validation rejects bypasses before saving an assignment; student projections and direct saves also fail closed rather than falling through to Fitch processing. Owner publication does not grant student access.
+
+### Slice 3b verification — November 5, 2026
+
+Focused API tests passed **200 cases** across problem authoring/routes and tree transport. Focused frontend tests passed **56 cases**, including new saved-tree editing/checking/failed-save/format-change, read-only malformed-draft rendering and guarded picker pagination coverage. Contracts, database, API and web type checks passed; contracts/database builds passed.
+
+Focused PostgreSQL authoring/HTTP tests passed **14 cases** across Fitch, dependency and tree definitions. They cover owner-scoped draft/history/archive behavior, missing/stale/accepted reference certification, publication/edit races, immutable snapshots, invalid-edit rollback, all-mode tree assignment rejection, normal/demo HTTP routes, cross-visitor privacy and demo transaction rollback. Tests used disposable isolated schemas and cleaned them up. The initial sandbox-blocked database connection was rerun with local database access and passed. No user development database was migrated/reset.
+
+Formatting, whitespace and local documentation links were checked. No real-browser walkthrough, full workspace run or demo template update was performed for this slice. Tree reference construction and student workflow admission remain unfinished; next is the instructor tree editor/preview, followed by student/review integration. The separately planned proof UX redesign remains required before deployment.

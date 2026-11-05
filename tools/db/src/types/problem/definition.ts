@@ -1,6 +1,7 @@
 import type { ProblemType } from './enums.ts';
 import type { DerivationDefinition } from './derivation.ts';
 import type { DependencyDerivationDefinition } from './dependency-derivation.ts';
+import type { TreeDerivationDefinition } from './tree-derivation.ts';
 
 export type TruthTableDefinition = {
   type: `${ProblemType.TruthTable}`;
@@ -36,4 +37,5 @@ export type ProblemDefinition =
   | TruthTableDefinition
   | ConceptualProblemDefinition
   | DerivationDefinition
-  | DependencyDerivationDefinition;
+  | DependencyDerivationDefinition
+  | TreeDerivationDefinition;

@@ -7,6 +7,7 @@ import {
   checkDependencyReference,
 } from './derivation/dependency/authoring';
 import type { DerivationReferenceCheck } from './derivation/reference-check';
+import { validateTreeDefinition, checkTreeReference } from './derivation/tree/authoring';
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
@@ -16,6 +17,7 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
     'type' in value &&
     value.type === 'derivation'
   ) {
+    if ('format' in value && value.format === 'tree') return validateTreeDefinition(value);
     return 'format' in value && value.format === 'dependency'
       ? validateDependencyDefinition(value)
       : validateFitchDefinition(value);
@@ -27,6 +29,7 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
 export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
 ): DerivationReferenceCheck {
+  if (definition.format === 'tree') return checkTreeReference(definition);
   return definition.format === 'dependency'
     ? checkDependencyReference(definition)
     : checkFitchReference(definition);

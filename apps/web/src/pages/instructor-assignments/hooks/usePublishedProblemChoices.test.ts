@@ -19,6 +19,31 @@ beforeEach(() => {
   vi.mocked(listProblems).mockResolvedValue({ problems: [], nextOffset: null });
 });
 
+test('tree publications stay unavailable for assignments without losing pagination or other formats', async () => {
+  const { treeDerivationDefinition, derivationDraft } = await import('../../../../test/derivation');
+  vi.mocked(listVersions)
+    .mockResolvedValueOnce({
+      versions: [{ ...version, definition: treeDerivationDefinition }],
+      nextOffset: 20,
+    })
+    .mockResolvedValueOnce({
+      versions: [{ ...version, definition: derivationDraft.definition }, version],
+      nextOffset: null,
+    });
+  const hook = renderHook(() => usePublishedProblemChoices(true));
+  act(() => hook.result.current.selectProblem(version.problemId));
+  await waitFor(() => expect(hook.result.current.versionNext).toBe(20));
+  expect(hook.result.current.versions).toEqual([]);
+  await act(async () => {
+    await hook.result.current.loadVersions(20);
+  });
+  expect(hook.result.current.versions.map((v) => v.definition.type)).toEqual([
+    'derivation',
+    'truth_table',
+  ]);
+  expect(hook.result.current.versionNext).toBeNull();
+});
+
 test('switching problems cancels history reads and ignores late versions', async () => {
   let resolve!: (value: { versions: PublishedProblemVersion[]; nextOffset: null }) => void;
   vi.mocked(listVersions)

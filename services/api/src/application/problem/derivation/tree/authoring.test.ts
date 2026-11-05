@@ -38,6 +38,9 @@ import {
 import { DerivationAuthoringError, DerivationPublicationError } from '../errors';
 import { libraryProblemDefinition, publicationDefinition } from '../../library-definition';
 import { supportedAssignmentDefinition } from '../../../assignment/definition-support';
+import { AssignmentOperationError } from '../../../assignment/errors';
+import { publicDerivationContent, derivationReferenceSolution } from '../projections';
+import { UnsupportedProblemDefinitionError } from '../../definition-support';
 
 type Assert<T extends true> = T;
 type DefinitionTypesMatch = Assert<
@@ -246,15 +249,17 @@ test('format-specific certification cannot reuse an accepted Fitch or dependency
   );
 });
 
-test('staged definitions do not widen live library, publication or student-work admission', () => {
+test('owner library admits trees while assignment/student projections remain guarded', () => {
   const value = treePublicationDefinition(treeDefinitionFixture());
-  expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(false);
+  expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
     createLibraryProblemRequestSchema.safeParse({ title: 'Not yet admitted', definition: value })
       .success,
-  ).toBe(false);
-  expect(() => libraryProblemDefinition(value)).toThrow(DerivationAuthoringError);
-  expect(() => publicationDefinition(value)).toThrow(DerivationAuthoringError);
+  ).toBe(true);
+  expect(libraryProblemDefinition(value)).toEqual(value);
+  expect(publicationDefinition(value)).toEqual(value);
+  expect(() => publicDerivationContent(value)).toThrow(UnsupportedProblemDefinitionError);
+  expect(() => derivationReferenceSolution(value)).toThrow(UnsupportedProblemDefinitionError);
   expect(
     savedDerivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof })
       .success,
@@ -265,6 +270,6 @@ test('staged definitions do not widen live library, publication or student-work 
         assessmentMode,
         feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
       }),
-    ).toThrow(DerivationAuthoringError);
+    ).toThrow(AssignmentOperationError);
   }
 });

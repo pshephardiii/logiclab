@@ -1,5 +1,40 @@
 import type { DerivationDefinition } from '@logiclab/contracts/derivation';
 import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
+import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
+
+export const treeDerivationDefinition: TreeDerivationDefinition = {
+  type: 'derivation',
+  definitionVersion: 1,
+  format: 'tree',
+  ruleCatalogVersion: 1,
+  checkerVersion: 1,
+  premises: [],
+  conclusion: 'P -> P',
+  rules: [{ id: 'implication_introduction', label: 'Conditional proof' }],
+  explanation: 'Private tree explanation',
+  referenceProof: {
+    proofVersion: 1,
+    format: 'tree',
+    rootId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    nodes: [
+      { kind: 'assumption', id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', formula: 'P' },
+      {
+        kind: 'inference',
+        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        formula: 'P -> P',
+        ruleId: 'implication_introduction',
+        lineReferences: [],
+        branches: [
+          {
+            rootId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            assumptionFormula: 'P',
+            assumptionIds: ['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'],
+          },
+        ],
+      },
+    ],
+  },
+};
 
 export const derivationDefinition: DerivationDefinition = {
   type: 'derivation',

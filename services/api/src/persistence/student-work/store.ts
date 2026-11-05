@@ -91,6 +91,8 @@ export async function createStudentWorkStore(
         );
         if (!item) throw new StudentWorkError('not_found');
         const definition = item.problemVersion.definition;
+        if (definition.type === 'derivation' && definition.format === 'tree')
+          throw new StudentWorkError('submission_unavailable');
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
           libraryProblemDefinition(definition);

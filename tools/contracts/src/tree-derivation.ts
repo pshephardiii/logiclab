@@ -5,7 +5,7 @@ import {
   derivationExplanationSchema as explanation,
 } from './derivation-statement';
 
-/** Staged tree statement; live library and assignment admission remain separate. */
+/** Tree statement used by the owner library; student assignment admission remains separate. */
 export const treeDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('tree'),
 });
