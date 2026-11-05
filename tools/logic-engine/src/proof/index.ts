@@ -25,3 +25,6 @@ export type { DischargedDependencySet } from './dependency/sets';
 export { analyzeDependencyStructure } from './dependency/structure';
 export type { DependencyStructureResult, DependencyReferences } from './dependency/structure';
 export { checkDependencyProof } from './dependency/check-proof';
+export { checkTreeProof } from './tree/check-proof';
+export { analyzeTreeStructure } from './tree/structure';
+export type { TreeReferences, TreeStructureResult } from './tree/structure';

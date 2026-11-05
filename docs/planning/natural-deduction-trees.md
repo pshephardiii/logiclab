@@ -24,8 +24,8 @@ A fully accepted proof must establish the target at the selected root with no op
 
 ## Slice sequence
 
-1. **Current:** bounded standalone draft/input contracts and transport/admission regression tests. Retain blank/null edits and stable IDs; keep live definitions and student work unchanged.
-2. Add iterative tree structure/reference analysis, branch-local discharge/open-assumption propagation and standalone checking through the existing formulas, catalog and reports. Test all catalog variants, repeated/vacuous/nested assumptions, cycles/shared children/disconnected work, support failures and resource limits.
+1. **Completed:** bounded standalone draft/input contracts and transport/admission regression tests. Retain blank/null edits and stable IDs; keep live definitions and student work unchanged.
+2. **Completed:** iterative tree structure/reference analysis, branch-local discharge/open-assumption propagation and standalone checking through the existing formulas, catalog and reports. Test all catalog variants, repeated/vacuous/nested assumptions, cycles/shared children/disconnected work, support failures and resource limits.
 3. Add immutable tree definitions, private reference certification and persistence/library integration. Require an accepted reference in the selected format; never relabel an existing Fitch/dependency reference.
 4. Add instructor/reference editing and preview, rule labels and authoring validation. Preserve unsaved work and failed-write recovery.
 5. Add student editing, revisioned saves, explicit checks, completion/finalization and instructor review through existing independent release/grading policies. Enable live assignment admission only after these workflows are verified.
@@ -44,3 +44,24 @@ This slice does not add a checker, database type/migration, API handler, authori
 Contracts builds (Node and browser targets), contracts type checks and API type checks passed. The focused tree/Fitch/dependency contract run passed 74 tests, including 26 new tree cases covering draft preservation, repeated premise identities, multi-occurrence/vacuous discharge shape, canonical UUIDs, strict fields, transport bounds and unchanged live admission. These are transport tests, not proof-validity tests; the standalone checker is the next slice.
 
 Formatting and whitespace checks passed. No database or browser checks were repeated because this slice changes neither persistence nor UI. Full workspace verification remains for later integration/final verification.
+
+## Slice 2: standalone structure and checking
+
+`checkTreeProof` and `analyzeTreeStructure` are exported from `@logiclab/logic-engine/proof`. The checker returns the existing version-1 report with accepted/review-needed/unassessable outcomes; it does not award points or enable live tree assignments. Callers remain responsible for loading the authoritative pinned problem and enforcing authorization/disclosure.
+
+The implementation is contained in `proof/tree/`:
+
+- `input.ts` bounds and inspects plain flat data before schema parsing. It rejects unsupported versions/fields, oversized lists/text, object/list accessors, array holes and custom iterators without following arbitrary nested fields.
+- `structure.ts` resolves UUID children independently of array order and traverses iteratively. Every submitted node must belong to the selected root, with no duplicate identities, shared children or cycles. Ordinary and discharged children both participate in that same strict-tree constraint. Discharge IDs must identify distinct assumption leaves; actual open support is checked separately. A null root/branch remains incomplete work. The existing 200-node transport bound also bounds possible tree depth without recursive traversal.
+- `nodes.ts` evaluates children before parents, verifies authoritative premise correspondence and invokes shared local rule matching. It computes open-assumption sets from the submitted leaves, validates each discharge against its own branch's still-open occurrences and exact formula, and removes only valid selected occurrences. Equal formulas do not merge identities. Nested/vacuous/multi-occurrence discharge is supported; repeated/cross-branch/already-closed discharge cannot manufacture support. All children propagate invalid or unknown support even when a parent inference locally matches its rule.
+- `check-proof.ts` composes input/configuration, structure, formula reading, evaluation and root-target checking under the shared deterministic work/diagnostic budget. Acceptance requires valid submitted work and an established root with no open temporary assumptions. Node reports retain the original node-array `stepIndex`, not traversal order or a display line number. Structural failures do not produce a partially accepted proof; resource/configuration failures remain unassessable.
+
+All 19 existing catalog variants are available under explicit per-problem permission. Tree operands adapt to the existing ordinary/subproof formula obligations rather than implementing a separate rule library. Fitch/dependency entry points retain their format boundaries. No persisted definition/answer/result union, API, editor, migration or demo seed changes in this slice.
+
+The user also required the [proof-editor interaction redesign](ui-ux-audit.md#required-before-deployment-proof-editor-interaction-redesign) in the planned UI branch before deployment. Numbered proof entry should append a confirmed line to a clean proof display; tree entry should use deliberate branch-building. This changes presentation while preserving proof data, explicit checks/saves, unsaved-work protection and grading/reference-release boundaries. Unconfirmed text must never be silently lost or omitted at submission.
+
+### Slice 2 verification — November 5, 2026
+
+Engine type checking/build and the complete engine suite passed: **558 tests**, including **90 new tree cases**. Existing Fitch/dependency regressions passed. Tests cover all catalog variants and direct-rule parity, malformed/unfinished input, authoritative premise checks, array-order/report identity, nested/repeated/vacuous discharge, cross-branch and already-closed assumptions, invalid versus unknown support, detached work, strict-tree constraints, maximum-depth iterative checking, bounded diagnostics and work exhaustion. Focused API contract regressions passed **74 tests**. Node/browser contracts builds passed through the engine pretest.
+
+Built ESM/CommonJS public-entry smoke passed six accepted/review/unassessable checks, validated the accepted report schema and confirmed input preservation. Formatting, whitespace and local documentation links were checked. This is engine/contract verification rather than a full workspace or browser/product QA run; no database/browser checks were repeated because their workflows are unchanged. No user development database was migrated/reset. Next: tree-format private definitions and checked instructor-reference publication, with live student admission still guarded.
