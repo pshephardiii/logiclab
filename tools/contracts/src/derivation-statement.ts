@@ -29,12 +29,12 @@ export const derivationRuleSchema = z.strictObject({
     ),
 });
 
-/** Shared declarative statement fields; a format and its reference are added explicitly. */
+/** Shared fields, including staged formats; each consumer must narrow its format explicitly. */
 export const derivationStatementSchema = z
   .strictObject({
     type: z.literal('derivation'),
     definitionVersion: z.literal(1),
-    format: z.enum(['fitch', 'dependency']),
+    format: z.enum(['fitch', 'dependency', 'tree']),
     ruleCatalogVersion: z.literal(1),
     checkerVersion: z.literal(1),
     premises: z.array(z.strictObject({ id, formula })).max(PROOF_LIMITS.maxPremises),

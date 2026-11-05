@@ -1,9 +1,33 @@
 import type { DependencyDerivationDefinition } from '@logiclab/contracts/dependency-derivation';
 import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
 const c = 'c3333333-3333-4333-8333-333333333333';
+export function treeDefinitionFixture(): TreeDerivationDefinition {
+  return {
+    ...derivationDefinitionFixture(),
+    format: 'tree',
+    referenceProof: {
+      proofVersion: 1,
+      format: 'tree',
+      rootId: b,
+      nodes: [
+        { kind: 'assumption', id: a, formula: 'P' },
+        {
+          kind: 'inference',
+          id: b,
+          formula: 'P -> P',
+          ruleId: 'implication_introduction',
+          lineReferences: [],
+          branches: [{ rootId: a, assumptionFormula: 'P', assumptionIds: [a] }],
+        },
+      ],
+    },
+  };
+}
+
 export function derivationDefinitionFixture(): DerivationDefinition {
   return {
     type: 'derivation',
