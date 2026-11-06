@@ -9,6 +9,7 @@ import {
 export const treeDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('tree'),
 });
+
 export type TreeDerivationContent = z.infer<typeof treeDerivationContentSchema>;
 
 /** Instructor-only JSON. The pinned format and private reference must agree. */
@@ -16,6 +17,7 @@ export const treeDerivationDefinitionSchema = treeDerivationContentSchema.safeEx
   referenceProof: treeProofSchema.nullable(),
   explanation,
 });
+
 export type TreeDerivationDefinition = z.infer<typeof treeDerivationDefinitionSchema>;
 
 /** Privileged reference projection; callers must authorize independent answer reveal. */
@@ -28,4 +30,5 @@ export const treeDerivationSolutionSchema = z.strictObject({
   referenceProof: treeProofSchema,
   explanation,
 });
+
 export type TreeDerivationSolution = z.infer<typeof treeDerivationSolutionSchema>;

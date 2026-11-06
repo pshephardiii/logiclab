@@ -6,6 +6,7 @@ export const solutionAccessSchema = z.enum([
   'anytime',
   'instructor_release',
 ]);
+
 export type SolutionAccess = z.infer<typeof solutionAccessSchema>;
 
 /**
@@ -29,4 +30,5 @@ export const assignmentLearningPolicySchema = z.discriminatedUnion('assessmentMo
     solutionAccess: z.enum(['never', 'anytime']),
   }),
 ]);
+
 export type AssignmentLearningPolicy = z.infer<typeof assignmentLearningPolicySchema>;

@@ -5,6 +5,7 @@ import {
   derivationStatementSchema,
   derivationExplanationSchema as explanation,
 } from './derivation-statement';
+
 export {
   DERIVATION_AUTHORING_LIMITS,
   derivationRuleSchema,
@@ -15,6 +16,7 @@ export {
 export const derivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('fitch'),
 });
+
 export type DerivationContent = z.infer<typeof derivationContentSchema>;
 
 /** Instructor-only authored JSON; a reference/version tag is not a cached acceptance claim. */
@@ -22,6 +24,7 @@ export const derivationDefinitionSchema = derivationContentSchema.safeExtend({
   referenceProof: fitchProofSchema.nullable(),
   explanation,
 });
+
 export type DerivationDefinition = z.infer<typeof derivationDefinitionSchema>;
 
 /** Privileged answer-reveal payload; never include this in ordinary assigned content. */
@@ -34,6 +37,7 @@ export const derivationSolutionSchema = z.strictObject({
   referenceProof: fitchProofSchema,
   explanation,
 });
+
 export type DerivationSolution = z.infer<typeof derivationSolutionSchema>;
 
 export const derivationReferenceCheckResponseSchema = z.strictObject({
@@ -44,6 +48,7 @@ export const derivationReferenceCheckResponseSchema = z.strictObject({
     z.strictObject({ status: z.literal('checked'), report: proofCheckReportSchema }),
   ]),
 });
+
 export type DerivationReferenceCheckResponse = z.infer<
   typeof derivationReferenceCheckResponseSchema
 >;

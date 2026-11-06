@@ -12,6 +12,7 @@ export const dependencyDischargeSchema = z.strictObject({
   assumptionId: id.nullable(),
   conclusionId: id.nullable(),
 });
+
 export type DependencyDischarge = z.infer<typeof dependencyDischargeSchema>;
 
 const fields = {
@@ -33,6 +34,7 @@ export const dependencyProofStepSchema = z.discriminatedUnion('kind', [
     discharges: z.array(dependencyDischargeSchema).max(2),
   }),
 ]);
+
 export type DependencyProofStep = z.infer<typeof dependencyProofStepSchema>;
 
 /** Flat dependency proofs have no implicit box scope or global assumption-closing operation. */
@@ -41,6 +43,7 @@ export const dependencyProofSchema = z.strictObject({
   format: z.literal('dependency'),
   steps: z.array(dependencyProofStepSchema).max(PROOF_LIMITS.maxSteps),
 });
+
 export type DependencyProof = z.infer<typeof dependencyProofSchema>;
 
 /** Format-specific checker input; callers enforce workflow admission and authoritative statements. */
@@ -48,4 +51,5 @@ export const dependencyProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
   proof: dependencyProofSchema,
 });
+
 export type DependencyProofCheckInput = z.infer<typeof dependencyProofCheckInputSchema>;

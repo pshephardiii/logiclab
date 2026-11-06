@@ -6,6 +6,7 @@ export const treeDerivationAnswerSchema = z.strictObject({
   type: z.literal('derivation'),
   proof: treeProofSchema,
 });
+
 export type TreeDerivationAnswer = z.infer<typeof treeDerivationAnswerSchema>;
 
 /** Staged transport; adding these contracts does not enable live tree assignment admission. */
@@ -14,9 +15,12 @@ export const saveTreeAnswersSchema = z.strictObject({
   itemId: z.uuid(),
   answers: treeDerivationAnswerSchema,
 });
+
 export type SaveTreeAnswers = z.infer<typeof saveTreeAnswersSchema>;
+
 export const checkTreeAnswersSchema = z.strictObject({
   itemId: z.uuid(),
   answers: treeDerivationAnswerSchema,
 });
+
 export type CheckTreeAnswers = z.infer<typeof checkTreeAnswersSchema>;
