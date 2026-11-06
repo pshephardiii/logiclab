@@ -7,7 +7,6 @@ import {
   dependencyDefinitionFixture,
   treeDefinitionFixture,
 } from '../derivation-fixture';
-import { AssignmentOperationError } from '../../src/application/assignment/errors';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
@@ -163,22 +162,18 @@ for (const definition of [
       } as const;
       if (format === 'tree') {
         for (const assessmentMode of ['graded', 'completion_only', 'ungraded_practice'] as const) {
-          await assert.rejects(
-            assignments.create(owner.id, classroom.id, {
-              ...input,
-              assessmentMode,
-              feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
-              problemVersionIds: [...input.problemVersionIds],
-            }),
-            (error) =>
-              error instanceof AssignmentOperationError &&
-              error.reason === 'proof_mode_unavailable',
-          );
+          const created = await assignments.create(owner.id, classroom.id, {
+            ...input,
+            assessmentMode,
+            feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
+            problemVersionIds: [...input.problemVersionIds],
+          });
+          assert.equal(created.items[0]!.problemVersion.id, published.version.id);
         }
-        assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 0);
+        assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 3);
         assert.equal(
           await em.fork().count(db.AssignmentItem, { problemVersion: published.version.id }),
-          0,
+          3,
         );
         return;
       }

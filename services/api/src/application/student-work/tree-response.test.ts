@@ -47,16 +47,19 @@ function fixture() {
   return { definition, answer, authoritative };
 }
 
-test('tree finalization remains explicitly guarded after draft transport is enabled', () => {
+test('tree finalization uses the shared retained evidence formats for graded and completion work', () => {
   const { definition, authoritative, answer } = fixture();
   const items = [
     { id: authoritative.itemId, problemVersionId: authoritative.problemVersionId, definition },
   ];
-  for (const finalize of [evaluateProofSubmission, evaluateProofCompletion]) {
-    expect(() => finalize(items, { [authoritative.itemId]: answer })).toThrow(
-      'submission_unavailable',
-    );
-  }
+  expect(evaluateProofSubmission(items, { [authoritative.itemId]: answer })).toMatchObject({
+    gradingVersion: 'proof_mixed_v1',
+    summary: { proofs: { accepted: 1 } },
+  });
+  expect(evaluateProofCompletion(items, { [authoritative.itemId]: answer })).toMatchObject({
+    gradingVersion: 'proof_completion_v1',
+    summary: { proofVerification: { verified: 1 } },
+  });
 });
 
 test('exact student JSON and staged requests round-trip without borrowing the reference object', () => {

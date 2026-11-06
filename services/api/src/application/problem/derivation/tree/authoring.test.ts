@@ -248,7 +248,7 @@ test('format-specific certification cannot reuse an accepted Fitch or dependency
   );
 });
 
-test('owner and student projections support trees while public assignment admission stays guarded', () => {
+test('tree admission supports each assessment mode while retaining proof feedback-policy checks', () => {
   const value = treePublicationDefinition(treeDefinitionFixture());
   expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
@@ -264,11 +264,20 @@ test('owner and student projections support trees while public assignment admiss
       .success,
   ).toBe(true);
   for (const assessmentMode of ['graded', 'completion_only', 'ungraded_practice']) {
-    expect(() =>
+    expect(
       supportedAssignmentDefinition(value, {
         assessmentMode,
         feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
       }),
-    ).toThrow(AssignmentOperationError);
+    ).toEqual(value);
   }
+  expect(() =>
+    supportedAssignmentDefinition(value, {
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_check',
+    }),
+  ).toThrow(AssignmentOperationError);
+  expect(() =>
+    supportedAssignmentDefinition(value, { assessmentMode: 'graded', feedbackTiming: 'on_check' }),
+  ).toThrow(AssignmentOperationError);
 });

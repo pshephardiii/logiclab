@@ -164,7 +164,7 @@ for (const definitionFixture of [derivationDefinitionFixture, treeDefinitionFixt
               },
             )
           ).statusCode,
-          definition.format === 'tree' ? 409 : 201,
+          201,
         );
         await request('POST', `${path}/${id}/archive`, scope.cookie, {});
         assert.equal(

@@ -3,7 +3,11 @@ import type { AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'im
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { dependencyDefinitionFixture, derivationDefinitionFixture } from '../derivation-fixture';
+import {
+  dependencyDefinitionFixture,
+  derivationDefinitionFixture,
+  treeDefinitionFixture,
+} from '../derivation-fixture';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
@@ -14,6 +18,7 @@ import { StudentWorkError } from '../../src/application/student-work/errors';
 import {
   savedStudentAssignmentResponseSchema,
   savedStudentAnswersSchema,
+  savedDerivationAnswerSchema,
   type SavedStudentResponseValue,
 } from '@logiclab/contracts/saved-student-work';
 import { submissionReviewSchema } from '@logiclab/contracts';
@@ -21,9 +26,13 @@ import { submissionReviewSchema } from '@logiclab/contracts';
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
-for (const mode of ['normal', 'demo'] as const)
+for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((mode) =>
+  [dependencyDefinitionFixture, treeDefinitionFixture].map(
+    (definitionFixture) => [mode, definitionFixture] as const,
+  ),
+))
   for (const assessment of ['graded', 'completion_only'] as const) {
-    test(`${mode} dependency ${assessment} finalization freezes mixed-format evidence, isolates review and preserves independent release`, async () => {
+    test(`${mode} ${definitionFixture().format} ${assessment} finalization freezes mixed-format evidence, isolates review and preserves independent release`, async () => {
       const db = await import('@logiclab/db');
       const schema = `dependency_final_${randomUUID().replaceAll('-', '')}`;
       const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -83,11 +92,11 @@ for (const mode of ['normal', 'demo'] as const)
         em.persist(stranger);
         await em.flush();
         const problems = await createProblemStore(orm);
-        const dependency = dependencyDefinitionFixture(),
+        const primary = definitionFixture(),
           fitch = derivationDefinitionFixture();
         const definitionList = [
-          dependency,
-          dependency,
+          primary,
+          primary,
           fitch,
           {
             type: 'true_false' as const,
@@ -144,11 +153,12 @@ for (const mode of ['normal', 'demo'] as const)
           runtime ? runtime.run(studentSession!.sessionId, write, work) : work();
         const ownerRun = <T>(write: boolean, work: () => Promise<T>) =>
           runtime ? runtime.run(ownerSession!.sessionId, write, work) : work();
-        const bad = structuredClone(dependency.referenceProof!);
-        bad.steps[0]!.formula = 'Q';
+        const bad = structuredClone(primary.referenceProof!);
+        const firstNode = 'steps' in bad ? bad.steps[0]! : bad.nodes[0]!;
+        firstNode.formula = 'Q';
         const answers: SavedStudentResponseValue[] = [
-          { type: 'derivation' as const, proof: dependency.referenceProof! },
-          { type: 'derivation' as const, proof: bad },
+          savedDerivationAnswerSchema.parse({ type: 'derivation', proof: primary.referenceProof }),
+          savedDerivationAnswerSchema.parse({ type: 'derivation', proof: bad }),
           { type: 'derivation' as const, proof: fitch.referenceProof! },
           { type: 'true_false' as const, answer: true },
         ];
@@ -175,15 +185,22 @@ for (const mode of ['normal', 'demo'] as const)
         let revision = 4;
         if (assessment === 'completion_only') {
           const unfinished = structuredClone(bad);
-          const last = unfinished.steps.at(-1)!;
+          const last =
+            'steps' in unfinished
+              ? unfinished.steps.at(-1)!
+              : unfinished.nodes.find((node) => node.id === unfinished.rootId)!;
           if (last.kind !== 'inference') assert.fail('Expected inference');
           last.ruleId = null;
           await studentRun(true, () =>
-            studentStore.save(student.id, assignment.id, {
-              revision,
-              itemId: items[1]!.id,
-              answers: { type: 'derivation', proof: unfinished },
-            }),
+            studentStore.save(
+              student.id,
+              assignment.id,
+              savedStudentAnswersSchema.parse({
+                revision,
+                itemId: items[1]!.id,
+                answers: { type: 'derivation', proof: unfinished },
+              }),
+            ),
           );
           revision++;
           await assert.rejects(
@@ -250,7 +267,7 @@ for (const mode of ['normal', 'demo'] as const)
         assert.equal(
           review.attempt.answers[items[0]!.id] &&
             (review.attempt.answers[items[0]!.id] as { proof: { format: string } }).proof.format,
-          'dependency',
+          primary.format,
         );
         assert(!JSON.stringify(review.assignment).includes('referenceProof'));
         assert(!JSON.stringify(review).includes('PRIVATE_CONCEPTUAL_KEY'));
@@ -308,7 +325,7 @@ for (const mode of ['normal', 'demo'] as const)
           studentStore.solution(student.id, assignment.id, items[0]!.id),
         );
         assert('type' in solution.solution && solution.solution.type === 'derivation');
-        assert.equal(solution.solution.format, 'dependency');
+        assert.equal(solution.solution.format, primary.format);
         if (assessment === 'graded') {
           assert(
             (await studentRun(false, () => studentStore.read(student.id, assignment.id))).attempt!

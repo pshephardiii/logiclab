@@ -115,7 +115,7 @@ test('instructor list and detail show the retained point score', async () => {
   expect(screen.getAllByText('5 / 25 points (20%)')).toHaveLength(2);
 });
 
-test.each(['fitch', 'dependency'] as const)(
+test.each(['fitch', 'dependency', 'tree'] as const)(
   'completion review flags retained proof mistakes and displays read-only diagnostics without points or reference answers (%s)',
   async (format) => {
     const source = await import('../../../../test/proof-work-fixture');
@@ -127,7 +127,13 @@ test.each(['fitch', 'dependency'] as const)(
             ...source.proofCompletionWork,
             items: source.proofCompletionWork.items.map((item) =>
               'content' in item && item.content.type === 'derivation'
-                ? { ...item, content: { ...item.content, format: 'dependency' as const } }
+                ? {
+                    ...item,
+                    content:
+                      format === 'tree'
+                        ? { ...item.content, format: 'tree' as const }
+                        : { ...item.content, format: 'dependency' as const },
+                  }
                 : item,
             ),
           };
@@ -139,7 +145,7 @@ test.each(['fitch', 'dependency'] as const)(
             answers: Object.fromEntries(
               Object.keys(source.proofCompletionFinal.answers).map((id) => [
                 id,
-                structuredClone(dependencyAnswer),
+                structuredClone(format === 'tree' ? source.treeAnswer : dependencyAnswer),
               ]),
             ),
           };
@@ -179,6 +185,7 @@ test.each(['fitch', 'dependency'] as const)(
     expect(await screen.findByText(/Premise does not match/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Formula for node 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
     expect(screen.queryByText('Instructor solution')).not.toBeInTheDocument();
   },

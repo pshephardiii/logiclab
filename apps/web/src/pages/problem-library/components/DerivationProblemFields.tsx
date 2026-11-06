@@ -77,8 +77,8 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       )}
       <p className="help">
         Save an unfinished statement now. Publication requires an accepted reference under these
-        exact premises, conclusion and permitted rules. Published Fitch and dependency snapshots can
-        be added to assignments. Tree assignment support is not available yet.
+        exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
+        snapshots can be added to assignments.
       </p>
       <section aria-label="Derivation premises">
         <h3>Premises</h3>

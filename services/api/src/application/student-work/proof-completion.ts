@@ -1,6 +1,7 @@
 import {
   isFinishedProofAttempt,
   isFinishedDependencyProofAttempt,
+  isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
 import {
   proofCompletionSubmissionResultSchema,
@@ -19,13 +20,6 @@ export function evaluateProofCompletion(
   input: unknown,
 ): ProofCompletionSubmissionResult {
   const { assigned, responses } = validatedProofWork(items, input);
-  // Completion evidence for trees is enabled together with finalization/review in the next slice.
-  if (
-    assigned.some(
-      (item) => item.definition.type === 'derivation' && item.definition.format === 'tree',
-    )
-  )
-    throw new StudentWorkError('submission_unavailable');
   const proofs = assigned.flatMap((item) => {
     if (item.definition.type !== 'derivation') return [];
     const value = responses.get(item.id);
@@ -34,7 +28,11 @@ export function evaluateProofCompletion(
     const answer = validateProofAnswer(content, value);
     if (
       !(
-        content.format === 'dependency' ? isFinishedDependencyProofAttempt : isFinishedProofAttempt
+        content.format === 'tree'
+          ? isFinishedTreeProofAttempt
+          : content.format === 'dependency'
+            ? isFinishedDependencyProofAttempt
+            : isFinishedProofAttempt
       )({
         problem: {
           ruleCatalogVersion: content.ruleCatalogVersion,

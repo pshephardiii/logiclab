@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.mocked(listProblems).mockResolvedValue({ problems: [], nextOffset: null });
 });
 
-test('tree publications stay unavailable for assignments without losing pagination or other formats', async () => {
+test('tree publications remain selectable across pagination with other supported formats', async () => {
   const { treeDerivationDefinition, derivationDraft } = await import('../../../../test/derivation');
   vi.mocked(listVersions)
     .mockResolvedValueOnce({
@@ -33,11 +33,13 @@ test('tree publications stay unavailable for assignments without losing paginati
   const hook = renderHook(() => usePublishedProblemChoices(true));
   act(() => hook.result.current.selectProblem(version.problemId));
   await waitFor(() => expect(hook.result.current.versionNext).toBe(20));
-  expect(hook.result.current.versions).toEqual([]);
+  expect(hook.result.current.versions).toHaveLength(1);
+  expect(hook.result.current.versions[0]!.definition).toEqual(treeDerivationDefinition);
   await act(async () => {
     await hook.result.current.loadVersions(20);
   });
   expect(hook.result.current.versions.map((v) => v.definition.type)).toEqual([
+    'derivation',
     'derivation',
     'truth_table',
   ]);

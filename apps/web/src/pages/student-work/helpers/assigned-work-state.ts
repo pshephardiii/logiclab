@@ -7,6 +7,7 @@ import type {
 import {
   isFinishedProofAttempt,
   isFinishedDependencyProofAttempt,
+  isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
 import type { Answers } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
@@ -39,7 +40,6 @@ export function assignedWorkCapabilities(
 
 /**
  * Finished response shape is separate from correctness and whether edits have been saved.
- * Tree completion remains unavailable until its finalization/review workflow is enabled.
  */
 export function assignmentCompletionReady(
   assignment: StudentAssignment | null,
@@ -62,10 +62,11 @@ export function assignmentCompletionReady(
               (answer) => answer.value !== null,
             )
           : item.content.type === 'derivation'
-            ? item.content.format !== 'tree' &&
-              (item.content.format === 'dependency'
-                ? isFinishedDependencyProofAttempt
-                : isFinishedProofAttempt)({
+            ? (item.content.format === 'tree'
+                ? isFinishedTreeProofAttempt
+                : item.content.format === 'dependency'
+                  ? isFinishedDependencyProofAttempt
+                  : isFinishedProofAttempt)({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

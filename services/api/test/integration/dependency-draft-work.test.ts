@@ -301,25 +301,6 @@ for (const { definitionFixture, mode } of variants) {
           .statusCode,
         403,
       );
-      if (definition.format === 'tree') {
-        for (const assessmentMode of [db.AssessmentMode.Graded, db.AssessmentMode.CompletionOnly]) {
-          await orm.em.fork().nativeUpdate(db.Assignment, assignment.id, { assessmentMode });
-          await assert.rejects(
-            store.submit(student.id, assignment.id, 3),
-            (error) =>
-              error instanceof StudentWorkError && error.reason === 'submission_unavailable',
-          );
-        }
-        assert.deepEqual((await request('GET', prefix, cookie)).json().attempt, afterRace);
-        assert.equal(
-          await em.fork().count(db.AssignmentAttempt, {
-            assignment: assignment.id,
-            submittedAt: { $ne: null },
-          }),
-          0,
-        );
-        return;
-      }
       const submitted = await store.submit(student.id, assignment.id, 3);
       assert(submitted.submittedAt);
       assert.equal(submitted.result?.gradingVersion, 'proof_mixed_v1');

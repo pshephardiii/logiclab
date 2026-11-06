@@ -22,10 +22,8 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       <h2>Published versions</h2>
       <p>
         Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
-        Publication does not grant student access.{' '}
-        {problem.definition.type === 'derivation' && problem.definition.format === 'tree'
-          ? 'Tree assignment support is not available yet.'
-          : 'Add a published version to a class assignment to share it.'}
+        Publication does not grant student access. Add a published version to a class assignment to
+        share it.
       </p>
       <div className="action-row">
         <button

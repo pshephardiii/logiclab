@@ -60,13 +60,7 @@ export function usePublishedProblemChoices(includeDerivations = false) {
         if (!signal.aborted) {
           const assignable = page.versions.flatMap((version) => {
             const parsed = libraryProblemVersionSchema.safeParse(version);
-            return parsed.success &&
-              !(
-                parsed.data.definition.type === 'derivation' &&
-                parsed.data.definition.format === 'tree'
-              )
-              ? [parsed.data]
-              : [];
+            return parsed.success ? [parsed.data] : [];
           });
           setVersions((previous) => (offset ? [...previous, ...assignable] : assignable));
           setVersionNext(page.nextOffset);

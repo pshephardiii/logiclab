@@ -8,7 +8,6 @@ import {
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
 import { evaluateAssignmentSubmission } from './mixed-evaluation';
-import { StudentWorkError } from './errors';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
 export function evaluateProofSubmission(
@@ -16,13 +15,6 @@ export function evaluateProofSubmission(
   input: unknown,
 ): ProofSubmissionResult {
   const { assigned, responses } = validatedProofWork(items, input);
-  // Draft transport is tree-aware; final grading remains guarded until its workflow is verified.
-  if (
-    assigned.some(
-      (item) => item.definition.type === 'derivation' && item.definition.format === 'tree',
-    )
-  )
-    throw new StudentWorkError('submission_unavailable');
   const objectiveItems = assigned.flatMap((item) =>
     item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
   );
@@ -42,14 +34,17 @@ export function evaluateProofSubmission(
   const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
   const results = assigned.map((item): ProofSubmissionItem => {
     if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
+    // Missing work needs an empty proof in its pinned format so the report records incompleteness.
     const answer = responses.has(item.id)
       ? responses.get(item.id)
       : {
           type: 'derivation',
           proof:
-            item.definition.format === 'dependency'
-              ? { proofVersion: 1, format: 'dependency', steps: [] }
-              : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+            item.definition.format === 'tree'
+              ? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] }
+              : item.definition.format === 'dependency'
+                ? { proofVersion: 1, format: 'dependency', steps: [] }
+                : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
         };
     const evidence = evaluateProofAnswer(
       {
