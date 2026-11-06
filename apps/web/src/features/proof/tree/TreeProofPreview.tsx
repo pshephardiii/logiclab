@@ -15,6 +15,7 @@ export function TreeProofPreview({
   const rendered = new Map<string, ReactNode>();
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
   const positions = new Map(proof.nodes.map((node, index) => [node.id, index + 1]));
+  // Child views already exist when their parent is assembled; raw draft links never drive recursion.
   for (const index of layout?.order ?? []) {
     const node = proof.nodes[index]!;
     const child = (id: string | null) =>

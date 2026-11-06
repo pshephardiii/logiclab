@@ -297,6 +297,8 @@ Use `void` when an event/effect intentionally ignores an asynchronous operation'
 
 Add brief documentation above exported hooks and substantial components when their responsibility or behavior is not obvious from the name. Describe what they own, what callers supply, and important lifecycle behavior. Use inline comments to explain invariants and decisions such as cancellation guards, pagination adjustments, authorization ordering, and transaction locks.
 
+For dense algorithms, guide the reader through the main processing stages with short inline comments, even when a function already has a summary. Explain why stages run in that order, what is established before later code can rely on it, and intentional exceptions or failure handling. Proof traversal, scope/discharge, support propagation and completeness-versus-correctness checks are examples. Add this guidance alongside related implementation or review work; a focused comment pass does not need its own branch.
+
 Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.
 
 ## Repository formatting

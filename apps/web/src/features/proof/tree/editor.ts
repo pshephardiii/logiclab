@@ -48,6 +48,7 @@ export function treePreviewLayout(
   if (root === undefined) return { order: [], unattached: proof.nodes.length };
   const seen = new Set<number>();
   const order: number[] = [];
+  // Exit markers build child-first drawing order without following draft links recursively.
   const pending = [{ index: root, exit: false }];
   while (pending.length) {
     const { index, exit } = pending.pop()!;
@@ -67,8 +68,10 @@ export function treePreviewLayout(
     ];
     for (const id of children.reverse()) {
       const child = indices.get(id);
+      // Missing selections are drawn as placeholders; they remain errors for explicit checking.
       if (child !== undefined) pending.push({ index: child, exit: false });
     }
   }
+  // Report detached entries rather than hiding them as though the preview covered the whole draft.
   return { order, unattached: proof.nodes.length - seen.size };
 }

@@ -83,6 +83,7 @@ export function evaluateFitchSteps(
   for (const [stepIndex, step] of input.proof.steps.entries()) {
     const reference = references.get(stepIndex);
     const dependencies = new Set<number>();
+    // Each line inherits its enclosing assumptions, even when it does not explicitly cite them.
     let scope = step.blockId;
     while (scope !== null) {
       budget.spend(1);
@@ -90,6 +91,7 @@ export function evaluateFitchSteps(
       if (block.assumptionIndex < stepIndex) dependencies.add(block.assumptionIndex);
       scope = block.parentId;
     }
+    // Add explicit cited lines and the endpoints of discharged boxes to that support.
     if (reference?.status === 'resolved') {
       reference.lineIndices.forEach((index) => dependencies.add(index));
       reference.subproofs.forEach((block) => {
@@ -103,6 +105,7 @@ export function evaluateFitchSteps(
         : reference?.status === 'unassessable'
           ? 'unknown'
           : 'valid';
+    // Invalid support takes precedence over unknown support; later correct patterns cannot erase it.
     for (const index of dependencies) {
       budget.spend(1);
       const earlier = reports[index]!;
@@ -114,6 +117,7 @@ export function evaluateFitchSteps(
       )
         dependencyStatus = 'unknown';
     }
+    // Check this line's own pattern separately so review can distinguish local from upstream errors.
     const status = localStatus(
       step,
       stepIndex,

@@ -16,6 +16,7 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
     target: ProofCheckReport['target'] = 'unknown',
     steps: ProofCheckReport['steps'] = [],
   ) => finishProofReport(diagnostics, status, target, steps);
+  // Shape/version failures make the input unassessable, rather than an incorrect proof.
   const read = readTreeInput(value);
   if ('diagnostic' in read) {
     diagnostics.add(read.diagnostic);
@@ -24,8 +25,10 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
   const { input } = read;
   const budget = proofBudget();
   try {
+    // Validate the authoritative statement first; configuration errors are not student mistakes.
     const problem = readProblem(input, budget, diagnostics);
     if (diagnostics.items.length) return finish('unassessable');
+    // Resolve structure before following citations or evaluating formulas through them.
     const structure = analyzeTreeStructure(input.proof, budget);
     structure.diagnostics.forEach((diagnostic) => diagnostics.add(diagnostic));
     if (structure.status !== 'resolved')
@@ -41,6 +44,7 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
               dependencyStatus: 'unknown',
             })),
       );
+    // Read every submitted formula, including branch assumptions, before propagating support.
     const formulas = input.proof.nodes.map((node, index) =>
       readFormula(node.formula, budget, diagnostics, index),
     );
@@ -60,6 +64,7 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
       budget,
       diagnostics,
     );
+    // Matching target text is insufficient: its root must also have valid, closed support.
     const root = reports[structure.rootIndex]!;
     const formula = formulas[structure.rootIndex]!;
     let target: ProofCheckReport['target'] = 'not_established';
@@ -83,6 +88,7 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
         message:
           'The root must establish the requested conclusion with no open temporary assumptions.',
       });
+    // Automatic acceptance requires an error-free submission, not just a matching conclusion.
     const accepted =
       target === 'established' &&
       diagnostics.items.length === 0 &&

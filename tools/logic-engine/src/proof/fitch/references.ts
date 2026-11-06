@@ -20,6 +20,7 @@ export function resolveFitchReferences(
       invalid = true;
       diagnostics.add({ code: 'INVALID_REFERENCE', message, stepIndex });
     };
+    // Ordinary lines must already exist and remain visible in the current or an ancestor box.
     for (const id of step.lineReferences) {
       const index = layout.stepIndices.get(id);
       if (index === undefined || index >= stepIndex) {
@@ -33,6 +34,7 @@ export function resolveFitchReferences(
       }
       lineIndices.push(index);
     }
+    // Discharge cites whole closed child boxes, not arbitrary lines from sibling/nested scopes.
     const seen = new Set<string>();
     for (const id of step.subproofReferences) {
       if (seen.has(id)) {
@@ -57,6 +59,7 @@ export function resolveFitchReferences(
         fail('Subproof citation must follow its closing endpoint.');
       } else subproofs.push({ ...block, endIndex: block.endIndex });
     }
+    // Do not return a usable subset of citations when any required reference is invalid/unfinished.
     checks.push(
       invalid
         ? { status: 'invalid', stepIndex }

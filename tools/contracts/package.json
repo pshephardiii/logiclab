@@ -41,6 +41,11 @@
       "browser": "./dist/browser/dependency-derivation.js",
       "default": "./dist/dependency-derivation.js"
     },
+    "./tree-derivation-work": {
+      "types": "./dist/tree-derivation-work.d.ts",
+      "browser": "./dist/browser/tree-derivation-work.js",
+      "default": "./dist/tree-derivation-work.js"
+    },
     "./tree-derivation": {
       "types": "./dist/tree-derivation.d.ts",
       "browser": "./dist/browser/tree-derivation.js",

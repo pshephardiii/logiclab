@@ -69,9 +69,11 @@ export function evaluateDependencySteps(
         : reference.status === 'unassessable'
           ? 'unknown'
           : 'valid';
+    // Null means unknown support. It must not become an empty set that falsely proves independence.
     let computed: string[] | null = null;
     const cited = new Set<number>();
     if (step.kind !== 'inference') {
+      // Each premise/assumption is its own source; premise formula validity is checked separately.
       computed = [step.id];
       localStatus = sourceStatus(input, stepIndex, formulas, premises, budget, diagnostics);
     } else if (reference.status !== 'resolved') {
@@ -87,6 +89,7 @@ export function evaluateDependencySteps(
         cited.add(pair.assumptionIndex);
         cited.add(pair.conclusionIndex);
       });
+      // Compute the union only when every operand's support is known. Discharge is branch-local.
       if (
         lines.every((line) => line !== null) &&
         branches.every((branch) => branch.conclusionDependencies !== null)
@@ -119,6 +122,7 @@ export function evaluateDependencySteps(
         diagnostics,
       );
     }
+    // A locally valid pattern still inherits invalid/unknown support from the work it cites.
     for (const index of cited) {
       budget.spend(1);
       const earlier = reports[index]!;
@@ -130,6 +134,7 @@ export function evaluateDependencySteps(
       )
         dependencyStatus = 'unknown';
     }
+    // Compare the student's written set against independently computed support, not vice versa.
     budget.spend(step.dependencies.length + (computed?.length ?? 0) + 1);
     if (
       !structure.annotationsValid[stepIndex] ||
@@ -143,6 +148,7 @@ export function evaluateDependencySteps(
           stepIndex,
         });
     }
+    // Avoid repeating an annotation/reference error when the remaining problem is inherited support.
     if (
       dependencyStatus !== 'valid' &&
       reference.status === 'resolved' &&

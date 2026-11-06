@@ -11,6 +11,7 @@ export function readTreeInput(
   value: unknown,
 ): { input: TreeProofCheckInput } | { diagnostic: ProofDiagnostic } {
   try {
+    // Inspect only declared plain fields; do not let schema parsing invoke getters on raw input.
     const outer = record(value, ['problem', 'proof']);
     const problem = record(outer.problem, [
       'ruleCatalogVersion',
@@ -58,6 +59,7 @@ export function readTreeInput(
           for (const id of array(branch.assumptionIds, PROOF_LIMITS.maxSteps)) stringLimit(id, 36);
         }
     }
+    // After bounding every nested list/text field, let the contract enforce exact types and UUIDs.
     const parsed = treeProofCheckInputSchema.safeParse(value);
     return parsed.success
       ? { input: parsed.data }

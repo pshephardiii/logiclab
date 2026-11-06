@@ -28,3 +28,4 @@ export { checkDependencyProof } from './dependency/check-proof';
 export { checkTreeProof } from './tree/check-proof';
 export { analyzeTreeStructure } from './tree/structure';
 export type { TreeReferences, TreeStructureResult } from './tree/structure';
+export { isFinishedTreeProofAttempt } from './tree/completeness';
