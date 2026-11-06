@@ -36,9 +36,7 @@ export function readTreeInput(
 
     for (const value of array(problem.premises, PROOF_LIMITS.maxPremises)) {
       const premise = record(value, ['id', 'formula']);
-
       ids(premise, ['id']);
-
       stringLimit(premise.formula, PROOF_LIMITS.maxFormulaLength);
     }
 

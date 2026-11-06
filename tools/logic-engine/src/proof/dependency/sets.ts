@@ -29,7 +29,6 @@ export function inferenceDependencyIds(
 /** Exact set equality: order is presentation; duplicates and extra/missing sources are errors. */
 export function dependencySetsMatch(declared: readonly string[], expected: readonly string[]) {
   const declaredSet = new Set(declared);
-
   const expectedSet = new Set(expected);
 
   return (

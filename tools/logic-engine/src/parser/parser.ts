@@ -11,7 +11,6 @@ import type { Formula } from './types';
  */
 export function parseFormula(source: string): Formula {
   checkLength(source);
-
   return parseTokens(tokenize(source));
 }
 

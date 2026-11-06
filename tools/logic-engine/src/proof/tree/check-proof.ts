@@ -23,12 +23,10 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
 
   if ('diagnostic' in read) {
     diagnostics.add(read.diagnostic);
-
     return finish('unassessable');
   }
 
   const { input } = read;
-
   const budget = proofBudget();
 
   try {
@@ -81,9 +79,7 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
 
     // Matching target text is insufficient: its root must also have valid, closed support.
     const root = reports[structure.rootIndex]!;
-
     const formula = formulas[structure.rootIndex]!;
-
     let target: ProofCheckReport['target'] = 'not_established';
 
     if (!formula.formula) target = 'unknown';
@@ -125,7 +121,6 @@ export function checkTreeProof(value: unknown): ProofCheckReport {
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),
     });
-
     return finish('unassessable');
   }
 }

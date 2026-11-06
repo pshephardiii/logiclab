@@ -112,7 +112,6 @@ export const savedStudentAttemptSchema = studentAttemptSchema
         reject('Instructor grading requires visible final graded work.');
 
       const automatic = new Map(attempt.automaticScore.items.map((item) => [item.itemId, item]));
-
       const decisions = new Map(attempt.instructorGrading.items.map((item) => [item.itemId, item]));
 
       if (
@@ -123,7 +122,6 @@ export const savedStudentAttemptSchema = studentAttemptSchema
 
       for (const item of attempt.score?.items ?? []) {
         const original = automatic.get(item.itemId);
-
         const award = decisions.get(item.itemId)?.earnedPoints;
 
         if (

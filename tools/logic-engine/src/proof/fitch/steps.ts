@@ -33,7 +33,6 @@ function localStatus(
         message: 'Premise declaration has no selected problem premise.',
         stepIndex,
       });
-
       return 'unassessable';
     }
 
@@ -45,7 +44,6 @@ function localStatus(
         message: 'Premise declaration must identify a supplied problem premise.',
         stepIndex,
       });
-
       return 'invalid';
     }
 
@@ -58,7 +56,6 @@ function localStatus(
       message: 'Premise formula does not match its supplied problem premise.',
       stepIndex,
     });
-
     return 'invalid';
   }
 
@@ -99,7 +96,6 @@ export function evaluateFitchSteps(
 
   for (const [stepIndex, step] of input.proof.steps.entries()) {
     const reference = references.get(stepIndex);
-
     const dependencies = new Set<number>();
 
     // Each line inherits its enclosing assumptions, even when it does not explicitly cite them.
@@ -118,10 +114,8 @@ export function evaluateFitchSteps(
     // Add explicit cited lines and the endpoints of discharged boxes to that support.
     if (reference?.status === 'resolved') {
       reference.lineIndices.forEach((index) => dependencies.add(index));
-
       reference.subproofs.forEach((block) => {
         dependencies.add(block.assumptionIndex);
-
         dependencies.add(block.endIndex);
       });
     }

@@ -46,7 +46,6 @@ export const submissionReviewSchema = z
     );
 
     const completion = review.attempt.result?.gradingVersion === 'proof_completion_v1';
-
     const graded = review.attempt.result?.gradingVersion === 'proof_mixed_v1';
 
     if (

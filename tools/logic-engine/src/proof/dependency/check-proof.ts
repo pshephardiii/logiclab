@@ -24,12 +24,10 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
 
   if ('diagnostic' in read) {
     diagnostics.add(read.diagnostic);
-
     return finish('unassessable');
   }
 
   const { input } = read;
-
   const budget = proofBudget();
 
   try {
@@ -80,7 +78,6 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
     );
 
     let target: ProofCheckReport['target'] = 'not_established';
-
     const index = reports.length - 1;
 
     if (index >= 0) {
@@ -134,7 +131,6 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),
     });
-
     return finish('unassessable');
   }
 }

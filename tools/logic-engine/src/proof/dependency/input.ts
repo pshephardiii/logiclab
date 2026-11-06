@@ -36,9 +36,7 @@ export function readDependencyInput(
 
     for (const item of array(problem.premises, PROOF_LIMITS.maxPremises)) {
       const premise = record(item, ['id', 'formula']);
-
       ids(premise, ['id']);
-
       stringLimit(premise.formula, PROOF_LIMITS.maxFormulaLength);
     }
 
@@ -74,7 +72,6 @@ export function readDependencyInput(
       if (step.discharges !== undefined)
         for (const value of array(step.discharges, 2)) {
           const discharge = record(value, ['assumptionId', 'conclusionId']);
-
           ids(discharge, ['assumptionId', 'conclusionId']);
         }
     }

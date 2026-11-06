@@ -17,9 +17,7 @@ export function isFinishedTreeProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
-
   const budget = proofBudget();
-
   const diagnostics = structureDiagnostics();
 
   try {

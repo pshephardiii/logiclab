@@ -61,14 +61,12 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
   if (diagnostics.items.length) return { status: 'invalid', diagnostics: diagnostics.result() };
 
   const references: DependencyReferences[] = [];
-
   const annotationsValid: boolean[] = [];
 
   for (const [stepIndex, step] of proof.steps.entries()) {
     if (diagnostics.exhausted) break;
 
     let annotationValid = true;
-
     const seen = new Set<string>();
 
     // Written annotations may name only available premise/assumption sources, with no duplicates.
@@ -82,7 +80,6 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
         proof.steps[index]!.kind === 'inference'
       ) {
         annotationValid = false;
-
         diagnostics.add({
           code: 'INVALID_DEPENDENCY',
           message: 'Dependencies must be distinct available premise or assumption line IDs.',
@@ -97,7 +94,6 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
 
     if (step.kind !== 'inference') {
       references.push({ status: 'resolved', lineIndices: [], discharges: [] });
-
       continue;
     }
 
@@ -106,7 +102,6 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
 
     const fail = (message: string) => {
       invalid = true;
-
       diagnostics.add({ code: 'INVALID_REFERENCE', message, stepIndex });
     };
 
@@ -122,19 +117,16 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
 
     // Resolve assumption/conclusion pairs by chronology; there is no global Fitch-style box closure.
     const discharges: { assumptionIndex: number; conclusionIndex: number }[] = [];
-
     const assumptions = new Set<string>();
 
     for (const pair of step.discharges) {
       if (pair.assumptionId === null || pair.conclusionId === null) {
         incomplete = true;
-
         diagnostics.add({
           code: 'INCOMPLETE_PROOF',
           message: 'Discharge needs an assumption and a concluding line.',
           stepIndex,
         });
-
         continue;
       }
 

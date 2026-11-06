@@ -24,12 +24,10 @@ export function checkProof(value: unknown): ProofCheckReport {
 
   if ('diagnostic' in read) {
     diagnostics.add(read.diagnostic);
-
     return finish('unassessable');
   }
 
   const { input } = read;
-
   const budget = proofBudget();
 
   try {
@@ -70,14 +68,12 @@ export function checkProof(value: unknown): ProofCheckReport {
     );
 
     let target: ProofCheckReport['target'] = 'not_established';
-
     let finalIndex = input.proof.steps.length - 1;
 
     while (finalIndex >= 0 && input.proof.steps[finalIndex]!.blockId !== null) finalIndex--;
 
     if (finalIndex >= 0) {
       const final = steps[finalIndex]!;
-
       const formula = formulas[finalIndex]!;
 
       if (!formula.formula) target = 'unknown';
@@ -118,7 +114,6 @@ export function checkProof(value: unknown): ProofCheckReport {
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),
     });
-
     return finish('unassessable');
   }
 }

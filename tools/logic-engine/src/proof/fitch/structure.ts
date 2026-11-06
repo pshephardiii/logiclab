@@ -21,7 +21,6 @@ export function analyzeFitchStructure(proof: FitchProof): FitchStructureResult {
     };
 
   const diagnostics = structureDiagnostics();
-
   const layout = buildFitchLayout(proof, diagnostics);
 
   if (!layout)

@@ -23,7 +23,6 @@ export function analyzeTreeStructure(
   budget: ProofBudget = proofBudget(),
 ): TreeStructureResult {
   const diagnostics = structureDiagnostics();
-
   let incomplete = false;
 
   const fail = (message: string, stepIndex?: number) =>
@@ -73,7 +72,6 @@ export function analyzeTreeStructure(
 
     // Both ordinary supports and discharged branches are child edges in the same strict tree.
     const references: TreeReferences[] = [];
-
     const parents = proof.nodes.map(() => 0);
 
     for (const [index, node] of proof.nodes.entries()) {
@@ -106,7 +104,6 @@ export function analyzeTreeStructure(
         for (const branch of node.branches) {
           // Check identity/kind here; whether these leaves are still open belongs to evaluation.
           const selected = new Set<string>();
-
           const assumptionIndices: number[] = [];
 
           for (const id of branch.assumptionIds) {
@@ -127,7 +124,6 @@ export function analyzeTreeStructure(
 
           if (branch.rootId === null) {
             incomplete = true;
-
             diagnostics.add({
               code: 'INCOMPLETE_PROOF',
               message: 'Discharged branch needs a supporting subtree.',
@@ -149,7 +145,6 @@ export function analyzeTreeStructure(
 
     if (proof.rootId === null) {
       incomplete = true;
-
       diagnostics.add({ code: 'INCOMPLETE_PROOF', message: 'Select a proof root.' });
     } else if (rootIndex === undefined) fail('The proof root must identify a submitted node.');
 
@@ -172,15 +167,12 @@ export function analyzeTreeStructure(
         if (exit) {
           // Exit markers run after children, producing the evaluation order without recursion.
           state[index] = 2;
-
           postorder.push(index);
-
           continue;
         }
 
         if (state[index] === 1) {
           fail('Tree child references must not form a cycle.', index);
-
           continue;
         }
 
@@ -219,7 +211,6 @@ export function analyzeTreeStructure(
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 
     diagnostics.add({ code: 'RESOURCE_LIMIT', message: error.message });
-
     return { status: 'unassessable', diagnostics: diagnostics.result() };
   }
 }

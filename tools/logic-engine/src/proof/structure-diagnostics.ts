@@ -3,7 +3,6 @@ import { PROOF_LIMITS, type ProofDiagnostic } from '@logiclab/contracts';
 /** Reserve a diagnostic for overflow rather than returning a successful partial analysis. */
 export function structureDiagnostics() {
   const items: ProofDiagnostic[] = [];
-
   let exhausted = false;
 
   return {

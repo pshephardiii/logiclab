@@ -27,7 +27,6 @@ export function evaluateFormula(formula: Formula, assignment: VariableAssignment
     case 'binary': {
       // Evaluate both operands so short-circuiting cannot hide missing inputs.
       const left = evaluateFormula(formula.left, assignment);
-
       const right = evaluateFormula(formula.right, assignment);
 
       return evaluateBinaryOperation(formula.operator, left, right);

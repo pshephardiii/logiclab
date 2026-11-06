@@ -24,15 +24,12 @@ export function readFormula(
       message: 'Formula is blank.',
       ...(stepIndex === undefined ? {} : { stepIndex }),
     });
-
     return { formula: null, size: 0, status: 'unassessable' };
   }
 
   try {
     const formula = parseProofFormula(source);
-
     const pending = [formula];
-
     let size = 0;
 
     while (pending.length) {
@@ -63,7 +60,6 @@ export function readFormula(
       position: error.position,
       ...(stepIndex === undefined ? {} : { stepIndex }),
     });
-
     return { formula: null, size: 0, status: 'invalid' };
   }
 }

@@ -31,7 +31,6 @@ const optionsSchema = z
   .max(CONCEPTUAL_QUESTION_LIMITS.maxOptions)
   .superRefine((options, context) => {
     const ids = new Set<string>();
-
     const labels = new Set<string>();
 
     options.forEach((option, index) => {
@@ -50,7 +49,6 @@ const optionsSchema = z
         });
 
       ids.add(option.id);
-
       labels.add(option.text);
     });
   });

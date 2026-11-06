@@ -18,9 +18,7 @@ export function isFinishedProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
-
   const proof = input.proof;
-
   const last = proof.steps.at(-1);
 
   // The final target must be outside all subproofs, and each started box needs an endpoint.
@@ -28,7 +26,6 @@ export function isFinishedProofAttempt(value: unknown): boolean {
     return false;
 
   const budget = proofBudget();
-
   const diagnostics = structureDiagnostics();
 
   try {

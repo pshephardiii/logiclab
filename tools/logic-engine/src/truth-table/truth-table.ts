@@ -5,7 +5,6 @@ import { collectTableExpressions, expressionColumnId, createColumns, createRows 
 /** Generate a bounded table from input, with alphabetical variables and T-first rows. */
 export function generateTruthTable(source: string): TruthTable {
   const formula = parseFormula(source);
-
   const { variables, expressions } = collectTableExpressions(formula);
 
   return {

@@ -21,21 +21,15 @@ export function evaluateTreeNodes(
   diagnostics: StructureDiagnostics,
 ) {
   const reports: NodeReport[] = new Array(input.proof.nodes.length);
-
   const openAssumptions: Set<number>[] = new Array(input.proof.nodes.length);
 
   // Children already have reports/support, even when their array positions follow the parent.
   for (const index of structure.postorder) {
     const node = input.proof.nodes[index]!;
-
     const current = formulas[index]!;
-
     const reference = structure.references[index]!;
-
     const support = new Set<number>();
-
     let dependencyStatus: NodeReport['dependencyStatus'] = 'valid';
-
     let localStatus: NodeReport['localStatus'] = current.status;
 
     // Track assumption occurrences by identity, not formula: equal formulas can have different scopes.
@@ -47,7 +41,6 @@ export function evaluateTreeNodes(
 
       if (node.premiseId === null) {
         localStatus = 'unassessable';
-
         diagnostics.add({
           code: 'INCOMPLETE_PROOF',
           message: 'Premise leaf has no selected problem premise.',
@@ -55,7 +48,6 @@ export function evaluateTreeNodes(
         });
       } else if (!premise?.formula) {
         localStatus = 'invalid';
-
         diagnostics.add({
           code: 'INVALID_REFERENCE',
           message: 'Premise leaf must identify a supplied problem premise.',
@@ -66,7 +58,6 @@ export function evaluateTreeNodes(
 
         if (!sameFormula(current.formula, premise.formula)) {
           localStatus = 'invalid';
-
           diagnostics.add({
             code: 'RULE_MISMATCH',
             message: 'Premise leaf formula does not match its supplied problem premise.',
@@ -124,7 +115,6 @@ export function evaluateTreeNodes(
           if (!remaining.has(assumption)) {
             // This also rejects occurrences already discharged deeper in the subtree.
             dependencyStatus = 'invalid';
-
             diagnostics.add({
               code: 'INVALID_DEPENDENCY',
               message:
@@ -134,7 +124,6 @@ export function evaluateTreeNodes(
           } else if (declared.formula && formula.formula) {
             if (!sameFormula(declared.formula, formula.formula)) {
               dependencyStatus = 'invalid';
-
               diagnostics.add({
                 code: 'INVALID_DEPENDENCY',
                 message:

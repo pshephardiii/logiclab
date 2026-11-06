@@ -20,7 +20,6 @@ function sourceStatus(
   diagnostics: StructureDiagnostics,
 ): StepReport['localStatus'] {
   const step = input.proof.steps[index]!;
-
   const current = formulas[index]!;
 
   if (!current.formula) return current.status;
@@ -33,7 +32,6 @@ function sourceStatus(
       message: 'Premise declaration has no selected problem premise.',
       stepIndex: index,
     });
-
     return 'unassessable';
   }
 
@@ -45,7 +43,6 @@ function sourceStatus(
       message: 'Premise declaration must identify a supplied problem premise.',
       stepIndex: index,
     });
-
     return 'invalid';
   }
 
@@ -58,7 +55,6 @@ function sourceStatus(
     message: 'Premise formula does not match its supplied problem premise.',
     stepIndex: index,
   });
-
   return 'invalid';
 }
 
@@ -72,12 +68,10 @@ export function evaluateDependencySteps(
   diagnostics: StructureDiagnostics,
 ) {
   const reports: StepReport[] = [];
-
   const dependencies: (string[] | null)[] = [];
 
   for (const [stepIndex, step] of input.proof.steps.entries()) {
     const reference = structure.references[stepIndex]!;
-
     let localStatus: StepReport['localStatus'];
 
     let dependencyStatus: StepReport['dependencyStatus'] =
@@ -89,13 +83,11 @@ export function evaluateDependencySteps(
 
     // Null means unknown support. It must not become an empty set that falsely proves independence.
     let computed: string[] | null = null;
-
     const cited = new Set<number>();
 
     if (step.kind !== 'inference') {
       // Each premise/assumption is its own source; premise formula validity is checked separately.
       computed = [step.id];
-
       localStatus = sourceStatus(input, stepIndex, formulas, premises, budget, diagnostics);
     } else if (reference.status !== 'resolved') {
       localStatus = reference.status === 'invalid' ? 'invalid' : 'unassessable';
@@ -111,7 +103,6 @@ export function evaluateDependencySteps(
 
       reference.discharges.forEach((pair) => {
         cited.add(pair.assumptionIndex);
-
         cited.add(pair.conclusionIndex);
       });
 
@@ -203,7 +194,6 @@ export function evaluateDependencySteps(
     }
 
     dependencies.push(computed);
-
     reports.push({ stepId: step.id, stepIndex, localStatus, dependencyStatus });
   }
 

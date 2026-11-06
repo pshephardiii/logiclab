@@ -16,16 +16,12 @@ export function resolveFitchReferences(
     if (step.kind !== 'inference') continue;
 
     let invalid = false;
-
     let incomplete = false;
-
     const lineIndices: number[] = [];
-
     const subproofs: ClosedFitchBlockSpan[] = [];
 
     const fail = (message: string) => {
       invalid = true;
-
       diagnostics.add({ code: 'INVALID_REFERENCE', message, stepIndex });
     };
 
@@ -35,7 +31,6 @@ export function resolveFitchReferences(
 
       if (index === undefined || index >= stepIndex) {
         fail('Line citation must identify an earlier step.');
-
         continue;
       }
 
@@ -43,7 +38,6 @@ export function resolveFitchReferences(
 
       if (blockId !== null && !layout.paths[stepIndex]!.includes(blockId)) {
         fail('Line citation is outside the current or ancestor scope.');
-
         continue;
       }
 
@@ -56,7 +50,6 @@ export function resolveFitchReferences(
     for (const id of step.subproofReferences) {
       if (seen.has(id)) {
         fail('Subproof citations must identify distinct blocks.');
-
         continue;
       }
 
@@ -66,13 +59,11 @@ export function resolveFitchReferences(
 
       if (!block || block.parentId !== step.blockId || block.assumptionIndex >= stepIndex) {
         fail('Subproof citation must identify an earlier direct child of the current scope.');
-
         continue;
       }
 
       if (block.endIndex === null) {
         incomplete = true;
-
         diagnostics.add({
           code: 'INCOMPLETE_PROOF',
           message: 'Cited subproof is not closed.',

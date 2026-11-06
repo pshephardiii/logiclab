@@ -59,7 +59,6 @@ export const derivationStatementSchema = z
     });
 
     const rules = new Set<string>();
-
     const labels = new Set<string>();
 
     value.rules.forEach((rule, index) => {
@@ -80,7 +79,6 @@ export const derivationStatementSchema = z
         });
 
       rules.add(rule.id);
-
       labels.add(label);
     });
   });

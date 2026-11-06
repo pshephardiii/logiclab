@@ -14,11 +14,8 @@ export function parseTokens<Atom = never>(
   options?: ParseOptions<Atom>,
 ): FormulaNode<Atom> {
   const limits = options?.limits ?? FORMULA_LIMITS;
-
   const variables = new Set<string>();
-
   let cursor = 0;
-
   const current = (): Token => tokens[cursor]!;
 
   function checkDepth(depth: number): void {
@@ -61,7 +58,6 @@ export function parseTokens<Atom = never>(
 
       // Recursive right-hand parsing makes implication right-associative.
       const right = parseImplication(depth + 1);
-
       return { type: 'binary', operator: 'implies', left, right };
     }
 
@@ -74,7 +70,6 @@ export function parseTokens<Atom = never>(
 
     while (current().kind === 'or') {
       cursor++;
-
       left = { type: 'binary', operator: 'or', left, right: parseConjunction(depth) };
     }
 
@@ -87,7 +82,6 @@ export function parseTokens<Atom = never>(
 
     while (current().kind === 'and') {
       cursor++;
-
       left = { type: 'binary', operator: 'and', left, right: parseUnary(depth) };
     }
 
@@ -101,7 +95,6 @@ export function parseTokens<Atom = never>(
 
     if (token.kind === 'not') {
       cursor++;
-
       return { type: 'not', operand: parseUnary(depth + 1) };
     }
 
@@ -113,7 +106,6 @@ export function parseTokens<Atom = never>(
 
     if (atom !== undefined) {
       cursor++;
-
       return atom;
     }
 
@@ -128,7 +120,6 @@ export function parseTokens<Atom = never>(
     cursor++;
 
     const expression = parseBiconditional(depth + 1);
-
     const closingSymbol = openingToken.text === '[' ? ']' : ')';
 
     if (current().kind !== 'close' || current().text !== closingSymbol) {
@@ -140,7 +131,6 @@ export function parseTokens<Atom = never>(
     }
 
     cursor++;
-
     return expression;
   }
 
@@ -156,7 +146,6 @@ export function parseTokens<Atom = never>(
     }
 
     cursor++;
-
     return { type: 'variable', name: token.text };
   }
 

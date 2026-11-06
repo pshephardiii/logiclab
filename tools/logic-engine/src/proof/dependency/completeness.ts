@@ -17,13 +17,11 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
-
   const last = input.proof.steps.at(-1);
 
   if (!last || last.kind === 'assumption') return false;
 
   const budget = proofBudget();
-
   const diagnostics = structureDiagnostics();
 
   try {

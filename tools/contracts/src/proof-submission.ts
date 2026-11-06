@@ -33,7 +33,6 @@ export const proofSubmissionResultSchema = z
       reject('Submission occurrences must be unique.');
 
     const objective = { correct: 0, incorrect: 0, unanswered: 0, total: 0 };
-
     const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
     for (const item of value.items) {
@@ -53,7 +52,6 @@ export const proofSubmissionResultSchema = z
           objective[key] += counts[key];
       } else {
         objective[item.feedback.status]++;
-
         objective.total++;
       }
     }
@@ -167,7 +165,6 @@ export const proofCompletionSubmissionResultSchema = z
       reject('Submission occurrences must be unique.');
 
     const completed = value.items.reduce((sum, item) => sum + item.completedResponses, 0);
-
     const total = value.items.reduce((sum, item) => sum + item.totalResponses, 0);
 
     if (value.summary.completedResponses !== completed || value.summary.totalResponses !== total)

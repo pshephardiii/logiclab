@@ -9,9 +9,7 @@ export function buildFitchLayout(
 ): FitchLayout | null {
   // Build identity tables before trusting block openings, endpoints or parent references.
   const stepIndices = new Map<string, number>();
-
   const declarations = new Map(proof.blocks.map((block) => [block.id, block]));
-
   const blocks = new Map<string, FitchBlockSpan>();
 
   proof.steps.forEach((step, stepIndex) => {
@@ -45,7 +43,6 @@ export function buildFitchLayout(
       });
 
     const assumptionIndex = stepIndices.get(block.assumptionId);
-
     const assumption = assumptionIndex === undefined ? undefined : proof.steps[assumptionIndex];
 
     if (
@@ -59,7 +56,6 @@ export function buildFitchLayout(
         message: 'Block must open with its own declared assumption step.',
         blockId: block.id,
       });
-
       continue;
     }
 
@@ -75,7 +71,6 @@ export function buildFitchLayout(
         message: 'Block endpoint must be its final direct step, at or after its assumption.',
         blockId: block.id,
       });
-
       continue;
     }
 
@@ -103,7 +98,6 @@ export function buildFitchLayout(
   // Parent chains must be acyclic and bounded before the chronological scope walk can use them.
   for (const block of proof.blocks) {
     const seen = new Set<string>();
-
     let cursor: string | null = block.id;
 
     while (cursor !== null) {
@@ -113,7 +107,6 @@ export function buildFitchLayout(
           message: 'Block parents must not form a cycle.',
           blockId: block.id,
         });
-
         break;
       }
 
@@ -134,7 +127,6 @@ export function buildFitchLayout(
 
   // Replay openings/closings in line order. The stack represents the one current nesting path.
   const stack: FitchBlockSpan[] = [];
-
   const paths: string[][] = [];
 
   for (const [stepIndex, step] of proof.steps.entries()) {
@@ -150,7 +142,6 @@ export function buildFitchLayout(
           stepIndex,
           blockId: block.id,
         });
-
         return null;
       }
 
@@ -161,7 +152,6 @@ export function buildFitchLayout(
         message: 'Step must remain in the current innermost open block.',
         stepIndex,
       });
-
       return null;
     }
 

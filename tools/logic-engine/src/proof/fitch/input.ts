@@ -33,9 +33,7 @@ export function readFitchInput(
 
     for (const item of array(problem.premises, PROOF_LIMITS.maxPremises)) {
       const premise = record(item, ['id', 'formula']);
-
       ids(premise, ['id']);
-
       stringLimit(premise.formula, PROOF_LIMITS.maxFormulaLength);
     }
 
@@ -44,7 +42,6 @@ export function readFitchInput(
 
     for (const item of array(proof.blocks, PROOF_LIMITS.maxBlocks)) {
       const block = record(item, ['id', 'parentId', 'assumptionId', 'endId']);
-
       ids(block, ['id', 'parentId', 'assumptionId', 'endId']);
     }
 
