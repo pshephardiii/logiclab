@@ -1,7 +1,7 @@
 import type { TreeProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 
-/** Flat diagnostic view also tolerates unfinished/cyclic drafts; visual tree editing comes later. */
+/** Flat diagnostic view tolerates unfinished/cyclic drafts alongside the visual preview. */
 export function TreeProofSummary({
   proof,
   rules,

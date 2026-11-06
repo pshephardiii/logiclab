@@ -1,7 +1,7 @@
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
 import { DependencyProofEditor } from '../../../features/proof/dependency/DependencyProofEditor';
-import { TreeProofSummary } from '../../../features/proof/tree/TreeProofSummary';
+import { TreeProofEditor } from '../../../features/proof/tree/TreeProofEditor';
 
 /** Private definition stays at the authoring boundary; controls receive no explanation/key. */
 export function ReferenceProofEditor({
@@ -13,16 +13,12 @@ export function ReferenceProofEditor({
 }) {
   if (definition.format === 'tree')
     return (
-      <>
-        <p className="help">
-          The saved tree reference is preserved. Tree reference editing is not available yet.
-        </p>
-        <TreeProofSummary
-          proof={definition.referenceProof}
-          rules={definition.rules}
-          label="Reference proof (read-only)"
-        />
-      </>
+      <TreeProofEditor
+        key="tree"
+        statement={definition}
+        proof={definition.referenceProof}
+        onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
+      />
     );
   return definition.format === 'dependency' ? (
     <DependencyProofEditor

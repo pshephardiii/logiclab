@@ -20,7 +20,7 @@ test('saved trees preserve their reference during statement edits and explicit f
     />,
   );
   expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
-  expect(screen.getByText(/Tree reference editing is not available yet/)).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Tree reference proof editor' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Start reference proof' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
