@@ -1,6 +1,6 @@
 # Natural-deduction trees
 
-Branch: `026-feat-natural-deduction-trees`, following the completed Fitch and dependency workflows. See [the agreed derivation sequence](logical-derivations.md#025-and-026-additional-formats). This is the slice record; broader documentation and PR notes wait until final verification.
+Branch: `026-feat-natural-deduction-trees`, following the completed Fitch and dependency workflows. See [the agreed derivation sequence](logical-derivations.md#025-and-026-additional-formats). Implementation and final verification are complete as of November 6, 2026; this document retains the historical slice boundaries. See [consolidated verification](../verification/natural-deduction-trees-verification.md) for current behavior and limits.
 
 ## Confirmed representation — November 5, 2026
 
@@ -169,3 +169,9 @@ Focused PostgreSQL authoring/draft/final/HTTP suites passed **26 cases**. Normal
 Focused real-API Chrome passed **public** problem/assignment creation and publication, student graded/completion tree editing/saving/finalization, withheld graded receipts, read-only instructor review, instructor point/comment adjustment, grade release while references remain locked, subsequent independent answer reveal, frozen submission retry and 390px completion review. All assignment setup used public APIs; no private fixture route was used. Browser storage was empty and no uncaught page errors/page overflow were observed. Temporary servers/schema were cleaned up. Local ignored evidence: `.codex-local/verification/tree-authoring/final-browser.cjs` and `final-review-mobile.png`.
 
 Formatting, whitespace and local documentation targets passed. This remains focused feature verification rather than full workspace/final branch verification or an accessibility/browser matrix. No new migration, environment setting or demo template. Next: final branch checks, consolidated documentation/verification evidence and local PR notes. The agreed UI audit/proof interaction redesign remains required before deployment; student-created practice and remaining cross-format seed work stay in 027.
+
+## Final closeout — November 6, 2026
+
+Final checks cover runtime commit `ae5f7b4` plus documentation-only closeout. `npm run check` passed all type checks, production builds and **2,007 tests** (583 engine, 1,051 API, 373 web). `npm run db:test` passed **315 PostgreSQL checks** (184 database, 131 API/workflow). Built ESM/CommonJS proof-entry smoke passed all three formats and tree failure/completion boundaries. Logs are retained locally under `.codex-local/verification/tree-authoring/closeout/`.
+
+The branch is ready for review with consolidated verification and local PR notes. Existing Jest VM-module and Vite chunk-size advisories remain. No new browser sweep, migration, environment setting or template change was needed during closeout. Earlier browser evidence and remaining QA/rollout limits are recorded in [final verification](../verification/natural-deduction-trees-verification.md). Next is planned 027; the UI/proof interaction redesign remains required before deployment.
