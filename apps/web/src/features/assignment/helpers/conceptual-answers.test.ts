@@ -4,7 +4,7 @@ import {
   sameConceptualAnswer,
   conceptualAnswerFilled,
 } from './conceptual-answers';
-import { savedAnswerMaps } from './answers';
+import { savedTruthTableAnswerMaps } from './answers';
 import {
   conceptualWork,
   conceptualSaved,
@@ -18,7 +18,7 @@ test('conceptual normalization retains false, creates blanks and never allocates
   const responses = savedConceptualAnswers(conceptualWork, conceptualSaved);
   expect(responses[itemA]).toEqual({ type: 'true_false', answer: false });
   expect(responses[itemB]).toEqual({ type: 'multiple_choice', optionId: null });
-  expect(savedAnswerMaps(conceptualWork, conceptualSaved)).toEqual({});
+  expect(savedTruthTableAnswerMaps(conceptualWork, conceptualSaved)).toEqual({});
   expect(savedConceptualAnswers(work, saved)).toEqual({});
 });
 

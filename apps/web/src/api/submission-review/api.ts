@@ -10,6 +10,7 @@ import { requestAccountJson } from '../account-request';
 /** Bind resource operations to a supplied account request transport. */
 export function createApi(request: typeof requestAccountJson = requestAccountJson) {
   const fallback = 'Could not load submissions. Please try again.';
+
   function listSubmissions(assignmentId: string, offset: number, signal: AbortSignal) {
     return request(`/api/assignments/${assignmentId}/submissions?offset=${offset}`, {
       schema: submissionListResponseSchema,
@@ -17,6 +18,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
     });
   }
+
   function readSubmission(assignmentId: string, submissionId: string, signal: AbortSignal) {
     return request(`/api/assignments/${assignmentId}/submissions/${submissionId}`, {
       schema: submissionReviewSchema,
@@ -32,6 +34,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
     });
   }
+
   function saveGrading(
     assignmentId: string,
     submissionId: string,
@@ -46,6 +49,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       body: input,
     });
   }
+
   function readGradingHistory(
     assignmentId: string,
     submissionId: string,
@@ -61,6 +65,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       },
     );
   }
+
   return { listSubmissions, readSubmission, readGrading, saveGrading, readGradingHistory };
 }
 

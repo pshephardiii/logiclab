@@ -23,6 +23,7 @@ export function createCognitoProvider(
   client?: CognitoIdentityProviderClient,
 ): IdentityProvider {
   const cognito = createCognitoWrapper(config, client);
+
   return {
     signup: (email, password) => signup(cognito, email, password),
     deleteCreatedUser: (subject) => deleteCreatedUser(cognito, subject),

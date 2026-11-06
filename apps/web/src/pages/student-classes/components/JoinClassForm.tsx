@@ -10,7 +10,9 @@ export function JoinClassForm({ busy, onJoin }: Props) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const joined = await onJoin(code);
+
     if (joined) setCode('');
   }
 

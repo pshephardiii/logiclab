@@ -14,6 +14,8 @@ When reviewing a large file, inspect its interface/types, mapping constants, res
 
 Keep mapping constants with the function that uses them instead of creating an unrelated constants file. Put shared internal interfaces in a domain's `types.ts` when this removes imports from implementation or component files; reuse an existing application-level interface where one already owns the boundary. Update internal consumers directly when moving types, without adding compatibility re-exports solely to preserve an old internal path. Preserve supported package exports and external contracts.
 
+Name types, schemas and operations for their actual supported variants. Use `Objective…` for truth-table/conceptual unions, `TruthTable…` for table-only results/helpers and `Fitch…` for Fitch-only proof contracts/checkers/editors. Keep genuinely shared proof reports and multi-format operations generic. When an authorized rename changes package exports, update consumers and build matching packages together; preserve serialized field names, version tags, route paths and stored data.
+
 ## General: proportional effort
 
 Take the time needed for correctness, privacy, authorization, data integrity and meaningful regression coverage. Keep routine organization, documentation and verification overhead proportional to the significance of the change; do not reduce necessary checks just to finish faster.
@@ -307,9 +309,15 @@ Use the pinned root Prettier dependency and `.prettierrc.json` for consistent fo
 
 The committed VS Code settings enable format-on-save with the recommended Prettier extension. Other editors should use the same repository configuration and installed version. Generated output, dependencies, local secrets/drafts, the lockfile, and immutable database migration history are excluded by `.prettierignore`. Review formatter changes separately from behavior changes. Formatting complements named handlers and focused helpers; it does not replace clear structure.
 
-Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between functions, classes, type/interface declarations and separate constant declarations, including local declarations within functions. Separate conditionals and distinct operations from the statements around them: for example, leave a blank line between a completed `budget.spend(...)` call and `const result = ...`, and another between that completed assignment and the following `if`.
+Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between top-level declarations and exports, and between distinct logical stages within functions. A completed `budget.spend(...)` call, a substantial `const result = ...` calculation and the following validation conditional can each benefit from a visible boundary.
 
-Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer these visible boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
+Group tightly related local operations instead of mechanically separating every statement. Related setup declarations, updating a cursor before returning/continuing, recording a diagnostic before returning its failure status, or updating the same collection can stay together. Separate independent guards and substantial validation stages; short cohesive branches need not have blank lines inside them. The goal is to make processing stages distinguishable, not to maximize spacing.
+
+Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer meaningful boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
+
+In TSX, apply statement spacing to component logic and hooks without adding blank lines between JSX elements or props by analogy. Keep markup compact; use brief JSX comments to explain dense conditional sections, especially mode/type dispatch, retained feedback and independent disclosure, rather than labeling every visible element.
+
+Keep stacked decorators together and directly above their class or property, following Prettier's formatting. Do not disable class formatting solely to preserve blank lines between decorators or before a class declaration. Continue separating decorated property groups with blank lines. Use spacing and meaningful stage comments rather than routine “End of …” comments after long declarations.
 
 Use braces for multiline conditional branches; Prettier does not add them automatically.
 

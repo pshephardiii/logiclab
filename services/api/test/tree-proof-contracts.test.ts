@@ -1,12 +1,12 @@
 import {
   treeProofSchema,
   treeProofCheckInputSchema,
-  proofCheckInputSchema,
+  fitchProofCheckInputSchema,
   dependencyProofSchema,
   PROOF_LIMITS,
 } from '@logiclab/contracts';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
-import { derivationAnswerSchema } from '@logiclab/contracts/derivation-work';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationAnswerSchema } from '@logiclab/contracts/derivation-work';
 import { libraryProblemDefinitionSchema } from '@logiclab/contracts/problem-library';
 import { savedDerivationAnswerSchema } from '@logiclab/contracts/saved-student-work';
 import { derivationDefinitionFixture } from './derivation-fixture';
@@ -184,13 +184,13 @@ test('tree inputs retain authoritative statement bounds and reject student repla
 });
 
 test('Fitch/dependency/student boundaries stay separate while the owner library admits trees', () => {
-  expect(proofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
+  expect(fitchProofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
   expect(dependencyProofSchema.safeParse(proof).success).toBe(false);
-  expect(derivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
+  expect(fitchDerivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
   expect(savedDerivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(true);
   const definition = derivationDefinitionFixture();
   expect(
-    derivationDefinitionSchema.safeParse({
+    fitchDerivationDefinitionSchema.safeParse({
       ...definition,
       format: 'tree',
       referenceProof: proof,

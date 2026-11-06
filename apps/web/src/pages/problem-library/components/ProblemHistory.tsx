@@ -17,6 +17,7 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
   const { versions, next, loading, publishing, error, notice, load, publish } = useProblemHistory(
     problem.id,
   );
+
   return (
     <section className="panel" aria-label="Published versions" aria-busy={loading || publishing}>
       <h2>Published versions</h2>

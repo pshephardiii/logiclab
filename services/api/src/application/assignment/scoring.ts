@@ -2,8 +2,8 @@ import { z } from 'zod';
 import {
   assignmentPointAllocationsSchema,
   assignmentScoreSchema,
-  gradedSubmissionResultSchema,
-  mixedGradedSubmissionResultSchema,
+  truthTableGradedSubmissionResultSchema,
+  objectiveGradedSubmissionResultSchema,
   type AssignmentPointAllocation,
   type AssignmentScore,
   type AssignmentItemScore,
@@ -22,6 +22,7 @@ const outcomeSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('full_credit') }),
   z.strictObject({ type: z.literal('needs_review') }),
 ]);
+
 const outcomesSchema = z
   .array(
     z.strictObject({
@@ -30,6 +31,7 @@ const outcomesSchema = z
     }),
   )
   .max(50);
+
 export type AssignmentScoringOutcome = z.infer<typeof outcomesSchema>[number];
 
 export class AssignmentScoringError extends Error {
@@ -45,34 +47,44 @@ export function scoreAssignment(
 ): AssignmentScore {
   const parsedAllocations = assignmentPointAllocationsSchema.safeParse(allocations);
   const parsedOutcomes = outcomesSchema.safeParse(input);
+
   if (!parsedAllocations.success || !parsedOutcomes.success) throw new AssignmentScoringError();
+
   const outcomes = new Map(parsedOutcomes.data.map((item) => [item.itemId, item.outcome]));
+
   if (
     outcomes.size !== input.length ||
     outcomes.size !== allocations.length ||
     parsedAllocations.data.some((item) => !outcomes.has(item.itemId))
   )
     throw new AssignmentScoringError();
+
   const items = parsedAllocations.data.map((item) => {
     const outcome = outcomes.get(item.itemId)!;
+
     if (outcome.type === 'needs_review')
       return { ...item, status: 'needs_review' as const, earnedPoints: null };
+
     const earnedHundredths =
       outcome.type === 'full_credit'
         ? item.maxPoints * 100
         : Math.round((item.maxPoints * 100 * outcome.correct) / outcome.total);
+
     return { ...item, status: 'graded' as const, earnedPoints: earnedHundredths / 100 };
   });
+
   return summarizeAssignmentScore(items);
 }
 
 /** Aggregate automatic or instructor-awarded items without changing their scoring evidence. */
 export function summarizeAssignmentScore(items: AssignmentItemScore[]): AssignmentScore {
   const maxPoints = items.reduce((sum, item) => sum + item.maxPoints, 0);
+
   const hundredths = items.reduce(
     (sum, item) => sum + Math.round((item.earnedPoints ?? 0) * 100),
     0,
   );
+
   const summary = items.some((item) => item.status === 'needs_review')
     ? { status: 'needs_review' as const, maxPoints, earnedPoints: null, percentage: null }
     : {
@@ -81,17 +93,21 @@ export function summarizeAssignmentScore(items: AssignmentItemScore[]): Assignme
         earnedPoints: hundredths / 100,
         percentage: Math.round((hundredths * 100) / maxPoints) / 100,
       };
+
   return assignmentScoreSchema.parse({ scoringVersion: 'points_v1', items, summary });
 }
 
 /** Validate objective evidence and derive outcomes shared by objective-only and proof-mixed scoring. */
 export function objectiveScoringOutcomes(input: unknown): AssignmentScoringOutcome[] {
   const parsed = z
-    .union([gradedSubmissionResultSchema, mixedGradedSubmissionResultSchema])
+    .union([truthTableGradedSubmissionResultSchema, objectiveGradedSubmissionResultSchema])
     .safeParse(input);
+
   if (!parsed.success) throw new AssignmentScoringError();
+
   const result = parsed.data;
   const counts = { correct: 0, incorrect: 0, unanswered: 0, total: 0 };
+
   const outcomes = result.items.map((item) => {
     const summary =
       'status' in item.feedback
@@ -102,16 +118,21 @@ export function objectiveScoringOutcomes(input: unknown): AssignmentScoringOutco
             total: 1,
           }
         : item.feedback.summary;
+
     if (summary.correct + summary.incorrect + summary.unanswered !== summary.total)
       throw new AssignmentScoringError();
+
     for (const key of summaryKeys) counts[key] += summary[key];
+
     return {
       itemId: item.itemId,
       outcome: { type: 'correctness' as const, correct: summary.correct, total: summary.total },
     };
   });
+
   if (summaryKeys.some((key) => counts[key] !== result.summary[key]))
     throw new AssignmentScoringError();
+
   return outcomes;
 }
 

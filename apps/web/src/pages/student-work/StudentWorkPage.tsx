@@ -16,6 +16,7 @@ function StudentWork() {
   const accountPath = useAccountPath();
   const confirmDiscard = useConfirmDiscard();
   const [classId, setClassId] = useState('');
+
   return (
     <>
       <header>
@@ -42,8 +43,10 @@ function StudentWork() {
     </>
   );
 }
+
 export function StudentWorkPage() {
   const { user } = useAccountContext();
+
   return (
     <Page>
       <StudentWork key={user?.id} />

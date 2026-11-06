@@ -17,8 +17,11 @@ export async function billingRoutes(app: FastifyInstance, context: BillingContex
 
 export async function billingAccountRoutes(app: FastifyInstance, context: BillingContext) {
   installBillingErrors(app, context.config);
+
   app.decorateRequest('billingUser', null);
+
   await installAccountHttpPolicy(app, context.config);
+
   app.addHook('preValidation', async (request) => {
     await billingInstructor(request, context);
   });

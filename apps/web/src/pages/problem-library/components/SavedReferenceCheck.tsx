@@ -12,14 +12,19 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
   const [result, setResult] = useState<DerivationReferenceCheckResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   async function check() {
     const signal = request.startRequest();
+
     setBusy(true);
     setError(null);
     setResult(null);
+
     try {
       const value = await checkReference(problem.id, signal);
+
       if (signal.aborted) return;
+
       if (value.problemId !== problem.id || value.updatedAt !== problem.updatedAt) {
         setError('The saved draft changed. Reload problems and reopen it before checking again.');
       } else setResult(value);
@@ -30,7 +35,9 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
       if (!signal.aborted) setBusy(false);
     }
   }
+
   const report = result?.check.status === 'checked' ? result.check.report : null;
+
   return (
     <section aria-label="Saved reference check" aria-busy={busy}>
       <button disabled={busy} onClick={() => void check()}>

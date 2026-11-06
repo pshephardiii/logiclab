@@ -4,6 +4,7 @@ import { ProblemLibrary } from './components/ProblemLibrary';
 
 export function ProblemLibraryPage() {
   const { user } = useAccountContext();
+
   return (
     <Page>
       <ProblemLibrary key={user?.id} />

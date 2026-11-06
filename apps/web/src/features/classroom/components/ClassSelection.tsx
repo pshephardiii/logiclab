@@ -13,6 +13,7 @@ type Props = {
 /** Presents paginated class choices and setup guidance. */
 export function ClassSelection({ value, onChange, loadPage, emptyMessage }: Props) {
   const { classes, next, loading, error, load } = useClassChoices(loadPage);
+
   return (
     <section className="panel class-selection" aria-label="Assignment classroom">
       <label htmlFor="assignment-class">Class</label>

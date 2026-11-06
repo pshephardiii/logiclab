@@ -12,8 +12,11 @@ export async function installAccountHttpPolicy(
   rateLimitOptions: RateLimitPluginOptions = {},
 ) {
   installZodSchemas(app);
+
   await app.register(cookie);
+
   installRateLimitDefaults(app);
+
   await app.register(rateLimit, {
     max: 60,
     timeWindow: '1 minute',
@@ -21,6 +24,7 @@ export async function installAccountHttpPolicy(
   });
   app.addHook('onRequest', async (request, reply) => {
     reply.header('Cache-Control', 'no-store');
+
     if (request.method !== 'GET') assertAuthOrigin(request, config);
   });
 }

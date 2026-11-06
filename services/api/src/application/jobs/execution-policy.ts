@@ -15,6 +15,7 @@ export function failureTransition(
   now: Date,
 ) {
   const exhausted = attempts >= maxAttempts;
+
   return {
     exhausted,
     completedAt: exhausted ? now : undefined,

@@ -14,6 +14,7 @@ type Props = {
 export function PublishedProblemPicker({ disabled, allowDerivations = false, onAdd }: Props) {
   const accountPath = useAccountPath();
   const choices = usePublishedProblemChoices(allowDerivations);
+
   return (
     <section aria-label="Add published problems">
       <h3>Add published problems</h3>

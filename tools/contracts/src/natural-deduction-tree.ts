@@ -14,6 +14,7 @@ export const treeProofBranchSchema = z.strictObject({
   assumptionFormula: formula,
   assumptionIds: z.array(id).max(PROOF_LIMITS.maxSteps),
 });
+
 export type TreeProofBranch = z.infer<typeof treeProofBranchSchema>;
 
 const fields = { id, formula };
@@ -32,6 +33,7 @@ export const treeProofNodeSchema = z.discriminatedUnion('kind', [
     branches: z.array(treeProofBranchSchema).max(2),
   }),
 ]);
+
 export type TreeProofNode = z.infer<typeof treeProofNodeSchema>;
 
 /** Flat bounded draft data; uniqueness, connectivity, scope and logical validity need a checker. */
@@ -41,6 +43,7 @@ export const treeProofSchema = z.strictObject({
   rootId: id.nullable(),
   nodes: z.array(treeProofNodeSchema).max(PROOF_LIMITS.maxSteps),
 });
+
 export type TreeProof = z.infer<typeof treeProofSchema>;
 
 /** Standalone transport only; this does not enable tree problems in live assignment workflows. */
@@ -48,4 +51,5 @@ export const treeProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
   proof: treeProofSchema,
 });
+
 export type TreeProofCheckInput = z.infer<typeof treeProofCheckInputSchema>;

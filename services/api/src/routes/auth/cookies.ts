@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type {} from '@fastify/cookie';
+
 export type CookieConfig = {
   APP_ORIGIN: string;
   secureCookies: boolean;
@@ -7,9 +8,11 @@ export type CookieConfig = {
   sessionCookiePath?: string;
   clearInvalidSessionCookie?: boolean;
 };
+
 export const cookieName = (config: CookieConfig) => config.sessionCookieName ?? SESSION_COOKIE;
 
 export const SESSION_COOKIE = 'logiclab_session';
+
 export function setSessionCookie(
   reply: FastifyReply,
   config: CookieConfig,

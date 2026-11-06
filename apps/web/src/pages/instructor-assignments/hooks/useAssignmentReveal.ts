@@ -13,13 +13,15 @@ export function useAssignmentReveal(selectedId: string | null, loading: boolean,
 
   useEffect(() => {
     if (loading || !selectedId || pendingId.current !== selectedId) return;
+
     pendingId.current = null;
+
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
     panelRef.current?.scrollIntoView?.({
       behavior: reducedMotion ? 'instant' : 'smooth',
       block: 'start',
     });
   }, [selectedId, loading, revision]);
-
   return { panelRef, reservedHeight, prepareSelection };
 }

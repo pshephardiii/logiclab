@@ -11,14 +11,14 @@ import type { AuthContext } from '../../src/routes/auth/context';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import type { ProblemDefinition } from '@logiclab/contracts';
+import type { ObjectiveProblemDefinition } from '@logiclab/contracts';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const first = 'b1111111-1111-4111-8111-111111111111';
 const second = 'b2222222-2222-4222-8222-222222222222';
-const definitions: ProblemDefinition[] = [
+const definitions: ObjectiveProblemDefinition[] = [
   { type: 'truth_table', definitionVersion: 1, formula: 'P & Q' },
   {
     type: 'true_false',

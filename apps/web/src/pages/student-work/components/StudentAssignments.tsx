@@ -8,12 +8,14 @@ export function StudentAssignments({ classId }: { classId: string }) {
   const list = useStudentAssignments(classId);
   const [selected, setSelected] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
+
   function select(id: string) {
     confirmDiscard(() => {
       setSelected(id);
       setRevision((value) => value + 1);
     });
   }
+
   return (
     <>
       <p className="help">

@@ -41,9 +41,9 @@ export {
 
 export { ProblemType } from './types/problem/enums.ts';
 export type {
-  DerivationDefinition,
-  DerivationReferenceProof,
-  DerivationProofStep,
+  FitchDerivationDefinition,
+  FitchReferenceProof,
+  FitchDerivationProofStep,
 } from './types/problem/derivation.ts';
 export type { UserFields } from './types/user/fields.ts';
 export type { AuthSessionFields } from './types/auth-session/fields.ts';
@@ -56,15 +56,15 @@ export type { AssignmentItemFields } from './types/assignment-item/fields.ts';
 export { AssignmentAttempt } from './entities/AssignmentAttempt.ts';
 export type { AssignmentAttemptFields } from './types/assignment-attempt/fields.ts';
 export type {
-  AttemptAnswer,
+  TruthTableAttemptAnswer,
   AttemptAnswers,
   SubmissionResult,
 } from './types/assignment-attempt/work.ts';
 export type {
   ConceptualResponse,
   AssignmentResponses,
-  MixedGradedSubmissionResult,
-  MixedCompletionSubmissionResult,
+  ObjectiveGradedSubmissionResult,
+  ObjectiveCompletionSubmissionResult,
 } from './types/assignment-attempt/mixed-work.ts';
 
 export { ClassPurchase } from './entities/ClassPurchase.ts';
@@ -114,7 +114,7 @@ export { seedDemoBillingPlan } from './seeds/billing-plan.ts';
 export type { AssignmentItemScore, AssignmentScore } from './types/assignment-attempt/scoring.ts';
 
 export type { FitchProof, FitchProofStep } from './types/proof/work.ts';
-export type { DerivationAnswer } from './types/assignment-attempt/derivation-work.ts';
+export type { FitchDerivationAnswer } from './types/assignment-attempt/derivation-work.ts';
 
 export type { ProofCheckReport, ProofDiagnosticCode } from './types/proof/report.ts';
 export type {

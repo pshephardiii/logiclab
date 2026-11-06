@@ -4,13 +4,13 @@ import { AssignedDerivation } from '../../../features/assignment/components/Assi
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import {
-  submissionFeedback,
+  truthTableSubmissionFeedback,
   proofSubmissionFeedback,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useSubmissionReview } from '../hooks/useSubmissionReview';
-import { answerMap } from '../../../features/assignment/helpers/answers';
+import { truthTableAnswerMap } from '../../../features/assignment/helpers/answers';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
 import { SubmissionSummary } from '../../../features/assignment/components/SubmissionSummary';
 import { PointScore } from '../../../features/assignment/components/PointScore';
@@ -26,15 +26,18 @@ export function SubmissionReview({
   const state = useSubmissionReview(assignmentId);
   const confirmDiscard = useConfirmDiscard();
   const [position, setPosition] = useState(0);
+
   function select(id: string) {
     confirmDiscard(() => {
       setPosition(0);
       void state.select(id);
     });
   }
+
   const review = state.review;
   const item = review?.assignment.items[position];
   const response = item ? review?.attempt.answers[item.id] : undefined;
+
   const proofAnswer =
     response && !Array.isArray(response) && response.type === 'derivation'
       ? response
@@ -43,7 +46,9 @@ export function SubmissionReview({
             ? item.content.format
             : 'fitch',
         );
+
   const proofReport = item ? proofSubmissionFeedback(review?.attempt.result, item.id) : null;
+
   return (
     <section aria-label="Final submission review">
       <section className="panel">
@@ -68,6 +73,7 @@ export function SubmissionReview({
                 {submission.student.email ?? `Student ${submission.student.id}`}
               </button>
               {submission.score && <PointScore score={submission.score} showItems={false} />}
+              {/* Completion counts, original proof checks and objective correctness are distinct summaries. */}
               <p>
                 {'completedCells' in submission.summary
                   ? `Completed ${submission.summary.completedCells} of ${submission.summary.totalCells} cells · No correctness score`
@@ -126,6 +132,7 @@ export function SubmissionReview({
               items={review.assignment.items}
             />
           )}
+          {/* Only graded submissions expose point adjustments; completion remains score-free. */}
           {review.assignment.assessmentMode === 'graded' && review.attempt.score && (
             <SubmissionGradingPanel
               key={review.attempt.id}
@@ -156,12 +163,13 @@ export function SubmissionReview({
               ))}
             </select>
           </section>
+          {/* Review the frozen response in its type-specific read-only view. */}
           {item &&
             ('exercise' in item ? (
               <AssignedItemTable
                 item={item}
-                answers={answerMap(review.attempt.answers[item.id] ?? [])}
-                feedback={submissionFeedback(review.attempt.result, item.id)}
+                answers={truthTableAnswerMap(review.attempt.answers[item.id] ?? [])}
+                feedback={truthTableSubmissionFeedback(review.attempt.result, item.id)}
                 readOnly
                 onAnswer={() => {}}
               />

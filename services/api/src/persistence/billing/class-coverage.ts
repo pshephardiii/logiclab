@@ -14,9 +14,12 @@ export async function hasClassCapability(
 ): Promise<boolean> {
   const { Classroom, ClassEntitlement, LockMode } = await import('@logiclab/db');
   const classroom = await em.findOne(Classroom, classId, { lockMode: LockMode.PESSIMISTIC_READ });
+
   if (!classroom) return false;
+
   // Evaluate time after acquiring the lock, including any time spent waiting for a refund.
   const now = clock();
+
   const grant = await em.findOne(ClassEntitlement, {
     classroom: classId,
     capability,
@@ -24,5 +27,6 @@ export async function hasClassCapability(
     endsAt: { $gt: now },
     revokedAt: null,
   });
+
   return grant !== null;
 }

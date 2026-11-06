@@ -4,6 +4,7 @@ import { PROOF_LIMITS, type ProofDiagnostic } from '@logiclab/contracts';
 export function structureDiagnostics() {
   const items: ProofDiagnostic[] = [];
   let exhausted = false;
+
   return {
     add(diagnostic: ProofDiagnostic) {
       if (items.length < PROOF_LIMITS.maxDiagnostics) items.push(diagnostic);

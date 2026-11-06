@@ -1,12 +1,13 @@
-import type { ProofStep } from '@logiclab/contracts';
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchProofStep } from '@logiclab/contracts';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { ProofChoice } from './ProofChoice';
 
-type PremiseStep = Extract<ProofStep, { kind: 'premise' }>;
+type PremiseStep = Extract<FitchProofStep, { kind: 'premise' }>;
+
 type Props = {
   step: PremiseStep;
   index: number;
-  premises: DerivationContent['premises'];
+  premises: FitchDerivationContent['premises'];
   onChange: (step: PremiseStep) => void;
 };
 

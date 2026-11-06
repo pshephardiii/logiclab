@@ -12,8 +12,10 @@ export function submissionSummary(
   grading?: SubmissionGradingResponse,
 ): SubmissionSummary {
   if (!attempt.submittedAt || !attempt.result) throw new AssignmentOperationError('not_found');
+
   if (attempt.result.gradingVersion === 'proof_mixed_v1')
     validateProofSubmissionScore(attempt.result, attempt.score);
+
   return submissionSummarySchema.parse({
     id: attempt.id,
     student: { id: attempt.student.id, email: attempt.student.email ?? null },

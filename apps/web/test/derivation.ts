@@ -1,4 +1,4 @@
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
 import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
 
@@ -36,7 +36,7 @@ export const treeDerivationDefinition: TreeDerivationDefinition = {
   },
 };
 
-export const derivationDefinition: DerivationDefinition = {
+export const derivationDefinition: FitchDerivationDefinition = {
   type: 'derivation',
   definitionVersion: 1,
   format: 'fitch',

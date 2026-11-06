@@ -8,6 +8,7 @@ export function ClassBilling({ classId }: { classId: string }) {
   const blocked = state.busy || state.loading;
   const selected = state.plans.find((plan) => plan.id === state.selectedPlan);
   const checkoutReason = state.data?.checkoutBlockedReason;
+
   return (
     <div className="class-billing">
       {state.error && (

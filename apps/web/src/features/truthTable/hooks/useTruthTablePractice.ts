@@ -41,7 +41,9 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
 
   function changeFormula(value: string) {
     cancelRequest();
+
     resetFeedback();
+
     setFormula(value);
     setExercise(null);
     setAnswers({});
@@ -51,22 +53,29 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
 
   async function createTable() {
     const signal = startRequest();
+
     resetFeedback();
+
     setLoading(true);
     setError(null);
     setExercise(null);
     setAnswers({});
+
     try {
       const result = await createExercise(formula, signal);
+
       if (!signal.aborted) setExercise(result);
     } catch (caught) {
       if (signal.aborted) return;
+
       setError(
         caught instanceof PracticeApiError
           ? caught.message
           : 'Unable to reach the practice API. Check your connection and try again.',
       );
+
       inputRef.current?.focus();
+
       if (caught instanceof PracticeApiError && caught.position !== undefined) {
         inputRef.current?.setSelectionRange(caught.position, caught.position + 1);
       }
@@ -78,9 +87,12 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   const total = exercise
     ? exercise.rows.length * exercise.columns.filter((column) => column.kind === 'answer').length
     : 0;
+
   const completed = Object.values(answers).filter((value) => value != null).length;
+
   function changeAnswer(rowId: string, columnId: string, value: boolean | null) {
     cancelRequest();
+
     setAction(null);
     setActionError(null);
     setFeedback(null);
@@ -89,19 +101,25 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
 
   async function runAction(kind: 'check' | 'solution') {
     if (!exercise) return;
+
     const signal = startRequest();
+
     setAction(kind);
     setActionError(null);
+
     if (kind === 'check') setFeedback(null);
+
     try {
       if (kind === 'check') {
         const result = await checkAnswers(
           { formula, answers: submittedAnswers(exercise, answers) },
           signal,
         );
+
         if (!signal.aborted) setFeedback(result);
       } else {
         const result = await getSolution(formula, signal);
+
         if (!signal.aborted) setSolution(result);
       }
     } catch (caught) {

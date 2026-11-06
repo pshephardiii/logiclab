@@ -37,18 +37,23 @@ export function ProblemForm({
   const [validationError, setValidationError] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const error = validationError ?? saveError;
+
   useEffect(() => {
     if (error) errorRef.current?.focus();
   }, [error]);
+
   useEffect(() => {
     onDirty(editorSnapshot(fields) !== editorSnapshot(initial));
   }, [fields, initial, onDirty]);
+
   function change(next: ProblemEditorFields) {
     setFields(next);
     setValidationError(null);
   }
+
   function validatedDefinition() {
     const parsed = editorDefinition(fields);
+
     if (!parsed.success) {
       setValidationError(
         parsed.error.issues
@@ -58,24 +63,32 @@ export function ProblemForm({
       );
       return null;
     }
+
     setValidationError(null);
     return parsed.data;
   }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const definition = validatedDefinition();
+
     if (!definition) return;
+
     const input = createLibraryProblemRequestSchema.safeParse({
       title: fields.title,
       instructions: fields.instructions || null,
       definition,
     });
+
     if (!input.success) {
       setValidationError(input.error.issues.map((issue) => issue.message).join(' '));
       return;
     }
+
     await onSave(input.data);
   }
+
   return (
     <section className="panel">
       <h2>{problem ? 'Edit draft' : 'Create a problem'}</h2>
@@ -122,6 +135,7 @@ export function ProblemForm({
             Only the selected problem type is saved. Switching types keeps your fields until you
             leave this editor.
           </p>
+          {/* Show only the selected type's fields; other local draft fields survive type changes. */}
           {fields.type === 'derivation' ? (
             <DerivationProblemFields fields={fields} onChange={change} />
           ) : fields.type === 'truth_table' ? (
@@ -157,6 +171,7 @@ export function ProblemForm({
         }
         onClick={() => {
           const definition = validatedDefinition();
+
           if (definition) onPreview(definition);
         }}
       >

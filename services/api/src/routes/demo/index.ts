@@ -12,7 +12,9 @@ import { postLogoutRoute } from './postLogout/route';
 export async function demoRoutes(app: FastifyInstance, runtime: DemoRuntime) {
   app.register(async (lifecycle) => {
     await installAccountHttpPolicy(lifecycle, runtime.config);
+
     installDemoErrors(lifecycle, runtime);
+
     lifecycle.register(postStartRoute, runtime);
     lifecycle.register(getSessionRoute, runtime);
     lifecycle.register(postRoleRoute, runtime);

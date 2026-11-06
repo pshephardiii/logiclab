@@ -1,23 +1,23 @@
 import {
   proofCheckReportSchema,
   PROOF_LIMITS,
-  type ProofCheckInput,
-  type ProofStep,
+  type FitchProofCheckInput,
+  type FitchProofStep,
 } from '@logiclab/contracts';
 import {
-  checkProof,
+  checkFitchProof,
   PROPOSITIONAL_RULE_CATALOG,
   type PropositionalRuleId,
 } from '../../../src/proof';
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
-const given = (n: number, slot: number, formula: string): ProofStep => ({
+const given = (n: number, slot: number, formula: string): FitchProofStep => ({
   kind: 'premise',
   id: id(n),
   blockId: null,
   premiseId: id(1000 + slot),
   formula,
 });
-const assume = (n: number, block: number, formula: string): ProofStep => ({
+const assume = (n: number, block: number, formula: string): FitchProofStep => ({
   kind: 'assumption',
   id: id(n),
   blockId: id(block),
@@ -30,7 +30,7 @@ const infer = (
   lines: number[] = [],
   subproofs: number[] = [],
   blockId: number | null = null,
-): ProofStep => ({
+): FitchProofStep => ({
   kind: 'inference',
   id: id(n),
   blockId: blockId === null ? null : id(blockId),
@@ -48,10 +48,10 @@ const block = (n: number, start: number, end: number | null, parent: number | nu
 function input(
   conclusion: string,
   premises: string[],
-  steps: ProofStep[],
+  steps: FitchProofStep[],
   rules: string[],
-  blocks: ProofCheckInput['proof']['blocks'] = [],
-): ProofCheckInput {
+  blocks: FitchProofCheckInput['proof']['blocks'] = [],
+): FitchProofCheckInput {
   return {
     problem: {
       ruleCatalogVersion: 1,
@@ -63,7 +63,7 @@ function input(
   };
 }
 function run(value: unknown) {
-  const result = checkProof(value);
+  const result = checkFitchProof(value);
   expect(proofCheckReportSchema.safeParse(result).success).toBe(true);
   return result;
 }
@@ -514,7 +514,7 @@ test('size and diagnostic overflow never return successful partial checking', ()
 
 test('the deterministic work budget stops expensive but transport-bounded checking', () => {
   const formula = Array.from({ length: 128 }, () => 'P').join('&');
-  const steps: ProofStep[] = [
+  const steps: FitchProofStep[] = [
     given(1, 1, formula),
     ...Array.from({ length: 199 }, (_, index) =>
       infer(index + 2, formula, 'reiteration', [index + 1]),

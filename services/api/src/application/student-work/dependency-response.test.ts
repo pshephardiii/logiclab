@@ -10,7 +10,7 @@ import type { DependencyDerivationAnswer as StoredAnswer } from '@logiclab/db' w
 };
 import { PROOF_LIMITS, proofCheckReportSchema } from '@logiclab/contracts';
 import {
-  derivationAnswerSchema,
+  fitchDerivationAnswerSchema,
   derivationEvaluationEvidenceSchema,
 } from '@logiclab/contracts/derivation-work';
 import {
@@ -24,7 +24,7 @@ import {
 } from '../../../test/derivation-fixture';
 import { dependencyContent } from '../problem/derivation/dependency/authoring';
 import { evaluateDependencyAnswer, validateDependencyAnswer } from './dependency-response';
-import { validateDerivationAnswer } from './derivation-response';
+import { validateFitchAnswer } from './derivation-response';
 import { StudentWorkError } from './errors';
 
 type Assert<T extends true> = T;
@@ -266,8 +266,8 @@ test('format-specific validators stay distinct while saved-work transport accept
   const { authoritative, answer } = fixture();
   const fitch = { type: 'derivation', proof: derivationDefinitionFixture().referenceProof };
   expect(() => validateDependencyAnswer(fitch)).toThrow(StudentWorkError);
-  expect(() => validateDerivationAnswer(answer)).toThrow(StudentWorkError);
-  expect(derivationAnswerSchema.safeParse(answer).success).toBe(false);
+  expect(() => validateFitchAnswer(answer)).toThrow(StudentWorkError);
+  expect(fitchDerivationAnswerSchema.safeParse(answer).success).toBe(false);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
     true,
   );

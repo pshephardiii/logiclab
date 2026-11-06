@@ -1,11 +1,11 @@
 import {
   dependencyProofSchema,
   dependencyProofCheckInputSchema,
-  proofCheckInputSchema,
+  fitchProofCheckInputSchema,
   PROOF_LIMITS,
 } from '@logiclab/contracts';
-import { derivationAnswerSchema } from '@logiclab/contracts/derivation-work';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationAnswerSchema } from '@logiclab/contracts/derivation-work';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import { derivationDefinitionFixture } from './derivation-fixture';
 
 const p = 'a1111111-1111-4111-8111-111111111111';
@@ -121,10 +121,10 @@ test.each(['steps', 'dependencies', 'lineReferences', 'discharges'] as const)(
 );
 
 test('Fitch-only contracts keep rejecting dependency input after shared workflows support both formats', () => {
-  expect(proofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
-  expect(derivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
+  expect(fitchProofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
+  expect(fitchDerivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
   expect(
-    derivationDefinitionSchema.safeParse({
+    fitchDerivationDefinitionSchema.safeParse({
       ...derivationDefinitionFixture(),
       format: 'dependency',
       referenceProof: proof,

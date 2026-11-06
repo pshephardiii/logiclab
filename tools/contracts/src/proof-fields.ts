@@ -13,7 +13,9 @@ export const PROOF_LIMITS = Object.freeze({
 });
 
 export const proofReferenceIdSchema = z.uuid().transform((value) => value.toLowerCase());
+
 export const proofFormulaTextSchema = z.string().max(PROOF_LIMITS.maxFormulaLength);
+
 export const proofRuleIdSchema = z
   .string()
   .min(1)

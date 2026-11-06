@@ -22,12 +22,16 @@ export function SubmissionGradingHistory({
   const [next, setNext] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   async function load(offset = 0) {
     const signal = requests.startRequest();
+
     setBusy(true);
     setError(null);
+
     try {
       const page = await readGradingHistory(assignmentId, submissionId, offset, signal);
+
       if (!signal.aborted) {
         setEntries((previous) =>
           offset ? appendPageById(previous, page.revisions) : page.revisions,
@@ -42,6 +46,7 @@ export function SubmissionGradingHistory({
       if (!signal.aborted) setBusy(false);
     }
   }
+
   return (
     <section aria-label="Grading history">
       <h3>Grading history</h3>
@@ -70,6 +75,7 @@ export function SubmissionGradingHistory({
             <ul>
               {entry.changes.map((change) => {
                 const position = items.findIndex((item) => item.id === change.itemId);
+
                 return (
                   <li key={change.itemId}>
                     Problem {position + 1}: {items[position]?.title ?? change.itemId} —{' '}

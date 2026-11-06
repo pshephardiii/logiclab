@@ -1,24 +1,24 @@
 import type { ProofSubmissionResult, ProofCompletionSubmissionResult } from './proof-result.ts';
-import type { DerivationAnswer } from './derivation-work.ts';
+import type { FitchDerivationAnswer } from './derivation-work.ts';
 import type { DependencyDerivationAnswer } from './dependency-derivation-work.ts';
 import type { TreeDerivationAnswer } from './tree-derivation-work.ts';
 import type {
   ConceptualResponse,
-  MixedGradedSubmissionResult,
-  MixedCompletionSubmissionResult,
+  ObjectiveGradedSubmissionResult,
+  ObjectiveCompletionSubmissionResult,
 } from './mixed-work.ts';
 
 /** Student-entered values; missing cells and null are blanks, never false. */
-export interface AttemptAnswer {
+export interface TruthTableAttemptAnswer {
   rowId: string;
   columnId: string;
   value: boolean | null;
 }
 export type AttemptAnswers = Record<
   string,
-  | AttemptAnswer[]
+  | TruthTableAttemptAnswer[]
   | ConceptualResponse
-  | DerivationAnswer
+  | FitchDerivationAnswer
   | DependencyDerivationAnswer
   | TreeDerivationAnswer
 >;
@@ -31,7 +31,7 @@ export interface SubmissionCounts {
 }
 
 /** Frozen evaluation snapshot; future engine changes must not silently recompute official results. */
-export interface GradedSubmissionResult {
+export interface TruthTableGradedSubmissionResult {
   gradingVersion: 'truth_table_v1';
   items: {
     itemId: string;
@@ -44,15 +44,15 @@ export interface GradedSubmissionResult {
 }
 
 /** Completion-only finalization stores no correctness counts or grading feedback. */
-export interface CompletionSubmissionResult {
+export interface TruthTableCompletionSubmissionResult {
   gradingVersion: 'completion_v1';
   items: { itemId: string; completedCells: number; totalCells: number }[];
   summary: { completedCells: number; totalCells: number };
 }
 export type SubmissionResult =
-  | GradedSubmissionResult
-  | CompletionSubmissionResult
-  | MixedGradedSubmissionResult
-  | MixedCompletionSubmissionResult
+  | TruthTableGradedSubmissionResult
+  | TruthTableCompletionSubmissionResult
+  | ObjectiveGradedSubmissionResult
+  | ObjectiveCompletionSubmissionResult
   | ProofSubmissionResult
   | ProofCompletionSubmissionResult;

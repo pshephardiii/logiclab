@@ -1,6 +1,6 @@
 import {
-  problemDefinitionSchema,
-  type ProblemDefinition as AuthoredProblemDefinition,
+  objectiveProblemDefinitionSchema,
+  type ObjectiveProblemDefinition as AuthoredProblemDefinition,
 } from '@logiclab/contracts';
 import { parseFormula } from '@logiclab/logic-engine';
 import type { ProblemDefinition, TruthTableDefinition } from '@logiclab/db' with {
@@ -18,13 +18,17 @@ export function requireTruthTableDefinition(definition: ProblemDefinition): Trut
   if (definition.type !== 'truth_table' || definition.definitionVersion !== 1) {
     throw new UnsupportedProblemDefinitionError();
   }
+
   return definition;
 }
 
 /** Validate stored/authoring content before publication or owner-facing serialization. */
-export function supportedProblemDefinition(input: unknown): AuthoredProblemDefinition {
-  const result = problemDefinitionSchema.safeParse(input);
+export function validateObjectiveDefinition(input: unknown): AuthoredProblemDefinition {
+  const result = objectiveProblemDefinitionSchema.safeParse(input);
+
   if (!result.success) throw new UnsupportedProblemDefinitionError();
+
   if (result.data.type === 'truth_table') parseFormula(result.data.formula);
+
   return result.data;
 }

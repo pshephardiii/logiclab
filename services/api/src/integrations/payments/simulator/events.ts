@@ -15,6 +15,7 @@ const eventSchema = z.strictObject({
 /** Re-delivery reuses the event body/ID; a fresh signature permits delayed transport retries. */
 export function signSimulatorEvent(wrapper: SimulatorWrapper, event: PaymentEvent) {
   const body = JSON.stringify(eventSchema.parse(event));
+
   return { body, signature: wrapper.sign(body) };
 }
 

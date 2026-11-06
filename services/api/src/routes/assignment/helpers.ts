@@ -11,12 +11,18 @@ export async function instructor(
   context: AssignmentContext,
 ): Promise<ResourceUser> {
   const scoped = request as FastifyRequest & { assignmentUser?: ResourceUser | null };
+
   if (scoped.assignmentUser) return scoped.assignmentUser;
+
   const id = request.cookies[cookieName(context.config)];
+
   if (!id) throw new AuthError('SESSION_INVALID');
+
   const user = await context.service.authenticate(id);
+
   if (user.role !== 'instructor')
     throw new AssignmentError(403, 'INSTRUCTOR_REQUIRED', 'An instructor account is required.');
+
   scoped.assignmentUser = user;
   return user;
 }

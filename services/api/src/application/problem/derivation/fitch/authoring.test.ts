@@ -1,21 +1,21 @@
 import { DerivationAuthoringError } from '../errors';
 import { derivationDefinitionFixture as definition } from '../../../../../test/derivation-fixture';
 import {
-  derivationDefinitionSchema,
-  derivationContentSchema,
-  derivationSolutionSchema,
+  fitchDerivationDefinitionSchema,
+  fitchDerivationContentSchema,
+  fitchDerivationSolutionSchema,
   normalizedRuleLabel,
   DERIVATION_AUTHORING_LIMITS,
-  type DerivationDefinition,
+  type FitchDerivationDefinition,
 } from '@logiclab/contracts/derivation';
 import {
   createProblemRequestSchema,
-  problemDefinitionSchema,
+  objectiveProblemDefinitionSchema,
   type FitchProof,
 } from '@logiclab/contracts';
 import type {
-  DerivationDefinition as StoredDefinition,
-  DerivationReferenceProof,
+  FitchDerivationDefinition as StoredDefinition,
+  FitchReferenceProof,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import {
   validateFitchDefinition,
@@ -24,7 +24,7 @@ import {
   fitchReferenceSolution,
 } from './authoring';
 import {
-  supportedProblemDefinition,
+  validateObjectiveDefinition,
   requireTruthTableDefinition,
   UnsupportedProblemDefinitionError,
 } from '../../definition-support';
@@ -34,12 +34,12 @@ const b = 'b2222222-2222-4222-8222-222222222222';
 const c = 'c3333333-3333-4333-8333-333333333333';
 
 test('private derivation and reference JSON types are mutually assignable and round-trip', () => {
-  const stored: StoredDefinition = derivationDefinitionSchema.parse(definition());
-  const transported: DerivationDefinition = stored;
-  const reference: DerivationReferenceProof = transported.referenceProof!;
+  const stored: StoredDefinition = fitchDerivationDefinitionSchema.parse(definition());
+  const transported: FitchDerivationDefinition = stored;
+  const reference: FitchReferenceProof = transported.referenceProof!;
   const proof: FitchProof = reference;
   expect(proof).toEqual(transported.referenceProof);
-  expect(derivationDefinitionSchema.parse(JSON.parse(JSON.stringify(transported)))).toEqual(
+  expect(fitchDerivationDefinitionSchema.parse(JSON.parse(JSON.stringify(transported)))).toEqual(
     definition(),
   );
 });
@@ -101,7 +101,7 @@ test('ordinary content whitelists statements/labels and excludes private referen
   });
   expect(content).not.toHaveProperty('referenceProof');
   expect(content).not.toHaveProperty('explanation');
-  expect(derivationContentSchema.safeParse(value).success).toBe(false);
+  expect(fitchDerivationContentSchema.safeParse(value).success).toBe(false);
   content.rules[0]!.label = 'Changed returned copy';
   expect(value).toEqual(before);
 });
@@ -109,7 +109,7 @@ test('ordinary content whitelists statements/labels and excludes private referen
 test('privileged solution contains only a freshly accepted reference and its explanation', () => {
   const value = definition();
   const solution = fitchReferenceSolution(value);
-  expect(derivationSolutionSchema.parse(solution)).toEqual({
+  expect(fitchDerivationSolutionSchema.parse(solution)).toEqual({
     type: 'derivation',
     definitionVersion: 1,
     format: 'fitch',
@@ -136,7 +136,7 @@ test.each([
 ])('normalized labels reject collisions between %s and %s', (first, second) => {
   expect(normalizedRuleLabel(first)).toBe(normalizedRuleLabel(second));
   expect(
-    derivationDefinitionSchema.safeParse({
+    fitchDerivationDefinitionSchema.safeParse({
       ...definition(),
       rules: [
         { id: 'implication_elimination', label: first },
@@ -168,8 +168,10 @@ test.each([
   'MP\nCP',
 ])('rejects blank, oversized or invisible/control labels: %#', (label) => {
   expect(
-    derivationDefinitionSchema.safeParse({ ...definition(), rules: [{ id: 'reiteration', label }] })
-      .success,
+    fitchDerivationDefinitionSchema.safeParse({
+      ...definition(),
+      rules: [{ id: 'reiteration', label }],
+    }).success,
   ).toBe(false);
 });
 
@@ -194,7 +196,9 @@ test.each([
     ],
   },
 ])('rejects unsupported or ambiguous authoring configuration: %#', (patch) => {
-  expect(derivationDefinitionSchema.safeParse({ ...definition(), ...patch }).success).toBe(false);
+  expect(fitchDerivationDefinitionSchema.safeParse({ ...definition(), ...patch }).success).toBe(
+    false,
+  );
 });
 
 test('supported IDs are checked against the engine catalog, not labels or custom behavior', () => {
@@ -202,7 +206,7 @@ test('supported IDs are checked against the engine catalog, not labels or custom
     validateFitchDefinition({ ...definition(), rules: [{ id: 'custom_rule', label: 'MP' }] }),
   ).toThrow(DerivationAuthoringError);
   expect(
-    derivationDefinitionSchema.safeParse({
+    fitchDerivationDefinitionSchema.safeParse({
       ...definition(),
       rules: [{ id: 'reiteration', label: 'R', behavior: 'anything' }],
     }).success,
@@ -211,10 +215,10 @@ test('supported IDs are checked against the engine catalog, not labels or custom
 
 test('staged persistence types do not enable live authoring, assignment evaluation or table dispatch', () => {
   const value: StoredDefinition = definition();
-  expect(problemDefinitionSchema.safeParse(value).success).toBe(false);
+  expect(objectiveProblemDefinitionSchema.safeParse(value).success).toBe(false);
   expect(
     createProblemRequestSchema.safeParse({ title: 'Premature', definition: value }).success,
   ).toBe(false);
-  expect(() => supportedProblemDefinition(value)).toThrow(UnsupportedProblemDefinitionError);
+  expect(() => validateObjectiveDefinition(value)).toThrow(UnsupportedProblemDefinitionError);
   expect(() => requireTruthTableDefinition(value)).toThrow(UnsupportedProblemDefinitionError);
 });

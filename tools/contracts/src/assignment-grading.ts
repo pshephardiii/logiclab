@@ -7,6 +7,7 @@ export const INSTRUCTOR_GRADING_LIMITS = {
 } as const;
 
 const revisionSchema = z.number().int().min(0).max(INSTRUCTOR_GRADING_LIMITS.maxRevision);
+
 const itemFields = {
   itemId: z.uuid().transform((id) => id.toLowerCase()),
   // Null retains/reinstates the automatic award; it does not resolve a pending automatic grade.
@@ -20,6 +21,7 @@ const itemFields = {
 };
 
 export const instructorItemGradeSchema = z.strictObject(itemFields);
+
 export type InstructorItemGrade = z.infer<typeof instructorItemGradeSchema>;
 
 /** Actor/timestamp and frozen maxima come from the server, never the grading request. */
@@ -34,6 +36,7 @@ export const updateSubmissionGradingSchema = z.strictObject({
       'Each assigned occurrence may be changed only once per request.',
     ),
 });
+
 export type UpdateSubmissionGrading = z.infer<typeof updateSubmissionGradingSchema>;
 
 export const instructorGradingEntrySchema = z.strictObject({
@@ -41,6 +44,7 @@ export const instructorGradingEntrySchema = z.strictObject({
   reviewedBy: z.uuid().transform((id) => id.toLowerCase()),
   reviewedAt: z.iso.datetime(),
 });
+
 export type InstructorGradingEntry = z.infer<typeof instructorGradingEntrySchema>;
 
 /** Latest instructor decisions, separate from frozen automatic scores and append-only history. */
@@ -56,12 +60,14 @@ export const instructorGradingSchema = z
         code: 'custom',
         message: 'Instructor grading occurrences must be unique.',
       });
+
     if ((grading.revision === 0) !== (grading.items.length === 0))
       context.addIssue({
         code: 'custom',
         message: 'Initial grading is empty; saved decisions need a positive revision.',
       });
   });
+
 export type InstructorGrading = z.infer<typeof instructorGradingSchema>;
 
 /** Student-safe decisions: reviewer identities, timestamps and history stay owner-only. */
@@ -77,6 +83,7 @@ export const releasedInstructorGradingSchema = z.strictObject({
       'Instructor grading occurrences must be unique.',
     ),
 });
+
 export type ReleasedInstructorGrading = z.infer<typeof releasedInstructorGradingSchema>;
 
 /** Staged owner-only views; student disclosure remains a separate projection. */
@@ -84,6 +91,7 @@ export const submissionGradingResponseSchema = z.strictObject({
   grading: instructorGradingSchema,
   score: assignmentScoreSchema,
 });
+
 export type SubmissionGradingResponse = z.infer<typeof submissionGradingResponseSchema>;
 
 export const submissionGradingHistoryEntrySchema = submissionGradingResponseSchema
@@ -95,6 +103,7 @@ export const submissionGradingHistoryEntrySchema = submissionGradingResponseSche
   })
   .superRefine((record, context) => {
     const entries = new Map(record.grading.items.map((item) => [item.itemId, item]));
+
     if (
       record.grading.revision < 1 ||
       new Set(record.changes.map((item) => item.itemId)).size !== record.changes.length
@@ -103,8 +112,10 @@ export const submissionGradingHistoryEntrySchema = submissionGradingResponseSche
         code: 'custom',
         message: 'History requires a saved revision and distinct changes.',
       });
+
     for (const change of record.changes) {
       const entry = entries.get(change.itemId);
+
       if (
         !entry ||
         entry.earnedPoints !== change.earnedPoints ||
@@ -118,10 +129,12 @@ export const submissionGradingHistoryEntrySchema = submissionGradingResponseSche
         });
     }
   });
+
 export type SubmissionGradingHistoryEntry = z.infer<typeof submissionGradingHistoryEntrySchema>;
 
 export const submissionGradingHistorySchema = z.strictObject({
   revisions: z.array(submissionGradingHistoryEntrySchema).max(50),
   nextOffset: z.number().int().nonnegative().nullable(),
 });
+
 export type SubmissionGradingHistory = z.infer<typeof submissionGradingHistorySchema>;

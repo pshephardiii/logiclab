@@ -8,6 +8,7 @@ interface CommandIo {
   out(text: string): void;
   error(text: string): void;
 }
+
 export async function runJobsCommand(
   args: string[],
   env: NodeJS.ProcessEnv,
@@ -17,24 +18,31 @@ export async function runJobsCommand(
 ): Promise<number> {
   let orm: Awaited<ReturnType<typeof createDatabase>> | undefined;
   let exitCode = 0;
+
   try {
     const command = parseJobArguments(args);
+
     if (command[0] === 'help') {
       io.out(JOBS_HELP);
       return 0;
     }
+
     if (!env.DATABASE_URL) {
       io.error('DATABASE_URL is required for operator jobs commands.');
       return 1;
     }
+
     orm = await connect(env.DATABASE_URL, { snapshotOnMigrate: false });
+
     const result = await dispatchJobCommand(command, {
       runtime: await createJobRuntime(orm),
       operator: await createJobOperatorStore(orm),
     });
+
     io.out(
       typeof result.output === 'string' ? result.output : JSON.stringify(result.output, null, 2),
     );
+
     exitCode = result.exitCode;
   } catch (error) {
     io.error(
@@ -53,5 +61,6 @@ export async function runJobsCommand(
       }
     }
   }
+
   return exitCode;
 }

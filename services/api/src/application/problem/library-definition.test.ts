@@ -9,7 +9,7 @@ import { derivationDefinitionFixture as definition } from '../../../test/derivat
 import { libraryProblemDefinition, publicationDefinition } from './library-definition';
 import { mapProblemError } from '../../routes/problem/errors';
 
-import { supportedProblemDefinition } from './definition-support';
+import { validateObjectiveDefinition } from './definition-support';
 
 test('owner definitions accept incomplete derivations while assignment admission stays closed', () => {
   const value = { ...definition(), referenceProof: null, conclusion: '' };
@@ -21,7 +21,7 @@ test('owner definitions accept incomplete derivations while assignment admission
   expect(updateLibraryProblemRequestSchema.safeParse({ referenceAccepted: true }).success).toBe(
     false,
   );
-  expect(() => supportedProblemDefinition(value)).toThrow();
+  expect(() => validateObjectiveDefinition(value)).toThrow();
 });
 
 test('publication checks the exact saved configuration without trusting an old result', () => {

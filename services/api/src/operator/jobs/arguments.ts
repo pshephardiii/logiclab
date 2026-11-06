@@ -1,10 +1,14 @@
 import { z } from 'zod';
 
 const uuid = z.uuid();
+
 const jobType = z.enum(['billing_reconciliation', 'demo_cleanup']);
+
 const integer = (min: number, max: number) =>
   z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(min).max(max));
+
 const page = [integer(0, 1000000).optional(), integer(1, 100).optional()] as const;
+
 const commandSchema = z.union([
   z.tuple([z.literal('help')]),
   z.tuple([z.literal('setup'), jobType]),
@@ -15,18 +19,25 @@ const commandSchema = z.union([
   z.tuple([z.literal('inspect'), uuid]),
   z.tuple([z.literal('findings'), uuid, ...page]),
 ]);
+
 export class JobArgumentsError extends Error {}
+
 export function parseJobArguments(args: string[]) {
   const input =
     args.length === 0 || (args.length === 1 && ['--help', '-h'].includes(args[0]!))
       ? ['help']
       : args;
+
   const parsed = commandSchema.safeParse(input);
+
   if (!parsed.success)
     throw new JobArgumentsError('Invalid jobs command. Run npm run jobs -- help for usage.');
+
   return parsed.data;
 }
+
 export type JobCommand = ReturnType<typeof parseJobArguments>;
+
 export const JOBS_HELP = `Operator jobs commands (run from repository root):
   npm run jobs -- setup <billing_reconciliation|demo_cleanup>
   npm run jobs -- schedules [offset] [limit]

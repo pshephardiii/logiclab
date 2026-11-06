@@ -29,25 +29,33 @@ export function useSubmissionGrading(
   const [needsReload, setNeedsReload] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
   const accept = useCallback(
     (value: SubmissionGradingResponse) => {
       const next = submissionGradingDraft(frozenScore, value.grading);
+
       setCurrent(value);
       setBaseline(next);
       setDraft(next);
       setNeedsReload(false);
+
       onUpdated(submissionId, value);
     },
     [frozenScore, onUpdated, submissionId],
   );
+
   const load = useCallback(async () => {
     const signal = requests.startRequest();
+
     busyRef.current = true;
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       const value = await readGrading(assignmentId, submissionId, signal);
+
       if (!signal.aborted) accept(value);
     } catch (caught) {
       if (!signal.aborted)
@@ -59,27 +67,36 @@ export function useSubmissionGrading(
       }
     }
   }, [assignmentId, submissionId, readGrading, requests.startRequest, accept]);
+
   useEffect(() => {
     void load();
     return requests.cancelRequest;
   }, [load, requests.cancelRequest]);
+
   const changes = gradingDraftChanges(draft, baseline, frozenScore);
   const dirty = changedGradingItems(draft, baseline).length > 0;
+
   function change(itemId: string, patch: Partial<Omit<GradingDraft, 'itemId'>>) {
     if (busyRef.current || needsReload) return;
+
     setNotice(null);
     setDraft((previous) =>
       previous.map((item) => (item.itemId === itemId ? { ...item, ...patch } : item)),
     );
   }
+
   async function save() {
     if (!current || busyRef.current || needsReload || !dirty || Object.keys(changes.errors).length)
       return false;
+
     const signal = requests.startRequest();
+
     busyRef.current = true;
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       const value = await saveGrading(
         assignmentId,
@@ -87,8 +104,11 @@ export function useSubmissionGrading(
         { revision: current.grading.revision, items: changes.items },
         signal,
       );
+
       if (signal.aborted) return false;
+
       accept(value);
+
       setNotice('Instructor grading saved.');
       return true;
     } catch (caught) {
@@ -96,6 +116,7 @@ export function useSubmissionGrading(
         setError(caught instanceof Error ? caught.message : 'Could not confirm the grading save.');
         setNeedsReload(true);
       }
+
       return false;
     } finally {
       if (!signal.aborted) {
@@ -104,6 +125,7 @@ export function useSubmissionGrading(
       }
     }
   }
+
   return {
     current,
     draft,

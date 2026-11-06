@@ -21,9 +21,12 @@ export function useStudentClasses() {
 
   async function joinClass(code: string, signal: AbortSignal) {
     const classroom = await joinClassroom(code, signal);
+
     if (signal.aborted) return;
+
     // Show the committed result without requiring another request.
     setClassrooms((current) => [classroom, ...current.filter((row) => row.id !== classroom.id)]);
+
     // Joining may already exist; reload before requesting further offset pages.
     setNextOffset(null);
     setNotice(`You are enrolled in ${classroom.name}. Reload classes to see your complete list.`);
@@ -31,7 +34,9 @@ export function useStudentClasses() {
 
   async function loadClasses(append: boolean, signal: AbortSignal) {
     const result = await listEnrollments(signal, append ? (nextOffset ?? 0) : 0);
+
     if (signal.aborted) return;
+
     setClassrooms((current) =>
       append ? appendPageById(current, result.classrooms) : result.classrooms,
     );
@@ -40,14 +45,18 @@ export function useStudentClasses() {
 
   async function run(action: 'list' | 'more' | 'join', code?: string): Promise<boolean> {
     const signal = startRequest();
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       if (action === 'join') {
         await joinClass(code!, signal);
       } else await loadClasses(action === 'more', signal);
+
       if (signal.aborted) return false;
+
       return true;
     } catch (caught) {
       if (!signal.aborted) {
@@ -57,11 +66,13 @@ export function useStudentClasses() {
             : 'Could not complete the request. Please try again.',
         );
       }
+
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);
     }
   }
+
   useEffect(() => {
     void run('list');
   }, []);

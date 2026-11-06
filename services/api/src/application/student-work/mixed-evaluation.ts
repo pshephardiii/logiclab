@@ -1,22 +1,22 @@
 import {
-  assignmentResponsesSchema,
-  mixedGradedSubmissionResultSchema,
-  mixedCompletionSubmissionResultSchema,
-  type AssignmentResponses,
-  type AssignmentResponseValue,
-  type ProblemDefinition,
+  objectiveAssignmentResponsesSchema,
+  objectiveGradedSubmissionResultSchema,
+  objectiveCompletionSubmissionResultSchema,
+  type ObjectiveAssignmentResponses,
+  type ObjectiveAssignmentResponseValue,
+  type ObjectiveProblemDefinition,
   type TruthTableAnswer,
-  type MixedGradedSubmissionResult,
-  type MixedCompletionSubmissionResult,
-  type GradedSubmissionResult,
-  type CompletionSubmissionResult,
+  type ObjectiveGradedSubmissionResult,
+  type ObjectiveCompletionSubmissionResult,
+  type TruthTableGradedSubmissionResult,
+  type TruthTableCompletionSubmissionResult,
 } from '@logiclab/contracts';
-import { supportedProblemDefinition } from '../problem/definition-support';
+import { validateObjectiveDefinition } from '../problem/definition-support';
 import {
-  validateAnswers,
-  checkAssignedAnswers,
-  evaluateSubmission,
-  evaluateCompletion,
+  validateTruthTableAnswers,
+  checkAssignedTruthTableAnswers,
+  evaluateTruthTableSubmission,
+  evaluateTruthTableCompletion,
 } from './evaluation';
 import {
   checkConceptualAnswer,
@@ -25,35 +25,39 @@ import {
 } from './conceptual-evaluation';
 import { StudentWorkError } from './errors';
 
-type AssignedDefinition = { id: string; definition: ProblemDefinition };
+type AssignedObjectiveDefinition = { id: string; definition: ObjectiveProblemDefinition };
 
-function validatedWork(items: AssignedDefinition[], input: unknown) {
+function validatedWork(items: AssignedObjectiveDefinition[], input: unknown) {
   if (
     !items.length ||
     items.length > 50 ||
     new Set(items.map((item) => item.id)).size !== items.length
   )
     throw new StudentWorkError('invalid_answer');
-  const parsed = assignmentResponsesSchema.safeParse(input);
+
+  const parsed = objectiveAssignmentResponsesSchema.safeParse(input);
+
   if (
     !parsed.success ||
     Object.keys(parsed.data).some((id) => !items.some((item) => item.id === id))
   )
     throw new StudentWorkError('invalid_answer');
+
   return {
     items: items.map((item) => ({
       ...item,
-      definition: supportedProblemDefinition(item.definition),
+      definition: validateObjectiveDefinition(item.definition),
     })),
     responses: parsed.data,
   };
 }
 
 function responseFor(
-  item: AssignedDefinition,
-  responses: AssignmentResponses,
-): AssignmentResponseValue {
+  item: AssignedObjectiveDefinition,
+  responses: ObjectiveAssignmentResponses,
+): ObjectiveAssignmentResponseValue {
   if (Object.hasOwn(responses, item.id)) return responses[item.id]!;
+
   switch (item.definition.type) {
     case 'truth_table':
       return [];
@@ -64,16 +68,21 @@ function responseFor(
   }
 }
 
-function tableAnswers(response: AssignmentResponseValue): TruthTableAnswer[] {
+function tableAnswers(response: ObjectiveAssignmentResponseValue): TruthTableAnswer[] {
   if (!Array.isArray(response)) throw new StudentWorkError('invalid_answer');
+
   return response;
 }
 
 /** Preserve the legacy stored formats for assignments containing only truth tables. */
-function legacyWork(items: AssignedDefinition[], responses: AssignmentResponses) {
+function truthTableOnlyWork(
+  items: AssignedObjectiveDefinition[],
+  responses: ObjectiveAssignmentResponses,
+) {
   return {
     items: items.map((item) => {
       if (item.definition.type !== 'truth_table') throw new StudentWorkError('invalid_answer');
+
       return { id: item.id, formula: item.definition.formula };
     }),
     answers: Object.fromEntries(
@@ -83,32 +92,44 @@ function legacyWork(items: AssignedDefinition[], responses: AssignmentResponses)
 }
 
 /** Each table cell or conceptual question contributes one unweighted response unit. */
-export function evaluateAssignmentSubmission(
-  items: AssignedDefinition[],
+export function evaluateObjectiveSubmission(
+  items: AssignedObjectiveDefinition[],
   input: unknown,
-): GradedSubmissionResult | MixedGradedSubmissionResult {
+): TruthTableGradedSubmissionResult | ObjectiveGradedSubmissionResult {
   const work = validatedWork(items, input);
+
   if (work.items.every((item) => item.definition.type === 'truth_table')) {
-    const legacy = legacyWork(work.items, work.responses);
-    return evaluateSubmission(legacy.items, legacy.answers);
+    const tableWork = truthTableOnlyWork(work.items, work.responses);
+
+    return evaluateTruthTableSubmission(tableWork.items, tableWork.answers);
   }
+
   const summary = { correct: 0, incorrect: 0, unanswered: 0, total: 0 };
+
   const results = work.items.map((item) => {
     const answer = responseFor(item, work.responses);
+
     if (item.definition.type === 'truth_table') {
-      const feedback = checkAssignedAnswers(item.definition.formula, tableAnswers(answer));
+      const feedback = checkAssignedTruthTableAnswers(
+        item.definition.formula,
+        tableAnswers(answer),
+      );
+
       summary.correct += feedback.summary.correct;
       summary.incorrect += feedback.summary.incorrect;
       summary.unanswered += feedback.summary.unanswered;
       summary.total += feedback.summary.total;
       return { type: 'truth_table' as const, itemId: item.id, feedback };
     }
+
     const feedback = checkConceptualAnswer(item.definition, answer);
+
     summary[feedback.status]++;
     summary.total++;
     return { type: item.definition.type, itemId: item.id, feedback };
   });
-  return mixedGradedSubmissionResultSchema.parse({
+
+  return objectiveGradedSubmissionResultSchema.parse({
     gradingVersion: 'mixed_v1',
     items: results,
     summary,
@@ -116,21 +137,25 @@ export function evaluateAssignmentSubmission(
 }
 
 /** Completion validates and counts answers without comparing conceptual answers with keys. */
-export function evaluateAssignmentCompletion(
-  items: AssignedDefinition[],
+export function evaluateObjectiveCompletion(
+  items: AssignedObjectiveDefinition[],
   input: unknown,
-): CompletionSubmissionResult | MixedCompletionSubmissionResult {
+): TruthTableCompletionSubmissionResult | ObjectiveCompletionSubmissionResult {
   const work = validatedWork(items, input);
+
   if (work.items.every((item) => item.definition.type === 'truth_table')) {
-    const legacy = legacyWork(work.items, work.responses);
-    return evaluateCompletion(legacy.items, legacy.answers);
+    const tableWork = truthTableOnlyWork(work.items, work.responses);
+
+    return evaluateTruthTableCompletion(tableWork.items, tableWork.answers);
   }
+
   const completed = work.items.map((item) => {
     const response = responseFor(item, work.responses);
     let totalResponses: number;
     let completedResponses: number;
+
     if (item.definition.type === 'truth_table') {
-      const validated = validateAnswers(item.definition.formula, tableAnswers(response));
+      const validated = validateTruthTableAnswers(item.definition.formula, tableAnswers(response));
       totalResponses = validated.table.rows.length * validated.columns.length;
       completedResponses = [...validated.answers.values()].filter((value) => value !== null).length;
     } else {
@@ -138,9 +163,12 @@ export function evaluateAssignmentCompletion(
       totalResponses = 1;
       completedResponses = conceptualAnswerIsFilled(answer) ? 1 : 0;
     }
+
     if (completedResponses !== totalResponses) throw new StudentWorkError('incomplete_work');
+
     return { itemId: item.id, type: item.definition.type, completedResponses, totalResponses };
   });
+
   const summary = completed.reduce(
     (total, item) => ({
       completedResponses: total.completedResponses + item.completedResponses,
@@ -148,7 +176,8 @@ export function evaluateAssignmentCompletion(
     }),
     { completedResponses: 0, totalResponses: 0 },
   );
-  return mixedCompletionSubmissionResultSchema.parse({
+
+  return objectiveCompletionSubmissionResultSchema.parse({
     gradingVersion: 'mixed_completion_v1',
     items: completed,
     summary,

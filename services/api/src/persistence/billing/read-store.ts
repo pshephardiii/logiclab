@@ -11,6 +11,7 @@ export async function createBillingReadStore(
   transaction?: DatabaseManager,
 ): Promise<BillingReadStore> {
   const transact = transactionRunner(orm, transaction);
+
   const {
     BillingPlan,
     BillingModel,
@@ -20,6 +21,7 @@ export async function createBillingReadStore(
     ClassCapability,
     LockMode,
   } = await import('@logiclab/db');
+
   return {
     async plans(query) {
       const rows = await (transaction ?? orm.em.fork()).find(
@@ -27,6 +29,7 @@ export async function createBillingReadStore(
         { active: true, billingModel: BillingModel.OneTime },
         { limit: query.limit + 1, offset: query.offset, orderBy: { name: 'ASC', id: 'ASC' } },
       );
+
       return {
         plans: rows.slice(0, query.limit).map((plan) => ({
           id: plan.id,
@@ -39,6 +42,7 @@ export async function createBillingReadStore(
         nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
       };
     },
+
     async readClass(ownerId, classId, query) {
       return transact(async (em) => {
         const classroom = await em.findOne(
@@ -46,8 +50,11 @@ export async function createBillingReadStore(
           { id: classId, owner: ownerId },
           { lockMode: LockMode.PESSIMISTIC_READ },
         );
+
         if (!classroom) throw new BillingError('not_found');
+
         const now = new Date();
+
         const grants = await em.find(
           ClassEntitlement,
           {
@@ -59,6 +66,7 @@ export async function createBillingReadStore(
           },
           { orderBy: { endsAt: 'DESC' }, limit: 1 },
         );
+
         const rows = await em.find(
           ClassPurchase,
           { classroom: classId },
@@ -68,6 +76,7 @@ export async function createBillingReadStore(
             orderBy: { createdAt: 'DESC', id: 'DESC' },
           },
         );
+
         return {
           classId,
           checkoutBlockedReason: await checkoutBlockedReason(em, classId),

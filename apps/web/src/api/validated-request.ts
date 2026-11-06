@@ -13,6 +13,7 @@ export async function requestValidatedJson<T>(
   { schema, validationError, ...requestOptions }: ValidatedRequestOptions<T>,
 ): Promise<T> {
   const payload = await requestJson(path, requestOptions);
+
   try {
     return schema.parse(payload);
   } catch (error) {

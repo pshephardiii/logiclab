@@ -11,6 +11,7 @@ const findingKinds = {
 /** Bound handler output before any findings are committed. */
 export function validResult(result: JobResult) {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   return (
     result &&
     Number.isInteger(result.recordsChecked) &&

@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
-import { checkProof, checkDependencyProof, checkTreeProof } from '@logiclab/logic-engine/proof';
+import {
+  checkFitchProof,
+  checkDependencyProof,
+  checkTreeProof,
+} from '@logiclab/logic-engine/proof';
 import { treeDerivationDefinitionSchema } from '@logiclab/contracts/tree-derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
@@ -9,20 +13,24 @@ import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
 export function LocalReferenceCheck({ definition }: { definition: AuthoringDerivationDefinition }) {
   const snapshot = JSON.stringify(definition);
+
   const [checked, setChecked] = useState<{
     snapshot: string;
     report?: ProofCheckReport;
     error?: string;
   } | null>(null);
+
   const current = checked?.snapshot === snapshot ? checked : null;
+
   function check() {
     const parsed = (
       definition.format === 'tree'
         ? treeDerivationDefinitionSchema
         : definition.format === 'dependency'
           ? dependencyDerivationDefinitionSchema
-          : derivationDefinitionSchema
+          : fitchDerivationDefinitionSchema
     ).safeParse(definition);
+
     if (!parsed.success) {
       setChecked({
         snapshot,
@@ -33,18 +41,21 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
       });
       return;
     }
+
     const value = parsed.data;
+
     if (!value.referenceProof) {
       setChecked({ snapshot, error: 'Start a reference proof before checking.' });
       return;
     }
+
     setChecked({
       snapshot,
       report: (value.format === 'tree'
         ? checkTreeProof
         : value.format === 'dependency'
           ? checkDependencyProof
-          : checkProof)({
+          : checkFitchProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
           premises: value.premises,
@@ -55,6 +66,7 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
       }),
     });
   }
+
   return (
     <section aria-label="Check current reference">
       <button type="button" onClick={check}>

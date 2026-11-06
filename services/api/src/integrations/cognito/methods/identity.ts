@@ -11,7 +11,9 @@ export async function identity(
 ): Promise<{ subject: string; verified: boolean }> {
   const result = await cognito.send(new GetUserCommand({ AccessToken: accessToken }));
   const subject = result.UserAttributes?.find((attribute) => attribute.Name === 'sub')?.Value;
+
   if (!subject) throw new AuthError('AUTH_RESPONSE_INVALID');
+
   return {
     subject,
     verified:

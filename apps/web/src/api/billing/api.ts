@@ -11,12 +11,14 @@ import { requestAccountJson } from '../account-request';
 /** Bind resource operations to a supplied account request transport. */
 export function createApi(request: typeof requestAccountJson = requestAccountJson) {
   const fallback = 'Could not load or update simulated billing.';
+
   const errorOverride = (status: number) =>
     status === 404
       ? new Error(
           'Billing is unavailable or this class is inaccessible. Enable the billing simulator on the API if needed.',
         )
       : undefined;
+
   function listPlans(signal: AbortSignal, offset = 0) {
     return request(`/api/billing/plans?offset=${offset}`, {
       schema: billingPlansResponseSchema,
@@ -25,6 +27,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       errorOverride,
     });
   }
+
   function readClassBilling(classId: string, signal: AbortSignal, offset = 0) {
     return request(`/api/classes/${classId}/billing?offset=${offset}`, {
       schema: classBillingResponseSchema,
@@ -33,6 +36,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       errorOverride,
     });
   }
+
   function createCheckout(classId: string, input: CheckoutRequest, signal: AbortSignal) {
     return request(`/api/classes/${classId}/checkout`, {
       schema: purchaseResponseSchema,
@@ -42,6 +46,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       errorOverride,
     });
   }
+
   function simulatePayment(
     purchaseId: string,
     outcome: SimulatorRequest['outcome'],

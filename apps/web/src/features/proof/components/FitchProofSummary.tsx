@@ -1,4 +1,4 @@
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 
@@ -10,16 +10,19 @@ export function FitchProofSummary({
   children,
 }: {
   proof: FitchProof | null;
-  rules: DerivationContent['rules'];
+  rules: FitchDerivationContent['rules'];
   label: string;
   children?: ReactNode;
 }) {
   const lines = new Map(proof?.steps.map((step, index) => [step.id, index + 1]));
   const line = (id: string | null) => (id ? (lines.get(id) ?? '?') : '?');
+
   const blocks = new Map(
     proof?.blocks.map((block) => [block.id, `${line(block.assumptionId)}–${line(block.endId)}`]),
   );
+
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
+
   return (
     <details>
       <summary>{label}</summary>

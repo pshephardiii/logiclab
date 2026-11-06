@@ -27,6 +27,7 @@ export function ProofFeedback({
       <ul>
         {report.diagnostics.map((diagnostic, index) => {
           const position = diagnostic.stepIndex ?? -1;
+
           return (
             <li key={index}>
               {position >= 0 && `${stepLabel} ${position + 1}: `}

@@ -14,6 +14,7 @@ export function createCognitoWrapper(
     poolId: config.COGNITO_USER_POOL_ID,
     clientSecret: config.COGNITO_CLIENT_SECRET,
     send: client.send.bind(client),
+
     secretHash(username: string): string {
       return createHmac('sha256', config.COGNITO_CLIENT_SECRET)
         .update(username + config.COGNITO_CLIENT_ID)

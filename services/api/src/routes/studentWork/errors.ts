@@ -11,6 +11,7 @@ export class StudentWorkRouteError extends Error {
     super(message);
   }
 }
+
 const failures = {
   invalid_answer: {
     status: 400,
@@ -69,13 +70,19 @@ const failures = {
     message: 'This assignment policy is not supported.',
   },
 };
+
 export function mapStudentWorkError(error: unknown) {
   const unsupported = mapProblemDefinitionError(error);
+
   if (unsupported) return unsupported;
+
   if (error instanceof StudentWorkRouteError)
     return { status: error.status, code: error.code, message: error.message };
+
   if (error instanceof StudentWorkError) return failures[error.reason];
+
   const mapped = mapAuthError(error);
+
   return mapped.status === 503
     ? {
         status: 503,

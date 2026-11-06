@@ -12,6 +12,7 @@ export class AssignmentError extends Error {
     super(message);
   }
 }
+
 const failures = {
   proof_mode_unavailable: {
     status: 409,
@@ -67,6 +68,7 @@ const failures = {
     message: 'Add at least one published problem before publishing.',
   },
 };
+
 const gradingFailures = {
   not_found: { status: 404, code: 'SUBMISSION_NOT_FOUND', message: 'Submission not found.' },
   archived: {
@@ -93,12 +95,18 @@ const gradingFailures = {
 
 export function mapAssignmentError(error: unknown) {
   if (error instanceof SubmissionGradingError) return gradingFailures[error.reason];
+
   const unsupported = mapProblemDefinitionError(error);
+
   if (unsupported) return unsupported;
+
   if (error instanceof AssignmentError)
     return { status: error.status, code: error.code, message: error.message };
+
   if (error instanceof AssignmentOperationError) return failures[error.reason];
+
   const mapped = mapAuthError(error);
+
   return mapped.status === 503
     ? {
         status: 503,

@@ -7,6 +7,7 @@ export function mapClassroomError(error: unknown) {
   let status = 503,
     code = 'CLASSROOM_UNAVAILABLE',
     message = 'Classes are temporarily unavailable. Please try again.';
+
   if (error instanceof ClassroomError) {
     status = error.status;
     code = error.code;
@@ -48,5 +49,6 @@ export function mapClassroomError(error: unknown) {
         ? 'Too many requests. Please try again later.'
         : 'Provide a valid, bounded JSON request.';
   }
+
   return { status, code, message };
 }

@@ -6,10 +6,12 @@ import '../../../features/truthTable/truth-table.css';
 /** Independent preview state never replaces the visitor's practice-page answers. */
 export function ProblemPreview({ formula }: { formula: string }) {
   const practice = useTruthTablePractice(formula);
+
   // The parent remounts each preview; generate once for its fixed formula.
   useEffect(() => {
     void practice.createTable();
   }, []);
+
   return (
     <section aria-label="Problem preview">
       <h2>Preview: {formula}</h2>

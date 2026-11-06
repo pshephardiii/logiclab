@@ -6,6 +6,7 @@ export function validatedPaymentEventTime(
   event: PaymentEvent,
 ): Date {
   const occurred = new Date(event.occurredAt);
+
   if (
     event.sourceReference !== purchase.checkoutReference ||
     !Number.isSafeInteger(event.sequence) ||
@@ -14,5 +15,6 @@ export function validatedPaymentEventTime(
     occurred.getTime() > Date.now() + 300_000
   )
     throw new BillingError('invalid_event');
+
   return occurred;
 }

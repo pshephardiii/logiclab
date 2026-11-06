@@ -13,7 +13,9 @@ import type { DerivationReferenceCheck } from '../reference-check';
 
 export function validateDependencyContent(value: unknown): DependencyDerivationContent {
   const parsed = dependencyDerivationContentSchema.safeParse(value);
+
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
+
   assertDerivationConfiguration(parsed.data);
   return parsed.data;
 }
@@ -21,7 +23,9 @@ export function validateDependencyContent(value: unknown): DependencyDerivationC
 /** Retain unfinished drafts without treating schema validation as proof certification. */
 export function validateDependencyDefinition(value: unknown): DependencyDerivationDefinition {
   const parsed = dependencyDerivationDefinitionSchema.safeParse(value);
+
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
+
   assertDerivationConfiguration(parsed.data);
   return parsed.data;
 }
@@ -29,7 +33,9 @@ export function validateDependencyDefinition(value: unknown): DependencyDerivati
 /** Check the exact supplied authoritative definition, never a cached flag or a Fitch conversion. */
 export function checkDependencyReference(value: unknown): DerivationReferenceCheck {
   const definition = validateDependencyDefinition(value);
+
   if (definition.referenceProof === null) return { status: 'missing' };
+
   return {
     status: 'checked',
     report: checkDependencyProof({
@@ -48,15 +54,19 @@ export function checkDependencyReference(value: unknown): DerivationReferenceChe
 export function dependencyPublicationDefinition(value: unknown): DependencyDerivationDefinition {
   const definition = validateDependencyDefinition(value);
   const check = checkDependencyReference(definition);
+
   if (check.status === 'missing') throw new DerivationPublicationError('missing_reference');
+
   if (check.report.status !== 'accepted')
     throw new DerivationPublicationError('rejected_reference');
+
   return definition;
 }
 
 /** Explicit ordinary-content projection excludes the private reference and explanation. */
 export function dependencyContent(value: unknown): DependencyDerivationContent {
   const definition = validateDependencyDefinition(value);
+
   return dependencyDerivationContentSchema.parse({
     type: definition.type,
     definitionVersion: definition.definitionVersion,
@@ -73,8 +83,10 @@ export function dependencyContent(value: unknown): DependencyDerivationContent {
 export function dependencyReferenceSolution(value: unknown): DependencyDerivationSolution {
   const definition = validateDependencyDefinition(value);
   const check = checkDependencyReference(definition);
+
   if (check.status !== 'checked' || check.report.status !== 'accepted')
     throw new DerivationAuthoringError('reference_unavailable');
+
   return dependencyDerivationSolutionSchema.parse({
     type: definition.type,
     definitionVersion: definition.definitionVersion,

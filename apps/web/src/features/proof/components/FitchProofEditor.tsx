@@ -1,30 +1,31 @@
 import { FitchProofInsertControls } from './FitchProofInsertControls';
 import { FitchProofDeletionConfirmation } from './FitchProofDeletionConfirmation';
-import { proofEditorChoices } from '../helpers/proof-editor-choices';
+import { fitchEditorChoices } from '../helpers/proof-editor-choices';
 import { FitchProofBlockControls } from './FitchProofBlockControls';
 import { useState } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import {
-  startProof,
-  insertProofPremise,
-  insertProofStep,
-  moveProofStep,
-  removeProofStep,
-  removeProofSubproof,
-  proofSubtree,
-  uniqueProofIds,
+  startFitchProof,
+  insertFitchPremise,
+  insertFitchProofStep,
+  moveFitchProofStep,
+  removeFitchProofStep,
+  removeFitchSubproof,
+  fitchProofSubtree,
+  uniqueFitchProofIds,
 } from '../helpers/fitch-editor';
 import { FitchProofLine } from './FitchProofLine';
 import { FitchProofSummary } from './FitchProofSummary';
 import '../proof.css';
 
 type Props = {
-  statement: Pick<DerivationContent, 'premises' | 'rules'>;
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'>;
   proof: FitchProof | null;
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
 };
+
 type Deletion = { kind: 'line'; index: number } | { kind: 'block'; id: string } | { kind: 'proof' };
 
 export function FitchProofEditor({ statement, proof, purpose, onChange }: Props) {
@@ -34,11 +35,13 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
   const [before, setBefore] = useState<string | null>(null);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   function change(next: FitchProof | null) {
     setDeletion(null);
     setError(null);
     onChange(next);
   }
+
   if (!proof)
     return (
       <section
@@ -55,36 +58,43 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
           onClick={() => {
             setScope(null);
             setBefore(null);
-            change(startProof(statement));
+            change(startFitchProof(statement));
           }}
         >
           {reference ? 'Start reference proof' : 'Start proof'}
         </button>
       </section>
     );
-  const safe = uniqueProofIds(proof);
-  const { lines, lineScopes, blockChoices } = proofEditorChoices(proof);
-  const affected = deletion?.kind === 'block' ? proofSubtree(proof, deletion.id) : null;
+
+  const safe = uniqueFitchProofIds(proof);
+  const { lines, lineScopes, blockChoices } = fitchEditorChoices(proof);
+  const affected = deletion?.kind === 'block' ? fitchProofSubtree(proof, deletion.id) : null;
+
   const deletedCount = affected
     ? proof.steps.filter((step) => step.blockId && affected.has(step.blockId)).length
     : deletion?.kind === 'line'
       ? 1
       : proof.steps.length;
+
   function insert(subproof: boolean, premise = false) {
     try {
       const index =
         before === null
           ? proof!.steps.length
           : proof!.steps.findIndex((step) => step.id === before);
+
       const next = premise
-        ? insertProofPremise(proof!, index)
-        : insertProofStep(proof!, index, scope, subproof);
+        ? insertFitchPremise(proof!, index)
+        : insertFitchProofStep(proof!, index, scope, subproof);
+
       if (subproof) setScope(next.blocks.at(-1)!.id);
+
       change(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not insert a proof line.');
     }
   }
+
   return (
     <section
       className="proof-editor"
@@ -141,7 +151,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
                   steps: proof.steps.map((value, position) => (position === index ? next : value)),
                 })
               }
-              onMove={(delta) => change(moveProofStep(proof, index, delta))}
+              onMove={(delta) => change(moveFitchProofStep(proof, index, delta))}
               onDelete={() => setDeletion({ kind: 'line', index })}
             />
           ))}
@@ -151,7 +161,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
               block={block}
               label={blockChoices[index]!.label}
               parentChoices={blockChoices.filter(
-                (value) => !proofSubtree(proof, block.id).has(value.id),
+                (value) => !fitchProofSubtree(proof, block.id).has(value.id),
               )}
               finalLineChoices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
               onChange={(next) =>
@@ -178,8 +188,9 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
               setScope(null);
               setBefore(null);
               change(null);
-            } else if (deletion.kind === 'line') change(removeProofStep(proof, deletion.index));
-            else change(removeProofSubproof(proof, deletion.id));
+            } else if (deletion.kind === 'line')
+              change(removeFitchProofStep(proof, deletion.index));
+            else change(removeFitchSubproof(proof, deletion.id));
           }}
           onCancel={() => setDeletion(null)}
         />

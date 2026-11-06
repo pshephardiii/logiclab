@@ -3,6 +3,7 @@ import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from '../components/ProofChoice';
 
 type Inference = Extract<DependencyProofStep, { kind: 'inference' }>;
+
 export function DependencyInferenceFields({
   step,
   index,
@@ -17,10 +18,12 @@ export function DependencyInferenceFields({
   onChange: (step: Inference) => void;
 }) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
+
   const earlier = steps.slice(0, index).map((line, position) => ({
     id: line.id,
     label: `${position + 1}. ${line.formula || '(blank)'}`,
   }));
+
   return (
     <>
       <ProofChoice
@@ -39,8 +42,10 @@ export function DependencyInferenceFields({
             choices={earlier}
             onChange={(id) => {
               const refs = [...step.lineReferences];
+
               if (id) refs[slot] = id;
               else refs.splice(slot, 1);
+
               onChange({ ...step, lineReferences: refs.filter(Boolean) });
             }}
           />
@@ -50,13 +55,18 @@ export function DependencyInferenceFields({
         { length: Math.max(rule?.subproofReferences ?? 0, step.discharges.length) },
         (_, slot) => {
           const pair = step.discharges[slot] ?? { assumptionId: null, conclusionId: null };
+
           function change(patch: Partial<typeof pair>) {
             const discharges = [...step.discharges];
+
             while (discharges.length <= slot)
               discharges.push({ assumptionId: null, conclusionId: null });
+
             discharges[slot] = { ...pair, ...patch };
+
             onChange({ ...step, discharges });
           }
+
           return (
             <div key={`discharge-${slot}`}>
               <ProofChoice

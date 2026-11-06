@@ -12,7 +12,9 @@ export function validateConceptualAnswer(
   input: unknown,
 ): ConceptualAnswer {
   const result = conceptualAnswerSchemaFor(definition).safeParse(input);
+
   if (!result.success) throw new StudentWorkError('invalid_answer');
+
   return result.data;
 }
 
@@ -26,12 +28,15 @@ export function checkConceptualAnswer(
   input: unknown,
 ): ConceptualFeedback {
   const answer = validateConceptualAnswer(definition, input);
+
   if (!conceptualAnswerIsFilled(answer)) return { status: 'unanswered' };
+
   const correct =
     definition.type === 'true_false' && answer.type === 'true_false'
       ? answer.answer === definition.correctAnswer
       : definition.type === 'multiple_choice' &&
         answer.type === 'multiple_choice' &&
         answer.optionId === definition.correctOptionId;
+
   return { status: correct ? 'correct' : 'incorrect' };
 }

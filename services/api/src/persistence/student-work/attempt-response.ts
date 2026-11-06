@@ -20,21 +20,26 @@ export function attemptResponse(
   grading?: SubmissionGradingResponse,
 ): SavedStudentAttempt {
   const submitted = Boolean(attempt.submittedAt);
+
   if (submitted && assignment.assessmentMode === 'graded' && !attempt.score)
     throw new StudentWorkError('unsupported_policy');
+
   if (
     attempt.result?.gradingVersion === 'proof_mixed_v1' &&
     (!submitted || assignment.assessmentMode !== 'graded')
   )
     throw new StudentWorkError('unsupported_policy');
+
   if (attempt.result?.gradingVersion === 'proof_completion_v1')
     retainedProofCompletion(attempt, assignment);
+
   const score =
     attempt.result?.gradingVersion === 'proof_mixed_v1'
       ? validateProofSubmissionScore(attempt.result, attempt.score)
       : attempt.score
         ? assignmentScoreSchema.parse(attempt.score)
         : null;
+
   const visible =
     assignment.assessmentMode === 'graded'
       ? canViewAssignmentResults({
@@ -44,6 +49,7 @@ export function attemptResponse(
           gradesReleased: Boolean(assignment.gradesReleasedAt),
         })
       : canViewAssignmentResults({ assessmentMode: assignment.assessmentMode, submitted });
+
   return savedStudentAttemptSchema.parse({
     id: attempt.id,
     revision: attempt.revision,

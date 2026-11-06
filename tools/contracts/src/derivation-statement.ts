@@ -2,8 +2,11 @@ import { z } from 'zod';
 import { proofProblemSchema, PROOF_LIMITS } from './proof';
 
 export const DERIVATION_AUTHORING_LIMITS = Object.freeze({ ruleLabel: 80, explanation: 5000 });
+
 const id = z.uuid().transform((value) => value.toLowerCase());
+
 const formula = z.string().max(PROOF_LIMITS.maxFormulaLength);
+
 export const derivationExplanationSchema = z
   .string()
   .trim()
@@ -43,6 +46,7 @@ export const derivationStatementSchema = z
   })
   .superRefine((value, context) => {
     const premises = new Set<string>();
+
     value.premises.forEach((premise, index) => {
       if (premises.has(premise.id))
         context.addIssue({
@@ -50,10 +54,13 @@ export const derivationStatementSchema = z
           path: ['premises', index, 'id'],
           message: 'Premise IDs must be unique.',
         });
+
       premises.add(premise.id);
     });
+
     const rules = new Set<string>();
     const labels = new Set<string>();
+
     value.rules.forEach((rule, index) => {
       if (rules.has(rule.id))
         context.addIssue({
@@ -61,13 +68,16 @@ export const derivationStatementSchema = z
           path: ['rules', index, 'id'],
           message: 'Enabled rule IDs must be unique.',
         });
+
       const label = normalizedRuleLabel(rule.label);
+
       if (labels.has(label))
         context.addIssue({
           code: 'custom',
           path: ['rules', index, 'label'],
           message: 'Enabled rules must have distinct normalized labels.',
         });
+
       rules.add(rule.id);
       labels.add(label);
     });

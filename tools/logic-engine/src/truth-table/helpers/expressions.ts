@@ -24,9 +24,9 @@ export function collectTableExpressions(formula: Formula) {
   }
 
   visit(formula);
+
   // A single-variable exercise still needs an answer distinct from its given column.
   expressions.set(expressionColumnId(formula), formula);
-
   return {
     variables: [...variableNames].sort(),
     expressions,
@@ -50,6 +50,7 @@ export function canonicalExpression(formula: Formula): string {
       const left = canonicalExpression(formula.left);
       const right = canonicalExpression(formula.right);
       const operator = operatorSymbols[formula.operator];
+
       return `(${left} ${operator} ${right})`;
     }
   }

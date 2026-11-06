@@ -13,6 +13,7 @@ export function useFormulaValidation(formula: string) {
 
   useEffect(() => {
     if (!formula.trim()) return;
+
     const timer = setTimeout(() => {
       try {
         parseFormula(formula);
@@ -23,9 +24,11 @@ export function useFormulaValidation(formula: string) {
         });
       } catch (error) {
         if (!(error instanceof FormulaParseError)) throw error;
+
         setResult({ formula, valid: false, message: error.message });
       }
     }, FORMULA_VALIDATION_DELAY_MS);
+
     return () => clearTimeout(timer);
   }, [formula]);
 

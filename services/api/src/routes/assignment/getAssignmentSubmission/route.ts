@@ -11,6 +11,7 @@ export const getAssignmentSubmissionSchema = {
   params: submissionParamsSchema,
   response: { 200: submissionReviewSchema, ...assignmentErrorResponses },
 } satisfies RouteSchema;
+
 export async function getAssignmentSubmissionRoute(
   app: FastifyInstance,
   context: AssignmentContext,

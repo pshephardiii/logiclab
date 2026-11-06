@@ -13,11 +13,14 @@ export class ProofBudgetExceeded extends Error {
 /** Deterministic work units, not elapsed-time cancellation or an instruction counter. */
 export function proofBudget() {
   let remaining = PROOF_LIMITS.maxCheckWork;
+
   return {
     spend(units: number) {
       remaining -= units;
+
       if (remaining < 0) throw new ProofBudgetExceeded();
     },
   };
 }
+
 export type ProofBudget = ReturnType<typeof proofBudget>;

@@ -2,11 +2,11 @@ import type { ProblemType } from './enums.ts';
 
 import type { FitchProof, FitchProofStep } from '../proof/work.ts';
 
-export type DerivationProofStep = FitchProofStep;
-export type DerivationReferenceProof = FitchProof;
+export type FitchDerivationProofStep = FitchProofStep;
+export type FitchReferenceProof = FitchProof;
 
 /** Versioned instructor JSON, shared by mutable drafts and immutable published snapshots. */
-export type DerivationDefinition = {
+export type FitchDerivationDefinition = {
   type: `${ProblemType.Derivation}`;
   definitionVersion: 1;
   format: 'fitch';
@@ -15,6 +15,6 @@ export type DerivationDefinition = {
   premises: { id: string; formula: string }[];
   conclusion: string;
   rules: { id: string; label: string }[];
-  referenceProof: DerivationReferenceProof | null;
+  referenceProof: FitchReferenceProof | null;
   explanation?: string | null;
 };

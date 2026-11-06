@@ -10,7 +10,9 @@ export function ClassroomForm({ busy, onCreate }: Props) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const created = await onCreate(name);
+
     if (created) setName('');
   }
 

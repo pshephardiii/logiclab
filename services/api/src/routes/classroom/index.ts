@@ -18,7 +18,9 @@ import { getClassroomRoute } from './getClassroom/route';
  */
 export async function classroomRoutes(app: FastifyInstance, context: ClassroomContext) {
   app.decorateRequest('classroomUser', null);
+
   await installAccountHttpPolicy(app, context.config);
+
   // Preserve authorization-before-field-validation, without authenticating twice.
   app.addHook('preValidation', async (request) => {
     const authorize = request.routeOptions.url?.includes('/enrollments') ? student : instructor;
@@ -26,8 +28,11 @@ export async function classroomRoutes(app: FastifyInstance, context: ClassroomCo
   });
   app.setErrorHandler((error, request, reply) => {
     const { status, code, message } = mapClassroomError(error);
+
     if (status === 401) clearRejectedSessionCookie(reply, context.config);
+
     if (status === 503) request.log.warn({ code }, 'Classroom operation unavailable');
+
     return reply.code(status).send(authErrorResponseSchema.parse({ error: { code, message } }));
   });
   app.register(postEnrollmentRoute, context);

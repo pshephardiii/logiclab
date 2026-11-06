@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import type { CreateLibraryProblemRequest } from '@logiclab/contracts/problem-library';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import { derivationDefinition, derivationDraft } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
@@ -144,7 +144,7 @@ test('missing references and ambiguous identities are inspectable without silent
 });
 
 test('checks unsupported/incomplete statements explicitly and preserves blank reference work', async () => {
-  const definition: DerivationDefinition = {
+  const definition: FitchDerivationDefinition = {
     ...derivationDefinition,
     conclusion: '',
     referenceProof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },

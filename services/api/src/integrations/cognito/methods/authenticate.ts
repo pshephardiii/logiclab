@@ -19,12 +19,15 @@ export async function authenticate(
       AuthParameters: parameters,
     }),
   );
+
   if (result.ChallengeName) throw new AuthError('AUTH_CHALLENGE_UNSUPPORTED');
 
   const auth = result.AuthenticationResult;
   const refreshToken = auth?.RefreshToken ?? previousRefresh;
+
   if (!auth?.AccessToken || !refreshToken || !auth.ExpiresIn || auth.ExpiresIn <= 0) {
     throw new AuthError('AUTH_RESPONSE_INVALID');
   }
+
   return { accessToken: auth.AccessToken, refreshToken, expiresIn: auth.ExpiresIn };
 }

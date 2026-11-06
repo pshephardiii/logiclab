@@ -14,6 +14,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: { code },
     });
+
     return response.classroom;
   }
 
@@ -23,6 +24,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       ...enrollmentRequestOptions,
       signal,
     });
+
     return response;
   }
 

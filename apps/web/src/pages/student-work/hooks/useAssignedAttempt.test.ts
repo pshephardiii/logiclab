@@ -16,7 +16,7 @@ import {
   solution,
 } from '../../../../test/assignment-work-fixture';
 import { cellKey } from '../../../features/truthTable/types';
-import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
+import { truthTableSubmissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { IMMEDIATE_CHECK_DELAY_MS, useAssignedAttempt } from './useAssignedAttempt';
 
 vi.mock('../../../api/student-work/api', () => ({
@@ -26,7 +26,10 @@ vi.mock('../../../api/student-work/api', () => ({
   checkAssignedAnswers: vi.fn(),
   readAssignedSolution: vi.fn(),
 }));
-const response = { itemId: itemA, feedback: submissionFeedback(submitted.result, itemA)! };
+const response = {
+  itemId: itemA,
+  feedback: truthTableSubmissionFeedback(submitted.result, itemA)!,
+};
 
 beforeEach(() => {
   vi.useFakeTimers();

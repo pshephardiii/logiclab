@@ -25,16 +25,21 @@ export function useClassBilling(classId: string) {
   const intent = useRef<{ planId: string; requestId: string } | null>(null);
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
+
   const load = useCallback(async () => {
     const signal = reads.startRequest();
+
     setLoading(true);
     setError(null);
+
     try {
       const [catalog, status] = await Promise.all([
         api.listPlans(signal),
         api.readClassBilling(classId, signal),
       ]);
+
       if (signal.aborted) return;
+
       setPlans(catalog.plans);
       setPlanNext(catalog.nextOffset);
       setData(status);
@@ -46,25 +51,33 @@ export function useClassBilling(classId: string) {
       if (!signal.aborted) setLoading(false);
     }
   }, [api, classId, reads.startRequest]);
+
   useEffect(() => {
     void load();
     return reads.cancelRequest;
   }, [load, reads.cancelRequest]);
+
   async function more(kind: 'plans' | 'purchases') {
     const offset = kind === 'plans' ? planNext : data?.nextOffset;
+
     if (offset == null) return;
+
     const signal = reads.startRequest();
+
     setLoading(true);
     setError(null);
+
     try {
       if (kind === 'plans') {
         const page = await api.listPlans(signal, offset);
+
         if (!signal.aborted) {
           setPlans((old) => appendPageById(old, page.plans));
           setPlanNext(page.nextOffset);
         }
       } else {
         const page = await api.readClassBilling(classId, signal, offset);
+
         if (!signal.aborted)
           setData((old) => ({
             ...page,
@@ -78,32 +91,47 @@ export function useClassBilling(classId: string) {
       if (!signal.aborted) setLoading(false);
     }
   }
+
   async function checkout() {
     if (!selectedPlan || busy || loading || uncertain || !data || data.checkoutBlockedReason)
       return;
+
     intent.current ??= { planId: selectedPlan, requestId: crypto.randomUUID() };
+
     const signal = writes.startRequest();
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       const result = await api.createCheckout(classId, intent.current, signal);
+
       if (signal.aborted) return;
+
       intent.current = null;
+
       setNotice(
         `Checkout ${result.purchase.id} created. No charge occurred; choose a simulated outcome below.`,
       );
+
       await load();
     } catch (caught) {
       if (signal.aborted) return;
+
       if (caught instanceof AccountApiError && caught.status === 409) {
         // A definitive business rejection is not an uncertain checkout creation.
         intent.current = null;
+
         setUncertain(true);
+
         await load();
+
         if (!signal.aborted) setError(caught.message);
+
         return;
       }
+
       setError(
         `${caught instanceof Error ? caught.message : 'Checkout failed.'} Retry with the same intent, or reload history to inspect existing purchases before starting another.`,
       );
@@ -111,16 +139,23 @@ export function useClassBilling(classId: string) {
       if (!signal.aborted) setBusy(false);
     }
   }
+
   async function simulate(id: string, outcome: SimulatorRequest['outcome']) {
     if (busy || uncertain) return;
+
     const signal = writes.startRequest();
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       await api.simulatePayment(id, outcome, signal);
+
       if (signal.aborted) return;
+
       setNotice(`Simulated ${outcome} event accepted. No real money moved.`);
+
       await load();
     } catch (caught) {
       if (!signal.aborted) {
@@ -133,13 +168,16 @@ export function useClassBilling(classId: string) {
       if (!signal.aborted) setBusy(false);
     }
   }
+
   function discardIntent() {
     intent.current = null;
     setNotice('Retry intent cleared. Check purchase history before starting a different checkout.');
   }
+
   function choosePlan(id: string) {
     if (!intent.current) setSelectedPlan(id);
   }
+
   return {
     discardIntent,
     data,

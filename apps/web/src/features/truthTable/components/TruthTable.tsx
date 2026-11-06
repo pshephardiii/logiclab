@@ -25,7 +25,9 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
   const statuses = new Map(
     feedback?.cells.map((cell) => [cellKey(cell.rowId, cell.columnId), cell.status]),
   );
+
   const solutionRows = new Map(solution?.rows.map((row) => [row.id, row.values]));
+
   return (
     <div
       className="table-scroll"
@@ -61,6 +63,7 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
             const given = exercise.variables
               .map((name) => `${name}=${row.values[`var:v1:${name}`] ? 'T' : 'F'}`)
               .join(', ');
+
             return (
               <tr key={row.id}>
                 <th scope="row">{index + 1}</th>
@@ -69,6 +72,7 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
                   const status = statuses.get(cellKey(row.id, column.id));
                   const expected = solutionRows.get(row.id)?.[column.id];
                   const feedbackId = `feedback-${index}-${columnIndex}`;
+
                   return (
                     <td
                       key={column.id}

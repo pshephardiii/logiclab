@@ -1,5 +1,6 @@
 import { formatPrice } from '../helpers/format-price';
 import type { ClassBillingResponse, SimulatorRequest } from '@logiclab/contracts';
+
 export function PurchaseHistory({
   purchases,
   disabled,

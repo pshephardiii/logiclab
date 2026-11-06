@@ -25,6 +25,7 @@ export function useAssignedAttempt(assignmentId: string) {
   const api = useResourceApi(apiModule);
   const [assignment, setAssignment] = useState<StudentAssignment | null>(null);
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
+
   const {
     answers,
     choiceAnswers,
@@ -38,13 +39,17 @@ export function useAssignedAttempt(assignmentId: string) {
     markSaved,
     responseFor,
   } = useAssignedAnswers(assignment);
+
   const [solutions, setSolutions] = useState<Record<string, StudentSolutionResponse['solution']>>(
     {},
   );
+
   const [feedback, setFeedback] = useState<Record<string, StudentCheckResponse['feedback']>>({});
+
   const [proofFeedback, setProofFeedback] = useState<
     Record<string, { proof: DerivationAnswer['proof']; report: ProofCheckReport }>
   >({});
+
   const [checkingItem, setCheckingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<'save' | 'submit' | 'solution' | null>(null);
@@ -54,6 +59,7 @@ export function useAssignedAttempt(assignmentId: string) {
   const checks = useAbortableRequest();
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
+
   const {
     hasFinalSubmission,
     requiresCompleteAnswers,
@@ -64,14 +70,21 @@ export function useAssignedAttempt(assignmentId: string) {
 
   const cancelCheck = useCallback(() => {
     if (checkTimer.current !== null) clearTimeout(checkTimer.current);
+
     checkTimer.current = null;
+
     checks.cancelRequest();
+
     setCheckingItem(null);
   }, [checks.cancelRequest]);
+
   const load = useCallback(async () => {
     const signal = reads.startRequest();
+
     writes.cancelRequest();
+
     cancelCheck();
+
     setFeedback({});
     setProofFeedback({});
     setAction(null);
@@ -79,8 +92,10 @@ export function useAssignedAttempt(assignmentId: string) {
     setError(null);
     setNotice(null);
     setSolutions({});
+
     try {
       const result = await api.readAssignedWork(assignmentId, signal);
+
       if (!signal.aborted) {
         setAssignment(result.assignment);
         setAttempt(result.attempt);
@@ -95,6 +110,7 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setLoading(false);
     }
   }, [api, assignmentId, reads.startRequest, writes.cancelRequest, cancelCheck, resetAnswers]);
+
   useEffect(() => {
     void load();
     return () => {
@@ -102,9 +118,12 @@ export function useAssignedAttempt(assignmentId: string) {
       cancelCheck();
     };
   }, [load, reads.cancelRequest, cancelCheck]);
+
   function changeAnswer(itemId: string, row: string, column: string, value: boolean | null) {
     if (loading || action || attempt?.submittedAt) return;
+
     cancelCheck();
+
     setFeedback((previous) => {
       const next = { ...previous };
       delete next[itemId];
@@ -112,10 +131,15 @@ export function useAssignedAttempt(assignmentId: string) {
     });
     setError(null);
     setNotice(null);
+
     const item = assignment?.items.find((value) => value.id === itemId);
+
     if (!item || !('exercise' in item)) return;
+
     const snapshot = { ...answers[itemId], [cellKey(row, column)]: value };
+
     changeTableAnswers(itemId, snapshot);
+
     if (allowsImmediateFeedback) {
       // Capture the edited answers rather than the render preceding this state update.
       checkTimer.current = setTimeout(() => {
@@ -124,11 +148,16 @@ export function useAssignedAttempt(assignmentId: string) {
       }, IMMEDIATE_CHECK_DELAY_MS);
     }
   }
+
   function changeConceptualAnswer(itemId: string, snapshot: ConceptualAnswer) {
     if (loading || action || attempt?.submittedAt) return;
+
     const item = assignment?.items.find((value) => value.id === itemId);
+
     if (!item || !('content' in item) || item.content.type !== snapshot.type) return;
+
     cancelCheck();
+
     setFeedback((previous) => {
       const next = { ...previous };
       delete next[itemId];
@@ -136,16 +165,21 @@ export function useAssignedAttempt(assignmentId: string) {
     });
     setError(null);
     setNotice(null);
+
     changeChoiceAnswers(itemId, snapshot);
+
     if (allowsImmediateFeedback)
       checkTimer.current = setTimeout(() => {
         checkTimer.current = null;
         void check(itemId, snapshot);
       }, IMMEDIATE_CHECK_DELAY_MS);
   }
+
   function changeProofAnswer(itemId: string, snapshot: DerivationAnswer) {
     if (loading || action || attempt?.submittedAt) return;
+
     const item = assignment?.items.find((value) => value.id === itemId);
+
     if (
       !item ||
       !('content' in item) ||
@@ -153,7 +187,9 @@ export function useAssignedAttempt(assignmentId: string) {
       item.content.format !== snapshot.proof.format
     )
       return;
+
     cancelCheck();
+
     setFeedback((previous) => {
       const next = { ...previous };
       delete next[itemId];
@@ -166,20 +202,28 @@ export function useAssignedAttempt(assignmentId: string) {
     });
     setError(null);
     setNotice(null);
+
     changeProofAnswers(itemId, snapshot);
     // Proof diagnostics are always explicit, including mixed immediate-feedback assignments.
   }
+
   async function save(itemId: string) {
     if (!assignment || action || attempt?.submittedAt) return;
+
     const item = assignment.items.find((value) => value.id === itemId);
+
     if (!item) return;
+
     cancelCheck();
+
     const snapshot = answers[itemId] ?? {};
     const response = responseFor(item, snapshot);
     const signal = writes.startRequest();
+
     setAction('save');
     setError(null);
     setNotice(null);
+
     try {
       const saved = await api.saveAssignedAnswers(
         assignmentId,
@@ -190,6 +234,7 @@ export function useAssignedAttempt(assignmentId: string) {
         }),
         signal,
       );
+
       if (!signal.aborted) {
         setAttempt(saved);
         markSaved(itemId, snapshot, response);
@@ -202,6 +247,7 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
+
   async function submit() {
     if (
       !assignment ||
@@ -212,13 +258,18 @@ export function useAssignedAttempt(assignmentId: string) {
       (requiresCompleteAnswers && !completionReady)
     )
       return;
+
     cancelCheck();
+
     const signal = writes.startRequest();
+
     setAction('submit');
     setError(null);
     setNotice(null);
+
     try {
       const saved = await api.submitAssignedWork(assignmentId, attempt?.revision ?? 0, signal);
+
       if (!signal.aborted) {
         setAttempt(saved);
         resetAnswers(assignment, saved);
@@ -233,27 +284,39 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
+
   async function check(itemId: string, snapshot?: AssignmentResponseValue) {
     if (!assignment || loading || !allowsExplicitCheck || action || attempt?.submittedAt) return;
+
     const item = assignment.items.find((value) => value.id === itemId);
+
     if (!item) return;
+
     cancelCheck();
+
     const signal = checks.startRequest();
+
     setCheckingItem(itemId);
     setError(null);
     setNotice(null);
+
     try {
       const checkedAnswer = snapshot ?? responseFor(item);
+
       const response = await api.checkAssignedAnswers(
         assignmentId,
         savedStudentCheckSchema.parse({ itemId, answers: checkedAnswer }),
         signal,
       );
+
       if (response.itemId !== itemId)
         throw new Error('The check response did not match this problem.');
+
       const feedback = response.feedback;
+
       if (!signal.aborted) {
         setFeedback((previous) => ({ ...previous, [itemId]: feedback }));
+
         if (
           'type' in feedback &&
           feedback.type === 'derivation' &&
@@ -272,9 +335,12 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setCheckingItem(null);
     }
   }
+
   async function toggleSolution(itemId: string) {
     if (!solutionAvailable || action) return;
+
     cancelCheck();
+
     if (solutions[itemId]) {
       setSolutions((previous) => {
         const next = { ...previous };
@@ -283,11 +349,15 @@ export function useAssignedAttempt(assignmentId: string) {
       });
       return;
     }
+
     const signal = writes.startRequest();
+
     setAction('solution');
     setError(null);
+
     try {
       const solution = await api.readAssignedSolution(assignmentId, itemId, signal);
+
       if (!signal.aborted) setSolutions((previous) => ({ ...previous, [itemId]: solution }));
     } catch (caught) {
       if (!signal.aborted)
@@ -296,6 +366,7 @@ export function useAssignedAttempt(assignmentId: string) {
       if (!signal.aborted) setAction(null);
     }
   }
+
   return {
     assignment,
     attempt,

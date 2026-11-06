@@ -18,15 +18,20 @@ export async function createClassroomStore(
 ): Promise<ClassroomStore> {
   const transact = transactionRunner(orm, transaction);
   const { Classroom, User, Enrollment } = await import('@logiclab/db');
+
   return {
     async join(studentId, hash) {
       return transact(async (em) => {
         const classroom = await lockInvitedClassroom(em, hash, studentId);
+
         if (!invitationIsActive(classroom)) return null;
+
         await ensureEnrollment(em, classroom, studentId);
+
         return classroomSummary(classroom);
       });
     },
+
     async listEnrolled(studentId, limit, offset) {
       const rows = await (transaction ?? orm.em.fork()).find(
         Enrollment,
@@ -38,31 +43,40 @@ export async function createClassroomStore(
           orderBy: { classroom: { createdAt: 'DESC', id: 'DESC' } },
         },
       );
+
       return rows.map((row) => classroomSummary(row.classroom));
     },
+
     async findEnrolled(studentId, classId) {
       const row = await (transaction ?? orm.em.fork()).findOne(
         Enrollment,
         { student: studentId, classroom: classId },
         { populate: ['classroom'] },
       );
+
       return row ? classroomSummary(row.classroom) : null;
     },
+
     async create(ownerId, name) {
       const em = transaction ?? orm.em.fork();
       const classroom = em.create(Classroom, { name, owner: em.getReference(User, ownerId) });
+
       em.persist(classroom);
       await em.flush();
+
       return classroomSummary(classroom);
     },
+
     async list(ownerId, limit, offset) {
       const rows = await (transaction ?? orm.em.fork()).find(
         Classroom,
         { owner: ownerId },
         { limit, offset, orderBy: { createdAt: 'DESC', id: 'DESC' } },
       );
+
       return rows.map(classroomSummary);
     },
+
     async replaceInvitation(ownerId, classId, hash, expiresAt) {
       // One owner-scoped update atomically invalidates the previous invitation.
       return (
@@ -76,11 +90,13 @@ export async function createClassroomStore(
         )) > 0
       );
     },
+
     async findOwned(ownerId, classId) {
       const row = await (transaction ?? orm.em.fork()).findOne(Classroom, {
         id: classId,
         owner: ownerId,
       });
+
       return row ? classroomSummary(row) : null;
     },
   };

@@ -13,12 +13,14 @@ export function getSubmissionGradingHistoryHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId, submissionId } = parseRequest(submissionParamsSchema, request.params);
     const input = parseRequest(submissionListQuerySchema, request.query);
+
     const result = await context.submissionGrading.history(
       user.id,
       assignmentId,
       submissionId,
       input,
     );
+
     return submissionGradingHistorySchema.parse(result);
   };
 }

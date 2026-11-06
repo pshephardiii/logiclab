@@ -2,6 +2,7 @@ import type { TruthTable, TruthTableColumn } from '@logiclab/logic-engine';
 import type { TruthTableCheckRequest, TruthTableCheckResponse } from '@logiclab/contracts';
 
 type AnswerIndex = Map<string, boolean | null>;
+
 type IndexedAnswers =
   { success: true; answers: AnswerIndex } | { success: false; code: string; message: string };
 
@@ -29,6 +30,7 @@ export function indexSubmittedAnswers(
     }
 
     const id = cellKey(answer.rowId, answer.columnId);
+
     if (answers.has(id)) {
       return {
         success: false,
@@ -36,6 +38,7 @@ export function indexSubmittedAnswers(
         message: 'Submit each answer cell at most once.',
       };
     }
+
     answers.set(id, answer.value);
   }
 
@@ -54,6 +57,7 @@ export function buildFeedback(
     for (const column of answerColumns) {
       const value = answers.get(cellKey(row.id, column.id));
       const status = answerStatus(value, row.values[column.id]);
+
       cells.push({ rowId: row.id, columnId: column.id, status });
       summary[status]++;
       summary.total++;
@@ -68,5 +72,6 @@ function answerStatus(
   expected: boolean | undefined,
 ): TruthTableCheckResponse['cells'][number]['status'] {
   if (value == null) return 'unanswered';
+
   return value === expected ? 'correct' : 'incorrect';
 }

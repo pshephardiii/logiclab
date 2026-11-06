@@ -4,15 +4,19 @@ import type { PropositionalRuleId } from './rule-catalog';
 import type { ProofFormula, LocalSubproof } from './types';
 
 type BinaryFormula = Extract<ProofFormula, { type: 'binary' }>;
+
 function binary(formula: ProofFormula, operator: BinaryOperator): formula is BinaryFormula {
   return formula.type === 'binary' && formula.operator === operator;
 }
+
 function negates(negative: ProofFormula, positive: ProofFormula): boolean {
   return negative.type === 'not' && sameFormula(negative.operand, positive);
 }
+
 function eitherOrder<T>(values: readonly T[], match: (first: T, second: T) => boolean): boolean {
   return match(values[0]!, values[1]!) || match(values[1]!, values[0]!);
 }
+
 function operands(formula: BinaryFormula, left: ProofFormula, right: ProofFormula): boolean {
   return sameFormula(formula.left, left) && sameFormula(formula.right, right);
 }
@@ -30,6 +34,7 @@ const patterns: Record<PropositionalRuleId, RulePattern> = {
     binary(conclusion, 'and') && eitherOrder(lines, (a, b) => operands(conclusion, a, b)),
   and_elimination: (conclusion, lines) => {
     const conjunction = lines[0]!;
+
     return (
       binary(conjunction, 'and') &&
       (sameFormula(conclusion, conjunction.left) || sameFormula(conclusion, conjunction.right))
@@ -40,6 +45,7 @@ const patterns: Record<PropositionalRuleId, RulePattern> = {
     (sameFormula(lines[0]!, conclusion.left) || sameFormula(lines[0]!, conclusion.right)),
   or_elimination: (conclusion, lines, subproofs) => {
     const disjunction = lines[0]!;
+
     return (
       binary(disjunction, 'or') &&
       subproofs.every((subproof) => sameFormula(subproof.conclusion, conclusion)) &&
@@ -72,6 +78,7 @@ const patterns: Record<PropositionalRuleId, RulePattern> = {
     ),
   biconditional_elimination: (conclusion, lines) => {
     const biconditional = lines[0]!;
+
     return (
       binary(biconditional, 'iff') &&
       binary(conclusion, 'implies') &&
@@ -109,6 +116,7 @@ const patterns: Record<PropositionalRuleId, RulePattern> = {
     ),
   double_negation_elimination: (conclusion, lines) => {
     const negative = lines[0]!;
+
     return negative.type === 'not' && negates(negative.operand, conclusion);
   },
   proof_by_contradiction: (conclusion, _lines, subproofs) =>

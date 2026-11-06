@@ -4,5 +4,6 @@ export function appendPageById<T extends { id: string }>(
   page: readonly T[],
 ): T[] {
   const existingIds = new Set(current.map((item) => item.id));
+
   return [...current, ...page.filter((item) => !existingIds.has(item.id))];
 }

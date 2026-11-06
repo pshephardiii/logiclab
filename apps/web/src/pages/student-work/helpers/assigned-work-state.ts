@@ -5,7 +5,7 @@ import type {
   SavedStudentAttempt as StudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
 import {
-  isFinishedProofAttempt,
+  isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
   isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
@@ -20,9 +20,11 @@ export function assignedWorkCapabilities(
 ) {
   const hasFinalSubmission =
     assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
+
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
   const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
   const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
+
   const solutionAvailable =
     assignment?.solutionAccess === 'anytime' ||
     (assignment?.solutionAccess === 'instructor_release' &&
@@ -66,7 +68,7 @@ export function assignmentCompletionReady(
                 ? isFinishedTreeProofAttempt
                 : item.content.format === 'dependency'
                   ? isFinishedDependencyProofAttempt
-                  : isFinishedProofAttempt)({
+                  : isFinishedFitchProofAttempt)({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

@@ -3,6 +3,7 @@ import type { DatabaseManager } from '../transactions';
 /** Fail closed on references crossing the sandbox boundary; never relax ordinary retention FKs. */
 export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: string) {
   if (!em.isInTransaction()) throw new Error('An active workspace transaction is required.');
+
   const {
     DemoWorkspace,
     DemoWorkspaceStatus,
@@ -25,23 +26,28 @@ export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: 
     AuthSession,
     DemoSession,
   } = await import('@logiclab/db');
+
   const workspace = await em.findOne(DemoWorkspace, workspaceId, {
     lockMode: LockMode.PESSIMISTIC_WRITE,
     refresh: true,
   });
+
   if (
     !workspace ||
     (workspace.status !== DemoWorkspaceStatus.Resetting &&
       workspace.status !== DemoWorkspaceStatus.Expired)
   )
     throw new Error('Demo deletion requires a resetting or expired workspace.');
+
   const users = await em.find(User, {
     demoWorkspace: workspaceId,
     identityProvider: UserIdentityProvider.Demo,
   });
+
   const userIds = users.map((user) => user.id);
   const own = { $in: userIds };
   const outside = { $nin: userIds };
+
   const unsafe = await Promise.all([
     em.count(SubmissionGradingRevision, {
       $or: [
@@ -80,11 +86,15 @@ export async function deleteDemoWorkspaceData(em: DatabaseManager, workspaceId: 
       ],
     }),
   ]);
+
   if (unsafe.some(Boolean)) throw new Error('Demo data has cross-workspace references.');
+
   const purchases = await em.find(ClassPurchase, { classroom: { owner: own } });
   const references = purchases.map((purchase) => purchase.checkoutReference);
+
   if (purchases.some((purchase) => purchase.provider !== BillingProvider.Simulator))
     throw new Error('Demo data contains unsupported funding.');
+
   if (
     await em.count(ClassEntitlement, {
       $or: [

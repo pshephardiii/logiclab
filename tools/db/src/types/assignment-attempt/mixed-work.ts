@@ -1,5 +1,5 @@
 import type { AttemptAnswers } from './work.ts';
-import type { GradedSubmissionResult, SubmissionCounts } from './work.ts';
+import type { TruthTableGradedSubmissionResult, SubmissionCounts } from './work.ts';
 
 export type ConceptualResponse =
   | { type: 'true_false'; answer: boolean | null }
@@ -7,11 +7,11 @@ export type ConceptualResponse =
 
 /** Mixed JSON response shapes, keyed by pinned assignment occurrence. */
 export type AssignmentResponses = AttemptAnswers;
-export type MixedGradedItem =
+export type ObjectiveGradedItem =
   | {
       type: 'truth_table';
       itemId: string;
-      feedback: GradedSubmissionResult['items'][number]['feedback'];
+      feedback: TruthTableGradedSubmissionResult['items'][number]['feedback'];
     }
   | {
       type: 'true_false';
@@ -23,12 +23,12 @@ export type MixedGradedItem =
       itemId: string;
       feedback: { status: 'correct' | 'incorrect' | 'unanswered' };
     };
-export interface MixedGradedSubmissionResult {
+export interface ObjectiveGradedSubmissionResult {
   gradingVersion: 'mixed_v1';
-  items: MixedGradedItem[];
+  items: ObjectiveGradedItem[];
   summary: SubmissionCounts;
 }
-export interface MixedCompletionSubmissionResult {
+export interface ObjectiveCompletionSubmissionResult {
   gradingVersion: 'mixed_completion_v1';
   items: {
     itemId: string;

@@ -319,3 +319,7 @@ No migration, environment change or new result version is required. Deploy match
 ### 026 closeout and next delivery
 
 Natural-deduction tree authoring/checking, public assignment admission, student editing/save/check/finalization and retained grading/review are implemented alongside Fitch/dependency workflows. See [tree verification](../verification/natural-deduction-trees-verification.md). No migration or demo template change is introduced. The next reserved feature is `027-feat-derivation-practice-and-demo` for student-created practice and remaining cross-format seeds/verification, then the required UI/proof-interaction audit and sandbox preparation. This updates the older sequencing notes above; no next branch or deployment is started here.
+
+### 027 readability cleanup and updated sequence
+
+The readability branch applies logical-stage spacing and clarifying JSX comments, and renames objective-only, truth-table-only and Fitch-only code symbols to reflect their actual scope. Runtime payloads and persisted versions are unchanged; matching workspace builds are required for the renamed package exports. See [verification](../verification/code-readability-verification.md). The unstarted practice/demo feature moves to proposed `028-feat-derivation-practice-and-demo`, followed by the required UI/proof-interaction audit and sandbox preparation. Earlier numbered reservations are historical; no next branch or deployment is started here.

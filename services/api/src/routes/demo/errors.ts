@@ -12,9 +12,11 @@ export const demoErrorResponses = {
   429: authErrorResponseSchema,
   503: authErrorResponseSchema,
 };
+
 export function installDemoErrors(app: FastifyInstance, runtime: DemoRuntime) {
   app.setErrorHandler((error, request, reply) => {
     const invalid = error instanceof DemoSessionError || error instanceof AuthError;
+
     const mapped = invalid
       ? {
           status: 401,
@@ -22,8 +24,10 @@ export function installDemoErrors(app: FastifyInstance, runtime: DemoRuntime) {
           message: 'Your demo expired or changed. Start a new demo.',
         }
       : mapAuthError(error);
+
     if (mapped.status === 503)
       request.log.warn({ code: 'DEMO_UNAVAILABLE' }, 'Demo operation unavailable');
+
     return reply.code(mapped.status).send({
       error: {
         code: mapped.code,

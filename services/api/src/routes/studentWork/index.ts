@@ -14,14 +14,19 @@ import { mapStudentWorkError } from './errors';
 
 export async function studentWorkRoutes(app: FastifyInstance, context: StudentWorkContext) {
   app.decorateRequest('studentWorkUser', null);
+
   await installAccountHttpPolicy(app, context.config);
+
   app.addHook('preValidation', async (request) => {
     await student(request, context);
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapStudentWorkError(error);
+
     if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
+
     if (mapped.status === 503) request.log.warn({ code: mapped.code }, 'Student work unavailable');
+
     return reply.code(mapped.status).send(
       studentWorkErrorResponseSchema.parse({
         error: { code: mapped.code, message: mapped.message },

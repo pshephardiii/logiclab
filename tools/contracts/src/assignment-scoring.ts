@@ -7,19 +7,24 @@ export const ASSIGNMENT_POINT_LIMITS = {
   maxPoints: 1000,
   maxItems: 50,
 } as const;
+
 export const assignmentItemPointsSchema = z
   .number()
   .int()
   .min(ASSIGNMENT_POINT_LIMITS.minPoints)
   .max(ASSIGNMENT_POINT_LIMITS.maxPoints);
+
 export const weightedAssignmentItemsSchema = z
   .array(z.strictObject({ problemVersionId: z.uuid(), maxPoints: assignmentItemPointsSchema }))
   .max(ASSIGNMENT_POINT_LIMITS.maxItems);
+
 export const assignmentPointAllocationSchema = z.strictObject({
   itemId: z.uuid().transform((id) => id.toLowerCase()),
   maxPoints: assignmentItemPointsSchema,
 });
+
 export type AssignmentPointAllocation = z.infer<typeof assignmentPointAllocationSchema>;
+
 export const assignmentPointAllocationsSchema = z
   .array(assignmentPointAllocationSchema)
   .min(1)
@@ -28,15 +33,18 @@ export const assignmentPointAllocationsSchema = z
     (items) => new Set(items.map((item) => item.itemId)).size === items.length,
     'Each assigned occurrence needs one point allocation.',
   );
+
 const earnedPointsSchema = z
   .number()
   .min(0)
   .max(ASSIGNMENT_POINT_LIMITS.maxPoints)
   .multipleOf(0.01);
+
 const itemFields = {
   itemId: z.uuid().transform((id) => id.toLowerCase()),
   maxPoints: assignmentItemPointsSchema,
 };
+
 export const assignmentItemScoreSchema = z
   .discriminatedUnion('status', [
     z.strictObject({
@@ -50,12 +58,15 @@ export const assignmentItemScoreSchema = z
     if (item.earnedPoints !== null && item.earnedPoints > item.maxPoints)
       context.addIssue({ code: 'custom', message: 'Earned points cannot exceed the allocation.' });
   });
+
 export type AssignmentItemScore = z.infer<typeof assignmentItemScoreSchema>;
+
 const totalPointsSchema = z
   .number()
   .int()
   .min(1)
   .max(ASSIGNMENT_POINT_LIMITS.maxItems * ASSIGNMENT_POINT_LIMITS.maxPoints);
+
 const summarySchema = z.discriminatedUnion('status', [
   z.strictObject({
     status: z.literal('graded'),
@@ -84,22 +95,31 @@ export const assignmentScoreSchema = z
   })
   .superRefine((score, context) => {
     const reject = (message: string) => context.addIssue({ code: 'custom', message });
+
     if (new Set(score.items.map((item) => item.itemId)).size !== score.items.length)
       reject('Score occurrences must be unique.');
+
     const maxPoints = score.items.reduce((sum, item) => sum + item.maxPoints, 0);
+
     if (score.summary.maxPoints !== maxPoints) reject('The total allocation must match its items.');
+
     const pending = score.items.some((item) => item.status === 'needs_review');
+
     if (pending !== (score.summary.status === 'needs_review'))
       reject('Unfinished grading must keep the assignment pending.');
+
     if (score.summary.status === 'graded') {
       const hundredths = score.items.reduce(
         (sum, item) => sum + Math.round((item.earnedPoints ?? 0) * 100),
         0,
       );
+
       if (score.summary.earnedPoints !== hundredths / 100)
         reject('Earned totals must match their rounded items.');
+
       if (score.summary.percentage !== Math.round((hundredths * 100) / maxPoints) / 100)
         reject('Percentage must match the point total.');
     }
   });
+
 export type AssignmentScore = z.infer<typeof assignmentScoreSchema>;

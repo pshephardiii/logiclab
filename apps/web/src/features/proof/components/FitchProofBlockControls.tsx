@@ -2,6 +2,7 @@ import type { FitchProof } from '@logiclab/contracts';
 import { ProofChoice } from './ProofChoice';
 
 type Block = FitchProof['blocks'][number];
+
 type Props = {
   block: Block;
   label: string;

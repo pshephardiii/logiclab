@@ -8,6 +8,7 @@ import { databaseTime } from '../database-time';
 export async function createDemoAccess(orm: Database) {
   const { DemoWorkspace, DemoSession, User, UserIdentityProvider, UserRole, LockMode } =
     await import('@logiclab/db');
+
   async function actorFor(
     em: DatabaseManager,
     workspaceId: string,
@@ -15,13 +16,16 @@ export async function createDemoAccess(orm: Database) {
     role: Role,
   ): Promise<DemoActor | null> {
     if (role !== 'instructor' && role !== 'student') return null;
+
     const user = await em.findOne(User, {
       identityProvider: UserIdentityProvider.Demo,
       demoWorkspace: workspaceId,
       role: role === 'instructor' ? UserRole.Instructor : UserRole.Student,
     });
+
     return user ? { id: user.id, role: user.role, workspaceId, generation } : null;
   }
+
   async function withSession<T>(
     hash: string,
     work: (
@@ -33,12 +37,16 @@ export async function createDemoAccess(orm: Database) {
   ): Promise<T | null> {
     return orm.em.fork().transactional(async (em) => {
       const hint = await em.findOne(DemoSession, hash);
+
       if (!hint) return null;
+
       const workspace = await em.findOne(DemoWorkspace, hint.workspace.id, {
         lockMode: LockMode.PESSIMISTIC_WRITE,
       });
+
       const now = await databaseTime(em);
       const session = await em.findOne(DemoSession, hash, { refresh: true });
+
       if (
         !workspace ||
         !session ||
@@ -46,8 +54,10 @@ export async function createDemoAccess(orm: Database) {
         !demoSessionIsUsable(workspace, session.generation, now)
       )
         return null;
+
       return work(em, workspace, session, now);
     });
   }
+
   return { actorFor, withSession };
 }

@@ -1,5 +1,5 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import { proofDepth } from '../helpers/fitch-editor';
+import { fitchProofDepth } from '../helpers/fitch-editor';
 import { ProofChoice } from './ProofChoice';
 
 type Props = {
@@ -60,7 +60,8 @@ export function FitchProofInsertControls({
           disabled={
             proof.steps.length >= PROOF_LIMITS.maxSteps ||
             proof.blocks.length >= PROOF_LIMITS.maxBlocks ||
-            (proofDepth(proof, scope) ?? PROOF_LIMITS.maxBlockDepth) >= PROOF_LIMITS.maxBlockDepth
+            (fitchProofDepth(proof, scope) ?? PROOF_LIMITS.maxBlockDepth) >=
+              PROOF_LIMITS.maxBlockDepth
           }
           onClick={() => onInsert(true)}
         >

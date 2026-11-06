@@ -1,16 +1,16 @@
 import {
   DERIVATION_AUTHORING_LIMITS,
-  type DerivationDefinition,
+  type FitchDerivationDefinition,
 } from '@logiclab/contracts/derivation';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
 type Props = {
   format: 'fitch' | 'dependency' | 'tree';
-  rules: DerivationDefinition['rules'];
+  rules: FitchDerivationDefinition['rules'];
   labels: ProblemEditorFields['derivationLabels'];
   onChange: (
-    rules: DerivationDefinition['rules'],
+    rules: FitchDerivationDefinition['rules'],
     labels: ProblemEditorFields['derivationLabels'],
   ) => void;
 };
@@ -27,6 +27,7 @@ export function DerivationRuleFields({ format, rules, labels, onChange }: Props)
       {PROPOSITIONAL_RULE_CATALOG.map((rule) => {
         const enabled = rules.some((value) => value.id === rule.id);
         const label = labels[rule.id] ?? rule.label;
+
         return (
           <div className="problem-option" key={rule.id}>
             <label className="correct-option">

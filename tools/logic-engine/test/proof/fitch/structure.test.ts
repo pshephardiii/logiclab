@@ -3,19 +3,19 @@ import {
   proofDiagnosticSchema,
   PROOF_LIMITS,
   type FitchProof,
-  type ProofStep,
+  type FitchProofStep,
 } from '@logiclab/contracts';
 import { analyzeFitchStructure, checkLocalRule, parseProofFormula } from '../../../src/proof';
 
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
-const premise = (n: number, formula = 'P'): ProofStep => ({
+const premise = (n: number, formula = 'P'): FitchProofStep => ({
   kind: 'premise',
   id: id(n),
   blockId: null,
   formula,
   premiseId: id(1000 + n),
 });
-const assumption = (n: number, block: number, formula = 'Q'): ProofStep => ({
+const assumption = (n: number, block: number, formula = 'Q'): FitchProofStep => ({
   kind: 'assumption',
   id: id(n),
   blockId: id(block),
@@ -28,7 +28,7 @@ const inference = (
   subproofs: number[] = [],
   formula = 'P',
   ruleId = 'reiteration',
-): ProofStep => ({
+): FitchProofStep => ({
   kind: 'inference',
   id: id(n),
   blockId: block === null ? null : id(block),
@@ -43,7 +43,7 @@ const block = (n: number, parent: number | null, opening: number, end: number | 
   assumptionId: id(opening),
   endId: end === null ? null : id(end),
 });
-const proof = (steps: ProofStep[], blocks: FitchProof['blocks'] = []): FitchProof => ({
+const proof = (steps: FitchProofStep[], blocks: FitchProof['blocks'] = []): FitchProof => ({
   proofVersion: 1,
   format: 'fitch',
   steps,
@@ -62,7 +62,7 @@ const conditional = () =>
 const analyze = (value: FitchProof) => analyzeFitchStructure(fitchProofSchema.parse(value));
 
 function nested(depth: number): FitchProof {
-  const steps: ProofStep[] = [];
+  const steps: FitchProofStep[] = [];
   const blocks: FitchProof['blocks'] = [];
   for (let n = 1; n <= depth; n++) steps.push(assumption(n, 100 + n, 'P'));
   for (let n = depth; n >= 1; n--) {

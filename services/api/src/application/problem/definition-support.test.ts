@@ -7,7 +7,7 @@ import {
 } from '@logiclab/contracts';
 import {
   requireTruthTableDefinition,
-  supportedProblemDefinition,
+  validateObjectiveDefinition,
   UnsupportedProblemDefinitionError,
 } from './definition-support';
 import { mapProblemError } from '../../routes/problem/errors';
@@ -52,9 +52,9 @@ test.each([mapProblemError, mapAssignmentError, mapStudentWorkError])(
 );
 
 test('owner definition validation supports conceptual text without parsing it as a formula', () => {
-  expect(supportedProblemDefinition(definition)).toEqual(definition);
-  expect(() => supportedProblemDefinition({ ...definition, correctAnswer: null })).toThrow(
+  expect(validateObjectiveDefinition(definition)).toEqual(definition);
+  expect(() => validateObjectiveDefinition({ ...definition, correctAnswer: null })).toThrow(
     UnsupportedProblemDefinitionError,
   );
-  expect(() => supportedProblemDefinition({ ...truth, formula: 'P &' })).toThrow(/Expected/);
+  expect(() => validateObjectiveDefinition({ ...truth, formula: 'P &' })).toThrow(/Expected/);
 });

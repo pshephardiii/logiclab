@@ -15,13 +15,17 @@ export function useProblemHistory(problemId: string) {
   const [notice, setNotice] = useState<string | null>(null);
   const reads = useAbortableRequest();
   const writes = useAbortableRequest();
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = reads.startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await listVersions(problemId, offset, signal);
+
         if (!signal.aborted) {
           setVersions((previous) => (offset ? [...previous, ...page.versions] : page.versions));
           setNext(page.nextOffset);
@@ -35,17 +39,22 @@ export function useProblemHistory(problemId: string) {
     },
     [listVersions, problemId, reads.startRequest],
   );
+
   useEffect(() => {
     void load();
     return reads.cancelRequest;
   }, [load, reads.cancelRequest]);
+
   async function publish() {
     const signal = writes.startRequest();
+
     setPublishing(true);
     setError(null);
     setNotice(null);
+
     try {
       const version = await publishProblem(problemId, signal);
+
       if (!signal.aborted) {
         setNotice(`Published version ${version.version}.`);
         await load();
@@ -59,5 +68,6 @@ export function useProblemHistory(problemId: string) {
       if (!signal.aborted) setPublishing(false);
     }
   }
+
   return { versions, next, loading, publishing, error, notice, load, publish };
 }

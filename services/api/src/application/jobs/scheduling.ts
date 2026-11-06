@@ -2,6 +2,7 @@
 export function nextScheduledTime(occurrence: Date, intervalSeconds: number, now: Date): Date {
   const interval = intervalSeconds * 1000;
   const steps = Math.floor((now.getTime() - occurrence.getTime()) / interval) + 1;
+
   return new Date(occurrence.getTime() + steps * interval);
 }
 

@@ -6,6 +6,7 @@ export function validAssignmentScoring(
   items: { id: string; maxPoints?: number | null }[],
 ): boolean {
   if (assignment.assessmentMode !== 'graded') return true;
+
   return assignmentPointAllocationsSchema.safeParse(
     items.map((item) => ({ itemId: item.id, maxPoints: item.maxPoints })),
   ).success;

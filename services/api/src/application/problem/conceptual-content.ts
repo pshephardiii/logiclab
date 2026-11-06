@@ -13,6 +13,7 @@ export function conceptualQuestionContent(
     definitionVersion: definition.definitionVersion,
     question: definition.question,
   };
+
   return conceptualQuestionContentSchema.parse(
     definition.type === 'true_false'
       ? common

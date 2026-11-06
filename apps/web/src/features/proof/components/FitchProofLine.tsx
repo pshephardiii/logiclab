@@ -1,19 +1,20 @@
-import type { DerivationContent } from '@logiclab/contracts/derivation';
-import type { FitchProof, ProofStep } from '@logiclab/contracts';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchProof, FitchProofStep } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { FitchPremiseFields } from './FitchPremiseFields';
 import { FitchInferenceFields } from './FitchInferenceFields';
 
 type Props = {
-  statement: Pick<DerivationContent, 'premises' | 'rules'>;
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'>;
   purpose: 'reference' | 'student';
   proof: FitchProof;
   index: number;
   blocks: { id: string; label: string }[];
-  onChange: (step: ProofStep) => void;
+  onChange: (step: FitchProofStep) => void;
   onMove: (delta: -1 | 1) => void;
   onDelete: () => void;
 };
+
 export function FitchProofLine({
   statement,
   purpose,
@@ -25,6 +26,7 @@ export function FitchProofLine({
   onDelete,
 }: Props) {
   const step = proof.steps[index]!;
+
   return (
     <section
       className="problem-option"

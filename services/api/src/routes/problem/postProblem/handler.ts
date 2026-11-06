@@ -13,8 +13,11 @@ export function postProblemHandler(context: ProblemContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await instructor(request, context);
     const input = parseRequest(createLibraryProblemRequestSchema, request.body);
+
     libraryProblemDefinition(input.definition);
+
     const problem = await context.problems.create(user.id, input);
+
     reply.code(201);
     return libraryProblemResponseSchema.parse({ problem });
   };

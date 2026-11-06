@@ -43,6 +43,7 @@ export function demoActivityUpdate(
 ) {
   if (now.getTime() - workspace.lastActivityAt.getTime() < policy.activityIntervalSeconds * 1000)
     return null;
+
   return {
     lastActivityAt: now,
     idleExpiresAt: new Date(

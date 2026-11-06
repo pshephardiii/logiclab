@@ -9,10 +9,12 @@ export function DemoPage() {
   const { demo } = useAccountContext();
   const navigate = useNavigate();
   const confirmDiscard = useConfirmDiscard();
+
   async function explore(role: 'instructor' | 'student') {
     if (await demo.run(demo.session ? 'role' : 'start', role))
       navigate(role === 'instructor' ? '/demo/classes' : '/demo/work');
   }
+
   return (
     <Page className="demo-page">
       <h1>Explore LogicLab</h1>

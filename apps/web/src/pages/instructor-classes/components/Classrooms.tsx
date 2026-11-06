@@ -5,6 +5,7 @@ import { useClassrooms } from '../hooks/useClassrooms';
 
 export function Classrooms() {
   const state = useClassrooms();
+
   return (
     <ClassroomPanel
       headingId="classes-heading"

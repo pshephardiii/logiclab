@@ -30,6 +30,7 @@ export function mapAuthError(error: unknown, routeUrl?: string) {
   let text = 'Authentication is temporarily unavailable. Please try again.';
   const name = errorName(error);
   const authCode = error instanceof AuthError ? error.code : '';
+
   if (error instanceof Error && error.message === 'AUTH_ORIGIN_REJECTED') {
     status = 403;
     code = 'ORIGIN_REJECTED';
@@ -105,6 +106,7 @@ export function mapAuthError(error: unknown, routeUrl?: string) {
     code = 'INVALID_REQUEST';
     text = 'Provide a valid, bounded JSON request.';
   }
+
   return {
     status,
     code,

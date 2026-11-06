@@ -9,7 +9,9 @@ export function getEnrollmentHandler(context: ClassroomContext) {
     const user = await student(request, context);
     const { classId } = parseRequest(classroomParamsSchema, request.params);
     const classroom = await context.classrooms.findEnrolled(user.id, classId);
+
     if (!classroom) throw new ClassroomError(404, 'CLASS_NOT_FOUND', 'Class not found.');
+
     return classroomResponseSchema.parse({ classroom });
   };
 }

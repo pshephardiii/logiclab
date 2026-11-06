@@ -22,13 +22,17 @@ export function usePublishedProblemChoices(includeDerivations = false) {
   const [versionError, setVersionError] = useState<string | null>(null);
   const library = useAbortableRequest();
   const history = useAbortableRequest();
+
   const loadProblems = useCallback(
     async (offset = 0) => {
       const signal = library.startRequest();
+
       setProblemLoading(true);
       setProblemError(null);
+
       try {
         const page = await listProblems('all', offset, signal);
+
         if (!signal.aborted) {
           setProblems((previous) => (offset ? [...previous, ...page.problems] : page.problems));
           setProblemNext(page.nextOffset);
@@ -42,24 +46,31 @@ export function usePublishedProblemChoices(includeDerivations = false) {
     },
     [listProblems, library.startRequest],
   );
+
   useEffect(() => {
     void loadProblems();
     return library.cancelRequest;
   }, [loadProblems, library.cancelRequest]);
+
   const loadVersions = useCallback(
     async (offset = 0) => {
       const signal = history.startRequest();
+
       if (!problemId) {
         setVersionLoading(false);
         return;
       }
+
       setVersionLoading(true);
       setVersionError(null);
+
       try {
         const page = await listVersions(problemId, offset, signal);
+
         if (!signal.aborted) {
           const assignable = page.versions.flatMap((version) => {
             const parsed = libraryProblemVersionSchema.safeParse(version);
+
             return parsed.success ? [parsed.data] : [];
           });
           setVersions((previous) => (offset ? [...previous, ...assignable] : assignable));
@@ -74,17 +85,21 @@ export function usePublishedProblemChoices(includeDerivations = false) {
     },
     [listVersions, problemId, history.startRequest],
   );
+
   useEffect(() => {
     void loadVersions();
     return history.cancelRequest;
   }, [loadVersions, history.cancelRequest]);
+
   function selectProblem(id: string) {
     history.cancelRequest();
+
     setProblemId(id);
     setVersions([]);
     setVersionNext(null);
     setVersionError(null);
   }
+
   return {
     problems,
     problemNext,

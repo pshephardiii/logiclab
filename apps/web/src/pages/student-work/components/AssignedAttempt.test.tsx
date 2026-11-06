@@ -1,6 +1,6 @@
 import { pointScore } from '../../../../test/assignment-score-fixture';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
-import { submissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
+import { truthTableSubmissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -32,7 +32,7 @@ beforeEach(() => {
   vi.mocked(api.readAssignedSolution).mockResolvedValue(solution);
   vi.mocked(api.checkAssignedAnswers).mockResolvedValue({
     itemId: itemA,
-    feedback: submissionFeedback(submitted.result, itemA)!,
+    feedback: truthTableSubmissionFeedback(submitted.result, itemA)!,
   });
 });
 function cells() {
@@ -218,7 +218,7 @@ test('editing cancels a pending check and late feedback cannot overwrite the edi
   await user.selectOptions(cells()[0]!, 'T');
   expect(signal.aborted).toBe(true);
   await act(async () =>
-    resolve({ itemId: itemA, feedback: submissionFeedback(submitted.result, itemA)! }),
+    resolve({ itemId: itemA, feedback: truthTableSubmissionFeedback(submitted.result, itemA)! }),
   );
   expect(cells()[0]).toHaveValue('T');
   expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();
@@ -310,7 +310,7 @@ test('failed checks preserve entries and can be retried, while reload cancels ou
   await screen.findByRole('heading', { name: 'Problem 1: First occurrence' });
   expect(signal.aborted).toBe(true);
   await act(async () =>
-    resolve({ itemId: itemA, feedback: submissionFeedback(submitted.result, itemA)! }),
+    resolve({ itemId: itemA, feedback: truthTableSubmissionFeedback(submitted.result, itemA)! }),
   );
   expect(cells()[0]).toHaveValue('');
   expect(screen.queryByText('Incorrect', { exact: true })).not.toBeInTheDocument();

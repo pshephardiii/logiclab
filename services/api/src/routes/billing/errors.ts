@@ -36,14 +36,19 @@ export function installBillingErrors(app: FastifyInstance, config: CookieConfig)
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof BillingError) {
       const failure = failures[error.reason];
+
       return reply.code(failure.status).send({
         error: { code: `BILLING_${error.reason.toUpperCase()}`, message: failure.message },
       });
     }
+
     const mapped = mapAuthError(error);
+
     if (mapped.status === 401) clearRejectedSessionCookie(reply, config);
+
     if (mapped.status === 503)
       request.log.warn({ code: 'BILLING_UNAVAILABLE' }, 'Billing operation unavailable');
+
     return reply.code(mapped.status).send({
       error: {
         code: mapped.code,

@@ -6,11 +6,13 @@ import { navigationRoutes } from '../../routing/route-definitions';
 /** Role-specific destinations stay bound to the active normal or demo workspace. */
 export function WorkspaceNavigation() {
   const { user, demoMode } = useAccountContext();
+
   if (!user) return null;
 
   const workspaceRoutes = navigationRoutes.filter((route) =>
     route.access?.allowedRoles.includes(user.role),
   );
+
   const links = (
     <nav
       className="workspace-nav"

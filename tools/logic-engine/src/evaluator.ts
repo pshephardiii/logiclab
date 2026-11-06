@@ -28,6 +28,7 @@ export function evaluateFormula(formula: Formula, assignment: VariableAssignment
       // Evaluate both operands so short-circuiting cannot hide missing inputs.
       const left = evaluateFormula(formula.left, assignment);
       const right = evaluateFormula(formula.right, assignment);
+
       return evaluateBinaryOperation(formula.operator, left, right);
     }
   }
@@ -39,6 +40,7 @@ function readVariable(name: string, assignment: VariableAssignment): boolean {
   }
 
   const value = assignment[name];
+
   if (typeof value !== 'boolean') {
     throw new FormulaEvaluationError('INVALID_VARIABLE_VALUE', name);
   }

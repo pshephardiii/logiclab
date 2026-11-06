@@ -29,6 +29,7 @@ export function mapProblemError(error: unknown) {
           ? 'Add a reference proof before publishing this derivation.'
           : 'Check and correct the saved reference proof before publishing this derivation.',
     };
+
   if (error instanceof DerivationAuthoringError)
     return {
       status: error.code === 'reference_unavailable' ? 409 : 400,
@@ -45,14 +46,21 @@ export function mapProblemError(error: unknown) {
             ? 'An accepted reference proof is required.'
             : 'Check the derivation configuration and rule labels.',
     };
+
   const unsupported = mapProblemDefinitionError(error);
+
   if (unsupported) return unsupported;
+
   if (error instanceof ProblemError)
     return { status: error.status, code: error.code, message: error.message };
+
   if (error instanceof FormulaParseError)
     return { status: 400, code: error.code, message: error.message, position: error.position };
+
   const mapped = mapAuthError(error);
+
   if (mapped.status !== 503) return mapped;
+
   return {
     status: 503,
     code: 'PROBLEM_UNAVAILABLE',

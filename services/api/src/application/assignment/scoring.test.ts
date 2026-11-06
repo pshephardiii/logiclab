@@ -18,8 +18,8 @@ import {
   type AssignmentScoringOutcome,
 } from './scoring';
 import {
-  evaluateAssignmentSubmission,
-  evaluateAssignmentCompletion,
+  evaluateObjectiveSubmission,
+  evaluateObjectiveCompletion,
 } from '../student-work/mixed-evaluation';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
@@ -237,12 +237,12 @@ test('legacy and mixed objective evidence can be explicitly scored without chang
       correctAnswer: false,
     },
   };
-  const legacy = evaluateAssignmentSubmission([table], {});
+  const legacy = evaluateObjectiveSubmission([table], {});
   const copy = JSON.stringify(legacy);
   expect(scoreObjectiveSubmission([allocations[0]!], legacy).summary.earnedPoints).toBe(0);
   expect(JSON.stringify(legacy)).toBe(copy);
   expect(submissionResultSchema.parse(legacy)).toEqual(legacy);
-  const mixed = evaluateAssignmentSubmission([table, truth], {
+  const mixed = evaluateObjectiveSubmission([table, truth], {
     [b]: { type: 'true_false', answer: false },
   });
   const frozen = JSON.stringify(mixed);
@@ -264,14 +264,14 @@ test('completion/private work and corrupted objective summaries cannot be mistak
       correctAnswer: false,
     },
   };
-  const completion = evaluateAssignmentCompletion([truth], {
+  const completion = evaluateObjectiveCompletion([truth], {
     [a]: { type: 'true_false', answer: false },
   });
   expect(() => scoreObjectiveSubmission([allocations[0]!], completion)).toThrow(
     AssignmentScoringError,
   );
   expect(() => scoreObjectiveSubmission([allocations[0]!], null)).toThrow(AssignmentScoringError);
-  const result = evaluateAssignmentSubmission([truth], {});
+  const result = evaluateObjectiveSubmission([truth], {});
   expect(() =>
     scoreObjectiveSubmission([allocations[0]!], {
       ...result,

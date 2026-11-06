@@ -6,9 +6,11 @@ import { cookieName, setSessionCookie } from '../auth/cookies';
 export function demoToken(request: FastifyRequest, runtime: DemoRuntime) {
   return request.cookies[cookieName(runtime.config)] ?? '';
 }
+
 export function setDemoCookie(reply: FastifyReply, runtime: DemoRuntime, token: string) {
   setSessionCookie(reply, runtime.config, token, runtime.config.maxLifetimeSeconds);
 }
+
 export function publicDemoSession(actor: DemoActor) {
   return {
     mode: 'demo' as const,

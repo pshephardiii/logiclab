@@ -8,6 +8,7 @@ import { ReferenceProofEditor } from './ReferenceProofEditor';
 import { LocalReferenceCheck } from './LocalReferenceCheck';
 
 type Props = { fields: ProblemEditorFields; onChange: (fields: ProblemEditorFields) => void };
+
 const formulaInput = {
   maxLength: PROOF_LIMITS.maxFormulaLength,
   autoComplete: 'off',
@@ -19,9 +20,11 @@ const formulaInput = {
 /** Statement edits preserve premise identities and the private reference, even when incomplete. */
 export function DerivationProblemFields({ fields, onChange }: Props) {
   const definition = fields.derivation;
+
   const [pendingFormat, setPendingFormat] = useState<
     AuthoringDerivationDefinition['format'] | null
   >(null);
+
   function change(
     patch: Partial<
       Pick<AuthoringDerivationDefinition, 'premises' | 'conclusion' | 'rules' | 'explanation'>
@@ -29,11 +32,13 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
   ) {
     onChange({ ...fields, derivation: { ...definition, ...patch } });
   }
+
   function movePremise(index: number, delta: number) {
     const premises = [...definition.premises];
     [premises[index], premises[index + delta]] = [premises[index + delta]!, premises[index]!];
     change({ premises });
   }
+
   return (
     <>
       <label htmlFor="derivation-format">Proof format</label>
@@ -42,8 +47,11 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
         value={definition.format}
         onChange={(event) => {
           const format = event.target.value as AuthoringDerivationDefinition['format'];
+
           setPendingFormat(null);
+
           if (format === definition.format) return;
+
           if (definition.referenceProof) setPendingFormat(format);
           else onChange({ ...fields, derivation: { ...definition, format, referenceProof: null } });
         }}

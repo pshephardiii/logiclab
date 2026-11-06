@@ -6,7 +6,7 @@ import { AssignedConceptualQuestion } from '../../../features/assignment/compone
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import {
-  submissionFeedback,
+  truthTableSubmissionFeedback,
   conceptualSubmissionFeedback,
   proofSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
@@ -18,11 +18,15 @@ import { SubmissionSummary } from '../../../features/assignment/components/Submi
 /** Explicit item saves precede the irreversible final-submission confirmation. */
 export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const work = useAssignedAttempt(assignmentId);
+
   useUnsavedWork(work.dirty.length > 0 && !work.attempt?.submittedAt);
+
   const confirmDiscard = useConfirmDiscard();
   const [position, setPosition] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
+
   if (work.loading) return <p role="status">Loading assigned work…</p>;
+
   if (!work.assignment)
     return (
       <section className="panel">
@@ -32,6 +36,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         <button onClick={() => confirmDiscard(() => void work.load())}>Retry assigned work</button>
       </section>
     );
+
   const item = work.assignment.items[position] ?? work.assignment.items[0];
   const isProof = item && 'content' in item && item.content.type === 'derivation';
   const currentFeedback = item ? work.feedback[item.id] : undefined;
@@ -39,6 +44,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const submitted = Boolean(work.attempt?.submittedAt);
   const proofAnswer = item ? work.proofAnswers[item.id] : undefined;
   const proofReport = item ? proofSubmissionFeedback(work.attempt?.result, item.id) : null;
+
   const proofFeedback = submitted
     ? proofReport
       ? {
@@ -56,9 +62,12 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
     : item
       ? work.proofFeedback[item.id]
       : null;
+
   const busy = work.action !== null;
+
   const submissionBlocked =
     busy || work.dirty.length > 0 || (work.requiresCompleteAnswers && !work.completionReady);
+
   function reload() {
     confirmDiscard(() => {
       setConfirmed(false);
@@ -66,11 +75,13 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       void work.load();
     });
   }
+
   function changeItem(index: number) {
     work.cancelCheck();
     setPosition(index);
     setConfirmed(false);
   }
+
   return (
     <>
       <section className="panel">
@@ -127,6 +138,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           <p role="status">Unsaved changes in {work.dirty.length} problem(s).</p>
         )}
       </section>
+      {/* A submission receipt can be visible while graded reports and points remain withheld. */}
       {work.attempt?.gradePending && (
         <section className="panel" role="status">
           <h2>Submitted — awaiting grade release</h2>
@@ -163,13 +175,14 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             maxPoints={work.assignment.assessmentMode === 'graded' ? item.maxPoints : undefined}
             onSelect={changeItem}
           />
+          {/* Each problem type uses its own editor; submitted work uses retained final feedback. */}
           {'exercise' in item ? (
             <AssignedItemTable
               item={item}
               answers={work.answers[item.id] ?? {}}
               feedback={
                 submitted
-                  ? submissionFeedback(work.attempt?.result, item.id)
+                  ? truthTableSubmissionFeedback(work.attempt?.result, item.id)
                   : currentFeedback && 'cells' in currentFeedback
                     ? currentFeedback
                     : null

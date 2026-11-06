@@ -16,6 +16,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
     fallback: 'Could not update or load your library. Please try again.',
     errorOverride: (status: number, payload: unknown) => {
       const parsed = problemErrorResponseSchema.safeParse(payload);
+
       return parsed.success ? new AccountApiError(parsed.data.error.message, status) : undefined;
     },
   };
@@ -36,6 +37,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       body: input,
       method: id ? 'PATCH' : 'POST',
     });
+
     return result.problem;
   }
 
@@ -46,6 +48,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: {},
     });
+
     return result.problem;
   }
 
@@ -56,6 +59,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: {},
     });
+
     return result.version;
   }
 
@@ -75,6 +79,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       body: {},
     });
   }
+
   return {
     listProblems,
     saveProblem,

@@ -4,7 +4,11 @@ import {
   type DependencyProofCheckInput,
   type DependencyProofStep,
 } from '@logiclab/contracts';
-import { checkDependencyProof, checkProof, analyzeDependencyStructure } from '../../../src/proof';
+import {
+  checkDependencyProof,
+  checkFitchProof,
+  analyzeDependencyStructure,
+} from '../../../src/proof';
 const id = (n: number) => `${n.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 const given = (n: number, slot: number, formula: string): DependencyProofStep => ({
   kind: 'premise',
@@ -113,7 +117,7 @@ test.each<[string, string, string[]]>([
         },
   );
   expect(
-    checkProof({
+    checkFitchProof({
       problem: value.problem,
       proof: { proofVersion: 1, format: 'fitch', steps, blocks: [] },
     }).status,
@@ -424,7 +428,7 @@ test('bad configurations and unsupported formats/versions remain unassessable', 
     },
   ])
     expect(run(malformed).status).toBe('unassessable');
-  expect(checkProof(value).status).toBe('unassessable');
+  expect(checkFitchProof(value).status).toBe('unassessable');
 });
 test('resource and diagnostic exhaustion never return partial success', () => {
   const value = direct('reiteration', 'P', ['P']);
@@ -546,7 +550,7 @@ test('both input readers reject non-enumerable object accessors and array access
   };
   for (const [checker, value] of [
     [checkDependencyProof, dependency],
-    [checkProof, fitch],
+    [checkFitchProof, fitch],
   ] as const) {
     let calls = 0;
     const outer = { proof: value.proof };

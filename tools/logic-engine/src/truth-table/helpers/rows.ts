@@ -49,6 +49,7 @@ function variableValueForRow(
   // First variable changes slowest. Zero bits represent T, so all-T comes first.
   const bitPosition = variableCount - variableIndex - 1;
   const bitIsSet = (rowIndex & (1 << bitPosition)) !== 0;
+
   return !bitIsSet;
 }
 
@@ -57,5 +58,6 @@ function rowId(
   assignment: Readonly<Record<string, boolean>>,
 ): string {
   const entries = variables.map((name) => `${name}=${assignment[name] ? 'T' : 'F'}`);
+
   return `row:v1:${entries.join(';')}`;
 }

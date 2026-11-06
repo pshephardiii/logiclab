@@ -9,6 +9,7 @@ import { badRequest } from '../errors';
  */
 export async function postCheckHandler(request: FastifyRequest, reply: FastifyReply) {
   const parsed = truthTableCheckRequestSchema.safeParse(request.body);
+
   if (!parsed.success) {
     return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
   }
@@ -16,10 +17,12 @@ export async function postCheckHandler(request: FastifyRequest, reply: FastifyRe
   const table = generateTruthTable(parsed.data.formula);
   const answerColumns = table.columns.filter((column) => column.kind === 'answer');
   const indexed = indexSubmittedAnswers(table, answerColumns, parsed.data.answers);
+
   if (!indexed.success) {
     return badRequest(reply, indexed.code, indexed.message);
   }
 
   const feedback = buildFeedback(table, answerColumns, indexed.answers);
+
   return truthTableCheckResponseSchema.parse(feedback);
 }

@@ -17,14 +17,19 @@ type Props = { classId: string };
 export function ClassAssignments({ classId }: Props) {
   const accountPath = useAccountPath();
   const state = useAssignments(classId);
+
   const detailView = useAssignmentReveal(
     state.selected?.id ?? null,
     state.detailLoading,
     state.revision,
   );
+
   const [dirty, setDirty] = useState(false);
+
   useUnsavedWork(dirty && !state.selected?.publishedAt && !state.selected?.archivedAt);
+
   const confirmDiscard = useConfirmDiscard();
+
   function select(id: string | null) {
     confirmDiscard(() => {
       detailView.prepareSelection(id);
@@ -32,9 +37,11 @@ export function ClassAssignments({ classId }: Props) {
       void state.select(id);
     });
   }
+
   function duplicate() {
     confirmDiscard(() => void state.duplicate());
   }
+
   return (
     <>
       <p className="help">

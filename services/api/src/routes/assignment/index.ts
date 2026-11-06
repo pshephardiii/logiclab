@@ -24,15 +24,20 @@ import { mapAssignmentError } from './errors';
 /** Instructor-only scope; authentication and role checks precede field validation. */
 export async function assignmentRoutes(app: FastifyInstance, context: AssignmentContext) {
   app.decorateRequest('assignmentUser', null);
+
   await installAccountHttpPolicy(app, context.config);
+
   app.addHook('preValidation', async (request) => {
     await instructor(request, context);
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapAssignmentError(error);
+
     if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
+
     if (mapped.status === 503)
       request.log.warn({ code: mapped.code }, 'Assignment operation unavailable');
+
     return reply.code(mapped.status).send(
       assignmentErrorResponseSchema.parse({
         error: { code: mapped.code, message: mapped.message },

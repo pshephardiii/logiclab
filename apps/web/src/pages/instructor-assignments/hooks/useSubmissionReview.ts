@@ -21,13 +21,17 @@ export function useSubmissionReview(assignmentId: string) {
   const [error, setError] = useState<string | null>(null);
   const reads = useAbortableRequest();
   const details = useAbortableRequest();
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = reads.startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await listSubmissions(assignmentId, offset, signal);
+
         if (!signal.aborted) {
           setSubmissions((previous) =>
             offset ? appendPageById(previous, page.submissions) : page.submissions,
@@ -43,18 +47,23 @@ export function useSubmissionReview(assignmentId: string) {
     },
     [listSubmissions, assignmentId, reads.startRequest],
   );
+
   useEffect(() => {
     void load();
     return reads.cancelRequest;
   }, [load, reads.cancelRequest]);
+
   async function select(id: string) {
     const signal = details.startRequest();
+
     setSelected(id);
     setReview(null);
     setDetailLoading(true);
     setError(null);
+
     try {
       const response = await readSubmission(assignmentId, id, signal);
+
       if (!signal.aborted) setReview(response);
     } catch (caught) {
       if (!signal.aborted)
@@ -63,17 +72,21 @@ export function useSubmissionReview(assignmentId: string) {
       if (!signal.aborted) setDetailLoading(false);
     }
   }
+
   const applyGrading = useCallback(
     (id: string, value: SubmissionGradingResponse) => {
       reads.cancelRequest();
+
       setLoading(false);
       setSubmissions((previous) =>
         previous.map((row) => (row.id === id ? { ...row, score: value.score } : row)),
       );
       setReview((previous) => {
         if (!previous || previous.attempt.id !== id) return previous;
+
         const { automaticScore, instructorGrading: _grading, ...attempt } = previous.attempt;
         const original = automaticScore ?? attempt.score;
+
         return {
           ...previous,
           submission: { ...previous.submission, score: value.score },
@@ -100,6 +113,7 @@ export function useSubmissionReview(assignmentId: string) {
     },
     [reads.cancelRequest],
   );
+
   return {
     submissions,
     next,

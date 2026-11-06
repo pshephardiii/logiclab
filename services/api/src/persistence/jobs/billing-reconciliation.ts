@@ -18,29 +18,40 @@ export async function createBillingReconciliationReader(
     )
       throw new Error('Invalid reconciliation scan limits.');
   }
+
   const { ClassPurchase, ClassEntitlement, EntitlementSource } = await import('@logiclab/db');
+
   return {
     async scan(signal, visit) {
       signal.throwIfAborted();
+
       await orm.em.fork().transactional(async (em) => {
         await em.execute('set transaction isolation level repeatable read read only');
         await em.execute("set local statement_timeout = '10s'");
+
         const asOf = await databaseTime(em);
         const deadline = performance.now() + 30000;
         let cursor: string | undefined;
         let checked = 0;
+
         while (true) {
           signal.throwIfAborted();
+
           if (performance.now() > deadline)
             throw new JobExecutionError('RECONCILIATION_SCAN_TIMEOUT');
+
           const purchases = await em.find(ClassPurchase, cursor ? { id: { $gt: cursor } } : {}, {
             orderBy: { id: 'ASC' },
             limit: Math.min(limits.batchSize, limits.maxPurchases - checked + 1),
           });
+
           signal.throwIfAborted();
+
           if (!purchases.length) break;
+
           if (checked + purchases.length > limits.maxPurchases)
             throw new JobExecutionError('RECONCILIATION_SCAN_LIMIT');
+
           const grants = await em.find(
             ClassEntitlement,
             {
@@ -52,9 +63,12 @@ export async function createBillingReconciliationReader(
             },
             { limit: limits.maxGrantsPerBatch + 1, orderBy: { id: 'ASC' } },
           );
+
           signal.throwIfAborted();
+
           if (grants.length > limits.maxGrantsPerBatch)
             throw new JobExecutionError('RECONCILIATION_SCAN_LIMIT');
+
           await visit({
             asOf,
             purchases: purchases.map((purchase) => ({
@@ -78,7 +92,9 @@ export async function createBillingReconciliationReader(
               revokedAt: grant.revokedAt,
             })),
           });
+
           signal.throwIfAborted();
+
           cursor = purchases[purchases.length - 1]!.id;
           checked += purchases.length;
           em.clear();

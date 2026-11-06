@@ -13,12 +13,12 @@ import {
   dependencyDerivationSolutionSchema,
   type DependencyDerivationDefinition,
 } from '@logiclab/contracts/dependency-derivation';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import {
   createLibraryProblemRequestSchema,
   libraryProblemDefinitionSchema,
 } from '@logiclab/contracts/problem-library';
-import { derivationAnswerSchema } from '@logiclab/contracts/derivation-work';
+import { fitchDerivationAnswerSchema } from '@logiclab/contracts/derivation-work';
 import { derivationDefinitionFixture } from '../../../../../test/derivation-fixture';
 import {
   validateDependencyContent,
@@ -231,12 +231,12 @@ test('known rule IDs and common labels do not define custom inference behavior',
 });
 test('format certification never reuses or converts an accepted Fitch reference', () => {
   const fitch = derivationDefinitionFixture();
-  expect(derivationDefinitionSchema.safeParse(fitch).success).toBe(true);
+  expect(fitchDerivationDefinitionSchema.safeParse(fitch).success).toBe(true);
   expect(() => checkDependencyReference(fitch)).toThrow(DerivationAuthoringError);
   expect(() => checkDependencyReference({ ...fitch, format: 'dependency' })).toThrow(
     DerivationAuthoringError,
   );
-  expect(derivationDefinitionSchema.safeParse(definition()).success).toBe(false);
+  expect(fitchDerivationDefinitionSchema.safeParse(definition()).success).toBe(false);
 });
 test('owner library and assignment admission accept dependency definitions while Fitch-only contracts stay separate', () => {
   const value = dependencyPublicationDefinition(definition());
@@ -253,6 +253,7 @@ test('owner library and assignment admission accept dependency definitions while
     }),
   ).toEqual(value);
   expect(
-    derivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof }).success,
+    fitchDerivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof })
+      .success,
   ).toBe(false);
 });

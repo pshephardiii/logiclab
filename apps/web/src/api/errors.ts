@@ -15,5 +15,6 @@ export function accountApiError(
   fallback: string,
 ): AccountApiError {
   const parsed = authErrorResponseSchema.safeParse(payload);
+
   return new AccountApiError(parsed.success ? parsed.data.error.message : fallback, status);
 }

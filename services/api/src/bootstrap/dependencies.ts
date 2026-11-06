@@ -66,29 +66,36 @@ export async function createDependencies(
 ): Promise<ApplicationDependencies | null> {
   const config = readAuthConfig(env);
   const billingConfig = readBillingConfig(env);
+
   if (!config) {
     if (billingConfig) throw new Error('Billing requires authentication.');
+
     return null;
   }
+
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required when auth is enabled.');
 
   const orm = await factories.connectDatabase(env.DATABASE_URL);
   let client: CognitoIdentityProviderClient | undefined;
+
   try {
     client = factories.createClient(config);
+
     const store = await factories.createAuthStore(orm, config.COGNITO_USER_POOL_ID);
+
     const service = createAuthService(
       createCognitoProvider(config, client),
       store,
       config.AUTH_TOKEN_KEY,
     );
-    const classrooms = await factories.createClassroomStore(orm);
 
+    const classrooms = await factories.createClassroomStore(orm);
     const problems = await factories.createProblemStore(orm);
     const assignments = await factories.createAssignmentStore(orm);
     const submissionReviews = await factories.createSubmissionReviewStore(orm);
     const submissionGrading = await factories.createSubmissionGradingStore(orm);
     const studentWork = await factories.createStudentWorkStore(orm);
+
     const billing = billingConfig
       ? createBillingService(
           await (factories.createBillingStore ?? createBillingStore)(orm),
@@ -96,6 +103,7 @@ export async function createDependencies(
           billingConfig,
         )
       : undefined;
+
     return {
       ...(billing ? { billing: { config, service, billing } } : {}),
       studentWork: { config, service, studentWork },
@@ -117,6 +125,7 @@ export async function createDependencies(
     } finally {
       client?.destroy();
     }
+
     throw error;
   }
 }

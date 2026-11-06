@@ -20,6 +20,7 @@ export function ReferenceProofEditor({
         onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
       />
     );
+
   return definition.format === 'dependency' ? (
     <DependencyProofEditor
       key="dependency"

@@ -29,17 +29,22 @@ export function DependencyProofEditor({
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
   const [before, setBefore] = useState<string | null>(null);
+
   const [deletion, setDeletion] = useState<{ kind: 'line'; id: string } | { kind: 'proof' } | null>(
     null,
   );
+
   const [error, setError] = useState<string | null>(null);
+
   function change(next: DependencyProof | null) {
     setDeletion(null);
     setError(null);
     onChange(next);
   }
+
   function insert(kind: DependencyProofStep['kind']) {
     if (!proof) return;
+
     try {
       change(
         insertDependencyStep(
@@ -54,6 +59,7 @@ export function DependencyProofEditor({
       setError(caught instanceof Error ? caught.message : 'Could not insert a proof line.');
     }
   }
+
   return (
     <section
       className="proof-editor"
@@ -169,7 +175,9 @@ export function DependencyProofEditor({
                     change(null);
                   } else {
                     const index = proof.steps.findIndex((step) => step.id === deletion.id);
+
                     if (before === deletion.id) setBefore(null);
+
                     change(removeDependencyStep(proof, index));
                   }
                 }}

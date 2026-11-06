@@ -20,30 +20,41 @@ export async function createProblemStore(
 ): Promise<ProblemStore> {
   const transact = transactionRunner(orm, transaction);
   const { Problem, ProblemVersion, User } = await import('@logiclab/db');
+
   return {
     async previewReference(ownerId, problemId) {
       const problem = await ownedProblem(transaction ?? orm.em.fork(), ownerId, problemId);
+
       if (!problem) return null;
+
       const definition = libraryProblemDefinition(problem.definition);
+
       if (definition.type !== 'derivation') throw new UnsupportedProblemDefinitionError();
+
       return {
         problemId: problem.id,
         updatedAt: problem.updatedAt.toISOString(),
         check: libraryReferenceCheck(definition),
       };
     },
+
     async publish(ownerId, problemId) {
       return transact(async (em) => {
         // The parent lock serializes numbering and snapshots against edits and archiving.
         const problem = await lockedProblem(em, ownerId, problemId);
+
         if (!problem) return { status: 'not_found' as const };
+
         if (problem.archivedAt) return { status: 'archived' as const };
+
         const definition = publicationDefinition(problem.definition);
+
         const latest = await em.findOne(
           ProblemVersion,
           { problem: problemId },
           { orderBy: { version: 'DESC' } },
         );
+
         const version = em.create(ProblemVersion, {
           problem,
           version: (latest?.version ?? 0) + 1,
@@ -51,51 +62,70 @@ export async function createProblemStore(
           instructions: problem.instructions,
           definition: structuredClone(definition),
         });
+
         em.persist(version);
         await em.flush();
+
         return { status: 'published' as const, version: libraryProblemVersion(version) };
       });
     },
+
     async setArchived(ownerId, problemId, archived) {
       return transact(async (em) => {
         const problem = await lockedProblem(em, ownerId, problemId);
+
         if (!problem) return null;
+
         // Repeated archive/restore requests preserve the original timestamp/state.
         if (archived && !problem.archivedAt) problem.archivedAt = new Date();
+
         if (!archived && problem.archivedAt) problem.archivedAt = undefined;
+
         await em.flush();
+
         return libraryProblemDraft(problem);
       });
     },
+
     async listVersions(ownerId, problemId, limit, offset) {
       const em = transaction ?? orm.em.fork();
+
       if (!(await ownedProblem(em, ownerId, problemId))) return null;
+
       const versions = await em.find(
         ProblemVersion,
         { problem: { id: problemId, owner: ownerId } },
         { limit, offset, orderBy: { version: 'DESC' } },
       );
+
       return versions.map(libraryProblemVersion);
     },
+
     async findVersion(ownerId, problemId, version) {
       const value = await (transaction ?? orm.em.fork()).findOne(ProblemVersion, {
         problem: { id: problemId, owner: ownerId },
         version,
       });
+
       return value ? libraryProblemVersion(value) : null;
     },
+
     async create(ownerId, input) {
       const em = transaction ?? orm.em.fork();
+
       const problem = em.create(Problem, {
         owner: em.getReference(User, ownerId),
         title: input.title,
         instructions: input.instructions ?? undefined,
         definition: libraryProblemDefinition(input.definition),
       });
+
       em.persist(problem);
       await em.flush();
+
       return libraryProblemDraft(problem);
     },
+
     async list(ownerId, limit, offset, archive = 'active') {
       const rows = await (transaction ?? orm.em.fork()).find(
         Problem,
@@ -109,23 +139,34 @@ export async function createProblemStore(
           orderBy: { createdAt: 'DESC', id: 'DESC' },
         },
       );
+
       return rows.map(libraryProblemDraft);
     },
+
     async findOwned(ownerId, problemId) {
       const problem = await ownedProblem(transaction ?? orm.em.fork(), ownerId, problemId);
+
       return problem ? libraryProblemDraft(problem) : null;
     },
+
     async update(ownerId, problemId, input) {
       return transact(async (em) => {
         const problem = await lockedProblem(em, ownerId, problemId);
+
         if (!problem) return { status: 'not_found' as const };
+
         if (problem.archivedAt) return { status: 'archived' as const };
+
         if (input.title !== undefined) problem.title = input.title;
+
         if (input.instructions !== undefined)
           problem.instructions = input.instructions ?? undefined;
+
         if (input.definition !== undefined)
           problem.definition = libraryProblemDefinition(input.definition);
+
         await em.flush();
+
         return { status: 'updated' as const, problem: libraryProblemDraft(problem) };
       });
     },

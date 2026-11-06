@@ -12,13 +12,17 @@ export function useStudentAssignments(classId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { startRequest, cancelRequest } = useAbortableRequest();
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await listAssignedWork(classId, offset, signal);
+
         if (!signal.aborted) {
           setAssignments((previous) =>
             offset ? appendPageById(previous, page.assignments) : page.assignments,
@@ -34,6 +38,7 @@ export function useStudentAssignments(classId: string) {
     },
     [listAssignedWork, classId, startRequest],
   );
+
   useEffect(() => {
     void load();
     return cancelRequest;

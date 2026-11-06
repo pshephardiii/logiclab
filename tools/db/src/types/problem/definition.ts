@@ -1,5 +1,5 @@
 import type { ProblemType } from './enums.ts';
-import type { DerivationDefinition } from './derivation.ts';
+import type { FitchDerivationDefinition } from './derivation.ts';
 import type { DependencyDerivationDefinition } from './dependency-derivation.ts';
 import type { TreeDerivationDefinition } from './tree-derivation.ts';
 
@@ -36,6 +36,6 @@ export type ConceptualProblemDefinition = TrueFalseDefinition | MultipleChoiceDe
 export type ProblemDefinition =
   | TruthTableDefinition
   | ConceptualProblemDefinition
-  | DerivationDefinition
+  | FitchDerivationDefinition
   | DependencyDerivationDefinition
   | TreeDerivationDefinition;

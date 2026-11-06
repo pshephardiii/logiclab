@@ -20,6 +20,7 @@ export function jobSummary(job: JobEntity) {
     createdAt: job.createdAt.toISOString(),
   };
 }
+
 export function scheduleSummary(schedule: ScheduleEntity) {
   return {
     id: schedule.id,

@@ -6,14 +6,14 @@ import {
   ProblemVersion,
   User,
   UserRole,
-  type DerivationDefinition,
+  type FitchDerivationDefinition,
   type createDatabase,
 } from '../src/index.ts';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
 const c = 'c3333333-3333-4333-8333-333333333333';
-function definition(): DerivationDefinition {
+function definition(): FitchDerivationDefinition {
   return {
     type: 'derivation',
     definitionVersion: 1,
@@ -99,7 +99,7 @@ export function registerDerivationPersistenceTests(
     await em.begin();
     try {
       const { problem } = await fixture(em);
-      const incomplete: DerivationDefinition = {
+      const incomplete: FitchDerivationDefinition = {
         ...definition(),
         premises: [{ id: a, formula: '' }],
         conclusion: '',

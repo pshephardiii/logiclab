@@ -20,7 +20,9 @@ export function InstructorGradingFeedback({
           const position =
             items?.findIndex((item) => item.id === decision.itemId) ??
             automaticScore.items.findIndex((item) => item.itemId === decision.itemId);
+
           const automatic = automaticScore.items.find((item) => item.itemId === decision.itemId);
+
           return (
             <li key={decision.itemId}>
               <strong>

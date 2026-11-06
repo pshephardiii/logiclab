@@ -17,9 +17,11 @@ export function ProtectedRoute({ allowedRoles, deniedTitle, deniedMessage }: Rou
       </Page>
     );
   }
+
   if (!user) {
     return <Navigate to={demoMode ? '/demo' : routeDefinitions.account.path} replace />;
   }
+
   if (!allowedRoles.includes(user.role)) {
     return (
       <Page>
@@ -28,5 +30,6 @@ export function ProtectedRoute({ allowedRoles, deniedTitle, deniedMessage }: Rou
       </Page>
     );
   }
+
   return <Outlet />;
 }

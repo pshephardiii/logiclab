@@ -7,6 +7,7 @@ import { savedStudentResponsesSchema } from '@logiclab/contracts/saved-student-w
 /** Owner projection. Caller must authorize the assignment owner and load the related student. */
 export function proofCompletionReviewSummary(attempt: AssignmentAttempt, assignment: Assignment) {
   const result = retainedProofCompletion(attempt, assignment);
+
   return {
     id: attempt.id,
     student: { id: attempt.student.id, email: attempt.student.email ?? null },
@@ -18,6 +19,7 @@ export function proofCompletionReviewSummary(attempt: AssignmentAttempt, assignm
 export function proofCompletionReviewResponse(attempt: AssignmentAttempt, assignment: Assignment) {
   const result = retainedProofCompletion(attempt, assignment);
   const submittedAt = attempt.submittedAt!.toISOString();
+
   return {
     submission: proofCompletionReviewSummary(attempt, assignment),
     attempt: {

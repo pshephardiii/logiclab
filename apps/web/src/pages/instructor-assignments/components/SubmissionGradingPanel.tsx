@@ -23,8 +23,11 @@ export function SubmissionGradingPanel({
   onUpdated: (id: string, value: SubmissionGradingResponse) => void;
 }) {
   const state = useSubmissionGrading(assignmentId, submissionId, automaticScore, onUpdated);
+
   useUnsavedWork(state.dirty);
+
   const confirmDiscard = useConfirmDiscard();
+
   return (
     <section className="panel submission-grading" aria-label="Instructor grading">
       <h2>Instructor grading</h2>
@@ -62,6 +65,7 @@ export function SubmissionGradingPanel({
         <form
           onSubmit={(event) => {
             event.preventDefault();
+
             if (!archived) void state.save();
           }}
         >
@@ -74,9 +78,11 @@ export function SubmissionGradingPanel({
             {state.draft.map((row) => {
               const position = items.findIndex((item) => item.id === row.itemId);
               const automatic = automaticScore.items.find((item) => item.itemId === row.itemId)!;
+
               const effective = state.current!.score.items.find(
                 (item) => item.itemId === row.itemId,
               )!;
+
               return (
                 <fieldset className="grading-problem" key={row.itemId}>
                   <legend>

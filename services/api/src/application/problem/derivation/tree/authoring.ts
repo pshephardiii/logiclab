@@ -13,7 +13,9 @@ import type { DerivationReferenceCheck } from '../reference-check';
 
 export function validateTreeContent(value: unknown): TreeDerivationContent {
   const parsed = treeDerivationContentSchema.safeParse(value);
+
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
+
   assertDerivationConfiguration(parsed.data);
   return parsed.data;
 }
@@ -21,7 +23,9 @@ export function validateTreeContent(value: unknown): TreeDerivationContent {
 /** Retain incomplete draft work without treating transport validation as certification. */
 export function validateTreeDefinition(value: unknown): TreeDerivationDefinition {
   const parsed = treeDerivationDefinitionSchema.safeParse(value);
+
   if (!parsed.success) throw new DerivationAuthoringError('invalid_definition');
+
   assertDerivationConfiguration(parsed.data);
   return parsed.data;
 }
@@ -29,7 +33,9 @@ export function validateTreeDefinition(value: unknown): TreeDerivationDefinition
 /** Always check the exact statement, permitted rules and reference, never a cached acceptance. */
 export function checkTreeReference(value: unknown): DerivationReferenceCheck {
   const definition = validateTreeDefinition(value);
+
   if (definition.referenceProof === null) return { status: 'missing' };
+
   return {
     status: 'checked',
     report: checkTreeProof({
@@ -48,15 +54,19 @@ export function checkTreeReference(value: unknown): DerivationReferenceCheck {
 export function treePublicationDefinition(value: unknown): TreeDerivationDefinition {
   const definition = validateTreeDefinition(value);
   const check = checkTreeReference(definition);
+
   if (check.status === 'missing') throw new DerivationPublicationError('missing_reference');
+
   if (check.report.status !== 'accepted')
     throw new DerivationPublicationError('rejected_reference');
+
   return definition;
 }
 
 /** Ordinary statement content never includes the private reference or instructor explanation. */
 export function treeContent(value: unknown): TreeDerivationContent {
   const definition = validateTreeDefinition(value);
+
   return treeDerivationContentSchema.parse({
     type: definition.type,
     definitionVersion: definition.definitionVersion,
@@ -73,8 +83,10 @@ export function treeContent(value: unknown): TreeDerivationContent {
 export function treeReferenceSolution(value: unknown): TreeDerivationSolution {
   const definition = validateTreeDefinition(value);
   const check = checkTreeReference(definition);
+
   if (check.status !== 'checked' || check.report.status !== 'accepted')
     throw new DerivationAuthoringError('reference_unavailable');
+
   return treeDerivationSolutionSchema.parse({
     type: definition.type,
     definitionVersion: definition.definitionVersion,

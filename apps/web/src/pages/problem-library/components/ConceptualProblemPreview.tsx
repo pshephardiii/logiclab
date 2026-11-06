@@ -14,8 +14,10 @@ export function ConceptualProblemPreview({
       ? { type: 'true_false', answer: null }
       : { type: 'multiple_choice', optionId: null },
   );
+
   const [revealed, setRevealed] = useState(false);
   const { content, solution } = conceptualPreviewData(definition);
+
   return (
     <section aria-label="Problem preview">
       <h2>Question preview</h2>

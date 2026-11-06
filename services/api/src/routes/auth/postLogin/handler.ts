@@ -10,6 +10,7 @@ export function postLoginHandler(context: AuthContext) {
     const { email, password } = parseRequest(loginRequestSchema, request.body);
     const result = await context.service.login(email, password);
     const previous = request.cookies[SESSION_COOKIE];
+
     if (previous && previous !== result.sessionId) {
       try {
         await context.service.logout(previous);
@@ -17,6 +18,7 @@ export function postLoginHandler(context: AuthContext) {
         request.log.warn('Previous session cleanup could not complete');
       }
     }
+
     setSessionCookie(reply, context.config, result.sessionId, result.maxAge);
     return publicUser(result.user);
   };

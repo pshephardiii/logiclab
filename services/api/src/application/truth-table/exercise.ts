@@ -6,6 +6,7 @@ export function exerciseResponse(table: TruthTable) {
   const givenIds = new Set(
     table.columns.filter((column) => column.kind === 'given').map((column) => column.id),
   );
+
   return truthTableExerciseResponseSchema.parse({
     ...table,
     rows: table.rows.map((row) => ({

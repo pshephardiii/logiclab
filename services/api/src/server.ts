@@ -5,15 +5,20 @@ import { createDependencies } from './bootstrap/dependencies';
 import type { FastifyInstance } from 'fastify';
 
 let app: FastifyInstance | undefined;
+
 let closeDependencies: (() => Promise<void>) | undefined;
+
 const port = Number(process.env.PORT ?? 3000);
+
 const host = process.env.HOST ?? '0.0.0.0';
+
 let stopping = false;
 
 const closeOnShutdown = createShutdownHandler({
   close: async () => {
     // A signal during dependency initialization must not strand resources or start a new listener.
     await startup;
+
     if (app) await app.close();
     else await closeDependencies?.();
   },
@@ -35,6 +40,7 @@ async function start() {
   try {
     const dependencies = await createDependencies(process.env);
     let demo: Awaited<ReturnType<typeof createDemoDependencies>> = null;
+
     closeDependencies = async () => {
       try {
         await demo?.close();
@@ -42,9 +48,13 @@ async function start() {
         await dependencies?.close();
       }
     };
+
     if (stopping) return;
+
     demo = await createDemoDependencies(process.env);
+
     if (stopping) return;
+
     app = buildApp({
       logger: true,
       ...(demo ? { demo: demo.runtime } : {}),
@@ -59,6 +69,7 @@ async function start() {
           }
         : {}),
     });
+
     app.addHook('onClose', async () => {
       await closeDependencies?.();
     });
@@ -77,4 +88,5 @@ async function start() {
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, shutdown);
 }
+
 const startup = start();

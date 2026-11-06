@@ -16,6 +16,7 @@ export function TreeProofSummary({
   const positions = new Map(proof?.nodes.map((node, index) => [node.id, index + 1]));
   const position = (id: string | null) => (id ? (positions.get(id) ?? '?') : '?');
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
+
   return (
     <details>
       <summary>{label}</summary>

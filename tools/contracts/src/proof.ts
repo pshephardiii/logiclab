@@ -6,12 +6,13 @@ import {
   proofFormulaTextSchema as formula,
   proofRuleIdSchema as ruleId,
 } from './proof-fields';
+
 export { PROOF_LIMITS } from './proof-fields';
 
 const scope = { id, blockId: id.nullable(), formula };
 
 /** Blank fields are retained draft work; syntax and references are checked by the engine later. */
-export const proofStepSchema = z.discriminatedUnion('kind', [
+export const fitchProofStepSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     ...scope,
     kind: z.literal('premise'),
@@ -27,9 +28,10 @@ export const proofStepSchema = z.discriminatedUnion('kind', [
     subproofReferences: z.array(id).max(2),
   }),
 ]);
-export type ProofStep = z.infer<typeof proofStepSchema>;
 
-export const proofBlockSchema = z.strictObject({
+export type FitchProofStep = z.infer<typeof fitchProofStepSchema>;
+
+export const fitchProofBlockSchema = z.strictObject({
   id,
   parentId: id.nullable(),
   assumptionId: id,
@@ -40,9 +42,10 @@ export const proofBlockSchema = z.strictObject({
 export const fitchProofSchema = z.strictObject({
   proofVersion: z.literal(1),
   format: z.literal('fitch'),
-  steps: z.array(proofStepSchema).max(PROOF_LIMITS.maxSteps),
-  blocks: z.array(proofBlockSchema).max(PROOF_LIMITS.maxBlocks),
+  steps: z.array(fitchProofStepSchema).max(PROOF_LIMITS.maxSteps),
+  blocks: z.array(fitchProofBlockSchema).max(PROOF_LIMITS.maxBlocks),
 });
+
 export type FitchProof = z.infer<typeof fitchProofSchema>;
 
 export const proofProblemSchema = z.strictObject({
@@ -51,13 +54,15 @@ export const proofProblemSchema = z.strictObject({
   conclusion: formula.min(1),
   permittedRuleIds: z.array(ruleId).max(PROOF_LIMITS.maxPermittedRules),
 });
+
 export type ProofProblem = z.infer<typeof proofProblemSchema>;
 
-export const proofCheckInputSchema = z.strictObject({
+export const fitchProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
   proof: fitchProofSchema,
 });
-export type ProofCheckInput = z.infer<typeof proofCheckInputSchema>;
+
+export type FitchProofCheckInput = z.infer<typeof fitchProofCheckInputSchema>;
 
 const diagnosticCode = z.enum([
   'UNSUPPORTED_VERSION',
@@ -72,6 +77,7 @@ const diagnosticCode = z.enum([
   'INCOMPLETE_PROOF',
   'TARGET_NOT_ESTABLISHED',
 ]);
+
 export const proofDiagnosticSchema = z.strictObject({
   code: diagnosticCode,
   message: z.string().min(1).max(500),
@@ -84,6 +90,7 @@ export const proofDiagnosticSchema = z.strictObject({
   blockId: id.optional(),
   position: z.number().int().min(0).max(PROOF_LIMITS.maxFormulaLength).optional(),
 });
+
 export type ProofDiagnostic = z.infer<typeof proofDiagnosticSchema>;
 
 export const proofCheckReportSchema = z
@@ -110,8 +117,10 @@ export const proofCheckReportSchema = z
   })
   .superRefine((report, context) => {
     const reject = (message: string) => context.addIssue({ code: 'custom', message });
+
     if (new Set(report.steps.map((step) => step.stepIndex)).size !== report.steps.length)
       reject('Each submitted step index needs a distinct report entry.');
+
     if (
       report.status === 'accepted' &&
       (report.target !== 'established' ||
@@ -126,7 +135,9 @@ export const proofCheckReportSchema = z
         ))
     )
       reject('Accepted proofs require an established target and wholly valid, resolved work.');
+
     if (report.status === 'unassessable' && report.diagnostics.length === 0)
       reject('Unassessable proofs must explain why checking could not finish.');
   });
+
 export type ProofCheckReport = z.infer<typeof proofCheckReportSchema>;

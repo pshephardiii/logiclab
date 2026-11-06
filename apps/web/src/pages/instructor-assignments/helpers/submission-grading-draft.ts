@@ -13,6 +13,7 @@ export function submissionGradingDraft(
 ): GradingDraft[] {
   return score.items.map((item) => {
     const saved = grading.items.find((value) => value.itemId === item.itemId);
+
     return {
       itemId: item.itemId,
       automatic: saved?.earnedPoints == null,
@@ -45,17 +46,21 @@ export function gradingDraftChanges(
 ) {
   const items: InstructorItemGrade[] = [];
   const errors: Record<string, string> = {};
+
   for (const item of changedGradingItems(draft, baseline)) {
     const maximum = score.items.find((value) => value.itemId === item.itemId)?.maxPoints;
+
     const value = instructorItemGradeSchema.safeParse({
       itemId: item.itemId,
       earnedPoints: item.automatic ? null : item.points.trim() === '' ? NaN : Number(item.points),
       comment: item.comment.trim() || null,
     });
+
     if (!value.success || maximum == null || (value.data.earnedPoints ?? 0) > maximum) {
       errors[item.itemId] =
         `Enter points from 0 to ${maximum ?? 0} in hundredths, or use the automatic award. Comments must be at most 4,000 characters.`;
     } else items.push(value.data);
   }
+
   return { items, errors };
 }

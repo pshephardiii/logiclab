@@ -30,6 +30,7 @@ export const assignmentPolicySchema = z
       policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
     'Only graded work has grade release.',
   );
+
 export type AssignmentPolicy = z.infer<typeof assignmentPolicySchema>;
 
 export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
@@ -44,6 +45,7 @@ export const assignmentSummarySchema = assignmentPolicySchema.safeExtend({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
+
 export type AssignmentSummary = z.infer<typeof assignmentSummarySchema>;
 
 export const assignmentItemSchema = z.strictObject({
@@ -52,7 +54,9 @@ export const assignmentItemSchema = z.strictObject({
   maxPoints: assignmentItemPointsSchema.optional(),
   problemVersion: libraryProblemVersionSchema,
 });
+
 export type AssignmentItem = z.infer<typeof assignmentItemSchema>;
+
 /** Owner-only details may carry private references. Students use separate redacted work contracts. */
 export const assignmentSchema = assignmentSummarySchema
   .safeExtend({
@@ -66,17 +70,23 @@ export const assignmentSchema = assignmentSummarySchema
       !assignment.items.some((item) => item.problemVersion.definition.type === 'derivation'),
     'Graded and completion-only derivations require feedback at submission.',
   );
+
 export type AssignmentDetail = z.infer<typeof assignmentSchema>;
 
 export const assignmentClassParamsSchema = z.strictObject({ classId: z.uuid() });
+
 export type AssignmentClassParams = z.infer<typeof assignmentClassParamsSchema>;
+
 export const assignmentParamsSchema = z.strictObject({ assignmentId: z.uuid() });
+
 export type AssignmentParams = z.infer<typeof assignmentParamsSchema>;
+
 export const assignmentListQuerySchema = z.strictObject({
   archive: z.enum(['active', 'archived', 'all']).default('active'),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   offset: z.coerce.number().int().nonnegative().default(0),
 });
+
 export type AssignmentListQuery = z.infer<typeof assignmentListQuerySchema>;
 
 export const createAssignmentRequestSchema = z
@@ -112,6 +122,7 @@ export const createAssignmentRequestSchema = z
     (input) => input.items === undefined || input.assessmentMode === 'graded',
     'Only graded assignments use points.',
   );
+
 export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestSchema>;
 
 // No creation defaults here: omitted PATCH fields retain their saved values.
@@ -141,18 +152,26 @@ export const updateAssignmentRequestSchema = z
     (input) => input.problemVersionIds === undefined || input.pointAllocations === undefined,
     'Change item order and weights together using items.',
   );
+
 export type UpdateAssignmentRequest = z.infer<typeof updateAssignmentRequestSchema>;
+
 export const assignmentActionRequestSchema = z.strictObject({});
+
 export type AssignmentActionRequest = z.infer<typeof assignmentActionRequestSchema>;
 
 export const assignmentResponseSchema = z.strictObject({ assignment: assignmentSchema });
+
 export type AssignmentResponse = z.infer<typeof assignmentResponseSchema>;
+
 export const assignmentListResponseSchema = z.strictObject({
   assignments: z.array(assignmentSummarySchema),
   nextOffset: z.number().int().nonnegative().nullable(),
 });
+
 export type AssignmentListResponse = z.infer<typeof assignmentListResponseSchema>;
+
 export const assignmentErrorResponseSchema = z.strictObject({
   error: z.strictObject({ code: z.string(), message: z.string() }),
 });
+
 export type AssignmentErrorResponse = z.infer<typeof assignmentErrorResponseSchema>;

@@ -5,6 +5,7 @@ export function CoverageStatus({ coverage }: { coverage: ClassBillingResponse['c
   // Re-evaluate a loaded end time at render; the server remains authoritative at publication.
   const active =
     coverage.active && coverage.endsAt !== null && new Date(coverage.endsAt).getTime() > Date.now();
+
   return (
     <section className="panel" aria-label="Class coverage">
       <h2>Class coverage</h2>

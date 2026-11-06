@@ -18,12 +18,14 @@ export function ProofSummary({
 }) {
   if (format === 'tree') {
     const tree = proof?.format === 'tree' ? proof : null;
+
     return (
       <TreeProofSummary proof={tree} rules={rules} label={label}>
         {tree && <TreeProofPreview proof={tree} rules={rules} />}
       </TreeProofSummary>
     );
   }
+
   return format === 'dependency' ? (
     <DependencyProofSummary
       proof={proof?.format === 'dependency' ? proof : null}

@@ -11,7 +11,9 @@ export function purchaseFindings(
   const related = grants.filter(
     (grant) => grant.provider === purchase.provider && grant.reference === purchase.reference,
   );
+
   const findings: JobFinding[] = [];
+
   function add(kind: `${FindingKind}`, grant?: GrantSnapshot) {
     findings.push({
       kind: kind as FindingKind,
@@ -20,11 +22,15 @@ export function purchaseFindings(
       ...(grant ? { grantId: grant.id } : {}),
     });
   }
+
   if (purchase.status === 'paid' && related.length === 0) add('paid_purchase_missing_grant');
+
   const active = related.find(
     (grant) => !grant.revokedAt && grant.startsAt <= asOf && grant.endsAt > asOf,
   );
+
   if (purchase.status === 'refunded' && active) add('refunded_purchase_active_grant', active);
+
   const mismatch = related.find(
     (grant) =>
       grant.classId !== purchase.classId ||
@@ -32,6 +38,8 @@ export function purchaseFindings(
       grant.endsAt.getTime() - grant.startsAt.getTime() !== purchase.coverageDays * 86400000 ||
       grant.startsAt < purchase.createdAt,
   );
+
   if (mismatch) add('purchase_grant_terms_mismatch', mismatch);
+
   return findings;
 }

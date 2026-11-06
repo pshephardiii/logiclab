@@ -23,6 +23,7 @@ export function DerivationReferenceSummary({
         <p>{definition.explanation || 'No explanation.'}</p>
       </TreeProofSummary>
     );
+
   if (definition.format === 'dependency')
     return (
       <DependencyProofSummary
@@ -33,6 +34,7 @@ export function DerivationReferenceSummary({
         <p>{definition.explanation || 'No explanation.'}</p>
       </DependencyProofSummary>
     );
+
   return (
     <FitchProofSummary
       proof={definition.referenceProof}
