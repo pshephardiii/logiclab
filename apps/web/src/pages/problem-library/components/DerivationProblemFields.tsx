@@ -19,7 +19,9 @@ const formulaInput = {
 /** Statement edits preserve premise identities and the private reference, even when incomplete. */
 export function DerivationProblemFields({ fields, onChange }: Props) {
   const definition = fields.derivation;
-  const [pendingFormat, setPendingFormat] = useState<'fitch' | 'dependency' | null>(null);
+  const [pendingFormat, setPendingFormat] = useState<
+    AuthoringDerivationDefinition['format'] | null
+  >(null);
   function change(
     patch: Partial<
       Pick<AuthoringDerivationDefinition, 'premises' | 'conclusion' | 'rules' | 'explanation'>
@@ -39,7 +41,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
         id="derivation-format"
         value={definition.format}
         onChange={(event) => {
-          const format = event.target.value as 'fitch' | 'dependency';
+          const format = event.target.value as AuthoringDerivationDefinition['format'];
           setPendingFormat(null);
           if (format === definition.format) return;
           if (definition.referenceProof) setPendingFormat(format);
@@ -48,6 +50,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       >
         <option value="fitch">Fitch</option>
         <option value="dependency">Dependency</option>
+        <option value="tree">Natural-deduction tree</option>
       </select>
       {pendingFormat && (
         <div role="group" aria-label="Confirm proof format change">
@@ -74,8 +77,8 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       )}
       <p className="help">
         Save an unfinished statement now. Publication requires an accepted reference under these
-        exact premises, conclusion and permitted rules. Published snapshots can be added to
-        assignments.
+        exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
+        snapshots can be added to assignments.
       </p>
       <section aria-label="Derivation premises">
         <h3>Premises</h3>

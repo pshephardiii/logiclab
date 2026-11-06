@@ -7,6 +7,7 @@ export function buildFitchLayout(
   proof: FitchProof,
   diagnostics: StructureDiagnostics,
 ): FitchLayout | null {
+  // Build identity tables before trusting block openings, endpoints or parent references.
   const stepIndices = new Map<string, number>();
   const declarations = new Map(proof.blocks.map((block) => [block.id, block]));
   const blocks = new Map<string, FitchBlockSpan>();
@@ -20,6 +21,7 @@ export function buildFitchLayout(
     else stepIndices.set(step.id, stepIndex);
   });
   const blockIds = new Set<string>();
+  // Turn each declared box into a line interval; null endpoints preserve unfinished boxes.
   for (const block of proof.blocks) {
     if (blockIds.has(block.id) || stepIndices.has(block.id))
       diagnostics.add({
@@ -80,6 +82,7 @@ export function buildFitchLayout(
   }
   if (diagnostics.items.length) return null;
 
+  // Parent chains must be acyclic and bounded before the chronological scope walk can use them.
   for (const block of proof.blocks) {
     const seen = new Set<string>();
     let cursor: string | null = block.id;
@@ -104,6 +107,7 @@ export function buildFitchLayout(
   }
   if (diagnostics.items.length) return null;
 
+  // Replay openings/closings in line order. The stack represents the one current nesting path.
   const stack: FitchBlockSpan[] = [];
   const paths: string[][] = [];
   for (const [stepIndex, step] of proof.steps.entries()) {
@@ -128,6 +132,7 @@ export function buildFitchLayout(
       });
       return null;
     }
+    // Capture scope before closing: a block's final line still belongs inside that block.
     paths.push(stack.map((block) => block.id));
     if (stack.at(-1)?.endIndex === stepIndex) stack.pop();
   }

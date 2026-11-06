@@ -46,3 +46,13 @@ New feature branches completed after this audit require a focused UI review befo
 ## Carry-forward finding: workspace navigation prominence
 
 During QA on October 28, the user accepted separating site-wide and workspace navigation as an improvement, but found the workspace row insufficiently prominent as instructor navigation. Defer this visual hierarchy refinement to this audit rather than expanding the current QA slice. Explore stronger role labelling, contrast, placement or active-state treatment while retaining the two-level structure, normal/demo destination boundaries and accessible focus states. Include student navigation and desktop/mobile views in the review. No particular visual treatment has been selected yet.
+
+## Required before deployment: proof-editor interaction redesign
+
+Agreed November 5, 2026: redesign proof entry in this UI branch before initial deployment. For numbered proofs, show a clean proof display and a next-line entry area. Confirming **Add line** appends that line to the visible proof. Allow earlier edits, insertion and deletion with stable underlying identities and automatically updated display numbers. Explore the corresponding deliberate branch-building interaction for natural-deduction trees instead of forcing them into a numbered-line layout. Include instructor reference authoring, student editing and read-only review.
+
+Preserve the existing backend proof representations, checker semantics, revisions and independent grading/reference-release policies. Adding a line confirms an editing action; it must not silently check correctness or reveal diagnostics withheld by the assignment policy. **Check proof**, saving and final submission retain distinct meanings.
+
+Unconfirmed entry-row edits must count as unsaved work. Decide and clearly communicate whether Save includes that entry or requires confirmation first; final submission must never silently omit entered work. Test Stay/Discard, failed saves, earlier edits/deletion that break references, insertion/renumbering, keyboard entry/focus, mobile layouts and reduced motion. Keep the proof visible as it grows, with accessible announcements and predictable focus. Backend changes are not required merely to change this presentation; separately review any proposed change to transport or assessment policy.
+
+This is a required usability deliverable for the planned UI branch, not an addition to the current checker slice or permission to deploy before it is complete.

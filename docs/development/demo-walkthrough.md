@@ -123,3 +123,17 @@ Use a published Fitch problem from the preceding section. You can author a new p
 9. Reset the demo to discard these examples and their retained grading history. End the demo when finished.
 
 See [grading/review verification](../verification/derivation-grading-review-verification.md) for the focused automated/browser evidence and limits.
+
+## Optional: author a natural-deduction tree
+
+This example is manually authored; demo template 6 does not seed trees yet.
+
+1. As demo instructor, open **Problem library**, create a titled **Derivation**, choose **Natural-deduction tree**, leave premises empty and enter conclusion `P -> P`.
+2. Enable **Implication introduction** and choose its teaching label. Select **Start reference proof**: node 1 is an unverified conclusion root, copied from the target once.
+3. Choose that rule for node 1. Select **Add assumption node**, enter `P` in node 2, then set node 1's branch root to node 2, its assumption formula to `P`, and check **Discharge node 2**. The drawing places `[P]` above `P -> P`.
+4. Select **Check current proof**, then **Save draft**, **Check saved reference** and **Publish saved draft**. Expect acceptance at each check. Editing the target/rules afterward requires a fresh check; publication always checks the saved version independently.
+5. Open **Assignments**, select the funded class and add the published tree. Choose ungraded practice for explicit checks, or graded/completion-only with submission-time feedback. Save and publish. Grade release and answer reveal are independently configurable.
+6. Switch to student and open the assignment. Its format is fixed. Start the proof, add the assumption and discharge as above, then **Save problem**. In practice, **Check proof** checks without saving. Changing problems preserves local work; leaving/reloading protects unsaved edits.
+7. For graded work, incomplete/incorrect proofs may be submitted and require instructor review; accepted proofs receive full points. For completion-only, fill the tree and matching root before submitting; logical mistakes produce retained verification flags without a score. Graded diagnostics wait for grade release; completion diagnostics appear after submission.
+8. As instructor, review the final proof read-only. Grade/comment adjustments preserve original evidence. Reveal the reference independently from graded reports/points. See the preceding grading walkthrough for review and release controls.
+9. End/reset the demo when finished. Reset removes these authored examples and restores template 6; it does not add a prebuilt tree.

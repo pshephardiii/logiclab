@@ -1,7 +1,13 @@
 import type { ProofCheckReport } from '@logiclab/contracts';
 
 /** Render only an authorized, snapshot-bound report; no local checking or grade inference. */
-export function ProofFeedback({ report }: { report: ProofCheckReport }) {
+export function ProofFeedback({
+  report,
+  stepLabel = 'Line',
+}: {
+  report: ProofCheckReport;
+  stepLabel?: 'Line' | 'Node';
+}) {
   return (
     <section className="proof-feedback" aria-label="Proof feedback">
       <p role="status">
@@ -23,7 +29,7 @@ export function ProofFeedback({ report }: { report: ProofCheckReport }) {
           const position = diagnostic.stepIndex ?? -1;
           return (
             <li key={index}>
-              {position >= 0 && `Line ${position + 1}: `}
+              {position >= 0 && `${stepLabel} ${position + 1}: `}
               {diagnostic.message}
             </li>
           );
@@ -31,12 +37,12 @@ export function ProofFeedback({ report }: { report: ProofCheckReport }) {
       </ul>
       {report.steps.length > 0 && (
         <details>
-          <summary>Line-by-line checks</summary>
+          <summary>{stepLabel === 'Node' ? 'Node-by-node checks' : 'Line-by-line checks'}</summary>
           <ul>
             {report.steps.map((step) => (
               <li key={step.stepId}>
-                Line {step.stepIndex + 1}: local step {step.localStatus}; supporting dependencies{' '}
-                {step.dependencyStatus}.
+                {stepLabel} {step.stepIndex + 1}: local step {step.localStatus}; supporting
+                dependencies {step.dependencyStatus}.
               </li>
             ))}
           </ul>

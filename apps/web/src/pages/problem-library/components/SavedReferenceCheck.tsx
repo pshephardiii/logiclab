@@ -59,7 +59,8 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
         <ul>
           {report.diagnostics.map((diagnostic, index) => (
             <li key={index}>
-              {diagnostic.stepIndex !== undefined && `Line ${diagnostic.stepIndex + 1}: `}
+              {diagnostic.stepIndex !== undefined &&
+                `${problem.definition.type === 'derivation' && problem.definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
               {diagnostic.message}
             </li>
           ))}

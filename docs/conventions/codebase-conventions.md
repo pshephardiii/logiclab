@@ -297,6 +297,8 @@ Use `void` when an event/effect intentionally ignores an asynchronous operation'
 
 Add brief documentation above exported hooks and substantial components when their responsibility or behavior is not obvious from the name. Describe what they own, what callers supply, and important lifecycle behavior. Use inline comments to explain invariants and decisions such as cancellation guards, pagination adjustments, authorization ordering, and transaction locks.
 
+For dense algorithms, guide the reader through the main processing stages with short inline comments, even when a function already has a summary. Explain why stages run in that order, what is established before later code can rely on it, and intentional exceptions or failure handling. Proof traversal, scope/discharge, support propagation and completeness-versus-correctness checks are examples. Add this guidance alongside related implementation or review work; a focused comment pass does not need its own branch.
+
 Do not narrate obvious statements or add comments to every trivial component. Keep explanations accurate to the current implementation, distinguish presentation from authorization, and update comments when behavior changes. Prefer a clear name or focused helper over a comment that compensates for confusing code.
 
 ## Repository formatting
@@ -305,7 +307,9 @@ Use the pinned root Prettier dependency and `.prettierrc.json` for consistent fo
 
 The committed VS Code settings enable format-on-save with the recommended Prettier extension. Other editors should use the same repository configuration and installed version. Generated output, dependencies, local secrets/drafts, the lockfile, and immutable database migration history are excluded by `.prettierignore`. Review formatter changes separately from behavior changes. Formatting complements named handlers and focused helpers; it does not replace clear structure.
 
-Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between top-level functions, classes, and type/interface declarations, and between distinct stages within substantial functions. Keep related imports and small related declarations together. Prettier preserves these boundaries but does not create them automatically.
+Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between functions, classes, type/interface declarations and separate constant declarations, including local declarations within functions. Separate conditionals and distinct operations from the statements around them: for example, leave a blank line between a completed `budget.spend(...)` call and `const result = ...`, and another between that completed assignment and the following `if`.
+
+Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer these visible boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
 
 Use braces for multiline conditional branches; Prettier does not add them automatically.
 

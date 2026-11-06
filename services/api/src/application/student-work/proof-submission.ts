@@ -34,14 +34,17 @@ export function evaluateProofSubmission(
   const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
   const results = assigned.map((item): ProofSubmissionItem => {
     if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
+    // Missing work needs an empty proof in its pinned format so the report records incompleteness.
     const answer = responses.has(item.id)
       ? responses.get(item.id)
       : {
           type: 'derivation',
           proof:
-            item.definition.format === 'dependency'
-              ? { proofVersion: 1, format: 'dependency', steps: [] }
-              : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+            item.definition.format === 'tree'
+              ? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] }
+              : item.definition.format === 'dependency'
+                ? { proofVersion: 1, format: 'dependency', steps: [] }
+                : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
         };
     const evidence = evaluateProofAnswer(
       {

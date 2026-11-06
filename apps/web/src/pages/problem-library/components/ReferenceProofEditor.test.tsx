@@ -102,7 +102,8 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
   ).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   const value = onSave.mock.calls[0]![0].definition;
-  if (value.type !== 'derivation') throw new Error('Expected derivation');
+  if (value.type !== 'derivation' || value.format !== 'fitch')
+    throw new Error('Expected Fitch derivation');
   expect(value.referenceProof!.steps[2]).toMatchObject({ lineReferences: ids });
 });
 

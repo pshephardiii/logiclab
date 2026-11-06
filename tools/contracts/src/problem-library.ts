@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { derivationDefinitionSchema } from './derivation';
 import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
+import { treeDerivationDefinitionSchema } from './tree-derivation';
 import {
   problemDefinitionSchema,
   problemDraftSchema,
@@ -14,6 +15,7 @@ export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
   z.discriminatedUnion('format', [
     derivationDefinitionSchema,
     dependencyDerivationDefinitionSchema,
+    treeDerivationDefinitionSchema,
   ]),
 ]);
 export type LibraryProblemDefinition = z.infer<typeof libraryProblemDefinitionSchema>;

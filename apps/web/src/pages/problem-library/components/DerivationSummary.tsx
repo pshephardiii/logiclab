@@ -10,7 +10,12 @@ export function DerivationSummary({
   return (
     <div>
       <p>
-        <strong>Format:</strong> {definition.format === 'fitch' ? 'Fitch' : 'Dependency'}
+        <strong>Format:</strong>{' '}
+        {definition.format === 'tree'
+          ? 'Natural-deduction tree'
+          : definition.format === 'fitch'
+            ? 'Fitch'
+            : 'Dependency'}
       </p>
       <h3>Premises</h3>
       {definition.premises.length ? (

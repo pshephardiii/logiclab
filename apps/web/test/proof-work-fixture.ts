@@ -5,11 +5,21 @@ import type {
 import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
 import type { DerivationSolution } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
+import type { TreeDerivationAnswer } from '@logiclab/contracts/tree-derivation-work';
 import { work, itemA, itemB, saved } from './assignment-work-fixture';
 export { itemA, itemB };
 export const tableId = 'a6666666-6666-4666-8666-666666666666';
 const premiseId = 'b1111111-1111-4111-8111-111111111111';
 const stepId = 'b2222222-2222-4222-8222-222222222222';
+export const treeAnswer: TreeDerivationAnswer = {
+  type: 'derivation',
+  proof: {
+    proofVersion: 1,
+    format: 'tree',
+    rootId: stepId,
+    nodes: [{ kind: 'premise', id: stepId, premiseId, formula: 'P' }],
+  },
+};
 export const proofAnswer: DerivationAnswer = {
   type: 'derivation',
   proof: {

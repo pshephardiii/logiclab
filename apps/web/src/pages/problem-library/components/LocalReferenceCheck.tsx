@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
-import { checkProof, checkDependencyProof } from '@logiclab/logic-engine/proof';
+import { checkProof, checkDependencyProof, checkTreeProof } from '@logiclab/logic-engine/proof';
+import { treeDerivationDefinitionSchema } from '@logiclab/contracts/tree-derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
@@ -16,9 +17,11 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
   const current = checked?.snapshot === snapshot ? checked : null;
   function check() {
     const parsed = (
-      definition.format === 'dependency'
-        ? dependencyDerivationDefinitionSchema
-        : derivationDefinitionSchema
+      definition.format === 'tree'
+        ? treeDerivationDefinitionSchema
+        : definition.format === 'dependency'
+          ? dependencyDerivationDefinitionSchema
+          : derivationDefinitionSchema
     ).safeParse(definition);
     if (!parsed.success) {
       setChecked({
@@ -37,7 +40,11 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
     }
     setChecked({
       snapshot,
-      report: (value.format === 'dependency' ? checkDependencyProof : checkProof)({
+      report: (value.format === 'tree'
+        ? checkTreeProof
+        : value.format === 'dependency'
+          ? checkDependencyProof
+          : checkProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
           premises: value.premises,
@@ -74,7 +81,8 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
           <ul>
             {current.report.diagnostics.map((diagnostic, index) => (
               <li key={index}>
-                {diagnostic.stepIndex !== undefined && `Line ${diagnostic.stepIndex + 1}: `}
+                {diagnostic.stepIndex !== undefined &&
+                  `${definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
                 {diagnostic.message}
               </li>
             ))}

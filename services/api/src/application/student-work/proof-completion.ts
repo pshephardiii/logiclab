@@ -1,6 +1,7 @@
 import {
   isFinishedProofAttempt,
   isFinishedDependencyProofAttempt,
+  isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
 import {
   proofCompletionSubmissionResultSchema,
@@ -27,7 +28,11 @@ export function evaluateProofCompletion(
     const answer = validateProofAnswer(content, value);
     if (
       !(
-        content.format === 'dependency' ? isFinishedDependencyProofAttempt : isFinishedProofAttempt
+        content.format === 'tree'
+          ? isFinishedTreeProofAttempt
+          : content.format === 'dependency'
+            ? isFinishedDependencyProofAttempt
+            : isFinishedProofAttempt
       )({
         problem: {
           ruleCatalogVersion: content.ruleCatalogVersion,

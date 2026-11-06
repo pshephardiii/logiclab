@@ -133,3 +133,6 @@ export type {
 export type { DependencyProof, DependencyProofStep } from './types/proof/dependency-work.ts';
 export type { DependencyDerivationDefinition } from './types/problem/dependency-derivation.ts';
 export type { DependencyDerivationAnswer } from './types/assignment-attempt/dependency-derivation-work.ts';
+export type { TreeProof, TreeProofNode, TreeProofBranch } from './types/proof/tree-work.ts';
+export type { TreeDerivationDefinition } from './types/problem/tree-derivation.ts';
+export type { TreeDerivationAnswer } from './types/assignment-attempt/tree-derivation-work.ts';

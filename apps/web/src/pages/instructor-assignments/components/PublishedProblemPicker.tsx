@@ -25,7 +25,7 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
       </p>
       <p className="help">
         {allowDerivations
-          ? 'Published Fitch and dependency proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
+          ? 'Published Fitch, dependency and tree proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
           : 'Choose feedback at submission or Ungraded practice to assign proofs.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
@@ -96,7 +96,7 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
               {version.definition.type === 'truth_table'
                 ? version.definition.formula
                 : version.definition.type === 'derivation'
-                  ? `${version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
+                  ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
                   : version.definition.question}
             </code>
             <button type="button" disabled={disabled} onClick={() => onAdd(version)}>

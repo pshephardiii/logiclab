@@ -20,3 +20,4 @@ export * from './assignment-scoring';
 export * from './assignment-grading';
 export * from './proof';
 export * from './dependency-proof';
+export * from './natural-deduction-tree';

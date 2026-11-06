@@ -40,6 +40,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
       status: 'unassessable',
       diagnostics: [{ code: 'RESOURCE_LIMIT', message: 'Dependency proof list limit exceeded.' }],
     };
+  // Ambiguous identities must be rejected before interpreting citations or written source sets.
   const indices = new Map<string, number>();
   for (const [stepIndex, step] of proof.steps.entries()) {
     if (indices.has(step.id))
@@ -57,6 +58,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
     if (diagnostics.exhausted) break;
     let annotationValid = true;
     const seen = new Set<string>();
+    // Written annotations may name only available premise/assumption sources, with no duplicates.
     for (const dependency of step.dependencies) {
       const index = indices.get(dependency);
       if (
@@ -92,6 +94,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
         fail('Line citation must identify an earlier step.');
       else lineIndices.push(index);
     }
+    // Resolve assumption/conclusion pairs by chronology; there is no global Fitch-style box closure.
     const discharges: { assumptionIndex: number; conclusionIndex: number }[] = [];
     const assumptions = new Set<string>();
     for (const pair of step.discharges) {
@@ -120,6 +123,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
       else discharges.push({ assumptionIndex, conclusionIndex });
       assumptions.add(pair.assumptionId);
     }
+    // An inference gets usable citations only when every required identity resolves safely.
     references.push(
       invalid
         ? { status: 'invalid' }

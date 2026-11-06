@@ -126,9 +126,9 @@ Student graded work displays problem allocations and total available points. Rel
 
 ## Assigned Fitch proofs (022)
 
-Graded, practice and completion-only assignments can contain pinned version-1 Fitch or dependency derivations alongside tables and conceptual questions. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
+Graded, practice and completion-only assignments can contain pinned version-1 Fitch, dependency or tree derivations alongside tables and conceptual questions. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
 
-A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"` or `"dependency"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
+A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"`, `"dependency"` or `"tree"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
 
 Save a full bounded proof response for one occurrence using the existing revision protocol:
 
@@ -173,10 +173,18 @@ Apply `Migration20261102120000` and rebuild matching contracts/engine/database/A
 
 ## Dependency-format extension (025)
 
-The proof-aware saved-work schemas now carry both formats; `SavedDerivationAnswer`, `SavedDerivationContent` and `SavedDerivationSolution` describe those unions. `@logiclab/contracts/dependency-derivation-work` supplies the separate dependency answer/save/check shapes. Existing Fitch-only schemas continue rejecting dependency input; they are not substitutes for shared route schemas.
+The proof-aware saved-work schemas carry Fitch, dependency and tree formats; `SavedDerivationAnswer`, `SavedDerivationContent` and `SavedDerivationSolution` describe those unions. `@logiclab/contracts/dependency-derivation-work` supplies the separate dependency answer/save/check shapes. Existing Fitch-only schemas continue rejecting dependency input; they are not substitutes for shared route schemas.
 
 The existing save/check/solution/submission URLs and revision envelope are unchanged. A dependency answer is `{ type: "derivation", proof: { proofVersion: 1, format: "dependency", steps: [...] } }`. Every step has stable `id`, `formula` and `dependencies` source-line IDs. Premises also have nullable `premiseId`; inferences have nullable `ruleId`, up to two `lineReferences` and up to two nullable assumption/conclusion discharge pairs. Drafts may be unfinished or wrong within shape/text/list limits. Statements, permissions, private references, reports and scores cannot be supplied as student work. The pinned definition chooses validation/checking; cross-format answers fail without partial writes.
 
 Student format is fixed by the publication, with separate occurrence drafts and explicit saving/checking. Reference reveal never replaces entries. Graded/completion proofs have no pre-submission check. Dependency completion allows filled logical errors, wrong source sets and forward/self citations for later feedback, but rejects missing targets, blank fields, unlinked/unknown identities, unfilled discharge fields or a final assumption alone. Completion is not verification of effort or logical correctness.
 
 Graded finalization retains the existing `proof_mixed_v1`/`points_v1`; completion retains `proof_completion_v1` without a score. Current result/grade/reveal rules, immutable retries and instructor award/history behavior apply to mixed-format assignments. No new migration or result version is introduced. Rebuild matching consumers; older applications cannot read dependency drafts/definitions and must not be rolled back onto them without compatibility review. See [verification and rollout](../verification/dependency-proof-format-verification.md).
+
+## Assigned natural-deduction trees (026)
+
+The existing proof-aware read/save/check/solution/submission URLs also handle `format: "tree"`. Separate shapes live in `@logiclab/contracts/tree-derivation-work`; shared `saved-student-work` unions include all three formats. Save accepts the usual revision/item envelope with `answers: { type: "derivation", proof: { proofVersion: 1, format: "tree", rootId, nodes } }`. The server chooses validation from the pinned definition, so a Fitch/dependency answer cannot substitute for a tree. Transport and reference shape are described in [the library API](problem-library-api.md#natural-deduction-tree-format-026).
+
+Saves preserve incomplete or incorrect entries and stable identities without grading. Practice checks remain explicit even under immediate timing; they do not write attempts or disclose instructor references. Displayed node numbers and report `stepIndex` refer to submitted array positions; UUIDs carry identity. The selected root, not the last array entry, determines the target. Drawing the proof does not verify it.
+
+Graded finalization freezes `proof_mixed_v1` evidence and `points_v1`: accepted proofs receive full allocated points; all other outcomes retain pending review rather than zero. Completion requires one connected filled tree, a selected premise/inference root matching the target, known selected premises/rules and the required existing operands/branch fields. A filled but logically incorrect tree can complete and receives retained error/unavailable verification flags without points. Grade/report/comment release and reference/explanation reveal remain independent. The shared immutable retry, instructor adjustment/history and ownership policies apply unchanged. No new migration, result version or endpoint is introduced. See [final evidence and limitations](../verification/natural-deduction-trees-verification.md).
