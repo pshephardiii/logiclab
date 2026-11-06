@@ -67,8 +67,8 @@ export function TreeProofPreview({
     <section aria-label="Tree preview">
       <h4>Tree preview</h4>
       <p className="help">
-        Supporting formulas appear above their conclusion. This displays your entries; use Check
-        current proof to verify them.
+        Supporting formulas appear above their conclusion. This displays your entries without
+        checking correctness.
       </p>
       {!layout ? (
         <p>

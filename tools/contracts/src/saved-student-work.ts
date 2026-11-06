@@ -21,20 +21,29 @@ import {
   saveDependencyAnswersSchema,
   checkDependencyAnswersSchema,
 } from './dependency-derivation-work';
+import { treeDerivationContentSchema, treeDerivationSolutionSchema } from './tree-derivation';
+import {
+  treeDerivationAnswerSchema,
+  saveTreeAnswersSchema,
+  checkTreeAnswersSchema,
+} from './tree-derivation-work';
 
 export const savedDerivationAnswerSchema = z.union([
   derivationAnswerSchema,
   dependencyDerivationAnswerSchema,
+  treeDerivationAnswerSchema,
 ]);
 export type SavedDerivationAnswer = z.infer<typeof savedDerivationAnswerSchema>;
 export const savedDerivationContentSchema = z.discriminatedUnion('format', [
   derivationContentSchema,
   dependencyDerivationContentSchema,
+  treeDerivationContentSchema,
 ]);
 export type SavedDerivationContent = z.infer<typeof savedDerivationContentSchema>;
 export const savedDerivationSolutionSchema = z.discriminatedUnion('format', [
   derivationSolutionSchema,
   dependencyDerivationSolutionSchema,
+  treeDerivationSolutionSchema,
 ]);
 export type SavedDerivationSolution = z.infer<typeof savedDerivationSolutionSchema>;
 import {
@@ -150,6 +159,7 @@ export const savedStudentAnswersSchema = z.union([
   saveStudentAnswersSchema,
   saveDerivationAnswersSchema,
   saveDependencyAnswersSchema,
+  saveTreeAnswersSchema,
 ]);
 export type SavedStudentAnswers = z.infer<typeof savedStudentAnswersSchema>;
 
@@ -157,6 +167,7 @@ export const savedStudentCheckSchema = z.union([
   checkStudentAnswersSchema,
   checkDerivationAnswersSchema,
   checkDependencyAnswersSchema,
+  checkTreeAnswersSchema,
 ]);
 export type SavedStudentCheck = z.infer<typeof savedStudentCheckSchema>;
 export const savedStudentCheckResponseSchema = studentCheckResponseSchema.extend({

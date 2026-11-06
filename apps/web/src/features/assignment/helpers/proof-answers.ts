@@ -5,7 +5,11 @@ import type {
 } from '@logiclab/contracts/saved-student-work';
 
 /** An explicit empty response stays distinct from never starting a proof. */
-export function blankDerivationAnswer(format: 'fitch' | 'dependency' = 'fitch'): DerivationAnswer {
+export function blankDerivationAnswer(
+  format: DerivationAnswer['proof']['format'] = 'fitch',
+): DerivationAnswer {
+  if (format === 'tree')
+    return { type: 'derivation', proof: { proofVersion: 1, format, rootId: null, nodes: [] } };
   if (format === 'dependency')
     return { type: 'derivation', proof: { proofVersion: 1, format, steps: [] } };
   return { type: 'derivation', proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] } };

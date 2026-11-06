@@ -187,7 +187,7 @@ test('Fitch/dependency/student boundaries stay separate while the owner library 
   expect(proofCheckInputSchema.safeParse({ problem, proof }).success).toBe(false);
   expect(dependencyProofSchema.safeParse(proof).success).toBe(false);
   expect(derivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
-  expect(savedDerivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
+  expect(savedDerivationAnswerSchema.safeParse({ type: 'derivation', proof }).success).toBe(true);
   const definition = derivationDefinitionFixture();
   expect(
     derivationDefinitionSchema.safeParse({

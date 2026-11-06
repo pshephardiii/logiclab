@@ -1,7 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { dependencyDefinitionFixture, derivationDefinitionFixture } from '../derivation-fixture';
+import {
+  dependencyDefinitionFixture,
+  derivationDefinitionFixture,
+  treeDefinitionFixture,
+} from '../derivation-fixture';
+import { StudentWorkError } from '../../src/application/student-work/errors';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
@@ -12,14 +17,19 @@ import {
   savedStudentAttemptResponseSchema,
   savedStudentCheckResponseSchema,
   savedStudentSolutionResponseSchema,
+  savedDerivationAnswerSchema,
+  savedStudentAnswersSchema,
 } from '@logiclab/contracts/saved-student-work';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
-for (const mode of ['normal', 'demo'] as const) {
-  test(`${mode} dependency draft HTTP work preserves revision locks, privacy, format matching and independent checks/solutions`, async () => {
+const variants = [dependencyDefinitionFixture, treeDefinitionFixture].flatMap((definitionFixture) =>
+  (['normal', 'demo'] as const).map((mode) => ({ definitionFixture, mode })),
+);
+for (const { definitionFixture, mode } of variants) {
+  test(`${mode} ${definitionFixture().format} draft HTTP work preserves revision locks, privacy, format matching and independent checks/solutions`, async () => {
     const db = await import('@logiclab/db');
     const schema = `dependency_work_${randomUUID().replaceAll('-', '')}`;
     const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -105,7 +115,7 @@ for (const mode of ['normal', 'demo'] as const) {
         });
       }
       const problems = await createProblemStore(orm);
-      const definition = dependencyDefinitionFixture();
+      const definition = definitionFixture();
       const draft = await problems.create(owner.id, { title: 'Pinned dependency', definition });
       const published = await problems.publish(owner.id, draft.id);
       if (published.status !== 'published') assert.fail('Expected fixture publication');
@@ -135,9 +145,14 @@ for (const mode of ['normal', 'demo'] as const) {
       assignment.publishedAt = new Date();
       await em.flush();
       const prefix = `/api/${mode === 'demo' ? 'demo/resources/' : ''}student/assignments/${assignment.id}`;
-      const valid = { type: 'derivation' as const, proof: definition.referenceProof! };
+      const valid = savedDerivationAnswerSchema.parse({
+        type: 'derivation',
+        proof: definition.referenceProof,
+      });
       const incomplete = structuredClone(valid);
-      incomplete.proof.steps[0]!.formula = 'P &';
+      const firstNode =
+        'steps' in incomplete.proof ? incomplete.proof.steps[0]! : incomplete.proof.nodes[0]!;
+      firstNode.formula = 'P &';
       const read = await request('GET', prefix, cookie);
       assert.equal(read.statusCode, 200, read.body);
       savedStudentAssignmentResponseSchema.parse(read.json());
@@ -213,14 +228,18 @@ for (const mode of ['normal', 'demo'] as const) {
       await assert.rejects(
         orm.em.fork().transactional(async (manager) => {
           const transactionalStore = await createStudentWorkStore(orm, manager);
-          await transactionalStore.save(student.id, assignment.id, {
-            revision: 3,
-            itemId: first.id,
-            answers: valid,
-          });
-          throw new Error('ROLLBACK_DEPENDENCY_SAVE');
+          await transactionalStore.save(
+            student.id,
+            assignment.id,
+            savedStudentAnswersSchema.parse({
+              revision: 3,
+              itemId: first.id,
+              answers: valid,
+            }),
+          );
+          throw new Error('ROLLBACK_PROOF_SAVE');
         }),
-        /ROLLBACK_DEPENDENCY_SAVE/,
+        /ROLLBACK_PROOF_SAVE/,
       );
       assert.deepEqual((await request('GET', prefix, cookie)).json().attempt, afterRace);
       assert.equal(
@@ -236,9 +255,9 @@ for (const mode of ['normal', 'demo'] as const) {
         (await request('GET', `${prefix}/items/${first.id}/solution`, cookie)).statusCode,
         403,
       );
-      await orm.em
-        .fork()
-        .nativeUpdate(db.Assignment, assignment.id, { solutionAccess: db.SolutionAccess.Anytime });
+      await orm.em.fork().nativeUpdate(db.Assignment, assignment.id, {
+        solutionAccess: db.SolutionAccess.Anytime,
+      });
       const solution = await request('GET', `${prefix}/items/${first.id}/solution`, cookie);
       assert.equal(solution.statusCode, 200, solution.body);
       const parsedSolution = savedStudentSolutionResponseSchema.parse(solution.json()).solution;
@@ -282,6 +301,25 @@ for (const mode of ['normal', 'demo'] as const) {
           .statusCode,
         403,
       );
+      if (definition.format === 'tree') {
+        for (const assessmentMode of [db.AssessmentMode.Graded, db.AssessmentMode.CompletionOnly]) {
+          await orm.em.fork().nativeUpdate(db.Assignment, assignment.id, { assessmentMode });
+          await assert.rejects(
+            store.submit(student.id, assignment.id, 3),
+            (error) =>
+              error instanceof StudentWorkError && error.reason === 'submission_unavailable',
+          );
+        }
+        assert.deepEqual((await request('GET', prefix, cookie)).json().attempt, afterRace);
+        assert.equal(
+          await em.fork().count(db.AssignmentAttempt, {
+            assignment: assignment.id,
+            submittedAt: { $ne: null },
+          }),
+          0,
+        );
+        return;
+      }
       const submitted = await store.submit(student.id, assignment.id, 3);
       assert(submitted.submittedAt);
       assert.equal(submitted.result?.gradingVersion, 'proof_mixed_v1');

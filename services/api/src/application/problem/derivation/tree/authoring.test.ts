@@ -40,7 +40,6 @@ import { libraryProblemDefinition, publicationDefinition } from '../../library-d
 import { supportedAssignmentDefinition } from '../../../assignment/definition-support';
 import { AssignmentOperationError } from '../../../assignment/errors';
 import { publicDerivationContent, derivationReferenceSolution } from '../projections';
-import { UnsupportedProblemDefinitionError } from '../../definition-support';
 
 type Assert<T extends true> = T;
 type DefinitionTypesMatch = Assert<
@@ -249,7 +248,7 @@ test('format-specific certification cannot reuse an accepted Fitch or dependency
   );
 });
 
-test('owner library admits trees while assignment/student projections remain guarded', () => {
+test('owner and student projections support trees while public assignment admission stays guarded', () => {
   const value = treePublicationDefinition(treeDefinitionFixture());
   expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
@@ -258,12 +257,12 @@ test('owner library admits trees while assignment/student projections remain gua
   ).toBe(true);
   expect(libraryProblemDefinition(value)).toEqual(value);
   expect(publicationDefinition(value)).toEqual(value);
-  expect(() => publicDerivationContent(value)).toThrow(UnsupportedProblemDefinitionError);
-  expect(() => derivationReferenceSolution(value)).toThrow(UnsupportedProblemDefinitionError);
+  expect(publicDerivationContent(value)).toEqual(treeContent(value));
+  expect(derivationReferenceSolution(value)).toEqual(treeReferenceSolution(value));
   expect(
     savedDerivationAnswerSchema.safeParse({ type: 'derivation', proof: value.referenceProof })
       .success,
-  ).toBe(false);
+  ).toBe(true);
   for (const assessmentMode of ['graded', 'completion_only', 'ungraded_practice']) {
     expect(() =>
       supportedAssignmentDefinition(value, {

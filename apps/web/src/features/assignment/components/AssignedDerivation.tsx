@@ -4,10 +4,10 @@ import type {
   SavedDerivationSolution as DerivationSolution,
 } from '@logiclab/contracts/saved-student-work';
 import { DependencyProofEditor } from '../../proof/dependency/DependencyProofEditor';
-import { DependencyProofSummary } from '../../proof/dependency/DependencyProofSummary';
+import { TreeProofEditor } from '../../proof/tree/TreeProofEditor';
+import { ProofSummary } from '../../proof/components/ProofSummary';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
-import { FitchProofSummary } from '../../proof/components/FitchProofSummary';
 import { ProofFeedback } from '../../proof/components/ProofFeedback';
 import '../assignment.css';
 
@@ -53,7 +53,12 @@ export function AssignedDerivation({
       </h2>
       {item.instructions && <p>{item.instructions}</p>}
       <p>
-        <strong>Format:</strong> {item.content.format === 'fitch' ? 'Fitch' : 'Dependency'}
+        <strong>Format:</strong>{' '}
+        {item.content.format === 'tree'
+          ? 'Natural-deduction tree'
+          : item.content.format === 'fitch'
+            ? 'Fitch'
+            : 'Dependency'}
       </p>
       <h3>Premises</h3>
       {item.content.premises.length ? (
@@ -85,19 +90,12 @@ export function AssignedDerivation({
           The saved proof format does not match this problem. Reload saved work before editing.
         </p>
       ) : readOnly ? (
-        proof?.format === 'dependency' || item.content.format === 'dependency' ? (
-          <DependencyProofSummary
-            proof={proof?.format === 'dependency' ? proof : null}
-            rules={item.content.rules}
-            label="Your submitted proof"
-          />
-        ) : (
-          <FitchProofSummary
-            proof={proof?.format === 'fitch' ? proof : null}
-            rules={item.content.rules}
-            label="Your submitted proof"
-          />
-        )
+        <ProofSummary
+          proof={proof}
+          format={item.content.format}
+          rules={item.content.rules}
+          label="Your submitted proof"
+        />
       ) : (
         <>
           <p className="help">
@@ -106,7 +104,20 @@ export function AssignedDerivation({
             {onCheck && ' Check proof evaluates your current work without saving it.'}
           </p>
           <fieldset disabled={disabled} aria-label="Edit proof">
-            {item.content.format === 'dependency' ? (
+            {item.content.format === 'tree' ? (
+              <TreeProofEditor
+                statement={item.content}
+                proof={proof?.format === 'tree' ? proof : null}
+                purpose="student"
+                onChange={(next) => {
+                  if (!readOnly && !disabled)
+                    onAnswer({
+                      type: 'derivation',
+                      proof: next ?? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] },
+                    });
+                }}
+              />
+            ) : item.content.format === 'dependency' ? (
               <DependencyProofEditor
                 statement={item.content}
                 proof={proof?.format === 'dependency' ? proof : null}
@@ -141,23 +152,21 @@ export function AssignedDerivation({
           </fieldset>
         </>
       )}
-      {report && <ProofFeedback report={report} />}
+      {report && (
+        <ProofFeedback
+          report={report}
+          stepLabel={item.content.format === 'tree' ? 'Node' : 'Line'}
+        />
+      )}
       {solution && solution.format === item.content.format && (
         <div className="conceptual-solution">
           <h3>Instructor solution</h3>
-          {solution.format === 'dependency' ? (
-            <DependencyProofSummary
-              proof={solution.referenceProof}
-              rules={item.content.rules}
-              label="Instructor reference proof"
-            />
-          ) : (
-            <FitchProofSummary
-              proof={solution.referenceProof}
-              rules={item.content.rules}
-              label="Instructor reference proof"
-            />
-          )}
+          <ProofSummary
+            proof={solution.referenceProof}
+            format={solution.format}
+            rules={item.content.rules}
+            label="Instructor reference proof"
+          />
           {solution.explanation && <p>{solution.explanation}</p>}
         </div>
       )}

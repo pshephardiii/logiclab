@@ -8,6 +8,7 @@ import {
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
 import { evaluateAssignmentSubmission } from './mixed-evaluation';
+import { StudentWorkError } from './errors';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
 export function evaluateProofSubmission(
@@ -15,6 +16,13 @@ export function evaluateProofSubmission(
   input: unknown,
 ): ProofSubmissionResult {
   const { assigned, responses } = validatedProofWork(items, input);
+  // Draft transport is tree-aware; final grading remains guarded until its workflow is verified.
+  if (
+    assigned.some(
+      (item) => item.definition.type === 'derivation' && item.definition.format === 'tree',
+    )
+  )
+    throw new StudentWorkError('submission_unavailable');
   const objectiveItems = assigned.flatMap((item) =>
     item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
   );

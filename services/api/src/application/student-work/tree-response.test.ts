@@ -25,6 +25,8 @@ import { evaluateTreeAnswer, validateTreeAnswer } from './tree-response';
 import { validateDerivationAnswer } from './derivation-response';
 import { validateDependencyAnswer } from './dependency-response';
 import { StudentWorkError } from './errors';
+import { evaluateProofSubmission } from './proof-submission';
+import { evaluateProofCompletion } from './proof-completion';
 
 type Assert<T extends true> = T;
 type AnswerTypesMatch = Assert<
@@ -44,6 +46,18 @@ function fixture() {
   };
   return { definition, answer, authoritative };
 }
+
+test('tree finalization remains explicitly guarded after draft transport is enabled', () => {
+  const { definition, authoritative, answer } = fixture();
+  const items = [
+    { id: authoritative.itemId, problemVersionId: authoritative.problemVersionId, definition },
+  ];
+  for (const finalize of [evaluateProofSubmission, evaluateProofCompletion]) {
+    expect(() => finalize(items, { [authoritative.itemId]: answer })).toThrow(
+      'submission_unavailable',
+    );
+  }
+});
 
 test('exact student JSON and staged requests round-trip without borrowing the reference object', () => {
   const { answer, authoritative } = fixture();
@@ -227,7 +241,7 @@ test('a plausible-looking premise leaf cannot replace the pinned premise formula
   );
 });
 
-test('tree validation stays format-specific and live saved-work transport remains guarded', () => {
+test('tree validation stays format-specific while saved-work transport admits tree drafts', () => {
   const { answer, authoritative } = fixture();
   for (const definition of [derivationDefinitionFixture(), dependencyDefinitionFixture()])
     expect(() =>
@@ -236,7 +250,7 @@ test('tree validation stays format-specific and live saved-work transport remain
   expect(() => validateDerivationAnswer(answer)).toThrow(StudentWorkError);
   expect(() => validateDependencyAnswer(answer)).toThrow(StudentWorkError);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
-    false,
+    true,
   );
   expect(
     savedStudentAnswersSchema.safeParse({
@@ -244,10 +258,10 @@ test('tree validation stays format-specific and live saved-work transport remain
       itemId: authoritative.itemId,
       answers: answer,
     }).success,
-  ).toBe(false);
+  ).toBe(true);
   expect(
     savedStudentCheckSchema.safeParse({ itemId: authoritative.itemId, answers: answer }).success,
-  ).toBe(false);
+  ).toBe(true);
 });
 
 test('authoritative public content rejects private reference data and unsupported configuration', () => {

@@ -17,6 +17,7 @@ export function TreeProofEditor({
   statement,
   proof,
   onChange,
+  purpose = 'reference',
 }: {
   statement: {
     conclusion: string;
@@ -24,8 +25,10 @@ export function TreeProofEditor({
     rules: { id: string; label: string }[];
   };
   proof: TreeProof | null;
+  purpose?: 'reference' | 'student';
   onChange: (proof: TreeProof | null) => void;
 }) {
+  const reference = purpose === 'reference';
   const [deletion, setDeletion] = useState<{ id: string } | { all: true } | null>(null);
   const [error, setError] = useState<string | null>(null);
   function change(next: TreeProof | null) {
@@ -42,8 +45,11 @@ export function TreeProofEditor({
     }
   }
   return (
-    <section className="proof-editor" aria-label="Tree reference proof editor">
-      <h3>Reference proof</h3>
+    <section
+      className="proof-editor"
+      aria-label={reference ? 'Tree reference proof editor' : 'Tree student proof editor'}
+    >
+      <h3>{reference ? 'Reference proof' : 'Your proof'}</h3>
       <p className="help">
         Build from the conclusion toward its supporting premises or assumptions. Add a separate leaf
         for every use; nodes cannot be shared. Choose ordinary supporting nodes and discharged
@@ -56,7 +62,7 @@ export function TreeProofEditor({
             statement edits do not rewrite it.
           </p>
           <button type="button" onClick={() => change(startTreeProof(statement.conclusion))}>
-            Start reference proof
+            {reference ? 'Start reference proof' : 'Start proof'}
           </button>
         </>
       ) : (
@@ -113,13 +119,15 @@ export function TreeProofEditor({
             </>
           )}
           <button type="button" className="secondary" onClick={() => setDeletion({ all: true })}>
-            Remove reference proof
+            {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
             <div role="group" aria-label="Confirm tree deletion">
               <p>
                 {'all' in deletion
-                  ? 'Remove the entire reference proof?'
+                  ? reference
+                    ? 'Remove the entire reference proof?'
+                    : 'Clear the entire proof?'
                   : 'Delete this node? Incoming references, assumption selections and the root will remain unresolved until you repair them.'}
               </p>
               <button
