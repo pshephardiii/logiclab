@@ -1,14 +1,14 @@
 import { generateTruthTable } from '@logiclab/logic-engine';
 import type {
   TruthTableAnswer,
-  GradedSubmissionResult,
-  CompletionSubmissionResult,
+  TruthTableGradedSubmissionResult,
+  TruthTableCompletionSubmissionResult,
 } from '@logiclab/contracts';
 import { indexSubmittedAnswers, buildFeedback } from '../truth-table/checking';
 import { StudentWorkError } from './errors';
 
 /** Validate references on save without returning correctness or expected values. */
-export function validateAnswers(formula: string, answers: TruthTableAnswer[]) {
+export function validateTruthTableAnswers(formula: string, answers: TruthTableAnswer[]) {
   const table = generateTruthTable(formula);
   const columns = table.columns.filter((column) => column.kind === 'answer');
   const indexed = indexSubmittedAnswers(table, columns, answers);
@@ -22,14 +22,14 @@ export function validateAnswers(formula: string, answers: TruthTableAnswer[]) {
 }
 
 /** Grade every assigned occurrence, including untouched items and blank cells. */
-export function evaluateSubmission(
+export function evaluateTruthTableSubmission(
   items: { id: string; formula: string }[],
   saved: Record<string, TruthTableAnswer[]>,
-): GradedSubmissionResult {
+): TruthTableGradedSubmissionResult {
   const summary = { correct: 0, incorrect: 0, unanswered: 0, total: 0 };
 
   const feedback = items.map((item) => {
-    const validated = validateAnswers(item.formula, saved[item.id] ?? []);
+    const validated = validateTruthTableAnswers(item.formula, saved[item.id] ?? []);
     const result = buildFeedback(validated.table, validated.columns, validated.answers);
 
     summary.correct += result.summary.correct;
@@ -43,21 +43,21 @@ export function evaluateSubmission(
 }
 
 /** Transient feedback shares submission validation but never produces a persisted result. */
-export function checkAssignedAnswers(formula: string, answers: TruthTableAnswer[]) {
-  const validated = validateAnswers(formula, answers);
+export function checkAssignedTruthTableAnswers(formula: string, answers: TruthTableAnswer[]) {
+  const validated = validateTruthTableAnswers(formula, answers);
 
   return buildFeedback(validated.table, validated.columns, validated.answers);
 }
 
 /** Count actual nonblank expected cells per occurrence; correctness never affects completion. */
-export function evaluateCompletion(
+export function evaluateTruthTableCompletion(
   items: { id: string; formula: string }[],
   saved: Record<string, TruthTableAnswer[]>,
-): CompletionSubmissionResult {
+): TruthTableCompletionSubmissionResult {
   if (!items.length) throw new StudentWorkError('incomplete_work');
 
   const completed = items.map((item) => {
-    const validated = validateAnswers(item.formula, saved[item.id] ?? []);
+    const validated = validateTruthTableAnswers(item.formula, saved[item.id] ?? []);
     const totalCells = validated.table.rows.length * validated.columns.length;
     const completedCells = [...validated.answers.values()].filter((value) => value != null).length;
 

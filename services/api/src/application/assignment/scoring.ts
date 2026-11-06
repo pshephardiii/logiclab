@@ -2,8 +2,8 @@ import { z } from 'zod';
 import {
   assignmentPointAllocationsSchema,
   assignmentScoreSchema,
-  gradedSubmissionResultSchema,
-  mixedGradedSubmissionResultSchema,
+  truthTableGradedSubmissionResultSchema,
+  objectiveGradedSubmissionResultSchema,
   type AssignmentPointAllocation,
   type AssignmentScore,
   type AssignmentItemScore,
@@ -100,7 +100,7 @@ export function summarizeAssignmentScore(items: AssignmentItemScore[]): Assignme
 /** Validate objective evidence and derive outcomes shared by objective-only and proof-mixed scoring. */
 export function objectiveScoringOutcomes(input: unknown): AssignmentScoringOutcome[] {
   const parsed = z
-    .union([gradedSubmissionResultSchema, mixedGradedSubmissionResultSchema])
+    .union([truthTableGradedSubmissionResultSchema, objectiveGradedSubmissionResultSchema])
     .safeParse(input);
 
   if (!parsed.success) throw new AssignmentScoringError();

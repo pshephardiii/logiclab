@@ -1,5 +1,5 @@
 import type { DependencyDerivationDefinition } from '@logiclab/contracts/dependency-derivation';
-import type { DerivationDefinition } from '@logiclab/contracts/derivation';
+import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
@@ -28,7 +28,7 @@ export function treeDefinitionFixture(): TreeDerivationDefinition {
   };
 }
 
-export function derivationDefinitionFixture(): DerivationDefinition {
+export function derivationDefinitionFixture(): FitchDerivationDefinition {
   return {
     type: 'derivation',
     definitionVersion: 1,

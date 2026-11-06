@@ -1,7 +1,7 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 
-export function startProof(statement: Pick<DerivationContent, 'premises'>): FitchProof {
+export function startFitchProof(statement: Pick<FitchDerivationContent, 'premises'>): FitchProof {
   return {
     proofVersion: 1,
     format: 'fitch',
@@ -16,14 +16,14 @@ export function startProof(statement: Pick<DerivationContent, 'premises'>): Fitc
   };
 }
 
-export function uniqueProofIds(proof: FitchProof): boolean {
+export function uniqueFitchProofIds(proof: FitchProof): boolean {
   const ids = [...proof.steps.map((step) => step.id), ...proof.blocks.map((block) => block.id)];
 
   return new Set(ids).size === ids.length;
 }
 
 /** Bound malformed parent walks; never recurse over a draft supplied by the server. */
-export function proofDepth(proof: FitchProof, blockId: string | null): number | null {
+export function fitchProofDepth(proof: FitchProof, blockId: string | null): number | null {
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
   const seen = new Set<string>();
 
@@ -42,13 +42,13 @@ export function proofDepth(proof: FitchProof, blockId: string | null): number | 
   return seen.size;
 }
 
-export function insertProofStep(
+export function insertFitchProofStep(
   proof: FitchProof,
   index: number,
   blockId: string | null,
   subproof = false,
 ): FitchProof {
-  if (!uniqueProofIds(proof))
+  if (!uniqueFitchProofIds(proof))
     throw new Error('Repair duplicate proof identities before inserting lines.');
 
   if (index < 0 || index > proof.steps.length || !Number.isInteger(index))
@@ -57,7 +57,7 @@ export function insertProofStep(
   if (proof.steps.length >= PROOF_LIMITS.maxSteps)
     throw new Error('The proof line limit has been reached.');
 
-  const depth = proofDepth(proof, blockId);
+  const depth = fitchProofDepth(proof, blockId);
 
   if (depth === null) throw new Error('Choose a scope with a valid parent chain.');
 
@@ -91,7 +91,7 @@ export function insertProofStep(
   };
 }
 
-export function moveProofStep(proof: FitchProof, index: number, delta: -1 | 1): FitchProof {
+export function moveFitchProofStep(proof: FitchProof, index: number, delta: -1 | 1): FitchProof {
   const next = index + delta;
 
   if (!proof.steps[index] || !proof.steps[next]) return proof;
@@ -103,14 +103,14 @@ export function moveProofStep(proof: FitchProof, index: number, delta: -1 | 1): 
 }
 
 /** Preserve incoming citations/endpoints as missing IDs; never redirect them to a neighbor. */
-export function removeProofStep(proof: FitchProof, index: number): FitchProof {
+export function removeFitchProofStep(proof: FitchProof, index: number): FitchProof {
   if (proof.steps[index]?.kind === 'assumption')
     throw new Error('Delete the assumption’s entire subproof instead.');
 
   return { ...proof, steps: proof.steps.filter((_, position) => position !== index) };
 }
 
-export function proofSubtree(proof: FitchProof, id: string): Set<string> {
+export function fitchProofSubtree(proof: FitchProof, id: string): Set<string> {
   const ids = new Set([id]);
 
   for (let pass = 0; pass < proof.blocks.length; pass++) {
@@ -125,8 +125,8 @@ export function proofSubtree(proof: FitchProof, id: string): Set<string> {
   return ids;
 }
 
-export function removeProofSubproof(proof: FitchProof, id: string): FitchProof {
-  const ids = proofSubtree(proof, id);
+export function removeFitchSubproof(proof: FitchProof, id: string): FitchProof {
+  const ids = fitchProofSubtree(proof, id);
 
   return {
     ...proof,
@@ -135,8 +135,8 @@ export function removeProofSubproof(proof: FitchProof, id: string): FitchProof {
   };
 }
 
-export function insertProofPremise(proof: FitchProof, index: number): FitchProof {
-  const next = insertProofStep(proof, index, null);
+export function insertFitchPremise(proof: FitchProof, index: number): FitchProof {
+  const next = insertFitchProofStep(proof, index, null);
   const line = next.steps[index]!;
 
   return {

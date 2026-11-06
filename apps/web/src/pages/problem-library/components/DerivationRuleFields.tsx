@@ -1,16 +1,16 @@
 import {
   DERIVATION_AUTHORING_LIMITS,
-  type DerivationDefinition,
+  type FitchDerivationDefinition,
 } from '@logiclab/contracts/derivation';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
 type Props = {
   format: 'fitch' | 'dependency' | 'tree';
-  rules: DerivationDefinition['rules'];
+  rules: FitchDerivationDefinition['rules'];
   labels: ProblemEditorFields['derivationLabels'];
   onChange: (
-    rules: DerivationDefinition['rules'],
+    rules: FitchDerivationDefinition['rules'],
     labels: ProblemEditorFields['derivationLabels'],
   ) => void;
 };

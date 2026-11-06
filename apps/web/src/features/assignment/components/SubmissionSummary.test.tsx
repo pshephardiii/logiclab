@@ -3,7 +3,7 @@ import { submitted, work } from '../../../../test/assignment-work-fixture';
 import { render, screen } from '@testing-library/react';
 import { test, expect } from 'vitest';
 import { SubmissionSummary } from './SubmissionSummary';
-import { submissionFeedback } from '../helpers/submission-feedback';
+import { truthTableSubmissionFeedback } from '../helpers/submission-feedback';
 
 test('completion summaries show completion without a correctness score or feedback', () => {
   const result = {
@@ -16,7 +16,7 @@ test('completion summaries show completion without a correctness score or feedba
     screen.getByText('Completed 4 of 4 cells. No correctness score is recorded.'),
   ).toBeTruthy();
   expect(screen.queryByText(/incorrect/)).toBeNull();
-  expect(submissionFeedback(result, 'item')).toBeNull();
+  expect(truthTableSubmissionFeedback(result, 'item')).toBeNull();
 });
 
 test('mixed completion summaries count responses without correctness feedback', () => {
@@ -32,7 +32,7 @@ test('mixed completion summaries count responses without correctness feedback', 
     screen.getByText('Completed 1 of 1 responses. No correctness score is recorded.'),
   ).toBeTruthy();
   expect(screen.queryByText(/incorrect/)).toBeNull();
-  expect(submissionFeedback(result, 'item')).toBeNull();
+  expect(truthTableSubmissionFeedback(result, 'item')).toBeNull();
 });
 
 test('mixed graded results retain table feedback while conceptual statuses stay distinct', () => {
@@ -50,8 +50,8 @@ test('mixed graded results retain table feedback while conceptual statuses stay 
   };
   render(<SubmissionSummary result={result} submittedAt="2026-10-29T12:00:00Z" />);
   expect(screen.getByText('1 correct · 0 incorrect · 1 unanswered · 2 responses')).toBeTruthy();
-  expect(submissionFeedback(result, 'table')).toEqual(tableFeedback);
-  expect(submissionFeedback(result, 'choice')).toBeNull();
+  expect(truthTableSubmissionFeedback(result, 'table')).toEqual(tableFeedback);
+  expect(truthTableSubmissionFeedback(result, 'choice')).toBeNull();
 });
 
 test('official point totals and occurrence scores remain distinct from correctness counts', () => {
@@ -114,7 +114,7 @@ test('proof completion shows independent verification flags without displaying s
     screen.getByText(/1 verified · 1 with errors found · 0 with verification unavailable/),
   ).toBeInTheDocument();
   expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
-  expect(submissionFeedback(result, result.items[0]!.itemId)).toBeNull();
+  expect(truthTableSubmissionFeedback(result, result.items[0]!.itemId)).toBeNull();
   expect(conceptualSubmissionFeedback(result, result.items[0]!.itemId)).toBeNull();
   expect(proofSubmissionFeedback(result, result.items[0]!.itemId)?.status).toBe('accepted');
   expect(proofSubmissionFeedback(null, result.items[0]!.itemId)).toBeNull();

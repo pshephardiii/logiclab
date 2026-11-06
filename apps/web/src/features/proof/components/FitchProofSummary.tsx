@@ -1,4 +1,4 @@
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 
@@ -10,7 +10,7 @@ export function FitchProofSummary({
   children,
 }: {
   proof: FitchProof | null;
-  rules: DerivationContent['rules'];
+  rules: FitchDerivationContent['rules'];
   label: string;
   children?: ReactNode;
 }) {

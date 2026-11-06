@@ -1,10 +1,10 @@
-import { PROOF_LIMITS, type ProofCheckInput } from '@logiclab/contracts';
-import { isFinishedProofAttempt, checkProof } from '../../../src/proof';
+import { PROOF_LIMITS, type FitchProofCheckInput } from '@logiclab/contracts';
+import { isFinishedFitchProofAttempt, checkFitchProof } from '../../../src/proof';
 
 let sequence = 0;
 const nextId = () => `${(++sequence).toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 
-function fixture(): ProofCheckInput {
+function fixture(): FitchProofCheckInput {
   const premiseId = nextId();
   const first = nextId();
   return {
@@ -35,19 +35,19 @@ function fixture(): ProofCheckInput {
 }
 test('finished work is independent from verification, including wrong premise text and inference patterns', () => {
   const input = fixture();
-  expect(isFinishedProofAttempt(input)).toBe(true);
-  expect(checkProof(input).status).toBe('accepted');
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
+  expect(checkFitchProof(input).status).toBe('accepted');
   input.proof.steps[0]!.formula = 'Q';
   const snapshot = structuredClone(input);
-  expect(isFinishedProofAttempt(input)).toBe(true);
-  expect(checkProof(input).status).toBe('needs_review');
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
+  expect(checkFitchProof(input).status).toBe('needs_review');
   expect(input).toEqual(snapshot);
 });
 test('filled nonfinal syntax errors remain mistakes for later diagnostics rather than pre-submission checking', () => {
   const input = fixture();
   input.proof.steps[0]!.formula = 'P &';
-  expect(isFinishedProofAttempt(input)).toBe(true);
-  expect(checkProof(input).status).toBe('needs_review');
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
+  expect(checkFitchProof(input).status).toBe('needs_review');
 });
 test('filled citations can be logically wrong, including unavailable scope and repeated/forward/self citations', () => {
   const input = fixture();
@@ -63,10 +63,10 @@ test('filled citations can be logically wrong, including unavailable scope and r
   const last = input.proof.steps.at(-1)!;
   if (last.kind !== 'inference') throw new Error('Expected inference');
   last.lineReferences = [assumption];
-  expect(isFinishedProofAttempt(input)).toBe(true);
-  expect(checkProof(input).status).toBe('needs_review');
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
+  expect(checkFitchProof(input).status).toBe('needs_review');
   last.lineReferences = [last.id];
-  expect(isFinishedProofAttempt(input)).toBe(true);
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
   const first = input.proof.steps[0]!;
   input.proof.steps[0] = {
     kind: 'inference',
@@ -77,104 +77,104 @@ test('filled citations can be logically wrong, including unavailable scope and r
     lineReferences: [last.id],
     subproofReferences: [],
   };
-  expect(isFinishedProofAttempt(input)).toBe(true);
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
   input.problem.permittedRuleIds = ['and_introduction'];
   last.ruleId = 'and_introduction';
   last.formula = 'P & P';
   last.lineReferences = [first.id, first.id];
   input.problem.conclusion = 'P & P';
   input.proof.steps[0] = first;
-  expect(isFinishedProofAttempt(input)).toBe(true);
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
 });
 test.each([
   [
     'missing steps',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.proof.steps = [];
     },
   ],
   [
     'blank formula',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.proof.steps[0]!.formula = '   ';
     },
   ],
   [
     'missing premise selection',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const first = input.proof.steps[0]!;
       if (first.kind === 'premise') first.premiseId = null;
     },
   ],
   [
     'foreign premise',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const first = input.proof.steps[0]!;
       if (first.kind === 'premise') first.premiseId = nextId();
     },
   ],
   [
     'missing rule',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const last = input.proof.steps[1]!;
       if (last.kind === 'inference') last.ruleId = null;
     },
   ],
   [
     'disabled rule',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.problem.permittedRuleIds = [];
     },
   ],
   [
     'unknown rule',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const last = input.proof.steps[1]!;
       if (last.kind === 'inference') last.ruleId = 'custom_rule';
     },
   ],
   [
     'missing citation',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const last = input.proof.steps[1]!;
       if (last.kind === 'inference') last.lineReferences = [];
     },
   ],
   [
     'extra citation',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const last = input.proof.steps[1]!;
       if (last.kind === 'inference') last.lineReferences.push(last.id);
     },
   ],
   [
     'deleted citation',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       const last = input.proof.steps[1]!;
       if (last.kind === 'inference') last.lineReferences = [nextId()];
     },
   ],
   [
     'wrong final target',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.proof.steps[1]!.formula = 'Q';
     },
   ],
   [
     'malformed final formula',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.proof.steps[1]!.formula = 'P &';
     },
   ],
   [
     'duplicate identity',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.proof.steps[1]!.id = input.proof.steps[0]!.id;
     },
   ],
   [
     'unknown configuration',
-    (input: ProofCheckInput) => {
+    (input: FitchProofCheckInput) => {
       input.problem.permittedRuleIds.push('custom_rule');
     },
   ],
@@ -182,14 +182,14 @@ test.each([
   const input = fixture();
   change(input);
   const snapshot = structuredClone(input);
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
   expect(input).toEqual(snapshot);
 });
 test('closed subproofs require explicit boundaries and filled block citations', () => {
   const a = nextId();
   const b = nextId();
   const block = nextId();
-  const input: ProofCheckInput = {
+  const input: FitchProofCheckInput = {
     problem: {
       ruleCatalogVersion: 1,
       premises: [],
@@ -214,37 +214,37 @@ test('closed subproofs require explicit boundaries and filled block citations', 
       ],
     },
   };
-  expect(isFinishedProofAttempt(input)).toBe(true);
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
   input.proof.blocks[0]!.endId = null;
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
   input.proof.blocks[0]!.endId = a;
   input.proof.blocks[0]!.parentId = block;
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
   input.proof.blocks[0]!.parentId = null;
   const last = input.proof.steps[1]!;
   if (last.kind !== 'inference') throw new Error('Expected inference');
   last.subproofReferences = [nextId()];
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
   input.proof.steps.pop();
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
 });
 test('target matching accepts notation/grouping aliases without silently applying equivalence rules', () => {
   const input = fixture();
   input.problem.conclusion = '~(P v Q)';
   input.proof.steps[1]!.formula = '¬[P ∨ Q]';
-  expect(isFinishedProofAttempt(input)).toBe(true);
+  expect(isFinishedFitchProofAttempt(input)).toBe(true);
   input.proof.steps[1]!.formula = '!P & !Q';
-  expect(isFinishedProofAttempt(input)).toBe(false);
+  expect(isFinishedFitchProofAttempt(input)).toBe(false);
 });
 test('raw shape/version/resource boundaries fail closed without invoking getters', () => {
-  expect(isFinishedProofAttempt(null)).toBe(false);
+  expect(isFinishedFitchProofAttempt(null)).toBe(false);
   const input = fixture();
-  expect(isFinishedProofAttempt({ ...input, report: {} })).toBe(false);
-  expect(isFinishedProofAttempt({ ...input, proof: { ...input.proof, proofVersion: 2 } })).toBe(
-    false,
-  );
+  expect(isFinishedFitchProofAttempt({ ...input, report: {} })).toBe(false);
   expect(
-    isFinishedProofAttempt({
+    isFinishedFitchProofAttempt({ ...input, proof: { ...input.proof, proofVersion: 2 } }),
+  ).toBe(false);
+  expect(
+    isFinishedFitchProofAttempt({
       ...input,
       proof: { ...input.proof, steps: Array(PROOF_LIMITS.maxSteps + 1).fill(input.proof.steps[0]) },
     }),
@@ -254,6 +254,6 @@ test('raw shape/version/resource boundaries fail closed without invoking getters
     enumerable: true,
     get: getter,
   });
-  expect(isFinishedProofAttempt(unsafe)).toBe(false);
+  expect(isFinishedFitchProofAttempt(unsafe)).toBe(false);
   expect(getter).not.toHaveBeenCalled();
 });

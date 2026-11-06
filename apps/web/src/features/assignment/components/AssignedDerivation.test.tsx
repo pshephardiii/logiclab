@@ -3,7 +3,10 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import type { FitchProof, ProofCheckReport } from '@logiclab/contracts';
-import { derivationAnswerSchema, type DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import {
+  fitchDerivationAnswerSchema,
+  type FitchDerivationAnswer,
+} from '@logiclab/contracts/derivation-work';
 import { derivationDefinition } from '../../../../test/derivation';
 import { AssignedDerivation } from './AssignedDerivation';
 
@@ -53,7 +56,7 @@ function accepted(proof: FitchProof): ProofCheckReport {
     })),
   };
 }
-function setup(initial?: DerivationAnswer, options: Partial<Props> = {}) {
+function setup(initial?: FitchDerivationAnswer, options: Partial<Props> = {}) {
   const onAnswer = vi.fn();
   const onCheck = vi.fn();
   let current = initial;
@@ -106,7 +109,7 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   ).toEqual(['None', 'Conditional proof']);
   await f.user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   await f.user.selectOptions(screen.getByLabelText('Line 2 subproof 1'), block);
-  expect(derivationAnswerSchema.safeParse(f.current()).success).toBe(true);
+  expect(fitchDerivationAnswerSchema.safeParse(f.current()).success).toBe(true);
   expect(f.current()!.proof.blocks[0]!.endId).toBe(f.current()!.proof.steps[0]!.id);
   expect(f.onCheck).not.toHaveBeenCalled();
   expect(screen.queryByRole('status')).not.toBeInTheDocument();

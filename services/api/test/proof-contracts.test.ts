@@ -1,10 +1,10 @@
 import {
   fitchProofSchema,
-  proofCheckInputSchema,
+  fitchProofCheckInputSchema,
   proofCheckReportSchema,
   proofDiagnosticSchema,
   PROOF_LIMITS,
-  problemDefinitionSchema,
+  objectiveProblemDefinitionSchema,
   type FitchProof,
   type ProofCheckReport,
 } from '@logiclab/contracts';
@@ -12,7 +12,7 @@ import {
   PROOF_FORMULA_LIMITS,
   checkLocalRule,
   analyzeFitchStructure,
-  checkProof,
+  checkFitchProof,
   parseProofFormula,
   type LocalRuleApplication,
 } from '@logiclab/logic-engine/proof';
@@ -55,7 +55,7 @@ const accepted: ProofCheckReport = {
 };
 
 test('proof contracts retain bounded incomplete work without validating its logic', () => {
-  expect(proofCheckInputSchema.parse(input)).toEqual(input);
+  expect(fitchProofCheckInputSchema.parse(input)).toEqual(input);
   const partial = {
     ...proof,
     steps: [
@@ -123,20 +123,22 @@ test.each([
 
 test('problem statements and catalog versions are strict without inventing permission defaults', () => {
   expect(
-    proofCheckInputSchema.safeParse({
+    fitchProofCheckInputSchema.safeParse({
       ...input,
       problem: { ...input.problem, ruleCatalogVersion: 2 },
     }).success,
   ).toBe(false);
   expect(
-    proofCheckInputSchema.safeParse({
+    fitchProofCheckInputSchema.safeParse({
       ...input,
       problem: { ...input.problem, permittedRuleIds: undefined },
     }).success,
   ).toBe(false);
   expect(
-    proofCheckInputSchema.parse({ ...input, problem: { ...input.problem, permittedRuleIds: [] } })
-      .problem.permittedRuleIds,
+    fitchProofCheckInputSchema.parse({
+      ...input,
+      problem: { ...input.problem, permittedRuleIds: [] },
+    }).problem.permittedRuleIds,
   ).toEqual([]);
   expect(PROOF_LIMITS.maxFormulaLength).toBe(PROOF_FORMULA_LIMITS.maxLength);
   expect(
@@ -204,8 +206,11 @@ test('reports preserve local validity separately from invalid upstream dependenc
 
 test('foundation contracts do not enable authored derivation definitions', () => {
   expect(
-    problemDefinitionSchema.safeParse({ type: 'derivation', definitionVersion: 1, ...input })
-      .success,
+    objectiveProblemDefinitionSchema.safeParse({
+      type: 'derivation',
+      definitionVersion: 1,
+      ...input,
+    }).success,
   ).toBe(false);
 });
 
@@ -261,13 +266,16 @@ test('whole-proof checking produces consumable reports without awarded scores or
       steps: [{ kind: 'premise', id: a, blockId: null, premiseId: b, formula: 'P' }],
     },
   };
-  const report = proofCheckReportSchema.parse(checkProof(complete));
+  const report = proofCheckReportSchema.parse(checkFitchProof(complete));
   expect(report.status).toBe('accepted');
   expect(report).not.toHaveProperty('score');
-  expect(proofCheckReportSchema.parse(checkProof(input)).status).toBe('needs_review');
-  expect(proofCheckReportSchema.parse(checkProof(null)).status).toBe('unassessable');
+  expect(proofCheckReportSchema.parse(checkFitchProof(input)).status).toBe('needs_review');
+  expect(proofCheckReportSchema.parse(checkFitchProof(null)).status).toBe('unassessable');
   expect(
-    problemDefinitionSchema.safeParse({ type: 'derivation', definitionVersion: 1, ...complete })
-      .success,
+    objectiveProblemDefinitionSchema.safeParse({
+      type: 'derivation',
+      definitionVersion: 1,
+      ...complete,
+    }).success,
   ).toBe(false);
 });

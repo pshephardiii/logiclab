@@ -1,5 +1,5 @@
 import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
-import { supportedProblemDefinition } from '../../application/problem/definition-support';
+import { validateObjectiveDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import { publicDerivationContent } from '../../application/problem/derivation/projections';
@@ -23,7 +23,7 @@ export function savedAssignmentExercises(
       const definition =
         stored.type === 'derivation'
           ? publicDerivationContent(stored)
-          : supportedProblemDefinition(stored);
+          : validateObjectiveDefinition(stored);
 
       const common = {
         id: item.id,

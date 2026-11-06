@@ -1,6 +1,6 @@
 import { DerivationPublicationError } from './derivation/errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
-import { supportedProblemDefinition } from './definition-support';
+import { validateObjectiveDefinition } from './definition-support';
 import { validateFitchDefinition, checkFitchReference } from './derivation/fitch/authoring';
 import {
   validateDependencyDefinition,
@@ -24,7 +24,7 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
       : validateFitchDefinition(value);
   }
 
-  return supportedProblemDefinition(value);
+  return validateObjectiveDefinition(value);
 }
 
 /** Check the authoritative saved definition with its own format's checker. */

@@ -12,7 +12,7 @@ export { PROOF_LIMITS } from './proof-fields';
 const scope = { id, blockId: id.nullable(), formula };
 
 /** Blank fields are retained draft work; syntax and references are checked by the engine later. */
-export const proofStepSchema = z.discriminatedUnion('kind', [
+export const fitchProofStepSchema = z.discriminatedUnion('kind', [
   z.strictObject({
     ...scope,
     kind: z.literal('premise'),
@@ -29,9 +29,9 @@ export const proofStepSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-export type ProofStep = z.infer<typeof proofStepSchema>;
+export type FitchProofStep = z.infer<typeof fitchProofStepSchema>;
 
-export const proofBlockSchema = z.strictObject({
+export const fitchProofBlockSchema = z.strictObject({
   id,
   parentId: id.nullable(),
   assumptionId: id,
@@ -42,8 +42,8 @@ export const proofBlockSchema = z.strictObject({
 export const fitchProofSchema = z.strictObject({
   proofVersion: z.literal(1),
   format: z.literal('fitch'),
-  steps: z.array(proofStepSchema).max(PROOF_LIMITS.maxSteps),
-  blocks: z.array(proofBlockSchema).max(PROOF_LIMITS.maxBlocks),
+  steps: z.array(fitchProofStepSchema).max(PROOF_LIMITS.maxSteps),
+  blocks: z.array(fitchProofBlockSchema).max(PROOF_LIMITS.maxBlocks),
 });
 
 export type FitchProof = z.infer<typeof fitchProofSchema>;
@@ -57,12 +57,12 @@ export const proofProblemSchema = z.strictObject({
 
 export type ProofProblem = z.infer<typeof proofProblemSchema>;
 
-export const proofCheckInputSchema = z.strictObject({
+export const fitchProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
   proof: fitchProofSchema,
 });
 
-export type ProofCheckInput = z.infer<typeof proofCheckInputSchema>;
+export type FitchProofCheckInput = z.infer<typeof fitchProofCheckInputSchema>;
 
 const diagnosticCode = z.enum([
   'UNSUPPORTED_VERSION',

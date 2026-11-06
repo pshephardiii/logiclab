@@ -1,18 +1,18 @@
 import type { Assignment, AssignmentItem, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
-import { assignmentResponsesSchema } from '@logiclab/contracts';
+import { objectiveAssignmentResponsesSchema } from '@logiclab/contracts';
 import { scoreObjectiveSubmission } from '../../application/assignment/scoring';
 import { scoreProofSubmission } from '../../application/assignment/proof-scoring';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import { libraryProblemDefinition } from '../../application/problem/library-definition';
-import { supportedProblemDefinition } from '../../application/problem/definition-support';
+import { validateObjectiveDefinition } from '../../application/problem/definition-support';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
 import { evaluateProofCompletion } from '../../application/student-work/proof-completion';
 import { evaluateProofSubmission } from '../../application/student-work/proof-submission';
 import {
-  evaluateAssignmentSubmission,
-  evaluateAssignmentCompletion,
+  evaluateObjectiveSubmission,
+  evaluateObjectiveCompletion,
 } from '../../application/student-work/mixed-evaluation';
 import { StudentWorkError } from '../../application/student-work/errors';
 
@@ -59,15 +59,15 @@ export function calculateSubmissionResult(
 
   const evaluate =
     assignment.assessmentMode === 'completion_only'
-      ? evaluateAssignmentCompletion
-      : evaluateAssignmentSubmission;
+      ? evaluateObjectiveCompletion
+      : evaluateObjectiveSubmission;
 
   const result = evaluate(
     assigned.map((item) => ({
       id: item.id,
-      definition: supportedProblemDefinition(item.problemVersion.definition),
+      definition: validateObjectiveDefinition(item.problemVersion.definition),
     })),
-    assignmentResponsesSchema.parse(answers),
+    objectiveAssignmentResponsesSchema.parse(answers),
   );
 
   return {

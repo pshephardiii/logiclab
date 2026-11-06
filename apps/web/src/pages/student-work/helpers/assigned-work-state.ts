@@ -5,7 +5,7 @@ import type {
   SavedStudentAttempt as StudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
 import {
-  isFinishedProofAttempt,
+  isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
   isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
@@ -68,7 +68,7 @@ export function assignmentCompletionReady(
                 ? isFinishedTreeProofAttempt
                 : item.content.format === 'dependency'
                   ? isFinishedDependencyProofAttempt
-                  : isFinishedProofAttempt)({
+                  : isFinishedFitchProofAttempt)({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

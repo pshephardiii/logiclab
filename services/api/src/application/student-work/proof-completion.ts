@@ -1,5 +1,5 @@
 import {
-  isFinishedProofAttempt,
+  isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
   isFinishedTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
@@ -10,7 +10,7 @@ import {
 } from '@logiclab/contracts/proof-submission';
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer, validateProofAnswer } from './proof-response';
-import { evaluateAssignmentCompletion } from './mixed-evaluation';
+import { evaluateObjectiveCompletion } from './mixed-evaluation';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 import { StudentWorkError } from './errors';
 
@@ -37,7 +37,7 @@ export function evaluateProofCompletion(
           ? isFinishedTreeProofAttempt
           : content.format === 'dependency'
             ? isFinishedDependencyProofAttempt
-            : isFinishedProofAttempt
+            : isFinishedFitchProofAttempt
       )({
         problem: {
           ruleCatalogVersion: content.ruleCatalogVersion,
@@ -58,7 +58,7 @@ export function evaluateProofCompletion(
   );
 
   const objective = objectiveItems.length
-    ? evaluateAssignmentCompletion(
+    ? evaluateObjectiveCompletion(
         objectiveItems,
         Object.fromEntries(
           objectiveItems

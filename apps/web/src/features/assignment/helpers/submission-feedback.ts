@@ -7,7 +7,10 @@ import type {
 type SubmissionResult = ObjectiveResult | ProofSubmissionResult | ProofCompletionSubmissionResult;
 
 /** Completion records intentionally contain no correctness feedback. */
-export function submissionFeedback(result: SubmissionResult | null | undefined, itemId: string) {
+export function truthTableSubmissionFeedback(
+  result: SubmissionResult | null | undefined,
+  itemId: string,
+) {
   if (result?.gradingVersion === 'mixed_v1' || result?.gradingVersion === 'proof_mixed_v1') {
     const item = result.items.find((item) => item.itemId === itemId);
 

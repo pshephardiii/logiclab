@@ -1,15 +1,15 @@
-import type { ProofStep } from '@logiclab/contracts';
-import type { DerivationContent } from '@logiclab/contracts/derivation';
+import type { FitchProofStep } from '@logiclab/contracts';
+import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from './ProofChoice';
 
-type InferenceStep = Extract<ProofStep, { kind: 'inference' }>;
+type InferenceStep = Extract<FitchProofStep, { kind: 'inference' }>;
 
 type Props = {
   step: InferenceStep;
   index: number;
-  steps: ProofStep[];
-  rules: DerivationContent['rules'];
+  steps: FitchProofStep[];
+  rules: FitchDerivationContent['rules'];
   blocks: { id: string; label: string }[];
   onChange: (step: InferenceStep) => void;
 };

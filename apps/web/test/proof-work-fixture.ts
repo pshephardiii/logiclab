@@ -2,8 +2,8 @@ import type {
   SavedStudentAssignment,
   SavedStudentAttempt,
 } from '@logiclab/contracts/saved-student-work';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
-import type { DerivationSolution } from '@logiclab/contracts/derivation';
+import type { FitchDerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { FitchDerivationSolution } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import type { TreeDerivationAnswer } from '@logiclab/contracts/tree-derivation-work';
 import { work, itemA, itemB, saved } from './assignment-work-fixture';
@@ -20,7 +20,7 @@ export const treeAnswer: TreeDerivationAnswer = {
     nodes: [{ kind: 'premise', id: stepId, premiseId, formula: 'P' }],
   },
 };
-export const proofAnswer: DerivationAnswer = {
+export const proofAnswer: FitchDerivationAnswer = {
   type: 'derivation',
   proof: {
     proofVersion: 1,
@@ -29,7 +29,7 @@ export const proofAnswer: DerivationAnswer = {
     steps: [{ kind: 'premise', id: stepId, blockId: null, formula: 'P', premiseId }],
   },
 };
-export function editedProof(formula = 'Q'): DerivationAnswer {
+export function editedProof(formula = 'Q'): FitchDerivationAnswer {
   const answer = structuredClone(proofAnswer);
   answer.proof.steps[0]!.formula = formula;
   return answer;
@@ -68,7 +68,7 @@ export const checkedProof = {
   itemId: itemA,
   feedback: { type: 'derivation' as const, report: proofReport },
 };
-export const proofSolution: DerivationSolution = {
+export const proofSolution: FitchDerivationSolution = {
   type: 'derivation',
   definitionVersion: 1,
   format: 'fitch',

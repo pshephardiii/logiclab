@@ -8,19 +8,19 @@ export const truthTableDefinitionSchema = z.strictObject({
   formula: z.string().min(1).max(256),
 });
 
-export const problemDefinitionSchema = z.discriminatedUnion('type', [
+export const objectiveProblemDefinitionSchema = z.discriminatedUnion('type', [
   truthTableDefinitionSchema,
   trueFalseDefinitionSchema,
   multipleChoiceDefinitionSchema,
 ]);
 
-export type ProblemDefinition = z.infer<typeof problemDefinitionSchema>;
+export type ObjectiveProblemDefinition = z.infer<typeof objectiveProblemDefinitionSchema>;
 
 export const problemDraftSchema = z.strictObject({
   id: z.uuid(),
   title: z.string().min(1).max(120),
   instructions: z.string().max(5000).nullable(),
-  definition: problemDefinitionSchema,
+  definition: objectiveProblemDefinitionSchema,
   archivedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -34,7 +34,7 @@ export const problemVersionSchema = z.strictObject({
   version: z.number().int().positive().max(2147483647),
   title: z.string().min(1).max(120),
   instructions: z.string().max(5000).nullable(),
-  definition: problemDefinitionSchema,
+  definition: objectiveProblemDefinitionSchema,
   publishedAt: z.iso.datetime(),
 });
 
@@ -43,7 +43,7 @@ export type PublishedProblemVersion = z.infer<typeof problemVersionSchema>;
 export const createProblemRequestSchema = z.strictObject({
   title: z.string().trim().min(1).max(120),
   instructions: z.string().trim().max(5000).nullable().optional(),
-  definition: problemDefinitionSchema,
+  definition: objectiveProblemDefinitionSchema,
 });
 
 export type CreateProblemRequest = z.infer<typeof createProblemRequestSchema>;

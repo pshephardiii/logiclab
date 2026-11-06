@@ -22,7 +22,7 @@ import {
 } from '../../../test/derivation-fixture';
 import { treeContent } from '../problem/derivation/tree/authoring';
 import { evaluateTreeAnswer, validateTreeAnswer } from './tree-response';
-import { validateDerivationAnswer } from './derivation-response';
+import { validateFitchAnswer } from './derivation-response';
 import { validateDependencyAnswer } from './dependency-response';
 import { StudentWorkError } from './errors';
 import { evaluateProofSubmission } from './proof-submission';
@@ -250,7 +250,7 @@ test('tree validation stays format-specific while saved-work transport admits tr
     expect(() =>
       validateTreeAnswer({ type: 'derivation', proof: definition.referenceProof }),
     ).toThrow(StudentWorkError);
-  expect(() => validateDerivationAnswer(answer)).toThrow(StudentWorkError);
+  expect(() => validateFitchAnswer(answer)).toThrow(StudentWorkError);
   expect(() => validateDependencyAnswer(answer)).toThrow(StudentWorkError);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
     true,

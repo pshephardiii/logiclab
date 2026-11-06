@@ -8,7 +8,7 @@ import {
 } from '@logiclab/contracts/proof-submission';
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
-import { evaluateAssignmentSubmission } from './mixed-evaluation';
+import { evaluateObjectiveSubmission } from './mixed-evaluation';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
 export function evaluateProofSubmission(
@@ -28,7 +28,7 @@ export function evaluateProofSubmission(
   );
 
   const objective = objectiveItems.length
-    ? evaluateAssignmentSubmission(objectiveItems, objectiveResponses)
+    ? evaluateObjectiveSubmission(objectiveItems, objectiveResponses)
     : null;
 
   const objectiveResults: ProofSubmissionItem[] =

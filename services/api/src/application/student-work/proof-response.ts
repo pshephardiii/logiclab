@@ -1,5 +1,5 @@
 import type { SavedDerivationContent } from '@logiclab/contracts/saved-student-work';
-import { validateDerivationAnswer, evaluateDerivationAnswer } from './derivation-response';
+import { validateFitchAnswer, evaluateFitchAnswer } from './derivation-response';
 import { validateDependencyAnswer, evaluateDependencyAnswer } from './dependency-response';
 import { validateTreeAnswer, evaluateTreeAnswer } from './tree-response';
 
@@ -12,7 +12,7 @@ export function validateProofAnswer(
 
   return content.format === 'dependency'
     ? validateDependencyAnswer(value)
-    : validateDerivationAnswer(value);
+    : validateFitchAnswer(value);
 }
 
 export function evaluateProofAnswer(
@@ -29,5 +29,5 @@ export function evaluateProofAnswer(
 
   return content.format === 'dependency'
     ? evaluateDependencyAnswer({ ...authoritative, content }, value)
-    : evaluateDerivationAnswer({ ...authoritative, content }, value);
+    : evaluateFitchAnswer({ ...authoritative, content }, value);
 }

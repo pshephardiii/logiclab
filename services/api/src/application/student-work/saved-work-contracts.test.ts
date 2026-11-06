@@ -1,7 +1,7 @@
-import { evaluateDerivationAnswer } from './derivation-response';
+import { evaluateFitchAnswer } from './derivation-response';
 import type {
   AttemptAnswers,
-  DerivationAnswer as StoredProof,
+  FitchDerivationAnswer as StoredProof,
   FitchProof as StoredFitch,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { FitchProof } from '@logiclab/contracts';
@@ -13,7 +13,7 @@ import {
   studentCheckResponseSchema,
   studentSolutionResponseSchema,
 } from '@logiclab/contracts';
-import type { DerivationAnswer } from '@logiclab/contracts/derivation-work';
+import type { FitchDerivationAnswer } from '@logiclab/contracts/derivation-work';
 import {
   savedStudentAttemptSchema,
   savedStudentAssignmentResponseSchema,
@@ -29,8 +29,8 @@ import { detail, attempt } from '../../../test/student-work-fixture';
 
 type Assert<T extends true> = T;
 type ProofTransportMatches = Assert<
-  StoredProof extends DerivationAnswer
-    ? DerivationAnswer extends StoredProof
+  StoredProof extends FitchDerivationAnswer
+    ? FitchDerivationAnswer extends StoredProof
       ? true
       : false
     : false
@@ -46,7 +46,7 @@ type SavedWorkMatches = Assert<
     : false
 >;
 const id = 'a1111111-1111-4111-8111-111111111111';
-const response: DerivationAnswer = {
+const response: FitchDerivationAnswer = {
   type: 'derivation',
   proof: derivationDefinitionFixture().referenceProof!,
 };
@@ -99,7 +99,7 @@ test('staged proof checks and solutions remain distinct, strict and excluded fro
   expect(savedStudentCheckSchema.safeParse(input).success).toBe(true);
   expect(savedStudentAnswersSchema.safeParse(input).success).toBe(false);
   expect(checkStudentAnswersSchema.safeParse(input).success).toBe(false);
-  const evidence = evaluateDerivationAnswer(
+  const evidence = evaluateFitchAnswer(
     { itemId: id, problemVersionId: id, content: fitchContent(definition) },
     response,
   );

@@ -1,5 +1,5 @@
 import { proofCheckReportSchema, PROOF_LIMITS, type TreeProofNode } from '@logiclab/contracts';
-import { checkTreeProof, checkProof, checkDependencyProof } from '../../../src/proof';
+import { checkTreeProof, checkFitchProof, checkDependencyProof } from '../../../src/proof';
 import { id, given, assume, branch, infer, input, direct, identity } from './fixtures';
 
 function run(value: unknown) {
@@ -36,7 +36,7 @@ test.each(directCases)(
       return { ...fields, blockId: null, subproofReferences: [] };
     });
     expect(
-      checkProof({
+      checkFitchProof({
         problem: value.problem,
         proof: { proofVersion: 1, format: 'fitch', steps: fitchSteps, blocks: [] },
       }).status,
@@ -375,7 +375,7 @@ test('unsupported configuration is unassessable, never a zero grade or partial a
     },
   ])
     expect(run(malformed).status).toBe('unassessable');
-  expect(checkProof(value).status).toBe('unassessable');
+  expect(checkFitchProof(value).status).toBe('unassessable');
   expect(checkDependencyProof(value).status).toBe('unassessable');
 });
 

@@ -1,6 +1,6 @@
 export { sameFormula } from './formula-equality';
 
-export { checkProof } from './fitch/check-proof';
+export { checkFitchProof } from './fitch/check-proof';
 
 export { PROOF_CHECKER_VERSION } from './report';
 
@@ -31,7 +31,7 @@ export {
 
 export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
 
-export { isFinishedProofAttempt, isFinishedDependencyProofAttempt } from './completion';
+export { isFinishedFitchProofAttempt, isFinishedDependencyProofAttempt } from './completion';
 
 export { inferenceDependencyIds, dependencySetsMatch } from './dependency/sets';
 

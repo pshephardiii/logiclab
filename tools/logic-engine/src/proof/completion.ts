@@ -1,4 +1,4 @@
-export { isFinishedProofAttempt } from './fitch/completeness';
+export { isFinishedFitchProofAttempt } from './fitch/completeness';
 
 export { isFinishedDependencyProofAttempt } from './dependency/completeness';
 

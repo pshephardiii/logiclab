@@ -8,7 +8,7 @@ import { enrolled, accessible, submittableAssignment, items, lockedAttempt } fro
 import { policyFor, checkRevision } from './validation';
 import { calculateSubmissionResult } from './submission-result';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
-import { supportedProblemDefinition } from '../../application/problem/definition-support';
+import { validateObjectiveDefinition } from '../../application/problem/definition-support';
 import {
   assignmentLearningCapabilities,
   canViewAssignedSolution,
@@ -29,9 +29,9 @@ import type { createDatabase } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import {
-  validateItemResponse,
-  checkItemResponse,
-  itemSolution,
+  validateObjectiveResponse,
+  checkObjectiveResponse,
+  objectiveSolution,
 } from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { assignmentSummary } from '../assignment/summary';
@@ -118,7 +118,7 @@ export async function createStudentWorkStore(
         const answers =
           definition.type === 'derivation'
             ? validateProofAnswer(definition, input.answers)
-            : validateItemResponse(supportedProblemDefinition(definition), input.answers);
+            : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
 
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
@@ -182,8 +182,8 @@ export async function createStudentWorkStore(
 
         return {
           itemId: item.id,
-          feedback: checkItemResponse(
-            supportedProblemDefinition(item.problemVersion.definition),
+          feedback: checkObjectiveResponse(
+            validateObjectiveDefinition(item.problemVersion.definition),
             input.answers,
           ),
         };
@@ -249,7 +249,7 @@ export async function createStudentWorkStore(
 
         return {
           itemId,
-          solution: itemSolution(supportedProblemDefinition(definition)),
+          solution: objectiveSolution(validateObjectiveDefinition(definition)),
         };
       });
     },

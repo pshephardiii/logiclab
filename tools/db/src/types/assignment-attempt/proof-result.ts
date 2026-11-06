@@ -1,5 +1,5 @@
 import type { ProofCheckReport } from '../proof/report.ts';
-import type { MixedGradedItem } from './mixed-work.ts';
+import type { ObjectiveGradedItem } from './mixed-work.ts';
 import type { SubmissionCounts } from './work.ts';
 
 export interface DerivationEvaluationEvidence {
@@ -11,7 +11,7 @@ export interface DerivationEvaluationEvidence {
 }
 export interface ProofSubmissionResult {
   gradingVersion: 'proof_mixed_v1';
-  items: (MixedGradedItem | DerivationEvaluationEvidence)[];
+  items: (ObjectiveGradedItem | DerivationEvaluationEvidence)[];
   summary: {
     objective: SubmissionCounts;
     proofs: { accepted: number; needsReview: number; unassessable: number; total: number };

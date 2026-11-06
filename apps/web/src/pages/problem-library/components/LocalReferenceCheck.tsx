@@ -1,7 +1,11 @@
 import { useState } from 'react';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
-import { checkProof, checkDependencyProof, checkTreeProof } from '@logiclab/logic-engine/proof';
+import {
+  checkFitchProof,
+  checkDependencyProof,
+  checkTreeProof,
+} from '@logiclab/logic-engine/proof';
 import { treeDerivationDefinitionSchema } from '@logiclab/contracts/tree-derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
@@ -24,7 +28,7 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
         ? treeDerivationDefinitionSchema
         : definition.format === 'dependency'
           ? dependencyDerivationDefinitionSchema
-          : derivationDefinitionSchema
+          : fitchDerivationDefinitionSchema
     ).safeParse(definition);
 
     if (!parsed.success) {
@@ -51,7 +55,7 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
         ? checkTreeProof
         : value.format === 'dependency'
           ? checkDependencyProof
-          : checkProof)({
+          : checkFitchProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
           premises: value.premises,

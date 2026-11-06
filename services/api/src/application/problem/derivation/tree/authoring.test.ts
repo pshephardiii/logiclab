@@ -15,7 +15,7 @@ import {
   treeDerivationSolutionSchema,
   type TreeDerivationDefinition,
 } from '@logiclab/contracts/tree-derivation';
-import { derivationDefinitionSchema } from '@logiclab/contracts/derivation';
+import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import {
   libraryProblemDefinitionSchema,
@@ -242,7 +242,7 @@ test('format-specific certification cannot reuse an accepted Fitch or dependency
       DerivationAuthoringError,
     );
   }
-  expect(derivationDefinitionSchema.safeParse(treeDefinitionFixture()).success).toBe(false);
+  expect(fitchDerivationDefinitionSchema.safeParse(treeDefinitionFixture()).success).toBe(false);
   expect(dependencyDerivationDefinitionSchema.safeParse(treeDefinitionFixture()).success).toBe(
     false,
   );

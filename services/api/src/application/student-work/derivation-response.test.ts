@@ -1,21 +1,21 @@
 import { DerivationAuthoringError } from '../problem/derivation/errors';
 import { randomUUID } from 'node:crypto';
 import {
-  saveDerivationAnswersSchema,
-  checkDerivationAnswersSchema,
-  derivationAnswerSchema,
+  saveFitchAnswersSchema,
+  checkFitchAnswersSchema,
+  fitchDerivationAnswerSchema,
   derivationEvaluationEvidenceSchema,
 } from '@logiclab/contracts/derivation-work';
 import {
-  assignmentResponseValueSchema,
+  objectiveAssignmentResponseValueSchema,
   saveStudentAnswersSchema,
   submissionResultSchema,
   PROOF_LIMITS,
 } from '@logiclab/contracts';
 import { derivationDefinitionFixture } from '../../../test/derivation-fixture';
 import { fitchContent } from '../problem/derivation/fitch/authoring';
-import { supportedProblemDefinition } from '../problem/definition-support';
-import { evaluateDerivationAnswer, validateDerivationAnswer } from './derivation-response';
+import { validateObjectiveDefinition } from '../problem/definition-support';
+import { evaluateFitchAnswer, validateFitchAnswer } from './derivation-response';
 import { StudentWorkError } from './errors';
 
 function fixture() {
@@ -34,13 +34,13 @@ test('saved-proof validation retains incomplete/invalid work without checking or
   answer.proof.steps[0]!.formula = 'P &';
   answer.proof.blocks[0]!.endId = null;
   const original = structuredClone(answer);
-  const parsed = validateDerivationAnswer(answer);
+  const parsed = validateFitchAnswer(answer);
   expect(parsed).toEqual(original);
   expect(parsed).not.toBe(answer);
   parsed.proof.steps[0]!.formula = '';
   expect(answer).toEqual(original);
   expect(
-    validateDerivationAnswer({
+    validateFitchAnswer({
       type: 'derivation',
       proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
     }).proof.steps,
@@ -57,7 +57,7 @@ test.each([
   'explanation',
 ])('rejects injected student-owned %s fields', (field) => {
   const { answer, authoritative } = fixture();
-  expect(() => validateDerivationAnswer({ ...answer, [field]: authoritative.content })).toThrow(
+  expect(() => validateFitchAnswer({ ...answer, [field]: authoritative.content })).toThrow(
     StudentWorkError,
   );
 });
@@ -72,7 +72,7 @@ test.each([
 ])('strict save envelopes reject invalid/spoofed metadata: %#', (patch) => {
   const { answer, authoritative } = fixture();
   expect(
-    saveDerivationAnswersSchema.safeParse({
+    saveFitchAnswersSchema.safeParse({
       revision: 0,
       itemId: authoritative.itemId,
       answers: answer,
@@ -83,18 +83,19 @@ test.each([
 
 test('check envelopes accept only a target occurrence and student work', () => {
   const { answer, authoritative } = fixture();
+  expect(checkFitchAnswersSchema.parse({ itemId: authoritative.itemId, answers: answer })).toEqual({
+    itemId: authoritative.itemId,
+    answers: answer,
+  });
   expect(
-    checkDerivationAnswersSchema.parse({ itemId: authoritative.itemId, answers: answer }),
-  ).toEqual({ itemId: authoritative.itemId, answers: answer });
-  expect(
-    checkDerivationAnswersSchema.safeParse({
+    checkFitchAnswersSchema.safeParse({
       itemId: authoritative.itemId,
       answers: answer,
       problem: authoritative.content,
     }).success,
   ).toBe(false);
   expect(
-    saveDerivationAnswersSchema.parse({
+    saveFitchAnswersSchema.parse({
       revision: 2,
       itemId: authoritative.itemId,
       answers: answer,
@@ -123,14 +124,14 @@ test.each(['steps', 'blocks', 'formula', 'references', 'version'] as const)(
         { ...answer.proof.steps[1], lineReferences: [randomUUID(), randomUUID(), randomUUID()] },
       ];
     if (kind === 'version') proof.proofVersion = 2;
-    expect(() => validateDerivationAnswer({ type: 'derivation', proof })).toThrow(StudentWorkError);
+    expect(() => validateFitchAnswer({ type: 'derivation', proof })).toThrow(StudentWorkError);
   },
 );
 
 test('evaluation binds freshly checked evidence to the supplied occurrence/version without reference leakage', () => {
   const { authoritative, answer, definition } = fixture();
   const snapshot = structuredClone({ authoritative, answer });
-  const evidence = evaluateDerivationAnswer(authoritative, answer);
+  const evidence = evaluateFitchAnswer(authoritative, answer);
   expect(evidence).toMatchObject({
     evaluationVersion: 'derivation_v1',
     itemId: authoritative.itemId,
@@ -144,7 +145,7 @@ test('evaluation binds freshly checked evidence to the supplied occurrence/versi
   expect(evidence).not.toHaveProperty('earnedPoints');
   expect(evidence).not.toHaveProperty('proof');
   expect(JSON.stringify(evidence)).not.toContain(definition.explanation);
-  const repeated = evaluateDerivationAnswer({ ...authoritative, itemId: randomUUID() }, answer);
+  const repeated = evaluateFitchAnswer({ ...authoritative, itemId: randomUUID() }, answer);
   expect(repeated.itemId).not.toBe(evidence.itemId);
   expect(repeated.report).toEqual(evidence.report);
 });
@@ -152,12 +153,12 @@ test('evaluation binds freshly checked evidence to the supplied occurrence/versi
 test('target and rule permissions come from authoritative content, not the submitted proof or reference', () => {
   const { authoritative, answer, definition } = fixture();
   expect(
-    evaluateDerivationAnswer(
+    evaluateFitchAnswer(
       { ...authoritative, content: { ...authoritative.content, conclusion: 'Q' } },
       answer,
     ).report.status,
   ).toBe('needs_review');
-  const disabled = evaluateDerivationAnswer(
+  const disabled = evaluateFitchAnswer(
     { ...authoritative, content: { ...authoritative.content, rules: [] } },
     answer,
   );
@@ -165,11 +166,11 @@ test('target and rule permissions come from authoritative content, not the submi
   expect(
     disabled.report.diagnostics.some((diagnostic) => diagnostic.code === 'RULE_DISABLED'),
   ).toBe(true);
-  expect(() => evaluateDerivationAnswer({ ...authoritative, content: definition }, answer)).toThrow(
+  expect(() => evaluateFitchAnswer({ ...authoritative, content: definition }, answer)).toThrow(
     DerivationAuthoringError,
   );
   expect(() =>
-    evaluateDerivationAnswer(
+    evaluateFitchAnswer(
       {
         ...authoritative,
         content: { ...authoritative.content, rules: [{ id: 'custom_rule', label: 'Custom' }] },
@@ -191,7 +192,7 @@ test('unused erroneous work requires review even when the final target is indepe
     subproofReferences: [],
   };
   answer.proof.steps.splice(1, 0, extra);
-  const evidence = evaluateDerivationAnswer(authoritative, answer);
+  const evidence = evaluateFitchAnswer(authoritative, answer);
   expect(evidence.report.status).toBe('needs_review');
   expect(evidence.report.target).toBe('established');
 });
@@ -246,14 +247,14 @@ test('locally valid downstream work keeps invalid upstream support distinct', ()
       ],
     },
   };
-  const report = evaluateDerivationAnswer({ ...authoritative, content }, answer).report;
+  const report = evaluateFitchAnswer({ ...authoritative, content }, answer).report;
   expect(report.status).toBe('needs_review');
   expect(report.steps[3]).toMatchObject({ localStatus: 'valid', dependencyStatus: 'invalid' });
 });
 
 test('unassessable evidence is explicit and cannot become a guessed numeric result', () => {
   const { authoritative, answer } = fixture();
-  const evidence = evaluateDerivationAnswer(
+  const evidence = evaluateFitchAnswer(
     { ...authoritative, content: { ...authoritative.content, conclusion: '' } },
     answer,
   );
@@ -267,8 +268,8 @@ test('unassessable evidence is explicit and cannot become a guessed numeric resu
 
 test('staged proof work/evidence does not broaden live assignment, save or result admission', () => {
   const { authoritative, answer, definition } = fixture();
-  expect(derivationAnswerSchema.safeParse(answer).success).toBe(true);
-  expect(assignmentResponseValueSchema.safeParse(answer).success).toBe(false);
+  expect(fitchDerivationAnswerSchema.safeParse(answer).success).toBe(true);
+  expect(objectiveAssignmentResponseValueSchema.safeParse(answer).success).toBe(false);
   expect(
     saveStudentAnswersSchema.safeParse({
       revision: 0,
@@ -276,8 +277,8 @@ test('staged proof work/evidence does not broaden live assignment, save or resul
       answers: answer,
     }).success,
   ).toBe(false);
-  expect(
-    submissionResultSchema.safeParse(evaluateDerivationAnswer(authoritative, answer)).success,
-  ).toBe(false);
-  expect(() => supportedProblemDefinition(definition)).toThrow();
+  expect(submissionResultSchema.safeParse(evaluateFitchAnswer(authoritative, answer)).success).toBe(
+    false,
+  );
+  expect(() => validateObjectiveDefinition(definition)).toThrow();
 });

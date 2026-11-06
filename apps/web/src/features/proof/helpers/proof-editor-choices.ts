@@ -1,7 +1,7 @@
 import type { FitchProof } from '@logiclab/contracts';
 
 /** Display positions remain separate from stable line/block identities. */
-export function proofEditorChoices(proof: FitchProof) {
+export function fitchEditorChoices(proof: FitchProof) {
   const lines = proof.steps.map((line, index) => ({
     id: line.id,
     label: `${index + 1}. ${line.formula || '(blank)'}`,

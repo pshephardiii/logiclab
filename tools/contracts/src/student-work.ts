@@ -2,11 +2,11 @@ import { assignmentScoreSchema, assignmentItemPointsSchema } from './assignment-
 import { releasedInstructorGradingSchema } from './assignment-grading';
 import { z } from 'zod';
 import {
-  assignmentResponsesSchema,
-  assignmentResponseValueSchema,
+  objectiveAssignmentResponsesSchema,
+  objectiveAssignmentResponseValueSchema,
   conceptualFeedbackSchema,
-  mixedGradedSubmissionResultSchema,
-  mixedCompletionSubmissionResultSchema,
+  objectiveGradedSubmissionResultSchema,
+  objectiveCompletionSubmissionResultSchema,
 } from './assignment-responses';
 import { conceptualQuestionContentSchema, conceptualSolutionSchema } from './conceptual-question';
 import { assignmentSummarySchema } from './assignment';
@@ -16,7 +16,7 @@ import {
   truthTableSolutionResponseSchema,
 } from './truth-table';
 
-export const gradedSubmissionResultSchema = z.strictObject({
+export const truthTableGradedSubmissionResultSchema = z.strictObject({
   gradingVersion: z.literal('truth_table_v1'),
   items: z
     .array(z.strictObject({ itemId: z.uuid(), feedback: truthTableCheckResponseSchema }))
@@ -24,26 +24,30 @@ export const gradedSubmissionResultSchema = z.strictObject({
   summary: truthTableCheckResponseSchema.shape.summary,
 });
 
-export type GradedSubmissionResult = z.infer<typeof gradedSubmissionResultSchema>;
+export type TruthTableGradedSubmissionResult = z.infer<
+  typeof truthTableGradedSubmissionResultSchema
+>;
 
-export const completionCountsSchema = z.strictObject({
+export const truthTableCompletionCountsSchema = z.strictObject({
   completedCells: z.number().int().nonnegative(),
   totalCells: z.number().int().nonnegative(),
 });
 
-export const completionSubmissionResultSchema = z.strictObject({
+export const truthTableCompletionSubmissionResultSchema = z.strictObject({
   gradingVersion: z.literal('completion_v1'),
-  items: z.array(completionCountsSchema.extend({ itemId: z.uuid() })).max(50),
-  summary: completionCountsSchema,
+  items: z.array(truthTableCompletionCountsSchema.extend({ itemId: z.uuid() })).max(50),
+  summary: truthTableCompletionCountsSchema,
 });
 
-export type CompletionSubmissionResult = z.infer<typeof completionSubmissionResultSchema>;
+export type TruthTableCompletionSubmissionResult = z.infer<
+  typeof truthTableCompletionSubmissionResultSchema
+>;
 
 export const submissionResultSchema = z.discriminatedUnion('gradingVersion', [
-  gradedSubmissionResultSchema,
-  completionSubmissionResultSchema,
-  mixedGradedSubmissionResultSchema,
-  mixedCompletionSubmissionResultSchema,
+  truthTableGradedSubmissionResultSchema,
+  truthTableCompletionSubmissionResultSchema,
+  objectiveGradedSubmissionResultSchema,
+  objectiveCompletionSubmissionResultSchema,
 ]);
 
 export type SubmissionResult = z.infer<typeof submissionResultSchema>;
@@ -51,7 +55,7 @@ export type SubmissionResult = z.infer<typeof submissionResultSchema>;
 export const studentAttemptSchema = z.strictObject({
   id: z.uuid(),
   revision: z.number().int().nonnegative(),
-  answers: assignmentResponsesSchema,
+  answers: objectiveAssignmentResponsesSchema,
   submittedAt: z.iso.datetime().nullable(),
   result: submissionResultSchema.nullable(),
   score: assignmentScoreSchema.nullable().optional(),
@@ -108,7 +112,7 @@ export type StudentAssignmentListQuery = z.infer<typeof studentAssignmentListQue
 export const saveStudentAnswersSchema = z.strictObject({
   revision: z.number().int().nonnegative().max(2147483646),
   itemId: z.uuid(),
-  answers: assignmentResponseValueSchema,
+  answers: objectiveAssignmentResponseValueSchema,
 });
 
 export type SaveStudentAnswers = z.infer<typeof saveStudentAnswersSchema>;
@@ -153,7 +157,7 @@ export type StudentWorkErrorResponse = z.infer<typeof studentWorkErrorResponseSc
 /** Explicit checking evaluates these transient answers; it does not save or submit them. */
 export const checkStudentAnswersSchema = z.strictObject({
   itemId: z.uuid(),
-  answers: assignmentResponseValueSchema,
+  answers: objectiveAssignmentResponseValueSchema,
 });
 
 export type CheckStudentAnswers = z.infer<typeof checkStudentAnswersSchema>;

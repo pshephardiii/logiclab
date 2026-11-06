@@ -1,6 +1,6 @@
 import {
-  problemDefinitionSchema,
-  type ProblemDefinition as AuthoredProblemDefinition,
+  objectiveProblemDefinitionSchema,
+  type ObjectiveProblemDefinition as AuthoredProblemDefinition,
 } from '@logiclab/contracts';
 import { parseFormula } from '@logiclab/logic-engine';
 import type { ProblemDefinition, TruthTableDefinition } from '@logiclab/db' with {
@@ -23,8 +23,8 @@ export function requireTruthTableDefinition(definition: ProblemDefinition): Trut
 }
 
 /** Validate stored/authoring content before publication or owner-facing serialization. */
-export function supportedProblemDefinition(input: unknown): AuthoredProblemDefinition {
-  const result = problemDefinitionSchema.safeParse(input);
+export function validateObjectiveDefinition(input: unknown): AuthoredProblemDefinition {
+  const result = objectiveProblemDefinitionSchema.safeParse(input);
 
   if (!result.success) throw new UnsupportedProblemDefinitionError();
 

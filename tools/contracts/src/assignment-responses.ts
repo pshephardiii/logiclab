@@ -3,18 +3,20 @@ import { conceptualAnswerSchema } from './conceptual-question';
 import { truthTableAnswerSchema, truthTableCheckResponseSchema } from './truth-table';
 
 /** Stored per occurrence: preserve legacy table arrays and use tagged conceptual responses. */
-export const assignmentResponseValueSchema = z.union([
+export const objectiveAssignmentResponseValueSchema = z.union([
   z.array(truthTableAnswerSchema).max(4096),
   conceptualAnswerSchema,
 ]);
 
-export const assignmentResponsesSchema = z
-  .record(z.uuid(), assignmentResponseValueSchema)
+export const objectiveAssignmentResponsesSchema = z
+  .record(z.uuid(), objectiveAssignmentResponseValueSchema)
   .refine((responses) => Object.keys(responses).length <= 50, 'At most 50 assigned occurrences.');
 
-export type AssignmentResponseValue = z.infer<typeof assignmentResponseValueSchema>;
+export type ObjectiveAssignmentResponseValue = z.infer<
+  typeof objectiveAssignmentResponseValueSchema
+>;
 
-export type AssignmentResponses = z.infer<typeof assignmentResponsesSchema>;
+export type ObjectiveAssignmentResponses = z.infer<typeof objectiveAssignmentResponsesSchema>;
 
 /** Correctness only. Keys and explanations belong exclusively to authorized answer reveal. */
 export const conceptualFeedbackSchema = z.strictObject({
@@ -23,7 +25,7 @@ export const conceptualFeedbackSchema = z.strictObject({
 
 export type ConceptualFeedback = z.infer<typeof conceptualFeedbackSchema>;
 
-export const mixedGradedItemSchema = z.discriminatedUnion('type', [
+export const objectiveGradedItemSchema = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('truth_table'),
     itemId: z.uuid(),
@@ -41,20 +43,20 @@ export const mixedGradedItemSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const mixedGradedSubmissionResultSchema = z.strictObject({
+export const objectiveGradedSubmissionResultSchema = z.strictObject({
   gradingVersion: z.literal('mixed_v1'),
-  items: z.array(mixedGradedItemSchema).max(50),
+  items: z.array(objectiveGradedItemSchema).max(50),
   summary: truthTableCheckResponseSchema.shape.summary,
 });
 
-export type MixedGradedSubmissionResult = z.infer<typeof mixedGradedSubmissionResultSchema>;
+export type ObjectiveGradedSubmissionResult = z.infer<typeof objectiveGradedSubmissionResultSchema>;
 
 const responseCountsSchema = z.strictObject({
   completedResponses: z.number().int().nonnegative(),
   totalResponses: z.number().int().nonnegative(),
 });
 
-export const mixedCompletionSubmissionResultSchema = z.strictObject({
+export const objectiveCompletionSubmissionResultSchema = z.strictObject({
   gradingVersion: z.literal('mixed_completion_v1'),
   items: z
     .array(
@@ -67,4 +69,6 @@ export const mixedCompletionSubmissionResultSchema = z.strictObject({
   summary: responseCountsSchema,
 });
 
-export type MixedCompletionSubmissionResult = z.infer<typeof mixedCompletionSubmissionResultSchema>;
+export type ObjectiveCompletionSubmissionResult = z.infer<
+  typeof objectiveCompletionSubmissionResultSchema
+>;

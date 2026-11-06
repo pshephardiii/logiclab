@@ -14,7 +14,10 @@ import {
 } from '../../../features/assignment/helpers/proof-answers';
 import type { Answers } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
-import { savedAnswerMaps, sameAnswers } from '../../../features/assignment/helpers/answers';
+import {
+  savedTruthTableAnswerMaps,
+  sameTruthTableAnswers,
+} from '../../../features/assignment/helpers/answers';
 import {
   blankConceptualAnswer,
   savedConceptualAnswers,
@@ -32,7 +35,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
 
   const dirty = useMemo(
     () => [
-      ...Object.keys(answers).filter((id) => !sameAnswers(answers[id]!, baseline[id])),
+      ...Object.keys(answers).filter((id) => !sameTruthTableAnswers(answers[id]!, baseline[id])),
       ...Object.keys(proofAnswers).filter(
         (id) => !sameProofAnswer(proofAnswers[id]!, proofBaseline[id]),
       ),
@@ -49,7 +52,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
   );
 
   const resetAnswers = useCallback((source: StudentAssignment, attempt: StudentAttempt | null) => {
-    const tables = savedAnswerMaps(source, attempt);
+    const tables = savedTruthTableAnswerMaps(source, attempt);
 
     setAnswers(tables);
     setBaseline(tables);

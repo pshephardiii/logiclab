@@ -1,9 +1,9 @@
 import {
   conceptualSolutionSchema,
-  assignmentResponseValueSchema,
+  objectiveAssignmentResponseValueSchema,
   truthTableSolutionResponseSchema,
-  type ProblemDefinition,
-  type AssignmentResponseValue,
+  type ObjectiveProblemDefinition,
+  type ObjectiveAssignmentResponseValue,
   type TruthTableAnswer,
   type TruthTableCheckResponse,
   type TruthTableSolutionResponse,
@@ -11,79 +11,79 @@ import {
   type ConceptualSolution,
 } from '@logiclab/contracts';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import { supportedProblemDefinition } from '../problem/definition-support';
-import { validateAnswers, checkAssignedAnswers } from './evaluation';
+import { validateObjectiveDefinition } from '../problem/definition-support';
+import { validateTruthTableAnswers, checkAssignedTruthTableAnswers } from './evaluation';
 import { validateConceptualAnswer, checkConceptualAnswer } from './conceptual-evaluation';
 import { StudentWorkError } from './errors';
 
-type TableDefinition = Extract<ProblemDefinition, { type: 'truth_table' }>;
+type TableDefinition = Extract<ObjectiveProblemDefinition, { type: 'truth_table' }>;
 
 function tableResponse(input: unknown): TruthTableAnswer[] {
-  const parsed = assignmentResponseValueSchema.safeParse(input);
+  const parsed = objectiveAssignmentResponseValueSchema.safeParse(input);
 
   if (!parsed.success || !Array.isArray(parsed.data)) throw new StudentWorkError('invalid_answer');
 
   return parsed.data;
 }
 
-export function validateItemResponse(
+export function validateObjectiveResponse(
   definition: TableDefinition,
   input: unknown,
 ): TruthTableAnswer[];
 
-export function validateItemResponse(
-  definition: ProblemDefinition,
+export function validateObjectiveResponse(
+  definition: ObjectiveProblemDefinition,
   input: unknown,
-): AssignmentResponseValue;
+): ObjectiveAssignmentResponseValue;
 
 /** Validate saves without evaluating correctness; return an independently parsed response. */
-export function validateItemResponse(
-  definition: ProblemDefinition,
+export function validateObjectiveResponse(
+  definition: ObjectiveProblemDefinition,
   input: unknown,
-): AssignmentResponseValue {
-  const supported = supportedProblemDefinition(definition);
+): ObjectiveAssignmentResponseValue {
+  const supported = validateObjectiveDefinition(definition);
 
   if (supported.type !== 'truth_table') return validateConceptualAnswer(supported, input);
 
   const answers = tableResponse(input);
 
-  validateAnswers(supported.formula, answers);
+  validateTruthTableAnswers(supported.formula, answers);
   return answers;
 }
 
-export function checkItemResponse(
+export function checkObjectiveResponse(
   definition: TableDefinition,
   input: unknown,
 ): TruthTableCheckResponse;
 
-export function checkItemResponse(
-  definition: ProblemDefinition,
+export function checkObjectiveResponse(
+  definition: ObjectiveProblemDefinition,
   input: unknown,
 ): TruthTableCheckResponse | ConceptualFeedback;
 
 /** Caller must authorize checking; this function neither saves work nor reveals keys. */
-export function checkItemResponse(
-  definition: ProblemDefinition,
+export function checkObjectiveResponse(
+  definition: ObjectiveProblemDefinition,
   input: unknown,
 ): TruthTableCheckResponse | ConceptualFeedback {
-  const supported = supportedProblemDefinition(definition);
+  const supported = validateObjectiveDefinition(definition);
 
   if (supported.type !== 'truth_table') return checkConceptualAnswer(supported, input);
 
-  return checkAssignedAnswers(supported.formula, tableResponse(input));
+  return checkAssignedTruthTableAnswers(supported.formula, tableResponse(input));
 }
 
-export function itemSolution(definition: TableDefinition): TruthTableSolutionResponse;
+export function objectiveSolution(definition: TableDefinition): TruthTableSolutionResponse;
 
-export function itemSolution(
-  definition: ProblemDefinition,
+export function objectiveSolution(
+  definition: ObjectiveProblemDefinition,
 ): TruthTableSolutionResponse | ConceptualSolution;
 
 /** Privileged projection: call only after ownership/enrollment AND answer-release authorization. */
-export function itemSolution(
-  definition: ProblemDefinition,
+export function objectiveSolution(
+  definition: ObjectiveProblemDefinition,
 ): TruthTableSolutionResponse | ConceptualSolution {
-  const supported = supportedProblemDefinition(definition);
+  const supported = validateObjectiveDefinition(definition);
 
   if (supported.type === 'truth_table')
     return truthTableSolutionResponseSchema.parse(generateTruthTable(supported.formula));

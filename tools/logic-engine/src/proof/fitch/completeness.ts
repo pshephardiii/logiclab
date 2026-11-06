@@ -11,7 +11,7 @@ import { sameFormula } from '../formula-equality';
  * Existing but wrong citations, premise formulas and inference patterns may remain mistakes.
  * Nonfinal formulas need only be nonblank; diagnostics belong to explicit/post-submission checking.
  */
-export function isFinishedProofAttempt(value: unknown): boolean {
+export function isFinishedFitchProofAttempt(value: unknown): boolean {
   // Validate transport before looking up any student-supplied line or block identity.
   const read = readFitchInput(value);
 

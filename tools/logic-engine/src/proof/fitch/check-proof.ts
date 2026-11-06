@@ -9,7 +9,7 @@ import { structureDiagnostics } from '../structure-diagnostics';
 import { finishProofReport } from '../report';
 
 /** Deterministic Fitch checking of bounded plain data; no proof search, grades or disclosure policy. */
-export function checkProof(value: unknown): ProofCheckReport {
+export function checkFitchProof(value: unknown): ProofCheckReport {
   const diagnostics = structureDiagnostics();
 
   function finish(

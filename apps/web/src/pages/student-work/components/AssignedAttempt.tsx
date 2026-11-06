@@ -6,7 +6,7 @@ import { AssignedConceptualQuestion } from '../../../features/assignment/compone
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import {
-  submissionFeedback,
+  truthTableSubmissionFeedback,
   conceptualSubmissionFeedback,
   proofSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
@@ -182,7 +182,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               answers={work.answers[item.id] ?? {}}
               feedback={
                 submitted
-                  ? submissionFeedback(work.attempt?.result, item.id)
+                  ? truthTableSubmissionFeedback(work.attempt?.result, item.id)
                   : currentFeedback && 'cells' in currentFeedback
                     ? currentFeedback
                     : null

@@ -5,8 +5,11 @@ import {
 import { savedStudentAssignmentSchema, savedStudentAttemptSchema } from './saved-student-work';
 import { assignmentScoreSchema } from './assignment-scoring';
 import { z } from 'zod';
-import { mixedCompletionSubmissionResultSchema } from './assignment-responses';
-import { gradedSubmissionResultSchema, completionCountsSchema } from './student-work';
+import { objectiveCompletionSubmissionResultSchema } from './assignment-responses';
+import {
+  truthTableGradedSubmissionResultSchema,
+  truthTableCompletionCountsSchema,
+} from './student-work';
 import { assignmentParamsSchema } from './assignment';
 
 export const submissionSummarySchema = z
@@ -16,9 +19,9 @@ export const submissionSummarySchema = z
     submittedAt: z.iso.datetime(),
     score: assignmentScoreSchema.optional(),
     summary: z.union([
-      gradedSubmissionResultSchema.shape.summary,
-      completionCountsSchema,
-      mixedCompletionSubmissionResultSchema.shape.summary,
+      truthTableGradedSubmissionResultSchema.shape.summary,
+      truthTableCompletionCountsSchema,
+      objectiveCompletionSubmissionResultSchema.shape.summary,
       proofCompletionSubmissionResultSchema.shape.summary,
       proofSubmissionResultSchema.shape.summary,
     ]),

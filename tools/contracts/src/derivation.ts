@@ -13,22 +13,22 @@ export {
 } from './derivation-statement';
 
 /** Fitch-only public shape; other formats use separately staged authoring contracts. */
-export const derivationContentSchema = derivationStatementSchema.safeExtend({
+export const fitchDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('fitch'),
 });
 
-export type DerivationContent = z.infer<typeof derivationContentSchema>;
+export type FitchDerivationContent = z.infer<typeof fitchDerivationContentSchema>;
 
 /** Instructor-only authored JSON; a reference/version tag is not a cached acceptance claim. */
-export const derivationDefinitionSchema = derivationContentSchema.safeExtend({
+export const fitchDerivationDefinitionSchema = fitchDerivationContentSchema.safeExtend({
   referenceProof: fitchProofSchema.nullable(),
   explanation,
 });
 
-export type DerivationDefinition = z.infer<typeof derivationDefinitionSchema>;
+export type FitchDerivationDefinition = z.infer<typeof fitchDerivationDefinitionSchema>;
 
 /** Privileged answer-reveal payload; never include this in ordinary assigned content. */
-export const derivationSolutionSchema = z.strictObject({
+export const fitchDerivationSolutionSchema = z.strictObject({
   type: z.literal('derivation'),
   definitionVersion: z.literal(1),
   format: z.literal('fitch'),
@@ -38,7 +38,7 @@ export const derivationSolutionSchema = z.strictObject({
   explanation,
 });
 
-export type DerivationSolution = z.infer<typeof derivationSolutionSchema>;
+export type FitchDerivationSolution = z.infer<typeof fitchDerivationSolutionSchema>;
 
 export const derivationReferenceCheckResponseSchema = z.strictObject({
   problemId: z.uuid(),

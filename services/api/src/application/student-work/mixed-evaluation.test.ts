@@ -1,22 +1,22 @@
 import {
-  assignmentResponsesSchema,
+  objectiveAssignmentResponsesSchema,
   conceptualFeedbackSchema,
-  mixedGradedSubmissionResultSchema,
-  mixedCompletionSubmissionResultSchema,
+  objectiveGradedSubmissionResultSchema,
+  objectiveCompletionSubmissionResultSchema,
   submissionResultSchema,
-  type ProblemDefinition,
-  type AssignmentResponses,
-  type MixedGradedSubmissionResult,
-  type MixedCompletionSubmissionResult,
+  type ObjectiveProblemDefinition,
+  type ObjectiveAssignmentResponses,
+  type ObjectiveGradedSubmissionResult,
+  type ObjectiveCompletionSubmissionResult,
 } from '@logiclab/contracts';
 import type {
   AssignmentResponses as StoredResponses,
-  MixedGradedSubmissionResult as StoredGrade,
-  MixedCompletionSubmissionResult as StoredCompletion,
+  ObjectiveGradedSubmissionResult as StoredGrade,
+  ObjectiveCompletionSubmissionResult as StoredCompletion,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
-import { evaluateAssignmentSubmission, evaluateAssignmentCompletion } from './mixed-evaluation';
+import { evaluateObjectiveSubmission, evaluateObjectiveCompletion } from './mixed-evaluation';
 import { checkConceptualAnswer } from './conceptual-evaluation';
-import { evaluateSubmission, evaluateCompletion } from './evaluation';
+import { evaluateTruthTableSubmission, evaluateTruthTableCompletion } from './evaluation';
 import { mapStudentWorkError } from '../../routes/studentWork/errors';
 import { StudentWorkError } from './errors';
 
@@ -24,9 +24,11 @@ import { StudentWorkError } from './errors';
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Assert<T extends true> = T;
-type GradeFormatMatches = Assert<Equal<StoredGrade, MixedGradedSubmissionResult>>;
-type CompletionFormatMatches = Assert<Equal<StoredCompletion, MixedCompletionSubmissionResult>>;
-type ObjectiveResponseSubset = Assert<AssignmentResponses extends StoredResponses ? true : false>;
+type GradeFormatMatches = Assert<Equal<StoredGrade, ObjectiveGradedSubmissionResult>>;
+type CompletionFormatMatches = Assert<Equal<StoredCompletion, ObjectiveCompletionSubmissionResult>>;
+type ObjectiveResponseSubset = Assert<
+  ObjectiveAssignmentResponses extends StoredResponses ? true : false
+>;
 
 const tableId = 'a1111111-1111-4111-8111-111111111111';
 const truthId = 'a2222222-2222-4222-8222-222222222222';
@@ -52,7 +54,7 @@ const choice = {
   correctOptionId: optionA,
   explanation: 'Secret choice explanation.',
 };
-const items: { id: string; definition: ProblemDefinition }[] = [
+const items: { id: string; definition: ObjectiveProblemDefinition }[] = [
   { id: tableId, definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' } },
   { id: truthId, definition: truth },
   { id: choiceId, definition: choice },
@@ -99,7 +101,7 @@ test.each([
 test('mixed grading counts each occurrence separately and returns only correctness feedback', () => {
   const responses = { ...filled, [choiceId]: { type: 'multiple_choice', optionId: optionB } };
   const before = structuredClone(responses);
-  const result = evaluateAssignmentSubmission(
+  const result = evaluateObjectiveSubmission(
     [...items, { id: repeatedId, definition: truth }],
     responses,
   );
@@ -120,11 +122,11 @@ test('mixed grading counts each occurrence separately and returns only correctne
   for (const key of ['correctAnswer', 'correctOptionId', 'explanation', 'Secret'])
     expect(JSON.stringify(result)).not.toContain(key);
   const stored: StoredGrade = result;
-  expect(mixedGradedSubmissionResultSchema.parse(stored)).toEqual(result);
+  expect(objectiveGradedSubmissionResultSchema.parse(stored)).toEqual(result);
 });
 
 test('unanswered conceptual questions have one unit even without a saved object', () => {
-  const result = evaluateAssignmentSubmission(items.slice(1), {});
+  const result = evaluateObjectiveSubmission(items.slice(1), {});
   expect(result.summary).toEqual({ correct: 0, incorrect: 0, unanswered: 2, total: 2 });
 });
 
@@ -142,8 +144,8 @@ test('option reorder/text edits do not change grading identity', () => {
 });
 
 test('completion is identical for correct and incorrect filled work and stores no correctness data', () => {
-  const correct = evaluateAssignmentCompletion(items, filled);
-  const wrong = evaluateAssignmentCompletion(items, {
+  const correct = evaluateObjectiveCompletion(items, filled);
+  const wrong = evaluateObjectiveCompletion(items, {
     [tableId]: tableAnswers.map((answer) => ({ ...answer, value: !answer.value })),
     [truthId]: { type: 'true_false', answer: true },
     [choiceId]: { type: 'multiple_choice', optionId: optionB },
@@ -156,7 +158,7 @@ test('completion is identical for correct and incorrect filled work and stores n
   for (const key of ['correct', 'feedback', 'explanation', 'correctAnswer', 'correctOptionId'])
     expect(JSON.stringify(correct)).not.toContain(key);
   const stored: StoredCompletion = correct;
-  expect(mixedCompletionSubmissionResultSchema.parse(stored)).toEqual(correct);
+  expect(objectiveCompletionSubmissionResultSchema.parse(stored)).toEqual(correct);
 });
 
 test.each([
@@ -165,7 +167,7 @@ test.each([
   { ...filled, [tableId]: [{ ...tableAnswers[0]!, value: null }, tableAnswers[1]!] },
   {},
 ])('completion rejects missing or blank response units %#', (responses) => {
-  expectFailure(() => evaluateAssignmentCompletion(items, responses), 'incomplete_work');
+  expectFailure(() => evaluateObjectiveCompletion(items, responses), 'incomplete_work');
 });
 
 test.each([
@@ -177,14 +179,14 @@ test.each([
   { ...filled, [repeatedId]: { type: 'true_false', answer: true } },
   { ...filled, [truthId]: undefined },
 ])('invalid or forged response shapes/identities cannot be graded or completed %#', (responses) => {
-  expectFailure(() => evaluateAssignmentSubmission(items, responses), 'invalid_answer');
-  expectFailure(() => evaluateAssignmentCompletion(items, responses), 'invalid_answer');
+  expectFailure(() => evaluateObjectiveSubmission(items, responses), 'invalid_answer');
+  expectFailure(() => evaluateObjectiveCompletion(items, responses), 'invalid_answer');
 });
 
 test('truth-cell validation is preserved inside mixed work', () => {
   expectFailure(
     () =>
-      evaluateAssignmentSubmission(items, {
+      evaluateObjectiveSubmission(items, {
         ...filled,
         [tableId]: [tableAnswers[0], tableAnswers[0]],
       }),
@@ -192,7 +194,7 @@ test('truth-cell validation is preserved inside mixed work', () => {
   );
   expectFailure(
     () =>
-      evaluateAssignmentSubmission(items, {
+      evaluateObjectiveSubmission(items, {
         ...filled,
         [tableId]: [{ ...tableAnswers[0]!, rowId: 'foreign' }],
       }),
@@ -203,33 +205,35 @@ test('truth-cell validation is preserved inside mixed work', () => {
 test('legacy-only assignments retain their exact graded and completion formats', () => {
   const oldItems = [{ id: tableId, formula: 'P' }];
   const responses = { [tableId]: tableAnswers };
-  const grade = evaluateAssignmentSubmission(items.slice(0, 1), responses);
-  const completion = evaluateAssignmentCompletion(items.slice(0, 1), responses);
-  expect(grade).toEqual(evaluateSubmission(oldItems, responses));
-  expect(completion).toEqual(evaluateCompletion(oldItems, responses));
+  const grade = evaluateObjectiveSubmission(items.slice(0, 1), responses);
+  const completion = evaluateObjectiveCompletion(items.slice(0, 1), responses);
+  expect(grade).toEqual(evaluateTruthTableSubmission(oldItems, responses));
+  expect(completion).toEqual(evaluateTruthTableCompletion(oldItems, responses));
   expect(submissionResultSchema.parse(grade)).toEqual(grade);
   expect(submissionResultSchema.parse(completion)).toEqual(completion);
 });
 
 test('response JSON round-trips and repeated/empty item lists fail closed', () => {
-  const parsed = assignmentResponsesSchema.parse(filled);
+  const parsed = objectiveAssignmentResponsesSchema.parse(filled);
   const stored: StoredResponses = parsed;
-  expect(assignmentResponsesSchema.parse(JSON.parse(JSON.stringify(stored)))).toEqual(parsed);
-  expectFailure(() => evaluateAssignmentSubmission([items[0]!, items[0]!], {}), 'invalid_answer');
-  expectFailure(() => evaluateAssignmentSubmission([], {}), 'invalid_answer');
+  expect(objectiveAssignmentResponsesSchema.parse(JSON.parse(JSON.stringify(stored)))).toEqual(
+    parsed,
+  );
+  expectFailure(() => evaluateObjectiveSubmission([items[0]!, items[0]!], {}), 'invalid_answer');
+  expectFailure(() => evaluateObjectiveSubmission([], {}), 'invalid_answer');
 });
 
 test('feedback and completion contracts reject accidental private fields', () => {
-  expect(submissionResultSchema.parse(evaluateAssignmentSubmission(items, filled))).toEqual(
-    evaluateAssignmentSubmission(items, filled),
+  expect(submissionResultSchema.parse(evaluateObjectiveSubmission(items, filled))).toEqual(
+    evaluateObjectiveSubmission(items, filled),
   );
   expect(
     conceptualFeedbackSchema.safeParse({ status: 'incorrect', correctOptionId: optionA }).success,
   ).toBe(false);
-  const result = evaluateAssignmentCompletion(items, filled);
-  expect(mixedCompletionSubmissionResultSchema.safeParse({ ...result, correct: 1 }).success).toBe(
-    false,
-  );
+  const result = evaluateObjectiveCompletion(items, filled);
+  expect(
+    objectiveCompletionSubmissionResultSchema.safeParse({ ...result, correct: 1 }).success,
+  ).toBe(false);
 });
 
 test('invalid conceptual responses have a stable sanitized route error', () => {

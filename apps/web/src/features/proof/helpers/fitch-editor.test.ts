@@ -1,26 +1,26 @@
 import { expect, test } from 'vitest';
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
-import { checkProof } from '@logiclab/logic-engine/proof';
+import { checkFitchProof } from '@logiclab/logic-engine/proof';
 import { derivationDefinition } from '../../../../test/derivation';
 import {
-  startProof,
-  insertProofStep,
-  insertProofPremise,
-  moveProofStep,
-  removeProofStep,
-  removeProofSubproof,
-  proofDepth,
-  proofSubtree,
-  uniqueProofIds,
+  startFitchProof,
+  insertFitchProofStep,
+  insertFitchPremise,
+  moveFitchProofStep,
+  removeFitchProofStep,
+  removeFitchSubproof,
+  fitchProofDepth,
+  fitchProofSubtree,
+  uniqueFitchProofIds,
 } from './fitch-editor';
 
 function fixture() {
-  let proof = startProof(derivationDefinition);
-  proof = insertProofStep(proof, 0, null, true);
+  let proof = startFitchProof(derivationDefinition);
+  proof = insertFitchProofStep(proof, 0, null, true);
   const block = proof.blocks[0]!;
   proof.steps[0]!.formula = 'P';
   proof = { ...proof, blocks: [{ ...block, endId: proof.steps[0]!.id }] };
-  proof = insertProofStep(proof, 1, null);
+  proof = insertFitchProofStep(proof, 1, null);
   const last = proof.steps[1]!;
   if (last.kind !== 'inference') throw new Error('Expected inference');
   proof.steps[1] = {
@@ -35,7 +35,7 @@ function fixture() {
 test('editor-generated single-assumption conditional proof is accepted without changing inputs', () => {
   const proof = fixture();
   const snapshot = structuredClone(proof);
-  const report = checkProof({
+  const report = checkFitchProof({
     problem: {
       ruleCatalogVersion: 1,
       premises: [],
@@ -52,29 +52,29 @@ test('insertion/moving preserve citation identities, and deleted endpoints remai
   const original = fixture();
   const id = original.steps[0]!.id;
   const block = original.blocks[0]!.id;
-  const inserted = insertProofStep(original, 1, block);
+  const inserted = insertFitchProofStep(original, 1, block);
   expect(inserted.steps[2]).toEqual(original.steps[1]);
-  const moved = moveProofStep(inserted, 1, 1);
+  const moved = moveFitchProofStep(inserted, 1, 1);
   expect(moved.steps[1]).toEqual(original.steps[1]);
   expect(moved.blocks[0]!.endId).toBe(id);
   // Deleting a cited inference also preserves incoming line references.
-  const root = insertProofStep(original, 2, null);
+  const root = insertFitchProofStep(original, 2, null);
   const second = root.steps[2]!;
   if (second.kind !== 'inference') throw new Error('Expected inference');
   root.steps[2] = { ...second, lineReferences: [root.steps[1]!.id] };
-  const removed = removeProofStep(root, 1);
+  const removed = removeFitchProofStep(root, 1);
   expect(removed.steps[1]).toEqual(root.steps[2]);
-  expect(() => removeProofStep(root, 0)).toThrow('entire subproof');
+  expect(() => removeFitchProofStep(root, 0)).toThrow('entire subproof');
   expect(original.steps).toHaveLength(2);
 });
 
 test('subproof deletion removes nested scopes only and preserves outside citations', () => {
   let proof = fixture();
   const parent = proof.blocks[0]!.id;
-  proof = insertProofStep(proof, 1, parent, true);
+  proof = insertFitchProofStep(proof, 1, parent, true);
   const child = proof.blocks[1]!.id;
-  expect(proofSubtree(proof, parent)).toEqual(new Set([parent, child]));
-  const result = removeProofSubproof(proof, parent);
+  expect(fitchProofSubtree(proof, parent)).toEqual(new Set([parent, child]));
+  const result = removeFitchSubproof(proof, parent);
   expect(result.blocks).toEqual([]);
   expect(result.steps).toHaveLength(1);
   expect(result.steps[0]).toEqual(proof.steps[2]);
@@ -84,19 +84,19 @@ test('missing or cyclic scopes fail bounded insertion without repairing the save
   const proof = fixture();
   const block = proof.blocks[0]!;
   const cyclic = { ...proof, blocks: [{ ...block, parentId: block.id }] };
-  expect(proofDepth(cyclic, block.id)).toBeNull();
-  expect(() => insertProofStep(cyclic, 1, block.id, true)).toThrow('valid parent chain');
-  expect(proofDepth(proof, crypto.randomUUID())).toBeNull();
-  expect(() => insertProofStep(proof, -1, null)).toThrow('insertion position');
+  expect(fitchProofDepth(cyclic, block.id)).toBeNull();
+  expect(() => insertFitchProofStep(cyclic, 1, block.id, true)).toThrow('valid parent chain');
+  expect(fitchProofDepth(proof, crypto.randomUUID())).toBeNull();
+  expect(() => insertFitchProofStep(proof, -1, null)).toThrow('insertion position');
 });
 
 test('step/block collisions disable ambiguous editing rather than silently assigning new IDs', () => {
   const proof = fixture();
   const duplicate = { ...proof, steps: [proof.steps[0]!, proof.steps[0]!] };
-  expect(uniqueProofIds(duplicate)).toBe(false);
-  expect(() => insertProofStep(duplicate, 1, null)).toThrow('duplicate');
+  expect(uniqueFitchProofIds(duplicate)).toBe(false);
+  expect(() => insertFitchProofStep(duplicate, 1, null)).toThrow('duplicate');
   expect(
-    uniqueProofIds({ ...proof, blocks: [{ ...proof.blocks[0]!, id: proof.steps[0]!.id }] }),
+    uniqueFitchProofIds({ ...proof, blocks: [{ ...proof.blocks[0]!, id: proof.steps[0]!.id }] }),
   ).toBe(false);
 });
 
@@ -112,15 +112,17 @@ test('resource limits block additional lines, blocks and nesting', () => {
       premiseId: null,
     })),
   };
-  expect(() => insertProofStep(full, full.steps.length, null)).toThrow('line limit');
+  expect(() => insertFitchProofStep(full, full.steps.length, null)).toThrow('line limit');
   let nested = empty;
   let parent: string | null = null;
   for (let index = 0; index < PROOF_LIMITS.maxBlockDepth; index++) {
-    nested = insertProofStep(nested, nested.steps.length, parent, true);
+    nested = insertFitchProofStep(nested, nested.steps.length, parent, true);
     parent = nested.blocks.at(-1)!.id;
   }
-  expect(proofDepth(nested, parent)).toBe(PROOF_LIMITS.maxBlockDepth);
-  expect(() => insertProofStep(nested, nested.steps.length, parent, true)).toThrow('nesting limit');
+  expect(fitchProofDepth(nested, parent)).toBe(PROOF_LIMITS.maxBlockDepth);
+  expect(() => insertFitchProofStep(nested, nested.steps.length, parent, true)).toThrow(
+    'nesting limit',
+  );
   const allBlocks = {
     ...empty,
     blocks: Array.from({ length: PROOF_LIMITS.maxBlocks }, () => ({
@@ -130,15 +132,15 @@ test('resource limits block additional lines, blocks and nesting', () => {
       endId: null,
     })),
   };
-  expect(() => insertProofStep(allBlocks, 0, null, true)).toThrow('subproof count');
+  expect(() => insertFitchProofStep(allBlocks, 0, null, true)).toThrow('subproof count');
 });
 
 test('starting and inserting premises copy formulas once and keep authoritative statement IDs', () => {
   const id = crypto.randomUUID();
   const definition = { ...derivationDefinition, premises: [{ id, formula: 'P' }] };
-  const proof = startProof(definition);
+  const proof = startFitchProof(definition);
   definition.premises[0]!.formula = 'Q';
   expect(proof.steps[0]).toMatchObject({ kind: 'premise', premiseId: id, formula: 'P' });
-  const next = insertProofPremise(proof, 1);
+  const next = insertFitchPremise(proof, 1);
   expect(next.steps[1]).toMatchObject({ kind: 'premise', premiseId: null, blockId: null });
 });

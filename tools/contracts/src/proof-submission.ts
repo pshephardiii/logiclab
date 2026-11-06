@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { mixedGradedItemSchema } from './assignment-responses';
+import { objectiveGradedItemSchema } from './assignment-responses';
 import { derivationEvaluationEvidenceSchema } from './derivation-work';
 import { truthTableCheckResponseSchema } from './truth-table';
 import type { ProofCheckReport } from './proof';
 
 export const proofSubmissionItemSchema = z.discriminatedUnion('type', [
-  ...mixedGradedItemSchema.options,
+  ...objectiveGradedItemSchema.options,
   derivationEvaluationEvidenceSchema,
 ]);
 

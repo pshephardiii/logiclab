@@ -14,6 +14,8 @@ When reviewing a large file, inspect its interface/types, mapping constants, res
 
 Keep mapping constants with the function that uses them instead of creating an unrelated constants file. Put shared internal interfaces in a domain's `types.ts` when this removes imports from implementation or component files; reuse an existing application-level interface where one already owns the boundary. Update internal consumers directly when moving types, without adding compatibility re-exports solely to preserve an old internal path. Preserve supported package exports and external contracts.
 
+Name types, schemas and operations for their actual supported variants. Use `Objective…` for truth-table/conceptual unions, `TruthTable…` for table-only results/helpers and `Fitch…` for Fitch-only proof contracts/checkers/editors. Keep genuinely shared proof reports and multi-format operations generic. When an authorized rename changes package exports, update consumers and build matching packages together; preserve serialized field names, version tags, route paths and stored data.
+
 ## General: proportional effort
 
 Take the time needed for correctness, privacy, authorization, data integrity and meaningful regression coverage. Keep routine organization, documentation and verification overhead proportional to the significance of the change; do not reduce necessary checks just to finish faster.

@@ -6,8 +6,8 @@ import { assignment, assignmentSummary, classId } from './assignment-fixture';
 import { exerciseResponse } from '../src/application/truth-table/exercise';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import {
-  checkAssignedAnswers,
-  evaluateSubmission,
+  checkAssignedTruthTableAnswers,
+  evaluateTruthTableSubmission,
 } from '../src/application/student-work/evaluation';
 export { classId };
 export const assignmentId = assignment.id;
@@ -42,7 +42,7 @@ export const submitted = {
   ...attempt,
   revision: 2,
   submittedAt: assignment.createdAt,
-  result: evaluateSubmission(detail.assignment.items, {}),
+  result: evaluateTruthTableSubmission(detail.assignment.items, {}),
 };
 export function studentWorkFixture() {
   const auth = authFixture();
@@ -52,7 +52,7 @@ export function studentWorkFixture() {
     check: jest.fn<ReturnType<StudentWorkStore['check']>, Parameters<StudentWorkStore['check']>>(
       async () => ({
         itemId,
-        feedback: checkAssignedAnswers(detail.assignment.items[0]!.formula, []),
+        feedback: checkAssignedTruthTableAnswers(detail.assignment.items[0]!.formula, []),
       }),
     ),
     list: jest.fn<ReturnType<StudentWorkStore['list']>, Parameters<StudentWorkStore['list']>>(

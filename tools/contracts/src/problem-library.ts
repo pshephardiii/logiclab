@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { derivationDefinitionSchema } from './derivation';
+import { fitchDerivationDefinitionSchema } from './derivation';
 import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
 import { treeDerivationDefinitionSchema } from './tree-derivation';
 import {
-  problemDefinitionSchema,
+  objectiveProblemDefinitionSchema,
   problemDraftSchema,
   problemVersionSchema,
   createProblemRequestSchema,
@@ -11,9 +11,9 @@ import {
 
 /** Owner-only library shapes; assignment definitions retain their separate supported union. */
 export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
-  ...problemDefinitionSchema.options,
+  ...objectiveProblemDefinitionSchema.options,
   z.discriminatedUnion('format', [
-    derivationDefinitionSchema,
+    fitchDerivationDefinitionSchema,
     dependencyDerivationDefinitionSchema,
     treeDerivationDefinitionSchema,
   ]),

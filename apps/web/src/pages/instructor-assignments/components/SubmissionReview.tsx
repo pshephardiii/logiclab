@@ -4,13 +4,13 @@ import { AssignedDerivation } from '../../../features/assignment/components/Assi
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import {
-  submissionFeedback,
+  truthTableSubmissionFeedback,
   proofSubmissionFeedback,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useSubmissionReview } from '../hooks/useSubmissionReview';
-import { answerMap } from '../../../features/assignment/helpers/answers';
+import { truthTableAnswerMap } from '../../../features/assignment/helpers/answers';
 import { AssignedItemTable } from '../../../features/assignment/components/AssignedItemTable';
 import { SubmissionSummary } from '../../../features/assignment/components/SubmissionSummary';
 import { PointScore } from '../../../features/assignment/components/PointScore';
@@ -168,8 +168,8 @@ export function SubmissionReview({
             ('exercise' in item ? (
               <AssignedItemTable
                 item={item}
-                answers={answerMap(review.attempt.answers[item.id] ?? [])}
-                feedback={submissionFeedback(review.attempt.result, item.id)}
+                answers={truthTableAnswerMap(review.attempt.answers[item.id] ?? [])}
+                feedback={truthTableSubmissionFeedback(review.attempt.result, item.id)}
                 readOnly
                 onAnswer={() => {}}
               />

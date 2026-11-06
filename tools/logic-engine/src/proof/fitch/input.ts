@@ -1,15 +1,15 @@
 import { InputFailure, record, array, stringLimit, ids } from '../proof-input-fields';
 import {
   PROOF_LIMITS,
-  proofCheckInputSchema,
-  type ProofCheckInput,
+  fitchProofCheckInputSchema,
+  type FitchProofCheckInput,
   type ProofDiagnostic,
 } from '@logiclab/contracts';
 
 /** Check list/text bounds before Zod visits elements; never recursively traverse unknown fields. */
 export function readFitchInput(
   value: unknown,
-): { input: ProofCheckInput } | { diagnostic: ProofDiagnostic } {
+): { input: FitchProofCheckInput } | { diagnostic: ProofDiagnostic } {
   try {
     const outer = record(value, ['problem', 'proof']);
 
@@ -71,7 +71,7 @@ export function readFitchInput(
       }
     }
 
-    const parsed = proofCheckInputSchema.safeParse(value);
+    const parsed = fitchProofCheckInputSchema.safeParse(value);
 
     return parsed.success
       ? { input: parsed.data }
