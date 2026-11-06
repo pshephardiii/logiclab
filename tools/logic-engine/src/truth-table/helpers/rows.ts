@@ -8,6 +8,7 @@ export function createRows(
   expressions: ReadonlyMap<string, Formula>,
 ): TruthTableRow[] {
   const rows: TruthTableRow[] = [];
+
   const rowCount = 2 ** variables.length;
 
   for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
@@ -23,11 +24,14 @@ function createRow(
   expressions: ReadonlyMap<string, Formula>,
 ): TruthTableRow {
   const assignment: Record<string, boolean> = {};
+
   const values: Record<string, boolean> = {};
 
   variables.forEach((name, variableIndex) => {
     const value = variableValueForRow(rowIndex, variableIndex, variables.length);
+
     assignment[name] = value;
+
     values[variableColumnId(name)] = value;
   });
 
@@ -48,7 +52,9 @@ function variableValueForRow(
 ): boolean {
   // First variable changes slowest. Zero bits represent T, so all-T comes first.
   const bitPosition = variableCount - variableIndex - 1;
+
   const bitIsSet = (rowIndex & (1 << bitPosition)) !== 0;
+
   return !bitIsSet;
 }
 
@@ -57,5 +63,6 @@ function rowId(
   assignment: Readonly<Record<string, boolean>>,
 ): string {
   const entries = variables.map((name) => `${name}=${assignment[name] ? 'T' : 'F'}`);
+
   return `row:v1:${entries.join(';')}`;
 }

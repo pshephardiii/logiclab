@@ -26,11 +26,13 @@ export function checkParsedRule(
   diagnostics: StructureDiagnostics,
 ): ProofCheckReport['steps'][number]['localStatus'] {
   if (!current.formula) return current.status;
+
   if (
     lines.some((line) => !line.formula) ||
     subproofs.some((subproof) => !subproof.assumption.formula || !subproof.conclusion.formula)
   )
     return 'unassessable';
+
   // Conservative comparison charge: rule patterns use at most six structural comparisons.
   budget.spend(
     8 *
@@ -40,6 +42,7 @@ export function checkParsedRule(
       problem.permittedRuleIds.length +
       PROPOSITIONAL_RULE_CATALOG.length,
   );
+
   const result = checkLocalRule({
     ruleCatalogVersion: problem.ruleCatalogVersion,
     ruleId: ruleId,
@@ -51,7 +54,9 @@ export function checkParsedRule(
       conclusion: block.conclusion.formula!,
     })),
   });
+
   if (result.status !== 'valid')
     diagnostics.add({ code: result.code, message: messages[result.code], stepIndex });
+
   return result.status;
 }

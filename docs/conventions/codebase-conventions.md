@@ -311,6 +311,8 @@ Separate the import block from the first declaration or its documentation with a
 
 Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer these visible boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
 
+Keep stacked decorators together and directly above their class or property, following Prettier's formatting. Do not disable class formatting solely to preserve blank lines between decorators or before a class declaration. Continue separating decorated property groups with blank lines. Use spacing and meaningful stage comments rather than routine “End of …” comments after long declarations.
+
 Use braces for multiline conditional branches; Prettier does not add them automatically.
 
 ## Committed regression coverage

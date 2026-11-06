@@ -12,21 +12,26 @@ export function inferenceDependencyIds(
   branches: readonly DischargedDependencySet[],
 ): string[] {
   const dependencies = new Set<string>();
+
   for (const line of lines) {
     for (const id of line) dependencies.add(id);
   }
+
   for (const branch of branches) {
     for (const id of branch.conclusionDependencies) {
       if (id !== branch.assumptionId) dependencies.add(id);
     }
   }
+
   return [...dependencies].sort();
 }
 
 /** Exact set equality: order is presentation; duplicates and extra/missing sources are errors. */
 export function dependencySetsMatch(declared: readonly string[], expected: readonly string[]) {
   const declaredSet = new Set(declared);
+
   const expectedSet = new Set(expected);
+
   return (
     declaredSet.size === declared.length &&
     expectedSet.size === expected.length &&

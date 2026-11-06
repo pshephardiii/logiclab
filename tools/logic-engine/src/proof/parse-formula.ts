@@ -18,6 +18,7 @@ export function parseProofFormula(source: string): ProofFormula {
       `Formula must be at most ${PROOF_FORMULA_LIMITS.maxLength} characters`,
     );
   }
+
   return parseTokens<{ readonly type: 'bottom' }>(tokenize(source, true), {
     limits: PROOF_FORMULA_LIMITS,
     extraAtom: (token) => (token.kind === 'bottom' ? { type: 'bottom' } : undefined),

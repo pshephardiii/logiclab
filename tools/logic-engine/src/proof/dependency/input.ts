@@ -12,13 +12,16 @@ export function readDependencyInput(
 ): { input: DependencyProofCheckInput } | { diagnostic: ProofDiagnostic } {
   try {
     const outer = record(value, ['problem', 'proof']);
+
     const problem = record(outer.problem, [
       'ruleCatalogVersion',
       'premises',
       'conclusion',
       'permittedRuleIds',
     ]);
+
     const proof = record(outer.proof, ['proofVersion', 'format', 'steps']);
+
     if (
       (problem.ruleCatalogVersion !== undefined && problem.ruleCatalogVersion !== 1) ||
       (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
@@ -28,14 +31,20 @@ export function readDependencyInput(
         'UNSUPPORTED_VERSION',
         'Unsupported dependency proof format or version.',
       );
+
     stringLimit(problem.conclusion, PROOF_LIMITS.maxFormulaLength);
+
     for (const item of array(problem.premises, PROOF_LIMITS.maxPremises)) {
       const premise = record(item, ['id', 'formula']);
+
       ids(premise, ['id']);
+
       stringLimit(premise.formula, PROOF_LIMITS.maxFormulaLength);
     }
+
     for (const rule of array(problem.permittedRuleIds, PROOF_LIMITS.maxPermittedRules))
       stringLimit(rule, 64);
+
     for (const item of array(proof.steps, PROOF_LIMITS.maxSteps)) {
       const step = record(item, [
         'kind',
@@ -47,21 +56,31 @@ export function readDependencyInput(
         'lineReferences',
         'discharges',
       ]);
+
       ids(step, ['id', 'premiseId']);
+
       stringLimit(step.kind, 16);
+
       stringLimit(step.formula, PROOF_LIMITS.maxFormulaLength);
+
       stringLimit(step.ruleId, 64);
+
       for (const dependency of array(step.dependencies, PROOF_LIMITS.maxSteps))
         stringLimit(dependency, 36);
+
       if (step.lineReferences !== undefined)
         for (const reference of array(step.lineReferences, 2)) stringLimit(reference, 36);
+
       if (step.discharges !== undefined)
         for (const value of array(step.discharges, 2)) {
           const discharge = record(value, ['assumptionId', 'conclusionId']);
+
           ids(discharge, ['assumptionId', 'conclusionId']);
         }
     }
+
     const parsed = dependencyProofCheckInputSchema.safeParse(value);
+
     return parsed.success
       ? { input: parsed.data }
       : {

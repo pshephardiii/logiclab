@@ -23,16 +23,22 @@ export type LocalRuleResult =
 export function checkLocalRule(application: LocalRuleApplication): LocalRuleResult {
   if (application.ruleCatalogVersion !== PROPOSITIONAL_RULE_CATALOG_VERSION)
     return { status: 'unassessable', code: 'UNSUPPORTED_VERSION' };
+
   if (application.ruleId === null) return { status: 'unassessable', code: 'INCOMPLETE_PROOF' };
+
   const rule = getPropositionalRule(application.ruleId);
+
   if (!rule) return { status: 'invalid', code: 'UNKNOWN_RULE' };
+
   if (!application.permittedRuleIds.includes(rule.id))
     return { status: 'invalid', code: 'RULE_DISABLED' };
+
   if (
     application.lines.length !== rule.lineReferences ||
     application.subproofs.length !== rule.subproofReferences
   )
     return { status: 'invalid', code: 'INVALID_REFERENCE' };
+
   return matchesRule(rule.id, application.conclusion, application.lines, application.subproofs)
     ? { status: 'valid' }
     : { status: 'invalid', code: 'RULE_MISMATCH' };
