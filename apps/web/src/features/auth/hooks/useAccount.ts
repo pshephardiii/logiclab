@@ -21,9 +21,11 @@ export function useAccount() {
 
   useEffect(() => {
     const signal = startRequest();
+
     async function restoreSession() {
       try {
         const currentUser = await loadSession(signal);
+
         if (!signal.aborted) setUser(currentUser);
       } catch {
         if (!signal.aborted) {
@@ -33,6 +35,7 @@ export function useAccount() {
         if (!signal.aborted) setBusy(false);
       }
     }
+
     void restoreSession();
   }, [startRequest]);
 
@@ -44,9 +47,13 @@ export function useAccount() {
 
   function applyAccountAction(action: AccountView | 'resend' | 'logout', message: string) {
     setNotice(message);
+
     if (action === 'signup') setView('confirm');
+
     if (action === 'confirm') setView('login');
+
     if (action === 'forgot-password') setView('reset-password');
+
     if (action === 'reset-password' || action === 'logout') {
       setUser(null);
       setView('login');
@@ -57,6 +64,7 @@ export function useAccount() {
     // Logout clears the browser cookie even when provider cleanup fails.
     try {
       const currentUser = await loadSession(signal);
+
       if (!signal.aborted) setUser(currentUser);
     } catch {
       if (!signal.aborted) setUser(null);
@@ -65,17 +73,23 @@ export function useAccount() {
 
   async function run(action: AccountView | 'resend' | 'logout', fields: Record<string, string>) {
     const signal = startRequest();
+
     setBusy(true);
     setError(null);
     setNotice(null);
+
     if (fields.email) setEmail(fields.email.trim().toLowerCase());
+
     try {
       if (action === 'login') {
         const result = await login(fields, signal);
+
         if (!signal.aborted) setUser(result);
       } else {
         const message = await accountAction(action, fields, signal);
+
         if (signal.aborted) return;
+
         applyAccountAction(action, message);
       }
     } catch (caught) {
@@ -85,11 +99,13 @@ export function useAccount() {
             ? caught.message
             : 'Could not complete the request. Please try again.',
         );
+
         if (action === 'logout') await reconcileLogout(signal);
       }
     } finally {
       if (!signal.aborted) setBusy(false);
     }
   }
+
   return { user, view, email, busy, error, notice, navigate, run };
 }

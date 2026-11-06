@@ -10,6 +10,7 @@ type Props = { account: ReturnType<typeof useAccount> };
  */
 export function AccountPanel({ account }: Props) {
   const confirmDiscard = useConfirmDiscard();
+
   return (
     <>
       <section className="panel" aria-labelledby="account-heading" aria-busy={account.busy}>

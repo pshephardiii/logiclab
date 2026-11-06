@@ -11,6 +11,7 @@ export function PointScore({
   showItems?: boolean;
 }) {
   const total = score.summary;
+
   return (
     <div aria-label="Point score">
       <p>
@@ -24,6 +25,7 @@ export function PointScore({
         <ul>
           {score.items.map((item, index) => {
             const title = items?.find((value) => value.id === item.itemId)?.title;
+
             return (
               <li key={item.itemId}>
                 Problem {index + 1}

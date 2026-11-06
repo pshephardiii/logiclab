@@ -15,6 +15,7 @@ export function conceptualPreviewData(definition: ConceptualQuestionDefinition) 
           question: definition.question,
           options: definition.options,
         };
+
   const solution: ConceptualSolution =
     definition.type === 'true_false'
       ? {
@@ -27,5 +28,6 @@ export function conceptualPreviewData(definition: ConceptualQuestionDefinition) 
           correctOptionId: definition.correctOptionId,
           explanation: definition.explanation ?? null,
         };
+
   return { content, solution };
 }

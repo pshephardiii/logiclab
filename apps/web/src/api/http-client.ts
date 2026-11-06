@@ -14,6 +14,7 @@ export async function requestJson(
   { signal, body, method, invalidJson = 'null', error }: RequestOptions,
 ): Promise<unknown> {
   const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+
   const response = await fetch(`${base}${path}`, {
     method: method ?? (body === undefined ? 'GET' : 'POST'),
     credentials: 'same-origin',
@@ -25,9 +26,12 @@ export async function requestJson(
           body: JSON.stringify(body),
         }),
   });
+
   // Practice preserves JSON parse failures; account/class APIs use null for malformed JSON.
   const payload: unknown =
     invalidJson === 'throw' ? await response.json() : await response.json().catch(() => null);
+
   if (!response.ok) throw error(response.status, payload);
+
   return payload;
 }

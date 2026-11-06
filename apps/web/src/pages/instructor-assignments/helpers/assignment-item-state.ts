@@ -11,6 +11,7 @@ export function assignmentItemState(
   graded: boolean,
 ) {
   const points = items.map((item) => item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints);
+
   return {
     itemsChanged:
       items.length !== original.length ||

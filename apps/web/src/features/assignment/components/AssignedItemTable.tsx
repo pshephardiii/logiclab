@@ -32,6 +32,7 @@ export function AssignedItemTable({
     feedback && neutralBlanks
       ? { ...feedback, cells: feedback.cells.filter((cell) => cell.status !== 'unanswered') }
       : feedback;
+
   return (
     <section className="panel assigned-item">
       <h2>

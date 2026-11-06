@@ -13,6 +13,7 @@ function InstructorBilling() {
   const { listClassrooms } = useResourceApi(classroomsApi);
   const accountPath = useAccountPath();
   const [classId, setClassId] = useState('');
+
   return (
     <>
       <header>
@@ -41,8 +42,10 @@ function InstructorBilling() {
     </>
   );
 }
+
 export function InstructorBillingPage() {
   const { user } = useAccountContext();
+
   return (
     <Page>
       <InstructorBilling key={user?.id} />

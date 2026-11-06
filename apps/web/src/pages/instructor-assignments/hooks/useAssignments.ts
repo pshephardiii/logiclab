@@ -30,13 +30,17 @@ export function useAssignments(classId: string) {
   const details = useAbortableRequest();
   const writes = useAbortableRequest();
   const mutationPending = useRef(false);
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = reads.startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await api.listAssignments(classId, filter, offset, signal);
+
         if (!signal.aborted) {
           setAssignments((previous) =>
             offset ? appendPageById(previous, page.assignments) : page.assignments,
@@ -52,6 +56,7 @@ export function useAssignments(classId: string) {
     },
     [api, classId, filter, reads.startRequest],
   );
+
   useEffect(() => {
     void load();
     return reads.cancelRequest;
@@ -59,18 +64,23 @@ export function useAssignments(classId: string) {
 
   async function select(id: string | null) {
     const signal = details.startRequest();
+
     setSelected(null);
     setEditingId(id);
     setNotice(null);
     setError(null);
     setRevision((value) => value + 1);
+
     if (!id) {
       setDetailLoading(false);
       return;
     }
+
     setDetailLoading(true);
+
     try {
       const assignment = await api.getAssignment(id, signal);
+
       if (!signal.aborted) setSelected(assignment);
     } catch (caught) {
       if (!signal.aborted)
@@ -86,23 +96,33 @@ export function useAssignments(classId: string) {
     failureHint = '',
   ) {
     if (mutationPending.current) return false;
+
     mutationPending.current = true;
+
     const signal = writes.startRequest();
+
     reads.cancelRequest();
+
     details.cancelRequest();
+
     setLoading(false);
     setDetailLoading(false);
     setBusy(true);
     setError(null);
     setNotice(null);
+
     try {
       const assignment = await operation(signal);
+
       if (signal.aborted) return false;
+
       setSelected(assignment);
       setEditingId(assignment.id);
       setRevision((value) => value + 1);
       setNotice(message);
+
       await load();
+
       return true;
     } catch (caught) {
       if (!signal.aborted) {
@@ -110,12 +130,15 @@ export function useAssignments(classId: string) {
           caught instanceof Error ? caught.message : 'Could not update the assignment.';
         setError(failureHint ? `${reason} ${failureHint}` : reason);
       }
+
       return false;
     } finally {
       mutationPending.current = false;
+
       if (!signal.aborted) setBusy(false);
     }
   }
+
   function save(input: CreateAssignmentRequest, itemsChanged: boolean) {
     return mutate(
       (signal) =>
@@ -129,23 +152,28 @@ export function useAssignments(classId: string) {
       'Assignment draft saved.',
     );
   }
+
   function duplicate() {
     if (!selected || busy) return;
+
     return mutate(
       (signal) => api.assignmentAction(selected.id, 'duplicate', signal),
       'Assignment duplicated as a new draft.',
       'Duplication could not be confirmed. Reload Active or All assignments and check for a copy before trying again; another request creates another draft.',
     );
   }
+
   async function act(
     action: 'publish' | 'archive' | 'restore' | 'release-grades' | 'reveal-answers',
   ) {
     if (!selected) return false;
+
     return mutate(
       (signal) => api.assignmentAction(selected.id, action, signal),
       assignmentActionNotice(action, selected.assessmentMode),
     );
   }
+
   return {
     assignments,
     filter,

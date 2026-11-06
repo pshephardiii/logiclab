@@ -5,6 +5,7 @@ import { ProofChoice } from '../components/ProofChoice';
 import { treeNodeChoices } from './editor';
 
 type Inference = Extract<TreeProofNode, { kind: 'inference' }>;
+
 export function TreeInferenceFields({
   proof,
   node,
@@ -20,9 +21,11 @@ export function TreeInferenceFields({
 }) {
   const rule = node.ruleId ? getPropositionalRule(node.ruleId) : undefined;
   const choices = treeNodeChoices(proof).filter((choice) => choice.id !== node.id);
+
   const assumptions = choices.filter(
     (choice) => proof.nodes.find((node) => node.id === choice.id)?.kind === 'assumption',
   );
+
   return (
     <>
       <ProofChoice
@@ -41,8 +44,10 @@ export function TreeInferenceFields({
             choices={choices}
             onChange={(id) => {
               const refs = [...node.lineReferences];
+
               if (id) refs[slot] = id;
               else refs.splice(slot, 1);
+
               onChange({ ...node, lineReferences: refs.filter(Boolean) });
             }}
           />
@@ -56,16 +61,22 @@ export function TreeInferenceFields({
             assumptionFormula: '',
             assumptionIds: [],
           };
+
           function change(patch: Partial<TreeProofBranch>) {
             const branches = [...node.branches];
+
             while (branches.length <= slot)
               branches.push({ rootId: null, assumptionFormula: '', assumptionIds: [] });
+
             branches[slot] = { ...branch, ...patch };
+
             onChange({ ...node, branches });
           }
+
           const unavailable = branch.assumptionIds.filter(
             (id) => !assumptions.some((choice) => choice.id === id),
           );
+
           return (
             <fieldset key={`branch-${slot}`} className="tree-branch">
               <legend>

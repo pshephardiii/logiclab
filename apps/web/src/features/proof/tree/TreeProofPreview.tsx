@@ -15,15 +15,18 @@ export function TreeProofPreview({
   const rendered = new Map<string, ReactNode>();
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
   const positions = new Map(proof.nodes.map((node, index) => [node.id, index + 1]));
+
   // Child views already exist when their parent is assembled; raw draft links never drive recursion.
   for (const index of layout?.order ?? []) {
     const node = proof.nodes[index]!;
+
     const child = (id: string | null) =>
       id && rendered.has(id) ? (
         rendered.get(id)
       ) : (
         <span className="tree-placeholder">Unselected or missing node</span>
       );
+
     rendered.set(
       node.id,
       <div className="tree-preview-node" key={node.id}>
@@ -63,6 +66,7 @@ export function TreeProofPreview({
       </div>,
     );
   }
+
   return (
     <section aria-label="Tree preview">
       <h4>Tree preview</h4>

@@ -12,6 +12,7 @@ import { requestAccountJson } from '../account-request';
 /** Bind resource operations to a supplied account request transport. */
 export function createApi(request: typeof requestAccountJson = requestAccountJson) {
   const fallback = 'Could not load or save assigned work. Please try again.';
+
   function listAssignedWork(classId: string, offset: number, signal: AbortSignal) {
     return request(`/api/student/classes/${classId}/assignments?offset=${offset}`, {
       schema: studentAssignmentListResponseSchema,
@@ -19,6 +20,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
     });
   }
+
   function readAssignedWork(id: string, signal: AbortSignal) {
     return request(`/api/student/assignments/${id}`, {
       schema: savedStudentAssignmentResponseSchema,
@@ -26,6 +28,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
     });
   }
+
   async function saveAssignedAnswers(id: string, input: SavedStudentAnswers, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/attempt`, {
@@ -37,6 +40,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       })
     ).attempt;
   }
+
   async function submitAssignedWork(id: string, revision: number, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/submission`, {
@@ -47,6 +51,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       })
     ).attempt;
   }
+
   async function checkAssignedAnswers(id: string, input: SavedStudentCheck, signal: AbortSignal) {
     return request(`/api/student/assignments/${id}/check`, {
       schema: savedStudentCheckResponseSchema,
@@ -55,6 +60,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       body: input,
     });
   }
+
   async function readAssignedSolution(id: string, itemId: string, signal: AbortSignal) {
     return (
       await request(`/api/student/assignments/${id}/items/${itemId}/solution`, {

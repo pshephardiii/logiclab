@@ -8,6 +8,7 @@ import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library'
 import { assignmentItemState } from './assignment-item-state';
 
 export type SelectedProblem = { key: string; maxPoints?: number; version: LibraryProblemVersion };
+
 type FormValues = {
   title: string;
   instructions: string;
@@ -18,6 +19,7 @@ type FormValues = {
 
 function assignmentMetadata(assignment: AssignmentDetail | null) {
   const gradeReleaseTiming: GradeReleaseTiming = assignment?.gradeReleaseTiming ?? 'on_submission';
+
   return {
     title: assignment?.title ?? '',
     instructions: assignment?.instructions ?? '',
@@ -38,6 +40,7 @@ export function assignmentFormDefaults(assignment: AssignmentDetail | null) {
       version: item.problemVersion,
       maxPoints: item.maxPoints ?? ASSIGNMENT_POINT_LIMITS.defaultPoints,
     })) ?? [];
+
   return { ...assignmentMetadata(assignment), items };
 }
 
@@ -54,13 +57,16 @@ export function allowsAssignmentProofs(
 /** Derive dirty/eligibility state; occurrence and point comparisons keep their existing rules. */
 export function assignmentFormState(assignment: AssignmentDetail | null, values: FormValues) {
   const original = assignmentMetadata(assignment);
+
   const itemState = assignmentItemState(
     values.items,
     assignment?.items ?? [],
     values.policy.assessmentMode === 'graded',
   );
+
   const containsProof = values.items.some((item) => item.version.definition.type === 'derivation');
   const allowsProofs = allowsAssignmentProofs(values.policy);
+
   return {
     ...itemState,
     containsProof,

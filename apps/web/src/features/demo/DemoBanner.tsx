@@ -5,7 +5,9 @@ import type { ReactNode } from 'react';
 
 export function DemoBanner({ children }: { children?: ReactNode }) {
   const { demoMode, demo } = useAccountContext();
+
   if (!demoMode || !demo?.session) return null;
+
   return (
     <aside className="demo-banner" aria-label="Demo notice">
       <div className="demo-banner-content">

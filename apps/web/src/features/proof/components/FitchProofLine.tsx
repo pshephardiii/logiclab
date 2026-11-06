@@ -14,6 +14,7 @@ type Props = {
   onMove: (delta: -1 | 1) => void;
   onDelete: () => void;
 };
+
 export function FitchProofLine({
   statement,
   purpose,
@@ -25,6 +26,7 @@ export function FitchProofLine({
   onDelete,
 }: Props) {
   const step = proof.steps[index]!;
+
   return (
     <section
       className="problem-option"

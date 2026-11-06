@@ -20,9 +20,11 @@ export function assignedWorkCapabilities(
 ) {
   const hasFinalSubmission =
     assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
+
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
   const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
   const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
+
   const solutionAvailable =
     assignment?.solutionAccess === 'anytime' ||
     (assignment?.solutionAccess === 'instructor_release' &&

@@ -14,6 +14,7 @@ export function ClassSelector({
 }) {
   const { listClassrooms } = useResourceApi(classroomsApi);
   const accountPath = useAccountPath();
+
   return (
     <ClassSelection
       value={value}

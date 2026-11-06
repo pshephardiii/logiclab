@@ -16,16 +16,21 @@ import '../problem-library.css';
 export function ProblemLibrary() {
   const library = useProblemLibrary();
   const [dirty, setDirty] = useState(false);
+
   useUnsavedWork(dirty && !library.selected?.archivedAt);
+
   const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
+
   const [preview, setPreview] = useState<{
     definition: LibraryProblemDefinition;
     key: number;
   } | null>(null);
+
   function showPreview(definition: LibraryProblemDefinition) {
     setPreview((previous) => ({ definition, key: (previous?.key ?? 0) + 1 }));
   }
+
   function select(problem: typeof library.selected) {
     confirmDiscard(() => {
       library.setSelected(problem);
@@ -34,6 +39,7 @@ export function ProblemLibrary() {
       setPreview(null);
     });
   }
+
   return (
     <>
       <header>

@@ -34,6 +34,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
   const graded = policy.assessmentMode === 'graded';
+
   const {
     itemsChanged,
     invalidPoints,
@@ -43,31 +44,40 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     invalidProofMode,
     dirty,
   } = assignmentFormState(assignment, { title, instructions, policy, gradeReleaseTiming, items });
+
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
 
   function add(version: LibraryProblemVersion) {
     if (version.definition.type === 'derivation' && !allowsProofs) return;
+
     setItems((previous) =>
       previous.length >= 50 ? previous : [...previous, { key: crypto.randomUUID(), version }],
     );
   }
+
   function move(index: number, direction: -1 | 1) {
     setItems((previous) => {
       const result = [...previous];
       const target = index + direction;
+
       if (target < 0 || target >= result.length) return previous;
+
       [result[index], result[target]] = [result[target]!, result[index]!];
       return result;
     });
   }
+
   function remove(index: number) {
     setItems((previous) => previous.filter((_, position) => position !== index));
   }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (invalidPoints || invalidProofMode || busy || readOnly) return;
+
     await onSave(
       createAssignmentRequestSchema.parse({
         title,
@@ -86,6 +96,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
       itemsChanged,
     );
   }
+
   return (
     <section className="panel assignment-editor" aria-label="Assignment editor">
       <h2>

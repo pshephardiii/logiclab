@@ -15,6 +15,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       ...classRequestOptions,
       signal,
     });
+
     return response;
   }
 
@@ -25,6 +26,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: { name },
     });
+
     return response.classroom;
   }
 
@@ -35,6 +37,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       body: {},
       fallback: 'Could not create the invitation. Please try again.',
     });
+
     return response.invitation;
   }
 

@@ -6,6 +6,7 @@ export function startDependencyProof(premises: { id: string; formula: string }[]
     format: 'dependency',
     steps: premises.map((premise) => {
       const id = crypto.randomUUID();
+
       return {
         kind: 'premise',
         id,
@@ -29,11 +30,15 @@ export function insertDependencyStep(
 ): DependencyProof {
   if (!uniqueDependencyIds(proof))
     throw new Error('Repair duplicate proof identities before inserting lines.');
+
   if (!Number.isInteger(index) || index < 0 || index > proof.steps.length)
     throw new Error('Choose an existing insertion position.');
+
   if (proof.steps.length >= PROOF_LIMITS.maxSteps)
     throw new Error('The proof line limit has been reached.');
+
   const id = crypto.randomUUID();
+
   const step: DependencyProofStep =
     kind === 'premise'
       ? { kind, id, formula: '', premiseId: null, dependencies: [id] }
@@ -48,6 +53,7 @@ export function insertDependencyStep(
             lineReferences: [],
             discharges: [],
           };
+
   return { ...proof, steps: [...proof.steps.slice(0, index), step, ...proof.steps.slice(index)] };
 }
 
@@ -57,8 +63,11 @@ export function moveDependencyStep(
   delta: -1 | 1,
 ): DependencyProof {
   const target = index + delta;
+
   if (!proof.steps[index] || !proof.steps[target]) return proof;
+
   const steps = [...proof.steps];
+
   [steps[index], steps[target]] = [steps[target]!, steps[index]!];
   return { ...proof, steps };
 }

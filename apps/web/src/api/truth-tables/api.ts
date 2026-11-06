@@ -27,6 +27,7 @@ function post<T>(route: string, payload: unknown, signal: AbortSignal, schema: R
     invalidJson: 'throw',
     error: (_status, body) => {
       const parsed = truthTableErrorResponseSchema.safeParse(body);
+
       return parsed.success
         ? new PracticeApiError(parsed.data.error.message, parsed.data.error.position)
         : new PracticeApiError('The request could not be completed. Please try again.');

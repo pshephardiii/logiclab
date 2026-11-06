@@ -12,13 +12,17 @@ export function useClassChoices(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { startRequest, cancelRequest } = useAbortableRequest();
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await loadPage(signal, offset);
+
         if (!signal.aborted) {
           setClasses((previous) =>
             offset
@@ -39,6 +43,7 @@ export function useClassChoices(
     },
     [loadPage, startRequest],
   );
+
   useEffect(() => {
     void load();
     return cancelRequest;

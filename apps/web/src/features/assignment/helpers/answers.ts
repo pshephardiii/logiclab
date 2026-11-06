@@ -8,6 +8,7 @@ import { submittedAnswers } from '../../truthTable/helpers/submitted-answers';
 
 export function answerMap(answers: AssignmentResponseValue): Answers {
   if (!Array.isArray(answers)) return {};
+
   return Object.fromEntries(
     answers.map((answer) => [cellKey(answer.rowId, answer.columnId), answer.value]),
   );
@@ -27,9 +28,13 @@ export function savedAnswerMaps(
       ]),
   );
 }
+
 export function sameAnswers(left: Answers, right: Answers | undefined): boolean {
   if (left === right) return true;
+
   if (!right) return false;
+
   const keys = Object.keys(left);
+
   return keys.length === Object.keys(right).length && keys.every((key) => left[key] === right[key]);
 }

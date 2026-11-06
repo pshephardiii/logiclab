@@ -19,6 +19,5 @@ export function useAbortableRequest() {
   }, [cancelRequest]);
 
   useEffect(() => cancelRequest, [cancelRequest]);
-
   return { startRequest, cancelRequest };
 }

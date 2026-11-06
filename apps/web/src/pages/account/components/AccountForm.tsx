@@ -26,6 +26,7 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
     const fields = Object.fromEntries(new FormData(form)) as Record<string, string>;
     void onSubmit(fields).finally(() => {
       const password = form.querySelector<HTMLInputElement>('input[type="password"]');
+
       if (password) password.value = '';
     });
   }
@@ -33,6 +34,7 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
   function handleResend(event: MouseEvent<HTMLButtonElement>) {
     const form = event.currentTarget.form!;
     const input = form.querySelector<HTMLInputElement>('input[name="email"]')!;
+
     if (input.reportValidity()) void onResend(input.value);
   }
 

@@ -16,10 +16,13 @@ export function FitchProofSummary({
 }) {
   const lines = new Map(proof?.steps.map((step, index) => [step.id, index + 1]));
   const line = (id: string | null) => (id ? (lines.get(id) ?? '?') : '?');
+
   const blocks = new Map(
     proof?.blocks.map((block) => [block.id, `${line(block.assumptionId)}–${line(block.endId)}`]),
   );
+
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
+
   return (
     <details>
       <summary>{label}</summary>

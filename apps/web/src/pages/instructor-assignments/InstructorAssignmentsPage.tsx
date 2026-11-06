@@ -9,6 +9,7 @@ import './instructor-assignments.css';
 function InstructorAssignments() {
   const [classId, setClassId] = useState('');
   const confirmDiscard = useConfirmDiscard();
+
   return (
     <>
       <header>
@@ -32,6 +33,7 @@ function InstructorAssignments() {
 
 export function InstructorAssignmentsPage() {
   const { user } = useAccountContext();
+
   return (
     <Page>
       <InstructorAssignments key={user?.id} />

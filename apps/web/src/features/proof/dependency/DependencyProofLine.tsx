@@ -23,6 +23,7 @@ export function DependencyProofLine({
   onDelete: () => void;
 }) {
   const step = proof.steps[index]!;
+
   const sources = proof.steps
     .slice(0, index + 1)
     .flatMap((line, position) =>
@@ -30,7 +31,9 @@ export function DependencyProofLine({
         ? []
         : [{ id: line.id, label: `${position + 1}. ${line.formula || '(blank)'}` }],
     );
+
   const unavailable = step.dependencies.filter((id) => !sources.some((source) => source.id === id));
+
   return (
     <section
       className="problem-option"

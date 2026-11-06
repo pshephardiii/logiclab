@@ -29,6 +29,7 @@ export function AssignedConceptualQuestion({
 }: Props) {
   const current = answer ?? blankConceptualAnswer(item);
   const content = item.content;
+
   const choices =
     content.type === 'true_false'
       ? [
@@ -36,12 +37,14 @@ export function AssignedConceptualQuestion({
           { id: 'false', text: 'False' },
         ]
       : content.options;
+
   const selected =
     current.type === 'true_false'
       ? current.answer === null
         ? null
         : String(current.answer)
       : current.optionId;
+
   const expected =
     solution?.type === 'true_false' && content.type === 'true_false'
       ? solution.correctAnswer
@@ -50,7 +53,9 @@ export function AssignedConceptualQuestion({
       : solution?.type === 'multiple_choice' && content.type === 'multiple_choice'
         ? content.options.find((option) => option.id === solution.correctOptionId)?.text
         : undefined;
+
   const visibleFeedback = feedback && !(neutralBlanks && feedback.status === 'unanswered');
+
   return (
     <section className="panel assigned-item">
       <h2>

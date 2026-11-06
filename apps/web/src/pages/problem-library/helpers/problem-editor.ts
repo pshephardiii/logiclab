@@ -3,6 +3,7 @@ import {
   type LibraryProblemDraft,
   type LibraryProblemDefinition,
 } from '@logiclab/contracts/problem-library';
+
 export type AuthoringDerivationDefinition = Extract<
   LibraryProblemDefinition,
   { type: 'derivation' }
@@ -24,6 +25,7 @@ export type ProblemEditorFields = {
 
 export function initialProblemFields(problem: LibraryProblemDraft | null): ProblemEditorFields {
   const definition = problem?.definition;
+
   return {
     title: problem?.title ?? '',
     instructions: problem?.instructions ?? '',
@@ -72,7 +74,9 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
   if (fields.type === 'derivation') return fields.derivation;
+
   const common = { type: fields.type, definitionVersion: 1 };
+
   return fields.type === 'truth_table'
     ? { ...common, formula: fields.formula }
     : fields.type === 'true_false'

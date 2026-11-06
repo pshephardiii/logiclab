@@ -26,13 +26,16 @@ export function FormulaForm({
   const validation = useFormulaValidation(formula);
   const canCreate = validation?.valid === true && !loading;
   const requestError = error !== validation?.message ? error : null;
+
   const descriptions = [
     'formula-help',
     'formula-validation',
     ...(requestError ? ['formula-error'] : []),
   ];
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (canCreate) void onCreate();
   }
 

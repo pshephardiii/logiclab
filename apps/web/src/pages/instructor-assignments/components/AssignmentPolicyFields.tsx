@@ -27,24 +27,31 @@ export function AssignmentPolicyFields({
   const [notice, setNotice] = useState<string | null>(null);
   const practice = policy.assessmentMode === 'ungraded_practice';
   const graded = policy.assessmentMode === 'graded';
+
   const legacyAssistance =
     policy.assessmentMode === 'completion_only' && policy.feedbackTiming !== 'on_submission';
+
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
     const next = assignmentPolicyTransition(policy, assessmentMode);
+
     onChange(next.policy);
+
     if (assessmentMode !== 'graded') onGradeReleaseChange('on_submission');
+
     setNotice(
       next.resetSolutions
         ? 'Practice has no final submission or instructor answer release. Answer reveal was changed to Never.'
         : null,
     );
   }
+
   function changeTiming(event: ChangeEvent<HTMLSelectElement>) {
     onChange(
       assignmentLearningPolicySchema.parse({ ...policy, feedbackTiming: event.target.value }),
     );
   }
+
   function changeSolutions(event: ChangeEvent<HTMLSelectElement>) {
     onChange(
       assignmentLearningPolicySchema.parse({
@@ -54,6 +61,7 @@ export function AssignmentPolicyFields({
     );
     setNotice(null);
   }
+
   return (
     <div className="assignment-policy">
       <label htmlFor="assignment-mode">Assessment mode</label>

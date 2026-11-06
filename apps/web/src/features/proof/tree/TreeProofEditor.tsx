@@ -31,19 +31,23 @@ export function TreeProofEditor({
   const reference = purpose === 'reference';
   const [deletion, setDeletion] = useState<{ id: string } | { all: true } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   function change(next: TreeProof | null) {
     setDeletion(null);
     setError(null);
     onChange(next);
   }
+
   function add(kind: TreeProofNode['kind']) {
     if (!proof) return;
+
     try {
       change(appendTreeNode(proof, kind));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not add a proof node.');
     }
   }
+
   return (
     <section
       className="proof-editor"

@@ -11,6 +11,7 @@ type Props = {
 /** Retain unresolved IDs as explicit choices instead of silently selecting another target. */
 export function ProofChoice({ label, value, choices, empty = 'None', onChange }: Props) {
   const id = useId();
+
   return (
     <div>
       <label htmlFor={id}>{label}</label>

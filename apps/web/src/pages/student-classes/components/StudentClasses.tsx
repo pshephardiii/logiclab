@@ -4,6 +4,7 @@ import { useStudentClasses } from '../hooks/useStudentClasses';
 
 export function StudentClasses() {
   const state = useStudentClasses();
+
   return (
     <ClassroomPanel
       headingId="student-classes-heading"

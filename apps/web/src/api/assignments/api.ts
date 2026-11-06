@@ -30,6 +30,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       fallback,
       signal,
     });
+
     return response.assignment;
   }
 
@@ -44,6 +45,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: input,
     });
+
     return response.assignment;
   }
 
@@ -55,6 +57,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       method: 'PATCH',
       body: input,
     });
+
     return response.assignment;
   }
 
@@ -69,6 +72,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
       signal,
       body: {},
     });
+
     return response.assignment;
   }
 

@@ -3,6 +3,7 @@ import type { DerivationContent } from '@logiclab/contracts/derivation';
 import { ProofChoice } from './ProofChoice';
 
 type PremiseStep = Extract<ProofStep, { kind: 'premise' }>;
+
 type Props = {
   step: PremiseStep;
   index: number;

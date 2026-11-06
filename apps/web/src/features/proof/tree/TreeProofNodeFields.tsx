@@ -19,10 +19,12 @@ export function TreeProofNodeFields({
   onDelete: () => void;
 }) {
   const node = proof.nodes[index]!;
+
   const premise =
     node.kind === 'premise'
       ? statement.premises.find((value) => value.id === node.premiseId)
       : undefined;
+
   return (
     <section className="problem-option" aria-label={`Proof node ${index + 1}`}>
       <h4>

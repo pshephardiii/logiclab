@@ -313,6 +313,8 @@ Group tightly related local operations instead of mechanically separating every 
 
 Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer meaningful boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
 
+In TSX, apply statement spacing to component logic and hooks without adding blank lines between JSX elements or props by analogy. Keep markup compact; use brief JSX comments to explain dense conditional sections, especially mode/type dispatch, retained feedback and independent disclosure, rather than labeling every visible element.
+
 Keep stacked decorators together and directly above their class or property, following Prettier's formatting. Do not disable class formatting solely to preserve blank lines between decorators or before a class declaration. Continue separating decorated property groups with blank lines. Use spacing and meaningful stage comments rather than routine “End of …” comments after long declarations.
 
 Use braces for multiline conditional branches; Prettier does not add them automatically.

@@ -52,6 +52,7 @@ export function ExercisePanel({
       Enter a formula above and select <strong>“Create table”</strong> to start.
     </>
   );
+
   const solutionLabel =
     action === 'solution' ? 'Loading solution…' : solution ? 'Hide solution' : 'Show solution';
 

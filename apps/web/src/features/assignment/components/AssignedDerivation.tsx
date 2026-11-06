@@ -39,6 +39,7 @@ export function AssignedDerivation({
   onCheck,
 }: Props) {
   const proof = answer?.proof ?? null;
+
   const report =
     proof &&
     proof.format === item.content.format &&
@@ -46,6 +47,7 @@ export function AssignedDerivation({
     JSON.stringify(proof) === JSON.stringify(feedback.proof)
       ? feedback.report
       : null;
+
   return (
     <section className="panel assigned-item proof-editor">
       <h2>
@@ -85,6 +87,7 @@ export function AssignedDerivation({
       ) : (
         <p>No rules enabled.</p>
       )}
+      {/* Reject mismatched saved work before choosing read-only review or the pinned-format editor. */}
       {proof && proof.format !== item.content.format ? (
         <p role="alert" className="error">
           The saved proof format does not match this problem. Reload saved work before editing.
@@ -158,6 +161,7 @@ export function AssignedDerivation({
           stepLabel={item.content.format === 'tree' ? 'Node' : 'Line'}
         />
       )}
+      {/* Reference reveal is independent of the student's proof and its check report. */}
       {solution && solution.format === item.content.format && (
         <div className="conceptual-solution">
           <h3>Instructor solution</h3>

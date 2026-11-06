@@ -1,6 +1,7 @@
 import { demoSessionResponseSchema, demoMessageResponseSchema } from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
 import { AccountApiError } from '../errors';
+
 export type { DemoSessionResponse } from '@logiclab/contracts';
 
 export async function loadDemoSession(signal: AbortSignal) {
@@ -13,9 +14,11 @@ export async function loadDemoSession(signal: AbortSignal) {
   } catch (error) {
     if (error instanceof AccountApiError && (error.status === 401 || error.status === 404))
       return null;
+
     throw error;
   }
 }
+
 export function demoAction(
   action: 'start' | 'role' | 'reset',
   signal: AbortSignal,
@@ -35,6 +38,7 @@ export function demoAction(
         : undefined,
   });
 }
+
 export function endDemo(signal: AbortSignal) {
   return requestAccountJson('/api/demo/logout', {
     signal,

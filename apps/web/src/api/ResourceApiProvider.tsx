@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { requestAccountJson } from './account-request';
 
 export type ResourceScope = 'normal' | 'demo';
+
 const ResourceScopeContext = createContext<ResourceScope>('normal');
 
 /** Route composition selects the resource namespace; transport never reads browser location. */
@@ -28,6 +29,7 @@ export function useResourceApi<T>(
   module: T & { createApi: (request: typeof requestAccountJson) => T },
 ): T {
   const scope = useContext(ResourceScopeContext);
+
   return useMemo(
     () => (scope === 'normal' ? module : module.createApi(createResourceRequest(scope))),
     [module, scope],

@@ -7,6 +7,7 @@ export function assignmentPolicyTransition(
 ) {
   const resetSolutions =
     assessmentMode === 'ungraded_practice' && !['never', 'anytime'].includes(policy.solutionAccess);
+
   return {
     policy: assignmentLearningPolicySchema.parse({
       assessmentMode,

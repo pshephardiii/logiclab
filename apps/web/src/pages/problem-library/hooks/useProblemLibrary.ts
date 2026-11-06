@@ -23,13 +23,17 @@ export function useProblemLibrary() {
   const [notice, setNotice] = useState<string | null>(null);
   const list = useAbortableRequest();
   const action = useAbortableRequest();
+
   const load = useCallback(
     async (offset = 0) => {
       const signal = list.startRequest();
+
       setLoading(true);
       setError(null);
+
       try {
         const page = await api.listProblems(filter, offset, signal);
+
         if (!signal.aborted) {
           setProblems((previous) =>
             offset === 0 ? page.problems : appendPageById(previous, page.problems),
@@ -45,6 +49,7 @@ export function useProblemLibrary() {
     },
     [api, filter, list.startRequest],
   );
+
   useEffect(() => {
     void load();
     return list.cancelRequest;
@@ -56,40 +61,53 @@ export function useProblemLibrary() {
     saving = false,
   ) {
     const signal = action.startRequest();
+
     list.cancelRequest();
+
     setLoading(false);
     setBusy(true);
     setError(null);
     setSaveError(null);
     setNotice(null);
+
     try {
       const problem = await operation(signal);
+
       if (signal.aborted) return false;
+
       setSelected(problem);
       setNotice(message);
+
       await load();
+
       return true;
     } catch (caught) {
       if (!signal.aborted) {
         const message = caught instanceof Error ? caught.message : 'Could not save the problem.';
+
         if (saving) setSaveError(message);
         else setError(message);
       }
+
       return false;
     } finally {
       if (!signal.aborted) setBusy(false);
     }
   }
+
   function save(input: CreateLibraryProblemRequest) {
     return mutate((signal) => api.saveProblem(input, signal, selected?.id), 'Draft saved.', true);
   }
+
   function archive() {
     if (!selected) return;
+
     return mutate(
       (signal) => api.archiveProblem(selected.id, !selected.archivedAt, signal),
       selected.archivedAt ? 'Problem restored.' : 'Problem archived.',
     );
   }
+
   return {
     filter,
     setFilter,

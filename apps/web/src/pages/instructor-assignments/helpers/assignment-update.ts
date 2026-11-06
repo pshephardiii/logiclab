@@ -11,7 +11,9 @@ export function assignmentUpdate(
   itemsChanged: boolean,
 ): UpdateAssignmentRequest {
   const { problemVersionIds, items, ...metadata } = input;
+
   if (itemsChanged) return { ...metadata, ...(items ? { items } : { problemVersionIds }) };
+
   if (items && items.some((item, index) => item.maxPoints !== selected.items[index]?.maxPoints)) {
     return {
       ...metadata,
@@ -21,5 +23,6 @@ export function assignmentUpdate(
       })),
     };
   }
+
   return metadata;
 }

@@ -20,16 +20,23 @@ export function ClassroomInvitation({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
+
   useEffect(() => () => request.current?.abort(), []);
+
   async function generate() {
     const controller = new AbortController();
+
     request.current?.abort();
+
     request.current = controller;
+
     setBusy(true);
     setError(null);
     setInvitation(null);
+
     try {
       const result = await replaceInvitation(classId, controller.signal);
+
       if (!controller.signal.aborted) setInvitation(result);
     } catch (caught) {
       if (!controller.signal.aborted) {
@@ -43,6 +50,7 @@ export function ClassroomInvitation({
       if (!controller.signal.aborted) setBusy(false);
     }
   }
+
   return (
     <section className="classroom-invitation" aria-label={`Invitation for ${className}`}>
       <p className="help">

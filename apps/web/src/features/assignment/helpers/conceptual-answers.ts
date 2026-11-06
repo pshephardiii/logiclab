@@ -18,19 +18,24 @@ export function savedConceptualAnswers(
   attempt: SavedStudentAttempt | null,
 ) {
   const answers: Record<string, ConceptualAnswer> = {};
+
   for (const item of assignment.items) {
     if (!('content' in item) || item.content.type === 'derivation') continue;
+
     const saved = attempt?.answers[item.id];
+
     answers[item.id] =
       saved && !Array.isArray(saved) && saved.type !== 'derivation'
         ? saved
         : blankConceptualAnswer({ content: item.content });
   }
+
   return answers;
 }
 
 export function sameConceptualAnswer(left: ConceptualAnswer, right?: ConceptualAnswer): boolean {
   if (left.type === 'true_false') return right?.type === left.type && left.answer === right.answer;
+
   return right?.type === left.type && left.optionId === right.optionId;
 }
 

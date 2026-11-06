@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { AssignmentDetail } from '@logiclab/contracts';
 
 type ReleaseAction = 'release-grades' | 'reveal-answers';
+
 type Props = {
   assignment: AssignmentDetail;
   busy: boolean;
@@ -11,17 +12,25 @@ type Props = {
 /** Independent, irreversible class-wide actions; failed requests remain explicitly retryable. */
 export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props) {
   const [pending, setPending] = useState<ReleaseAction | null>(null);
+
   if (!assignment.publishedAt || assignment.assessmentMode === 'ungraded_practice') return null;
+
   const manualGrades =
     assignment.assessmentMode === 'graded' &&
     assignment.gradeReleaseTiming === 'instructor_release';
+
   const manualAnswers = assignment.solutionAccess === 'instructor_release';
+
   if (!manualGrades && !manualAnswers) return null;
+
   const disabled = busy || Boolean(assignment.archivedAt);
+
   async function confirm() {
     if (!pending || disabled) return;
+
     if (await onRelease(pending)) setPending(null);
   }
+
   return (
     <section
       className="panel"

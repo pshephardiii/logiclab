@@ -25,6 +25,7 @@ type Props = {
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
 };
+
 type Deletion = { kind: 'line'; index: number } | { kind: 'block'; id: string } | { kind: 'proof' };
 
 export function FitchProofEditor({ statement, proof, purpose, onChange }: Props) {
@@ -34,11 +35,13 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
   const [before, setBefore] = useState<string | null>(null);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   function change(next: FitchProof | null) {
     setDeletion(null);
     setError(null);
     onChange(next);
   }
+
   if (!proof)
     return (
       <section
@@ -62,29 +65,36 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
         </button>
       </section>
     );
+
   const safe = uniqueProofIds(proof);
   const { lines, lineScopes, blockChoices } = proofEditorChoices(proof);
   const affected = deletion?.kind === 'block' ? proofSubtree(proof, deletion.id) : null;
+
   const deletedCount = affected
     ? proof.steps.filter((step) => step.blockId && affected.has(step.blockId)).length
     : deletion?.kind === 'line'
       ? 1
       : proof.steps.length;
+
   function insert(subproof: boolean, premise = false) {
     try {
       const index =
         before === null
           ? proof!.steps.length
           : proof!.steps.findIndex((step) => step.id === before);
+
       const next = premise
         ? insertProofPremise(proof!, index)
         : insertProofStep(proof!, index, scope, subproof);
+
       if (subproof) setScope(next.blocks.at(-1)!.id);
+
       change(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not insert a proof line.');
     }
   }
+
   return (
     <section
       className="proof-editor"

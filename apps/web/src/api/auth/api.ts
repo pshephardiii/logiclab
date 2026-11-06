@@ -23,9 +23,11 @@ export async function loadSession(signal: AbortSignal): Promise<SignedInUser | n
       ...authRequestOptions,
       signal,
     });
+
     return response.user;
   } catch (error) {
     if (error instanceof AccountApiError && error.status === 401) return null;
+
     throw error;
   }
 }
@@ -37,6 +39,7 @@ export async function login(body: Record<string, string>, signal: AbortSignal) {
     signal,
     body,
   });
+
   return response.user;
 }
 
@@ -51,5 +54,6 @@ export async function accountAction(
     signal,
     body,
   });
+
   return response.message;
 }

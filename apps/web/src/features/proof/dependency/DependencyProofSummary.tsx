@@ -15,6 +15,7 @@ export function DependencyProofSummary({
   const positions = new Map(proof?.steps.map((step, index) => [step.id, index + 1]));
   const line = (id: string | null) => (id ? (positions.get(id) ?? '?') : '?');
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
+
   return (
     <details>
       <summary>{label}</summary>

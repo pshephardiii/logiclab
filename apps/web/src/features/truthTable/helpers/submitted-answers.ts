@@ -9,6 +9,7 @@ export function submittedAnswers(
   answers: Answers,
 ): TruthTableCheckRequest['answers'] {
   const answerColumns = exercise.columns.filter((column) => column.kind === 'answer');
+
   return exercise.rows.flatMap((row) =>
     answerColumns.map((column) => ({
       rowId: row.id,

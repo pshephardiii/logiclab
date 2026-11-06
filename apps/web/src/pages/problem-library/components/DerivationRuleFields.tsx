@@ -27,6 +27,7 @@ export function DerivationRuleFields({ format, rules, labels, onChange }: Props)
       {PROPOSITIONAL_RULE_CATALOG.map((rule) => {
         const enabled = rules.some((value) => value.id === rule.id);
         const label = labels[rule.id] ?? rule.label;
+
         return (
           <div className="problem-option" key={rule.id}>
             <label className="correct-option">

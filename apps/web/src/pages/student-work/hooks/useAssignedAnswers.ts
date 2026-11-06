@@ -29,6 +29,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
   const [choiceBaseline, setChoiceBaseline] = useState<Record<string, ConceptualAnswer>>({});
   const [proofAnswers, setProofAnswers] = useState<Record<string, DerivationAnswer>>({});
   const [proofBaseline, setProofBaseline] = useState<Record<string, DerivationAnswer>>({});
+
   const dirty = useMemo(
     () => [
       ...Object.keys(answers).filter((id) => !sameAnswers(answers[id]!, baseline[id])),
@@ -41,6 +42,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     ],
     [answers, baseline, choiceAnswers, choiceBaseline, proofAnswers, proofBaseline],
   );
+
   const completionReady = useMemo(
     () => assignmentCompletionReady(assignment, { answers, choiceAnswers, proofAnswers }),
     [assignment, answers, choiceAnswers, proofAnswers],
@@ -48,24 +50,33 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
 
   const resetAnswers = useCallback((source: StudentAssignment, attempt: StudentAttempt | null) => {
     const tables = savedAnswerMaps(source, attempt);
+
     setAnswers(tables);
     setBaseline(tables);
+
     const choices = savedConceptualAnswers(source, attempt);
+
     setChoiceAnswers(choices);
     setChoiceBaseline(choices);
+
     const proofs = savedProofAnswers(source, attempt);
+
     setProofAnswers(proofs);
     setProofBaseline(proofs);
   }, []);
+
   const changeTableAnswers = useCallback((itemId: string, snapshot: Answers) => {
     setAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
   }, []);
+
   const changeChoiceAnswers = useCallback((itemId: string, snapshot: ConceptualAnswer) => {
     setChoiceAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
   }, []);
+
   const changeProofAnswers = useCallback((itemId: string, snapshot: DerivationAnswer) => {
     setProofAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
   }, []);
+
   // Advance only the confirmed snapshot's baseline, leaving every other draft untouched.
   const markSaved = useCallback(
     (itemId: string, tableSnapshot: Answers, response: AssignmentResponseValue) => {
@@ -77,6 +88,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     },
     [],
   );
+
   function responseFor(
     item: StudentAssignment['items'][number],
     tableSnapshot = answers[item.id] ?? {},
@@ -87,6 +99,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
         ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
         : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
   }
+
   return {
     answers,
     choiceAnswers,

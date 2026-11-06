@@ -14,10 +14,14 @@ export function TruthTablePractice() {
 
   useEffect(() => {
     const created = practice.exercise !== null && practice.exercise !== previousExercise.current;
+
     previousExercise.current = practice.exercise;
+
     // Returning to a retained table or checking answers should not move the page.
     if (!created) return;
+
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     tablePanelRef.current?.scrollIntoView({
       behavior: reducedMotion ? 'instant' : 'smooth',
       block: 'start',

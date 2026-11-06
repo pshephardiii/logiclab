@@ -3,14 +3,17 @@ import type {
   ProofSubmissionResult,
   ProofCompletionSubmissionResult,
 } from '@logiclab/contracts/proof-submission';
+
 type SubmissionResult = ObjectiveResult | ProofSubmissionResult | ProofCompletionSubmissionResult;
 
 /** Completion records intentionally contain no correctness feedback. */
 export function submissionFeedback(result: SubmissionResult | null | undefined, itemId: string) {
   if (result?.gradingVersion === 'mixed_v1' || result?.gradingVersion === 'proof_mixed_v1') {
     const item = result.items.find((item) => item.itemId === itemId);
+
     return item?.type === 'truth_table' ? item.feedback : null;
   }
+
   return result?.gradingVersion === 'truth_table_v1'
     ? (result.items.find((item) => item.itemId === itemId)?.feedback ?? null)
     : null;
@@ -23,7 +26,9 @@ export function conceptualSubmissionFeedback(
 ) {
   if (result?.gradingVersion !== 'mixed_v1' && result?.gradingVersion !== 'proof_mixed_v1')
     return null;
+
   const item = result.items.find((item) => item.itemId === itemId);
+
   return item && item.type !== 'truth_table' && item.type !== 'derivation' ? item.feedback : null;
 }
 
@@ -37,6 +42,8 @@ export function proofSubmissionFeedback(
     result?.gradingVersion !== 'proof_completion_v1'
   )
     return null;
+
   const item = result.items.find((item) => item.itemId === itemId);
+
   return item?.type === 'derivation' ? item.report : null;
 }

@@ -4,6 +4,7 @@ import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from './ProofChoice';
 
 type InferenceStep = Extract<ProofStep, { kind: 'inference' }>;
+
 type Props = {
   step: InferenceStep;
   index: number;
@@ -16,6 +17,7 @@ type Props = {
 /** Preserve existing citation slots and unresolved IDs when the selected rule changes. */
 export function FitchInferenceFields({ step, index, steps, rules, blocks, onChange }: Props) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
+
   return (
     <>
       <ProofChoice
@@ -44,8 +46,10 @@ export function FitchInferenceFields({ step, index, steps, rules, blocks, onChan
             }))}
             onChange={(id) => {
               const refs = [...step.lineReferences];
+
               if (id) refs[slot] = id;
               else refs.splice(slot, 1);
+
               onChange({ ...step, lineReferences: refs.filter(Boolean) });
             }}
           />
@@ -61,8 +65,10 @@ export function FitchInferenceFields({ step, index, steps, rules, blocks, onChan
             choices={blocks}
             onChange={(id) => {
               const refs = [...step.subproofReferences];
+
               if (id) refs[slot] = id;
               else refs.splice(slot, 1);
+
               onChange({ ...step, subproofReferences: refs.filter(Boolean) });
             }}
           />
