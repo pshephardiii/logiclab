@@ -8,6 +8,7 @@ export function getAssignmentSubmissionHandler(context: AssignmentContext) {
   return async (request: FastifyRequest) => {
     const user = await instructor(request, context);
     const { assignmentId, submissionId } = parseRequest(submissionParamsSchema, request.params);
+
     return submissionReviewSchema.parse(
       await context.submissionReviews.findSubmission(user.id, assignmentId, submissionId),
     );

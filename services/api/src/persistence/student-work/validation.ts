@@ -14,9 +14,12 @@ export function policyFor(assignment: {
     feedbackTiming: assignment.feedbackTiming,
     solutionAccess: assignment.solutionAccess,
   });
+
   if (!policy.success) throw new StudentWorkError('unsupported_policy');
+
   return policy.data;
 }
+
 export function checkRevision(attempt: AttemptEntity, revision: number) {
   if (attempt.revision !== revision) throw new StudentWorkError('revision_conflict');
 }

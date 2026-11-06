@@ -9,11 +9,13 @@ import { createJobStore } from '../persistence/jobs/store';
 /** Operator composition only; caller owns the connection. API startup never invokes job cycles. */
 export async function createJobRuntime(orm: Awaited<ReturnType<typeof createDatabase>>) {
   const reader = await createBillingReconciliationReader(orm);
+
   const registry = createJobRegistry({
     demo_cleanup: createDemoCleanupHandler((signal) =>
       cleanupExpiredDemoWorkspaces(orm, 10, signal),
     ),
     billing_reconciliation: createBillingReconciliationHandler(reader),
   });
+
   return { registry, store: await createJobStore(orm, registry) };
 }

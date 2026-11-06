@@ -29,14 +29,18 @@ export function calculateSubmissionResult(
 ): CalculatedSubmission {
   if (!validAssignmentScoring(assignment, assigned))
     throw new StudentWorkError('unsupported_policy');
+
   const containsProof = assigned.some(
     (item) => item.problemVersion.definition.type === 'derivation',
   );
+
   if (containsProof) assertProofWorkPolicy(assignment);
+
   const allocations = assigned.map((item) => ({
     itemId: item.id,
     maxPoints: item.maxPoints!,
   }));
+
   if (containsProof) {
     // Proof evidence and automatic points are frozen separately from later instructor awards.
     const occurrences = assigned.map((item) => ({
@@ -44,15 +48,20 @@ export function calculateSubmissionResult(
       problemVersionId: item.problemVersion.id,
       definition: libraryProblemDefinition(item.problemVersion.definition),
     }));
+
     if (assignment.assessmentMode === 'completion_only')
       return { result: evaluateProofCompletion(occurrences, answers) };
+
     const result = evaluateProofSubmission(occurrences, answers);
+
     return { result, score: scoreProofSubmission(allocations, result) };
   }
+
   const evaluate =
     assignment.assessmentMode === 'completion_only'
       ? evaluateAssignmentCompletion
       : evaluateAssignmentSubmission;
+
   const result = evaluate(
     assigned.map((item) => ({
       id: item.id,
@@ -60,6 +69,7 @@ export function calculateSubmissionResult(
     })),
     assignmentResponsesSchema.parse(answers),
   );
+
   return {
     result,
     ...(assignment.assessmentMode === 'graded'

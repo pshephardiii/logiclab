@@ -14,7 +14,9 @@ import { StudentWorkError } from './errors';
 /** Transport validation alone: incomplete formulas, annotations and citations remain draft work. */
 export function validateDependencyAnswer(value: unknown): DependencyDerivationAnswer {
   const parsed = dependencyDerivationAnswerSchema.safeParse(value);
+
   if (!parsed.success) throw new StudentWorkError('invalid_answer');
+
   return parsed.data;
 }
 
@@ -28,6 +30,7 @@ export function evaluateDependencyAnswer(
 ): DerivationEvaluationEvidence {
   const content = validateDependencyContent(authoritative.content);
   const answer = validateDependencyAnswer(value);
+
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',
     type: 'derivation',

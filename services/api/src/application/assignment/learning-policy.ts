@@ -46,7 +46,10 @@ export function resolveAssignmentLearningPolicy(
   const defined = Object.fromEntries(
     Object.entries(patch).filter(([, value]) => value !== undefined),
   );
+
   const result = assignmentLearningPolicySchema.safeParse({ ...current, ...defined });
+
   if (!result.success) throw new AssignmentOperationError('invalid_policy');
+
   return result.data;
 }

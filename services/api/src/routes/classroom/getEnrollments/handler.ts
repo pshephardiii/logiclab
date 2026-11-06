@@ -10,6 +10,7 @@ export function getEnrollmentsHandler(context: ClassroomContext) {
     const user = await student(request, context);
     const { limit, offset } = parseRequest(classroomListQuerySchema, request.query);
     const rows = await context.classrooms.listEnrolled(user.id, limit + 1, offset);
+
     return classroomPage(rows, { limit, offset });
   };
 }

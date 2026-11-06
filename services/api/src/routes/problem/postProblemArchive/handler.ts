@@ -10,9 +10,13 @@ export function postProblemArchiveHandler(context: ProblemContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await instructor(request, context);
     const { problemId } = parseRequest(problemParamsSchema, request.params);
+
     parseRequest(emptyProblemRequestSchema, request.body ?? {});
+
     const problem = await context.problems.setArchived(user.id, problemId, true);
+
     if (!problem) throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
+
     return libraryProblemResponseSchema.parse({ problem });
   };
 }

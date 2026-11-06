@@ -12,8 +12,11 @@ export function postAssignmentDuplicateHandler(context: AssignmentContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await instructor(request, context);
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
+
     parseRequest(assignmentActionRequestSchema, request.body);
+
     const assignment = await context.assignments.duplicate(user.id, assignmentId);
+
     reply.code(201);
     return assignmentResponseSchema.parse({ assignment });
   };

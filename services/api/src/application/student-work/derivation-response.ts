@@ -12,7 +12,9 @@ import { StudentWorkError } from './errors';
 /** Validate only bounded transport. Incorrect, unfinished and structurally invalid proofs can save. */
 export function validateDerivationAnswer(value: unknown): DerivationAnswer {
   const parsed = derivationAnswerSchema.safeParse(value);
+
   if (!parsed.success) throw new StudentWorkError('invalid_answer');
+
   return parsed.data;
 }
 
@@ -27,6 +29,7 @@ export function evaluateDerivationAnswer(
 ): DerivationEvaluationEvidence {
   const content = validateFitchContent(authoritative.content);
   const answer = validateDerivationAnswer(value);
+
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',
     type: 'derivation',

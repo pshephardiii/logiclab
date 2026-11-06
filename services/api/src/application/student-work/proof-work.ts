@@ -9,6 +9,7 @@ export type ProofSubmissionOccurrence = {
   problemVersionId: string;
   definition: LibraryProblemDefinition;
 };
+
 const identitiesSchema = z
   .array(
     z.strictObject({
@@ -25,21 +26,30 @@ export function validatedProofWork(items: ProofSubmissionOccurrence[], input: un
   const identities = identitiesSchema.safeParse(
     items.map(({ id, problemVersionId }) => ({ id, problemVersionId })),
   );
+
   const parsed = savedStudentResponsesSchema.safeParse(input);
+
   if (!identities.success || !parsed.success) throw new StudentWorkError('invalid_answer');
+
   const assigned = items.map((item, index) => ({
     ...identities.data[index]!,
     definition: libraryProblemDefinition(item.definition),
   }));
+
   const itemIds = new Set(assigned.map((item) => item.id));
   const responses = new Map<string, (typeof parsed.data)[string]>();
+
   for (const [id, answer] of Object.entries(parsed.data)) {
     const normalized = id.toLowerCase();
+
     if (!itemIds.has(normalized) || responses.has(normalized))
       throw new StudentWorkError('invalid_answer');
+
     responses.set(normalized, answer);
   }
+
   if (!assigned.some((item) => item.definition.type === 'derivation'))
     throw new StudentWorkError('unsupported_policy');
+
   return { assigned, responses };
 }

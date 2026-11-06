@@ -11,12 +11,16 @@ export async function createScheduleStore(
   registry: JobRegistry,
 ): Promise<Pick<JobStore, 'setupSchedule' | 'enqueue' | 'scheduleDue'>> {
   const { JobSchedule, DurableJob, LockMode } = await import('@logiclab/db');
+
   return {
     async setupSchedule(jobType) {
       const definition = registry[jobType];
+
       if (!definition) throw new Error('Unsupported job type.');
+
       return orm.em.fork().transactional(async (em) => {
         const now = await databaseTime(em);
+
         await em.upsert(
           JobSchedule,
           {
@@ -30,15 +34,20 @@ export async function createScheduleStore(
           },
           { onConflictFields: ['name'], onConflictAction: 'ignore' },
         );
+
         const schedule = await em.findOneOrFail(JobSchedule, { name: jobType }, { refresh: true });
+
         if (schedule.jobType !== jobType)
           throw new Error('Schedule name conflicts with another job type.');
+
         return schedule.id;
       });
     },
+
     async enqueue(jobType, deduplicationKey) {
       if (!registry[jobType] || !deduplicationKey.trim() || deduplicationKey.length > 255)
         throw new Error('Invalid job request.');
+
       return orm.em.fork().transactional(async (em) => {
         await em.upsert(
           DurableJob,
@@ -51,14 +60,17 @@ export async function createScheduleStore(
           },
           { onConflictFields: ['jobType', 'deduplicationKey'], onConflictAction: 'ignore' },
         );
+
         return (
           await em.findOneOrFail(DurableJob, { jobType, deduplicationKey }, { refresh: true })
         ).id;
       });
     },
+
     async scheduleDue(limit) {
       return orm.em.fork().transactional(async (em) => {
         const now = await databaseTime(em);
+
         const schedules = await em.find(
           JobSchedule,
           { enabled: true, nextRunAt: { $lte: now } },
@@ -68,9 +80,12 @@ export async function createScheduleStore(
             lockMode: LockMode.PESSIMISTIC_PARTIAL_WRITE,
           },
         );
+
         for (const schedule of schedules) {
           if (!registry[schedule.jobType]) throw new Error('Unsupported scheduled job.');
+
           const occurrence = schedule.nextRunAt;
+
           await em.upsert(
             DurableJob,
             {
@@ -84,9 +99,12 @@ export async function createScheduleStore(
             },
             { onConflictFields: ['schedule', 'scheduledFor'], onConflictAction: 'ignore' },
           );
+
           schedule.nextRunAt = nextScheduledTime(occurrence, schedule.intervalSeconds, now);
         }
+
         await em.flush();
+
         return schedules.length;
       });
     },

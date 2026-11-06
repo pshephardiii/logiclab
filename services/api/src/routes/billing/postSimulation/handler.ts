@@ -14,6 +14,7 @@ export function postSimulationHandler(context: BillingContext) {
     const { purchaseId } = parseRequest(billingPurchaseParamsSchema, request.params);
     const input = parseRequest(simulatorRequestSchema, request.body);
     const result = await context.billing.simulate(user.id, purchaseId, input.outcome);
+
     reply.code(200);
     return paymentReceiptResponseSchema.parse(result);
   };

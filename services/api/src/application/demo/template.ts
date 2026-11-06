@@ -71,8 +71,11 @@ export const DEMO_CONCEPTUAL_QUESTIONS: {
 
 /** Reference identities are local to each immutable proof; there are no global row references here. */
 const assumptionId = 'd1111111-1111-4111-8111-111111111111';
+
 const conclusionId = 'd2222222-2222-4222-8222-222222222222';
+
 const blockId = 'd3333333-3333-4333-8333-333333333333';
+
 const proofStatement = {
   type: 'derivation' as const,
   definitionVersion: 1 as const,
@@ -84,6 +87,7 @@ const proofStatement = {
   explanation:
     'Assume P. The assumption itself supplies P. Discharge that assumption to conclude P → P without remaining assumptions.',
 };
+
 export const DEMO_DERIVATIONS: {
   title: string;
   instructions: string;

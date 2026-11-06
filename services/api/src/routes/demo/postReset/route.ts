@@ -11,6 +11,7 @@ export const postResetSchema = {
   body: demoEmptyRequestSchema,
   response: { 200: demoSessionResponseSchema, ...demoErrorResponses },
 } satisfies RouteSchema;
+
 export async function postResetRoute(app: FastifyInstance, runtime: DemoRuntime) {
   app.route({
     method: 'POST',

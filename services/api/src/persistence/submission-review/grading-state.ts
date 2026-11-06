@@ -19,16 +19,20 @@ export function submissionGradingState(automatic: unknown, record: RevisionEntit
     revision: 0,
     items: [],
   };
+
   try {
     const score = effectiveAssignmentScore(automatic, grading);
     const parsed = instructorGradingSchema.parse(grading);
+
     if (
       record &&
       (record.revision !== parsed.revision ||
         JSON.stringify(assignmentScoreSchema.parse(record.score)) !== JSON.stringify(score))
     )
       throw new SubmissionGradingError('invalid_grading');
+
     const response = submissionGradingResponseSchema.parse({ grading: parsed, score });
+
     if (record)
       submissionGradingHistoryEntrySchema.parse({
         ...response,
@@ -37,6 +41,7 @@ export function submissionGradingState(automatic: unknown, record: RevisionEntit
         reviewedAt: record.createdAt.toISOString(),
         changes: record.changes,
       });
+
     return response;
   } catch {
     throw new SubmissionGradingError('invalid_grading');
@@ -47,8 +52,11 @@ export function submissionGradingState(automatic: unknown, record: RevisionEntit
 export async function latestSubmissionGrading(em: DatabaseManager, attempts: AssignmentAttempt[]) {
   const final = attempts.filter((attempt) => attempt.submittedAt && attempt.score);
   const result = new Map<string, SubmissionGradingResponse>();
+
   if (!final.length) return result;
+
   const { SubmissionGradingRevision } = await import('@logiclab/db');
+
   const records = await em
     .createQueryBuilder(SubmissionGradingRevision)
     .select('*')
@@ -56,18 +64,24 @@ export async function latestSubmissionGrading(em: DatabaseManager, attempts: Ass
     .where({ attempt: { $in: final.map((attempt) => attempt.id) } })
     .orderBy({ attempt: 'ASC', revision: 'DESC' })
     .getResultList();
+
   const byAttempt = new Map(records.map((record) => [record.attempt.id, record]));
+
   for (const attempt of final) {
     const record = byAttempt.get(attempt.id);
+
     if (record) result.set(attempt.id, submissionGradingState(attempt.score, record));
   }
+
   return result;
 }
 
 /** Called only after result-release authorization; never includes reviewer identity or history. */
 export function releasedGradingFields(automatic: unknown, state?: SubmissionGradingResponse) {
   const score = assignmentScoreSchema.parse(automatic);
+
   if (!state || state.grading.revision === 0) return { score };
+
   return {
     score: state.score,
     automaticScore: score,

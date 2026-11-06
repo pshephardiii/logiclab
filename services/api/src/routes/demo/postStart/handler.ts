@@ -10,6 +10,7 @@ export function postStartHandler(runtime: DemoRuntime) {
     const { role } = demoRoleRequestSchema.parse(request.body);
     const previous = demoToken(request, runtime);
     let current: DemoActor | null = null;
+
     if (previous) {
       try {
         current = await runtime.sessions.authenticate(previous);
@@ -17,14 +18,19 @@ export function postStartHandler(runtime: DemoRuntime) {
         if (!(error instanceof DemoSessionError)) throw error;
       }
     }
+
     if (current) {
       if (current.role === role) return publicDemoSession(current);
+
       const switched = await runtime.sessions.switchRole(previous, role);
+
       setDemoCookie(reply, runtime, switched.sessionId);
       return publicDemoSession(switched.actor);
     }
+
     const workspace = await runtime.workspaces.provision();
     const session = await runtime.sessions.issue(workspace.workspaceId, role);
+
     setDemoCookie(reply, runtime, session.sessionId);
     return publicDemoSession(session.actor);
   };

@@ -24,6 +24,7 @@ export function createBillingService(
       throw new BillingError('invalid_signature');
     }
   }
+
   return {
     plans: store.plans,
     readClass: store.readClass,
@@ -36,8 +37,10 @@ export function createBillingService(
           createSimulatorWrapper(config),
           createSimulatorEvent(reference, sequence, outcome),
         );
+
         return verify(signed.body, signed.signature);
       }),
   };
 }
+
 export type BillingService = ReturnType<typeof createBillingService>;

@@ -9,6 +9,7 @@ export function validateProofAnswer(
   value: unknown,
 ) {
   if (content.format === 'tree') return validateTreeAnswer(value);
+
   return content.format === 'dependency'
     ? validateDependencyAnswer(value)
     : validateDerivationAnswer(value);
@@ -23,7 +24,9 @@ export function evaluateProofAnswer(
   value: unknown,
 ) {
   const content = authoritative.content;
+
   if (content.format === 'tree') return evaluateTreeAnswer({ ...authoritative, content }, value);
+
   return content.format === 'dependency'
     ? evaluateDependencyAnswer({ ...authoritative, content }, value)
     : evaluateDerivationAnswer({ ...authoritative, content }, value);

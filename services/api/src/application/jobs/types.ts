@@ -7,15 +7,18 @@ export interface JobFinding {
   classId: string;
   grantId?: string;
 }
+
 export interface JobResult {
   recordsChecked: number;
   findings: JobFinding[];
 }
+
 export type JobHandler = (context: {
   jobId: string;
   attempt: number;
   signal: AbortSignal;
 }) => Promise<JobResult>;
+
 export interface JobDefinition {
   defaultIntervalSeconds: number;
   maxAttempts: number;
@@ -25,17 +28,21 @@ export interface JobDefinition {
   retryMaxSeconds: number;
   handler?: JobHandler;
 }
+
 export type JobRegistry = Readonly<Record<JobType, JobDefinition>>;
+
 export interface JobClaim {
   id: string;
   jobType: JobType;
   attempt: number;
   leaseToken: string;
 }
+
 export type JobFailureCode =
   | 'HANDLER_UNAVAILABLE'
   | 'HANDLER_FAILED'
   | 'EXECUTION_TIMEOUT'
   | 'INVALID_RESULT'
   | ReconciliationFailureCode;
+
 export type JobOutcome = { ok: true; result: JobResult } | { ok: false; code: JobFailureCode };

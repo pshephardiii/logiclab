@@ -14,6 +14,7 @@ export function patchStudentAttemptHandler(context: StudentWorkContext) {
     const { assignmentId } = parseRequest(studentAssignmentParamsSchema, request.params);
     const input = parseRequest(savedStudentAnswersSchema, request.body);
     const attempt = await context.studentWork.save(user.id, assignmentId, input);
+
     return savedStudentAttemptResponseSchema.parse({ attempt });
   };
 }

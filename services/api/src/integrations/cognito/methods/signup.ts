@@ -16,6 +16,8 @@ export async function signup(
       UserAttributes: [{ Name: 'email', Value: email }],
     }),
   );
+
   if (!result.UserSub) throw new AuthError('AUTH_RESPONSE_INVALID');
+
   return result.UserSub;
 }

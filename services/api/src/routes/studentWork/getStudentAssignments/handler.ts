@@ -13,10 +13,12 @@ export function getStudentAssignmentsHandler(context: StudentWorkContext) {
     const user = await student(request, context);
     const { classId } = parseRequest(studentClassParamsSchema, request.params);
     const query = parseRequest(studentAssignmentListQuerySchema, request.query);
+
     const rows = await context.studentWork.list(user.id, classId, {
       ...query,
       limit: query.limit + 1,
     });
+
     return studentAssignmentListResponseSchema.parse({
       assignments: rows.slice(0, query.limit),
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,

@@ -6,6 +6,7 @@ export function purchaseTerms(plan: BillingPlan): PurchaseTerms {
   if (!plan.active || plan.billingModel !== 'one_time') {
     throw new Error('Checkout requires an active one-time class plan.');
   }
+
   if (
     !Number.isSafeInteger(plan.amountMinor) ||
     plan.amountMinor < 0 ||
@@ -17,6 +18,7 @@ export function purchaseTerms(plan: BillingPlan): PurchaseTerms {
     plan.capability !== 'publish_assignments'
   )
     throw new Error('Invalid class purchase terms.');
+
   return {
     planId: plan.id,
     amountMinor: plan.amountMinor,

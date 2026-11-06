@@ -11,27 +11,34 @@ export async function createAuthStore(
   poolId: string,
 ): Promise<AuthStore> {
   const { User, AuthSession, UserRole, UserIdentityProvider } = await import('@logiclab/db');
+
   return {
     async createUser(subject, role, email) {
       const em = orm.em.fork();
+
       const user = em.create(User, {
         cognitoUserPoolId: poolId,
         cognitoSubject: subject,
         role: role === 'student' ? UserRole.Student : UserRole.Instructor,
         email,
       });
+
       em.persist(user);
       await em.flush();
+
       return appUser(user, poolId);
     },
+
     async findUser(subject) {
       const user = await orm.em.fork().findOne(User, {
         identityProvider: UserIdentityProvider.Cognito,
         cognitoUserPoolId: poolId,
         cognitoSubject: subject,
       });
+
       return user ? appUser(user, poolId) : null;
     },
+
     async saveSession(id, session) {
       const em = orm.em.fork();
       const record = em.create(AuthSession, {
@@ -44,6 +51,7 @@ export async function createAuthStore(
       em.persist(record);
       await em.flush();
     },
+
     async updateSession(id, session) {
       // Update only: a concurrent logout must never be undone by refresh upsert.
       return (
@@ -57,14 +65,17 @@ export async function createAuthStore(
         )) > 0
       );
     },
+
     async getSession(id) {
       const record = await orm.em.fork().findOne(AuthSession, id, { populate: ['user'] });
+
       if (
         !record ||
         record.user.identityProvider !== UserIdentityProvider.Cognito ||
         record.user.cognitoUserPoolId !== poolId
       )
         return null;
+
       return {
         user: await appUser(record.user, poolId),
         encryptedTokens: record.encryptedTokens,
@@ -72,16 +83,20 @@ export async function createAuthStore(
         expiresAt: record.expiresAt,
       };
     },
+
     async deleteSession(id) {
       await orm.em.fork().nativeDelete(AuthSession, id);
     },
+
     async deleteSessionsForEmail(email) {
       const em = orm.em.fork();
+
       const user = await em.findOne(User, {
         identityProvider: UserIdentityProvider.Cognito,
         cognitoUserPoolId: poolId,
         email,
       });
+
       if (user) await em.nativeDelete(AuthSession, { user: user.id });
     },
   };

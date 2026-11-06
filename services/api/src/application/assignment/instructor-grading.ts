@@ -19,17 +19,24 @@ export function effectiveAssignmentScore(
 ): AssignmentScore {
   const automatic = assignmentScoreSchema.safeParse(automaticInput);
   const grading = instructorGradingSchema.safeParse(gradingInput);
+
   if (!automatic.success || !grading.success) throw new InstructorGradingError();
+
   const allocations = new Map(automatic.data.items.map((item) => [item.itemId, item.maxPoints]));
+
   for (const entry of grading.data.items) {
     const maxPoints = allocations.get(entry.itemId);
+
     if (maxPoints === undefined || (entry.earnedPoints !== null && entry.earnedPoints > maxPoints))
       throw new InstructorGradingError();
   }
+
   const entries = new Map(grading.data.items.map((entry) => [entry.itemId, entry]));
+
   return summarizeAssignmentScore(
     automatic.data.items.map((item) => {
       const earnedPoints = entries.get(item.itemId)?.earnedPoints;
+
       return earnedPoints === undefined || earnedPoints === null
         ? item
         : { ...item, status: 'graded' as const, earnedPoints };

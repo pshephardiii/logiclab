@@ -10,9 +10,13 @@ export function postProblemReferenceCheckHandler(context: ProblemContext) {
   return async (request: FastifyRequest) => {
     const user = await instructor(request, context);
     const { problemId } = parseRequest(problemParamsSchema, request.params);
+
     parseRequest(emptyProblemRequestSchema, request.body ?? {});
+
     const result = await context.problems.previewReference(user.id, problemId);
+
     if (!result) throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
+
     return derivationReferenceCheckResponseSchema.parse(result);
   };
 }

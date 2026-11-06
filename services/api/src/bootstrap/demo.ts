@@ -37,28 +37,37 @@ type Stores = {
 /** Request-local store bindings keep demo handlers on one workspace-locked transaction. */
 export async function createDemoRuntime(orm: Database, config: DemoConfig) {
   const sessions = createDemoSessionService(await createDemoSessionStore(orm, config));
+
   const workspaces = createDemoWorkspaceService(
     await createDemoWorkspaceStore(orm, config, config.capacity),
   );
+
   const access = await createDemoAccess(orm);
   const scope = new AsyncLocalStorage<{ actor: DemoActor; stores: Stores }>();
   const simulator = { signingSecret: randomBytes(32).toString('hex') };
+
   function scopedStore<K extends keyof Stores>(name: K): Stores[K] {
     return new Proxy({} as Stores[K], {
       get(_target, method: string) {
         return (...args: unknown[]) => {
           const current = scope.getStore();
+
           if (!current) throw new Error('Demo resource transaction is required.');
+
           if (!(name === 'billing' && method === 'plans') && args[0] !== current.actor.id)
             throw new AuthError('SESSION_INVALID');
+
           const store = current.stores[name];
           const operation: unknown = Reflect.get(store, method);
+
           if (typeof operation !== 'function') throw new Error('Unknown demo operation.');
+
           return Reflect.apply(operation, store, args);
         };
       },
     });
   }
+
   const context = {
     config,
     service: {
@@ -67,6 +76,7 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
           return await sessions.authenticate(id);
         } catch (error) {
           if (error instanceof DemoSessionError) throw new AuthError('SESSION_INVALID');
+
           throw error;
         }
       },
@@ -79,6 +89,7 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
     studentWork: scopedStore('studentWork'),
     billing: scopedStore('billing'),
   };
+
   async function run<T>(
     id: string,
     activity: boolean,
@@ -93,7 +104,9 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
           session.generation,
           session.selectedRole,
         );
+
         if (!actor) throw new AuthError('SESSION_INVALID');
+
         const stores: Stores = {
           classrooms: await createClassroomStore(orm, em),
           problems: await createProblemStore(orm, em),
@@ -107,32 +120,46 @@ export async function createDemoRuntime(orm: Database, config: DemoConfig) {
             simulator,
           ),
         };
+
         const payload = await scope.run({ actor, stores }, () => work(actor));
+
         if (activity) {
           const update = demoActivityUpdate(workspace, now, config);
+
           if (update) Object.assign(workspace, update);
         }
+
         await em.flush();
+
         return { payload };
       },
     );
+
     if (!result) throw new AuthError('SESSION_INVALID');
+
     return result.payload;
   }
+
   return { config, sessions, workspaces, context, run };
 }
+
 export type DemoRuntime = Awaited<ReturnType<typeof createDemoRuntime>>;
 
 export async function createDemoDependencies(env: NodeJS.ProcessEnv) {
   const config = readDemoConfig(env);
+
   if (!config) return null;
+
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required for demo mode.');
+
   const { createDatabase } = await import('@logiclab/db');
   const orm = await createDatabase(env.DATABASE_URL);
+
   try {
     return { runtime: await createDemoRuntime(orm, config), close: () => orm.close(true) };
   } catch (error) {
     await orm.close(true);
+
     throw error;
   }
 }

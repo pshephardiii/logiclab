@@ -7,11 +7,14 @@ import type { DatabaseManager } from '../transactions';
 export async function lockInvitedClassroom(em: DatabaseManager, hash: string, studentId: string) {
   const { User, Classroom, LockMode, UserIdentityProvider } = await import('@logiclab/db');
   const student = await em.findOne(User, studentId);
+
   if (!student) return null;
+
   const owner =
     student.identityProvider === UserIdentityProvider.Demo
       ? { identityProvider: UserIdentityProvider.Demo, demoWorkspace: student.demoWorkspace!.id }
       : { identityProvider: UserIdentityProvider.Cognito };
+
   // Keep the lock through enrollment insertion to serialize against invitation replacement.
   return em.findOne(
     Classroom,
@@ -26,6 +29,7 @@ export function invitationIsActive(
   if (!classroom?.invitationExpiresAt) {
     return false;
   }
+
   return !(classroom.invitationExpiresAt.getTime() <= Date.now());
 }
 

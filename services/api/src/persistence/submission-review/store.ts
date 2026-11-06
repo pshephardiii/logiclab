@@ -20,10 +20,12 @@ export async function createSubmissionReviewStore(
   transaction?: DatabaseManager,
 ): Promise<SubmissionReviewStore> {
   const { AssignmentItem, AssignmentAttempt } = await import('@logiclab/db');
+
   return {
     async listSubmissions(ownerId, assignmentId, query) {
       const em = transaction ?? orm.em.fork();
       const assignment = await ownedReviewAssignment(em, ownerId, assignmentId);
+
       const submissions = await em.find(
         AssignmentAttempt,
         {
@@ -37,16 +39,20 @@ export async function createSubmissionReviewStore(
           populate: ['student'],
         },
       );
+
       const grading = await latestSubmissionGrading(em, submissions);
+
       return submissions.map((attempt) =>
         attempt.result?.gradingVersion === 'proof_completion_v1'
           ? submissionSummarySchema.parse(proofCompletionReviewSummary(attempt, assignment))
           : submissionSummary(attempt, grading.get(attempt.id)),
       );
     },
+
     async findSubmission(ownerId, assignmentId, submissionId) {
       const em = transaction ?? orm.em.fork();
       const assignment = await ownedReviewAssignment(em, ownerId, assignmentId);
+
       const attempt = await em.findOne(
         AssignmentAttempt,
         {
@@ -56,18 +62,23 @@ export async function createSubmissionReviewStore(
         },
         { populate: ['student'] },
       );
+
       if (!attempt) throw new AssignmentOperationError('not_found');
+
       const items = await em.find(
         AssignmentItem,
         { assignment: assignmentId },
         { orderBy: { position: 'ASC' }, populate: ['problemVersion'] },
       );
+
       if (attempt.result?.gradingVersion === 'proof_completion_v1')
         return submissionReviewSchema.parse({
           ...proofCompletionReviewResponse(attempt, assignment),
           assignment: savedAssignmentExercises(assignment, items),
         });
+
       const grading = (await latestSubmissionGrading(em, [attempt])).get(attempt.id);
+
       return submissionReviewSchema.parse({
         submission: submissionSummary(attempt, grading),
         assignment: savedAssignmentExercises(assignment, items),

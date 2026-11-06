@@ -11,12 +11,18 @@ export async function student(
   context: StudentWorkContext,
 ): Promise<ResourceUser> {
   const scoped = request as FastifyRequest & { studentWorkUser?: ResourceUser | null };
+
   if (scoped.studentWorkUser) return scoped.studentWorkUser;
+
   const id = request.cookies[cookieName(context.config)];
+
   if (!id) throw new AuthError('SESSION_INVALID');
+
   const user = await context.service.authenticate(id);
+
   if (user.role !== 'student')
     throw new StudentWorkRouteError(403, 'STUDENT_REQUIRED', 'A student account is required.');
+
   scoped.studentWorkUser = user;
   return user;
 }

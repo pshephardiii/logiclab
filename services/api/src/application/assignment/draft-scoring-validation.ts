@@ -19,7 +19,9 @@ export function validateDraftScoringInput(assessmentMode: string, input: DraftSc
       (input.problemVersionIds?.length ?? 0) > 0)
   )
     throw new AssignmentOperationError('invalid_scoring');
+
   const graded = assessmentMode === 'graded';
+
   if ((input.items !== undefined || input.pointAllocations !== undefined) && !graded)
     throw new AssignmentOperationError('invalid_scoring');
 }
@@ -30,11 +32,13 @@ export function validatedDraftPointAllocations(
   items: readonly { id: string }[],
 ): Map<string, number> {
   const parsed = assignmentPointAllocationsSchema.safeParse(input);
+
   if (
     !parsed.success ||
     parsed.data.length !== items.length ||
     parsed.data.some((value) => !items.some((item) => item.id === value.itemId))
   )
     throw new AssignmentOperationError('invalid_scoring');
+
   return new Map(parsed.data.map((value) => [value.itemId, value.maxPoints]));
 }

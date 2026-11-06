@@ -17,11 +17,14 @@ export function savedAssignmentExercises(
     ...assignmentSummary(assignment),
     items: items.map((item) => {
       const stored = item.problemVersion.definition;
+
       if (stored.type === 'derivation') assertProofWorkPolicy(assignment);
+
       const definition =
         stored.type === 'derivation'
           ? publicDerivationContent(stored)
           : supportedProblemDefinition(stored);
+
       const common = {
         id: item.id,
         position: item.position,
@@ -29,7 +32,9 @@ export function savedAssignmentExercises(
         title: item.problemVersion.title,
         instructions: item.problemVersion.instructions ?? null,
       };
+
       if (definition.type === 'derivation') return { ...common, content: definition };
+
       return definition.type === 'truth_table'
         ? {
             ...common,

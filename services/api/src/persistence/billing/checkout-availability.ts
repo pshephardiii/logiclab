@@ -8,11 +8,15 @@ export async function checkoutBlockedReason(
 ): Promise<ClassBillingResponse['checkoutBlockedReason']> {
   const { ClassPurchase, ClassEntitlement, PurchaseStatus, ClassCapability } =
     await import('@logiclab/db');
+
   if (await em.findOne(ClassPurchase, { classroom: classId, status: PurchaseStatus.Paid }))
     return 'paid';
+
   if (await em.findOne(ClassPurchase, { classroom: classId, status: PurchaseStatus.Pending }))
     return 'pending';
+
   const now = new Date();
+
   const coverage = await em.findOne(ClassEntitlement, {
     classroom: classId,
     capability: ClassCapability.PublishAssignments,
@@ -20,5 +24,6 @@ export async function checkoutBlockedReason(
     startsAt: { $lte: now },
     endsAt: { $gt: now },
   });
+
   return coverage ? 'covered' : null;
 }

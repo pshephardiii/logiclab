@@ -11,6 +11,7 @@ export function postStudentSubmissionHandler(context: StudentWorkContext) {
     const { assignmentId } = parseRequest(studentAssignmentParamsSchema, request.params);
     const input = parseRequest(submitStudentAttemptSchema, request.body);
     const attempt = await context.studentWork.submit(user.id, assignmentId, input.revision);
+
     return savedStudentAttemptResponseSchema.parse({ attempt });
   };
 }

@@ -19,17 +19,21 @@ export class ClassroomError extends Error {
  */
 export async function instructor(request: FastifyRequest, context: ClassroomContext) {
   const user = await classroomUser(request, context);
+
   if (user.role !== 'instructor') {
     throw new ClassroomError(403, 'INSTRUCTOR_REQUIRED', 'An instructor account is required.');
   }
+
   return user;
 }
 
 export async function student(request: FastifyRequest, context: ClassroomContext) {
   const user = await classroomUser(request, context);
+
   if (user.role !== 'student') {
     throw new ClassroomError(403, 'STUDENT_REQUIRED', 'A student account is required.');
   }
+
   return user;
 }
 
@@ -38,10 +42,15 @@ async function classroomUser(
   context: ClassroomContext,
 ): Promise<ResourceUser> {
   const scoped = request as FastifyRequest & { classroomUser?: ResourceUser | null };
+
   if (scoped.classroomUser) return scoped.classroomUser;
+
   const id = request.cookies[cookieName(context.config)];
+
   if (!id) throw new AuthError('SESSION_INVALID');
+
   const user = await context.service.authenticate(id);
+
   scoped.classroomUser = user;
   return user;
 }

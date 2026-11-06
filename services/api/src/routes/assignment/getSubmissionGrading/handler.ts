@@ -9,6 +9,7 @@ export function getSubmissionGradingHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId, submissionId } = parseRequest(submissionParamsSchema, request.params);
     const result = await context.submissionGrading.read(user.id, assignmentId, submissionId);
+
     return submissionGradingResponseSchema.parse(result);
   };
 }

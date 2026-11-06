@@ -12,6 +12,7 @@ export interface PurchaseSnapshot {
   coverageDays: number;
   createdAt: Date;
 }
+
 export interface GrantSnapshot {
   id: string;
   classId: string;
@@ -22,11 +23,13 @@ export interface GrantSnapshot {
   endsAt: Date;
   revokedAt?: Date;
 }
+
 export interface BillingSnapshotBatch {
   purchases: PurchaseSnapshot[];
   grants: GrantSnapshot[];
   asOf: Date;
 }
+
 export interface BillingReconciliationReader {
   scan(
     signal: AbortSignal,

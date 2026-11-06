@@ -11,8 +11,10 @@ export function getProblemVersionHandler(context: ProblemContext) {
     const user = await instructor(request, context);
     const { problemId, version } = parseRequest(problemVersionParamsSchema, request.params);
     const published = await context.problems.findVersion(user.id, problemId, version);
+
     if (!published)
       throw new ProblemError(404, 'PROBLEM_VERSION_NOT_FOUND', 'Problem version not found.');
+
     return libraryProblemVersionResponseSchema.parse({ version: published });
   };
 }

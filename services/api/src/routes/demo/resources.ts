@@ -12,12 +12,18 @@ import { cookieName } from '../auth/cookies';
 export async function demoResourceRoutes(app: FastifyInstance, runtime: DemoRuntime) {
   app.addHook('onRoute', (route) => {
     route.url = route.url.replace('/api/demo/api/', '/api/demo/resources/');
+
     route.path = route.url;
+
     route.exposeHeadRoute = false;
+
     const original = route.handler;
+
     route.handler = async function (request, reply) {
       const id = request.cookies[cookieName(runtime.config)];
+
       if (!id) throw new AuthError('SESSION_INVALID');
+
       return runtime.run(id, request.method !== 'GET', async () =>
         original.call(this, request, reply),
       );

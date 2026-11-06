@@ -14,7 +14,9 @@ import { StudentWorkError } from './errors';
 /** Save-shape validation only; incomplete and incorrect work remains unchanged draft data. */
 export function validateTreeAnswer(value: unknown): TreeDerivationAnswer {
   const parsed = treeDerivationAnswerSchema.safeParse(value);
+
   if (!parsed.success) throw new StudentWorkError('invalid_answer');
+
   return parsed.data;
 }
 
@@ -25,6 +27,7 @@ export function evaluateTreeAnswer(
 ): DerivationEvaluationEvidence {
   const content = validateTreeContent(authoritative.content);
   const answer = validateTreeAnswer(value);
+
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',
     type: 'derivation',

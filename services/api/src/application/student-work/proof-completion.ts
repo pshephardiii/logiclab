@@ -20,12 +20,17 @@ export function evaluateProofCompletion(
   input: unknown,
 ): ProofCompletionSubmissionResult {
   const { assigned, responses } = validatedProofWork(items, input);
+
   const proofs = assigned.flatMap((item) => {
     if (item.definition.type !== 'derivation') return [];
+
     const value = responses.get(item.id);
+
     if (value === undefined) throw new StudentWorkError('incomplete_work');
+
     const content = publicDerivationContent(item.definition);
     const answer = validateProofAnswer(content, value);
+
     if (
       !(
         content.format === 'tree'
@@ -44,11 +49,14 @@ export function evaluateProofCompletion(
       })
     )
       throw new StudentWorkError('incomplete_work');
+
     return [{ item, answer, content }];
   });
+
   const objectiveItems = assigned.flatMap((item) =>
     item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
   );
+
   const objective = objectiveItems.length
     ? evaluateAssignmentCompletion(
         objectiveItems,
@@ -59,7 +67,9 @@ export function evaluateProofCompletion(
         ),
       )
     : null;
+
   const results = new Map<string, ProofCompletionSubmissionResult['items'][number]>();
+
   for (const item of objective?.items ?? []) {
     results.set(
       item.itemId,
@@ -73,6 +83,7 @@ export function evaluateProofCompletion(
         : item,
     );
   }
+
   // Only after every proof/objective response is complete, generate fresh feedback for retained final work.
   for (const { item, answer, content } of proofs) {
     const evidence = evaluateProofAnswer(
@@ -81,7 +92,9 @@ export function evaluateProofCompletion(
     );
     results.set(item.id, { ...evidence, completedResponses: 1, totalResponses: 1 });
   }
+
   const ordered = assigned.map((item) => results.get(item.id)!);
+
   return proofCompletionSubmissionResultSchema.parse({
     gradingVersion: 'proof_completion_v1',
     items: ordered,

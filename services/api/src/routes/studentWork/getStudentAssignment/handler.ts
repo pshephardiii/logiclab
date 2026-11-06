@@ -9,6 +9,7 @@ export function getStudentAssignmentHandler(context: StudentWorkContext) {
   return async (request: FastifyRequest) => {
     const user = await student(request, context);
     const { assignmentId } = parseRequest(studentAssignmentParamsSchema, request.params);
+
     return savedStudentAssignmentResponseSchema.parse(
       await context.studentWork.read(user.id, assignmentId),
     );

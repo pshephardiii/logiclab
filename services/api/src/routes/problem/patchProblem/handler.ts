@@ -15,16 +15,21 @@ export function patchProblemHandler(context: ProblemContext) {
     const user = await instructor(request, context);
     const { problemId } = parseRequest(problemParamsSchema, request.params);
     const input = parseRequest(updateLibraryProblemRequestSchema, request.body);
+
     if (input.definition) libraryProblemDefinition(input.definition);
+
     const result = await context.problems.update(user.id, problemId, input);
+
     if (result.status === 'not_found')
       throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
+
     if (result.status === 'archived')
       throw new ProblemError(
         409,
         'PROBLEM_ARCHIVED',
         'Restore this problem before editing its draft.',
       );
+
     return libraryProblemResponseSchema.parse({ problem: result.problem });
   };
 }

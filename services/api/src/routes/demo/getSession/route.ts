@@ -10,6 +10,7 @@ export const getSessionSchema = {
   description: 'Synthetic workspace access only; normal account sessions are unaffected.',
   response: { 200: demoSessionResponseSchema, ...demoErrorResponses },
 } satisfies RouteSchema;
+
 export async function getSessionRoute(app: FastifyInstance, runtime: DemoRuntime) {
   app.route({
     method: 'GET',

@@ -11,6 +11,7 @@ export const postLogoutSchema = {
   body: demoEmptyRequestSchema,
   response: { 200: demoMessageResponseSchema, ...demoErrorResponses },
 } satisfies RouteSchema;
+
 export async function postLogoutRoute(app: FastifyInstance, runtime: DemoRuntime) {
   app.route({
     method: 'POST',

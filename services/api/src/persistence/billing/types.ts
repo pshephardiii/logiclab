@@ -18,6 +18,7 @@ export interface BillingReadStore {
 }
 
 export type VerifiedDelivery = { event: PaymentEvent; hash: string };
+
 export interface BillingStore extends BillingReadStore {
   checkout(
     ownerId: string,

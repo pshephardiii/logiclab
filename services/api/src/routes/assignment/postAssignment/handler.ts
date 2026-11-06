@@ -14,6 +14,7 @@ export function postAssignmentHandler(context: AssignmentContext) {
     const { classId } = parseRequest(assignmentClassParamsSchema, request.params);
     const input = parseRequest(createAssignmentRequestSchema, request.body);
     const assignment = await context.assignments.create(user.id, classId, input);
+
     reply.code(201);
     return assignmentResponseSchema.parse({ assignment });
   };

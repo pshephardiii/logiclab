@@ -9,7 +9,10 @@ import { badRequest } from '../errors';
  */
 export async function postExerciseHandler(request: FastifyRequest, reply: FastifyReply) {
   const parsed = truthTableRequestSchema.safeParse(request.body);
+
   if (!parsed.success) return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
+
   const table = generateTruthTable(parsed.data.formula);
+
   return exerciseResponse(table);
 }

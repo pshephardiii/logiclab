@@ -17,15 +17,20 @@ export function createShutdownHandler({
   timeoutMs = API_SHUTDOWN_TIMEOUT_MS,
 }: Options) {
   let closing = false;
+
   return () => {
     if (closing) return;
+
     closing = true;
+
     const deadline = setTimeout(() => {
       onTimeout();
       forceExit(1);
     }, timeoutMs);
+
     // Healthy shutdown exits naturally. A leftover socket/timer cannot keep it alive forever.
     deadline.unref();
+
     void Promise.resolve()
       .then(close)
       .catch(() => onError());

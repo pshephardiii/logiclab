@@ -44,13 +44,21 @@ export function buildApp(
         }
       : false,
   });
+
   if (options.demo) app.register(demoRoutes, options.demo);
+
   if (options.billing) app.register(billingRoutes, options.billing);
+
   if (options.auth) app.register(authRoutes, options.auth);
+
   if (options.classroom) app.register(classroomRoutes, options.classroom);
+
   if (options.studentWork) app.register(studentWorkRoutes, options.studentWork);
+
   if (options.assignment) app.register(assignmentRoutes, options.assignment);
+
   if (options.problem) app.register(problemRoutes, options.problem);
+
   app.register(truthTableRoutes);
   app.register(healthRoute);
   return app;

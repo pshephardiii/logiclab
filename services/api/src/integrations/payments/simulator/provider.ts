@@ -6,6 +6,7 @@ import { verifySimulatorEvent } from './events';
 
 export function createSimulatorProvider(config: BillingConfig, now?: () => Date): PaymentProvider {
   const wrapper = createSimulatorWrapper(config, now);
+
   return {
     createCheckout: createSimulatorCheckout,
     verifyEvent: (body, signature) => verifySimulatorEvent(wrapper, body, signature),

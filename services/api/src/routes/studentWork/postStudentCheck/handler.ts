@@ -13,6 +13,7 @@ export function postStudentCheckHandler(context: StudentWorkContext) {
     const user = await student(request, context);
     const { assignmentId } = parseRequest(studentAssignmentParamsSchema, request.params);
     const input = parseRequest(savedStudentCheckSchema, request.body);
+
     return savedStudentCheckResponseSchema.parse(
       await context.studentWork.check(user.id, assignmentId, input),
     );

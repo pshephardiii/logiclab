@@ -9,6 +9,7 @@ import { postWebhookHandler } from './handler';
 /** Isolated raw JSON parser: verify wire bytes before parsing, without cookie/origin authentication. */
 export async function postWebhookRoute(app: FastifyInstance, context: BillingContext) {
   installZodSchemas(app);
+
   await app.register(rateLimit, { max: 120, timeWindow: '1 minute' });
   app.removeContentTypeParser('application/json');
   app.addContentTypeParser(

@@ -10,23 +10,32 @@ export function createBillingReconciliationHandler(
   return async ({ signal }) => {
     let recordsChecked = 0;
     const findings: JobFinding[] = [];
+
     await reader.scan(signal, (batch) => {
       signal.throwIfAborted();
+
       const bySource = new Map<string, typeof batch.grants>();
+
       for (const grant of batch.grants) {
         const key = JSON.stringify([grant.provider, grant.reference]);
         const group = bySource.get(key) ?? [];
         group.push(grant);
         bySource.set(key, group);
       }
+
       for (const purchase of batch.purchases) {
         signal.throwIfAborted();
+
         const related = bySource.get(JSON.stringify([purchase.provider, purchase.reference])) ?? [];
+
         findings.push(...purchaseFindings(purchase, related, batch.asOf));
+
         if (findings.length > 1000) throw new JobExecutionError('RECONCILIATION_REPORT_LIMIT');
+
         recordsChecked += 1;
       }
     });
+
     signal.throwIfAborted();
     return { recordsChecked, findings };
   };

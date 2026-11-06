@@ -20,8 +20,10 @@ export async function replaceItems(
 ) {
   const { AssignmentItem } = await import('@logiclab/db');
   const versions = await ownedVersions(em, ownerId, ids, assignment);
+
   // Validate all references before replacement; the transaction rolls back the entire draft on failure.
   await em.nativeDelete(AssignmentItem, { assignment: assignment.id });
+
   ids.forEach((id, index) =>
     em.persist(
       em.create(AssignmentItem, {
@@ -41,13 +43,17 @@ export async function draftScoring(
   input: UpdateAssignmentRequest,
 ) {
   const { AssignmentItem } = await import('@logiclab/db');
+
   validateDraftScoringInput(assignment.assessmentMode, input);
+
   const graded = assignment.assessmentMode === 'graded';
+
   let items = await em.find(
     AssignmentItem,
     { assignment: assignment.id },
     { orderBy: { position: 'ASC' } },
   );
+
   if (input.items !== undefined) {
     await replaceItems(
       em,
@@ -60,7 +66,9 @@ export async function draftScoring(
     const same =
       input.problemVersionIds.length === items.length &&
       items.every((item, index) => item.problemVersion.id === input.problemVersionIds![index]);
+
     if (graded && !same && items.length > 0) throw new AssignmentOperationError('invalid_scoring');
+
     if (!same)
       await replaceItems(
         em,
@@ -70,12 +78,15 @@ export async function draftScoring(
         input.problemVersionIds.map(() => ASSIGNMENT_POINT_LIMITS.defaultPoints),
       );
   }
+
   await em.flush();
+
   items = await em.find(
     AssignmentItem,
     { assignment: assignment.id },
     { orderBy: { position: 'ASC' } },
   );
+
   // Validate the complete effective set, including policy-only PATCHes and retained occurrences.
   await ownedVersions(
     em,
@@ -83,8 +94,10 @@ export async function draftScoring(
     items.map((item) => item.problemVersion.id),
     assignment,
   );
+
   if (input.pointAllocations !== undefined) {
     const points = validatedDraftPointAllocations(input.pointAllocations, items);
+
     for (const item of items) item.maxPoints = points.get(item.id)!;
   }
 }

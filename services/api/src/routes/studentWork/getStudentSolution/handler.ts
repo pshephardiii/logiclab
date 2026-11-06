@@ -9,6 +9,7 @@ export function getStudentSolutionHandler(context: StudentWorkContext) {
   return async (request: FastifyRequest) => {
     const user = await student(request, context);
     const { assignmentId, itemId } = parseRequest(studentItemParamsSchema, request.params);
+
     return savedStudentSolutionResponseSchema.parse(
       await context.studentWork.solution(user.id, assignmentId, itemId),
     );

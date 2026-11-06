@@ -19,16 +19,22 @@ import { patchProblemRoute } from './patchProblem/route';
 /** Private instructor scope; authorization precedes field validation. */
 export async function problemRoutes(app: FastifyInstance, context: ProblemContext) {
   app.decorateRequest('problemUser', null);
+
   await installAccountHttpPolicy(app, context.config);
+
   app.addHook('preValidation', async (request) => {
     await instructor(request, context);
   });
   app.setErrorHandler((error, request, reply) => {
     const mapped = mapProblemError(error);
+
     if (mapped.status === 401) clearRejectedSessionCookie(reply, context.config);
+
     if (mapped.status === 503)
       request.log.warn({ code: mapped.code }, 'Problem operation unavailable');
+
     const { status, ...publicError } = mapped;
+
     // Keep auth's internal logging classification out of public responses.
     return reply.code(status).send(
       problemErrorResponseSchema.parse({

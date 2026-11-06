@@ -13,12 +13,14 @@ export function patchSubmissionGradingHandler(context: AssignmentContext) {
     const user = await instructor(request, context);
     const { assignmentId, submissionId } = parseRequest(submissionParamsSchema, request.params);
     const input = parseRequest(updateSubmissionGradingSchema, request.body);
+
     const result = await context.submissionGrading.update(
       user.id,
       assignmentId,
       submissionId,
       input,
     );
+
     return submissionGradingResponseSchema.parse(result);
   };
 }

@@ -18,10 +18,12 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
     value.type === 'derivation'
   ) {
     if ('format' in value && value.format === 'tree') return validateTreeDefinition(value);
+
     return 'format' in value && value.format === 'dependency'
       ? validateDependencyDefinition(value)
       : validateFitchDefinition(value);
   }
+
   return supportedProblemDefinition(value);
 }
 
@@ -30,6 +32,7 @@ export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
 ): DerivationReferenceCheck {
   if (definition.format === 'tree') return checkTreeReference(definition);
+
   return definition.format === 'dependency'
     ? checkDependencyReference(definition)
     : checkFitchReference(definition);
@@ -38,11 +41,15 @@ export function libraryReferenceCheck(
 /** Call under the saved problem's lock immediately before creating its immutable snapshot. */
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
   const definition = libraryProblemDefinition(value);
+
   if (definition.type === 'derivation') {
     const check = libraryReferenceCheck(definition);
+
     if (check.status === 'missing') throw new DerivationPublicationError('missing_reference');
+
     if (check.report.status !== 'accepted')
       throw new DerivationPublicationError('rejected_reference');
   }
+
   return definition;
 }

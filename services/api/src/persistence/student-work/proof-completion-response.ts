@@ -12,5 +12,6 @@ export function retainedProofCompletion(attempt: AssignmentAttempt, assignment: 
     attempt.score != null
   )
     throw new StudentWorkError('unsupported_policy');
+
   return proofCompletionSubmissionResultSchema.parse(attempt.result);
 }

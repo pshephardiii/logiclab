@@ -11,6 +11,7 @@ export const postRoleSchema = {
   body: demoRoleRequestSchema,
   response: { 200: demoSessionResponseSchema, ...demoErrorResponses },
 } satisfies RouteSchema;
+
 export async function postRoleRoute(app: FastifyInstance, runtime: DemoRuntime) {
   app.route({
     method: 'POST',

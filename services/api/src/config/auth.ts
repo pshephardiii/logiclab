@@ -11,6 +11,7 @@ const configSchema = z
   })
   .superRefine((value, context) => {
     const origin = new URL(value.APP_ORIGIN);
+
     if (origin.origin !== value.APP_ORIGIN || !['http:', 'https:'].includes(origin.protocol)) {
       context.addIssue({
         code: 'custom',
@@ -19,6 +20,7 @@ const configSchema = z
       });
     }
   });
+
 export type AuthConfig = z.infer<typeof configSchema> & { secureCookies: boolean };
 
 /**
@@ -26,14 +28,19 @@ export type AuthConfig = z.infer<typeof configSchema> & { secureCookies: boolean
  */
 export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig | null {
   if (env.AUTH_ENABLED === undefined || env.AUTH_ENABLED === 'false') return null;
+
   if (env.AUTH_ENABLED !== 'true') throw new Error('AUTH_ENABLED must be true or false.');
+
   const parsed = configSchema.safeParse(env);
+
   if (!parsed.success) {
     throw new Error(
       `Invalid auth configuration: ${parsed.error.issues.map((issue) => issue.path.join('.')).join(', ')}`,
     );
   }
+
   const secureCookies = new URL(parsed.data.APP_ORIGIN).protocol === 'https:';
+
   if (
     !secureCookies &&
     (env.NODE_ENV === 'production' ||
@@ -41,5 +48,6 @@ export function readAuthConfig(env: NodeJS.ProcessEnv): AuthConfig | null {
   ) {
     throw new Error('Authentication requires HTTPS outside localhost development.');
   }
+
   return { ...parsed.data, secureCookies };
 }

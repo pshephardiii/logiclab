@@ -2,6 +2,7 @@ import type { ClassPurchase as PurchaseEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
 import type { PurchaseResponse } from '@logiclab/contracts';
+
 export function purchaseResponse(purchase: PurchaseEntity): PurchaseResponse {
   return {
     purchase: {

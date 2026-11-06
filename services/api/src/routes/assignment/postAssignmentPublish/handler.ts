@@ -12,8 +12,11 @@ export function postAssignmentPublishHandler(context: AssignmentContext) {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     const user = await instructor(request, context);
     const { assignmentId } = parseRequest(assignmentParamsSchema, request.params);
+
     parseRequest(assignmentActionRequestSchema, request.body);
+
     const assignment = await context.assignments.publish(user.id, assignmentId);
+
     reply.code(200);
     return assignmentResponseSchema.parse({ assignment });
   };

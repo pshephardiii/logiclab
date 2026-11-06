@@ -16,6 +16,7 @@ export function assertDerivationConfiguration(value: {
     value.ruleCatalogVersion !== PROPOSITIONAL_RULE_CATALOG_VERSION
   )
     throw new DerivationAuthoringError('invalid_definition');
+
   if (value.rules.some((rule) => !getPropositionalRule(rule.id)))
     throw new DerivationAuthoringError('unknown_rule');
 }
