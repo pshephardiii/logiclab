@@ -307,7 +307,9 @@ Use the pinned root Prettier dependency and `.prettierrc.json` for consistent fo
 
 The committed VS Code settings enable format-on-save with the recommended Prettier extension. Other editors should use the same repository configuration and installed version. Generated output, dependencies, local secrets/drafts, the lockfile, and immutable database migration history are excluded by `.prettierignore`. Review formatter changes separately from behavior changes. Formatting complements named handlers and focused helpers; it does not replace clear structure.
 
-Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between top-level functions, classes, and type/interface declarations, and between distinct stages within substantial functions. Keep related imports and small related declarations together. Prettier preserves these boundaries but does not create them automatically.
+Separate the import block from the first declaration or its documentation with a blank line. Use blank lines between functions, classes, type/interface declarations and separate constant declarations, including local declarations within functions. Separate conditionals and distinct operations from the statements around them: for example, leave a blank line between a completed `budget.spend(...)` call and `const result = ...`, and another between that completed assignment and the following `if`.
+
+Keep each multiline expression, attached comment and `if`/`else if`/`else` chain together; do not insert blank lines between every property, argument or expression continuation. Prefer these visible boundaries even when they increase file length. Apply the convention in new or edited code and focused cleanup passes rather than requiring a repository-wide formatting change alongside unrelated work. Prettier preserves these boundaries but does not create them automatically.
 
 Use braces for multiline conditional branches; Prettier does not add them automatically.
 
