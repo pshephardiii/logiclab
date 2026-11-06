@@ -82,6 +82,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Code readability conventions and scoped naming](verification/code-readability-verification.md)
+
 - [Natural-deduction trees across authoring, student work and retained review](verification/natural-deduction-trees-verification.md)
 - [Dependency proofs, cross-format workflows and demo template 6](verification/dependency-proof-format-verification.md)
 

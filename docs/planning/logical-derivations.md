@@ -128,7 +128,7 @@ Instructor control of per-problem weights is agreed. Decide the concrete represe
 
 ## Agreed implementation sequence
 
-The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–021 are merged and 022 is ready for review; proposed branches 023–027 have not been started locally. The unstarted derivation reservations move up one number to accommodate 023. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
+The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–026 are merged. The subsequent readability cleanup uses 027, so student-created practice and remaining demo work move to proposed 028; no local 028 branch exists as of this closeout. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
 
 | Proposed branch                          | Depends on                                                        | Reviewable outcome                                                                                                                                                                            |
 | ---------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -140,7 +140,8 @@ The user accepted this breakdown, with a focused context-assembly refactor inser
 | `024-feat-derivation-grading-review`     | 019 and 022                                                       | Instructor reports/comments, awarded-score adjustments and review resolution; complete assignment grading and release behavior. Enable graded derivations only when this workflow is ready.   |
 | `025-feat-dependency-proof-format`       | 020–024                                                           | Dependency-style structural validation, reference/student editors and final review through the existing grading/release flow.                                                                 |
 | `026-feat-natural-deduction-trees`       | 020–024; scheduled after 025                                      | Natural-deduction tree structure/editor, assumption discharge, reference validation and student/review integration. Not truth trees/tableaux.                                                 |
-| `027-feat-derivation-practice-and-demo`  | All preceding derivation branches                                 | Student-created practice setup and confirmed full resets, representative synthetic demo examples and cross-format workflow verification.                                                      |
+| `027-refactor-code-readability`          | 026                                                               | Logical-stage spacing, TSX scanability and scoped code names, preserving runtime behavior and serialized formats.                                                                             |
+| `028-feat-derivation-practice-and-demo`  | All preceding derivation branches                                 | Student-created practice setup and confirmed full resets, representative synthetic demo examples and cross-format workflow verification.                                                      |
 
 After these, return to the UI/visual audit and inexpensive portfolio sandbox preparation. Assign fresh numbers for those branches when scheduled. A separate broad code audit is not silently added as a release prerequisite by this sequence.
 
@@ -224,7 +225,9 @@ Each format branch must deliver a complete vertical addition:
 
 Do not duplicate the rule library just to change presentation. Do not silently permit unsupported format/rule combinations, and do not add lossless mid-proof conversion as a dependency.
 
-### 027: student-created practice, demo and feature verification
+<a id="027-student-created-practice-demo-and-feature-verification"></a>
+
+### 028: student-created practice, demo and feature verification
 
 Small slices:
 
@@ -242,7 +245,7 @@ The sequence is ready without pretending every detail is settled. Resolve these 
 - In 021: editor interactions, label collision handling and reference-proof authoring/publication constraints.
 - In 022–024: safe incomplete-proof serialization, completion-only behavior, review-state visibility, release-before-review transitions, score/comment adjustment history and student aggregate projections.
 - In 025–026: exact dependency/tree representations and applicability of each supported rule variant.
-- In 027: student-created practice ownership/persistence and how an unsolvable self-created target is presented without a proof-search guarantee.
+- In 028: student-created practice ownership/persistence and how an unsolvable self-created target is presented without a proof-search guarantee.
 
 ## Background references
 
