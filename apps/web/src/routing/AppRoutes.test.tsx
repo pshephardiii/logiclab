@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, createMemoryRouter, RouterProvider } from 'react-router';
 import { expect, test, vi } from 'vitest';
 import { useAccountContext } from '../features/auth/AccountProvider';
 import { AppRoutes } from './AppRoutes';
+import { UnsavedWorkProvider } from '../features/unsaved-work/UnsavedWorkProvider';
+import { proofPracticePath } from './route-definitions';
 
 vi.mock('../features/auth/AccountProvider', () => ({ useAccountContext: vi.fn() }));
 vi.mock('../components/layout/Page', () => ({
@@ -34,6 +36,34 @@ test('signed-out visitors redirect before loading a protected page', () => {
   visit('/assignments', null);
   expect(screen.getByRole('heading', { name: 'Account' })).toBeInTheDocument();
   expect(screen.queryByText('Loading page…')).not.toBeInTheDocument();
+});
+
+test('self-created proof practice is directly accessible without account or demo resource context', async () => {
+  vi.mocked(useAccountContext).mockReturnValue({
+    user: null,
+    busy: false,
+    demoMode: false,
+  } as ReturnType<typeof useAccountContext>);
+  const router = createMemoryRouter(
+    [
+      {
+        path: '*',
+        element: (
+          <UnsavedWorkProvider>
+            <AppRoutes />
+          </UnsavedWorkProvider>
+        ),
+      },
+    ],
+    { initialEntries: [proofPracticePath] },
+  );
+  render(<RouterProvider router={router} />);
+
+  expect(
+    await screen.findByRole('heading', { name: 'Practice a derivation.' }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('form', { name: 'Proof practice setup' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Account' })).not.toBeInTheDocument();
 });
 
 test('wrong roles retain the access guard around lazy pages', () => {

@@ -229,6 +229,8 @@ Do not duplicate the rule library just to change presentation. Do not silently p
 
 ### 028: student-created practice, demo and feature verification
 
+See [the implementation record and confirmed session ownership](derivation-practice-and-demo.md).
+
 Small slices:
 
 1. Add self-created practice premises/target/format setup and manual Check proof using supported rule catalogs. Decide session/save ownership and solvability treatment for self-created practice explicitly; do not require the student to provide a solution before attempting a proof.

@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Natural-deduction trees](planning/natural-deduction-trees.md)
+- [Self-created derivation practice and remaining demo examples](planning/derivation-practice-and-demo.md)
 - [Dependency proof format](planning/dependency-proof-format.md)
 - [Logical derivation planning](planning/logical-derivations.md)
 - [Assignment scoring](planning/assignment-scoring.md)
