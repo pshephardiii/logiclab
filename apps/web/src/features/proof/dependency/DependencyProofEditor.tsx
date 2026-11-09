@@ -169,6 +169,7 @@ export function DependencyProofEditor({
               </p>
               <button
                 type="button"
+                className="danger"
                 onClick={() => {
                   if (deletion.kind === 'proof') {
                     setBefore(null);

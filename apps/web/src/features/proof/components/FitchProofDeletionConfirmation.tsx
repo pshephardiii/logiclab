@@ -29,7 +29,7 @@ export function FitchProofDeletionConfirmation({
         ? Surviving citations will remain missing until you repair them. This changes the local
         draft; save explicitly to persist.
       </p>
-      <button type="button" onClick={onConfirm}>
+      <button type="button" className="danger" onClick={onConfirm}>
         Confirm deletion
       </button>
       <button type="button" className="secondary" onClick={onCancel}>

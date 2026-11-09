@@ -1,6 +1,6 @@
 # UI/UX audit: baseline and proposed work
 
-Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-ui-ux-audit`. Baseline checkout: `97a0db3`. This first slice inventories presentation and records findings; it changes no application code, styles, contracts or product behavior. Findings remain open until their implementation and follow-up evidence are recorded here.
+Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-ui-ux-audit`. Baseline checkout: `97a0db3`. The baseline slice inventoried presentation without changing application code. Subsequent implementation and verification are recorded below; findings remain open unless explicitly resolved.
 
 ## Agreed direction and working targets
 
@@ -94,7 +94,29 @@ This is a proposed application of the agreed direction, not a new stylesheet or 
 4. Refine library/rule authoring, assignment selection/settings, student results, instructor grading, billing and account/error states using the shared patterns.
 5. Run focused keyboard/focus, contrast, zoom/reduced-motion, short-screen/mobile and secondary-browser checks; close or explicitly defer findings and capture before/after evidence.
 
-No findings are marked fixed in this slice. Remaining baseline gaps include archive/restore views, zero-enrollment/empty-library variants, denied/expired sessions, save-conflict/uncertain-write states, larger proofs/formulas, full keyboard traversal, zoom/reduced motion and Safari. Include them in subsequent focused work rather than implying that the captured matrix is exhaustive.
+Remaining baseline gaps include archive/restore views, zero-enrollment/empty-library variants, denied/expired sessions, save-conflict/uncertain-write states, larger proofs/formulas, full keyboard traversal, zoom/reduced motion and Safari. Include them in subsequent focused work rather than implying that the captured matrix is exhaustive.
+
+## Implementation: shared foundations
+
+**UI-029-002**, November 9, 2026:
+
+- **UI029-01 resolved:** move `.problem-option` from the lazy library stylesheet into the always-loaded shared stylesheet. Fitch, dependency and tree editors now receive the same border, padding and margin on direct entry and after SPA navigation through the library. `.correct-option` remains library-owned because its consumers are library fields.
+- **UI029-05 partially addressed:** give textareas shared font/radius/border/padding, readable text/background and vertical resizing; unify ordinary content-link colors. Exclude radios/checkboxes from text-input sizing and padding, preserving compact native controls. Page-specific fieldset/layout refinement remains open.
+- **UI029-06 partially addressed:** add an outlined destructive button variant for proof-deletion confirmations, unsaved-work discard and demo reset. Make End demo secondary. Labels, safe-action autofocus, cancellation and workflow behavior are unchanged. Broader editing/primary action hierarchy remains open for subsequent screen slices.
+
+The next slice is the representative Classes/workspace shell. Proof entry redesign and the broader audit remain pending. No backend, assessment policy, persistence or transport changes are included.
+
+After the shared-style fix, direct entry matches the previously styled library-navigation case:
+
+![Proof premise row with shared styling on direct entry](images/ui-audit-029/proof-row-fixed.png)
+
+Destructive emphasis keeps the labeled safe action and native dialog behavior:
+
+![Stay and outlined destructive Discard changes controls at 390px](images/ui-audit-029/discard-dialog-mobile.png)
+
+Validation: all **402 web tests** passed; the web production build (including TypeScript checking) passed. Focused real-API Chrome checks captured ten desktop/mobile states, comparing direct and library-warmed proof cards in all three formats, exercising deletion cancellation, checking native choice-control sizing and shared textarea styling, and verifying dialog Tab/Escape/Stay/Discard behavior. The final successful run had no uncaught page errors or document-wide overflow at 390px. Temporary servers and the isolated test schema were cleaned up. Scripts, screenshots and computed-style evidence are retained under `.codex-local/ui-audit/029/shared-foundations/`.
+
+Changed-file formatting, whitespace and local Markdown targets passed. Backend/database suites were not repeated for this presentation-only change. These focused checks do not establish full keyboard/focus containment, contrast, assistive-technology, zoom or secondary-browser coverage.
 
 ## Route/state inventory
 
@@ -152,6 +174,6 @@ Each ID below has desktop/mobile captures and metadata in the ignored baseline f
 | ST11 | `/demo/work`        | Score-free completion with verification flags        | real demo API; final fixture submitted through API               |
 | ST12 | `/demo/work`        | Read-only erroneous tree review                      | real demo API; final fixture submitted through API               |
 
-## Validation for this slice
+## Baseline validation
 
 Source/CSS inspection, the recorded Chrome captures, computed-style comparison and explicit cleanup were performed. Documentation formatting, whitespace and local links are checked before handoff. No application or test code changed, so functional suites were not repeated. Full validation and the local PR draft belong at branch closeout; [the audit plan](../planning/ui-ux-audit.md) remains the scope/completion guide.

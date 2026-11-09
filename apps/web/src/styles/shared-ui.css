@@ -59,3 +59,19 @@ button.text-button {
 button.text-button:hover:not(:disabled) {
   background: #e3eee8;
 }
+button.danger {
+  color: #9d2626;
+  background: white;
+  border: 1px solid #9d2626;
+}
+button.danger:hover:not(:disabled) {
+  background: #fff2f2;
+}
+
+/* Shared by proof editors and library option/rule fields, including direct route visits. */
+.problem-option {
+  padding: 0.75rem;
+  margin-block: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+}

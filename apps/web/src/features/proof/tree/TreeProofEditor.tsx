@@ -136,6 +136,7 @@ export function TreeProofEditor({
               </p>
               <button
                 type="button"
+                className="danger"
                 onClick={() =>
                   change('all' in deletion ? null : removeTreeNode(proof, deletion.id))
                 }
