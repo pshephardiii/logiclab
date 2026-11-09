@@ -83,6 +83,8 @@ Documentation is grouped by purpose:
 
 ## Verification
 
+- [Independent derivation practice and template-7 demo journeys](verification/derivation-practice-and-demo-verification.md)
+
 - [Code readability conventions and scoped naming](verification/code-readability-verification.md)
 
 - [Natural-deduction trees across authoring, student work and retained review](verification/natural-deduction-trees-verification.md)

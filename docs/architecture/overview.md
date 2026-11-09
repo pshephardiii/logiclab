@@ -1,6 +1,6 @@
 # Architecture overview
 
-LogicLab is a TypeScript monorepo for teaching propositional logic. It implements anonymous truth-table practice, instructor-owned reusable problems and assignments, student submissions, simulated class payments, and operator jobs. The isolated demo reuses these workflows with disposable local identities. Application hosting is not yet deployed.
+LogicLab is a TypeScript monorepo for teaching propositional logic. It implements anonymous truth-table and derivation practice, instructor-owned reusable problems and assignments, student submissions, simulated class payments, and operator jobs. The isolated demo reuses these workflows with disposable local identities. Application hosting is not yet deployed.
 
 ## Package boundaries
 
@@ -92,3 +92,7 @@ Natural-deduction trees use flat UUID-identified nodes with a selected conclusio
 The engine groups structural/input/step logic under `proof/fitch/`, `proof/dependency/` and `proof/tree/`. Formula parsing/equality, local rule patterns, deterministic budgets, diagnostics and report construction remain shared. Dependency checking derives support from authoritative premises/assumptions and computed earlier support, compares written sets exactly and discharges only the assumption belonging to each cited branch. An established final dependency target may contain only stated-premise support; unused errors still prevent acceptance. Completion readiness is a separate predicate and does not require correctness.
 
 Application authoring uses matching `problem/derivation/fitch/`, `dependency/` and `tree/` helpers. Shared projections and student evaluators dispatch by the pinned server format. Normal/demo stores retain their existing authorization, transaction, revision and disclosure boundaries. There is no conversion through Fitch, separate inference catalog, schema migration or replacement grading model. The existing `/proof`, `/proof/rules` and `/proof/completion` package entries remain available. See [dependency verification](../verification/dependency-proof-format-verification.md).
+
+## Independent proof practice
+
+Public `/practice/proofs` lazy-loads page-owned setup and session state. It reuses the three student proof editors and bounded engine checkers locally, without a resource API client or private instructor definition. Premises/target/rules are fixed after starting; checking is explicit and feedback clears on edits. Confirmed format changes and Start over remount a blank setup and discard all prior work. This page has no account/database save or browser-storage persistence; shared unsaved-work guards warn before loss where supported. Syntax validation does not promise that the chosen target is solvable. Assigned work retains separate server-side authorization, pinned content, saves, grading and disclosure.

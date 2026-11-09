@@ -323,3 +323,7 @@ Natural-deduction tree authoring/checking, public assignment admission, student 
 ### 027 readability cleanup and updated sequence
 
 The readability branch applies logical-stage spacing and clarifying JSX comments, and renames objective-only, truth-table-only and Fitch-only code symbols to reflect their actual scope. Runtime payloads and persisted versions are unchanged; matching workspace builds are required for the renamed package exports. See [verification](../verification/code-readability-verification.md). The unstarted practice/demo feature moves to proposed `028-feat-derivation-practice-and-demo`, followed by the required UI/proof-interaction audit and sandbox preparation. Earlier numbered reservations are historical; no next branch or deployment is started here.
+
+### 028 closeout and next delivery
+
+Independent derivation practice and template-7 three-format demo examples are implemented; see [verification](../verification/derivation-practice-and-demo-verification.md). Page-local work uses explicit checking and confirmed full reset without account/browser-storage persistence. Existing demo visitors retain their graph until reset. The next proposed branch is `029-chore-ui-ux-audit`, including the agreed proof-editor interaction redesign and focused visual/keyboard/mobile QA. Settle the visual direction/accessibility target first, then prepare the inexpensive portfolio sandbox. Broader contingency QA remains a reference, not a claim of completed certification.

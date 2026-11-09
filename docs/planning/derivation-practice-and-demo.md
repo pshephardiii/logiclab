@@ -2,6 +2,8 @@
 
 Branch: `028-feat-derivation-practice-and-demo`. This is the implementation record for [the agreed sequence](logical-derivations.md#028-student-created-practice-demo-and-feature-verification); consolidate broader API/product/setup guidance and PR notes at branch closeout.
 
+Implementation and final verification are complete as of November 9, 2026. See [consolidated evidence and rollout limits](../verification/derivation-practice-and-demo-verification.md). Historical slice boundaries below describe what was enabled at each stage.
+
 ## Confirmed decisions — November 9, 2026
 
 - Self-created practice belongs to the current page session. No database saves or browser-storage persistence. Protect setup/proof work before navigation or browser unload; checking is not saving. Instructor-assigned practice keeps its existing revisioned saves and disclosure rules.
@@ -56,3 +58,7 @@ Authentication does not upgrade an existing visitor. A repeat provisioning reque
 - Formatting and whitespace passed. Initial upgrade-fixture runs exposed the existing deletion/provisioning guards; the final fixture respects them and the completed suite passes.
 
 No new migration, schema, endpoint, frontend logic or reference-release policy was introduced in this slice. No browser journey or full workspace verification was repeated. Next: final branch-wide checks, focused real-browser practice/reset/demo journeys, consolidated rollout guidance and local PR notes.
+
+## Final closeout — November 9, 2026
+
+Final runtime checks cover `8d4dd83` plus documentation-only closeout: 2,036 workspace tests/type checks/builds, 317 PostgreSQL checks and the real-API Chrome smoke passed. Documentation, local PR notes and two mobile evidence images are consolidated. See [final verification](../verification/derivation-practice-and-demo-verification.md) for exact browser/API setup boundaries and untested areas. No application fix was needed during closeout. Next is proposed `029-chore-ui-ux-audit`, including the required proof-editor interaction redesign before sandbox deployment; no next branch or deployment is started here.

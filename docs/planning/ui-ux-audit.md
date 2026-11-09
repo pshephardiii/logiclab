@@ -1,6 +1,6 @@
 # UI and UX audit
 
-Status: agreed future branch, October 28, 2026. Perform after functional QA and before public deployment. Keep it distinct from the correctness/code-structure audit. This plan does not start a branch or authorize deployment.
+Status: agreed next work after 028, updated November 9, 2026. Proposed branch: `029-chore-ui-ux-audit` (no local 029 branch found; remote history not queried). Perform before public deployment, including the required proof-editor interaction redesign. Keep it distinct from the correctness/code-structure audit. This plan does not start a branch or authorize deployment.
 
 Assign the next unused numbered `chore` branch with description `ui-ux-audit` when scheduling it, following [branch conventions](../conventions/branch-naming-conventions.md). Previously suggested branch numbers are provisional; document final ordering when QA closes rather than silently renumbering existing work.
 
