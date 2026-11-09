@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { practiceStatement, type PracticeStatement } from '../helpers/practice-proof';
 
 const formulaInput = {
@@ -15,10 +16,13 @@ const formulaInput = {
 /** Setup is page-local; only a syntactically valid statement becomes an active practice session. */
 export function ProofPracticeSetup({
   onStart,
+  initialFormat = 'fitch',
 }: {
   onStart: (statement: PracticeStatement) => void;
+  initialFormat?: PracticeStatement['format'];
 }) {
-  const [format, setFormat] = useState<PracticeStatement['format']>('fitch');
+  const confirmDiscard = useConfirmDiscard();
+  const [format, setFormat] = useState(initialFormat);
   const [premises, setPremises] = useState<PracticeStatement['premises']>([]);
   const [conclusion, setConclusion] = useState('');
   const [ruleIds, setRuleIds] = useState<string[]>(
@@ -26,11 +30,22 @@ export function ProofPracticeSetup({
   );
   const [error, setError] = useState<string | null>(null);
   useUnsavedWork(
-    format !== 'fitch' ||
-      premises.length > 0 ||
+    premises.length > 0 ||
       conclusion.length > 0 ||
       ruleIds.length !== PROPOSITIONAL_RULE_CATALOG.length,
   );
+
+  function changeFormat(next: PracticeStatement['format']) {
+    if (next === format) return;
+
+    confirmDiscard(() => {
+      setFormat(next);
+      setPremises([]);
+      setConclusion('');
+      setRuleIds(PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id));
+      setError(null);
+    });
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,15 +65,16 @@ export function ProofPracticeSetup({
       <select
         id="practice-proof-format"
         value={format}
-        onChange={(event) => setFormat(event.target.value as PracticeStatement['format'])}
+        onChange={(event) => changeFormat(event.target.value as PracticeStatement['format'])}
+        aria-describedby="practice-setup-format-description"
       >
         <option value="fitch">Fitch</option>
         <option value="dependency">Dependency</option>
         <option value="tree">Natural-deduction tree</option>
       </select>
-      <p className="help">
-        Choose the format before starting. Instructor-assigned problems keep their instructor's
-        format.
+      <p id="practice-setup-format-description" className="help">
+        Choose the format before starting. Changing format clears entered setup and resets the rules
+        after discard confirmation. Instructor-assigned problems keep their instructor's format.
       </p>
       <h3>Premises</h3>
       <p className="help">Premises are optional. Use none when practicing a theorem.</p>

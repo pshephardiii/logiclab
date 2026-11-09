@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { PracticeProofEditor } from './PracticeProofEditor';
 import { ProofPracticeSetup } from './ProofPracticeSetup';
 import {
@@ -13,6 +14,8 @@ import '../../../features/proof/proof.css';
 
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
+  const confirmDiscard = useConfirmDiscard();
+  const [setupFormat, setSetupFormat] = useState<PracticeStatement['format']>('fitch');
   const [statement, setStatement] = useState<PracticeStatement | null>(null);
   const [proof, setProof] = useState<PracticeProof | null>(null);
   const [report, setReport] = useState<ProofCheckReport | null>(null);
@@ -21,6 +24,15 @@ export function ProofPractice() {
   function changeProof(next: PracticeProof | null) {
     setProof(next);
     setReport(null);
+  }
+
+  function restart(format: PracticeStatement['format']) {
+    confirmDiscard(() => {
+      setSetupFormat(format);
+      setStatement(null);
+      setProof(null);
+      setReport(null);
+    });
   }
 
   return (
@@ -41,10 +53,33 @@ export function ProofPractice() {
         storage, and reload clears it. No grades or instructor-visible records are created.
       </p>
       {!statement ? (
-        <ProofPracticeSetup onStart={setStatement} />
+        <ProofPracticeSetup initialFormat={setupFormat} onStart={setStatement} />
       ) : (
         <section className="panel proof-editor">
           <h2>Your practice problem</h2>
+          <label htmlFor="active-practice-format">Change proof format</label>
+          <select
+            id="active-practice-format"
+            value={statement.format}
+            onChange={(event) => {
+              const format = event.target.value as PracticeStatement['format'];
+
+              if (format !== statement.format) restart(format);
+            }}
+            aria-describedby="practice-reset-description"
+          >
+            <option value="fitch">Fitch</option>
+            <option value="dependency">Dependency</option>
+            <option value="tree">Natural-deduction tree</option>
+          </select>
+          <p id="practice-reset-description" className="help">
+            Changing format or starting over discards all premises, the conclusion, selected rules,
+            proof steps/nodes, assumptions, references and feedback. Stay keeps everything. Discard
+            changes opens an empty setup with the default rules; no proof is converted.
+          </p>
+          <button type="button" className="secondary" onClick={() => restart(statement.format)}>
+            Start over
+          </button>
           <p>
             <strong>Format:</strong>{' '}
             {statement.format === 'tree'
