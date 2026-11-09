@@ -1,8 +1,8 @@
 # UI and UX audit
 
-Status: agreed next work after 028, updated November 9, 2026. Proposed branch: `029-chore-ui-ux-audit` (no local 029 branch found; remote history not queried). Perform before public deployment, including the required proof-editor interaction redesign. Keep it distinct from the correctness/code-structure audit. This plan does not start a branch or authorize deployment.
+Status: in progress on `029-chore-ui-ux-audit`, updated November 9, 2026. The first read-only slice captured the baseline and prioritized findings in the [UI/UX audit record](../qa/ui-ux-audit.md). The user accepted a calm academic direction, desktop-first with usable mobile layouts, and Chrome as the initial browser baseline. Implementation and broader accessibility/browser verification remain pending. Perform before public deployment, including the required proof-editor interaction redesign. Keep it distinct from the correctness/code-structure audit; this plan does not authorize deployment.
 
-Assign the next unused numbered `chore` branch with description `ui-ux-audit` when scheduling it, following [branch conventions](../conventions/branch-naming-conventions.md). Previously suggested branch numbers are provisional; document final ordering when QA closes rather than silently renumbering existing work.
+The branch follows [branch conventions](../conventions/branch-naming-conventions.md). Keep historical branch numbers intact when updating the remaining release sequence.
 
 ## Goal and boundaries
 
