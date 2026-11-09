@@ -100,6 +100,7 @@ test('format changes require explicit reference discard and preserve the stateme
     'discards the entire reference',
   );
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
@@ -118,14 +119,16 @@ test('format changes require explicit reference discard and preserve the stateme
 
 test('moves and confirmed deletions preserve unresolved references and annotations for explicit repair', async () => {
   const { user } = setup(definition());
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
   await user.click(screen.getByRole('button', { name: 'Move line 2 up' }));
   expect(screen.getByLabelText('Line 1 discharge 1 assumption')).toHaveTextContent(
     'Missing or unavailable',
   );
   await user.click(screen.getByRole('button', { name: 'Move line 1 down' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
   await user.click(screen.getByRole('button', { name: 'Delete line 1' }));
   await user.click(screen.getByRole('button', { name: 'Keep proof' }));
-  expect(screen.getByLabelText('Formula for line 2')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Edit line 2' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Delete line 1' }));
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(screen.getByLabelText('Line 1 discharge 1 assumption')).toHaveTextContent(
@@ -167,6 +170,7 @@ test('unavailable sources are retained visibly until explicitly removed', async 
   const value = definition();
   value.referenceProof!.steps[1]!.dependencies = ['99999999-9999-4999-8999-999999999999'];
   const { user, onSave } = setup(value);
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
   expect(screen.getByText('Missing or unavailable dependency')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave.mock.calls[0]![0].definition).toMatchObject({

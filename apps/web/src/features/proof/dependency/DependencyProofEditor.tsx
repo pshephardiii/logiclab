@@ -3,6 +3,7 @@ import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@l
 import { ProofChoice } from '../components/ProofChoice';
 import { DependencyProofLine } from './DependencyProofLine';
 import { DependencyProofSummary } from './DependencyProofSummary';
+import { DependencyProofDisplay } from './DependencyProofDisplay';
 import {
   startDependencyProof,
   uniqueDependencyIds,
@@ -29,6 +30,14 @@ export function DependencyProofEditor({
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
   const [before, setBefore] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIndex = proof
+    ? Math.max(
+        0,
+        proof.steps.findIndex((step) => step.id === selectedId),
+      )
+    : 0;
+  const selected = proof?.steps[selectedIndex];
 
   const [deletion, setDeletion] = useState<{ kind: 'line'; id: string } | { kind: 'proof' } | null>(
     null,
@@ -46,15 +55,12 @@ export function DependencyProofEditor({
     if (!proof) return;
 
     try {
-      change(
-        insertDependencyStep(
-          proof,
-          before === null
-            ? proof.steps.length
-            : proof.steps.findIndex((step) => step.id === before),
-          kind,
-        ),
-      );
+      const index =
+        before === null ? proof.steps.length : proof.steps.findIndex((step) => step.id === before);
+      const next = insertDependencyStep(proof, index, kind);
+
+      setSelectedId(next.steps[index]!.id);
+      change(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not insert a proof line.');
     }
@@ -66,12 +72,15 @@ export function DependencyProofEditor({
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
       <h3>{heading}</h3>
-      <p className="help">
-        Dependency proofs use explicit source sets and assumption/conclusion discharge pairs. Line
-        numbers are display positions; references retain their identity through moves. Removing a
-        line leaves references unresolved. A final conclusion must have no temporary-assumption
-        dependencies.
-      </p>
+      <details>
+        <summary>How dependency proofs work</summary>
+        <p className="help">
+          Dependency proofs use explicit source sets and assumption/conclusion discharge pairs. Line
+          numbers are display positions; references retain their identity through moves. Removing a
+          line leaves references unresolved. A final conclusion must have no temporary-assumption
+          dependencies.
+        </p>
+      </details>
       {!proof ? (
         <>
           <p>
@@ -105,6 +114,16 @@ export function DependencyProofEditor({
             </>
           ) : (
             <>
+              <DependencyProofDisplay
+                proof={proof}
+                rules={statement.rules}
+                selectedId={selected?.id ?? null}
+                onEdit={(id) => {
+                  setSelectedId(id);
+                  setDeletion(null);
+                }}
+              />
+              <h4>Line controls</h4>
               <ProofChoice
                 label="Insert before"
                 value={before}
@@ -130,25 +149,28 @@ export function DependencyProofEditor({
                   </button>
                 ))}
               </div>
-              {proof.steps.map((step, index) => (
+              {selected && (
                 <DependencyProofLine
-                  key={step.id}
+                  key={selected.id}
                   proof={proof}
-                  index={index}
+                  index={selectedIndex}
                   statement={statement}
                   purpose={purpose}
                   onChange={(next) =>
                     change({
                       ...proof,
                       steps: proof.steps.map((value, position) =>
-                        position === index ? next : value,
+                        position === selectedIndex ? next : value,
                       ),
                     })
                   }
-                  onMove={(delta) => change(moveDependencyStep(proof, index, delta))}
-                  onDelete={() => setDeletion({ kind: 'line', id: step.id })}
+                  onMove={(delta) => {
+                    setSelectedId(selected.id);
+                    change(moveDependencyStep(proof, selectedIndex, delta));
+                  }}
+                  onDelete={() => setDeletion({ kind: 'line', id: selected.id })}
                 />
-              ))}
+              )}
             </>
           )}
           <button
