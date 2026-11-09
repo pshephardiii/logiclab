@@ -38,3 +38,21 @@ Changing format during setup also confirms before discarding entered premises, t
 Frontend type checking/production build and all **402 frontend tests** passed. Nine new cases cover all six cross-format transitions, Stay and native-dialog cancellation, old feedback/work removal, default-rule restoration, clean empty setup, a fresh attempt after reset, same-format restart/no-op and dirty setup/error retention. The focused run initially used an unsupported test-event shortcut; dispatching the actual cancel event corrected the test. Formatting and whitespace passed.
 
 No shared provider, assigned editor, API, database, migration or demo seed changed. Native dialog focus/unload behavior still needs real-browser verification; jsdom uses the existing dialog stub. Next: versioned tree/cross-format demo examples, then branch-wide verification and consolidated documentation/PR notes.
+
+## Slice 3: demo template 7 — November 9, 2026
+
+New/reset workspaces now receive the same conditional-identity problem (`P → P`) in Fitch, dependency and natural-deduction tree formats. Each reference is published through the existing checked authoring workflow. Conditional proof and optional Reiteration are enabled, so students can use the minimal reference route or a longer valid proof without matching the instructor's exact structure.
+
+All three proof examples appear in assigned practice, graded and completion-only sets. Proof practice keeps explicit checks, individual saves, anytime references and no final submission. The graded set has three 20-point problems (60 total), instructor review/adjustments and independent grade/answer release. Completion remains score-free with post-submission verification flags and separately revealed references. Existing table/conceptual examples and six-assignment organization are retained; there are now six published problem versions per workspace.
+
+Authentication does not upgrade an existing visitor. A repeat provisioning request for an older active template remains unavailable rather than silently replacing its data. Explicit reset restores template 7, rotates credentials/generation and keeps the original absolute deadline. The retained-template regression builds a synthetic two-format v6-shaped graph inside the permitted deletion lifecycle, without disabling retention guards; other visitors remain unchanged.
+
+### Slice 3 verification
+
+- API type checking and all **1,051 API tests** passed; existing Jest VM-module advisories remain.
+- All **133 API/PostgreSQL workflow checks** passed, including two new seeded-workflow/upgrade cases and updated seed/reset/cleanup expectations. Imported contracts, engine and database packages were rebuilt by that suite.
+- Scoped demo-runtime checks accept longer valid proofs in all three formats without saving an attempt. Graded work with one incorrect tree stays pending until an instructor awards points; the tested correction yields 52.5/60 without rewriting original evidence. Grades/comments can be released while references remain locked, and later answer reveal preserves student work and immutable submission retries. The same filled-but-incorrect tree earns score-free completion with an error flag alongside two verified proofs.
+- A retained two-format visitor keeps edited content before reset, receives the tree example only after reset, retains its absolute deadline and cannot reuse old credentials. Another visitor's generation/content stay unchanged. Temporary integration schemas were cleaned up; no user development database was migrated/reset.
+- Formatting and whitespace passed. Initial upgrade-fixture runs exposed the existing deletion/provisioning guards; the final fixture respects them and the completed suite passes.
+
+No new migration, schema, endpoint, frontend logic or reference-release policy was introduced in this slice. No browser journey or full workspace verification was repeated. Next: final branch-wide checks, focused real-browser practice/reset/demo journeys, consolidated rollout guidance and local PR notes.

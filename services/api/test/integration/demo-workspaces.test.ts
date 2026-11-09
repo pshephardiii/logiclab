@@ -1,4 +1,7 @@
-import { savedStudentCheckSchema } from '@logiclab/contracts/saved-student-work';
+import {
+  savedStudentCheckSchema,
+  savedStudentAnswersSchema,
+} from '@logiclab/contracts/saved-student-work';
 import { createBillingStore } from '../../src/persistence/billing/store';
 import { createBillingService } from '../../src/application/billing/service';
 import { createSimulatorProvider } from '../../src/integrations/payments/simulator/provider';
@@ -20,6 +23,9 @@ import {
 } from '../../src/application/demo/template';
 import { readDemoPolicy } from '../../src/config/demo';
 import { demoSessionHash } from '../../src/application/demo/service';
+import { createDemoRuntime } from '../../src/bootstrap/demo';
+import { readDemoConfig } from '../../src/config/demo';
+import type { SavedDerivationAnswer } from '@logiclab/contracts/saved-student-work';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
@@ -55,7 +61,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     assert.equal(await em.count(db.User, { demoWorkspace: id }), 2);
     assert.equal(await em.count(db.Classroom, {}), 2);
     assert.equal(await em.count(db.Enrollment, {}), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 5);
+    assert.equal(await em.count(db.ProblemVersion, {}), 6);
     assert.equal(
       await em.count(db.ClassPurchase, { status: db.PurchaseStatus.Paid, lastEventSequence: 1 }),
       1,
@@ -207,7 +213,7 @@ test('reset restores the template, clears submitted work and billing history, an
         owner: { demoWorkspace: first.workspaceId },
         title: 'Visitor changed this',
       }),
-      5,
+      6,
     );
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
@@ -295,7 +301,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
       db.DemoWorkspaceStatus.Active,
     );
     assert.equal(await em.count(db.User, { demoWorkspace: first.workspaceId }), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 5);
+    assert.equal(await em.count(db.ProblemVersion, {}), 6);
     assert.equal(await em.count(db.ClassPurchase, {}), 1);
     assert.equal(await em.count(db.AssignmentAttempt, { submittedAt: { $ne: null } }), 1);
     const nextId = randomUUID();
@@ -490,7 +496,7 @@ test('reset cannot revive an idle-expired workspace or extend its absolute deadl
     assert.equal(await em.count(db.User, { demoWorkspace: workspace.workspaceId }), 2);
   }));
 
-test('template 6 preserves weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
+test('template 7 preserves weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -568,7 +574,7 @@ test('template 6 preserves weighted graded assignments and score-free private pr
     assert.equal((await work.submit(student.id, graded.id, 0)).gradePending, false);
   }));
 
-test('template 6 certifies both proof formats and seeds explicit practice, weighted grading and score-free completion', async () =>
+test('template 7 certifies all three proof formats and seeds explicit practice, weighted grading and score-free completion', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -597,7 +603,7 @@ test('template 6 certifies both proof formats and seeds explicit practice, weigh
             ? item.problemVersion.definition.format
             : null,
         ),
-        ['fitch', 'dependency'],
+        ['fitch', 'dependency', 'tree'],
       );
       const read = await work.read(student.id, row.id);
       assert(!JSON.stringify(read).includes('referenceProof'));
@@ -642,7 +648,7 @@ test('template 6 certifies both proof formats and seeds explicit practice, weigh
           await assignments.release(owner.id, row.id, 'grades');
           assert.equal(
             (await work.read(student.id, row.id)).attempt!.score!.summary.earnedPoints,
-            40,
+            60,
           );
         } else {
           assert.equal(final.score, undefined);
@@ -650,12 +656,321 @@ test('template 6 certifies both proof formats and seeds explicit practice, weigh
           if (final.result?.gradingVersion !== 'proof_completion_v1')
             assert.fail('Expected proof completion');
           assert.deepEqual(final.result.summary.proofVerification, {
-            verified: 2,
+            verified: 3,
             errorsFound: 0,
             unavailable: 0,
-            total: 2,
+            total: 3,
           });
         }
       }
     }
+  }));
+
+/** Add an explicit reiteration without copying the instructor's minimal route. */
+function longerDemoProof(index: number): SavedDerivationAnswer['proof'] {
+  const proof = structuredClone(DEMO_DERIVATIONS[index]!.definition.referenceProof!);
+  const extraId = randomUUID();
+
+  if (proof.format === 'fitch') {
+    const assumption = proof.steps[0]!;
+    proof.steps.splice(1, 0, {
+      id: extraId,
+      kind: 'inference',
+      blockId: proof.blocks[0]!.id,
+      formula: 'P',
+      ruleId: 'reiteration',
+      lineReferences: [assumption.id],
+      subproofReferences: [],
+    });
+    proof.blocks[0]!.endId = extraId;
+  } else if (proof.format === 'dependency') {
+    const assumption = proof.steps[0]!;
+    proof.steps.splice(1, 0, {
+      id: extraId,
+      kind: 'inference',
+      formula: 'P',
+      dependencies: [assumption.id],
+      ruleId: 'reiteration',
+      lineReferences: [assumption.id],
+      discharges: [],
+    });
+    const last = proof.steps[2]!;
+    assert(last.kind === 'inference');
+    last.discharges[0]!.conclusionId = extraId;
+  } else {
+    const root = proof.nodes.find((node) => node.id === proof.rootId)!;
+    assert(root.kind === 'inference');
+    const assumptionId = root.branches[0]!.rootId!;
+    proof.nodes.push({
+      id: extraId,
+      kind: 'inference',
+      formula: 'P',
+      ruleId: 'reiteration',
+      lineReferences: [assumptionId],
+      branches: [],
+    });
+    root.branches[0]!.rootId = extraId;
+  }
+
+  return proof;
+}
+
+test('seeded three-format practice accepts alternate routes; graded review and completion retain incorrect-proof evidence', async () =>
+  fixture(async (orm, db) => {
+    const runtime = await createDemoRuntime(
+      orm,
+      readDemoConfig({ DEMO_ENABLED: 'true', APP_ORIGIN: 'http://localhost:5173' })!,
+    );
+    const workspace = await runtime.workspaces.provision();
+    const student = await runtime.sessions.issue(workspace.workspaceId, 'student');
+    const owner = await runtime.sessions.issue(workspace.workspaceId, 'instructor');
+    const em = orm.em.fork();
+    const practice = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner: owner.actor.id },
+      title: DEMO_TEMPLATE.proofPracticeAssignmentTitle,
+    });
+    const graded = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner: owner.actor.id },
+      title: DEMO_TEMPLATE.proofGradedAssignmentTitle,
+    });
+    const completion = await em.findOneOrFail(db.Assignment, {
+      classroom: { owner: owner.actor.id },
+      title: DEMO_TEMPLATE.proofCompletionAssignmentTitle,
+    });
+    const work = runtime.context.studentWork;
+    const proofs = DEMO_DERIVATIONS.map((_, index) => longerDemoProof(index));
+    const readPractice = await runtime.run(student.sessionId, false, () =>
+      work.read(student.actor.id, practice.id),
+    );
+
+    assert(!JSON.stringify(readPractice).includes('referenceProof'));
+    for (const [index, item] of readPractice.assignment.items.entries()) {
+      const checked = await runtime.run(student.sessionId, true, () =>
+        work.check(
+          student.actor.id,
+          practice.id,
+          savedStudentCheckSchema.parse({
+            itemId: item.id,
+            answers: { type: 'derivation', proof: proofs[index]! },
+          }),
+        ),
+      );
+      assert('type' in checked.feedback && checked.feedback.type === 'derivation');
+      assert.equal(checked.feedback.report.status, 'accepted');
+    }
+    assert.equal(await em.count(db.AssignmentAttempt, { assignment: practice.id }), 0);
+
+    // A filled but wrong tree still qualifies as completion work: reiterating P does not prove P → P.
+    const wrongTree = structuredClone(DEMO_DERIVATIONS[2]!.definition.referenceProof!);
+    assert(wrongTree.format === 'tree');
+    const root = wrongTree.nodes.find((node) => node.id === wrongTree.rootId)!;
+    assert(root.kind === 'inference');
+    root.lineReferences = [root.branches[0]!.rootId!];
+    root.branches = [];
+    root.ruleId = 'reiteration';
+
+    for (const [row, mode] of [
+      [graded, 'graded'],
+      [completion, 'completion_only'],
+    ] as const) {
+      const read = await runtime.run(student.sessionId, false, () =>
+        work.read(student.actor.id, row.id),
+      );
+      assert(!JSON.stringify(read).includes('referenceProof'));
+      let revision = 0;
+      for (const [index, item] of read.assignment.items.entries()) {
+        const saved = await runtime.run(student.sessionId, true, () =>
+          work.save(
+            student.actor.id,
+            row.id,
+            savedStudentAnswersSchema.parse({
+              revision,
+              itemId: item.id,
+              answers: { type: 'derivation', proof: index === 2 ? wrongTree : proofs[index]! },
+            }),
+          ),
+        );
+        revision = saved.revision;
+      }
+      const final = await runtime.run(student.sessionId, true, () =>
+        work.submit(student.actor.id, row.id, revision),
+      );
+      const originalAnswers = structuredClone(final.answers);
+      const treeItem = read.assignment.items[2]!;
+
+      if (mode === 'graded') {
+        assert(final.gradePending);
+        assert.equal(final.result, null);
+        const review = await runtime.run(owner.sessionId, false, () =>
+          runtime.context.submissionReviews.findSubmission(owner.actor.id, row.id, final.id),
+        );
+        assert.equal(review.attempt.result?.gradingVersion, 'proof_mixed_v1');
+        if (review.attempt.result?.gradingVersion !== 'proof_mixed_v1')
+          assert.fail('Expected proof results');
+        assert.deepEqual(review.attempt.result.summary.proofs, {
+          accepted: 2,
+          needsReview: 1,
+          unassessable: 0,
+          total: 3,
+        });
+        assert.equal(review.attempt.score?.summary.status, 'needs_review');
+        const originalEvidence = structuredClone(review.attempt.result);
+        const award = await runtime.run(owner.sessionId, true, () =>
+          runtime.context.submissionGrading.update(owner.actor.id, row.id, final.id, {
+            revision: 0,
+            items: [
+              {
+                itemId: treeItem.id,
+                earnedPoints: 12.5,
+                comment: 'The final inference needs correction.',
+              },
+            ],
+          }),
+        );
+        assert.equal(award.score.summary.earnedPoints, 52.5);
+
+        await runtime.run(owner.sessionId, true, () =>
+          runtime.context.assignments.release(owner.actor.id, row.id, 'grades'),
+        );
+        const released = (
+          await runtime.run(student.sessionId, false, () => work.read(student.actor.id, row.id))
+        ).attempt!;
+        assert.equal(released.score?.summary.earnedPoints, 52.5);
+        assert.equal(released.automaticScore?.summary.status, 'needs_review');
+        assert.deepEqual(released.result, originalEvidence);
+        assert.equal(
+          released.instructorGrading?.items[0]?.comment,
+          'The final inference needs correction.',
+        );
+        await assert.rejects(
+          runtime.run(student.sessionId, false, () =>
+            work.solution(student.actor.id, row.id, treeItem.id),
+          ),
+          /solution_locked/,
+        );
+      } else {
+        assert.equal(final.score, undefined);
+        assert.equal(final.result?.gradingVersion, 'proof_completion_v1');
+        if (final.result?.gradingVersion !== 'proof_completion_v1')
+          assert.fail('Expected completion evidence');
+        assert.deepEqual(final.result.summary.proofVerification, {
+          verified: 2,
+          errorsFound: 1,
+          unavailable: 0,
+          total: 3,
+        });
+      }
+
+      await runtime.run(owner.sessionId, true, () =>
+        runtime.context.assignments.release(owner.actor.id, row.id, 'answers'),
+      );
+      for (const [index, item] of read.assignment.items.entries()) {
+        const answer = await runtime.run(student.sessionId, false, () =>
+          work.solution(student.actor.id, row.id, item.id),
+        );
+        assert('type' in answer.solution && answer.solution.type === 'derivation');
+        assert.equal(answer.solution.format, DEMO_DERIVATIONS[index]!.definition.format);
+        assert.deepEqual(
+          answer.solution.referenceProof,
+          DEMO_DERIVATIONS[index]!.definition.referenceProof,
+        );
+      }
+      const retry = await runtime.run(student.sessionId, true, () =>
+        work.submit(student.actor.id, row.id, 0),
+      );
+      assert.deepEqual(retry.answers, originalAnswers);
+      assert.equal(retry.revision, final.revision);
+      if (mode === 'graded') assert.equal(retry.score?.summary.earnedPoints, 52.5);
+      else assert.deepEqual(retry.result, final.result);
+    }
+  }));
+
+test('a retained two-format visitor upgrades to template 7 only on reset, preserving its deadline and other visitors', async () =>
+  fixture(async (orm, db) => {
+    const store = await createDemoWorkspaceStore(orm, policy);
+    const service = createDemoWorkspaceService(store);
+    const first = await service.provision();
+    const other = await service.provision();
+    const sessions = createDemoSessionService(await createDemoSessionStore(orm, policy));
+    const session = await sessions.issue(first.workspaceId, 'student');
+    const em = orm.em.fork();
+    const originalDeadline = (
+      await em.findOneOrFail(db.DemoWorkspace, first.workspaceId)
+    ).expiresAt.getTime();
+    const tree = await em.findOneOrFail(db.Problem, {
+      owner: { demoWorkspace: first.workspaceId },
+      title: DEMO_DERIVATIONS[2]!.title,
+    });
+    const versions = await em.find(db.ProblemVersion, { problem: tree.id });
+    // Build a v6-shaped fixture inside the permitted deletion lifecycle, without disabling guards.
+    await em.transactional(async (transaction) => {
+      await transaction.nativeUpdate(db.DemoWorkspace, first.workspaceId, {
+        status: db.DemoWorkspaceStatus.Resetting,
+      });
+      await transaction.nativeDelete(db.AssignmentItem, {
+        problemVersion: { $in: versions.map((version) => version.id) },
+      });
+      await transaction.nativeDelete(db.ProblemVersion, { problem: tree.id });
+      await transaction.nativeDelete(db.Problem, { id: tree.id });
+      await transaction.nativeUpdate(db.DemoWorkspace, first.workspaceId, {
+        templateVersion: 6,
+        status: db.DemoWorkspaceStatus.Active,
+      });
+    });
+    await em.nativeUpdate(
+      db.Problem,
+      { owner: { demoWorkspace: first.workspaceId }, title: DEMO_DERIVATIONS[0]!.title },
+      { title: 'Retained visitor draft' },
+    );
+
+    await sessions.authenticate(session.sessionId);
+    await assert.rejects(store.provision(first.workspaceId), /Demo workspace is unavailable/);
+    assert.equal(
+      (await em.fork().findOneOrFail(db.DemoWorkspace, first.workspaceId)).templateVersion,
+      6,
+    );
+    assert.equal(
+      await em.count(db.Problem, {
+        owner: { demoWorkspace: first.workspaceId },
+        title: DEMO_DERIVATIONS[2]!.title,
+      }),
+      0,
+    );
+    assert.equal(
+      await em.count(db.Problem, {
+        owner: { demoWorkspace: first.workspaceId },
+        title: 'Retained visitor draft',
+      }),
+      1,
+    );
+
+    const reset = await service.reset(session.sessionId);
+    await assert.rejects(sessions.authenticate(session.sessionId));
+    assert.equal((await sessions.authenticate(reset.sessionId)).generation, 2);
+    em.clear();
+    const refreshed = await em.findOneOrFail(db.DemoWorkspace, first.workspaceId);
+    assert.equal(refreshed.templateVersion, 7);
+    assert.equal(refreshed.expiresAt.getTime(), originalDeadline);
+    assert.equal(
+      await em.count(db.Problem, {
+        owner: { demoWorkspace: first.workspaceId },
+        title: DEMO_DERIVATIONS[2]!.title,
+      }),
+      1,
+    );
+    assert.equal(
+      await em.count(db.Problem, {
+        owner: { demoWorkspace: first.workspaceId },
+        title: 'Retained visitor draft',
+      }),
+      0,
+    );
+    assert.equal((await em.findOneOrFail(db.DemoWorkspace, other.workspaceId)).generation, 1);
+    assert.equal(
+      await em.count(db.Problem, {
+        owner: { demoWorkspace: other.workspaceId },
+        title: DEMO_DERIVATIONS[2]!.title,
+      }),
+      1,
+    );
   }));

@@ -189,7 +189,10 @@ export async function seedDemoWorkspace(
       ...(example.assessmentMode === 'graded'
         ? {
             problemVersionIds: [],
-            items: proofVersionIds.map((problemVersionId) => ({ problemVersionId, maxPoints: 20 })),
+            items: proofVersionIds.map((problemVersionId) => ({
+              problemVersionId,
+              maxPoints: DEMO_TEMPLATE.proofPoints,
+            })),
           }
         : { problemVersionIds: proofVersionIds }),
     });
