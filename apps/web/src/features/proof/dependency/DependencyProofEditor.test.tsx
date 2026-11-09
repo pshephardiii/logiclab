@@ -27,12 +27,14 @@ function setup() {
     ],
   };
   const onChange = vi.fn();
+  const onPendingChange = vi.fn();
 
   function Harness() {
     const [proof, setProof] = useState<DependencyProof | null>(initial);
     return (
       <DependencyProofEditor
         statement={statement}
+        onPendingChange={onPendingChange}
         proof={proof}
         purpose="student"
         onChange={(next) => {
@@ -44,7 +46,7 @@ function setup() {
   }
 
   render(<Harness />);
-  return { user: userEvent.setup(), onChange, initial };
+  return { user: userEvent.setup(), onChange, onPendingChange, initial };
 }
 
 test('shows the entered proof and opens one line without modifying work', async () => {
@@ -88,7 +90,12 @@ test('selection follows stable identities through moves and missing references r
 test('insertion selects the new line while retaining incomplete work and existing references', async () => {
   const { user, onChange, initial } = setup();
   await user.selectOptions(screen.getByLabelText('Insert before'), source);
-  await user.click(screen.getByRole('button', { name: 'Add inference line' }));
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).not.toHaveTextContent(
+    '(blank)',
+  );
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
   const next = onChange.mock.lastCall![0] as DependencyProof;
   expect(next.steps.slice(1)).toEqual(initial.steps);
   expect(next.steps[0]).toMatchObject({ formula: '', ruleId: null, dependencies: [] });
@@ -96,4 +103,37 @@ test('insertion selects the new line while retaining incomplete work and existin
   expect(screen.getByRole('region', { name: 'Entered dependency proof' })).toHaveTextContent(
     'Repeat · 2',
   );
+});
+
+test('discarding a pending entry changes no proof, clears protection and restores focus', async () => {
+  const { user, onChange, onPendingChange } = setup();
+  const trigger = screen.getByRole('button', { name: 'New inference line' });
+  await user.click(trigger);
+  expect(onPendingChange).toHaveBeenLastCalledWith(true);
+  expect(screen.getByLabelText('Formula for line 3')).toHaveFocus();
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P &');
+  expect(screen.getByRole('button', { name: 'Edit line 1' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Clear proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(onPendingChange).toHaveBeenLastCalledWith(false);
+  expect(trigger).toHaveFocus();
+  expect(screen.queryByRole('region', { name: 'Unconfirmed proof entry' })).not.toBeInTheDocument();
+});
+
+test('a replacement proof cannot be overwritten by an entry based on older work', async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn();
+  const proof: DependencyProof = { proofVersion: 1, format: 'dependency', steps: [] };
+  const props = { statement, proof, onChange };
+  const view = render(<DependencyProofEditor {...props} />);
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P');
+  view.rerender(<DependencyProofEditor {...props} proof={{ ...proof }} />);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('proof changed');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });

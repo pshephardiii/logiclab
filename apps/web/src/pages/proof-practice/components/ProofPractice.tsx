@@ -19,6 +19,7 @@ export function ProofPractice() {
   const [statement, setStatement] = useState<PracticeStatement | null>(null);
   const [proof, setProof] = useState<PracticeProof | null>(null);
   const [report, setReport] = useState<ProofCheckReport | null>(null);
+  const [entryPending, setEntryPending] = useState(false);
   useUnsavedWork(statement !== null);
 
   function changeProof(next: PracticeProof | null) {
@@ -112,15 +113,22 @@ export function ProofPractice() {
             </ul>
             {!statement.rules.length && <p>No inference rules enabled.</p>}
           </details>
-          <PracticeProofEditor statement={statement} proof={proof} onChange={changeProof} />
+          <PracticeProofEditor
+            statement={statement}
+            proof={proof}
+            onChange={changeProof}
+            onPendingChange={setEntryPending}
+          />
           <button
             type="button"
-            disabled={!proof}
-            onClick={() => proof && setReport(checkPracticeProof(statement, proof))}
+            disabled={!proof || entryPending}
+            onClick={() =>
+              proof && !entryPending && setReport(checkPracticeProof(statement, proof))
+            }
           >
             Check proof
           </button>
-          {report && (
+          {report && !entryPending && (
             <ProofFeedback
               report={report}
               stepLabel={statement.format === 'tree' ? 'Node' : 'Line'}

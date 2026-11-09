@@ -13,6 +13,7 @@ import {
 } from '../../../../test/proof-work-fixture';
 import * as api from '../../../api/student-work/api';
 import { AssignedAttempt } from './AssignedAttempt';
+import { dependencyWork, dependencySaved } from '../../../../test/dependency-work-fixture';
 installDialogStub();
 vi.mock('../../../api/student-work/api', () => ({
   readAssignedWork: vi.fn(),
@@ -33,6 +34,58 @@ async function open() {
   await screen.findByRole('heading', { name: 'Problem 1: First proof' });
   return { user, ...view };
 }
+
+test('pending dependency entry protects clean saved work, blocks checking/saving and confirms problem changes', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: dependencyWork,
+    attempt: dependencySaved,
+  });
+  const { user } = await open();
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  await user.type(screen.getByLabelText('Formula for line 2'), 'Q &');
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
+  const unloading = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(unloading);
+  expect(unloading.defaultPrevented).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('Q &');
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByRole('heading', { name: 'Problem 2: Repeated proof' });
+  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  expect(screen.queryByRole('region', { name: 'Unconfirmed proof entry' })).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
+  const cleanUnload = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(cleanUnload);
+  expect(cleanUnload.defaultPrevented).toBe(false);
+});
+
+test('pending dependency entry blocks final submission without changing or saving the confirmed proof', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...dependencyWork, assessmentMode: 'graded', feedbackTiming: 'on_submission' },
+    attempt: dependencySaved,
+  });
+  const { user } = await open();
+  const confirmation = screen.getByRole('checkbox', {
+    name: 'I understand submission is final and cannot be edited.',
+  });
+  expect(confirmation).toBeEnabled();
+  await user.click(confirmation);
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  await user.type(screen.getByLabelText('Formula for line 2'), 'Q');
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+  expect(confirmation).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+});
 test('proof edits use existing unsaved-work protection and retain drafts after failed saves or Stay', async () => {
   const { user } = await open();
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');

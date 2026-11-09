@@ -58,15 +58,17 @@ function setup(
 test('authors and checks a dependency conditional proof, saves explicitly and retains it after failure', async () => {
   const { user, onSave, onDirty, onPreview } = setup();
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'Add assumption line' }));
+  await user.click(screen.getByRole('button', { name: 'New assumption line' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
-  await user.click(screen.getByRole('button', { name: 'Add inference line' }));
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   const assumption = screen.getByLabelText('Line 2 discharge 1 assumption') as HTMLSelectElement;
   await user.selectOptions(assumption, assumption.options[1]!.value);
   const conclusion = screen.getByLabelText('Line 2 discharge 1 conclusion') as HTMLSelectElement;
   await user.selectOptions(conclusion, conclusion.options[1]!.value);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
@@ -188,6 +190,25 @@ test('duplicate identities disable structural editing without hiding retained ev
   value.referenceProof!.steps[1]!.id = a;
   setup(value);
   expect(screen.getByRole('alert')).toHaveTextContent('duplicate identities');
-  expect(screen.queryByRole('button', { name: 'Add inference line' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'New inference line' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Remove reference proof' })).toBeInTheDocument();
+});
+
+test('a clean saved draft becomes dirty for pending entry and blocks checks, preview and save until resolved', async () => {
+  const { user, onSave, onPreview, onDirty } = setup(definition());
+  expect(onDirty).toHaveBeenLastCalledWith(false);
+  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  await user.type(screen.getByLabelText('Formula for line 3'), 'Q &');
+  expect(onDirty).toHaveBeenLastCalledWith(true);
+  for (const name of ['Save draft', 'Preview draft', 'Check current proof']) {
+    expect(screen.getByRole('button', { name })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name }));
+  }
+  expect(screen.getByLabelText('Problem type')).toBeDisabled();
+  expect(screen.getByLabelText('Proof format')).toBeDisabled();
+  expect(onSave).not.toHaveBeenCalled();
+  expect(onPreview).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(onDirty).toHaveBeenLastCalledWith(false);
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
 });

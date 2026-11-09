@@ -52,6 +52,24 @@ test('editing clears old diagnostics and never checks automatically', () => {
   );
 });
 
+test('pending dependency entry hides old feedback and requires Add line or discard before checking', () => {
+  enterProblem('dependency');
+  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'New inference line' }));
+  fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q &' } });
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).not.toHaveTextContent(
+    'Q &',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).toHaveTextContent('Q &');
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+});
+
 test.each([
   ['fitch', 'dependency'],
   ['fitch', 'tree'],

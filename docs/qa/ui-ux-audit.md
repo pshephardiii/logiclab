@@ -147,6 +147,27 @@ This is an intermediate foundation, **not the requested QA-ready prototype yet**
 
 Validation: **405 web tests** and the web production build passed. Three new editor regressions cover nonmutating selection/raw invalid edits, identity-preserving moves/deletions, and incomplete insertion without retargeting existing references. Existing authoring tests now explicitly select the desired line. Focused Chrome practice smoke verified an explicit accepted check, feedback invalidation after edits, retained raw invalid input, one-line selection, scoped styles after truth-table navigation and local horizontal scrolling at 390px/320px without page-wide overflow. No page errors were recorded; temporary servers/schema were cleaned up. Local evidence: `.codex-local/ui-audit/029/dependency-display/`. Broader authoring/student browser QA, full keyboard/focus and accessibility/browser coverage remain pending; backend/database suites were not repeated.
 
+## Implementation: confirmed dependency entry and first QA checkpoint
+
+**UI-029-005**, November 9, 2026: new premise/assumption/inference entry now stays in a local buffer until **Add line**. **Discard entry** leaves the entered proof unchanged. Confirmation permits unfinished or logically incorrect work; it never invokes the checker. Existing-line edits still update the current proof directly and require the existing explicit save in persisted contexts.
+
+Pending entry hides earlier check feedback and blocks Check, Save, Preview and final submission in the relevant hosts. Library pending entry marks even a clean saved draft dirty and prevents type/format replacement; assigned work registers pending entry with navigation/unload protection and confirms changing problems. Stay retains the entry; explicit discard permits the transition. Practice retains its existing session-wide unsaved protection. Entry fields receive focus when opened; Add/Discard returns focus to the initiating control and announces the editing outcome. An externally replaced proof cannot be overwritten by an entry based on older work.
+
+![Unconfirmed dependency entry with explicit Add line and Discard entry controls](images/ui-audit-029/dependency-pending-entry-mobile.png)
+
+Validation: **411 web tests** and the web production build passed. Added coverage for pending dirty state, action gates, final submission, Stay/Discard across problem changes, focus restoration and stale-base protection. Focused Chrome smoke covered practice, private reference authoring and assigned dependency work against real local APIs: confirmation/discard, old-feedback hiding, protected navigation, explicit verification and persisted student saves. The 390px/320px checks had no document-wide overflow; no page errors were recorded. Temporary servers/schema were cleaned up. Final evidence: `.codex-local/ui-audit/029/dependency-entry/`. Formatting, whitespace and local Markdown targets passed. Graded submission gating was verified in tests, not a new browser finalization journey. Full accessibility/keyboard/browser coverage and broader product QA remain open; backend/database suites were not repeated.
+
+**Ready for the user's first dependency-editor QA pass.** This is the interaction prototype, not final visual approval or completion of UI029-02. Fitch and tree editors retain their previous entry behavior.
+
+Suggested quick review:
+
+1. Open `/practice/proofs`, choose **Dependency**, add premise `P` and conclusion `P`, then choose **Begin proof practice** and **Start proof**.
+2. Choose **New inference line**. Enter `P`, select **Reiteration**, cite line 1 and select line 1 in the dependency set. The proof display should still contain only the original premise.
+3. Choose **Add line**. The new line should appear in the proof; choose **Check proof** separately to verify it.
+4. Start another new line and enter `P &`. Checking should be unavailable until Add/Discard; discarding should leave the entered proof unchanged. Adding an unfinished line should be allowed without automatic correctness feedback.
+5. Use **Edit** on an earlier line, move lines and try a confirmed deletion. Review whether the display, line controls and unresolved references are understandable.
+6. Optionally inspect `/demo/library` with **Conditional identity — Dependency**, and `/demo/work` with **Practice proofs in three formats**. Pending entry should block saving/checking; Stay on navigation should preserve it. Persisted work still requires an explicit save after Add line.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

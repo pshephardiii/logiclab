@@ -11,7 +11,13 @@ import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/depend
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
-export function LocalReferenceCheck({ definition }: { definition: AuthoringDerivationDefinition }) {
+export function LocalReferenceCheck({
+  definition,
+  disabled = false,
+}: {
+  definition: AuthoringDerivationDefinition;
+  disabled?: boolean;
+}) {
   const snapshot = JSON.stringify(definition);
 
   const [checked, setChecked] = useState<{
@@ -20,9 +26,11 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
     error?: string;
   } | null>(null);
 
-  const current = checked?.snapshot === snapshot ? checked : null;
+  const current = !disabled && checked?.snapshot === snapshot ? checked : null;
 
   function check() {
+    if (disabled) return;
+
     const parsed = (
       definition.format === 'tree'
         ? treeDerivationDefinitionSchema
@@ -69,7 +77,7 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
 
   return (
     <section aria-label="Check current reference">
-      <button type="button" onClick={check}>
+      <button type="button" disabled={disabled} onClick={check}>
         Check current proof
       </button>
       <p className="help">

@@ -7,7 +7,12 @@ import type { ProblemEditorFields } from '../helpers/problem-editor';
 import { ReferenceProofEditor } from './ReferenceProofEditor';
 import { LocalReferenceCheck } from './LocalReferenceCheck';
 
-type Props = { fields: ProblemEditorFields; onChange: (fields: ProblemEditorFields) => void };
+type Props = {
+  fields: ProblemEditorFields;
+  onChange: (fields: ProblemEditorFields) => void;
+  entryPending?: boolean;
+  onPendingChange?: (pending: boolean) => void;
+};
 
 const formulaInput = {
   maxLength: PROOF_LIMITS.maxFormulaLength,
@@ -18,7 +23,12 @@ const formulaInput = {
 } as const;
 
 /** Statement edits preserve premise identities and the private reference, even when incomplete. */
-export function DerivationProblemFields({ fields, onChange }: Props) {
+export function DerivationProblemFields({
+  fields,
+  onChange,
+  entryPending = false,
+  onPendingChange,
+}: Props) {
   const definition = fields.derivation;
 
   const [pendingFormat, setPendingFormat] = useState<
@@ -44,6 +54,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
       <label htmlFor="derivation-format">Proof format</label>
       <select
         id="derivation-format"
+        disabled={entryPending}
         value={definition.format}
         onChange={(event) => {
           const format = event.target.value as AuthoringDerivationDefinition['format'];
@@ -68,6 +79,7 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
           </p>
           <button
             type="button"
+            disabled={entryPending}
             onClick={() => {
               onChange({
                 ...fields,
@@ -180,10 +192,11 @@ export function DerivationProblemFields({ fields, onChange }: Props) {
         preserves the existing reference; check it again after saving.
       </p>
       <ReferenceProofEditor
+        onPendingChange={onPendingChange}
         definition={definition}
         onChange={(derivation) => onChange({ ...fields, derivation })}
       />
-      <LocalReferenceCheck definition={definition} />
+      <LocalReferenceCheck definition={definition} disabled={entryPending} />
     </>
   );
 }

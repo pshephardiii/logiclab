@@ -7,11 +7,13 @@ export function DependencyProofDisplay({
   rules,
   selectedId,
   onEdit,
+  disabled = false,
 }: {
   proof: DependencyProof;
   rules: { id: string; label: string }[];
   selectedId: string | null;
   onEdit: (id: string) => void;
+  disabled?: boolean;
 }) {
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
@@ -77,6 +79,7 @@ export function DependencyProofDisplay({
               <td>
                 <button
                   type="button"
+                  disabled={disabled}
                   className="text-button"
                   aria-pressed={step.id === selectedId}
                   aria-label={`Edit line ${index + 1}`}

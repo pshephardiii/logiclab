@@ -10,6 +10,7 @@ import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-w
 import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
 import { ProofFeedback } from '../../proof/components/ProofFeedback';
 import '../assignment.css';
+import { useCallback, useState } from 'react';
 
 type Props = {
   item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'derivation' } }>;
@@ -24,6 +25,7 @@ type Props = {
   onAnswer: (answer: DerivationAnswer) => void;
   /** Omit when checking is not permitted; editing never invokes it automatically. */
   onCheck?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 /** Staged student panel. Neither private definitions nor a local checker belong in this view. */
@@ -37,8 +39,17 @@ export function AssignedDerivation({
   disabled = false,
   onAnswer,
   onCheck,
+  onPendingChange,
 }: Props) {
   const proof = answer?.proof ?? null;
+  const [entryPending, setEntryPending] = useState(false);
+  const changePending = useCallback(
+    (pending: boolean) => {
+      setEntryPending(pending);
+      onPendingChange?.(pending);
+    },
+    [onPendingChange],
+  );
 
   const report =
     proof &&
@@ -122,6 +133,7 @@ export function AssignedDerivation({
               />
             ) : item.content.format === 'dependency' ? (
               <DependencyProofEditor
+                onPendingChange={changePending}
                 statement={item.content}
                 proof={proof?.format === 'dependency' ? proof : null}
                 purpose="student"
@@ -148,14 +160,18 @@ export function AssignedDerivation({
               />
             )}
             {onCheck && (
-              <button type="button" disabled={checking || disabled} onClick={onCheck}>
+              <button
+                type="button"
+                disabled={checking || disabled || entryPending}
+                onClick={() => !entryPending && onCheck()}
+              >
                 {checking ? 'Checking proof…' : 'Check proof'}
               </button>
             )}
           </fieldset>
         </>
       )}
-      {report && (
+      {report && !entryPending && (
         <ProofFeedback
           report={report}
           stepLabel={item.content.format === 'tree' ? 'Node' : 'Line'}

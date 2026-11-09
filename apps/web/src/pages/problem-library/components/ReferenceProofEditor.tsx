@@ -7,9 +7,11 @@ import { TreeProofEditor } from '../../../features/proof/tree/TreeProofEditor';
 export function ReferenceProofEditor({
   definition,
   onChange,
+  onPendingChange,
 }: {
   definition: AuthoringDerivationDefinition;
   onChange: (definition: AuthoringDerivationDefinition) => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   if (definition.format === 'tree')
     return (
@@ -23,6 +25,7 @@ export function ReferenceProofEditor({
 
   return definition.format === 'dependency' ? (
     <DependencyProofEditor
+      onPendingChange={onPendingChange}
       key="dependency"
       statement={definition}
       proof={definition.referenceProof}

@@ -34,6 +34,7 @@ export function ProblemForm({
 }: Props) {
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
+  const [entryPending, setEntryPending] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const error = validationError ?? saveError;
@@ -43,8 +44,8 @@ export function ProblemForm({
   }, [error]);
 
   useEffect(() => {
-    onDirty(editorSnapshot(fields) !== editorSnapshot(initial));
-  }, [fields, initial, onDirty]);
+    onDirty(entryPending || editorSnapshot(fields) !== editorSnapshot(initial));
+  }, [fields, initial, onDirty, entryPending]);
 
   function change(next: ProblemEditorFields) {
     setFields(next);
@@ -52,6 +53,11 @@ export function ProblemForm({
   }
 
   function validatedDefinition() {
+    if (entryPending) {
+      setValidationError('Add line or Discard entry before saving or previewing.');
+      return null;
+    }
+
     const parsed = editorDefinition(fields);
 
     if (!parsed.success) {
@@ -121,6 +127,7 @@ export function ProblemForm({
           <label htmlFor="problem-type">Problem type</label>
           <select
             id="problem-type"
+            disabled={entryPending}
             value={fields.type}
             onChange={(event) =>
               change({ ...fields, type: event.target.value as LibraryProblemDefinition['type'] })
@@ -137,7 +144,12 @@ export function ProblemForm({
           </p>
           {/* Show only the selected type's fields; other local draft fields survive type changes. */}
           {fields.type === 'derivation' ? (
-            <DerivationProblemFields fields={fields} onChange={change} />
+            <DerivationProblemFields
+              fields={fields}
+              onChange={change}
+              entryPending={entryPending}
+              onPendingChange={setEntryPending}
+            />
           ) : fields.type === 'truth_table' ? (
             <>
               <label htmlFor="problem-formula">Formula</label>
@@ -156,13 +168,16 @@ export function ProblemForm({
           ) : (
             <ConceptualProblemFields fields={fields} onChange={change} />
           )}
-          <button type="submit">{busy ? 'Saving…' : 'Save draft'}</button>
+          <button type="submit" disabled={entryPending}>
+            {busy ? 'Saving…' : 'Save draft'}
+          </button>
         </fieldset>
       </form>
       <button
         className="secondary"
         disabled={
           busy ||
+          entryPending ||
           (fields.type === 'derivation'
             ? false
             : fields.type === 'truth_table'

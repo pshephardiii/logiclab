@@ -19,8 +19,8 @@ export function DependencyProofLine({
     rules: { id: string; label: string }[];
   };
   onChange: (step: DependencyProofStep) => void;
-  onMove: (delta: -1 | 1) => void;
-  onDelete: () => void;
+  onMove?: (delta: -1 | 1) => void;
+  onDelete?: () => void;
 }) {
   const step = proof.steps[index]!;
 
@@ -119,27 +119,29 @@ export function DependencyProofLine({
           </div>
         ))}
       </fieldset>
-      <div className="action-row">
-        <button
-          type="button"
-          className="secondary"
-          disabled={index === 0}
-          onClick={() => onMove(-1)}
-        >
-          Move line {index + 1} up
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={index === proof.steps.length - 1}
-          onClick={() => onMove(1)}
-        >
-          Move line {index + 1} down
-        </button>
-        <button type="button" className="secondary" onClick={onDelete}>
-          Delete line {index + 1}
-        </button>
-      </div>
+      {onMove && onDelete && (
+        <div className="action-row">
+          <button
+            type="button"
+            className="secondary"
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+          >
+            Move line {index + 1} up
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            disabled={index === proof.steps.length - 1}
+            onClick={() => onMove(1)}
+          >
+            Move line {index + 1} down
+          </button>
+          <button type="button" className="secondary" onClick={onDelete}>
+            Delete line {index + 1}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
