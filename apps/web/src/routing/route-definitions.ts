@@ -20,6 +20,9 @@ interface RouteDefinition {
   access?: RouteAccess;
 }
 
+/** Reached from independent practice without adding a second top-level navigation item. */
+export const proofPracticePath = '/practice/proofs';
+
 export const routeDefinitions = {
   practice: {
     path: '/',

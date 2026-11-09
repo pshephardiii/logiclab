@@ -3,16 +3,17 @@ import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 /** Versioned synthetic content only; billing terms come from the saved simulator plan. */
 export const DEMO_TEMPLATE = {
-  version: 6,
-  proofPracticeAssignmentTitle: 'Practice proofs in two formats',
+  version: 7,
+  proofPracticeAssignmentTitle: 'Practice proofs in three formats',
   proofGradedAssignmentTitle: 'Derivations: separate grade and answer release',
-  proofCompletionAssignmentTitle: 'Complete a Fitch and dependency proof',
+  proofCompletionAssignmentTitle: 'Complete Fitch, dependency and tree proofs',
   proofPracticeInstructions:
-    'Try the same conditional proof in Fitch and dependency format. Check proof is explicit; save each problem separately. Instructor references are available anytime. There is no final submission.',
+    'Try the same conditional proof in Fitch, dependency and natural-deduction tree formats. Check proof is explicit; save each problem separately. Instructor references are available anytime. There is no final submission.',
   proofGradedInstructions:
-    'Each proof is worth 20 points (40 total). Save each problem before submitting. Verified proofs earn full credit; other work needs instructor review. Switch to the instructor to adjust points and release grades and answers independently.',
+    'Each proof is worth 20 points (60 total). Save each problem before submitting. Verified proofs earn full credit; other work needs instructor review. Switch to the instructor to adjust points and release grades and answers independently.',
   proofCompletionInstructions:
-    'Finish and save both proofs, then submit. Completion records no correctness score; proof diagnostics become available after submission. Switch to the instructor to reveal the reference answers.',
+    'Finish and save all three proofs, then submit. Completion records no correctness score; proof diagnostics become available after submission. Switch to the instructor to reveal the reference answers.',
+  proofPoints: 20,
 
   assignmentPoints: 20,
   mixedPoints: [20, 5, 5],
@@ -83,7 +84,10 @@ const proofStatement = {
   checkerVersion: 1 as const,
   premises: [],
   conclusion: 'P -> P',
-  rules: [{ id: 'implication_introduction', label: 'Conditional proof' }],
+  rules: [
+    { id: 'implication_introduction', label: 'Conditional proof' },
+    { id: 'reiteration', label: 'Reiteration' },
+  ],
   explanation:
     'Assume P. The assumption itself supplies P. Discharge that assumption to conclude P → P without remaining assumptions.',
 };
@@ -140,6 +144,33 @@ export const DEMO_DERIVATIONS: {
             lineReferences: [],
             discharges: [{ assumptionId, conclusionId: assumptionId }],
           },
+        ],
+      },
+    },
+  },
+  {
+    title: 'Conditional identity — Natural-deduction tree',
+    instructions:
+      'Prove P → P as a tree. Use an assumption leaf P below a Conditional proof root P → P. Select the P leaf as the supporting subtree, enter assumption P and discharge that leaf occurrence. Reiteration is available for a longer route too.',
+    definition: {
+      ...proofStatement,
+      format: 'tree',
+      referenceProof: {
+        proofVersion: 1,
+        format: 'tree',
+        rootId: conclusionId,
+        nodes: [
+          {
+            kind: 'inference',
+            id: conclusionId,
+            formula: 'P -> P',
+            ruleId: 'implication_introduction',
+            lineReferences: [],
+            branches: [
+              { rootId: assumptionId, assumptionFormula: 'P', assumptionIds: [assumptionId] },
+            ],
+          },
+          { kind: 'assumption', id: assumptionId, formula: 'P' },
         ],
       },
     },

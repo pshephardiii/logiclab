@@ -21,6 +21,7 @@ Documentation is grouped by purpose:
 ## Planning
 
 - [Natural-deduction trees](planning/natural-deduction-trees.md)
+- [Self-created derivation practice and remaining demo examples](planning/derivation-practice-and-demo.md)
 - [Dependency proof format](planning/dependency-proof-format.md)
 - [Logical derivation planning](planning/logical-derivations.md)
 - [Assignment scoring](planning/assignment-scoring.md)
@@ -81,6 +82,8 @@ Documentation is grouped by purpose:
 - [QA results, findings and changes](qa/findings-and-changes.md)
 
 ## Verification
+
+- [Independent derivation practice and template-7 demo journeys](verification/derivation-practice-and-demo-verification.md)
 
 - [Code readability conventions and scoped naming](verification/code-readability-verification.md)
 

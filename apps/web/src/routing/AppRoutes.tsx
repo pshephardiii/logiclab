@@ -10,7 +10,13 @@ import { InstructorClassesPage } from '../pages/instructor-classes/InstructorCla
 import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
-import { routeDefinitions } from './route-definitions';
+import { routeDefinitions, proofPracticePath } from './route-definitions';
+
+const ProofPracticePage = lazy(() =>
+  import('../pages/proof-practice/ProofPracticePage').then((module) => ({
+    default: module.ProofPracticePage,
+  })),
+);
 
 const ProblemLibraryPage = lazy(() =>
   import('../pages/problem-library/ProblemLibraryPage').then((module) => ({
@@ -52,6 +58,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/demo" element={<DemoPage />} />
         <Route path={routeDefinitions.practice.path} element={<PracticePage />} />
+        <Route path={proofPracticePath} element={<ProofPracticePage />} />
         <Route path={routeDefinitions.account.path} element={<AccountPage />} />
         {['', '/demo'].flatMap((prefix) =>
           accountPages.map(({ definition, element }) => (

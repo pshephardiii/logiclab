@@ -1,6 +1,6 @@
 # Logical derivations
 
-Status: scoring, the Fitch checker, checked private authoring, student practice/completion, explicit context assembly and instructor grading/review are implemented through 024. Graded Fitch assignments are now available with immutable automatic evidence, instructor point/comment adjustments, retained history and independent grade/reference release. See [current grading behavior](derivation-grading-review.md) and [verification](../verification/derivation-grading-review-verification.md). The next planned format is dependency-style proofs (025), followed by natural-deduction trees (026) and student-created practice/seeded demos (027). This document does not start another branch.
+Status: scoring, checked authoring, student work and grading/review support Fitch, dependency and natural-deduction tree proofs. Branch 028 adds page-local self-created practice, confirmed full format resets and template-7 examples across all three formats. See [the implementation record](derivation-practice-and-demo.md) and [final verification](../verification/derivation-practice-and-demo-verification.md). The next agreed work is the UI/visual audit and proof-editor interaction redesign before sandbox deployment; this document does not start another branch.
 
 ## Product direction and scope
 
@@ -128,7 +128,7 @@ Instructor control of per-problem weights is agreed. Decide the concrete represe
 
 ## Agreed implementation sequence
 
-The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–026 are merged. The subsequent readability cleanup uses 027, so student-created practice and remaining demo work move to proposed 028; no local 028 branch exists as of this closeout. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
+The user accepted this breakdown, with a focused context-assembly refactor inserted after 022 on November 2, 2026. Branches 019–027 are merged; 028 is implemented and ready for review. Readability cleanup occupied 027, so student-created practice and the remaining demo examples were delivered in 028. Confirm availability before creation; remote history was not queried. Do not reuse an occupied number or renumber branches already started. Deliver each branch in small reviewable slices with relevant tests, compatibility notes and a local PR description.
 
 | Proposed branch                          | Depends on                                                        | Reviewable outcome                                                                                                                                                                            |
 | ---------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -193,7 +193,7 @@ This is also a larger branch; preserve the boundary between the checker and requ
 2. Add assigned practice Check proof and protected graded finalization. A complete accepted graded proof gets its full allocation; any error, incomplete work or unresolved evaluation records review-needed state for the problem and assignment. Include unused erroneous steps. No numerical automatic partial credit or finalized overall grade while review is pending.
 3. Add student Fitch editing, explicit saves, unsaved-navigation protection, manual checks and read-only submitted views. Keep syntax/rule diagnostics hidden before graded submission. Preserve independent result-feedback and reference-proof access; reject stale responses after edits/lifecycle changes.
 
-Instructor-assigned practice belongs here; student-created practice setup belongs to 027. The completion checkpoint is resolved: require a finished attempt, allow logical mistakes, expose diagnostics only after submission and flag verified/error/unavailable outcomes independently from score-free completion. Instructors can inspect frozen completion proofs; reference reveal stays separately controlled.
+Instructor-assigned practice belongs here; student-created practice setup belongs to 028. The completion checkpoint is resolved: require a finished attempt, allow logical mistakes, expose diagnostics only after submission and flag verified/error/unavailable outcomes independently from score-free completion. Instructors can inspect frozen completion proofs; reference reveal stays separately controlled.
 
 022 and 024 are a single functional release milestone. Keep graded derivation assignment creation/publication or student availability guarded until instructors can inspect and resolve every flagged submission. Internal fixtures may test the staged paths, but users must not accumulate submissions that have no usable grading workflow.
 
@@ -215,7 +215,7 @@ Delivered in 024: graded admission is enabled with independent reference access,
 
 ### 025 and 026: additional formats
 
-025 is implemented: [dependency-style proofs](dependency-proof-format.md) now support authoring, published-format admission, student work and retained review through the existing grading/release rules. [Final verification](../verification/dependency-proof-format-verification.md) records the checks and limits. Template 6 seeds Fitch/dependency practice, graded and completion examples. 026 is also implemented: [natural-deduction trees](natural-deduction-trees.md) add strict-tree checking, reference/student editors, public assignment admission and retained grading/review with independent release. See [verification](../verification/natural-deduction-trees-verification.md). Template 6 is unchanged and has no tree seed yet. 027 remains next for student-created practice and remaining cross-format/demo coverage, building on the existing examples.
+025 is implemented: [dependency-style proofs](dependency-proof-format.md) now support authoring, published-format admission, student work and retained review through the existing grading/release rules. [Final verification](../verification/dependency-proof-format-verification.md) records the checks and limits. Template 6 seeds Fitch/dependency practice, graded and completion examples. 026 is also implemented: [natural-deduction trees](natural-deduction-trees.md) add strict-tree checking, reference/student editors, public assignment admission and retained grading/review with independent release. See [verification](../verification/natural-deduction-trees-verification.md). Branch 028 now supplies the remaining tree seeds in template 7 and adds self-created practice, building on those existing workflows.
 
 Each format branch must deliver a complete vertical addition:
 
@@ -228,6 +228,8 @@ Do not duplicate the rule library just to change presentation. Do not silently p
 <a id="027-student-created-practice-demo-and-feature-verification"></a>
 
 ### 028: student-created practice, demo and feature verification
+
+See [the implementation record and confirmed session ownership](derivation-practice-and-demo.md).
 
 Small slices:
 

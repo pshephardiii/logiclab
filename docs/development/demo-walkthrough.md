@@ -33,7 +33,7 @@ Try several quick edits: checking waits until you pause. **Check answers** runs 
 
 Use the **Problem** selector to open **Recognize a contradiction**. Select True to see Incorrect, then False to see Correct. This is a filled answer, not a blank. Open **Classify a formula** and try Contradiction before Tautology. **Save problem** persists only the selected occurrence; switching problems retains local edits. **Clear answer** restores an unanswered choice. **Show assigned solution** reveals the correct answer and explanation; hiding it does not change your selected answer.
 
-New visitors receive template 6. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
+New visitors receive template 7. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
 
 ## 4. Review the submission as the instructor
 
@@ -79,41 +79,42 @@ Operational limits and cleanup commands are in [local demo setup](public-demo.md
 
 Open the mixed graded assignment as instructor: its three problems carry 20, 5 and 5 points. Published allocations are locked. Choose **Duplicate as draft**, change **Points for problem 1**, and save. Verify the total updates and the saved value survives reload. Reordering carries each problem's allocation; repeated copies can have different weights. Completion-only and practice hide point controls.
 
-For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 6's starting weights and clears submissions.
+For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 7's starting weights and clears submissions.
 
-## Seeded Fitch and dependency proofs
+## Seeded proofs in all three formats
 
-1. As student, open **Practice proofs in two formats**. Each problem proves `P -> P`; its format is pinned by the instructor. Editing never checks automatically. Use **Check proof** explicitly, **Save problem** to persist and **Show assigned solution** for the separate reference.
+1. As student, open **Practice proofs in three formats**. Each problem proves `P -> P`; its format is pinned by the instructor. Editing never checks automatically. Use **Check proof** explicitly, **Save problem** to persist and **Show assigned solution** for the separate reference.
 2. For the dependency problem, start the proof, add an assumption line `P`, and leave its self-dependency selected. Add an inference `P -> P`, choose **Conditional proof**, and select line 1 as both the discharge assumption and conclusion. Leave the final dependency set empty. Check, save and reload.
 3. Compare the Fitch problem: open a subproof with assumption `P`, set its endpoint to that assumption, then use **Conditional proof** at root citing the closed subproof. Save each occurrence separately.
-4. Open **Derivations: separate grade and answer release** to try graded submission (40 points total). Pre-submission checks are unavailable. Switch to instructor to review finals, adjust a flagged proof's points/comments and independently choose **Release grades** and **Reveal answers**.
-5. Open **Complete a Fitch and dependency proof** for completion-only work. Finished attempts may contain logical mistakes; final diagnostics flag those mistakes without a score. Instructor reference reveal remains separate.
+4. For the tree problem, start the proof, add an assumption node `P`, choose **Conditional proof** for the conclusion root, select the assumption as its discharged branch root, enter assumption formula `P` and check that leaf occurrence for discharge. Check explicitly, save and inspect the separately revealed reference.
+5. Open **Derivations: separate grade and answer release** to try graded submission (60 points total). Pre-submission checks are unavailable. Switch to instructor to review finals, adjust a flagged proof's points/comments and independently choose **Release grades** and **Reveal answers**.
+6. Open **Complete Fitch, dependency and tree proofs** for completion-only work. Finished attempts may contain logical mistakes; final diagnostics flag those mistakes without a score. Instructor reference reveal remains separate.
 
 ## Optional: author and assign a Fitch derivation
 
-There is no seeded derivation yet. Create a disposable example to explore practice, completion-only and graded proofs. Allow extra time for these steps:
+The demo includes seeded proofs. You can also author a separate disposable example to explore practice, completion-only and graded proofs. Allow extra time for these steps:
 
-1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation** and choose **Fitch** under **Proof format**. Leave premises empty and enter `P -> P` as the conclusion.
+1. As the instructor, open **Problem library**, select **New problem**, enter a title and choose **Derivation**, then **Fitch** under **Proof format**. Leave premises empty and enter `P -> P` as the conclusion.
 2. Enable **Allow Implication introduction**. Keep its label or choose a suggested/custom label; no other rule needs permission for this example.
 3. Select **Start reference proof**, then **Open subproof**. Enter `P` in **Formula for line 1**. Set **Final line of Subproof 1 at line 1** to `1. P`.
 4. Set **New line scope** to **Root proof**, select **Add inference line**, and enter `P -> P` on line 2. Choose the enabled implication-introduction label under **Rule for line 2**, and select the first subproof under **Line 2 subproof 1**.
 5. Select **Check current proof** and expect acceptance. This checks unsaved local work. Select **Save draft**, then **Check saved reference** and expect acceptance from the server. Select **Publish saved draft** to create version 1.
 6. Change the conclusion to `Q`. The reference remains unchanged, and checking now requires correction. Save this draft and try publication; it must be rejected. Version 1 still shows its original target, rules, labels and private reference in history. Restore `P -> P` and save to keep the example valid.
-7. Open **Assignments**, choose **Demo: Introduction to Logic**, start a new assignment and select **Ungraded practice**. Under **Add published problems**, choose the proof and **Add version 1**. Set **Answer reveal** to **Anytime**, save and publish. Graded mode remains unavailable while a proof is selected.
+7. Open **Assignments**, choose **Demo: Introduction to Logic**, start a new assignment and select **Ungraded practice**. Under **Add published problems**, choose the proof and **Add version 1**. Set **Answer reveal** to **Anytime**, save and publish. Graded and completion-only proofs use submission-time feedback; grade release and reference reveal remain independent.
 8. Use the demo controls to switch to student, open **Assigned work**, select the class and assignment, then **Start proof**. Recreate the subproof/reference steps from above. Use **Check proof** explicitly, save with **Save problem**, reload and confirm the saved proof remains. **Show assigned solution** reveals the instructor reference separately. Practice has no final-submission control.
 9. Switch to instructor and duplicate the assignment as a draft. Give the copy a distinct title, choose **Completion only** and **When I reveal answers**, then save and publish. Completion proof feedback is at submission, not immediate/manual checking.
 10. As student, open the completion copy. Start the proof. Enter a finished but incorrect attempt: use `Q` for the assumption, close that block on its assumption line, and add root `P -> P` with implication introduction citing that block. This fills required fields and reaches the target, but the inference is wrong. There must be no **Check proof** or pre-submission diagnostics. Save, confirm final submission and submit.
 11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
-12. Reset discards these owner-authored examples and student work, restoring seed template 6 while retaining the original workspace deadline, including the seeded Fitch/dependency proof journeys.
+12. Reset discards these owner-authored examples and student work, restoring seed template 7 while retaining the original workspace deadline, including the seeded Fitch/dependency/tree proof journeys.
 
-This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency proofs are also available; natural-deduction trees remain a later branch. For graded instructor review, continue below.
+This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency and natural-deduction tree proofs are also available. For graded instructor review, continue below.
 
 ## Optional: grade a Fitch submission
 
 Use a published Fitch problem from the preceding section. You can author a new proof or use the Fitch version in the seeded proof assignments.
 
 1. As instructor, open **Assignments**, choose the funded demo class, and create a graded assignment. Add the proof version twice, set the first occurrence to 20 points and the second to 10, select **When I release grades** and **When I reveal answers**, save and publish.
-2. Switch to student and open the new assignment. Start each proof; leave one incomplete/incorrect and finish the other correctly. Save each problem. There is no **Check proof** for graded work. Confirm final submission. Expect an awaiting-release receipt with no reports, points or instructor comments.
+2. Switch to student and open the new assignment. Start each proof; leave the first incomplete/incorrect and finish the second correctly. Save each problem. There is no **Check proof** for graded work. Confirm final submission. Expect an awaiting-release receipt with no reports, points or instructor comments.
 3. Return as instructor, open the published assignment and select the final submission. The accepted proof has its automatic points; the other needs review, keeping the assignment total unresolved. Inspect the original report under **Submitted problem**.
 4. In **Instructor grading**, uncheck **Use automatic award** for the flagged occurrence, enter 12.25 and a comment, then **Save instructor grading**. Expect 22.25/30 points. Load grading history to inspect the saved change/reviewer/time. Changing the viewed problem retains grading edits; changing submissions or navigating away protects unsaved edits.
 5. Confirm **Release grades** while leaving answers hidden. Switch to student, reopen/refresh results, and expect the points/comment and original diagnostics. The instructor reference is still unavailable.
@@ -126,7 +127,7 @@ See [grading/review verification](../verification/derivation-grading-review-veri
 
 ## Optional: author a natural-deduction tree
 
-This example is manually authored; demo template 6 does not seed trees yet.
+Template 7 includes a seeded tree. This optional walkthrough creates a separate instructor-authored example.
 
 1. As demo instructor, open **Problem library**, create a titled **Derivation**, choose **Natural-deduction tree**, leave premises empty and enter conclusion `P -> P`.
 2. Enable **Implication introduction** and choose its teaching label. Select **Start reference proof**: node 1 is an unverified conclusion root, copied from the target once.
@@ -136,4 +137,13 @@ This example is manually authored; demo template 6 does not seed trees yet.
 6. Switch to student and open the assignment. Its format is fixed. Start the proof, add the assumption and discharge as above, then **Save problem**. In practice, **Check proof** checks without saving. Changing problems preserves local work; leaving/reloading protects unsaved edits.
 7. For graded work, incomplete/incorrect proofs may be submitted and require instructor review; accepted proofs receive full points. For completion-only, fill the tree and matching root before submitting; logical mistakes produce retained verification flags without a score. Graded diagnostics wait for grade release; completion diagnostics appear after submission.
 8. As instructor, review the final proof read-only. Grade/comment adjustments preserve original evidence. Reveal the reference independently from graded reports/points. See the preceding grading walkthrough for review and release controls.
-9. End/reset the demo when finished. Reset removes these authored examples and restores template 6; it does not add a prebuilt tree.
+9. End/reset the demo when finished. Reset removes these authored examples and restores template 7; including the prebuilt tree examples.
+
+## Independent proof practice (no account)
+
+1. Open **Practice**, then **Try derivation practice**, or go directly to `/practice/proofs`. Choose a format before beginning. This activity is separate from saved classroom/demo assignments.
+2. Add premise `P`, enter conclusion `P`, inspect the permitted rules and select **Begin proof practice**. Rules default to the supported catalog, including classical rules; a reference solution is not required.
+3. Select **Start proof**. In Fitch/dependency the premise is copied into a line. For a tree, add a premise node, select/copy the statement premise, select that node as the conclusion root and delete the unused initial inference node with confirmation.
+4. Select **Check proof** and expect verification. Change the entered formula to `Q`: the old report disappears. Check again and expect an error. Entries are never checked automatically.
+5. Choose another format. **Stay** or Escape preserves the setup, proof and report. Repeat and choose **Discard changes**: expect an empty setup in the selected format, no premises/target/proof/feedback, and all default rules restored. **Start over** performs the same confirmed reset without changing format.
+6. Leaving or reloading entered work requests discard/unload protection where the browser supports it. Reload/remount clears page memory; no database save, browser-storage backup or official grade is created. A failed check does not search for a solution or prove that the selected goal is impossible.
