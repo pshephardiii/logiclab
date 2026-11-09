@@ -6,7 +6,7 @@ export function InstructorClassesPage() {
   const account = useAccountContext();
 
   return (
-    <Page className="account-page">
+    <Page className="classes-page">
       <Classrooms key={account.user?.id} />
     </Page>
   );

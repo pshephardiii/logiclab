@@ -1,11 +1,11 @@
 main {
   max-width: 72rem;
-  margin: 4rem auto;
+  margin: 2rem auto 4rem;
   padding: 0 1.5rem;
 }
 @media (max-width: 600px) {
   main {
-    margin-top: 2rem;
+    margin-top: 1.5rem;
     padding: 0 1rem;
   }
 }

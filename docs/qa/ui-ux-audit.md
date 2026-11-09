@@ -104,7 +104,7 @@ Remaining baseline gaps include archive/restore views, zero-enrollment/empty-lib
 - **UI029-05 partially addressed:** give textareas shared font/radius/border/padding, readable text/background and vertical resizing; unify ordinary content-link colors. Exclude radios/checkboxes from text-input sizing and padding, preserving compact native controls. Page-specific fieldset/layout refinement remains open.
 - **UI029-06 partially addressed:** add an outlined destructive button variant for proof-deletion confirmations, unsaved-work discard and demo reset. Make End demo secondary. Labels, safe-action autofocus, cancellation and workflow behavior are unchanged. Broader editing/primary action hierarchy remains open for subsequent screen slices.
 
-The next slice is the representative Classes/workspace shell. Proof entry redesign and the broader audit remain pending. No backend, assessment policy, persistence or transport changes are included.
+The Classes/workspace shell follows below. Proof entry redesign and the broader audit remain pending. No backend, assessment policy, persistence or transport changes are included.
 
 After the shared-style fix, direct entry matches the previously styled library-navigation case:
 
@@ -117,6 +117,27 @@ Destructive emphasis keeps the labeled safe action and native dialog behavior:
 Validation: all **402 web tests** passed; the web production build (including TypeScript checking) passed. Focused real-API Chrome checks captured ten desktop/mobile states, comparing direct and library-warmed proof cards in all three formats, exercising deletion cancellation, checking native choice-control sizing and shared textarea styling, and verifying dialog Tab/Escape/Stay/Discard behavior. The final successful run had no uncaught page errors or document-wide overflow at 390px. Temporary servers and the isolated test schema were cleaned up. Scripts, screenshots and computed-style evidence are retained under `.codex-local/ui-audit/029/shared-foundations/`.
 
 Changed-file formatting, whitespace and local Markdown targets passed. Backend/database suites were not repeated for this presentation-only change. These focused checks do not establish full keyboard/focus containment, contrast, assistive-technology, zoom or secondary-browser coverage.
+
+## Implementation: Classes and workspace shell
+
+**UI-029-003**, November 9, 2026:
+
+- **UI029-04 implemented for representative review:** use a shared deep-teal workspace surface with explicit instructor/student identity and a filled, underlined active destination. Demo mode retains its badge, synthetic-data/no-charge notice and lifecycle-control link. Preserve normal/demo destination scoping, role visibility and session-expiry removal.
+- Reduce shared header/main spacing and allow workspace links to wrap. On the captured 390px instructor demo, main content begins around 314px instead of the baseline 382px; this is an observation, not a layout test threshold.
+- Separate the Classes page heading, create/join form and owned/enrolled list. Desktop uses a narrow form beside a wider list; layouts below 800px stack them in reading/tab order. Keep account forms at their existing narrower measure. Add a visible Join a class heading for students.
+- Preserve creation, invitations, joins, pagination, reload and status/error handling. Shared shell spacing also affects other pages; dense proof/library/review interactions remain scheduled for later slices.
+
+Representative desktop screen:
+
+![Instructor demo workspace with separate class creation and list panels](images/ui-audit-029/classes-workspace-desktop.png)
+
+The same screen at 390px:
+
+![Instructor demo Classes page stacked at 390px](images/ui-audit-029/classes-workspace-mobile.png)
+
+Validation: **402 web tests** and the web production build passed. Header regressions now assert role identity and the retained demo warning/badge; the six header cases passed again after those assertions were added. Focused Chrome checks captured ten desktop/mobile states covering both roles in demo and normal shells, anonymous practice, library, assigned work and class error/retry. Demo mutations used real local APIs: class creation cleared the form, invitation generation returned a code, reload retained the class, and a failed join retained entered text. Keyboard Tab/Enter navigation retained the correct destination and current-page marker. The 320px and 1024×600 checks had no page-wide overflow; no uncaught page errors were recorded. Normal-account views used the explicitly synthetic session/read-only data forwarding described above, not live Cognito or normal authorization verification.
+
+Final evidence is in `.codex-local/ui-audit/029/workspace-shell/`; temporary servers/schema were cleaned up. Changed-file formatting, whitespace and local Markdown targets passed. Backend/database suites, full keyboard/assistive-technology/contrast/zoom checks and secondary-browser coverage were not repeated or established by this slice. The next planned slice is the dependency proof display/entry prototype, including an explicit decision about pending entry fields before Check, Save or Submit. Broader navigation work and final visual approval remain open.
 
 ## Route/state inventory
 

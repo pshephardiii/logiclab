@@ -41,7 +41,7 @@ export function ClassroomPanel({
   emptyMessage,
 }: Props) {
   return (
-    <section className="panel classroom-panel" aria-labelledby={headingId} aria-busy={busy}>
+    <section className="classroom-panel" aria-labelledby={headingId} aria-busy={busy}>
       <p className="eyebrow">{eyebrow}</p>
       <h1 id={headingId}>{title}</h1>
       {error && (
@@ -50,22 +50,26 @@ export function ClassroomPanel({
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="classroom-editor">{children}</div>
-      <div className="classroom-list-heading">
-        <h2>{listTitle}</h2>
-        <button className="text-button" disabled={busy} onClick={onReload}>
-          Reload classes
-        </button>
+      <div className="classroom-content">
+        <div className="panel classroom-editor">{children}</div>
+        <section className="panel classroom-list-panel" aria-labelledby={`${headingId}-list`}>
+          <div className="classroom-list-heading">
+            <h2 id={`${headingId}-list`}>{listTitle}</h2>
+            <button className="text-button" disabled={busy} onClick={onReload}>
+              Reload classes
+            </button>
+          </div>
+          {busy && <p role="status">Loading…</p>}
+          <ClassroomList
+            classrooms={classrooms}
+            busy={busy}
+            nextOffset={nextOffset}
+            onMore={onMore}
+            renderActions={renderActions}
+            emptyMessage={emptyMessage}
+          />
+        </section>
       </div>
-      {busy && <p role="status">Loading…</p>}
-      <ClassroomList
-        classrooms={classrooms}
-        busy={busy}
-        nextOffset={nextOffset}
-        onMore={onMore}
-        renderActions={renderActions}
-        emptyMessage={emptyMessage}
-      />
     </section>
   );
 }

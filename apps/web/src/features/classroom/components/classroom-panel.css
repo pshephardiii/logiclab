@@ -1,13 +1,28 @@
+.classes-page {
+  max-width: 68rem;
+}
 .classroom-panel > .eyebrow {
   margin-top: 0;
 }
 .classroom-panel h1 {
-  margin-bottom: 1.75rem;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  margin: 0.5rem 0 1.5rem;
 }
-.classroom-editor {
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.75rem;
-  border-bottom: 1px solid #d6e0dc;
+.classroom-content {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 1.7fr);
+  align-items: start;
+  gap: 1.5rem;
+}
+.classroom-content > .panel {
+  min-width: 0;
+  margin: 0;
+}
+.classroom-editor .form-row {
+  flex-direction: column;
+}
+.classroom-editor input {
+  width: 100%;
 }
 .classroom-list-heading {
   display: flex;
@@ -25,7 +40,10 @@
   gap: 1.25rem;
   list-style: none;
   padding: 0;
-  margin: 0 0 1.25rem;
+  margin: 0;
+}
+.classroom-list + button {
+  margin-top: 1.25rem;
 }
 .classroom-card {
   padding: 1.25rem;
@@ -36,6 +54,11 @@
 .classroom-card h3 {
   margin: 0;
   font-size: 1.1rem;
+}
+@media (max-width: 800px) {
+  .classroom-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .classroom-created {
   margin: 0.4rem 0 0;

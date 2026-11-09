@@ -45,6 +45,9 @@ test.each(['instructor', 'student'] as const)(
       '/account',
     );
     const notice = screen.getByRole('complementary', { name: 'Demo notice' });
+    expect(notice).toHaveTextContent(`${role} workspace`);
+    expect(within(notice).getByText('Demo', { exact: true })).toBeInTheDocument();
+    expect(within(notice).getByText('Synthetic data · No real charges.')).toBeInTheDocument();
     const workspace = within(notice).getByRole('navigation', { name: 'Demo workspace navigation' });
     for (const link of within(workspace).getAllByRole('link')) {
       expect(link.getAttribute('href')).toMatch(/^\/demo\//);
@@ -70,6 +73,9 @@ test.each(['instructor', 'student'] as const)(
   'normal %s links remain outside the demo namespace',
   (role) => {
     header(role);
+    expect(screen.getByRole('region', { name: 'Account workspace' })).toHaveTextContent(
+      `${role === 'instructor' ? 'Instructor' : 'Student'} workspace`,
+    );
     const workspace = within(
       screen.getByRole('navigation', { name: 'Account workspace navigation' }),
     );
