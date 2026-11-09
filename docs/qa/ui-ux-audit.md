@@ -168,6 +168,36 @@ Suggested quick review:
 5. Use **Edit** on an earlier line, move lines and try a confirmed deletion. Review whether the display, line controls and unresolved references are understandable.
 6. Optionally inspect `/demo/library` with **Conditional identity — Dependency**, and `/demo/work` with **Practice proofs in three formats**. Pending entry should block saving/checking; Stay on navigation should preserve it. Persisted work still requires an explicit save after Add line.
 
+## Implementation: exact rule references and proof keyboard guidance
+
+**UI-029-006**, November 9, 2026: user QA exposed that familiar rule names did not communicate exact accepted variants. Add an expandable **Rule reference** in Fitch, dependency and tree editors, plus help beside the selected inference rule. Show only the configured enabled rules, using instructor labels alongside catalog names/aliases. Each of the 19 catalog-v1 entries includes abstract formula/assumption patterns, exact ordinary/discharge reference counts, variant restrictions and a worked example rendered for the current format. Examples use Fitch subproof marks, dependency sets/discharge pairs or tree branches/assumption labels. They are fixed instructional examples, not the current proof or an instructor reference; some use auxiliary rules that may be disabled in the current problem.
+
+Add an expandable **Formula keyboard guide** to proof setup and editors, covering sentence letters, all operators, grouping, Unicode input and explicit contradiction `_|_` → `⊥`. Explain lowercase `v` versus uppercase `V`, and distinguish contradiction from the sentence letter `F`. Formula controls in all three editors have unique associated hints for contradiction input. Rule/help disclosure does not modify answers, invoke checking or bypass pending-entry/release rules. Retained read-only review presentations and the remaining proof-editor redesign are unchanged in this slice.
+
+The reference explicitly distinguishes `A ∧ ¬A` from an explicit `⊥` endpoint, conditional-line versus subproof biconditional introduction, biconditional elimination to a conditional, and independently selectable classical rules.
+
+Example of dependency-specific presentation:
+
+![Worked negation-introduction example with dependency sets and discharge pairs](images/ui-audit-029/dependency-rule-example.png)
+
+The same rule in tree form:
+
+![Worked tree example showing the assumption occurrence and explicit discharge](images/ui-audit-029/tree-rule-example.png)
+
+Validation: **502 web tests** passed; the production build passed. New content checks cover all 19 abstract patterns and citation counts, **57 full worked proofs** accepted by the real checkers (19 × three formats), keyboard aliases and enabled/custom-label presentation without network calls. Existing practice cases now assert the associated contradiction hint in each format; those 17 cases passed a focused rerun after adding the assertions. Focused Chrome smoke opened reference/keyboard help in all formats at desktop/mobile widths, checked local overflow at 390px/320px, and verified that inline help does not change pending work or enable checking. It reproduced the reported six-line route from `P`, through `¬P`, `P ∧ ¬P`, explicit `⊥`, `¬¬P` and back to `P`, with discharge 2–4 and explicit dependencies; the checker accepted it. No page errors were recorded. Temporary servers/schema were cleaned up. Local evidence: `.codex-local/ui-audit/029/proof-reference/`.
+
+Formatting, whitespace and local Markdown targets passed. Backend/database suites and live account/payment services were not exercised for this frontend reference change. This is focused instructional/UI verification, not a completed accessibility or browser matrix. Continue user proof-editor QA before extending the confirmed-entry interaction to Fitch and trees.
+
+## User QA direction: simplify the editor
+
+**UI-029-007**, November 9, 2026: the user found the guide prose and overall editor excessive. Treat the proof and its entry area as the primary interface; prefer visual notation and concise action labels over repeated explanatory paragraphs. Keep actionable errors and necessary loss-of-work warnings. The worked-example tables remain provisional and will be reconsidered with the broader proof presentation.
+
+The keyboard guide now contains only its notation table, including A–Z and contradiction input. Rule help contains its abstract pattern and format-specific worked example, without catalog/alias paragraphs, reference-count prose, scope tutorials or caveats. Remove unused explanatory strings from the reference data. Shorten formula hints to `Contradiction: type _|_ for ⊥.` Remove duplicate permitted-rule/format displays from active practice and shorten session/reset/dependency copy. Existing checking, permissions, pending-entry protection and explicit saving are unchanged.
+
+![Simplified rule help with pattern and worked table](images/ui-audit-029/dependency-help-simplified.png)
+
+Validation: **502 web tests**, the production build, formatting, whitespace and local Markdown targets passed. Reference regressions now assert that explanatory paragraphs are absent while notation/pattern/example content remains. Focused Chrome checked all three formats and 390px/320px layouts without page errors or document-wide overflow; temporary servers/schema were cleaned up. Local evidence: `.codex-local/ui-audit/029/proof-simplification/`. Backend/database suites and the broader accessibility/browser matrix were not repeated. This reduces copy and duplication; it does not complete the larger editor interaction redesign.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

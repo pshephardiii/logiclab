@@ -27,6 +27,9 @@ test.each(['fitch', 'dependency', 'tree'])(
     expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
+    expect(
+      screen.getByLabelText(format === 'tree' ? 'Formula for node 1' : 'Formula for line 1'),
+    ).toHaveAccessibleDescription(/Contradiction: type _\|_ for ⊥/);
     expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
 
@@ -189,7 +192,7 @@ test('malformed setup retains the entered fields with an actionable error', () =
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
   expect(screen.getByLabelText('Conclusion')).toHaveValue('P &');
   expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
-  expect(screen.getByText(/does not search for a solution/)).toBeInTheDocument();
+  expect(screen.getByText(/Work is temporary/)).toBeInTheDocument();
 });
 
 test('setup edits require discard consent before navigation', async () => {

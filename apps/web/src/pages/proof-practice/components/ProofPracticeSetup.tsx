@@ -3,6 +3,7 @@ import { PROOF_LIMITS } from '@logiclab/contracts';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
+import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import { practiceStatement, type PracticeStatement } from '../helpers/practice-proof';
 
 const formulaInput = {
@@ -61,6 +62,7 @@ export function ProofPracticeSetup({
   return (
     <form className="panel proof-editor" aria-label="Proof practice setup" onSubmit={submit}>
       <h2>Choose your proof problem</h2>
+      <ProofKeyboardGuide />
       <label htmlFor="practice-proof-format">Proof format</label>
       <select
         id="practice-proof-format"

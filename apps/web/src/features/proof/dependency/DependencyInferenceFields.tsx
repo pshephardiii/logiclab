@@ -1,6 +1,7 @@
 import type { DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from '../components/ProofChoice';
+import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 
 type Inference = Extract<DependencyProofStep, { kind: 'inference' }>;
 
@@ -32,6 +33,7 @@ export function DependencyInferenceFields({
         choices={rules}
         onChange={(ruleId) => onChange({ ...step, ruleId })}
       />
+      <ProofRuleHelp format="dependency" rules={rules} ruleId={step.ruleId} />
       {Array.from(
         { length: Math.max(rule?.lineReferences ?? 0, step.lineReferences.length) },
         (_, slot) => (

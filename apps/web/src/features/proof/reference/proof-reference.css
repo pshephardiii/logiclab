@@ -1,0 +1,120 @@
+.proof-help {
+  margin-block: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #cbd8d3;
+  border-radius: 0.4rem;
+  background: #f8faf9;
+}
+.proof-help > details + details {
+  margin-top: 0.75rem;
+}
+.proof-rule-help {
+  margin-block: 0.75rem;
+}
+.proof-help summary,
+.proof-rule-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.proof-rule-content {
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border-left: 3px solid #176650;
+  background: #f8faf9;
+}
+.proof-formula-hint {
+  display: block;
+  margin-block: 0.4rem 0.75rem;
+  color: #465b65;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.proof-reference-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1rem;
+}
+.proof-reference-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+.proof-reference-table caption {
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  background: #edf2ef;
+}
+.proof-reference-table th,
+.proof-reference-table td {
+  border: 1px solid #cbd8d3;
+  padding: 0.5rem;
+  vertical-align: top;
+}
+.proof-reference-table thead th {
+  background: #edf2ef;
+}
+.proof-reference-table tbody th {
+  color: #162a36;
+  font-weight: 600;
+}
+.rule-example-lines {
+  min-width: 25rem;
+}
+.proof-reference-table .rule-example-subproof {
+  border-left: 3px solid #176650;
+  padding-left: 1rem;
+}
+.rule-pattern {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 100%;
+  text-align: center;
+}
+.rule-pattern-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: end;
+  padding: 0.75rem;
+}
+.rule-pattern-branch {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #70858d;
+  padding-left: 0.5rem;
+}
+.rule-pattern-conclusion {
+  border-top: 2px solid #162a36;
+  padding: 0.5rem;
+}
+.rule-example-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: max-content;
+  min-width: 5rem;
+  padding: 0.5rem;
+}
+.rule-example-children {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+}
+.rule-example-rule {
+  border-top: 2px solid #162a36;
+  padding-top: 0.25rem;
+  font-size: 0.85rem;
+  text-align: center;
+  width: 100%;
+}
+.rule-example-branch {
+  border: 1px dashed #70858d;
+  padding: 0.4rem;
+  font-size: 0.85rem;
+}
+.rule-example-node > span {
+  font-size: 0.85rem;
+}

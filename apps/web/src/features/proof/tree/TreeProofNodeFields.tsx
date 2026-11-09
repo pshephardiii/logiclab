@@ -1,6 +1,8 @@
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
 import { TreeInferenceFields } from './TreeInferenceFields';
+import { useId } from 'react';
+import { ProofFormulaHint } from '../reference/ProofKeyboardGuide';
 
 export function TreeProofNodeFields({
   proof,
@@ -19,6 +21,7 @@ export function TreeProofNodeFields({
   onDelete: () => void;
 }) {
   const node = proof.nodes[index]!;
+  const formulaHint = useId();
 
   const premise =
     node.kind === 'premise'
@@ -35,6 +38,7 @@ export function TreeProofNodeFields({
         Formula for node {index + 1}
         <input
           maxLength={PROOF_LIMITS.maxFormulaLength}
+          aria-describedby={formulaHint}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -43,6 +47,7 @@ export function TreeProofNodeFields({
           onChange={(event) => onChange({ ...node, formula: event.target.value })}
         />
       </label>
+      <ProofFormulaHint id={formulaHint} />
       {node.kind === 'premise' && (
         <>
           <ProofChoice

@@ -1,6 +1,8 @@
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
 import { DependencyInferenceFields } from './DependencyInferenceFields';
+import { useId } from 'react';
+import { ProofFormulaHint } from '../reference/ProofKeyboardGuide';
 
 export function DependencyProofLine({
   proof,
@@ -23,6 +25,7 @@ export function DependencyProofLine({
   onDelete?: () => void;
 }) {
   const step = proof.steps[index]!;
+  const formulaHint = useId();
 
   const sources = proof.steps
     .slice(0, index + 1)
@@ -46,6 +49,7 @@ export function DependencyProofLine({
         Formula for line {index + 1}
         <input
           maxLength={PROOF_LIMITS.maxFormulaLength}
+          aria-describedby={formulaHint}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -54,6 +58,7 @@ export function DependencyProofLine({
           onChange={(event) => onChange({ ...step, formula: event.target.value })}
         />
       </label>
+      <ProofFormulaHint id={formulaHint} />
       {step.kind === 'premise' && (
         <ProofChoice
           label={`Statement premise for line ${index + 1}`}
@@ -76,10 +81,7 @@ export function DependencyProofLine({
       )}
       <fieldset className="dependency-sources">
         <legend>Dependencies for line {index + 1}</legend>
-        <p className="help">
-          Select the premise or assumption lines supporting this line. No selection means the empty
-          set. Checking verifies your choices; it does not fill them in.
-        </p>
+        <p className="help">Leave empty for no dependencies.</p>
         {sources.map((source) => (
           <label className="dependency-source" key={source.id}>
             <input

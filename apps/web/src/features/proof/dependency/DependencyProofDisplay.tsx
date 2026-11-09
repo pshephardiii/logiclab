@@ -27,7 +27,7 @@ export function DependencyProofDisplay({
       tabIndex={0}
     >
       <table>
-        <caption>Entered proof — not a verification result.</caption>
+        <caption>Entered proof</caption>
         <thead>
           <tr>
             <th scope="col">Line</th>

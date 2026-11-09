@@ -3,6 +3,8 @@ import type { FitchProof, FitchProofStep } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { FitchPremiseFields } from './FitchPremiseFields';
 import { FitchInferenceFields } from './FitchInferenceFields';
+import { useId } from 'react';
+import { ProofFormulaHint } from '../reference/ProofKeyboardGuide';
 
 type Props = {
   statement: Pick<FitchDerivationContent, 'premises' | 'rules'>;
@@ -26,6 +28,7 @@ export function FitchProofLine({
   onDelete,
 }: Props) {
   const step = proof.steps[index]!;
+  const formulaHint = useId();
 
   return (
     <section
@@ -40,6 +43,7 @@ export function FitchProofLine({
         Formula for line {index + 1}
         <input
           maxLength={PROOF_LIMITS.maxFormulaLength}
+          aria-describedby={formulaHint}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -48,6 +52,7 @@ export function FitchProofLine({
           onChange={(event) => onChange({ ...step, formula: event.target.value })}
         />
       </label>
+      <ProofFormulaHint id={formulaHint} />
       <p>
         Kind:{' '}
         {step.kind === 'inference'

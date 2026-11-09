@@ -3,6 +3,7 @@ import { PROOF_LIMITS } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from '../components/ProofChoice';
 import { treeNodeChoices } from './editor';
+import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 
 type Inference = Extract<TreeProofNode, { kind: 'inference' }>;
 
@@ -34,6 +35,7 @@ export function TreeInferenceFields({
         choices={rules}
         onChange={(ruleId) => onChange({ ...node, ruleId })}
       />
+      <ProofRuleHelp format="tree" rules={rules} ruleId={node.ruleId} />
       {Array.from(
         { length: Math.max(rule?.lineReferences ?? 0, node.lineReferences.length) },
         (_, slot) => (

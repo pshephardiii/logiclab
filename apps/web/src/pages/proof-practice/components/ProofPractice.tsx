@@ -41,18 +41,9 @@ export function ProofPractice() {
       <header>
         <p className="eyebrow">LogicLab / Independent practice</p>
         <h1>Practice a derivation.</h1>
-        <p>
-          Choose your own premises and conclusion. No reference solution or account is required.
-        </p>
+        <p>Choose your premises and conclusion.</p>
       </header>
-      <p className="help">
-        Check proof evaluates only the proof you enter. It does not search for a solution or
-        establish that an unverified target is impossible under your selected rules.
-      </p>
-      <p className="help">
-        This work stays in the current page session. It is not saved to an account or browser
-        storage, and reload clears it. No grades or instructor-visible records are created.
-      </p>
+      <p className="help">Work is temporary; reloading clears this practice session.</p>
       {!statement ? (
         <ProofPracticeSetup initialFormat={setupFormat} onStart={setStatement} />
       ) : (
@@ -74,21 +65,11 @@ export function ProofPractice() {
             <option value="tree">Natural-deduction tree</option>
           </select>
           <p id="practice-reset-description" className="help">
-            Changing format or starting over discards all premises, the conclusion, selected rules,
-            proof steps/nodes, assumptions, references and feedback. Stay keeps everything. Discard
-            changes opens an empty setup with the default rules; no proof is converted.
+            Changing format or starting over clears this practice session after confirmation.
           </p>
           <button type="button" className="secondary" onClick={() => restart(statement.format)}>
             Start over
           </button>
-          <p>
-            <strong>Format:</strong>{' '}
-            {statement.format === 'tree'
-              ? 'Natural-deduction tree'
-              : statement.format === 'dependency'
-                ? 'Dependency'
-                : 'Fitch'}
-          </p>
           <h3>Premises</h3>
           {statement.premises.length ? (
             <ol>
@@ -104,15 +85,6 @@ export function ProofPractice() {
           <p>
             <strong>Conclusion:</strong> <code>{statement.conclusion}</code>
           </p>
-          <details>
-            <summary>Permitted rules</summary>
-            <ul>
-              {statement.rules.map((rule) => (
-                <li key={rule.id}>{rule.label}</li>
-              ))}
-            </ul>
-            {!statement.rules.length && <p>No inference rules enabled.</p>}
-          </details>
           <PracticeProofEditor
             statement={statement}
             proof={proof}

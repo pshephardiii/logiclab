@@ -12,6 +12,7 @@ import {
   removeDependencyStep,
 } from './editor';
 import '../proof.css';
+import { ProofHelp } from '../reference/ProofHelp';
 
 export function DependencyProofEditor({
   statement,
@@ -109,15 +110,7 @@ export function DependencyProofEditor({
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
       <h3>{heading}</h3>
-      <details>
-        <summary>How dependency proofs work</summary>
-        <p className="help">
-          Dependency proofs use explicit source sets and assumption/conclusion discharge pairs. Line
-          numbers are display positions; references retain their identity through moves. Removing a
-          line leaves references unresolved. A final conclusion must have no temporary-assumption
-          dependencies.
-        </p>
-      </details>
+      <ProofHelp format="dependency" rules={statement.rules} />
       {!proof ? (
         <>
           <p>
@@ -194,10 +187,7 @@ export function DependencyProofEditor({
               </fieldset>
               {entry && (
                 <section ref={entryFields} aria-label="Unconfirmed proof entry">
-                  <p role="status">
-                    This line has not been added. Add line or Discard entry before checking, saving,
-                    previewing or submitting.
-                  </p>
+                  <p role="status">Add line or Discard entry to continue.</p>
                   <DependencyProofLine
                     proof={entry.draft}
                     index={entry.index}

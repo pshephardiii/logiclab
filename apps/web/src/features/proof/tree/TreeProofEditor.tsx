@@ -12,6 +12,7 @@ import {
   treeNodeChoices,
 } from './editor';
 import '../proof.css';
+import { ProofHelp } from '../reference/ProofHelp';
 
 export function TreeProofEditor({
   statement,
@@ -54,11 +55,8 @@ export function TreeProofEditor({
       aria-label={reference ? 'Tree reference proof editor' : 'Tree student proof editor'}
     >
       <h3>{reference ? 'Reference proof' : 'Your proof'}</h3>
-      <p className="help">
-        Build from the conclusion toward its supporting premises or assumptions. Add a separate leaf
-        for every use; nodes cannot be shared. Choose ordinary supporting nodes and discharged
-        branches under each inference. Node numbers label entries, not proof order.
-      </p>
+      <ProofHelp format="tree" rules={statement.rules} />
+      <p className="help">Build from the conclusion toward its premises.</p>
       {!proof ? (
         <>
           <p>
