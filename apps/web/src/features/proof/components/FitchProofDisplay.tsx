@@ -9,8 +9,10 @@ import './fitch-proof-display.css';
 export function FitchProofDisplay({
   proof,
   rules,
-  selectedId,
+  selectedId = null,
   onEdit,
+  readOnly = false,
+  label = 'Entered Fitch proof',
   disabled = false,
   entry,
   entryLabel = 'New proof line',
@@ -24,8 +26,10 @@ export function FitchProofDisplay({
 }: {
   proof: FitchProof;
   rules: { id: string; label: string }[];
-  selectedId: string | null;
-  onEdit: (id: string) => void;
+  selectedId?: string | null;
+  onEdit?: (id: string) => void;
+  readOnly?: boolean;
+  label?: string;
   disabled?: boolean;
   entry?: ReactNode;
   entryLabel?: string;
@@ -45,12 +49,7 @@ export function FitchProofDisplay({
   const premiseBoundary = firstDerived === -1 ? proof.steps.length - 1 : firstDerived - 1;
 
   return (
-    <div
-      className="fitch-proof-display"
-      role="region"
-      aria-label="Entered Fitch proof"
-      tabIndex={0}
-    >
+    <div className="fitch-proof-display" role="region" aria-label={label} tabIndex={0}>
       <table>
         <caption>Entered proof</caption>
         <thead>
@@ -58,7 +57,7 @@ export function FitchProofDisplay({
             <th scope="col">Line</th>
             <th scope="col">Formula</th>
             <th scope="col">Justification</th>
-            <th scope="col">Actions</th>
+            {!readOnly && onEdit && <th scope="col">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -73,7 +72,7 @@ export function FitchProofDisplay({
             return (
               <tr
                 key={step.id}
-                className={step.id === selectedId ? 'selected-proof-line' : undefined}
+                className={!readOnly && step.id === selectedId ? 'selected-proof-line' : undefined}
               >
                 <th scope="row" className="fitch-line-number">
                   {index + 1}
@@ -128,40 +127,42 @@ export function FitchProofDisplay({
                   )}
                   {scope.warning && <span className="fitch-scope-warning">{scope.warning}</span>}
                 </td>
-                <td>
-                  <FitchLineActions
-                    index={index}
-                    count={proof.steps.length}
-                    disabled={disabled}
-                    onEdit={() => onEdit(step.id)}
-                    onMove={onMove ? (delta) => onMove(index, delta) : undefined}
-                    onInsert={onInsert ? () => onInsert(step.id) : undefined}
-                    onDelete={
-                      step.kind !== 'assumption' && onDelete ? () => onDelete(step.id) : undefined
-                    }
-                    onSettings={
-                      opening && onBlockSettings ? () => onBlockSettings(opening.id) : undefined
-                    }
-                    onDeleteSubproof={
-                      opening && onDeleteBlock ? () => onDeleteBlock(opening.id) : undefined
-                    }
-                    onCloseSubproof={
-                      containing && onCloseBlock && containing.endId === null
-                        ? () => onCloseBlock(containing.id, step.id)
-                        : undefined
-                    }
-                    onReopenSubproof={
-                      opening && opening.endId !== null && onReopenBlock
-                        ? () => onReopenBlock(opening.id)
-                        : undefined
-                    }
-                  />
-                </td>
+                {!readOnly && onEdit && (
+                  <td>
+                    <FitchLineActions
+                      index={index}
+                      count={proof.steps.length}
+                      disabled={disabled}
+                      onEdit={() => onEdit(step.id)}
+                      onMove={onMove ? (delta) => onMove(index, delta) : undefined}
+                      onInsert={onInsert ? () => onInsert(step.id) : undefined}
+                      onDelete={
+                        step.kind !== 'assumption' && onDelete ? () => onDelete(step.id) : undefined
+                      }
+                      onSettings={
+                        opening && onBlockSettings ? () => onBlockSettings(opening.id) : undefined
+                      }
+                      onDeleteSubproof={
+                        opening && onDeleteBlock ? () => onDeleteBlock(opening.id) : undefined
+                      }
+                      onCloseSubproof={
+                        containing && onCloseBlock && containing.endId === null
+                          ? () => onCloseBlock(containing.id, step.id)
+                          : undefined
+                      }
+                      onReopenSubproof={
+                        opening && opening.endId !== null && onReopenBlock
+                          ? () => onReopenBlock(opening.id)
+                          : undefined
+                      }
+                    />
+                  </td>
+                )}
               </tr>
             );
           })}
         </tbody>
-        {entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
+        {!readOnly && entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
       </table>
       {!proof.steps.length && <p>No proof lines entered yet.</p>}
     </div>

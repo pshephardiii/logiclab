@@ -256,7 +256,7 @@ test('read-only submitted proofs expose no editor/check actions and preserve unr
   expect(screen.getByText('Your submitted proof')).toBeInTheDocument();
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-  expect(screen.getByText(/subproofs \?/)).toBeInTheDocument();
+  expect(screen.getByText(/Missing subproof/)).toBeInTheDocument();
   expect(f.onAnswer).not.toHaveBeenCalled();
 });
 
