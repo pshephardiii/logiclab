@@ -19,9 +19,10 @@ import { FitchProofLine } from './FitchProofLine';
 import { FitchProofSummary } from './FitchProofSummary';
 import '../proof.css';
 import { ProofHelp } from '../reference/ProofHelp';
+import { ProofEditorHeading } from './ProofEditorHeading';
 
 type Props = {
-  statement: Pick<FitchDerivationContent, 'premises' | 'rules'>;
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> & { conclusion?: string };
   proof: FitchProof | null;
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
@@ -49,7 +50,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
         className="proof-editor"
         aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
       >
-        <h3>{heading}</h3>
+        <ProofEditorHeading title={heading} goal={statement.conclusion} />
         <ProofHelp format="fitch" rules={statement.rules} />
         <p>
           {reference ? 'No reference proof yet.' : 'No proof started yet.'} Starting copies the
@@ -102,7 +103,7 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
       className="proof-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
-      <h3>{heading}</h3>
+      <ProofEditorHeading title={heading} goal={statement.conclusion} />
       <ProofHelp format="fitch" rules={statement.rules} />
       {error && (
         <p role="alert" className="error">

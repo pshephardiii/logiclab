@@ -1,0 +1,51 @@
+.proof-feedback {
+  margin-block: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: 0.5rem;
+  background: #fffbeb;
+  border-color: #b7791f;
+  color: #713f12;
+}
+.proof-feedback--accepted {
+  color: #14532d;
+  background: #edf9f0;
+  border-color: #39865a;
+}
+.proof-feedback--needs_review {
+  color: #881337;
+  background: #fff1f2;
+  border-color: #be526b;
+}
+.proof-feedback-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-size: 1.1rem;
+}
+.proof-feedback-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 700;
+}
+.proof-feedback p {
+  line-height: 1.5;
+}
+.proof-feedback ul {
+  padding-left: 1.25rem;
+}
+.proof-feedback li {
+  margin-block: 0.4rem;
+  line-height: 1.5;
+}
+.proof-feedback .help {
+  color: inherit;
+}

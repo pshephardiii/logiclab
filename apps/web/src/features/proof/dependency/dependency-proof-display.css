@@ -139,7 +139,6 @@
   flex: 1 1 4rem;
   min-width: 0;
 }
-.proof-control-label,
 .dependency-entry-row label:not(.dependency-source) {
   position: absolute;
   width: 1px;

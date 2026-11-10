@@ -1,4 +1,5 @@
 .proof-dropdown-trigger {
+  white-space: nowrap;
   background: transparent;
   color: #176650;
   border: 1px solid #a8b9b1;

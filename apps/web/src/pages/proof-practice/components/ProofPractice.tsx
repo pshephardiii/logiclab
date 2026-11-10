@@ -11,6 +11,8 @@ import {
   type PracticeProof,
 } from '../helpers/practice-proof';
 import '../../../features/proof/proof.css';
+import { startPracticeProof } from '../helpers/start-practice-proof';
+import '../proof-practice.css';
 
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
@@ -37,69 +39,65 @@ export function ProofPractice() {
   }
 
   return (
-    <>
+    <div className="proof-practice">
       <header>
         <p className="eyebrow">LogicLab / Independent practice</p>
         <h1>Practice a derivation.</h1>
-        <p>Choose your premises and conclusion.</p>
+        {!statement && <p>Choose your premises and conclusion.</p>}
       </header>
-      <p className="help">Work is temporary; reloading clears this practice session.</p>
       {!statement ? (
-        <ProofPracticeSetup initialFormat={setupFormat} onStart={setStatement} />
+        <ProofPracticeSetup
+          initialFormat={setupFormat}
+          onStart={(next) => {
+            setStatement(next);
+            setProof(startPracticeProof(next));
+            setReport(null);
+          }}
+        />
       ) : (
-        <section className="panel proof-editor">
-          <h2>Your practice problem</h2>
-          <label htmlFor="active-practice-format">Change proof format</label>
-          <select
-            id="active-practice-format"
-            value={statement.format}
-            onChange={(event) => {
-              const format = event.target.value as PracticeStatement['format'];
+        <section className="panel proof-editor practice-workspace">
+          <div className="practice-workspace-tools">
+            <div>
+              <label htmlFor="active-practice-format">Change proof format</label>
+              <select
+                id="active-practice-format"
+                value={statement.format}
+                onChange={(event) => {
+                  const format = event.target.value as PracticeStatement['format'];
 
-              if (format !== statement.format) restart(format);
-            }}
-            aria-describedby="practice-reset-description"
-          >
-            <option value="fitch">Fitch</option>
-            <option value="dependency">Dependency</option>
-            <option value="tree">Natural-deduction tree</option>
-          </select>
-          <p id="practice-reset-description" className="help">
-            Changing format or starting over clears this practice session after confirmation.
-          </p>
-          <button type="button" className="secondary" onClick={() => restart(statement.format)}>
-            Start over
-          </button>
-          <h3>Premises</h3>
-          {statement.premises.length ? (
-            <ol>
-              {statement.premises.map((premise) => (
-                <li key={premise.id}>
-                  <code>{premise.formula}</code>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p>No premises.</p>
-          )}
-          <p>
-            <strong>Conclusion:</strong> <code>{statement.conclusion}</code>
-          </p>
+                  if (format !== statement.format) restart(format);
+                }}
+                aria-describedby="practice-reset-description"
+              >
+                <option value="fitch">Fitch</option>
+                <option value="dependency">Dependency</option>
+                <option value="tree">Natural-deduction tree</option>
+              </select>
+            </div>
+            <p id="practice-reset-description" className="proof-control-label">
+              Changing format or starting over clears this practice session after confirmation.
+            </p>
+            <button type="button" className="secondary" onClick={() => restart(statement.format)}>
+              Start over
+            </button>
+          </div>
           <PracticeProofEditor
             statement={statement}
             proof={proof}
             onChange={changeProof}
             onPendingChange={setEntryPending}
           />
-          <button
-            type="button"
-            disabled={!proof || entryPending}
-            onClick={() =>
-              proof && !entryPending && setReport(checkPracticeProof(statement, proof))
-            }
-          >
-            Check proof
-          </button>
+          <div className="practice-check-actions">
+            <button
+              type="button"
+              disabled={!proof || entryPending}
+              onClick={() =>
+                proof && !entryPending && setReport(checkPracticeProof(statement, proof))
+              }
+            >
+              Check proof
+            </button>
+          </div>
           {report && !entryPending && (
             <ProofFeedback
               report={report}
@@ -108,6 +106,9 @@ export function ProofPractice() {
           )}
         </section>
       )}
-    </>
+      <p className="help practice-session-note">
+        Work is temporary; reloading clears this practice session.
+      </p>
+    </div>
   );
 }

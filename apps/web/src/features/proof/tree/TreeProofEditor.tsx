@@ -13,6 +13,7 @@ import {
 } from './editor';
 import '../proof.css';
 import { ProofHelp } from '../reference/ProofHelp';
+import { ProofEditorHeading } from '../components/ProofEditorHeading';
 
 export function TreeProofEditor({
   statement,
@@ -54,7 +55,15 @@ export function TreeProofEditor({
       className="proof-editor"
       aria-label={reference ? 'Tree reference proof editor' : 'Tree student proof editor'}
     >
-      <h3>{reference ? 'Reference proof' : 'Your proof'}</h3>
+      <ProofEditorHeading
+        title={reference ? 'Reference proof' : 'Your proof'}
+        goal={statement.conclusion}
+      />
+      {statement.premises.length > 0 && (
+        <p className="help">
+          Available premises: {statement.premises.map((premise) => premise.formula).join('; ')}
+        </p>
+      )}
       <ProofHelp format="tree" rules={statement.rules} />
       <p className="help">Build from the conclusion toward its premises.</p>
       {!proof ? (

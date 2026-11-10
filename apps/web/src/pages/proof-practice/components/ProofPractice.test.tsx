@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 import { fireEvent, screen, within } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import { Link } from 'react-router';
@@ -13,6 +14,8 @@ function enterProblem(format = 'fitch', configure?: () => void) {
   fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: 'P' } });
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P' } });
   configure?.();
+  const rules = screen.queryByRole('dialog', { name: 'Permitted rules' });
+  if (rules) fireEvent.click(within(rules).getByRole('button', { name: 'Done' }));
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
 }
 
@@ -25,8 +28,9 @@ test.each(['fitch', 'dependency', 'tree'])(
     enterProblem(format);
 
     expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
+    expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Proof goal')).toHaveTextContent('P');
     expect(
       screen.getByLabelText(
         format === 'tree'
@@ -48,7 +52,6 @@ test.each(['fitch', 'dependency', 'tree'])(
 
 test('editing clears old diagnostics and never checks automatically', () => {
   enterProblem();
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 
@@ -63,7 +66,6 @@ test('editing clears old diagnostics and never checks automatically', () => {
 
 test('pending dependency entry hides old feedback and requires Add line or discard before checking', () => {
   enterProblem('dependency');
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q &' } });
@@ -90,7 +92,6 @@ test.each([
     fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   const feedback = screen.getByRole('region', { name: 'Proof feedback' }).textContent;
 
@@ -126,15 +127,13 @@ test.each([
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'Q -> Q' } });
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
   expect(screen.getByLabelText('Change proof format')).toHaveValue(to);
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
   expect(screen.queryByDisplayValue('P')).not.toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
 });
 
 test('reselecting the active format is a no-op; Start over confirms a same-format reset', () => {
   enterProblem('dependency');
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.change(screen.getByLabelText('Change proof format'), {
     target: { value: 'dependency' },
   });
@@ -159,6 +158,7 @@ test('changing format during setup protects fields, selected rules and validatio
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P &' } });
   fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
 
@@ -168,7 +168,9 @@ test('changing format during setup protects fields, selected rules and validatio
   expect(screen.getByLabelText('Conclusion')).toHaveValue('P &');
   expect(screen.getByLabelText('Premise 1')).toHaveValue('P');
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
+  fireEvent.click(screen.getByText('Permitted rules (18 selected)'));
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 
   fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'tree' } });
   fireEvent.click(
@@ -178,6 +180,7 @@ test('changing format during setup protects fields, selected rules and validatio
   expect(screen.getByLabelText('Conclusion')).toHaveValue('');
   expect(screen.queryByLabelText('Premise 1')).not.toBeInTheDocument();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).toBeChecked();
 });
 
@@ -189,9 +192,11 @@ test('an untouched setup changes format freely, but rule-only edits require conf
 
   fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'dependency' } });
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
+  fireEvent.click(screen.getByText('Permitted rules (18 selected)'));
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
 });
 
@@ -232,7 +237,6 @@ test('checked active work still requests an unload warning and does not persist 
   const rendered = renderWithUnsavedWork(<ProofPractice />);
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P -> P' } });
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   const unload = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(unload);
@@ -242,4 +246,50 @@ test('checked active work still requests an unload warning and does not persist 
   renderWithUnsavedWork(<ProofPractice />);
   expect(screen.getByLabelText('Conclusion')).toHaveValue('');
   expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+});
+
+test('rules are organized in a modal and Escape retains choices without starting or checking a proof', () => {
+  renderWithUnsavedWork(<ProofPractice />);
+  fireEvent.click(screen.getByRole('button', { name: 'Permitted rules (19 selected)' }));
+  const dialog = screen.getByRole('dialog', { name: 'Permitted rules' });
+  expect(within(dialog).getByRole('group', { name: 'Core rules' })).toBeInTheDocument();
+  expect(within(dialog).getByRole('group', { name: 'Derived rules' })).toBeInTheDocument();
+  expect(within(dialog).getByRole('group', { name: 'Classical rules' })).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Clear selection' }));
+  expect(
+    within(dialog)
+      .getAllByRole('checkbox')
+      .every((input) => !(input as HTMLInputElement).checked),
+  ).toBe(true);
+  fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Reiteration' }));
+  fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Permitted rules (1 selected)' })).toBeInTheDocument();
+  expect(screen.getByRole('form', { name: 'Proof practice setup' })).toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  const unloading = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(unloading);
+  expect(unloading.defaultPrevented).toBe(true);
+});
+
+test('beginning dependency practice puts the goal beside the proof without a duplicate premises panel', () => {
+  enterProblem('dependency');
+  expect(screen.getByLabelText('Proof goal')).toHaveTextContent('GoalP');
+  expect(screen.queryByRole('heading', { name: 'Premises' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('table', { name: 'Entered proof' }).querySelector('tbody'),
+  ).toHaveTextContent('P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('');
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+});
+
+test('closing rule settings returns keyboard focus to its opener', async () => {
+  const user = userEvent.setup();
+  renderWithUnsavedWork(<ProofPractice />);
+  const opener = screen.getByRole('button', { name: 'Permitted rules (19 selected)' });
+  await user.click(opener);
+  await user.click(screen.getByRole('button', { name: 'Done' }));
+  expect(opener).toHaveFocus();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

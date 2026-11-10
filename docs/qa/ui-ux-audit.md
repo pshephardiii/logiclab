@@ -161,7 +161,7 @@ Validation: **411 web tests** and the web production build passed. Added coverag
 
 Suggested quick review:
 
-1. Open `/practice/proofs`, choose **Dependency**, add premise `P` and conclusion `P`, then choose **Begin proof practice** and **Start proof**.
+1. Open `/practice/proofs`, choose **Dependency**, add premise `P` and conclusion `P`, then choose **Begin proof practice** to open the proof directly.
 2. In the bottom entry row, enter `P`, select **Reiteration**, cite line 1 and select line 1 in the dependencies dropdown. The proof display should still contain only the original premise.
 3. Choose **Add line**. The new line should appear in the proof; choose **Check proof** separately to verify it.
 4. In the next blank row, enter `P &`. Checking should be unavailable until Add/Discard; discarding should leave the entered proof unchanged. Adding an unfinished line should be allowed without automatic correctness feedback.
@@ -221,6 +221,36 @@ Each line's **⋯** opens Edit, Move up/down, Insert before and Delete. Keep sta
 Validation: **503 web tests** and the production build passed, followed by a focused 14-case authoring/editor rerun after final focus and Enter handling. Coverage includes clean idle rows, no new-premise option, checkbox dependencies, assumption/inference switching without losing typed fields, action menus, insertion/moves/deletion, stale-base protection, pending guards and Enter without implicit saving. Native top-layer popovers avoid clipping inside the proof's horizontal scroll area. jsdom uses a visibility/toggle stub; native behavior is separate browser evidence.
 
 Focused Chrome verified inference/assumption/discharge entry, explicit accepted checks, Add/Discard, line moves/deletion, menu initial focus/Escape/return, and 390px/320px top-layer popup positioning with local scrolling and no page errors. Temporary servers/schema were cleaned up. Evidence: `.codex-local/ui-audit/029/dependency-inline/`. Final Enter handling was tested in the authoring regression rather than a new browser run. Formatting, whitespace and local Markdown targets passed. No backend/database changes or full accessibility/browser matrix; secondary-browser native-popover coverage remains pending.
+
+## Implementation: review the whole practice flow
+
+**UI-029-010**, November 10, 2026: user QA identified repeated statement content, weak goal placement, crowded setup, redundant help, an unsuitable rules disclosure, an unhelpful input guide and bland check results. Address these as one flow rather than isolated spacing patches:
+
+- Space setup into format/keyboard controls, optional premise rows, a separate conclusion field and primary/secondary actions. Remove duplicate keyboard instructions. Permitted rules now open a native modal grouped into Core, Derived and Classical rules, with bulk selection and a selected count. Choices apply immediately; Done/Escape retain them. Restore focus explicitly on close.
+- Beginning independent practice initializes the proof directly, without a second Start proof action or automatic checking. Reuse the existing format-specific constructors and keep full-reset/unsaved-work behavior. Assigned-work start behavior is unchanged.
+- Put a highlighted Goal beside Your proof/Reference proof in shared editor headings. Remove the duplicated premise/conclusion panel from active practice and active assigned editing. Trees retain a compact available-premises line because their starting tree does not contain premise leaves. Read-only assigned review retains its statement information.
+- Replace the generic input instruction table with an annotated proof-row key showing exactly where dependencies, numbering, formula, justification and actions appear. Keep just one dependency explanation.
+- Give authorized check reports green/check, rose/attention and amber/unknown treatments with explicit text and symbols. Keep diagnostics, target status and independent disclosure rules. Move feedback styling to the component's own stylesheet so it also loads in review contexts.
+
+Setup:
+
+![Spaced setup with one keyboard guide and a rules-modal button](images/ui-audit-029/proof-setup-spaced.png)
+
+Rules on mobile:
+
+![Grouped rules modal with a scrollable body and fixed Done action](images/ui-audit-029/proof-rules-modal-mobile.png)
+
+Started proof and positive feedback:
+
+![Goal beside the proof and distinct successful-check feedback](images/ui-audit-029/proof-workspace-success.png)
+
+Invalid work:
+
+![Attention feedback with color, icon and specific diagnostics](images/ui-audit-029/proof-feedback-attention-mobile.png)
+
+Validation: **506 web tests** and the production build passed. Updated practice regressions cover direct start without checking, the nearby goal/no duplicate premises, grouped rule selection, Escape retention, unload protection and modal focus return, alongside existing pending-entry/reset/release tests. Chrome reviewed the complete setup→modal→started proof→success/error flow, the row key, all three formats' direct starts, modal keyboard navigation/background inertness/Escape/focus return, and Stay retention. Final narrow-screen refinement keeps the format/reset toolbar compact and the dependencies trigger on one line. At 390px/320px there was no document-wide overflow; no page errors were recorded. Temporary servers/schema were cleaned up. Evidence: `.codex-local/ui-audit/029/proof-flow/` and `proof-flow-final/`.
+
+Formatting, whitespace and local Markdown targets passed. Backend/database suites and live services were not exercised. This is a focused Chrome visual/interaction pass, not a complete assistive-technology, contrast or browser matrix. Fitch/tree line-entry redesign and further user visual refinement remain open.
 
 ## Route/state inventory
 

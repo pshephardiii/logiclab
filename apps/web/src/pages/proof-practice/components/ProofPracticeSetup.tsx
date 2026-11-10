@@ -3,6 +3,7 @@ import { PROOF_LIMITS } from '@logiclab/contracts';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
+import { PracticeRuleDialog } from './PracticeRuleDialog';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import { practiceStatement, type PracticeStatement } from '../helpers/practice-proof';
 
@@ -30,6 +31,7 @@ export function ProofPracticeSetup({
     PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id),
   );
   const [error, setError] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
   useUnsavedWork(
     premises.length > 0 ||
       conclusion.length > 0 ||
@@ -60,100 +62,95 @@ export function ProofPracticeSetup({
   }
 
   return (
-    <form className="panel proof-editor" aria-label="Proof practice setup" onSubmit={submit}>
-      <h2>Choose your proof problem</h2>
-      <ProofKeyboardGuide />
-      <label htmlFor="practice-proof-format">Proof format</label>
-      <select
-        id="practice-proof-format"
-        value={format}
-        onChange={(event) => changeFormat(event.target.value as PracticeStatement['format'])}
-        aria-describedby="practice-setup-format-description"
-      >
-        <option value="fitch">Fitch</option>
-        <option value="dependency">Dependency</option>
-        <option value="tree">Natural-deduction tree</option>
-      </select>
-      <p id="practice-setup-format-description" className="help">
-        Choose the format before starting. Changing format clears entered setup and resets the rules
-        after discard confirmation. Instructor-assigned problems keep their instructor's format.
-      </p>
-      <h3>Premises</h3>
-      <p className="help">Premises are optional. Use none when practicing a theorem.</p>
-      {premises.map((premise, index) => (
-        <div key={premise.id}>
-          <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
-          <input
-            {...formulaInput}
-            id={`practice-premise-${premise.id}`}
-            required
-            value={premise.formula}
-            onChange={(event) =>
-              setPremises(
-                premises.map((value) =>
-                  value.id === premise.id ? { ...value, formula: event.target.value } : value,
-                ),
-              )
-            }
-          />
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setPremises(premises.filter((value) => value.id !== premise.id))}
+    <form
+      className="panel proof-editor proof-practice-setup"
+      aria-label="Proof practice setup"
+      onSubmit={submit}
+    >
+      <h2>Set up a proof</h2>
+      <div className="proof-setup-toolbar">
+        <div>
+          <label htmlFor="practice-proof-format">Proof format</label>
+          <select
+            id="practice-proof-format"
+            value={format}
+            onChange={(event) => changeFormat(event.target.value as PracticeStatement['format'])}
           >
-            Remove premise {index + 1}
-          </button>
+            <option value="fitch">Fitch</option>
+            <option value="dependency">Dependency</option>
+            <option value="tree">Natural-deduction tree</option>
+          </select>
         </div>
-      ))}
-      <button
-        type="button"
-        disabled={premises.length >= PROOF_LIMITS.maxPremises}
-        onClick={() => setPremises([...premises, { id: crypto.randomUUID(), formula: '' }])}
-      >
-        Add premise
-      </button>
-      <label htmlFor="practice-proof-conclusion">Conclusion</label>
-      <input
-        {...formulaInput}
-        id="practice-proof-conclusion"
-        required
-        value={conclusion}
-        onChange={(event) => setConclusion(event.target.value)}
-      />
-      <p className="help">
-        Use A–Z, ! or ~, &amp;, v or |, -&gt;, &lt;-&gt;, parentheses or square brackets.
-        Contradiction: ⊥ or _|_.
-      </p>
-      <details>
-        <summary>Permitted rules ({ruleIds.length} selected)</summary>
-        <p className="help">
-          All supported rules start enabled, including classical rules. Disable any rules you do not
-          want to practice with.
-        </p>
-        {PROPOSITIONAL_RULE_CATALOG.map((rule) => (
-          <label key={rule.id} className="dependency-source">
-            <input
-              type="checkbox"
-              checked={ruleIds.includes(rule.id)}
-              onChange={(event) =>
-                setRuleIds(
-                  event.target.checked
-                    ? [...ruleIds, rule.id]
-                    : ruleIds.filter((id) => id !== rule.id),
-                )
-              }
-            />
-            {rule.label}
-            {rule.category === 'classical' ? ' (classical)' : ''}
-          </label>
+        <ProofKeyboardGuide />
+      </div>
+      <section className="proof-setup-premises" aria-label="Starting premises">
+        <h3>
+          Premises <span className="help">(optional)</span>
+        </h3>
+        {premises.map((premise, index) => (
+          <div className="proof-setup-premise" key={premise.id}>
+            <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
+            <div>
+              <input
+                {...formulaInput}
+                id={`practice-premise-${premise.id}`}
+                required
+                value={premise.formula}
+                onChange={(event) =>
+                  setPremises(
+                    premises.map((value) =>
+                      value.id === premise.id ? { ...value, formula: event.target.value } : value,
+                    ),
+                  )
+                }
+              />
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => setPremises(premises.filter((value) => value.id !== premise.id))}
+              >
+                Remove premise {index + 1}
+              </button>
+            </div>
+          </div>
         ))}
-      </details>
+        <button
+          type="button"
+          className="secondary"
+          disabled={premises.length >= PROOF_LIMITS.maxPremises}
+          onClick={() => setPremises([...premises, { id: crypto.randomUUID(), formula: '' }])}
+        >
+          Add premise
+        </button>
+      </section>
+      <div className="proof-setup-conclusion">
+        <label htmlFor="practice-proof-conclusion">Conclusion</label>
+        <input
+          {...formulaInput}
+          id="practice-proof-conclusion"
+          required
+          value={conclusion}
+          onChange={(event) => setConclusion(event.target.value)}
+        />
+      </div>
       {error && (
         <p role="alert" className="error">
           {error}
         </p>
       )}
-      <button type="submit">Begin proof practice</button>
+      <div className="proof-setup-actions">
+        <button type="button" className="secondary" onClick={() => setRulesOpen(true)}>
+          Permitted rules ({ruleIds.length} selected)
+        </button>
+        <button type="submit">Begin proof practice</button>
+      </div>
+      {rulesOpen && (
+        <PracticeRuleDialog
+          selected={ruleIds}
+          onChange={setRuleIds}
+          onClose={() => setRulesOpen(false)}
+        />
+      )}
     </form>
   );
 }

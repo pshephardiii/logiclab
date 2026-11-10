@@ -5,6 +5,7 @@ import { DependencyProofSummary } from './DependencyProofSummary';
 import { DependencyProofDisplay } from './DependencyProofDisplay';
 import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 import { ProofHelp } from '../reference/ProofHelp';
+import { ProofEditorHeading } from '../components/ProofEditorHeading';
 import {
   startDependencyProof,
   uniqueDependencyIds,
@@ -26,6 +27,7 @@ export function DependencyProofEditor({
   statement: {
     premises: { id: string; formula: string }[];
     rules: { id: string; label: string }[];
+    conclusion?: string;
   };
   proof: DependencyProof | null;
   purpose?: 'reference' | 'student';
@@ -133,7 +135,7 @@ export function DependencyProofEditor({
       className="proof-editor dependency-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
-      <h3>{heading}</h3>
+      <ProofEditorHeading title={heading} goal={statement.conclusion} />
       <ProofHelp format="dependency" rules={statement.rules} />
       {!proof ? (
         <>
@@ -226,39 +228,40 @@ export function DependencyProofEditor({
                 <p role="status">Proof line limit reached. Edit or remove an existing line.</p>
               )}
               <details className="dependency-input-guide">
-                <summary>Input guide</summary>
-                <table className="proof-reference-table">
-                  <tbody>
-                    <tr>
-                      <th scope="row">Dependencies</th>
-                      <td>Select supporting premise/assumption lines. ∅ means none.</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Number</th>
-                      <td>Assigned automatically.</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Formula</th>
-                      <td>
-                        Type your formula. Use <kbd>_|_</kbd> for ⊥.
-                      </td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Rule</th>
-                      <td>Choose an enabled rule or Assumption.</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Citations</th>
-                      <td>Select earlier lines, or assumption/end pairs for discharge.</td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Confirm</th>
-                      <td>
-                        Add line or Enter in the formula field. Save and Check remain separate.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <summary>Proof row key</summary>
+                <div
+                  className="proof-row-key-scroll"
+                  role="region"
+                  aria-label="Proof row key"
+                  tabIndex={0}
+                >
+                  <div className="proof-row-key">
+                    <div>
+                      <span>Dependencies</span>
+                      <code>{'{1, 2}'}</code>
+                      <span>∅ = none</span>
+                    </div>
+                    <div>
+                      <span>Line</span>
+                      <code>3</code>
+                    </div>
+                    <div>
+                      <span>Formula</span>
+                      <code>Q</code>
+                    </div>
+                    <div>
+                      <span>Rule, citations</span>
+                      <code>→E 1, 2</code>
+                    </div>
+                    <div>
+                      <span>Actions</span>
+                      <code>⋯</code>
+                    </div>
+                  </div>
+                </div>
+                <p className="help">
+                  Dependencies identify the starting premises and assumptions this line relies on.
+                </p>
               </details>
               {fieldsStep?.kind === 'inference' && (
                 <ProofRuleHelp

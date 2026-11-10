@@ -58,6 +58,7 @@ export function AssignedDerivation({
     JSON.stringify(proof) === JSON.stringify(feedback.proof)
       ? feedback.report
       : null;
+  const showStatement = readOnly || !proof || proof.format !== item.content.format;
 
   return (
     <section className="panel assigned-item proof-editor">
@@ -73,30 +74,34 @@ export function AssignedDerivation({
             ? 'Fitch'
             : 'Dependency'}
       </p>
-      <h3>Premises</h3>
-      {item.content.premises.length ? (
-        <ol>
-          {item.content.premises.map((premise) => (
-            <li key={premise.id}>
-              <code>{premise.formula}</code>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p>No premises.</p>
-      )}
-      <p>
-        <strong>Conclusion:</strong> <code>{item.content.conclusion}</code>
-      </p>
-      <h3>Permitted rules</h3>
-      {item.content.rules.length ? (
-        <ul>
-          {item.content.rules.map((rule) => (
-            <li key={rule.id}>{rule.label}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>No rules enabled.</p>
+      {showStatement && (
+        <>
+          <h3>Premises</h3>
+          {item.content.premises.length ? (
+            <ol>
+              {item.content.premises.map((premise) => (
+                <li key={premise.id}>
+                  <code>{premise.formula}</code>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p>No premises.</p>
+          )}
+          <p>
+            <strong>Conclusion:</strong> <code>{item.content.conclusion}</code>
+          </p>
+          <h3>Permitted rules</h3>
+          {item.content.rules.length ? (
+            <ul>
+              {item.content.rules.map((rule) => (
+                <li key={rule.id}>{rule.label}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>No rules enabled.</p>
+          )}
+        </>
       )}
       {/* Reject mismatched saved work before choosing read-only review or the pinned-format editor. */}
       {proof && proof.format !== item.content.format ? (
