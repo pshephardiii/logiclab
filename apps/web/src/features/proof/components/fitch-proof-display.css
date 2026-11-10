@@ -1,4 +1,5 @@
 .fitch-proof-display {
+  position: relative;
   max-width: 100%;
   overflow-x: auto;
   margin-block: 1rem 1.5rem;
@@ -90,4 +91,58 @@
 .fitch-proof-display button[aria-pressed='true'] {
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.fitch-proof-display .fitch-entry-row td,
+.fitch-proof-display .fitch-entry-row th {
+  padding-top: 0.75rem;
+  vertical-align: top;
+}
+.fitch-entry-row .fitch-line-number {
+  padding-top: 1.15rem;
+}
+.fitch-entry-row input,
+.fitch-entry-row select {
+  min-width: 0;
+  padding: 0.4rem;
+  font-size: 0.95rem;
+}
+.fitch-entry-row input {
+  width: 10rem;
+  max-width: 100%;
+}
+.fitch-entry-reasons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  width: 18rem;
+  min-width: 12rem;
+  max-width: 100%;
+}
+.fitch-entry-reasons > div:first-child {
+  grid-column: 1 / -1;
+}
+.fitch-entry-reasons > div {
+  min-width: 0;
+}
+.fitch-entry-reasons select {
+  width: 100%;
+}
+.fitch-entry-row label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.fitch-entry-actions .text-button {
+  display: block;
+}
+.fitch-entry-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-block: 1rem;
 }

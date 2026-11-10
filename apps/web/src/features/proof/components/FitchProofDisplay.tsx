@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
 import { proofNotation } from '../helpers/proof-notation';
 import { fitchDisplayScope } from '../helpers/fitch-display';
@@ -9,11 +10,17 @@ export function FitchProofDisplay({
   rules,
   selectedId,
   onEdit,
+  disabled = false,
+  entry,
+  entryLabel = 'New proof line',
 }: {
   proof: FitchProof;
   rules: { id: string; label: string }[];
   selectedId: string | null;
   onEdit: (id: string) => void;
+  disabled?: boolean;
+  entry?: ReactNode;
+  entryLabel?: string;
 }) {
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
@@ -105,6 +112,7 @@ export function FitchProofDisplay({
                   <button
                     type="button"
                     className="text-button"
+                    disabled={disabled}
                     aria-pressed={step.id === selectedId}
                     onClick={() => onEdit(step.id)}
                   >
@@ -115,6 +123,7 @@ export function FitchProofDisplay({
             );
           })}
         </tbody>
+        {entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
       </table>
       {!proof.steps.length && <p>No proof lines entered yet.</p>}
     </div>

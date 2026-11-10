@@ -38,6 +38,7 @@ export function PracticeProofEditor({
 
   return (
     <FitchProofEditor
+      onPendingChange={onPendingChange}
       statement={statement}
       proof={proof?.format === 'fitch' ? proof : null}
       purpose="student"

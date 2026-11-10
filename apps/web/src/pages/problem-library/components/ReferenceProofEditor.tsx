@@ -86,6 +86,7 @@ export function ReferenceProofEditor({
     </>
   ) : (
     <FitchProofEditor
+      onPendingChange={onPendingChange}
       key="fitch"
       statement={definition}
       proof={definition.referenceProof}
