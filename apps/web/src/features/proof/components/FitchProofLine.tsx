@@ -43,6 +43,7 @@ export function FitchProofLine({
       <label>
         Formula for line {index + 1}
         <ProofFormulaInput
+          data-proof-formula="true"
           maxLength={PROOF_LIMITS.maxFormulaLength}
           aria-describedby={formulaHint}
           autoComplete="off"

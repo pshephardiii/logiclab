@@ -90,11 +90,15 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
   expect(screen.getByRole('status')).toHaveTextContent('accepted');
   await user.selectOptions(screen.getByLabelText('Insert before'), ids[0]!);
   await user.click(screen.getByRole('button', { name: 'Add premise line at root' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 4' }));
   expect(screen.getByLabelText('Line 4 citation 1')).toHaveValue(ids[0]);
   expect(screen.getByLabelText('Line 4 citation 2')).toHaveValue(ids[1]);
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
   await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
   await user.click(screen.getByRole('button', { name: 'Keep reference work' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 4' }));
   expect(screen.getByLabelText('Formula for line 4')).toHaveValue('Q');
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
   await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue(ids[0]);
