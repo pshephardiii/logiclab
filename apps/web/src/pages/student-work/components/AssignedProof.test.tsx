@@ -1,3 +1,4 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -33,8 +34,8 @@ async function open(editSaved = true) {
   const view = render(<AssignedAttempt assignmentId={proofWork.id} />);
   await screen.findByRole('heading', { name: 'Problem 1: First proof' });
   if (editSaved && screen.queryByRole('region', { name: 'Entered Fitch proof' })) {
-    const edit = screen.queryByRole('button', { name: 'Edit line 1' });
-    if (edit) await user.click(edit);
+    const edit = screen.queryByRole('button', { name: 'Actions for line 1' });
+    if (edit) await lineAction(user, 1, 'Edit line 1');
   }
   return { user, ...view };
 }
@@ -125,18 +126,18 @@ test('proof edits use existing unsaved-work protection and retain drafts after f
   expect(api.readAssignedWork).toHaveBeenCalledTimes(1);
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Start proof' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await lineAction(user, 1, 'Edit line 1');
   await user.type(screen.getByLabelText('Formula for line 1'), ' Q');
   expect(screen.getByText('Unsaved changes in 2 problem(s).')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
   await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-  await screen.findByRole('button', { name: 'Edit line 1' });
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await screen.findByRole('button', { name: 'Actions for line 1' });
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
   expect(screen.queryByText(/Unsaved changes in/)).not.toBeInTheDocument();
 });
@@ -162,8 +163,8 @@ test('successful explicit saves keep proof identities, clear unload protection a
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
-  await screen.findByRole('button', { name: 'Edit line 1' });
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await screen.findByRole('button', { name: 'Actions for line 1' });
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();

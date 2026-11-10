@@ -1,6 +1,6 @@
 import { FitchProofDeletionConfirmation } from './FitchProofDeletionConfirmation';
 import { fitchEditorChoices } from '../helpers/proof-editor-choices';
-import { FitchProofBlockControls } from './FitchProofBlockControls';
+import { FitchSubproofDialog } from './FitchSubproofDialog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FitchProofDisplay } from './FitchProofDisplay';
 import { PROOF_LIMITS, type FitchProof, type FitchProofStep } from '@logiclab/contracts';
@@ -32,12 +32,13 @@ type Props = {
   onPendingChange?: (pending: boolean) => void;
 };
 
-type Deletion = { kind: 'line'; index: number } | { kind: 'block'; id: string } | { kind: 'proof' };
+type Deletion = { kind: 'line'; id: string } | { kind: 'block'; id: string } | { kind: 'proof' };
 
 export function FitchProofEditor({ statement, proof, purpose, onChange, onPendingChange }: Props) {
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [scope, setScope] = useState<string | null>(null);
   const [before, setBefore] = useState<string | null>(null);
   const [entry, setEntry] = useState<FitchEntry | null>(null);
@@ -135,6 +136,15 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
   const { lines, lineScopes, blockChoices } = fitchEditorChoices(
     proof ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
   );
+  // Malformed drafts may contain blocks with no usable assumption-line menu.
+  const attachedBlockIds = new Set(
+    proof?.steps
+      .filter((step) => step.kind === 'assumption')
+      .map((step) => proof.blocks.find((block) => block.assumptionId === step.id)?.id),
+  );
+  const unattachedBlockChoices = blockChoices.filter((block) => !attachedBlockIds.has(block.id));
+  const settingsBlock = proof?.blocks.find((block) => block.id === settingsId);
+  const settingsIndex = proof?.blocks.findIndex((block) => block.id === settingsId) ?? -1;
   const affected =
     proof && deletion?.kind === 'block' ? fitchProofSubtree(proof, deletion.id) : null;
   const deletedCount =
@@ -210,6 +220,53 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                   setDeletion(null);
                   focusRequested.current = true;
                 }}
+                onMove={(index, delta) => change(moveFitchProofStep(proof, index, delta))}
+                onInsert={
+                  proof.steps.length < PROOF_LIMITS.maxSteps
+                    ? (id) => {
+                        const step = proof.steps.find((step) => step.id === id)!;
+                        const block = proof.blocks.find((block) => block.id === step.blockId);
+                        setSelectedId(null);
+                        setBefore(id);
+                        setScope(
+                          step.kind === 'assumption' ? (block?.parentId ?? null) : step.blockId,
+                        );
+                        setDeletion(null);
+                        setError(null);
+                        focusRequested.current = true;
+                      }
+                    : undefined
+                }
+                onDelete={(id) => setDeletion({ kind: 'line', id })}
+                onBlockSettings={setSettingsId}
+                onDeleteBlock={(id) => setDeletion({ kind: 'block', id })}
+                onCloseBlock={(id, endId) => {
+                  const block = proof.blocks.find((block) => block.id === id)!;
+                  change({
+                    ...proof,
+                    blocks: proof.blocks.map((block) =>
+                      block.id === id ? { ...block, endId } : block,
+                    ),
+                  });
+                  setScope(block.parentId);
+                  setSelectedId(null);
+                  setBefore(null);
+                  focusRequested.current = true;
+                  setAnnouncement('Subproof closed. Continue in the parent proof.');
+                }}
+                onReopenBlock={(id) => {
+                  change({
+                    ...proof,
+                    blocks: proof.blocks.map((block) =>
+                      block.id === id ? { ...block, endId: null } : block,
+                    ),
+                  });
+                  setScope(id);
+                  setSelectedId(null);
+                  setBefore(null);
+                  focusRequested.current = true;
+                  setAnnouncement('Subproof reopened.');
+                }}
                 entryLabel={pending ? 'Unconfirmed proof entry' : 'New proof line'}
                 entry={
                   !selected && current ? (
@@ -242,8 +299,6 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                         steps: proof.steps.map((step) => (step.id === selected.id ? next : step)),
                       })
                     }
-                    onMove={(delta) => change(moveFitchProofStep(proof, selectedIndex, delta))}
-                    onDelete={() => setDeletion({ kind: 'line', index: selectedIndex })}
                   />
                   <button
                     type="button"
@@ -266,13 +321,6 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                       empty="Root proof"
                       onChange={setScope}
                     />
-                    <ProofChoice
-                      label="Insert before"
-                      value={before}
-                      choices={lines}
-                      empty="Append at end"
-                      onChange={setBefore}
-                    />
                     <button
                       type="button"
                       className="secondary"
@@ -287,6 +335,20 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                       Open subproof
                     </button>
                   </fieldset>
+                  {before && (
+                    <p className="help">
+                      Inserting before line{' '}
+                      {proof.steps.findIndex((step) => step.id === before) + 1 || '?'}.
+                      <button
+                        type="button"
+                        className="text-button"
+                        disabled={pending}
+                        onClick={() => setBefore(null)}
+                      >
+                        Append at end instead
+                      </button>
+                    </p>
+                  )}
                   {!current && (
                     <p role="status">
                       {proof.steps.length >= PROOF_LIMITS.maxSteps
@@ -303,26 +365,45 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                   )}
                 </>
               )}
-              <fieldset disabled={pending} aria-label="Subproof settings">
-                {proof.blocks.map((block, index) => (
-                  <FitchProofBlockControls
-                    key={block.id}
-                    block={block}
-                    label={blockChoices[index]!.label}
-                    parentChoices={blockChoices.filter(
-                      (value) => !fitchProofSubtree(proof, block.id).has(value.id),
-                    )}
-                    finalLineChoices={lines.filter((line) => lineScopes.get(line.id) === block.id)}
-                    onChange={(next) =>
-                      change({
-                        ...proof,
-                        blocks: proof.blocks.map((value) => (value.id === block.id ? next : value)),
-                      })
-                    }
-                    onDelete={() => setDeletion({ kind: 'block', id: block.id })}
-                  />
-                ))}
-              </fieldset>
+              {unattachedBlockChoices.length > 0 && (
+                <details>
+                  <summary>Unattached subproofs</summary>
+                  {unattachedBlockChoices.map((block) => (
+                    <button
+                      key={block.id}
+                      type="button"
+                      className="text-button"
+                      disabled={pending}
+                      onClick={() => setSettingsId(block.id)}
+                    >
+                      Settings for {block.label}
+                    </button>
+                  ))}
+                </details>
+              )}
+              {settingsBlock && !pending && (
+                <FitchSubproofDialog
+                  block={settingsBlock}
+                  label={blockChoices[settingsIndex]!.label}
+                  parentChoices={blockChoices.filter(
+                    (value) => !fitchProofSubtree(proof, settingsBlock.id).has(value.id),
+                  )}
+                  finalLineChoices={lines.filter(
+                    (line) => lineScopes.get(line.id) === settingsBlock.id,
+                  )}
+                  onChange={(next) =>
+                    change({
+                      ...proof,
+                      blocks: proof.blocks.map((block) => (block.id === next.id ? next : block)),
+                    })
+                  }
+                  onDelete={() => {
+                    setSettingsId(null);
+                    setDeletion({ kind: 'block', id: settingsBlock.id });
+                  }}
+                  onClose={() => setSettingsId(null)}
+                />
+              )}
             </>
           )}
           <span className="proof-control-label" aria-live="polite">
@@ -347,9 +428,15 @@ export function FitchProofEditor({ statement, proof, purpose, onChange, onPendin
                   setBefore(null);
                   setSelectedId(null);
                   change(null);
-                } else if (deletion.kind === 'line')
-                  change(removeFitchProofStep(proof, deletion.index));
-                else {
+                } else if (deletion.kind === 'line') {
+                  if (before === deletion.id) setBefore(null);
+                  change(
+                    removeFitchProofStep(
+                      proof,
+                      proof.steps.findIndex((step) => step.id === deletion.id),
+                    ),
+                  );
+                } else {
                   if (affected && scope && affected.has(scope)) setScope(null);
                   change(removeFitchSubproof(proof, deletion.id));
                 }

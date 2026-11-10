@@ -1,3 +1,4 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -36,14 +37,12 @@ async function conditionalProof() {
     name: 'New line scope',
   }) as HTMLSelectElement;
   const block = scope.value;
-  const endpoint = screen.getByLabelText('Final line of Subproof 1 at line 1') as HTMLSelectElement;
-  await user.selectOptions(endpoint, endpoint.options[1]!.value);
-  await user.selectOptions(scope, '');
+  await lineAction(user, 1, 'Close subproof at line 1');
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   await user.selectOptions(screen.getByLabelText('Line 2 subproof 1'), block);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
   return { ...view, block };
 }
 
@@ -90,20 +89,20 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('accepted');
-  await user.selectOptions(screen.getByLabelText('Insert before'), ids[0]!);
+  await lineAction(user, 1, 'Insert before line 1');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 4' }));
+  await lineAction(user, 4, 'Edit line 4');
   expect(screen.getByLabelText('Line 4 citation 1')).toHaveValue(ids[0]);
   expect(screen.getByLabelText('Line 4 citation 2')).toHaveValue(ids[1]);
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
-  await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await lineAction(user, 2, 'Delete line 2');
   await user.click(screen.getByRole('button', { name: 'Keep reference work' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 4' }));
+  await lineAction(user, 4, 'Edit line 4');
   expect(screen.getByLabelText('Formula for line 4')).toHaveValue('Q');
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
-  await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await lineAction(user, 2, 'Delete line 2');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 3' }));
+  await lineAction(user, 3, 'Edit line 3');
   expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue(ids[0]);
   expect(
     within(screen.getByLabelText('Line 3 citation 1')).getByRole('option', {
@@ -119,8 +118,8 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
 
 test('subproof deletion is explicit, removes its lines and leaves surviving subproof citations unresolved', async () => {
   const { user, block } = await conditionalProof();
-  await user.click(screen.getByRole('button', { name: 'Delete Subproof 1 at line 1' }));
-  expect(screen.getByRole('group', { name: 'Confirm reference deletion' })).toHaveTextContent(
+  await lineAction(user, 1, 'Delete subproof at line 1');
+  expect(screen.getByRole('dialog', { name: 'Confirm reference deletion' })).toHaveTextContent(
     'Delete 1 reference line',
   );
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');

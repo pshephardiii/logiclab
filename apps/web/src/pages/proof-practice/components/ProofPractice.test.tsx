@@ -54,6 +54,7 @@ test('editing clears old diagnostics and never checks automatically', async () =
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 
+  fireEvent.click(screen.getByRole('button', { name: 'Actions for line 1' }));
   fireEvent.click(screen.getByRole('button', { name: 'Edit line 1' }));
   fireEvent.change(screen.getByLabelText('Formula for line 1'), { target: { value: 'Q' } });
   expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();

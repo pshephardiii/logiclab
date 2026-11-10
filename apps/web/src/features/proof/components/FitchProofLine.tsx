@@ -14,20 +14,9 @@ type Props = {
   index: number;
   blocks: { id: string; label: string }[];
   onChange: (step: FitchProofStep) => void;
-  onMove: (delta: -1 | 1) => void;
-  onDelete: () => void;
 };
 
-export function FitchProofLine({
-  statement,
-  purpose,
-  proof,
-  index,
-  blocks,
-  onChange,
-  onMove,
-  onDelete,
-}: Props) {
+export function FitchProofLine({ statement, purpose, proof, index, blocks, onChange }: Props) {
   const step = proof.steps[index]!;
   const formulaHint = useId();
 
@@ -83,35 +72,9 @@ export function FitchProofLine({
         <p className="help">
           Opening assumption of{' '}
           {blocks.find((block) => block.id === step.blockId)?.label ?? 'an unavailable subproof'}.
-          Use the block controls to set its parent and endpoint.
+          Use the assumption line’s menu for subproof settings.
         </p>
       )}
-      <div className="action-row">
-        <button
-          type="button"
-          className="secondary"
-          disabled={index === 0}
-          onClick={() => onMove(-1)}
-        >
-          Move line {index + 1} up
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={index === proof.steps.length - 1}
-          onClick={() => onMove(1)}
-        >
-          Move line {index + 1} down
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={step.kind === 'assumption'}
-          onClick={onDelete}
-        >
-          Delete line {index + 1}
-        </button>
-      </div>
     </section>
   );
 }

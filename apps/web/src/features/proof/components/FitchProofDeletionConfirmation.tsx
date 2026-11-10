@@ -18,7 +18,7 @@ export function FitchProofDeletionConfirmation({
 }: Props) {
   return (
     <ProofDeletionPrompt
-      modal={kind === 'line'}
+      modal={kind !== 'proof'}
       label={reference ? 'Confirm reference deletion' : 'Confirm proof deletion'}
       onCancel={onCancel}
     >

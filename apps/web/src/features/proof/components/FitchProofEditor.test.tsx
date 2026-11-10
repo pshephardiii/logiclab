@@ -1,3 +1,4 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { useState } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -69,9 +70,9 @@ test('shows the whole proof but edits one selected line without changing work on
   expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
   expect(changed).not.toHaveBeenCalled();
 
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveFocus();
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveFocus();
   expect(screen.queryByLabelText('Formula for line 2')).not.toBeInTheDocument();
   expect(changed).not.toHaveBeenCalled();
@@ -86,9 +87,9 @@ test('adding selects the new line and movement retains its identity and citation
   await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), initial.steps[0]!.id);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   const added = current().steps[2]!;
-  await user.click(screen.getByRole('button', { name: 'Edit line 3' }));
+  await lineAction(user, 3, 'Edit line 3');
 
-  await user.click(screen.getByRole('button', { name: 'Move line 3 up' }));
+  await lineAction(user, 3, 'Move line 3 up');
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P');
   expect(current().steps[1]).toEqual(added);
   expect(screen.getByLabelText('Line 2 citation 1')).toHaveValue(initial.steps[0]!.id);
@@ -103,11 +104,11 @@ test('selected source deletion keeps incoming references visibly missing', async
   if (last.kind !== 'inference') throw new Error('Expected inference');
   last.lineReferences = [initial.steps[0]!.id];
   const { user, current } = setup(initial);
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
-  await user.click(screen.getByRole('button', { name: 'Delete line 1' }));
+  await lineAction(user, 1, 'Edit line 1');
+  await lineAction(user, 1, 'Delete line 1');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(current().steps).toEqual([last]);
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P → Q');
   expect(
     within(screen.getByRole('region', { name: 'Entered Fitch proof' })).getByText(
@@ -174,7 +175,7 @@ test('an untouched row is clean; typing stays local until confirmation and suppo
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q &');
   expect(changed).not.toHaveBeenCalled();
   expect(current()).toEqual(initial);
-  expect(screen.getByRole('button', { name: 'Edit line 1' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Actions for line 1' })).toBeDisabled();
   expect(screen.getByLabelText('New line scope')).toBeDisabled();
   fireEvent.keyDown(screen.getByLabelText('Formula for line 3'), {
     key: 'Enter',
@@ -247,4 +248,138 @@ test('a stale entry cannot overwrite authoritative work and pending state clears
   view.unmount();
   expect(pending).toHaveBeenLastCalledWith(false);
   expect(changed).not.toHaveBeenCalled();
+});
+
+function nestedProof(): FitchProof {
+  const outer = crypto.randomUUID(),
+    inner = crypto.randomUUID();
+  const first = crypto.randomUUID(),
+    second = crypto.randomUUID();
+  return {
+    proofVersion: 1,
+    format: 'fitch',
+    steps: [
+      { kind: 'assumption', id: first, blockId: outer, formula: 'P' },
+      { kind: 'assumption', id: second, blockId: inner, formula: 'Q' },
+      {
+        kind: 'inference',
+        id: crypto.randomUUID(),
+        blockId: null,
+        formula: 'P -> Q',
+        ruleId: 'reiteration',
+        lineReferences: [],
+        subproofReferences: [outer],
+      },
+    ],
+    blocks: [
+      { id: outer, parentId: null, assumptionId: first, endId: null },
+      { id: inner, parentId: outer, assumptionId: second, endId: null },
+    ],
+  };
+}
+
+test('closing/reopening a nested subproof changes only its endpoint and active entry scope', async () => {
+  const proof = nestedProof();
+  const { user, current } = setup(proof);
+  await lineAction(user, 2, 'Close subproof at line 2');
+  expect(current().blocks[1]!.endId).toBe(proof.steps[1]!.id);
+  expect(current().blocks[0]).toEqual(proof.blocks[0]);
+  expect(current().steps).toEqual(proof.steps);
+  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[0]!.id);
+  await lineAction(user, 2, 'Reopen subproof at line 2');
+  expect(current().blocks).toEqual(proof.blocks);
+  expect(current().steps).toEqual(proof.steps);
+  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[1]!.id);
+});
+
+test('subproof settings are modal, constrain parent/end choices and retain explicit changes on Escape', async () => {
+  const proof = nestedProof();
+  const { user, changed, current } = setup(proof);
+  expect(screen.queryByRole('dialog', { name: 'Subproof settings' })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Parent of Subproof 1 at line 1')).not.toBeInTheDocument();
+  await lineAction(user, 1, 'Subproof settings for line 1');
+  const dialog = screen.getByRole('dialog', { name: 'Subproof settings' });
+  expect(within(dialog).getByRole('heading', { name: 'Subproof settings' })).toHaveFocus();
+  expect(changed).not.toHaveBeenCalled();
+  expect(
+    within(screen.getByLabelText('Parent of Subproof 1 at line 1')).getAllByRole('option'),
+  ).toHaveLength(1);
+  const end = screen.getByLabelText('Final line of Subproof 1 at line 1');
+  expect(
+    within(end)
+      .getAllByRole('option')
+      .map((option) => option.getAttribute('value')),
+  ).toEqual(['', proof.steps[0]!.id]);
+  await user.selectOptions(end, proof.steps[0]!.id);
+  fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
+  expect(screen.queryByRole('dialog', { name: 'Subproof settings' })).not.toBeInTheDocument();
+  expect(current().blocks[0]!.endId).toBe(proof.steps[0]!.id);
+  expect(screen.getByRole('button', { name: 'Actions for line 1' })).toHaveFocus();
+});
+
+test('inserting before an assumption uses its parent scope and retains existing identities', async () => {
+  const proof = nestedProof();
+  const { user, changed, current } = setup(proof);
+  await lineAction(user, 2, 'Insert before line 2');
+  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[0]!.id);
+  expect(changed).not.toHaveBeenCalled();
+  await user.type(screen.getByLabelText('Formula for line 2'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps[1]!.blockId).toBe(proof.blocks[0]!.id);
+  expect(current().steps.filter((_, index) => index !== 1)).toEqual(proof.steps);
+  expect(current().blocks).toEqual(proof.blocks);
+});
+
+test('subproof deletion uses a modal, retains work on Keep and leaves surviving citations unresolved', async () => {
+  const proof = nestedProof();
+  const { user, current } = setup(proof);
+  await lineAction(user, 1, 'Delete subproof at line 1');
+  expect(screen.getByRole('dialog', { name: 'Confirm proof deletion' })).toHaveTextContent(
+    'Delete 2 proof line(s)',
+  );
+  await user.click(screen.getByRole('button', { name: 'Keep proof work' }));
+  expect(current()).toEqual(proof);
+  await lineAction(user, 1, 'Delete subproof at line 1');
+  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  expect(current().blocks).toEqual([]);
+  expect(current().steps).toEqual([proof.steps[2]]);
+  expect(screen.getByRole('region', { name: 'Entered Fitch proof' })).toHaveTextContent(
+    'Missing subproof',
+  );
+});
+
+test('a line deletion confirmation follows its stable identity after an authoritative reorder', async () => {
+  const proof = fixture();
+  const changed = vi.fn();
+  const props = {
+    statement: { premises: [], rules },
+    purpose: 'student' as const,
+    onChange: changed,
+  };
+  const view = render(<FitchProofEditor {...props} proof={proof} />);
+  const user = userEvent.setup();
+  await lineAction(user, 1, 'Delete line 1');
+  view.rerender(
+    <FitchProofEditor {...props} proof={{ ...proof, steps: [...proof.steps].reverse() }} />,
+  );
+  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  expect(changed.mock.calls[0]![0].steps).toEqual([proof.steps[1]]);
+});
+
+test('an orphan block remains inspectable and explicitly removable without a matching assumption line', async () => {
+  const proof = fixture();
+  const id = crypto.randomUUID();
+  proof.blocks = [{ id, parentId: null, assumptionId: crypto.randomUUID(), endId: null }];
+  const { user, changed, current } = setup(proof);
+  await user.click(screen.getByText('Unattached subproofs'));
+  await user.click(screen.getByRole('button', { name: 'Settings for Subproof 1 at line ?' }));
+  expect(screen.getByRole('dialog', { name: 'Subproof settings' })).toBeInTheDocument();
+  expect(changed).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Delete Subproof 1 at line ?' }));
+  expect(screen.getByRole('dialog', { name: 'Confirm proof deletion' })).toHaveTextContent(
+    'Delete 0 proof line(s)',
+  );
+  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  expect(current().blocks).toEqual([]);
+  expect(current().steps).toEqual(proof.steps);
 });

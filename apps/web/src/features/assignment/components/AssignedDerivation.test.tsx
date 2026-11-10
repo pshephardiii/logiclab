@@ -1,3 +1,4 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
@@ -81,10 +82,14 @@ function setup(initial?: FitchDerivationAnswer, options: Partial<Props> = {}) {
   }
   const view = render(<Harness options={options} />);
   // These cases inspect/edit retained work; enter its editor explicitly.
-  if (initial && !options.readOnly && !options.disabled)
+  if (initial && !options.readOnly && !options.disabled) {
+    fireEvent.click(
+      screen.getByRole('button', { name: `Actions for line ${initial.proof.steps.length}` }),
+    );
     fireEvent.click(
       screen.getByRole('button', { name: `Edit line ${initial.proof.steps.length}` }),
     );
+  }
   return {
     user: userEvent.setup(),
     onAnswer,
@@ -104,9 +109,7 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   await f.user.click(screen.getByRole('button', { name: 'Add line' }));
   const scope = screen.getByLabelText('New line scope') as HTMLSelectElement;
   const block = scope.value;
-  const endpoint = screen.getByLabelText('Final line of Subproof 1 at line 1') as HTMLSelectElement;
-  await f.user.selectOptions(endpoint, endpoint.options[1]!.value);
-  await f.user.selectOptions(scope, '');
+  await lineAction(f.user, 1, 'Close subproof at line 1');
   await f.user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   expect(
     within(screen.getByLabelText('Rule for line 2'))

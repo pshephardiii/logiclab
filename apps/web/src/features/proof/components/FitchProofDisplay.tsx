@@ -1,3 +1,4 @@
+import { FitchLineActions } from './FitchLineActions';
 import type { ReactNode } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
 import { proofNotation } from '../helpers/proof-notation';
@@ -13,6 +14,13 @@ export function FitchProofDisplay({
   disabled = false,
   entry,
   entryLabel = 'New proof line',
+  onMove,
+  onInsert,
+  onDelete,
+  onBlockSettings,
+  onDeleteBlock,
+  onCloseBlock,
+  onReopenBlock,
 }: {
   proof: FitchProof;
   rules: { id: string; label: string }[];
@@ -21,6 +29,13 @@ export function FitchProofDisplay({
   disabled?: boolean;
   entry?: ReactNode;
   entryLabel?: string;
+  onMove?: (index: number, delta: -1 | 1) => void;
+  onInsert?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onBlockSettings?: (id: string) => void;
+  onDeleteBlock?: (id: string) => void;
+  onCloseBlock?: (id: string, endId: string) => void;
+  onReopenBlock?: (id: string) => void;
 }) {
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
@@ -49,6 +64,11 @@ export function FitchProofDisplay({
         <tbody>
           {proof.steps.map((step, index) => {
             const scope = fitchDisplayScope(step.blockId, blocks);
+            const opening =
+              step.kind === 'assumption'
+                ? proof.blocks.find((block) => block.assumptionId === step.id)
+                : undefined;
+            const containing = step.blockId ? blocks.get(step.blockId) : undefined;
 
             return (
               <tr
@@ -109,15 +129,33 @@ export function FitchProofDisplay({
                   {scope.warning && <span className="fitch-scope-warning">{scope.warning}</span>}
                 </td>
                 <td>
-                  <button
-                    type="button"
-                    className="text-button"
+                  <FitchLineActions
+                    index={index}
+                    count={proof.steps.length}
                     disabled={disabled}
-                    aria-pressed={step.id === selectedId}
-                    onClick={() => onEdit(step.id)}
-                  >
-                    Edit line {index + 1}
-                  </button>
+                    onEdit={() => onEdit(step.id)}
+                    onMove={onMove ? (delta) => onMove(index, delta) : undefined}
+                    onInsert={onInsert ? () => onInsert(step.id) : undefined}
+                    onDelete={
+                      step.kind !== 'assumption' && onDelete ? () => onDelete(step.id) : undefined
+                    }
+                    onSettings={
+                      opening && onBlockSettings ? () => onBlockSettings(opening.id) : undefined
+                    }
+                    onDeleteSubproof={
+                      opening && onDeleteBlock ? () => onDeleteBlock(opening.id) : undefined
+                    }
+                    onCloseSubproof={
+                      containing && onCloseBlock && containing.endId === null
+                        ? () => onCloseBlock(containing.id, step.id)
+                        : undefined
+                    }
+                    onReopenSubproof={
+                      opening && opening.endId !== null && onReopenBlock
+                        ? () => onReopenBlock(opening.id)
+                        : undefined
+                    }
+                  />
                 </td>
               </tr>
             );
