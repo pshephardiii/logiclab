@@ -1,3 +1,4 @@
+import { proofNotation } from '../helpers/proof-notation';
 import type { DependencyProof } from '@logiclab/contracts';
 import './dependency-proof-display.css';
 import type { ReactNode } from 'react';
@@ -13,6 +14,7 @@ export function DependencyProofDisplay({
   onMove,
   onInsert,
   onDelete,
+  onDischarge,
   entry,
   entryLabel,
 }: {
@@ -24,6 +26,7 @@ export function DependencyProofDisplay({
   onMove: (index: number, delta: -1 | 1) => void;
   onInsert: (id: string) => void;
   onDelete: (id: string) => void;
+  onDischarge?: (id: string) => void;
   entry?: ReactNode;
   entryLabel: string;
 }) {
@@ -71,7 +74,7 @@ export function DependencyProofDisplay({
                 {index + 1}
               </th>
               <td className="proof-line-formula">
-                <code>{step.formula || '(blank)'}</code>
+                <code>{proofNotation(step.formula) || '(blank)'}</code>
               </td>
               <td className="proof-line-justification">
                 {step.kind === 'inference' ? (
@@ -106,6 +109,11 @@ export function DependencyProofDisplay({
                   onMove={(delta) => onMove(index, delta)}
                   onInsert={() => onInsert(step.id)}
                   onDelete={() => onDelete(step.id)}
+                  onDischarge={
+                    step.kind === 'assumption' && onDischarge
+                      ? () => onDischarge(step.id)
+                      : undefined
+                  }
                 />
               </td>
             </tr>

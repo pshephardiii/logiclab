@@ -1,8 +1,18 @@
 import { useEffect, useId, useRef } from 'react';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 
+const coreGroups = [
+  { label: 'Reiteration', ids: ['reiteration'] },
+  { label: 'Conjunction', ids: ['and_introduction', 'and_elimination'] },
+  { label: 'Disjunction', ids: ['or_introduction', 'or_elimination'] },
+  { label: 'Implication', ids: ['implication_introduction', 'implication_elimination'] },
+  {
+    label: 'Negation and contradiction',
+    ids: ['negation_introduction', 'contradiction_introduction', 'contradiction_elimination'],
+  },
+  { label: 'Biconditional', ids: ['biconditional_introduction', 'biconditional_elimination'] },
+];
 const categories = [
-  { id: 'core', label: 'Core rules' },
   { id: 'derived', label: 'Derived rules' },
   { id: 'classical', label: 'Classical rules' },
 ] as const;
@@ -20,6 +30,24 @@ export function PracticeRuleDialog({
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
+  function ruleChoice(rule: (typeof PROPOSITIONAL_RULE_CATALOG)[number]) {
+    return (
+      <label key={rule.id}>
+        <input
+          type="checkbox"
+          checked={selected.includes(rule.id)}
+          onChange={(event) =>
+            onChange(
+              event.target.checked
+                ? [...selected, rule.id]
+                : selected.filter((id) => id !== rule.id),
+            )
+          }
+        />
+        <span>{rule.label}</span>
+      </label>
+    );
+  }
 
   useEffect(() => {
     const element = dialog.current!;
@@ -37,6 +65,11 @@ export function PracticeRuleDialog({
       ref={dialog}
       className="practice-rule-dialog"
       aria-labelledby={titleId}
+      onClickCapture={(event) => {
+        if (event.detail <= 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -71,27 +104,25 @@ export function PracticeRuleDialog({
             Clear selection
           </button>
         </div>
-        <div className="practice-rule-categories">
+        <fieldset className="practice-rule-core">
+          <legend>Core rules</legend>
+          <div className="practice-rule-categories">
+            {coreGroups.map((group) => (
+              <fieldset className="practice-rule-category" key={group.label}>
+                <legend>{group.label}</legend>
+                {PROPOSITIONAL_RULE_CATALOG.filter((rule) => group.ids.includes(rule.id)).map(
+                  ruleChoice,
+                )}
+              </fieldset>
+            ))}
+          </div>
+        </fieldset>
+        <div className="practice-rule-categories practice-rule-extra">
           {categories.map((category) => (
             <fieldset className="practice-rule-category" key={category.id}>
               <legend>{category.label}</legend>
               {PROPOSITIONAL_RULE_CATALOG.filter((rule) => rule.category === category.id).map(
-                (rule) => (
-                  <label key={rule.id}>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(rule.id)}
-                      onChange={(event) =>
-                        onChange(
-                          event.target.checked
-                            ? [...selected, rule.id]
-                            : selected.filter((id) => id !== rule.id),
-                        )
-                      }
-                    />
-                    <span>{rule.label}</span>
-                  </label>
-                ),
+                ruleChoice,
               )}
             </fieldset>
           ))}

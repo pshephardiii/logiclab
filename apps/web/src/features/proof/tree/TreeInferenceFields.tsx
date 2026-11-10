@@ -1,3 +1,4 @@
+import { ProofFormulaInput } from '../components/ProofFormulaInput';
 import type { TreeProof, TreeProofNode, TreeProofBranch } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
@@ -92,14 +93,14 @@ export function TreeInferenceFields({
               />
               <label>
                 Node {index + 1} branch {slot + 1} assumption formula
-                <input
+                <ProofFormulaInput
                   maxLength={PROOF_LIMITS.maxFormulaLength}
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck={false}
                   value={branch.assumptionFormula}
-                  onChange={(event) => change({ assumptionFormula: event.target.value })}
+                  onValueChange={(assumptionFormula) => change({ assumptionFormula })}
                 />
               </label>
               <p className="help">

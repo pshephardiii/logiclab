@@ -129,7 +129,7 @@ test('saved incomplete proofs retain their IDs and missing references without fi
   const f = setup({ type: 'derivation', proof });
   expect(f.onAnswer).not.toHaveBeenCalled();
   expect(f.onCheck).not.toHaveBeenCalled();
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P ∧');
   expect(screen.getByLabelText('Line 2 subproof 1')).toHaveValue(missing);
   expect(
     within(screen.getByLabelText('Line 2 subproof 1')).getByRole('option', {
@@ -225,7 +225,7 @@ test('clearing a proof requires confirmation, preserves work on Keep and emits a
   );
   expect(f.onAnswer).not.toHaveBeenCalled();
   await f.user.click(screen.getByRole('button', { name: 'Keep proof work' }));
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
   await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
   await f.user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(f.current()).toEqual({

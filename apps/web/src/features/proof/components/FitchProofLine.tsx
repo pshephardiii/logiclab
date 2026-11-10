@@ -1,3 +1,4 @@
+import { ProofFormulaInput } from './ProofFormulaInput';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof, FitchProofStep } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
@@ -41,7 +42,7 @@ export function FitchProofLine({
       </h4>
       <label>
         Formula for line {index + 1}
-        <input
+        <ProofFormulaInput
           maxLength={PROOF_LIMITS.maxFormulaLength}
           aria-describedby={formulaHint}
           autoComplete="off"
@@ -49,7 +50,7 @@ export function FitchProofLine({
           autoCapitalize="off"
           spellCheck={false}
           value={step.formula}
-          onChange={(event) => onChange({ ...step, formula: event.target.value })}
+          onValueChange={(formula) => onChange({ ...step, formula })}
         />
       </label>
       <ProofFormulaHint id={formulaHint} />

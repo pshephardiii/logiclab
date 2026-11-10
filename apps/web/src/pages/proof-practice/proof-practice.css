@@ -194,3 +194,22 @@
     padding-inline: 1rem;
   }
 }
+
+.practice-rule-dialog .practice-rule-core {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.practice-rule-core > legend {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+.practice-rule-extra {
+  margin-top: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 650px) {
+  .practice-rule-extra {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

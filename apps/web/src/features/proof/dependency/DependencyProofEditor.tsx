@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
+import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { DependencyProofLine } from './DependencyProofLine';
 import { DependencyProofSummary } from './DependencyProofSummary';
 import { DependencyProofDisplay } from './DependencyProofDisplay';
@@ -100,6 +101,31 @@ export function DependencyProofEditor({
     }
   }
 
+  function dischargeAssumption(id: string) {
+    if (!proof || !idle || pending) return;
+    const rule =
+      statement.rules.find((rule) => rule.id === 'implication_introduction') ??
+      statement.rules.find((rule) => getPropositionalRule(rule.id)?.subproofReferences);
+    if (!rule) return;
+
+    const index = proof.steps.length;
+    const draft = insertDependencyStep(proof, index, 'inference');
+    const closing = draft.steps[index]!;
+    if (closing.kind !== 'inference') return;
+
+    // Prefill only the explicit assumption reference. The student supplies the conclusion,
+    // ending line and remaining dependencies; no validity or support is inferred here.
+    draft.steps[index] = {
+      ...closing,
+      ruleId: rule.id,
+      discharges: [{ assumptionId: id, conclusionId: null }],
+    };
+    setSelectedId(null);
+    setBefore(null);
+    setEntry({ base: proof, draft, index });
+    focusRequested.current = true;
+  }
+
   function discardEntry() {
     setEntry(null);
     setBefore(null);
@@ -196,6 +222,12 @@ export function DependencyProofEditor({
                   focusRequested.current = true;
                 }}
                 onDelete={(id) => setDeletion({ kind: 'line', id })}
+                onDischarge={
+                  idle &&
+                  statement.rules.some((rule) => getPropositionalRule(rule.id)?.subproofReferences)
+                    ? dischargeAssumption
+                    : undefined
+                }
                 entryLabel={
                   pending
                     ? 'Unconfirmed proof entry'
@@ -227,42 +259,6 @@ export function DependencyProofEditor({
               {!idle && !selected && (
                 <p role="status">Proof line limit reached. Edit or remove an existing line.</p>
               )}
-              <details className="dependency-input-guide">
-                <summary>Proof row key</summary>
-                <div
-                  className="proof-row-key-scroll"
-                  role="region"
-                  aria-label="Proof row key"
-                  tabIndex={0}
-                >
-                  <div className="proof-row-key">
-                    <div>
-                      <span>Dependencies</span>
-                      <code>{'{1, 2}'}</code>
-                      <span>∅ = none</span>
-                    </div>
-                    <div>
-                      <span>Line</span>
-                      <code>3</code>
-                    </div>
-                    <div>
-                      <span>Formula</span>
-                      <code>Q</code>
-                    </div>
-                    <div>
-                      <span>Rule, citations</span>
-                      <code>→E 1, 2</code>
-                    </div>
-                    <div>
-                      <span>Actions</span>
-                      <code>⋯</code>
-                    </div>
-                  </div>
-                </div>
-                <p className="help">
-                  Dependencies identify the starting premises and assumptions this line relies on.
-                </p>
-              </details>
               {fieldsStep?.kind === 'inference' && (
                 <ProofRuleHelp
                   format="dependency"

@@ -154,12 +154,6 @@
 .dependency-entry-actions .text-button {
   display: block;
 }
-.dependency-input-guide {
-  margin-block: 0.75rem;
-}
-.dependency-input-guide summary {
-  cursor: pointer;
-}
-.dependency-input-guide table {
-  margin-top: 0.75rem;
+.dependency-picker-title {
+  font-weight: 700;
 }

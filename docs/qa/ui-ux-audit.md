@@ -252,6 +252,28 @@ Validation: **506 web tests** and the production build passed. Updated practice 
 
 Formatting, whitespace and local Markdown targets passed. Backend/database suites and live services were not exercised. This is a focused Chrome visual/interaction pass, not a complete assistive-technology, contrast or browser matrix. Fitch/tree line-entry redesign and further user visual refinement remain open.
 
+## Implementation: focused rule selection and proof notation
+
+**UI-029-011**, November 10, 2026: refine the practice/editor flow after the next user review.
+
+- Defer mounting the permitted-rules modal until the opening gesture finishes and suppress repeated clicks from that gesture. Opening does not change a rule selection; a fresh checkbox action does. Group Core rules by operator, retaining separate Derived/Classical groups and immediate selections on Done/Escape.
+- Rename the visible Goal to **Conclusion** and display logical symbols. Separate Keyboard guide and Rule reference into bordered panels, side by side on wide screens and stacked on narrow screens. One reference selector shows one permitted rule's pattern/example, using configured labels.
+- Remove Proof row key. Label the dependencies popup **Dependencies**; retain the semantic table headings for assistive technology.
+- Translate proof formula aliases while typing/pasting (`->`, `<->`, `!`, `~`, `&`, `v`, `|`, `_|_`) in setup, reference/student editors and instructor derivation statements. Wait for the last underscore of `_|_`, retain invalid/incomplete text, preserve the caret and defer conversion during IME composition. Existing ASCII values display symbols without silently editing stored work. This is notation conversion, not proof checking.
+- Dependency introduction rules with no earlier assumption now offer **Start assumption** rather than empty Assume/End selectors. This explicitly changes the unconfirmed row to an assumption while retaining its visible formula. Add that line, construct the supporting work, then use **⋯ → Discharge assumption** on its line. The closing entry selects that assumption and defaults to implication introduction when permitted; the rule remains selectable. The student supplies the ending line, concluding formula and dependencies. Ending choices begin at the selected assumption; unresolved references remain explicit. Dependency proofs continue to use explicit dependency/discharge references rather than acquiring Fitch scope semantics.
+
+![Rules grouped by operator, derived and classical categories](images/ui-audit-029/proof-rules-by-operator.png)
+
+![Separate keyboard and selected-rule reference panels](images/ui-audit-029/proof-reference-selector.png)
+
+![Compact proof with Conclusion and explicit assumption discharge](images/ui-audit-029/proof-notation-workspace.png)
+
+Validation: **513 web tests** and the production build passed. New coverage includes alias typing/partial tokens, existing-value preservation, caret position, IME composition, one-reference selection/permission changes, modal opening/rapid-click isolation/operator groups, and explicit assumption/discharge entry. Existing authoring, assigned saving, failed saves, pending-entry/navigation protection and release tests pass with symbol-valued edits.
+
+Focused Chrome verified single/double modal opening without selection changes, fresh checkbox changes, Escape/focus return, the reference selector and both guides, an accepted assumption→conditional proof through the new actions, explicit checking/pending gates, live contradiction/caret behavior, all three formats' Conclusion/input notation, and 390px/320px layout/popover containment. Screenshots were inspected; no page errors were recorded. The browser harness used the real local editor/checker, temporary servers and an isolated test schema, all cleaned up. Evidence: `.codex-local/ui-audit/029/proof-polish/`.
+
+Formatting, whitespace and local Markdown targets checked. No backend code changed or database regression suite was repeated. This is focused Chrome evidence, not a complete browser/accessibility audit; the surrounding Fitch/tree entry redesign remains open.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

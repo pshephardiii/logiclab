@@ -4,6 +4,49 @@ import { getRuleReference } from './rule-reference';
 import { RuleExample, type ProofHelpFormat } from './RuleExample';
 import './proof-reference.css';
 
+export function ProofRuleReference({
+  ruleId,
+  rules,
+  format,
+}: {
+  ruleId: string | null;
+  rules: { id: string; label: string }[];
+  format: ProofHelpFormat;
+}) {
+  const enabled = rules.find((rule) => rule.id === ruleId);
+  const rule = enabled && getPropositionalRule(enabled.id);
+  if (!rule) return null;
+
+  const guide = getRuleReference(rule.id);
+  return (
+    <div className="proof-rule-content">
+      <div className="rule-pattern" role="group" aria-label="Abstract rule pattern">
+        <div className="rule-pattern-inputs">
+          {guide.premises.map((formula, index) => (
+            <code key={index}>{formula}</code>
+          ))}
+          {guide.branches?.map((branch, index) => (
+            <div className="rule-pattern-branch" key={index}>
+              <span>
+                Assume <code>{branch.assumption}</code>
+              </span>
+              <span>⋮</span>
+              <span>
+                Establish <code>{branch.conclusion}</code>
+              </span>
+            </div>
+          ))}
+          {!guide.premises.length && !guide.branches?.length && <span>No inputs</span>}
+        </div>
+        <div className="rule-pattern-conclusion">
+          <code>{guide.conclusion}</code>
+        </div>
+      </div>
+      <RuleExample lines={guide.example} format={format} rules={rules} />
+    </div>
+  );
+}
+
 export function ProofRuleHelp({
   ruleId,
   rules,
@@ -14,41 +57,12 @@ export function ProofRuleHelp({
   format: ProofHelpFormat;
 }) {
   const [open, setOpen] = useState(false);
-  const enabled = rules.find((rule) => rule.id === ruleId);
-  const rule = enabled && getPropositionalRule(enabled.id);
-  if (!rule) return null;
-
-  const guide = getRuleReference(rule.id);
+  const rule = rules.find((rule) => rule.id === ruleId);
+  if (!rule || !getPropositionalRule(rule.id)) return null;
   return (
     <details className="proof-rule-help" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>Rule help: {enabled.label}</summary>
-      {open && (
-        <div className="proof-rule-content">
-          <div className="rule-pattern" role="group" aria-label="Abstract rule pattern">
-            <div className="rule-pattern-inputs">
-              {guide.premises.map((formula, index) => (
-                <code key={index}>{formula}</code>
-              ))}
-              {guide.branches?.map((branch, index) => (
-                <div className="rule-pattern-branch" key={index}>
-                  <span>
-                    Assume <code>{branch.assumption}</code>
-                  </span>
-                  <span>⋮</span>
-                  <span>
-                    Establish <code>{branch.conclusion}</code>
-                  </span>
-                </div>
-              ))}
-              {!guide.premises.length && !guide.branches?.length && <span>No inputs</span>}
-            </div>
-            <div className="rule-pattern-conclusion">
-              <code>{guide.conclusion}</code>
-            </div>
-          </div>
-          <RuleExample lines={guide.example} format={format} rules={rules} />
-        </div>
-      )}
+      <summary>Rule help: {rule.label}</summary>
+      {open && <ProofRuleReference ruleId={ruleId} rules={rules} format={format} />}
     </details>
   );
 }

@@ -1,3 +1,4 @@
+import { proofNotation } from '../helpers/proof-notation';
 import { PROOF_LIMITS, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofDropdown } from '../components/ProofDropdown';
 
@@ -29,6 +30,7 @@ export function DependencySources({
     >
       {() => (
         <>
+          <p className="dependency-picker-title">Dependencies</p>
           {!sources.length && !missing.length && <p>No premise or assumption lines.</p>}
           {sources.map((source) => (
             <label className="dependency-source" key={source.id}>
@@ -48,7 +50,7 @@ export function DependencySources({
                   })
                 }
               />
-              {positions.get(source.id)}. {source.formula || '(blank)'}
+              {positions.get(source.id)}. {proofNotation(source.formula) || '(blank)'}
             </label>
           ))}
           {missing.map((id, position) => (

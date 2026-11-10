@@ -320,7 +320,7 @@ test('derivation editing keeps private history previews separate from the draft'
   const user = userEvent.setup();
   render(<ProblemLibrary />);
   await user.click(await screen.findByRole('button', { name: derivationDraft.title }));
-  expect(await screen.findByRole('textbox', { name: 'Conclusion' })).toHaveValue('P -> P');
+  expect(await screen.findByRole('textbox', { name: 'Conclusion' })).toHaveValue('P → P');
   expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue(derivationDraft.title);
   expect(screen.queryByRole('textbox', { name: 'Question' })).not.toBeInTheDocument();
   expect(

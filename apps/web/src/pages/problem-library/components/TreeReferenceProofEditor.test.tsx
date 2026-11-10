@@ -33,7 +33,7 @@ function setup(
 test('constructs and explicitly checks/saves an identity tree while drawing its entered branches', async () => {
   const { user, onSave, onDirty } = setup();
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
   await user.selectOptions(screen.getByLabelText('Rule for node 1'), 'implication_introduction');
   await user.click(screen.getByRole('button', { name: 'Add assumption node' }));
   await user.type(screen.getByLabelText('Formula for node 2'), 'P');
@@ -144,5 +144,5 @@ test('tree format is selectable for a new reference and cancelled switches retai
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
 });

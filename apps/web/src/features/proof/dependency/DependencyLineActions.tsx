@@ -8,6 +8,7 @@ export function DependencyLineActions({
   onMove,
   onInsert,
   onDelete,
+  onDischarge,
 }: {
   index: number;
   count: number;
@@ -16,6 +17,7 @@ export function DependencyLineActions({
   onMove: (delta: -1 | 1) => void;
   onInsert: () => void;
   onDelete: () => void;
+  onDischarge?: () => void;
 }) {
   return (
     <ProofDropdown
@@ -34,6 +36,17 @@ export function DependencyLineActions({
           >
             Edit line {index + 1}
           </button>
+          {onDischarge && (
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                onDischarge();
+              }}
+            >
+              Discharge assumption {index + 1}
+            </button>
+          )}
           <button
             type="button"
             disabled={index === 0}

@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -32,6 +33,25 @@ export function ProofPracticeSetup({
   );
   const [error, setError] = useState<string | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const openingFrame = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (openingFrame.current !== null) cancelAnimationFrame(openingFrame.current);
+    },
+    [],
+  );
+
+  function openRules(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.focus();
+    if (openingFrame.current !== null) return;
+    // Mount after the opening gesture has finished, so it cannot hit a newly overlaid checkbox.
+    openingFrame.current = requestAnimationFrame(() => {
+      openingFrame.current = null;
+      setRulesOpen(true);
+    });
+  }
   useUnsavedWork(
     premises.length > 0 ||
       conclusion.length > 0 ||
@@ -91,15 +111,15 @@ export function ProofPracticeSetup({
           <div className="proof-setup-premise" key={premise.id}>
             <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
             <div>
-              <input
+              <ProofFormulaInput
                 {...formulaInput}
                 id={`practice-premise-${premise.id}`}
                 required
                 value={premise.formula}
-                onChange={(event) =>
+                onValueChange={(formula) =>
                   setPremises(
                     premises.map((value) =>
-                      value.id === premise.id ? { ...value, formula: event.target.value } : value,
+                      value.id === premise.id ? { ...value, formula } : value,
                     ),
                   )
                 }
@@ -125,12 +145,12 @@ export function ProofPracticeSetup({
       </section>
       <div className="proof-setup-conclusion">
         <label htmlFor="practice-proof-conclusion">Conclusion</label>
-        <input
+        <ProofFormulaInput
           {...formulaInput}
           id="practice-proof-conclusion"
           required
           value={conclusion}
-          onChange={(event) => setConclusion(event.target.value)}
+          onValueChange={setConclusion}
         />
       </div>
       {error && (
@@ -139,7 +159,7 @@ export function ProofPracticeSetup({
         </p>
       )}
       <div className="proof-setup-actions">
-        <button type="button" className="secondary" onClick={() => setRulesOpen(true)}>
+        <button type="button" className="secondary" onClick={openRules}>
           Permitted rules ({ruleIds.length} selected)
         </button>
         <button type="submit">Begin proof practice</button>

@@ -1,3 +1,4 @@
+import { ProofFormulaInput } from '../components/ProofFormulaInput';
 import { useId, useRef } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
@@ -85,18 +86,18 @@ export function DependencyProofLine({
         {index + 1}
       </th>
       <td className="proof-line-formula">
-        <input
+        <ProofFormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
           aria-describedby={formulaHint}
-          placeholder="Formula"
+          placeholder={step.kind === 'assumption' ? 'Assumption formula' : 'Formula'}
           maxLength={PROOF_LIMITS.maxFormulaLength}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
           value={step.formula}
-          onChange={(event) => onChange({ ...step, formula: event.target.value })}
+          onValueChange={(formula) => onChange({ ...step, formula })}
         />
         <span className="proof-control-label" id={formulaHint}>
           Contradiction: type _|_ for ⊥.
@@ -144,6 +145,7 @@ export function DependencyProofLine({
               index={index}
               steps={proof.steps}
               onChange={onChange}
+              onStartAssumption={allowKindChange ? () => chooseRule('__assumption__') : undefined}
             />
           )}
         </div>

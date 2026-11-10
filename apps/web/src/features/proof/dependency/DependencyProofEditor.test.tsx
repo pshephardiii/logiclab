@@ -66,7 +66,7 @@ test('starts with a clean blank bottom row and opens existing work through line 
   await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveFocus();
   await user.type(screen.getByLabelText('Formula for line 2'), ' &');
-  expect(onChange.mock.lastCall![0].steps[1]).toMatchObject({ id: inference, formula: 'P &' });
+  expect(onChange.mock.lastCall![0].steps[1]).toMatchObject({ id: inference, formula: 'P ∧' });
   await user.click(screen.getByRole('button', { name: 'Done editing' }));
   expect(screen.getByLabelText('Formula for line 3')).toHaveValue('');
 });
@@ -138,4 +138,61 @@ test('a replacement proof cannot be overwritten by a pending row', async () => {
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+test('conditional introduction explicitly starts an assumption and its line menu begins discharge', async () => {
+  const user = userEvent.setup();
+  const changed = vi.fn();
+  function Harness() {
+    const [proof, setProof] = useState<DependencyProof | null>({
+      proofVersion: 1,
+      format: 'dependency',
+      steps: [],
+    });
+    return (
+      <DependencyProofEditor
+        statement={{
+          premises: [],
+          conclusion: 'P -> P',
+          rules: [{ id: 'implication_introduction', label: 'Conditional proof' }],
+        }}
+        proof={proof}
+        onChange={(next) => {
+          setProof(next);
+          changed(next);
+        }}
+      />
+    );
+  }
+  render(<Harness />);
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('ConclusionP → P');
+  expect(screen.queryByText('Proof row key')).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Rule for line 1'), 'implication_introduction');
+  expect(screen.queryByLabelText('Line 1 discharge 1 conclusion')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Start assumption' }));
+  expect(screen.getByLabelText('Rule for line 1')).toHaveValue('__assumption__');
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  const assumption = changed.mock.lastCall![0].steps[0];
+  expect(assumption).toMatchObject({
+    kind: 'assumption',
+    formula: 'P',
+    dependencies: [assumption.id],
+  });
+  await lineAction(user, 1, 'Discharge assumption 1');
+  expect(screen.getByLabelText('Rule for line 2')).toHaveValue('implication_introduction');
+  expect(screen.getByLabelText('Line 2 discharge 1 assumption')).toHaveValue(assumption.id);
+  expect(screen.getByLabelText('Line 2 discharge 1 conclusion')).toHaveValue('');
+  await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
+  await user.selectOptions(screen.getByLabelText('Line 2 discharge 1 conclusion'), assumption.id);
+  const sources = await openDependencies(user, 2);
+  expect(within(sources).getByText('Dependencies')).toBeInTheDocument();
+  expect(within(sources).getByRole('checkbox', { name: '1. P' })).not.toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(changed.mock.lastCall![0].steps[1]).toMatchObject({
+    formula: 'P → P',
+    ruleId: 'implication_introduction',
+    dependencies: [],
+    discharges: [{ assumptionId: assumption.id, conclusionId: assumption.id }],
+  });
 });

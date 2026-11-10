@@ -1,3 +1,4 @@
+import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { DerivationRuleFields } from './DerivationRuleFields';
@@ -108,14 +109,14 @@ export function DerivationProblemFields({
         {definition.premises.map((premise, index) => (
           <div className="problem-option" key={premise.id}>
             <label htmlFor={`premise-${premise.id}`}>Premise {index + 1}</label>
-            <input
+            <ProofFormulaInput
               id={`premise-${premise.id}`}
               {...formulaInput}
               value={premise.formula}
-              onChange={(event) =>
+              onValueChange={(formula) =>
                 change({
                   premises: definition.premises.map((value) =>
-                    value.id === premise.id ? { ...value, formula: event.target.value } : value,
+                    value.id === premise.id ? { ...value, formula } : value,
                   ),
                 })
               }
@@ -162,11 +163,11 @@ export function DerivationProblemFields({
         </button>
       </section>
       <label htmlFor="derivation-conclusion">Conclusion</label>
-      <input
+      <ProofFormulaInput
         id="derivation-conclusion"
         {...formulaInput}
         value={definition.conclusion}
-        onChange={(event) => change({ conclusion: event.target.value })}
+        onValueChange={(conclusion) => change({ conclusion })}
       />
       <DerivationRuleFields
         format={definition.format}

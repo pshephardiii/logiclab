@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { ProofKeyboardGuide } from './ProofKeyboardGuide';
-import { ProofRuleHelp } from './ProofRuleHelp';
+import { ProofRuleReference } from './ProofRuleHelp';
 import type { ProofHelpFormat } from './RuleExample';
 
 /** Only configured labels and the format enter this reference boundary; no proof or answer key. */
@@ -12,6 +12,9 @@ export function ProofHelp({
   rules: { id: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const [chosen, setChosen] = useState('');
+  const choiceId = useId();
+  const selected = rules.some((rule) => rule.id === chosen) ? chosen : (rules[0]?.id ?? '');
   return (
     <div className="proof-help">
       <ProofKeyboardGuide />
@@ -20,9 +23,23 @@ export function ProofHelp({
         {open && (
           <>
             {!rules.length && <p>No inference rules are enabled.</p>}
-            {rules.map((rule) => (
-              <ProofRuleHelp key={rule.id} format={format} rules={rules} ruleId={rule.id} />
-            ))}
+            {rules.length > 0 && (
+              <>
+                <label htmlFor={choiceId}>Reference rule</label>
+                <select
+                  id={choiceId}
+                  value={selected}
+                  onChange={(event) => setChosen(event.target.value)}
+                >
+                  {rules.map((rule) => (
+                    <option key={rule.id} value={rule.id}>
+                      {rule.label}
+                    </option>
+                  ))}
+                </select>
+                <ProofRuleReference ruleId={selected} rules={rules} format={format} />
+              </>
+            )}
           </>
         )}
       </details>

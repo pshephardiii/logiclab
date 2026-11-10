@@ -83,7 +83,7 @@ test('authors and checks a dependency conditional proof, saves explicitly and re
   });
   expect(onDirty).toHaveBeenLastCalledWith(true);
   await lineAction(user, 2, 'Edit line 2');
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
   await user.click(screen.getByRole('button', { name: 'Preview draft' }));
   expect(onPreview).toHaveBeenCalledWith(saved);
   await user.click(within(await openDependencies(user, 2)).getByRole('checkbox'));
@@ -102,12 +102,12 @@ test('format changes require explicit reference discard and preserve the stateme
   );
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
   await lineAction(user, 2, 'Edit line 2');
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('fitch');
   expect(screen.queryByLabelText('Formula for line 1')).not.toBeInTheDocument();
-  expect(screen.getByLabelText('Conclusion')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('P → P');
   expect(screen.getByLabelText('Reference explanation (optional)')).toHaveValue(
     'Private instructor explanation',
   );

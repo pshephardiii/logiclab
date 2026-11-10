@@ -67,19 +67,19 @@ test('tree edits retain work across failed saves, problem navigation and Stay wi
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Start proof' }));
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
   await user.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
 });
 
 test('explicit saves preserve tree identities and establish the confirmed reload baseline', async () => {
   const user = await open();
   await user.type(screen.getByLabelText('Formula for node 1'), ' &');
   const edited = structuredClone(answer);
-  edited.proof.nodes[0]!.formula = 'P &';
+  edited.proof.nodes[0]!.formula = 'P ∧';
   const next = { ...saved, revision: saved.revision + 1, answers: { [itemA]: edited } };
   vi.mocked(api.saveAssignedAnswers).mockResolvedValue(next);
   await user.click(screen.getByRole('button', { name: 'Save problem' }));
@@ -97,7 +97,7 @@ test('explicit saves preserve tree identities and establish the confirmed reload
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
-  await waitFor(() => expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P &'));
+  await waitFor(() => expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧'));
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
 

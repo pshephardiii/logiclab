@@ -18,7 +18,7 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
     );
     await user.click(screen.getByText('Rule reference (1 enabled)'));
     expect(screen.queryByText('Rule help: Modus tollens')).not.toBeInTheDocument();
-    await user.click(screen.getByText('Rule help: Our negation rule'));
+    expect(screen.getByLabelText('Reference rule')).toHaveValue('negation_introduction');
     await screen.findByRole('group', { name: 'Abstract rule pattern' });
     expect(screen.getByRole('group', { name: 'Abstract rule pattern' })).toHaveTextContent('⊥');
     expect(screen.getByRole('region', { name: `Worked ${format} example` })).toBeInTheDocument();
@@ -46,4 +46,27 @@ test('keyboard guide contains notation table without explanatory paragraphs', as
   expect(within(table).getByRole('row', { name: 'Contradiction _|_ ⊥' })).toBeInTheDocument();
   expect(table.closest('details')!.querySelectorAll('p')).toHaveLength(0);
   expect(within(table).getByRole('row', { name: 'Negation ! or ~ ¬' })).toBeInTheDocument();
+});
+
+test('one selector replaces the reference without accumulating per-rule disclosures', async () => {
+  const user = userEvent.setup();
+  const view = render(
+    <ProofHelp
+      format="dependency"
+      rules={[
+        { id: 'reiteration', label: 'Copy' },
+        { id: 'implication_introduction', label: 'Conditional proof' },
+      ]}
+    />,
+  );
+  await user.click(screen.getByText('Keyboard guide'));
+  await user.click(screen.getByText('Rule reference (2 enabled)'));
+  expect(screen.getAllByRole('group', { name: 'Abstract rule pattern' })).toHaveLength(1);
+  await user.selectOptions(screen.getByLabelText('Reference rule'), 'implication_introduction');
+  expect(screen.getByRole('group', { name: 'Abstract rule pattern' })).toHaveTextContent('A → B');
+  expect(screen.getAllByRole('region', { name: 'Worked dependency example' })).toHaveLength(1);
+  expect(screen.queryByText('Rule help: Copy')).not.toBeInTheDocument();
+  view.rerender(<ProofHelp format="dependency" rules={[{ id: 'reiteration', label: 'Copy' }]} />);
+  expect(screen.getByLabelText('Reference rule')).toHaveValue('reiteration');
+  expect(screen.queryByRole('option', { name: 'Conditional proof' })).not.toBeInTheDocument();
 });

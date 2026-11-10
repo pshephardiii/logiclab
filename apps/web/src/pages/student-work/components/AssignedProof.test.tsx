@@ -49,7 +49,7 @@ test('pending dependency entry protects clean saved work, blocks checking/saving
   expect(unloading.defaultPrevented).toBe(true);
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('Q &');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('Q ∧');
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
@@ -96,19 +96,19 @@ test('proof edits use existing unsaved-work protection and retain drafts after f
   vi.mocked(api.saveAssignedAnswers).mockRejectedValueOnce(new Error('Save failed.'));
   await user.click(screen.getByRole('button', { name: 'Save problem' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Save failed');
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
   await user.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   expect(api.readAssignedWork).toHaveBeenCalledTimes(1);
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Start proof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), ' Q');
   expect(screen.getByText('Unsaved changes in 2 problem(s).')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
@@ -120,7 +120,7 @@ test('successful explicit saves keep proof identities, clear unload protection a
   const { user } = await open();
   await user.type(screen.getByLabelText('Formula for line 1'), ' &');
   const edited = structuredClone(proofAnswer);
-  edited.proof.steps[0]!.formula = 'P &';
+  edited.proof.steps[0]!.formula = 'P ∧';
   const saved = { ...proofSaved, revision: 2, answers: { [itemA]: edited } };
   vi.mocked(api.saveAssignedAnswers).mockResolvedValue(saved);
   await user.click(screen.getByRole('button', { name: 'Save problem' }));
@@ -138,7 +138,7 @@ test('successful explicit saves keep proof identities, clear unload protection a
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
-  await waitFor(() => expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P &'));
+  await waitFor(() => expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧'));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
@@ -153,7 +153,7 @@ test('manual proof checking and separately fetched solutions never save or repla
   expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
   await screen.findByText('PRIVATE_REFERENCE_EXPLANATION');
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P ∧');
   expect(screen.getByText('Unsaved changes in 1 problem(s).')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
   expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();
