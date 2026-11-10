@@ -4,6 +4,8 @@ import {
   type LibraryProblemDefinition,
 } from '@logiclab/contracts/problem-library';
 
+export type DependencyAuthoringStep = 'details' | 'reference';
+
 export type AuthoringDerivationDefinition = Extract<
   LibraryProblemDefinition,
   { type: 'derivation' }

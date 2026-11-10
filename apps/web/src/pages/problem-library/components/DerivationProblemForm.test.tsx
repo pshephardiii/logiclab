@@ -192,7 +192,7 @@ test('saved dependency drafts open in their own editor without mutation', () => 
   const before = structuredClone(saved);
   const { onSave, onPreview } = setup(saved);
   expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
-  expect(screen.getByRole('button', { name: 'Start reference proof' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue to reference proof' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Open subproof' })).not.toBeInTheDocument();
   expect(onSave).not.toHaveBeenCalled();
   expect(onPreview).not.toHaveBeenCalled();

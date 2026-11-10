@@ -49,6 +49,7 @@ function setup(
   };
   const props = {
     problem,
+    initialDependencyStep: value.referenceProof ? ('reference' as const) : ('details' as const),
     busy: false,
     onSave: vi
       .fn<(input: CreateLibraryProblemRequest) => Promise<boolean>>()
@@ -61,7 +62,7 @@ function setup(
 
 test('authors and checks a dependency conditional proof, saves explicitly and retains it after failure', async () => {
   const { user, onSave, onDirty, onPreview } = setup();
-  await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
   await user.selectOptions(screen.getByLabelText('Rule for line 1'), '__assumption__');
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
   await user.keyboard('{Enter}');
@@ -87,8 +88,11 @@ test('authors and checks a dependency conditional proof, saves explicitly and re
   expect(onDirty).toHaveBeenLastCalledWith(true);
   await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.click(screen.getByRole('button', { name: 'Preview draft' }));
   expect(onPreview).toHaveBeenCalledWith(saved);
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
+  await lineAction(user, 2, 'Edit line 2');
   await user.click(within(await openDependencies(user, 2)).getByRole('checkbox'));
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
@@ -98,14 +102,17 @@ test('authors and checks a dependency conditional proof, saves explicitly and re
 
 test('format changes require explicit reference discard and preserve the statement and labels', async () => {
   const { user, onDirty } = setup(definition());
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
   expect(screen.getByRole('group', { name: 'Confirm proof format change' })).toHaveTextContent(
     'discards the entire reference',
   );
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('fitch');
@@ -207,7 +214,13 @@ test('a clean saved draft becomes dirty for pending entry and blocks checks, pre
   expect(onDirty).toHaveBeenLastCalledWith(false);
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q &');
   expect(onDirty).toHaveBeenLastCalledWith(true);
-  for (const name of ['Save draft', 'Preview draft', 'Check current proof']) {
+  expect(screen.queryByRole('button', { name: 'Preview draft' })).not.toBeInTheDocument();
+  for (const name of [
+    'Save draft',
+    'Check current proof',
+    '1. Problem details',
+    '2. Reference proof',
+  ]) {
     expect(screen.getByRole('button', { name })).toBeDisabled();
     await user.click(screen.getByRole('button', { name }));
   }
@@ -224,6 +237,7 @@ test('dependency authoring uses grouped rule/label settings and explicit stateme
   const { user, onSave } = setup(definition());
   expect(screen.getByLabelText('Conclusion')).not.toBeVisible();
   expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P → P');
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.click(screen.getByRole('button', { name: 'Permitted rules (1 selected)' }));
   const dialog = await screen.findByRole('dialog', { name: 'Permitted rules' });
   expect(within(dialog).getByRole('group', { name: 'Implication' })).toBeInTheDocument();
@@ -240,11 +254,14 @@ test('dependency authoring uses grouped rule/label settings and explicit stateme
     'Our conditional proof',
   );
   await user.click(within(dialog).getByRole('button', { name: 'Done' }));
-  await user.click(screen.getByRole('button', { name: 'Edit statement' }));
+  expect(screen.getByRole('button', { name: '1. Problem details' })).toHaveAttribute(
+    'aria-current',
+    'step',
+  );
   expect(screen.getByLabelText('Conclusion')).toBeVisible();
   await user.clear(screen.getByLabelText('Conclusion'));
   await user.type(screen.getByLabelText('Conclusion'), 'Q');
-  await user.click(screen.getByRole('button', { name: 'Done editing statement' }));
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('Q');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave.mock.lastCall![0].definition).toMatchObject({
@@ -252,4 +269,51 @@ test('dependency authoring uses grouped rule/label settings and explicit stateme
     referenceProof: definition().referenceProof,
     rules: [{ id: 'implication_introduction', label: 'Our conditional proof' }],
   });
+});
+
+test('separate steps seed premises once and preserve reference identities when returning to details', async () => {
+  const premiseId = crypto.randomUUID();
+  const { user, onSave } = setup({
+    ...definition(),
+    conclusion: 'P',
+    premises: [{ id: premiseId, formula: 'P' }],
+    referenceProof: null,
+  });
+  expect(screen.queryByRole('heading', { name: 'Reference proof' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+  expect(screen.getByLabelText('Title')).not.toBeVisible();
+  expect(screen.getByLabelText('Premise 1')).not.toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const first = onSave.mock.lastCall![0].definition;
+  if (first.type !== 'derivation' || first.format !== 'dependency')
+    throw new Error('Expected dependency definition');
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
+  expect(screen.getByLabelText('Title')).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Reference proof' })).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('Premise 1'));
+  await user.type(screen.getByLabelText('Premise 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave.mock.lastCall![0].definition).toMatchObject({
+    premises: [{ id: premiseId, formula: 'Q' }],
+    referenceProof: first.referenceProof,
+  });
+});
+
+test('reference-step save validates hidden metadata and keeps the proof reachable for correction', async () => {
+  const { user, onSave } = setup();
+  await user.clear(screen.getByLabelText('Title'));
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('title:');
+  expect(onSave).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
+  expect(screen.getByLabelText('Title')).toBeVisible();
+  await user.type(screen.getByLabelText('Title'), 'Repaired title');
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave).toHaveBeenCalledOnce();
 });

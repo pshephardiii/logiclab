@@ -328,6 +328,23 @@ Chrome started directly in instructor authoring, edited a custom rule label, con
 
 No backend/persistence policy changes or database regression suite rerun. Submitted-review controls also have component coverage; the focused browser journey covered assigned practice and authorized solutions, not a new graded-finalization/release journey. Normal and demo consumers share these components; no live Cognito/normal-account browser session or complete accessibility/browser matrix was exercised.
 
+## Implementation: separate dependency reference-authoring step
+
+**UI-029-015**, November 10, 2026: replace the collapsed statement/reference arrangement from UI-029-014 with two deliberate steps inside problem authoring, shared by normal/demo screens.
+
+1. **Problem details**: title/instructions, format, premises, conclusion, permitted rules/labels and reference explanation. Incomplete drafts can still be saved without starting a reference.
+2. **Reference proof**: problem title, nearby Conclusion, proof constructor, guides and checking feedback. The library list, metadata fields, previews, saved-check and publication/archive panels are out of view. Save the draft here, then return to Problem details to publish.
+
+Entering reference construction explicitly seeds starting premises only when no reference exists. Back/forward step navigation retains the local draft and existing line identities; later statement changes do not rewrite reference steps or silently recheck them. An unconfirmed entry disables step navigation as well as save/check/preview. Step transitions focus/scroll to the workspace heading. The library retains the chosen step through successful save/remounts and resets it only on a consented new/problem selection; failed saves retain the workspace. This is page-local UI state, not a new URL, automatic save or browser-storage feature. Hidden metadata is still validated when saving from the reference step, with named field errors and a route back through Problem details.
+
+![Problem details step on mobile](images/ui-audit-029/dependency-authoring-details-step.png)
+
+![Focused reference-proof authoring step](images/ui-audit-029/dependency-authoring-reference-step.png)
+
+Validation: **524 web tests**, production build, formatting, whitespace and local Markdown targets passed. Coverage includes cross-step draft/reference retention, copied premise identity after statement edits, pending-entry navigation guards, validation of hidden metadata, successful-save remount retention and new-problem reset, plus existing failed-save, publication, archive/busy and other-format regressions.
+
+Chrome verified a real local draft save without a reference, explicit reference construction, identity-preserving step navigation, changed-target checking, pending navigation guards, an injected save failure/retry, successful saves retaining each step, and publication after returning to details. Desktop/mobile screenshots were inspected; 390px/320px checks found no document-wide overflow and no page errors occurred. Temporary servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/dependency-authoring-steps/`. One save failure was synthetic; other workflow responses used the real local demo API. No backend changes/database regression rerun, live normal-account authentication or full browser/accessibility matrix.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.
