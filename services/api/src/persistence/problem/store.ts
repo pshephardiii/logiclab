@@ -127,7 +127,8 @@ export async function createProblemStore(
     },
 
     async list(ownerId, limit, offset, archive = 'active') {
-      const rows = await (transaction ?? orm.em.fork()).find(
+      const em = transaction ?? orm.em.fork();
+      const rows = await em.find(
         Problem,
         {
           owner: ownerId,
@@ -140,7 +141,36 @@ export async function createProblemStore(
         },
       );
 
-      return rows.map(libraryProblemDraft);
+      // One scoped query per page, rather than a history request for every problem.
+      const versions = rows.length
+        ? await em
+            .createQueryBuilder(ProblemVersion)
+            .select('*')
+            .distinctOn('problem')
+            .where({ problem: { id: { $in: rows.map((problem) => problem.id) }, owner: ownerId } })
+            .orderBy({ problem: 'ASC', version: 'DESC' })
+            .getResultList()
+        : [];
+      const latest = new Map(versions.map((version) => [version.problem.id, version]));
+
+      return rows.map((problem) => {
+        const draft = libraryProblemDraft(problem);
+        const record = latest.get(problem.id);
+        const version = record ? libraryProblemVersion(record) : null;
+        return {
+          ...draft,
+          publication: version
+            ? {
+                version: version.version,
+                publishedAt: version.publishedAt,
+                hasDraftChanges:
+                  draft.title !== version.title ||
+                  draft.instructions !== version.instructions ||
+                  JSON.stringify(draft.definition) !== JSON.stringify(version.definition),
+              }
+            : null,
+        };
+      });
     },
 
     async findOwned(ownerId, problemId) {

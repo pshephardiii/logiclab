@@ -43,3 +43,80 @@
   width: auto;
   flex: none;
 }
+/* Keep labels attached to their fields while separating successive fields and sections. */
+.problem-editor label:not(.correct-option):not(.dependency-source) {
+  margin-bottom: 0.45rem;
+}
+.problem-editor input:not([type='checkbox']):not([type='radio']) + label,
+.problem-editor select + label,
+.problem-editor textarea + label {
+  margin-top: 1.25rem;
+}
+.problem-editor .action-row {
+  gap: 0.65rem;
+  margin-block: 0.75rem 1rem;
+}
+.problem-editor section > h3 {
+  margin-top: 1.5rem;
+}
+.problem-editor #problem-explanation {
+  margin-top: 0.4rem;
+}
+.problem-editor .dependency-entry-row input + label {
+  margin: 0;
+}
+.problem-list li {
+  margin-bottom: 0.75rem;
+}
+.problem-status-badge {
+  display: inline-block;
+  margin-left: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.35rem;
+  background: #edf0f2;
+  color: #465b65;
+  font-size: 0.8rem;
+}
+.problem-status-badge.is-published {
+  background: #eaf6ef;
+  color: #17633a;
+}
+.problem-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.problem-overview-heading h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.publication-success {
+  padding: 1rem 1.25rem;
+  margin-block: 0 1.25rem;
+  background: #edf9f1;
+  color: #14582f;
+  border: 1px solid #94bba0;
+  border-left: 4px solid #2e8650;
+  border-radius: 0.5rem;
+}
+.publication-success p {
+  margin: 0.5rem 0 0;
+}
+.reference-premise-warning {
+  margin-block: 1rem;
+  padding: 1rem;
+  background: #fff8e8;
+  border-left: 3px solid #9b6b15;
+}
+.problem-editor section + label {
+  margin-top: 1.25rem;
+}
+.problem-editor .correct-option {
+  margin-top: 0.75rem;
+}
+
+.problem-editor p.help {
+  margin-block: 0.75rem 1.25rem;
+}

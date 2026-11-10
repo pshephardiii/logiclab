@@ -9,6 +9,7 @@ import type {
   UpdateLibraryProblemRequest as UpdateProblemRequest,
   LibraryProblemVersion,
   LibraryProblemDraft,
+  LibraryProblemListItem,
 } from '@logiclab/contracts/problem-library';
 import { authFixture, authUser } from './auth-fixture';
 import type { ProblemContext } from '../src/routes/problem/context';
@@ -83,7 +84,7 @@ export function problemFixture() {
         _limit: number,
         _offset: number,
         _archive?: ProblemArchiveFilter,
-      ): Promise<LibraryProblemDraft[]> => [problem],
+      ): Promise<LibraryProblemListItem[]> => [{ ...problem, publication: null }],
     ),
     findOwned: jest.fn(
       async (_ownerId: string, _problemId: string): Promise<LibraryProblemDraft | null> => problem,

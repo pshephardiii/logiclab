@@ -33,3 +33,6 @@
 .dependency-reference-next {
   margin: 1rem 1rem 1rem 0;
 }
+.dependency-authoring-statement > .proof-setup-premises {
+  margin-top: 1.5rem;
+}

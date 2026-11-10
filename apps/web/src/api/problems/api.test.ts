@@ -49,7 +49,10 @@ test.each(['normal', 'demo'] as const)(
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ problems: [derivationDraft], nextOffset: null }),
+        json: async () => ({
+          problems: [{ ...derivationDraft, publication: null }],
+          nextOffset: null,
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -62,7 +65,9 @@ test.each(['normal', 'demo'] as const)(
     vi.stubGlobal('fetch', fetch);
     const api = createApi(createResourceRequest(scope));
     const signal = new AbortController().signal;
-    expect((await api.listProblems('all', 0, signal)).problems).toEqual([derivationDraft]);
+    expect((await api.listProblems('all', 0, signal)).problems).toEqual([
+      { ...derivationDraft, publication: null },
+    ]);
     expect((await api.checkReference(derivationDraft.id, signal)).check.status).toBe('missing');
     expect(fetch).toHaveBeenLastCalledWith(
       `${scope === 'demo' ? '/api/demo/resources' : '/api'}/problems/${derivationDraft.id}/reference-check`,

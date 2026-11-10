@@ -1,3 +1,4 @@
+import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
@@ -32,9 +33,11 @@ export function ProofPracticeSetup({
   const [ruleIds, setRuleIds] = useState<string[]>(
     PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id),
   );
+  const [premisePending, setPremisePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useUnsavedWork(
-    premises.length > 0 ||
+    premisePending ||
+      premises.length > 0 ||
       conclusion.length > 0 ||
       ruleIds.length !== PROPOSITIONAL_RULE_CATALOG.length,
   );
@@ -54,6 +57,10 @@ export function ProofPracticeSetup({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    if (premisePending) {
+      setError('Add or discard the premise before beginning.');
+      return;
+    }
 
     try {
       onStart(practiceStatement(format, premises, conclusion, ruleIds));
@@ -84,46 +91,55 @@ export function ProofPracticeSetup({
         </div>
         <ProofKeyboardGuide />
       </div>
-      <section className="proof-setup-premises" aria-label="Starting premises">
-        <h3>
-          Premises <span className="help">(optional)</span>
-        </h3>
-        {premises.map((premise, index) => (
-          <div className="proof-setup-premise" key={premise.id}>
-            <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
-            <div>
-              <ProofFormulaInput
-                {...formulaInput}
-                id={`practice-premise-${premise.id}`}
-                required
-                value={premise.formula}
-                onValueChange={(formula) =>
-                  setPremises(
-                    premises.map((value) =>
-                      value.id === premise.id ? { ...value, formula } : value,
-                    ),
-                  )
-                }
-              />
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => setPremises(premises.filter((value) => value.id !== premise.id))}
-              >
-                Remove premise {index + 1}
-              </button>
+      {format === 'dependency' ? (
+        <ProofPremisesEditor
+          key={format}
+          premises={premises}
+          onChange={setPremises}
+          onPendingChange={setPremisePending}
+        />
+      ) : (
+        <section className="proof-setup-premises" aria-label="Starting premises">
+          <h3>
+            Premises <span className="help">(optional)</span>
+          </h3>
+          {premises.map((premise, index) => (
+            <div className="proof-setup-premise" key={premise.id}>
+              <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
+              <div>
+                <ProofFormulaInput
+                  {...formulaInput}
+                  id={`practice-premise-${premise.id}`}
+                  required
+                  value={premise.formula}
+                  onValueChange={(formula) =>
+                    setPremises(
+                      premises.map((value) =>
+                        value.id === premise.id ? { ...value, formula } : value,
+                      ),
+                    )
+                  }
+                />
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => setPremises(premises.filter((value) => value.id !== premise.id))}
+                >
+                  Remove premise {index + 1}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="secondary"
-          disabled={premises.length >= PROOF_LIMITS.maxPremises}
-          onClick={() => setPremises([...premises, { id: crypto.randomUUID(), formula: '' }])}
-        >
-          Add premise
-        </button>
-      </section>
+          ))}
+          <button
+            type="button"
+            className="secondary"
+            disabled={premises.length >= PROOF_LIMITS.maxPremises}
+            onClick={() => setPremises([...premises, { id: crypto.randomUUID(), formula: '' }])}
+          >
+            Add premise
+          </button>
+        </section>
+      )}
       <div className="proof-setup-conclusion">
         <label htmlFor="practice-proof-conclusion">Conclusion</label>
         <ProofFormulaInput
@@ -141,7 +157,9 @@ export function ProofPracticeSetup({
       )}
       <div className="proof-setup-actions">
         <ProofRulePicker selected={ruleIds} onChange={setRuleIds} />
-        <button type="submit">Begin proof practice</button>
+        <button type="submit" disabled={premisePending}>
+          Begin proof practice
+        </button>
       </div>
     </form>
   );

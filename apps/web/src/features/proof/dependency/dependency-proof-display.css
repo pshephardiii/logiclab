@@ -30,6 +30,7 @@
   background: transparent;
 }
 .dependency-proof-display .proof-line-dependencies {
+  white-space: nowrap;
   max-width: 8rem;
   padding-left: 0;
   color: #465b65;

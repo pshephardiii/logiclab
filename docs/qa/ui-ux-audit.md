@@ -345,6 +345,29 @@ Validation: **524 web tests**, production build, formatting, whitespace and loca
 
 Chrome verified a real local draft save without a reference, explicit reference construction, identity-preserving step navigation, changed-target checking, pending navigation guards, an injected save failure/retry, successful saves retaining each step, and publication after returning to details. Desktop/mobile screenshots were inspected; 390px/320px checks found no document-wide overflow and no page errors occurred. Temporary servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/dependency-authoring-steps/`. One save failure was synthetic; other workflow responses used the real local demo API. No backend changes/database regression rerun, live normal-account authentication or full browser/accessibility matrix.
 
+## Implementation: confirmed premises and published-first library views
+
+**UI-029-016**, November 10, 2026: address the next instructor-authoring QA findings across problem types.
+
+- Separate successive fields, labels, option controls and explanations consistently, including conceptual correct-answer/explanation boundaries and the dependency Premises heading. Keep dependency-number sets on one line. Final Chrome measurements show 20px answer/option-to-explanation gaps in both conceptual forms.
+- Replace dependency premise cards with the shared proof-style confirmed list and input row in both instructor setup and independent dependency practice. Add/Update confirms a nonblank premise; an untouched next row creates no statement source. Moves/edits retain IDs; deletion uses explicit modal consent. Pending premise entries protect unsaved work and block save/preview/step changes until added or discarded. Step entry validates the statement syntax while unfinished drafts remain saveable.
+- Prevent phantom blank reference sources: the former Add action allocated blank statement rows immediately, and reference startup copied every row. Confirmed-entry setup now copies exactly the authored premises. Regression/browser checks verified one confirmed premise becomes exactly one reference source. Existing mismatched references show a source-review notice; a confirmed restart replaces the reference from the statement, explicitly warning that derived work is removed. Keep preserves the original proof. Statement edits never silently rewrite reference steps.
+- Add owner-scoped publication metadata to private list items: never-published Draft, Published vN, and Published vN with Draft changes. Fetch the latest snapshot in one batch query per page; compare saved title/instructions/definition, not timestamps. Confirmed publication status survives a failed list refresh. Single-draft read/write shapes are unchanged; [the API contract](../api/problem-library-api.md#pagination-and-errors) records matching-build rollout without a migration.
+- Open published selections as immutable latest-version displays with an explicit **Edit draft** action. Draft edits do not alter that view's snapshot. Publication leads to a green/check success panel and refreshed list badge. Keep uncertain publication failure/reload behavior; do not retry a publication automatically. Permitted rules in read-only views now use a modal rule selector/reference instead of a long inline list.
+- Record [instructor rule-label preferences](../planning/ui-ux-audit.md#future-feature-instructor-rule-label-preferences) as a separate future feature. No preference storage/settings page is implemented in this audit.
+
+![Consistent conceptual answer/explanation spacing](images/ui-audit-029/authoring-conceptual-spacing.png)
+
+![Confirmed dependency premise with a distinct new-entry row](images/ui-audit-029/authoring-confirmed-premises.png)
+
+![Publication success and published-first display with explicit editing](images/ui-audit-029/authoring-publication-success.png)
+
+Validation: **534 web tests**, **1,051 API tests**, contracts/frontend builds and API type checking passed. Two focused PostgreSQL tests passed, covering existing library HTTP ownership/archive behavior and the new draft/publication/change/pagination/owner-isolation projection. New UI regressions cover confirmation without blank sources, IDs and pending guards, stale-reference restart consent, immutable published-first display, explicit editing, publication success, and list-refresh failure after confirmed publication. Initial broad web execution had timeouts; a bounded four-worker run passed. The API watcher initially hit the sandbox's EMFILE limit; the full suite passed outside the sandbox.
+
+Chrome used real local demo APIs for published selection, rule viewing, premise authoring, one-source reference checking/save/publication, draft-only changes, immutable snapshot display, confirmed reference restart and version-two publication. It also verified the shared dependency practice setup. A focused final spacing pass inspected true/false, multiple-choice and dependency setup, including 390px/320px bounds. Screenshots were inspected; no page errors were recorded. Temporary servers and their isolated schemas were removed. Evidence: `.codex-local/ui-audit/029/authoring-polish/` and `authoring-polish-spacing/`.
+
+Formatting, whitespace and local Markdown targets checked. No migration or user development-database reset; no new grading/release policies. This is focused local verification, not full product QA, live Cognito/payment testing or an accessibility/browser matrix. Rule preferences remain documented future work; further Fitch/tree editor redesign remains on separate branches.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

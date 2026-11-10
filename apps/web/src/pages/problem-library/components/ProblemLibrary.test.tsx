@@ -39,7 +39,10 @@ const version: PublishedProblemVersion = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.mocked(api.listProblems).mockResolvedValue({ problems: [draft], nextOffset: null });
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...draft, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(api.listVersions).mockResolvedValue({ versions: [version], nextOffset: null });
   vi.mocked(api.publishProblem).mockResolvedValue({ ...version, version: 2 });
 });
@@ -84,7 +87,9 @@ test('failed edits retain input; saving uses the selected ID and publishing uses
   );
   await waitFor(() => expect(protectedWork()).toBe(false));
   await user.click(screen.getByRole('button', { name: 'Publish saved draft' }));
-  expect(await screen.findByText('Published version 2.')).toBeInTheDocument();
+  expect(await screen.findByText('✓ Published version 2.')).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Published problem' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Edit draft' }));
   expect(api.publishProblem).toHaveBeenCalledTimes(1);
   await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
   expect(screen.getByText('Preview formula: P')).toBeInTheDocument();
@@ -110,7 +115,10 @@ test('archiving preserves history and restoring re-enables editing', async () =>
 });
 
 test('filter replacement ignores late responses and unmount aborts pending reads', async () => {
-  let resolve!: (page: { problems: ProblemDraft[]; nextOffset: null }) => void;
+  let resolve!: (page: {
+    problems: (ProblemDraft & { publication: null })[];
+    nextOffset: null;
+  }) => void;
   vi.mocked(api.listProblems).mockImplementationOnce(
     () =>
       new Promise((done) => {
@@ -124,7 +132,7 @@ test('filter replacement ignores late responses and unmount aborts pending reads
   await user.selectOptions(screen.getByLabelText('Show problems'), 'archived');
   await screen.findByText('No problems in this view.');
   expect(signal.aborted).toBe(true);
-  await act(async () => resolve({ problems: [draft], nextOffset: null }));
+  await act(async () => resolve({ problems: [{ ...draft, publication: null }], nextOffset: null }));
   expect(screen.queryByRole('button', { name: 'Conjunction' })).not.toBeInTheDocument();
   const lastSignal = vi.mocked(api.listProblems).mock.calls.at(-1)![2];
   view.unmount();
@@ -160,8 +168,8 @@ test('new problem resets the editor and saves through the create operation', asy
 test('library and version pagination append results and stop on the last page', async () => {
   const second = { ...draft, id: '33333333-3333-4333-8333-333333333333', title: 'Second problem' };
   vi.mocked(api.listProblems)
-    .mockResolvedValueOnce({ problems: [draft], nextOffset: 20 })
-    .mockResolvedValueOnce({ problems: [second], nextOffset: null });
+    .mockResolvedValueOnce({ problems: [{ ...draft, publication: null }], nextOffset: 20 })
+    .mockResolvedValueOnce({ problems: [{ ...second, publication: null }], nextOffset: null });
   vi.mocked(api.listVersions)
     .mockResolvedValueOnce({ versions: [{ ...version, version: 2 }], nextOffset: 20 })
     .mockResolvedValueOnce({ versions: [version], nextOffset: null });
@@ -188,7 +196,13 @@ test.each(['New problem', 'Second problem', 'Conjunction'])(
       id: '33333333-3333-4333-8333-333333333333',
       title: 'Second problem',
     };
-    vi.mocked(api.listProblems).mockResolvedValue({ problems: [draft, second], nextOffset: null });
+    vi.mocked(api.listProblems).mockResolvedValue({
+      problems: [
+        { ...draft, publication: null },
+        { ...second, publication: null },
+      ],
+      nextOffset: null,
+    });
     const user = await openDraft();
     await user.type(screen.getByLabelText('Formula'), ' & R');
     await user.click(screen.getByRole('button', { name: selection }));
@@ -281,7 +295,10 @@ test('conceptual editing participates in discard protection and previews the sel
       explanation: 'Saved explanation',
     },
   };
-  vi.mocked(api.listProblems).mockResolvedValue({ problems: [conceptual], nextOffset: null });
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...conceptual, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(api.listVersions).mockResolvedValue({
     versions: [{ ...version, definition: conceptual.definition }],
     nextOffset: null,
@@ -306,7 +323,10 @@ test('conceptual editing participates in discard protection and previews the sel
 
 test('derivation editing keeps private history previews separate from the draft', async () => {
   const { derivationDraft } = await import('../../../../test/derivation');
-  vi.mocked(api.listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...derivationDraft, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(api.listVersions).mockResolvedValue({
     versions: [
       {
@@ -328,7 +348,7 @@ test('derivation editing keeps private history previews separate from the draft'
   ).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
   expect(screen.getByRole('region', { name: 'Derivation version preview' })).toHaveTextContent(
-    'Q -> Q',
+    'Q → Q',
   );
   expect(api.saveProblem).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'New problem' }));
@@ -337,7 +357,10 @@ test('derivation editing keeps private history previews separate from the draft'
 
 test('unsaved derivation edits cancel saved checks, protect selection, and retain fields after failed saves', async () => {
   const { derivationDraft } = await import('../../../../test/derivation');
-  vi.mocked(api.listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...derivationDraft, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(api.listVersions).mockResolvedValue({ versions: [], nextOffset: null });
   vi.mocked(api.checkReference).mockResolvedValue({
     problemId: derivationDraft.id,
@@ -382,7 +405,10 @@ test('dependency authoring stays on its chosen step after a successful save remo
     ...derivationDraft,
     definition: { ...derivationDefinition, format: 'dependency' as const, referenceProof: null },
   };
-  vi.mocked(api.listProblems).mockResolvedValue({ problems: [dependency], nextOffset: null });
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...dependency, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(api.listVersions).mockResolvedValue({ versions: [], nextOffset: null });
   vi.mocked(api.saveProblem).mockImplementation(async (input) => ({
     ...dependency,
@@ -410,4 +436,59 @@ test('dependency authoring stays on its chosen step after a successful save remo
     'aria-current',
     'step',
   );
+});
+
+test('published selection displays the latest immutable snapshot first and editing is explicit', async () => {
+  const changed = {
+    ...draft,
+    title: 'Edited draft title',
+    definition: { type: 'truth_table' as const, definitionVersion: 1 as const, formula: 'Q' },
+    publication: { version: 1, publishedAt: version.publishedAt, hasDraftChanges: true },
+  };
+  vi.mocked(api.listProblems).mockResolvedValue({ problems: [changed], nextOffset: null });
+  const user = userEvent.setup();
+  render(<ProblemLibrary />);
+  await user.click(await screen.findByRole('button', { name: 'Edited draft title' }));
+  const overview = await screen.findByRole('region', { name: 'Published problem' });
+  await waitFor(() => expect(overview).toHaveTextContent('Original snapshot'));
+  expect(screen.getByText('Published v1 · Draft changes')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+  expect(overview).toHaveTextContent('P');
+  await user.click(screen.getByRole('button', { name: 'Edit draft' }));
+  expect(screen.getByLabelText('Title')).toHaveValue('Edited draft title');
+  expect(screen.getByLabelText('Formula')).toHaveValue('Q');
+  expect(api.saveProblem).not.toHaveBeenCalled();
+});
+
+test('publication shows a success overview and refreshes list badges without an automatic second publication', async () => {
+  const user = await openDraft();
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [
+      {
+        ...draft,
+        publication: { version: 2, publishedAt: version.publishedAt, hasDraftChanges: false },
+      },
+    ],
+    nextOffset: null,
+  });
+  await user.click(screen.getByRole('button', { name: 'Publish saved draft' }));
+  await screen.findByText('✓ Published version 2.');
+  expect(screen.getByRole('region', { name: 'Published problem' })).toHaveTextContent(
+    'ready to add to an assignment',
+  );
+  expect(await screen.findByText('Published v2')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+  expect(api.publishProblem).toHaveBeenCalledOnce();
+});
+
+test('a confirmed publication remains published when refreshing the library list fails', async () => {
+  const user = await openDraft();
+  vi.mocked(api.listProblems).mockRejectedValueOnce(new Error('List refresh failed'));
+  await user.click(screen.getByRole('button', { name: 'Publish saved draft' }));
+  await screen.findByText('✓ Published version 2.');
+  expect(await screen.findByText('Published v2 · Draft changes')).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Published problem' })).toHaveTextContent(
+    'Published · Version 2',
+  );
+  expect(api.publishProblem).toHaveBeenCalledOnce();
 });

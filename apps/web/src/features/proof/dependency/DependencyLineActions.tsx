@@ -15,7 +15,7 @@ export function DependencyLineActions({
   disabled: boolean;
   onEdit: () => void;
   onMove: (delta: -1 | 1) => void;
-  onInsert: () => void;
+  onInsert?: () => void;
   onDelete: () => void;
   onDischarge?: () => void;
 }) {
@@ -67,15 +67,17 @@ export function DependencyLineActions({
           >
             Move line {index + 1} down
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              close();
-              onInsert();
-            }}
-          >
-            Insert before line {index + 1}
-          </button>
+          {onInsert && (
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                onInsert();
+              }}
+            >
+              Insert before line {index + 1}
+            </button>
+          )}
           <button
             type="button"
             className="delete-action"

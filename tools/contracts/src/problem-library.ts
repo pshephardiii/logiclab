@@ -51,8 +51,20 @@ export type UpdateLibraryProblemRequest = z.infer<typeof updateLibraryProblemReq
 // Private library HTTP responses. These include instructor reference data.
 export const libraryProblemResponseSchema = z.strictObject({ problem: libraryProblemDraftSchema });
 
+export const libraryProblemListItemSchema = libraryProblemDraftSchema.extend({
+  publication: z
+    .strictObject({
+      version: z.number().int().positive(),
+      publishedAt: z.iso.datetime(),
+      hasDraftChanges: z.boolean(),
+    })
+    .nullable(),
+});
+
+export type LibraryProblemListItem = z.infer<typeof libraryProblemListItemSchema>;
+
 export const libraryProblemListResponseSchema = z.strictObject({
-  problems: z.array(libraryProblemDraftSchema),
+  problems: z.array(libraryProblemListItemSchema),
   nextOffset: z.number().int().nonnegative().nullable(),
 });
 

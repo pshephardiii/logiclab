@@ -10,8 +10,13 @@ installDialogStub();
 async function enterProblem(format = 'fitch', configure?: () => Promise<void>) {
   renderWithUnsavedWork(<ProofPractice />);
   fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: format } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
-  fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: 'P' } });
+  if (format === 'dependency') {
+    fireEvent.change(screen.getByLabelText('New premise'), { target: { value: 'P' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
+  } else {
+    fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
+    fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: 'P' } });
+  }
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P' } });
   await configure?.();
   const rules = screen.queryByRole('dialog', { name: 'Permitted rules' });

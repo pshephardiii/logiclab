@@ -1,3 +1,4 @@
+import { parseProofFormula } from '@logiclab/logic-engine/proof';
 import { startDependencyProof } from '../../../features/proof/dependency/editor';
 import './dependency-authoring.css';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -42,6 +43,8 @@ export function ProblemForm({
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
   const [entryPending, setEntryPending] = useState(false);
+  const [premisePending, setPremisePending] = useState(false);
+  const workPending = entryPending || premisePending;
   const [dependencyStep, setDependencyStep] = useState(initialDependencyStep);
   const dependency = fields.type === 'derivation' && fields.derivation.format === 'dependency';
   const referenceStep = dependency && dependencyStep === 'reference';
@@ -64,8 +67,8 @@ export function ProblemForm({
   }, [error]);
 
   useEffect(() => {
-    onDirty(entryPending || editorSnapshot(fields) !== editorSnapshot(initial));
-  }, [fields, initial, onDirty, entryPending]);
+    onDirty(workPending || editorSnapshot(fields) !== editorSnapshot(initial));
+  }, [fields, initial, onDirty, workPending]);
 
   function change(next: ProblemEditorFields) {
     setFields(next);
@@ -73,7 +76,36 @@ export function ProblemForm({
   }
 
   function goToStep(step: DependencyAuthoringStep) {
-    if (!dependency || busy || entryPending || step === dependencyStep) return;
+    if (!dependency || busy || workPending || step === dependencyStep) return;
+
+    if (
+      step === 'reference' &&
+      fields.derivation.premises.some((premise) => !premise.formula.trim())
+    ) {
+      setValidationError('Complete or remove blank premises before building the reference proof.');
+      return;
+    }
+
+    if (step === 'reference') {
+      for (const [index, premise] of fields.derivation.premises.entries()) {
+        try {
+          parseProofFormula(premise.formula);
+        } catch (error) {
+          setValidationError(
+            `Premise ${index + 1}: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
+          );
+          return;
+        }
+      }
+      try {
+        parseProofFormula(fields.derivation.conclusion);
+      } catch (error) {
+        setValidationError(
+          `Conclusion: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
+        );
+        return;
+      }
+    }
 
     // Entering reference construction is explicit and local. Seed premises once, retaining
     // any existing reference identities when navigating back from statement edits.
@@ -94,6 +126,10 @@ export function ProblemForm({
   }
 
   function validatedDefinition() {
+    if (premisePending) {
+      setValidationError('Add premise or Discard premise before saving or previewing.');
+      return null;
+    }
     if (entryPending) {
       setValidationError('Add line or Discard entry before saving or previewing.');
       return null;
@@ -153,7 +189,7 @@ export function ProblemForm({
             type="button"
             className="secondary"
             aria-current={!referenceStep ? 'step' : undefined}
-            disabled={busy || entryPending}
+            disabled={busy || workPending}
             onClick={() => goToStep('details')}
           >
             1. Problem details
@@ -162,7 +198,7 @@ export function ProblemForm({
             type="button"
             className="secondary"
             aria-current={referenceStep ? 'step' : undefined}
-            disabled={busy || entryPending}
+            disabled={busy || workPending}
             onClick={() => goToStep('reference')}
           >
             2. Reference proof
@@ -199,7 +235,7 @@ export function ProblemForm({
             <label htmlFor="problem-type">Problem type</label>
             <select
               id="problem-type"
-              disabled={entryPending}
+              disabled={workPending}
               value={fields.type}
               onChange={(event) =>
                 change({ ...fields, type: event.target.value as LibraryProblemDefinition['type'] })
@@ -221,8 +257,9 @@ export function ProblemForm({
               fields={fields}
               dependencyStep={dependencyStep}
               onChange={change}
-              entryPending={entryPending}
+              entryPending={workPending}
               onPendingChange={setEntryPending}
+              onPremisePendingChange={setPremisePending}
             />
           ) : fields.type === 'truth_table' ? (
             <>
@@ -246,13 +283,13 @@ export function ProblemForm({
             <button
               type="button"
               className="dependency-reference-next"
-              disabled={entryPending}
+              disabled={workPending}
               onClick={() => goToStep('reference')}
             >
               Continue to reference proof
             </button>
           )}
-          <button type="submit" disabled={entryPending}>
+          <button type="submit" disabled={workPending}>
             {busy ? 'Saving…' : 'Save draft'}
           </button>
         </fieldset>
@@ -262,7 +299,7 @@ export function ProblemForm({
         className="secondary"
         disabled={
           busy ||
-          entryPending ||
+          workPending ||
           (fields.type === 'derivation'
             ? false
             : fields.type === 'truth_table'

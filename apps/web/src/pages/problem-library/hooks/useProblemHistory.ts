@@ -9,7 +9,7 @@ export function useProblemHistory(problemId: string) {
   const { listVersions, publishProblem } = useResourceApi(problemsApi);
   const [versions, setVersions] = useState<LibraryProblemVersion[]>([]);
   const [next, setNext] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -58,6 +58,7 @@ export function useProblemHistory(problemId: string) {
       if (!signal.aborted) {
         setNotice(`Published version ${version.version}.`);
         await load();
+        if (!signal.aborted) return version;
       }
     } catch (caught) {
       if (!signal.aborted)
@@ -67,6 +68,7 @@ export function useProblemHistory(problemId: string) {
     } finally {
       if (!signal.aborted) setPublishing(false);
     }
+    return null;
   }
 
   return { versions, next, loading, publishing, error, notice, load, publish };

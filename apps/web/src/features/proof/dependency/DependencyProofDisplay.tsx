@@ -21,6 +21,7 @@ export function DependencyProofDisplay({
   entryLabel = 'New proof line',
   readOnly = false,
   label = 'Entered dependency proof',
+  allowInsert = true,
 }: {
   proof: DependencyProof;
   rules: { id: string; label: string }[];
@@ -35,6 +36,7 @@ export function DependencyProofDisplay({
   entryLabel?: string;
   readOnly?: boolean;
   label?: string;
+  allowInsert?: boolean;
 }) {
   const assumptions = dependencyAssumptionGuides(proof.steps);
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
@@ -116,7 +118,7 @@ export function DependencyProofDisplay({
                   'Assumption'
                 )}
               </td>
-              {!readOnly && onEdit && onMove && onInsert && onDelete && (
+              {!readOnly && onEdit && onMove && (onInsert || !allowInsert) && onDelete && (
                 <td className="proof-line-action">
                   <DependencyLineActions
                     index={index}
@@ -124,7 +126,7 @@ export function DependencyProofDisplay({
                     disabled={disabled}
                     onEdit={() => onEdit(step.id)}
                     onMove={(delta) => onMove(index, delta)}
-                    onInsert={() => onInsert(step.id)}
+                    onInsert={allowInsert && onInsert ? () => onInsert(step.id) : undefined}
                     onDelete={() => onDelete(step.id)}
                     onDischarge={
                       step.kind === 'assumption' && onDischarge

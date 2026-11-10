@@ -95,7 +95,10 @@ test('publication pagination retains earlier snapshots and failed loads can be r
 
 test('mixed library pages retain supported history but exclude derivation versions from assignments', async () => {
   const { derivationDraft } = await import('../../../../test/derivation');
-  vi.mocked(listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: 20 });
+  vi.mocked(listProblems).mockResolvedValue({
+    problems: [{ ...derivationDraft, publication: null }],
+    nextOffset: 20,
+  });
   vi.mocked(listVersions)
     .mockResolvedValueOnce({
       versions: [{ ...version, definition: derivationDraft.definition }],
@@ -118,7 +121,10 @@ test('mixed library pages retain supported history but exclude derivation versio
 test('practice choices include published proofs and disappear immediately when practice is disabled', async () => {
   const { derivationDraft } = await import('../../../../test/derivation');
   const proof = { ...version, definition: derivationDraft.definition };
-  vi.mocked(listProblems).mockResolvedValue({ problems: [derivationDraft], nextOffset: null });
+  vi.mocked(listProblems).mockResolvedValue({
+    problems: [{ ...derivationDraft, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(listVersions).mockResolvedValue({ versions: [proof, version], nextOffset: null });
   const hook = renderHook(({ practice }) => usePublishedProblemChoices(practice), {
     initialProps: { practice: true },

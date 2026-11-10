@@ -58,3 +58,7 @@ Preserve the existing backend proof representations, checker semantics, revision
 Unconfirmed entry-row edits must count as unsaved work. Decide and clearly communicate whether Save includes that entry or requires confirmation first; final submission must never silently omit entered work. Test Stay/Discard, failed saves, earlier edits/deletion that break references, insertion/renumbering, keyboard entry/focus, mobile layouts and reduced motion. Keep the proof visible as it grows, with accessible announcements and predictable focus. Backend changes are not required merely to change this presentation; separately review any proposed change to transport or assessment policy.
 
 This is a required usability deliverable for the planned UI branch, not an addition to the current checker slice or permission to deploy before it is complete.
+
+## Future feature: instructor rule-label preferences
+
+Provide an instructor settings page for preferred names/aliases by stable rule ID, so authors do not rename the same rules for every new derivation. Use those preferences as defaults for new problems, retain per-problem overrides, and keep effective labels pinned in published versions. Changing preferences must not rename existing published problems or student work. Plan this as a separate feature branch; no preferences storage or settings page is added by the current UI audit.

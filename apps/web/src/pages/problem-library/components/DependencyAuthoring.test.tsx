@@ -282,7 +282,7 @@ test('separate steps seed premises once and preserve reference identities when r
   expect(screen.queryByRole('heading', { name: 'Reference proof' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
   expect(screen.getByLabelText('Title')).not.toBeVisible();
-  expect(screen.getByLabelText('Premise 1')).not.toBeVisible();
+  expect(screen.getByLabelText('New premise')).not.toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   const first = onSave.mock.lastCall![0].definition;
   if (first.type !== 'derivation' || first.format !== 'dependency')
@@ -290,8 +290,10 @@ test('separate steps seed premises once and preserve reference identities when r
   await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   expect(screen.getByLabelText('Title')).toBeVisible();
   expect(screen.queryByRole('heading', { name: 'Reference proof' })).not.toBeInTheDocument();
+  await lineAction(user, 1, 'Edit line 1');
   await user.clear(screen.getByLabelText('Premise 1'));
   await user.type(screen.getByLabelText('Premise 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Update premise' }));
   await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
   await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
@@ -316,4 +318,63 @@ test('reference-step save validates hidden metadata and keeps the proof reachabl
   await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave).toHaveBeenCalledOnce();
+});
+
+test('one confirmed premise creates exactly one reference source and no extra blank premise', async () => {
+  const { user, onSave } = setup({
+    ...definition(),
+    premises: [],
+    conclusion: 'P',
+    referenceProof: null,
+  });
+  await user.type(screen.getByLabelText('New premise'), 'P');
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '2. Reference proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Add premise' }));
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const d = onSave.mock.lastCall![0].definition;
+  if (d.type !== 'derivation' || d.format !== 'dependency') throw new Error('Expected dependency');
+  expect(d.premises).toHaveLength(1);
+  expect(d.referenceProof!.steps).toHaveLength(1);
+  expect(d.referenceProof!.steps[0]).toMatchObject({
+    kind: 'premise',
+    formula: 'P',
+    premiseId: d.premises[0]!.id,
+  });
+});
+
+test('a mismatched existing reference requires explicit restart consent and then uses the current sources', async () => {
+  const source = crypto.randomUUID(),
+    line = crypto.randomUUID();
+  const value = { ...definition(), premises: [{ id: source, formula: 'Q' }] };
+  value.referenceProof!.steps.unshift({
+    kind: 'premise',
+    id: line,
+    premiseId: source,
+    formula: 'P',
+    dependencies: [line],
+  });
+  const { user, onSave } = setup(value);
+  expect(screen.getByRole('region', { name: 'Reference premise mismatch' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Restart reference from statement' }));
+  await user.click(screen.getByRole('button', { name: 'Keep reference' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave.mock.lastCall![0].definition).toMatchObject({
+    referenceProof: value.referenceProof,
+  });
+  await user.click(screen.getByRole('button', { name: 'Restart reference from statement' }));
+  await user.click(screen.getByRole('button', { name: 'Restart reference' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const d = onSave.mock.lastCall![0].definition;
+  if (d.type !== 'derivation' || d.format !== 'dependency') throw new Error('Expected dependency');
+  expect(d.referenceProof!.steps).toHaveLength(1);
+  expect(d.referenceProof!.steps[0]).toMatchObject({
+    kind: 'premise',
+    formula: 'Q',
+    premiseId: source,
+  });
+  expect(
+    screen.queryByRole('region', { name: 'Reference premise mismatch' }),
+  ).not.toBeInTheDocument();
 });
