@@ -1,7 +1,8 @@
 import { proofNotation } from '../helpers/proof-notation';
 import type { DependencyProof } from '@logiclab/contracts';
 import './dependency-proof-display.css';
-import type { ReactNode } from 'react';
+import { dependencyAssumptionGuides } from './assumption-guides';
+import type { CSSProperties, ReactNode } from 'react';
 import { DependencyLineActions } from './DependencyLineActions';
 
 /** Display entered work, not checker output. References always resolve by stable identity. */
@@ -30,6 +31,7 @@ export function DependencyProofDisplay({
   entry?: ReactNode;
   entryLabel: string;
 }) {
+  const assumptions = dependencyAssumptionGuides(proof.steps);
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
   const line = (id: string | null) => (id ? (positions.get(id) ?? 'Missing line') : 'Not selected');
@@ -43,7 +45,9 @@ export function DependencyProofDisplay({
       aria-label="Entered dependency proof"
       tabIndex={0}
     >
-      <table>
+      <table
+        style={{ '--dependency-guide-width': `${assumptions.lanes * 0.6}rem` } as CSSProperties}
+      >
         <caption>Entered proof</caption>
         <thead>
           <tr>
@@ -74,6 +78,18 @@ export function DependencyProofDisplay({
                 {index + 1}
               </th>
               <td className="proof-line-formula">
+                <span className="dependency-assumption-guides" aria-hidden="true">
+                  {assumptions.guides
+                    .filter((guide) => guide.start <= index && guide.end >= index)
+                    .map((guide) => (
+                      <span
+                        key={guide.id}
+                        className={`dependency-assumption-guide${guide.start === index ? ' guide-start' : ''}${guide.closed && guide.end === index ? ' guide-end' : ''}`}
+                        style={{ left: `${guide.lane * 0.6}rem` }}
+                        title={`Assumption on line ${guide.line}`}
+                      />
+                    ))}
+                </span>
                 <code>{proofNotation(step.formula) || '(blank)'}</code>
               </td>
               <td className="proof-line-justification">

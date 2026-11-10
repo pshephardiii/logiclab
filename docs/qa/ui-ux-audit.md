@@ -274,6 +274,26 @@ Focused Chrome verified single/double modal opening without selection changes, f
 
 Formatting, whitespace and local Markdown targets checked. No backend code changed or database regression suite was repeated. This is focused Chrome evidence, not a complete browser/accessibility audit; the surrounding Fitch/tree entry redesign remains open.
 
+## Implementation: citation layout, assumption guides and target feedback
+
+**UI-029-012**, November 10, 2026: follow-up user QA identified uneven citation widths, difficulty tracking nested assumptions and a misleading target diagnostic.
+
+- Put the rule selector above an equal-width two-column citation row. Discharge pairs also have consistent paired fields; the second citation no longer wraps into a full-width row by itself.
+- Add compact vertical assumption guides beside confirmed formulas, with additional lanes for overlapping/nested assumptions and endpoint caps at entered discharge conclusions. Open guides have no closing cap. Lane reuse keeps separate later assumptions compact. Guides use the entered assumption/dependency/discharge references, preserve reuse after discharge, and neither validate work nor impose Fitch scopes on dependency proofs. Incomplete references remain editable; unconfirmed rows remain outside the confirmed proof display.
+- Reproduce the reported premise `P` → assumption `¬P` → contradiction → `¬¬P` → DNE `P` sequence. It is accepted when the requested conclusion is `P`. The user confirmed their actual target was `¬¬P`, so there was no acceptance-rule defect. Replace the generic temporary-assumption warning with a cause-specific diagnostic: a mismatching final formula names both formulas and the final line; remaining temporary support and invalid/unknown work have separate messages. Bound formula excerpts to retain schema-valid diagnostics for long input.
+
+![Paired citation selectors beneath the rule](images/ui-audit-029/dependency-paired-citations.png)
+
+![Nested assumption guides beside a verified dependency proof](images/ui-audit-029/dependency-assumption-guides.png)
+
+![Specific final-formula versus requested-conclusion feedback](images/ui-audit-029/dependency-target-mismatch.png)
+
+Validation: **587 engine tests**, **515 web tests**, engine/frontend builds, formatting, whitespace and local Markdown targets passed. Regression coverage includes the reported five-line derivation, mismatching targets with otherwise valid steps, remaining assumptions, bounded diagnostic text, nested guide endpoints/lane reuse, missing references, open assumptions and reuse after discharge. A focused guide rerun passed after distinguishing open from closed endpoint caps.
+
+Chrome verified equal citation widths/vertical alignment, the reported derivation with all-valid line checks and the specific `P` versus `¬¬P` mismatch, and an accepted nested conditional proof with guide counts `1/2/2/1/0` across its confirmed lines. Desktop/mobile screenshots were inspected; 390px/320px checks found no document-wide overflow and no page errors were recorded. Temporary local servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/dependency-tracking/`.
+
+No persistence/API policy changes or database regression run; this is focused local Chrome evidence rather than exhaustive visual/accessibility/browser QA.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

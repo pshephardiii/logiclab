@@ -45,6 +45,8 @@
   text-align: right;
 }
 .dependency-proof-display .proof-line-formula {
+  position: relative;
+  padding-left: calc(0.65rem + var(--dependency-guide-width, 0rem));
   min-width: 7rem;
   max-width: 25rem;
   padding-right: 1.5rem;
@@ -113,30 +115,29 @@
   padding-top: 1.15rem;
 }
 .dependency-entry-reasons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
+  width: 20rem;
+  max-width: 100%;
   min-width: 12rem;
-  max-width: 25rem;
 }
-.dependency-entry-reasons > select {
-  flex: 1 1 10rem;
-  max-width: 15rem;
+.dependency-entry-reasons > select,
+.dependency-entry-reasons > .dependency-discharge {
+  grid-column: 1 / -1;
 }
 .dependency-entry-reasons > div {
-  flex: 1 1 5rem;
   min-width: 0;
 }
 .dependency-entry-reasons select {
   width: 100%;
 }
 .dependency-discharge {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 0.4rem;
 }
 .dependency-discharge > div {
-  flex: 1 1 4rem;
   min-width: 0;
 }
 .dependency-entry-row label:not(.dependency-source) {
@@ -156,4 +157,27 @@
 }
 .dependency-picker-title {
   font-weight: 700;
+}
+
+.dependency-assumption-guides {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.65rem;
+  pointer-events: none;
+}
+.dependency-assumption-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.35rem;
+  border-left: 2px solid #70858d;
+}
+.dependency-assumption-guide.guide-start {
+  top: 0.35rem;
+  border-top: 2px solid #70858d;
+}
+.dependency-assumption-guide.guide-end {
+  bottom: 0.1rem;
+  border-bottom: 2px solid #70858d;
 }

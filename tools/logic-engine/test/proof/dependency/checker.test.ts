@@ -599,3 +599,52 @@ test.each([false, true])(
     expect(report.target).toBe(invalid ? 'not_established' : 'unknown');
   },
 );
+
+test('discharges negated assumption through contradiction, then derives the original premise by DNE', () => {
+  const value = input(
+    'P',
+    ['P'],
+    [
+      given(1, 1, 'P'),
+      assume(2, '!P'),
+      infer(3, '⊥', 'contradiction_introduction', [1, 2], [1, 2]),
+      infer(4, '!!P', 'negation_introduction', [], [1], [[2, 3]]),
+      infer(5, 'P', 'double_negation_elimination', [4], [1]),
+    ],
+    ['contradiction_introduction', 'negation_introduction', 'double_negation_elimination'],
+  );
+  expect(run(value)).toMatchObject({ status: 'accepted', target: 'established', diagnostics: [] });
+});
+
+test('valid local steps with the wrong final formula report a target mismatch, not an assumption leak', () => {
+  const value = direct('double_negation_introduction', '!!P', ['P']);
+  value.problem.conclusion = 'P';
+  const report = run(value);
+  expect(
+    report.steps.every((step) => step.localStatus === 'valid' && step.dependencyStatus === 'valid'),
+  ).toBe(true);
+  expect(report).toMatchObject({ status: 'needs_review', target: 'not_established' });
+  expect(report.diagnostics).toContainEqual({
+    code: 'TARGET_NOT_ESTABLISHED',
+    message: 'The final line “!!P” does not match the requested conclusion “P”.',
+    stepIndex: 1,
+  });
+});
+
+test('a matching target with a remaining assumption reports the actual support problem', () => {
+  const report = run(input('P', [], [assume(1, 'P')], []));
+  expect(report).toMatchObject({ status: 'needs_review', target: 'not_established' });
+  expect(report.diagnostics).toContainEqual({
+    code: 'TARGET_NOT_ESTABLISHED',
+    message: 'The final line still depends on a temporary assumption.',
+    stepIndex: 0,
+  });
+});
+
+test('long target mismatch text remains a bounded, schema-valid diagnostic', () => {
+  const report = run(input('P ∧ '.repeat(45) + 'Q', ['P'], [given(1, 1, 'P')], []));
+  const diagnostic = report.diagnostics.find((item) => item.code === 'TARGET_NOT_ESTABLISHED')!;
+  expect(report.target).toBe('not_established');
+  expect(diagnostic.message).toContain('…');
+  expect(diagnostic.message.length).toBeLessThanOrEqual(500);
+});

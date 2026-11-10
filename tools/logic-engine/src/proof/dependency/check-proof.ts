@@ -79,13 +79,16 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
 
     let target: ProofCheckReport['target'] = 'not_established';
     const index = reports.length - 1;
+    let targetMessage = 'The final line must match the requested conclusion.';
 
     if (index >= 0) {
       const formula = formulas[index]!,
         final = reports[index]!;
 
-      if (!formula.formula) target = 'unknown';
-      else {
+      if (!formula.formula) {
+        target = 'unknown';
+        targetMessage = 'The final line has no checkable formula.';
+      } else {
         budget.spend(2 * (formula.size + problem.conclusion.size));
 
         if (sameFormula(formula.formula, problem.conclusion.formula!)) {
@@ -94,17 +97,25 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
           );
 
           const support = dependencies[index];
+          const temporarySupport = support?.some((id) => !sources.has(id)) ?? false;
+          targetMessage = temporarySupport
+            ? 'The final line still depends on a temporary assumption.'
+            : 'The final line relies on invalid or incompletely checked work.';
 
           target =
             final.localStatus === 'invalid' ||
             final.dependencyStatus === 'invalid' ||
-            (support !== null && support!.some((id) => !sources.has(id)))
+            temporarySupport
               ? 'not_established'
               : final.localStatus === 'unassessable' ||
                   final.dependencyStatus === 'unknown' ||
                   support == null
                 ? 'unknown'
                 : 'established';
+        } else {
+          // Keep diagnostics within the public report's message bound, even for long formulas.
+          const excerpt = (text: string) => (text.length > 180 ? `${text.slice(0, 177)}…` : text);
+          targetMessage = `The final line “${excerpt(input.proof.steps[index]!.formula)}” does not match the requested conclusion “${excerpt(input.problem.conclusion)}”.`;
         }
       }
     } else diagnostics.add({ code: 'INCOMPLETE_PROOF', message: 'Proof has no steps.' });
@@ -112,8 +123,8 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
     if (target !== 'established')
       diagnostics.add({
         code: 'TARGET_NOT_ESTABLISHED',
-        message:
-          'The final line must establish the target without temporary-assumption dependencies.',
+        message: targetMessage,
+        ...(index >= 0 ? { stepIndex: index } : {}),
       });
 
     const accepted =
