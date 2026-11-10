@@ -1,6 +1,6 @@
 # UI/UX audit: baseline and proposed work
 
-Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-ui-ux-audit`. Baseline checkout: `97a0db3`. The baseline slice inventoried presentation without changing application code. Subsequent implementation and verification are recorded below; findings remain open unless explicitly resolved.
+Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-dependency-proof-ui` (started as `029-chore-ui-ux-audit`). Baseline checkout: `97a0db3`. The baseline slice inventoried presentation without changing application code. Subsequent implementation and verification are recorded below; findings remain open unless explicitly resolved.
 
 ## Agreed direction and working targets
 
@@ -90,7 +90,7 @@ This is a proposed application of the agreed direction, not a new stylesheet or 
 
 1. Fix shared-style ownership and introduce the field/link/action foundations; validate direct entry versus SPA navigation.
 2. Apply the compact site/workspace shell to Classes as the representative screen, then verify instructor/student/demo and mobile variants.
-3. Prototype the dependency proof display/entry workflow and settle pending-entry semantics; extend to Fitch and tree editing, references and retained review in focused slices.
+3. Prototype the dependency proof display/entry workflow and settle pending-entry semantics. Dependency work is delivered in 029; Fitch and tree editor refinements continue on the separate 030/031 branches.
 4. Refine library/rule authoring, assignment selection/settings, student results, instructor grading, billing and account/error states using the shared patterns.
 5. Run focused keyboard/focus, contrast, zoom/reduced-motion, short-screen/mobile and secondary-browser checks; close or explicitly defer findings and capture before/after evidence.
 
@@ -367,6 +367,14 @@ Validation: **534 web tests**, **1,051 API tests**, contracts/frontend builds an
 Chrome used real local demo APIs for published selection, rule viewing, premise authoring, one-source reference checking/save/publication, draft-only changes, immutable snapshot display, confirmed reference restart and version-two publication. It also verified the shared dependency practice setup. A focused final spacing pass inspected true/false, multiple-choice and dependency setup, including 390px/320px bounds. Screenshots were inspected; no page errors were recorded. Temporary servers and their isolated schemas were removed. Evidence: `.codex-local/ui-audit/029/authoring-polish/` and `authoring-polish-spacing/`.
 
 Formatting, whitespace and local Markdown targets checked. No migration or user development-database reset; no new grading/release policies. This is focused local verification, not full product QA, live Cognito/payment testing or an accessibility/browser matrix. Rule preferences remain documented future work; further Fitch/tree editor redesign remains on separate branches.
+
+## Branch closeout and remaining scope
+
+November 10, 2026: the user closed this delivery around dependency proofs and related library/shared UI work. Rename `029-chore-ui-ux-audit` to **`029-chore-dependency-proof-ui`**; preserve the UI-029 run IDs, historical screenshots and baseline observations. This is not a full-product UI/accessibility sign-off.
+
+The agreed next branches are **030 Fitch proof UI → 031 natural-deduction tree UI → 032 general UI/UX audit**. The [updated plan](../planning/ui-ux-audit.md#next-branch-sequence-after-029) records boundaries and the new assignment-list/settings/content-view backlog. Student/instructor completion indicators, due-date display/sorting/data support and mode badges remain planned; assignment settings and ordered-problem viewing will be separated in that follow-up work. Instructor rule-label preferences remain a separately planned feature.
+
+See [final branch verification](../verification/dependency-proof-ui-verification.md) for the final automated checks and the distinction between earlier focused browser evidence and checks rerun at closeout.
 
 ## Route/state inventory
 

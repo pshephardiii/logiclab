@@ -1,6 +1,6 @@
 # UI and UX audit
 
-Status: in progress on `029-chore-ui-ux-audit`, updated November 9, 2026. The first read-only slice captured the baseline and prioritized findings in the [UI/UX audit record](../qa/ui-ux-audit.md). The user accepted a calm academic direction, desktop-first with usable mobile layouts, and Chrome as the initial browser baseline. Implementation and broader accessibility/browser verification remain pending. Perform before public deployment, including the required proof-editor interaction redesign. Keep it distinct from the correctness/code-structure audit; this plan does not authorize deployment.
+Status: branch 029 is closing as `029-chore-dependency-proof-ui` (renamed from `029-chore-ui-ux-audit`), updated November 10, 2026. It delivers shared UI foundations, dependency-proof interaction across practice/authoring/student/review contexts, and related library improvements. It is **not completion of the general product UI/accessibility audit**. Evidence and explicit limits are in the [UI/UX audit record](../qa/ui-ux-audit.md). The agreed next sequence is Fitch, natural-deduction trees, then a renewed general UI audit before portfolio sandbox preparation. This plan does not authorize deployment.
 
 The branch follows [branch conventions](../conventions/branch-naming-conventions.md). Keep historical branch numbers intact when updating the remaining release sequence.
 
@@ -51,7 +51,7 @@ During QA on October 28, the user accepted separating site-wide and workspace na
 
 Agreed November 5, 2026: redesign proof entry in this UI branch before initial deployment. For numbered proofs, show a clean proof display and a next-line entry area. Confirming **Add line** appends that line to the visible proof. Allow earlier edits, insertion and deletion with stable underlying identities and automatically updated display numbers. Explore the corresponding deliberate branch-building interaction for natural-deduction trees instead of forcing them into a numbered-line layout. Include instructor reference authoring, student editing and read-only review.
 
-Scope updated November 10, 2026: finish the dependency-proof experience across independent practice, instructor authoring, assigned student attempts and read-only review on `029-chore-ui-ux-audit`. Further Fitch and natural-deduction tree editor redesigns will use separate follow-up branches before deployment. Retain shared improvements already applied; this is a sequencing change, not a new checker or proof representation.
+Scope updated November 10, 2026: finish the dependency-proof experience across independent practice, instructor authoring, assigned student attempts and read-only review on `029-chore-dependency-proof-ui`. Further Fitch and natural-deduction tree editor redesigns will use separate follow-up branches before deployment. Retain shared improvements already applied; this is a sequencing change, not a new checker or proof representation.
 
 Preserve the existing backend proof representations, checker semantics, revisions and independent grading/reference-release policies. Adding a line confirms an editing action; it must not silently check correctness or reveal diagnostics withheld by the assignment policy. **Check proof**, saving and final submission retain distinct meanings.
 
@@ -62,3 +62,26 @@ This is a required usability deliverable for the planned UI branch, not an addit
 ## Future feature: instructor rule-label preferences
 
 Provide an instructor settings page for preferred names/aliases by stable rule ID, so authors do not rename the same rules for every new derivation. Use those preferences as defaults for new problems, retain per-problem overrides, and keep effective labels pinned in published versions. Changing preferences must not rename existing published problems or student work. Plan this as a separate feature branch; no preferences storage or settings page is added by the current UI audit.
+
+## Next branch sequence after 029
+
+These names use the next unused local/planned work numbers; confirm availability when each branch is created. This plan does not create or start any branch.
+
+1. **`030-chore-fitch-proof-ui`**: carry the dependency editor's visual/interaction approach into Fitch practice, instructor reference authoring, student attempts and read-only review. Use a growing proof, deliberate entry confirmation, clear conclusion/help, line actions and modal deletion/settings. Adapt the presentation to real Fitch blocks, scope and discharge; retain checker semantics, stable IDs, explicit save/check/submit and release rules.
+2. **`031-chore-tree-proof-ui`**: apply the same clarity to natural-deduction trees across those contexts. Make branch/node construction and explicit assumption discharge understandable; use tree-appropriate interactions rather than copying a numbered-line dependency editor. Build on the shared conventions and completed Fitch review.
+3. **`032-chore-ui-ux-audit`**: resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
+
+Existing shared improvements for all formats remain in place. Further Fitch/tree editor redesign is outside the closing 029 branch.
+
+## Assignment UI backlog for the renewed general audit
+
+Recorded November 10, 2026; **planned work, not implemented in 029**:
+
+- **Student assignment lists:** show completion/submission state clearly, using authoritative saved attempt information. Distinguish final/completed work from pending instructor review or withheld results; private practice needs a meaningful saved/in-progress state because it has no final submission. Settle exact labels during implementation rather than inferring completion from local edits or correctness.
+- **Due dates and ordering:** display assignment due dates and sort earliest due first, with stable ties and undated assignments grouped consistently (proposed: last). Due dates are not currently modeled in the assignment contracts/entities. Add the necessary authoring/data support and agree timezone/display semantics before wiring the list. Display/sorting must not silently introduce late-submission rejection or a new cutoff policy.
+- **Assessment-mode labels:** make Graded, Ungraded practice and Completion only visible in student lists before opening an assignment, with consistent wording and non-color cues.
+- **Instructor class-assignment lists:** provide the corresponding due dates/order and mode labels, plus publication/archive state and appropriate class submission/completion progress. Instructor-wide progress is different from one student's completion; do not present unreleased grades or treat a pending review as missing submitted work.
+- **Assignment editing/settings:** move assessment mode, grade release and answer reveal to a separate settings page/step. Keep these independent policies understandable and mode-aware, preserve valid combinations/published locks, and retain unsaved edits and failed-write recovery across navigation.
+- **Ordered-problem display:** link from assignment editing/settings to a dedicated content/view page instead of displaying all problems directly in the editor. Preserve occurrence order/IDs, repeated problems, pinned published versions and per-problem points; keep content viewing distinct from changing the assignment's structure/settings.
+
+Split prerequisite data/policy work into focused slices if it exceeds the UI audit's scope. These items do not authorize a deadline-enforcement policy change, new deployment or an automatic expansion of 030/031.
