@@ -294,6 +294,18 @@ Chrome verified equal citation widths/vertical alignment, the reported derivatio
 
 No persistence/API policy changes or database regression run; this is focused local Chrome evidence rather than exhaustive visual/accessibility/browser QA.
 
+## Implementation: line-deletion modals and dependency ordering
+
+**UI-029-013**, November 10, 2026: individual Fitch/dependency line deletions and tree-node deletions now use a native confirmation modal. Focus begins on Keep; Escape cancels, cancellation restores focus, and confirmation removes only the selected entry while preserving unresolved incoming references. The shared prompt retains the existing whole-proof/subproof confirmation flow.
+
+Dependency annotations now display current line numbers in ascending numeric order in the entered proof, entry control and read-only summary. Sorting is presentation-only: stored UUID order, duplicate references and missing references remain unchanged. Missing references sort after known numbers; moved lines use their current positions.
+
+![Mobile confirmation modal for an individual proof line](images/ui-audit-029/proof-line-deletion-modal.png)
+
+Validation: **518 web tests**, production build, formatting, whitespace and local Markdown targets passed. Added regression coverage for modal cancellation/initial focus/confirmation and numeric ordering beyond single-digit lines, current positions, missing/duplicate IDs and unchanged proof data. Existing Fitch/dependency/tree deletion tests pass with the native-dialog test stub.
+
+Chrome verified reverse-selected dependencies displaying `{1, 2}` in a valid checked proof; modal initial focus/background inertness/Escape/focus return; mobile containment; confirmed deletion retaining missing references; and Fitch/tree cancellation. Desktop/mobile screenshots were inspected. No page errors; temporary local servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/proof-deletion/`. No backend code changed or database regression suite was repeated; this is focused local Chrome evidence, not a full browser/accessibility audit.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

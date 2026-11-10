@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -5,6 +6,8 @@ import type { CreateLibraryProblemRequest } from '@logiclab/contracts/problem-li
 import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
 import { treeDerivationDefinition, derivationDraft } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
+
+installDialogStub();
 
 function setup(
   definition: TreeDerivationDefinition = { ...treeDerivationDefinition, referenceProof: null },

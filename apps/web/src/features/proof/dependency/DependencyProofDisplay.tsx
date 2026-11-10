@@ -1,3 +1,4 @@
+import { dependencyNumbers } from './dependency-numbers';
 import { proofNotation } from '../helpers/proof-notation';
 import type { DependencyProof } from '@logiclab/contracts';
 import './dependency-proof-display.css';
@@ -71,7 +72,7 @@ export function DependencyProofDisplay({
             >
               <td className="proof-line-dependencies">
                 {'{'}
-                {step.dependencies.map(line).join(', ')}
+                {dependencyNumbers(step.dependencies, positions)}
                 {'}'}
               </td>
               <th className="proof-line-number" scope="row">

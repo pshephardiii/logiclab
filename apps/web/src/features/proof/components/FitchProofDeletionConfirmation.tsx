@@ -1,3 +1,5 @@
+import { ProofDeletionPrompt } from './ProofDeletionPrompt';
+
 type Props = {
   reference: boolean;
   kind: 'line' | 'block' | 'proof';
@@ -15,9 +17,10 @@ export function FitchProofDeletionConfirmation({
   onCancel,
 }: Props) {
   return (
-    <div
-      role="group"
-      aria-label={reference ? 'Confirm reference deletion' : 'Confirm proof deletion'}
+    <ProofDeletionPrompt
+      modal={kind === 'line'}
+      label={reference ? 'Confirm reference deletion' : 'Confirm proof deletion'}
+      onCancel={onCancel}
     >
       <p>
         Delete {deletedCount} {reference ? 'reference' : 'proof'} line(s)
@@ -35,6 +38,6 @@ export function FitchProofDeletionConfirmation({
       <button type="button" className="secondary" onClick={onCancel}>
         {reference ? 'Keep reference work' : 'Keep proof work'}
       </button>
-    </div>
+    </ProofDeletionPrompt>
   );
 }

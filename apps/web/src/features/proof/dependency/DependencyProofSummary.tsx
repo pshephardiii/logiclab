@@ -1,3 +1,4 @@
+import { dependencyNumbers } from './dependency-numbers';
 import type { DependencyProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 
@@ -44,7 +45,7 @@ export function DependencyProofSummary({
                 'Assumption'
               )}
               ; dependencies {'{'}
-              {step.dependencies.map(line).join(', ')}
+              {dependencyNumbers(step.dependencies, positions, '?')}
               {'}'}
             </li>
           ))}

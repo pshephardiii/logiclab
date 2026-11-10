@@ -1,3 +1,4 @@
+import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useState } from 'react';
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
@@ -133,7 +134,11 @@ export function TreeProofEditor({
             {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
-            <div role="group" aria-label="Confirm tree deletion">
+            <ProofDeletionPrompt
+              modal={!('all' in deletion)}
+              label="Confirm tree deletion"
+              onCancel={() => setDeletion(null)}
+            >
               <p>
                 {'all' in deletion
                   ? reference
@@ -153,7 +158,7 @@ export function TreeProofEditor({
               <button type="button" className="secondary" onClick={() => setDeletion(null)}>
                 Keep proof
               </button>
-            </div>
+            </ProofDeletionPrompt>
           )}
         </>
       )}

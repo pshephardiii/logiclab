@@ -1,3 +1,4 @@
+import { dependencyNumbers } from './dependency-numbers';
 import { proofNotation } from '../helpers/proof-notation';
 import { PROOF_LIMITS, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofDropdown } from '../components/ProofDropdown';
@@ -16,7 +17,7 @@ export function DependencySources({
   const sources = steps.slice(0, index + 1).filter((line) => line.kind !== 'inference');
   const missing = step.dependencies.filter((id) => !sources.some((source) => source.id === id));
   const value = step.dependencies.length
-    ? `{${step.dependencies.map((id) => positions.get(id) ?? '?').join(', ')}}`
+    ? `{${dependencyNumbers(step.dependencies, positions, '?')}}`
     : '∅';
 
   return (

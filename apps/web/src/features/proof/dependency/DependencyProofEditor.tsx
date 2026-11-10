@@ -1,3 +1,4 @@
+import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
@@ -280,7 +281,11 @@ export function DependencyProofEditor({
             {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
-            <div role="group" aria-label="Confirm proof deletion">
+            <ProofDeletionPrompt
+              modal={deletion.kind === 'line'}
+              label="Confirm proof deletion"
+              onCancel={() => setDeletion(null)}
+            >
               <p>
                 {deletion.kind === 'proof'
                   ? reference
@@ -309,7 +314,7 @@ export function DependencyProofEditor({
               <button type="button" className="secondary" onClick={() => setDeletion(null)}>
                 Keep proof
               </button>
-            </div>
+            </ProofDeletionPrompt>
           )}
         </>
       )}

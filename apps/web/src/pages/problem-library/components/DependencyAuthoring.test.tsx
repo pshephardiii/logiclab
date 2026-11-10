@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { lineAction, openDependencies } from '../../../../test/proof-controls';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,6 +11,8 @@ import type { DependencyDerivationDefinition } from '@logiclab/contracts/depende
 import { derivationDraft, derivationDefinition } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
 import { DerivationSummary } from './DerivationSummary';
+
+installDialogStub();
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';

@@ -1,10 +1,13 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { lineAction, openDependencies } from '../../../../test/proof-controls';
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import type { DependencyProof } from '@logiclab/contracts';
 import { DependencyProofEditor } from './DependencyProofEditor';
+
+installDialogStub();
 
 const source = '11111111-1111-4111-8111-111111111111';
 const inference = '22222222-2222-4222-8222-222222222222';
@@ -195,4 +198,20 @@ test('conditional introduction explicitly starts an assumption and its line menu
     dependencies: [],
     discharges: [{ assumptionId: assumption.id, conclusionId: assumption.id }],
   });
+});
+
+test('line deletion opens a modal focused on Keep; Escape preserves the proof', async () => {
+  const { user, onChange } = setup();
+  await lineAction(user, 1, 'Delete line 1');
+  const dialog = screen.getByRole('dialog', { name: 'Confirm proof deletion' });
+  expect(within(dialog).getByRole('button', { name: 'Keep proof' })).toHaveFocus();
+  expect(onChange).not.toHaveBeenCalled();
+  fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(onChange).not.toHaveBeenCalled();
+  await lineAction(user, 1, 'Delete line 1');
+  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  expect(onChange.mock.lastCall![0].steps.map((step: { id: string }) => step.id)).toEqual([
+    inference,
+  ]);
 });

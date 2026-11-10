@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -6,6 +7,8 @@ import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import { derivationDefinition, derivationDraft } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
+
+installDialogStub();
 
 function setup(definition = derivationDefinition) {
   const onSave = vi
