@@ -306,6 +306,28 @@ Validation: **518 web tests**, production build, formatting, whitespace and loca
 
 Chrome verified reverse-selected dependencies displaying `{1, 2}` in a valid checked proof; modal initial focus/background inertness/Escape/focus return; mobile containment; confirmed deletion retaining missing references; and Fitch/tree cancellation. Desktop/mobile screenshots were inspected. No page errors; temporary local servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/proof-deletion/`. No backend code changed or database regression suite was repeated; this is focused local Chrome evidence, not a full browser/accessibility audit.
 
+## Implementation: dependency layout across authoring and assigned work
+
+**UI-029-014**, November 10, 2026: finish the dependency-proof layout across its real consumers. Further Fitch/tree editor redesign is deferred to separate branches, as recorded in [the audit plan](../planning/ui-ux-audit.md#required-before-deployment-proof-editor-interaction-redesign).
+
+- Promote the grouped rules modal, gesture-safe opener and setup styles into the shared proof feature. Independent practice and dependency authoring use the same grouped picker; instructor label controls appear for enabled rules inside the modal. Disabling/re-enabling retains label drafts. Enter in a label field does not submit the surrounding authoring form. Styles load directly in authoring, without visiting practice first.
+- Space dependency setup using the practice patterns. Once a reference exists, put its statement/explanation fields behind explicit **Edit statement / Done editing statement** controls. Keep the nearby Conclusion, shared guides, inline entry, assumption guides, line actions and deletion modal visible. Statement edits retain reference/premise identities; publication still requires the saved reference to pass under the current statement and rules. Instructors can deliberately edit their statement; the editor does not add new premises after start.
+- Give dependency reference checking the shared colored feedback and line-by-line report, with an authoring-specific title and the explicit save-before-publication reminder. Keep local checking separate from saving and server publication checks.
+- Remove the repeated permitted-rule list and redundant proof-saving paragraph from dependency attempts. Show configured starting premises before Start proof, then the same compact editor, Conclusion, guides and check action as practice. Keep assigned format/rules pinned, saving explicit, pending-entry gates and independently authorized feedback/solution access.
+- Render authorized dependency previews, submitted work and solutions with the same diagram in read-only mode, without mutation controls. Submitted student review retains the authoritative problem premises/Conclusion and static rule reference. Duplicate-identity fallback remains explicit instead of disguising malformed data.
+
+![Dependency reference authoring with compact statement controls and shared feedback](images/ui-audit-029/dependency-authoring-workspace.png)
+
+![Student attempt using the shared dependency workspace](images/ui-audit-029/dependency-student-workspace.png)
+
+![Authorized reference rendered as a read-only dependency diagram](images/ui-audit-029/dependency-readonly-solution.png)
+
+Validation: **521 web tests**, production build, formatting, whitespace and local Markdown targets passed. New coverage checks grouped authoring/labels, Enter isolation, disable/re-enable retention, deliberate statement edits with preserved references, compact student start without automatic writes/checks, and submitted read-only diagrams with authoritative premises. Existing saves/failures, pending entries, archive/busy states, grading/release and other-format regressions remain passing.
+
+Chrome started directly in instructor authoring, edited a custom rule label, constructed/checked a dependency reference, explicitly saved/published it, and checked the compact authoring state. The student journey used a real seeded demo assignment to build/check/save/reload a dependency proof and fetch its independently authorized reference diagram. Reload retains its existing return-to-first-problem behavior; the script reselected problem 2 to inspect persisted work. Practice's shared picker was rechecked. Desktop/mobile screenshots were inspected, no page errors occurred and 390px/320px checks found no document-wide overflow. Temporary servers and their isolated schema were removed. Evidence: `.codex-local/ui-audit/029/dependency-contexts/`.
+
+No backend/persistence policy changes or database regression suite rerun. Submitted-review controls also have component coverage; the focused browser journey covered assigned practice and authorized solutions, not a new graded-finalization/release journey. Normal and demo consumers share these components; no live Cognito/normal-account browser session or complete accessibility/browser matrix was exercised.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

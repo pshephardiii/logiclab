@@ -1,10 +1,11 @@
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
-import { PracticeRuleDialog } from './PracticeRuleDialog';
+import { ProofRulePicker } from '../../../features/proof/components/ProofRulePicker';
+import '../../../features/proof/components/proof-setup.css';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import { practiceStatement, type PracticeStatement } from '../helpers/practice-proof';
 
@@ -32,26 +33,6 @@ export function ProofPracticeSetup({
     PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id),
   );
   const [error, setError] = useState<string | null>(null);
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const openingFrame = useRef<number | null>(null);
-  useEffect(
-    () => () => {
-      if (openingFrame.current !== null) cancelAnimationFrame(openingFrame.current);
-    },
-    [],
-  );
-
-  function openRules(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.currentTarget.focus();
-    if (openingFrame.current !== null) return;
-    // Mount after the opening gesture has finished, so it cannot hit a newly overlaid checkbox.
-    openingFrame.current = requestAnimationFrame(() => {
-      openingFrame.current = null;
-      setRulesOpen(true);
-    });
-  }
   useUnsavedWork(
     premises.length > 0 ||
       conclusion.length > 0 ||
@@ -159,18 +140,9 @@ export function ProofPracticeSetup({
         </p>
       )}
       <div className="proof-setup-actions">
-        <button type="button" className="secondary" onClick={openRules}>
-          Permitted rules ({ruleIds.length} selected)
-        </button>
+        <ProofRulePicker selected={ruleIds} onChange={setRuleIds} />
         <button type="submit">Begin proof practice</button>
       </div>
-      {rulesOpen && (
-        <PracticeRuleDialog
-          selected={ruleIds}
-          onChange={setRuleIds}
-          onClose={() => setRulesOpen(false)}
-        />
-      )}
     </form>
   );
 }

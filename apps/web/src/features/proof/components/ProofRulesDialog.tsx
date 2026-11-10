@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef } from 'react';
+import './proof-rules-dialog.css';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
 
 const coreGroups = [
@@ -18,34 +19,39 @@ const categories = [
 ] as const;
 
 /** Settings apply immediately, including when Escape closes the dialog. */
-export function PracticeRuleDialog({
+export function ProofRulesDialog({
   selected,
   onChange,
   onClose,
+  renderDetails,
 }: {
   selected: string[];
   onChange: (ids: string[]) => void;
   onClose: () => void;
+  renderDetails?: (rule: (typeof PROPOSITIONAL_RULE_CATALOG)[number]) => ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
   function ruleChoice(rule: (typeof PROPOSITIONAL_RULE_CATALOG)[number]) {
     return (
-      <label key={rule.id}>
-        <input
-          type="checkbox"
-          checked={selected.includes(rule.id)}
-          onChange={(event) =>
-            onChange(
-              event.target.checked
-                ? [...selected, rule.id]
-                : selected.filter((id) => id !== rule.id),
-            )
-          }
-        />
-        <span>{rule.label}</span>
-      </label>
+      <div key={rule.id}>
+        <label>
+          <input
+            type="checkbox"
+            checked={selected.includes(rule.id)}
+            onChange={(event) =>
+              onChange(
+                event.target.checked
+                  ? [...selected, rule.id]
+                  : selected.filter((id) => id !== rule.id),
+              )
+            }
+          />
+          <span>{rule.label}</span>
+        </label>
+        {renderDetails?.(rule)}
+      </div>
     );
   }
 
@@ -63,8 +69,16 @@ export function PracticeRuleDialog({
   return (
     <dialog
       ref={dialog}
-      className="practice-rule-dialog"
+      className="proof-rule-dialog"
       aria-labelledby={titleId}
+      onKeyDown={(event) => {
+        if (
+          event.key === 'Enter' &&
+          event.target instanceof HTMLInputElement &&
+          event.target.type !== 'checkbox'
+        )
+          event.preventDefault();
+      }}
       onClickCapture={(event) => {
         if (event.detail <= 1) return;
         event.preventDefault();
@@ -91,8 +105,8 @@ export function PracticeRuleDialog({
           ×
         </button>
       </header>
-      <div className="practice-rule-options">
-        <div className="practice-rule-bulk">
+      <div className="proof-rule-options">
+        <div className="proof-rule-bulk">
           <button
             type="button"
             className="text-button"
@@ -104,11 +118,11 @@ export function PracticeRuleDialog({
             Clear selection
           </button>
         </div>
-        <fieldset className="practice-rule-core">
+        <fieldset className="proof-rule-core">
           <legend>Core rules</legend>
-          <div className="practice-rule-categories">
+          <div className="proof-rule-categories">
             {coreGroups.map((group) => (
-              <fieldset className="practice-rule-category" key={group.label}>
+              <fieldset className="proof-rule-category" key={group.label}>
                 <legend>{group.label}</legend>
                 {PROPOSITIONAL_RULE_CATALOG.filter((rule) => group.ids.includes(rule.id)).map(
                   ruleChoice,
@@ -117,9 +131,9 @@ export function PracticeRuleDialog({
             ))}
           </div>
         </fieldset>
-        <div className="practice-rule-categories practice-rule-extra">
+        <div className="proof-rule-categories proof-rule-extra">
           {categories.map((category) => (
-            <fieldset className="practice-rule-category" key={category.id}>
+            <fieldset className="proof-rule-category" key={category.id}>
               <legend>{category.label}</legend>
               {PROPOSITIONAL_RULE_CATALOG.filter((rule) => rule.category === category.id).map(
                 ruleChoice,

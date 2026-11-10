@@ -1,0 +1,19 @@
+.dependency-authoring {
+  margin-top: 1.5rem;
+}
+.dependency-authoring-statement {
+  margin-block: 1.5rem;
+}
+.dependency-authoring-statement input {
+  width: 100%;
+}
+.dependency-authoring .proof-setup-premise .action-row {
+  margin-top: 0.5rem;
+  gap: 0.5rem;
+}
+.dependency-authoring-rules {
+  margin-block: 1.5rem;
+}
+.dependency-authoring .proof-setup-premises > button {
+  margin-bottom: 0.5rem;
+}

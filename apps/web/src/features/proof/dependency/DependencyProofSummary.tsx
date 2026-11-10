@@ -1,3 +1,5 @@
+import { DependencyProofDisplay } from './DependencyProofDisplay';
+import { uniqueDependencyIds } from './editor';
 import { dependencyNumbers } from './dependency-numbers';
 import type { DependencyProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
@@ -24,6 +26,14 @@ export function DependencyProofSummary({
         <p>No proof entered.</p>
       ) : !proof.steps.length ? (
         <p>No proof lines entered.</p>
+      ) : uniqueDependencyIds(proof) ? (
+        <DependencyProofDisplay
+          proof={proof}
+          rules={rules}
+          selectedId={null}
+          readOnly
+          label={`${label} diagram`}
+        />
       ) : (
         <ol>
           {proof.steps.map((step, index) => (

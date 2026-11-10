@@ -150,7 +150,11 @@ test('private dependency previews show source sets, discharge lines and explanat
   expect(screen.getByText(/Dependency/)).toBeInTheDocument();
   expect(screen.getByText('Private instructor explanation')).toBeInTheDocument();
   expect(screen.getByText(/discharge 1–1/)).toBeInTheDocument();
-  expect(screen.getAllByText(/dependencies/)).toHaveLength(2);
+  expect(screen.getByRole('columnheader', { name: 'Dependencies' })).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Private reference proof diagram' })).toHaveTextContent(
+    '{1}',
+  );
+  expect(screen.queryByRole('button', { name: /Actions for line/ })).not.toBeInTheDocument();
 });
 
 test('archive and busy guards cover dependency editing and format changes', () => {
@@ -214,4 +218,38 @@ test('a clean saved draft becomes dirty for pending entry and blocks checks, pre
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   expect(onDirty).toHaveBeenLastCalledWith(false);
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+});
+
+test('dependency authoring uses grouped rule/label settings and explicit statement editing without replacing the reference', async () => {
+  const { user, onSave } = setup(definition());
+  expect(screen.getByLabelText('Conclusion')).not.toBeVisible();
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P → P');
+  await user.click(screen.getByRole('button', { name: 'Permitted rules (1 selected)' }));
+  const dialog = await screen.findByRole('dialog', { name: 'Permitted rules' });
+  expect(within(dialog).getByRole('group', { name: 'Implication' })).toBeInTheDocument();
+  const label = within(dialog).getByLabelText('Label for Implication introduction');
+  await user.clear(label);
+  await user.type(label, 'Our conditional proof{Enter}');
+  expect(onSave).not.toHaveBeenCalled();
+  await user.click(within(dialog).getByRole('checkbox', { name: 'Implication introduction' }));
+  expect(
+    within(dialog).queryByLabelText('Label for Implication introduction'),
+  ).not.toBeInTheDocument();
+  await user.click(within(dialog).getByRole('checkbox', { name: 'Implication introduction' }));
+  expect(within(dialog).getByLabelText('Label for Implication introduction')).toHaveValue(
+    'Our conditional proof',
+  );
+  await user.click(within(dialog).getByRole('button', { name: 'Done' }));
+  await user.click(screen.getByRole('button', { name: 'Edit statement' }));
+  expect(screen.getByLabelText('Conclusion')).toBeVisible();
+  await user.clear(screen.getByLabelText('Conclusion'));
+  await user.type(screen.getByLabelText('Conclusion'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing statement' }));
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('Q');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave.mock.lastCall![0].definition).toMatchObject({
+    conclusion: 'Q',
+    referenceProof: definition().referenceProof,
+    rules: [{ id: 'implication_introduction', label: 'Our conditional proof' }],
+  });
 });

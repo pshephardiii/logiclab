@@ -313,3 +313,20 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
     expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
   },
 );
+
+test('dependency attempts start in the compact workspace without a repeated rule list or automatic writes', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: dependencyWork,
+    attempt: { ...dependencySaved, answers: {} },
+  });
+  const { user } = await open();
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+  expect(screen.queryByRole('heading', { name: 'Permitted rules' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Starting premises' })).toHaveTextContent('P');
+  await user.click(screen.getByRole('button', { name: 'Start proof' }));
+  expect(screen.queryByRole('region', { name: 'Starting premises' })).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('');
+  expect(screen.getByRole('table', { name: 'Entered proof' })).toHaveTextContent('Premise');
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+});

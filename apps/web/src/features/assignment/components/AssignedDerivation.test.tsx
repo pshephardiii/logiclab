@@ -1,3 +1,4 @@
+import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -277,4 +278,28 @@ test('unassessable feedback is explicit and does not invent a failed proof or nu
   expect(screen.getByText('The checking work limit was reached.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
   expect(screen.queryByText(/incorrect|zero credit|0 points/i)).not.toBeInTheDocument();
+});
+
+test('submitted dependency review keeps authoritative premises and uses the shared diagram without editing controls', async () => {
+  const user = userEvent.setup();
+  const source = dependencyWork.items[0]!;
+  if (!('content' in source) || source.content.type !== 'derivation')
+    throw new Error('Expected derivation fixture');
+  const onAnswer = vi.fn();
+  render(
+    <AssignedDerivation
+      item={{ ...source, content: source.content }}
+      answer={dependencyAnswer}
+      readOnly
+      onAnswer={onAnswer}
+    />,
+  );
+  expect(screen.getByRole('region', { name: 'Problem premises' })).toHaveTextContent('P');
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+  await user.click(screen.getByText('Your submitted proof', { exact: true }));
+  const diagram = screen.getByRole('region', { name: 'Your submitted proof diagram' });
+  expect(within(diagram).getByRole('columnheader', { name: 'Dependencies' })).toBeInTheDocument();
+  expect(within(diagram).queryByRole('button')).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(onAnswer).not.toHaveBeenCalled();
 });

@@ -5,9 +5,11 @@ import './proof-feedback.css';
 export function ProofFeedback({
   report,
   stepLabel = 'Line',
+  title,
 }: {
   report: ProofCheckReport;
   stepLabel?: 'Line' | 'Node';
+  title?: string;
 }) {
   return (
     <section
@@ -19,11 +21,12 @@ export function ProofFeedback({
           {report.status === 'accepted' ? '✓' : report.status === 'needs_review' ? '!' : '?'}
         </span>
         <strong>
-          {report.status === 'accepted'
-            ? 'Proof verified.'
-            : report.status === 'needs_review'
-              ? 'Proof needs attention.'
-              : 'Proof could not be fully checked.'}
+          {title ??
+            (report.status === 'accepted'
+              ? 'Proof verified.'
+              : report.status === 'needs_review'
+                ? 'Proof needs attention.'
+                : 'Proof could not be fully checked.')}
         </strong>
       </p>
       <p>

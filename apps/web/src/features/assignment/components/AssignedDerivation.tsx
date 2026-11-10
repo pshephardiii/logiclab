@@ -1,3 +1,5 @@
+import { ProofHelp } from '../../proof/reference/ProofHelp';
+import { proofNotation } from '../../proof/helpers/proof-notation';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import type {
   SavedDerivationAnswer as DerivationAnswer,
@@ -58,7 +60,8 @@ export function AssignedDerivation({
     JSON.stringify(proof) === JSON.stringify(feedback.proof)
       ? feedback.report
       : null;
-  const showStatement = readOnly || !proof || proof.format !== item.content.format;
+  const dependency = item.content.format === 'dependency';
+  const showStatement = !dependency && (readOnly || !proof || proof.format !== item.content.format);
 
   return (
     <section className="panel assigned-item proof-editor">
@@ -74,6 +77,27 @@ export function AssignedDerivation({
             ? 'Fitch'
             : 'Dependency'}
       </p>
+      {dependency && readOnly && (
+        <>
+          {item.content.premises.length > 0 && (
+            <section aria-label="Problem premises">
+              <h3>Premises</h3>
+              <ol>
+                {item.content.premises.map((premise) => (
+                  <li key={premise.id}>
+                    <code>{proofNotation(premise.formula)}</code>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+          <p className="proof-goal" aria-label="Proof conclusion">
+            <span>Conclusion</span>
+            <code>{proofNotation(item.content.conclusion)}</code>
+          </p>
+          <ProofHelp format="dependency" rules={item.content.rules} />
+        </>
+      )}
       {showStatement && (
         <>
           <h3>Premises</h3>
@@ -117,11 +141,13 @@ export function AssignedDerivation({
         />
       ) : (
         <>
-          <p className="help">
-            Use Save problem to persist your proof. Incomplete formulas and unfinished steps can be
-            saved.
-            {onCheck && ' Check proof evaluates your current work without saving it.'}
-          </p>
+          {!dependency && (
+            <p className="help">
+              Use Save problem to persist your proof. Incomplete formulas and unfinished steps can
+              be saved.
+              {onCheck && ' Check proof evaluates your current work without saving it.'}
+            </p>
+          )}
           <fieldset disabled={disabled} aria-label="Edit proof">
             {item.content.format === 'tree' ? (
               <TreeProofEditor
@@ -165,13 +191,15 @@ export function AssignedDerivation({
               />
             )}
             {onCheck && (
-              <button
-                type="button"
-                disabled={checking || disabled || entryPending}
-                onClick={() => !entryPending && onCheck()}
-              >
-                {checking ? 'Checking proof…' : 'Check proof'}
-              </button>
+              <div className={dependency ? 'proof-check-actions' : undefined}>
+                <button
+                  type="button"
+                  disabled={checking || disabled || entryPending}
+                  onClick={() => !entryPending && onCheck()}
+                >
+                  {checking ? 'Checking proof…' : 'Check proof'}
+                </button>
+              </div>
             )}
           </fieldset>
         </>

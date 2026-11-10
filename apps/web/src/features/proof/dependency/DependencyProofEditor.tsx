@@ -1,3 +1,4 @@
+import { proofNotation } from '../helpers/proof-notation';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
@@ -166,6 +167,18 @@ export function DependencyProofEditor({
       <ProofHelp format="dependency" rules={statement.rules} />
       {!proof ? (
         <>
+          {!reference && statement.premises.length > 0 && (
+            <section aria-label="Starting premises">
+              <h4>Premises</h4>
+              <ol>
+                {statement.premises.map((premise) => (
+                  <li key={premise.id}>
+                    <code>{proofNotation(premise.formula)}</code>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
           <button
             type="button"
             onClick={() => {

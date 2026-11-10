@@ -1,3 +1,4 @@
+import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useState } from 'react';
 import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
@@ -89,26 +90,38 @@ export function LocalReferenceCheck({
           {current.error}
         </p>
       )}
-      {current?.report && (
-        <>
-          <p role="status">
-            {current.report.status === 'accepted'
-              ? 'Current reference accepted. Save it before publishing.'
-              : current.report.status === 'needs_review'
-                ? 'Current reference needs correction.'
-                : 'Current reference could not be fully assessed.'}
-          </p>
-          <ul>
-            {current.report.diagnostics.map((diagnostic, index) => (
-              <li key={index}>
-                {diagnostic.stepIndex !== undefined &&
-                  `${definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
-                {diagnostic.message}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {current?.report &&
+        (definition.format === 'dependency' ? (
+          <ProofFeedback
+            report={current.report}
+            title={
+              current.report.status === 'accepted'
+                ? 'Current reference accepted. Save it before publishing.'
+                : current.report.status === 'needs_review'
+                  ? 'Current reference needs correction.'
+                  : 'Current reference could not be fully assessed.'
+            }
+          />
+        ) : (
+          <>
+            <p role="status">
+              {current.report.status === 'accepted'
+                ? 'Current reference accepted. Save it before publishing.'
+                : current.report.status === 'needs_review'
+                  ? 'Current reference needs correction.'
+                  : 'Current reference could not be fully assessed.'}
+            </p>
+            <ul>
+              {current.report.diagnostics.map((diagnostic, index) => (
+                <li key={index}>
+                  {diagnostic.stepIndex !== undefined &&
+                    `${definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
+                  {diagnostic.message}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
     </section>
   );
 }

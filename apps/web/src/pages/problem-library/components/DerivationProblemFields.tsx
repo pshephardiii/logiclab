@@ -1,3 +1,6 @@
+import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
+import '../../../features/proof/components/proof-setup.css';
+import './dependency-authoring.css';
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
@@ -31,6 +34,9 @@ export function DerivationProblemFields({
   onPendingChange,
 }: Props) {
   const definition = fields.derivation;
+  const dependency = definition.format === 'dependency';
+  const [editingStatement, setEditingStatement] = useState(false);
+  const hideStatement = dependency && Boolean(definition.referenceProof) && !editingStatement;
 
   const [pendingFormat, setPendingFormat] = useState<
     AuthoringDerivationDefinition['format'] | null
@@ -51,27 +57,36 @@ export function DerivationProblemFields({
   }
 
   return (
-    <>
-      <label htmlFor="derivation-format">Proof format</label>
-      <select
-        id="derivation-format"
-        disabled={entryPending}
-        value={definition.format}
-        onChange={(event) => {
-          const format = event.target.value as AuthoringDerivationDefinition['format'];
+    <div className={dependency ? 'dependency-authoring proof-editor' : undefined}>
+      <div className={dependency ? 'proof-setup-toolbar' : undefined}>
+        <div>
+          <label htmlFor="derivation-format">Proof format</label>
+          <select
+            id="derivation-format"
+            disabled={entryPending}
+            value={definition.format}
+            onChange={(event) => {
+              const format = event.target.value as AuthoringDerivationDefinition['format'];
 
-          setPendingFormat(null);
+              setPendingFormat(null);
 
-          if (format === definition.format) return;
+              if (format === definition.format) return;
 
-          if (definition.referenceProof) setPendingFormat(format);
-          else onChange({ ...fields, derivation: { ...definition, format, referenceProof: null } });
-        }}
-      >
-        <option value="fitch">Fitch</option>
-        <option value="dependency">Dependency</option>
-        <option value="tree">Natural-deduction tree</option>
-      </select>
+              if (definition.referenceProof) setPendingFormat(format);
+              else
+                onChange({
+                  ...fields,
+                  derivation: { ...definition, format, referenceProof: null },
+                });
+            }}
+          >
+            <option value="fitch">Fitch</option>
+            <option value="dependency">Dependency</option>
+            <option value="tree">Natural-deduction tree</option>
+          </select>
+        </div>
+        {dependency && !hideStatement && <ProofKeyboardGuide />}
+      </div>
       {pendingFormat && (
         <div role="group" aria-label="Confirm proof format change">
           <p>
@@ -96,108 +111,133 @@ export function DerivationProblemFields({
           </button>
         </div>
       )}
-      <p className="help">
-        Save an unfinished statement now. Publication requires an accepted reference under these
-        exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
-        snapshots can be added to assignments.
-      </p>
-      <section aria-label="Derivation premises">
-        <h3>Premises</h3>
-        {!definition.premises.length && (
-          <p>No premises. A derivation may prove a theorem without premises.</p>
-        )}
-        {definition.premises.map((premise, index) => (
-          <div className="problem-option" key={premise.id}>
-            <label htmlFor={`premise-${premise.id}`}>Premise {index + 1}</label>
-            <ProofFormulaInput
-              id={`premise-${premise.id}`}
-              {...formulaInput}
-              value={premise.formula}
-              onValueChange={(formula) =>
-                change({
-                  premises: definition.premises.map((value) =>
-                    value.id === premise.id ? { ...value, formula } : value,
-                  ),
-                })
-              }
-            />
-            <div className="action-row">
-              <button
-                type="button"
-                className="secondary"
-                disabled={index === 0}
-                onClick={() => movePremise(index, -1)}
-              >
-                Move premise {index + 1} up
-              </button>
-              <button
-                type="button"
-                className="secondary"
-                disabled={index === definition.premises.length - 1}
-                onClick={() => movePremise(index, 1)}
-              >
-                Move premise {index + 1} down
-              </button>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() =>
-                  change({
-                    premises: definition.premises.filter((value) => value.id !== premise.id),
-                  })
-                }
-              >
-                Remove premise {index + 1}
-              </button>
-            </div>
-          </div>
-        ))}
+      {dependency && definition.referenceProof && (
         <button
           type="button"
-          disabled={definition.premises.length >= PROOF_LIMITS.maxPremises}
-          onClick={() =>
-            change({ premises: [...definition.premises, { id: crypto.randomUUID(), formula: '' }] })
-          }
+          className="secondary"
+          disabled={entryPending}
+          aria-expanded={!hideStatement}
+          onClick={() => setEditingStatement(!editingStatement)}
         >
-          Add premise
+          {hideStatement ? 'Edit statement' : 'Done editing statement'}
         </button>
+      )}
+      <section
+        hidden={hideStatement}
+        className={dependency ? 'dependency-authoring-statement' : undefined}
+      >
+        <p className="help">
+          Save an unfinished statement now. Publication requires an accepted reference under these
+          exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
+          snapshots can be added to assignments.
+        </p>
+        <section
+          aria-label="Derivation premises"
+          className={dependency ? 'proof-setup-premises' : undefined}
+        >
+          <h3>Premises</h3>
+          {!definition.premises.length && (
+            <p>No premises. A derivation may prove a theorem without premises.</p>
+          )}
+          {definition.premises.map((premise, index) => (
+            <div className={dependency ? 'proof-setup-premise' : 'problem-option'} key={premise.id}>
+              <label htmlFor={`premise-${premise.id}`}>Premise {index + 1}</label>
+              <ProofFormulaInput
+                id={`premise-${premise.id}`}
+                {...formulaInput}
+                value={premise.formula}
+                onValueChange={(formula) =>
+                  change({
+                    premises: definition.premises.map((value) =>
+                      value.id === premise.id ? { ...value, formula } : value,
+                    ),
+                  })
+                }
+              />
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={index === 0}
+                  onClick={() => movePremise(index, -1)}
+                >
+                  Move premise {index + 1} up
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={index === definition.premises.length - 1}
+                  onClick={() => movePremise(index, 1)}
+                >
+                  Move premise {index + 1} down
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() =>
+                    change({
+                      premises: definition.premises.filter((value) => value.id !== premise.id),
+                    })
+                  }
+                >
+                  Remove premise {index + 1}
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            disabled={definition.premises.length >= PROOF_LIMITS.maxPremises}
+            onClick={() =>
+              change({
+                premises: [...definition.premises, { id: crypto.randomUUID(), formula: '' }],
+              })
+            }
+          >
+            Add premise
+          </button>
+        </section>
+        <label htmlFor="derivation-conclusion">Conclusion</label>
+        <ProofFormulaInput
+          id="derivation-conclusion"
+          {...formulaInput}
+          value={definition.conclusion}
+          onValueChange={(conclusion) => change({ conclusion })}
+        />
       </section>
-      <label htmlFor="derivation-conclusion">Conclusion</label>
-      <ProofFormulaInput
-        id="derivation-conclusion"
-        {...formulaInput}
-        value={definition.conclusion}
-        onValueChange={(conclusion) => change({ conclusion })}
-      />
-      <DerivationRuleFields
-        format={definition.format}
-        rules={definition.rules}
-        labels={fields.derivationLabels}
-        onChange={(rules, derivationLabels) =>
-          onChange({
-            ...fields,
-            derivationLabels,
-            derivation: { ...definition, rules },
-          })
-        }
-      />
-      <label htmlFor="derivation-explanation">Reference explanation (optional)</label>
-      <textarea
-        id="derivation-explanation"
-        maxLength={DERIVATION_AUTHORING_LIMITS.explanation}
-        value={definition.explanation ?? ''}
-        onChange={(event) => change({ explanation: event.target.value || null })}
-      />
-      <p className="help">
-        The explanation is private reference-answer content. Changing the statement or rules
-        preserves the existing reference; check it again after saving.
-      </p>
+      <div className={dependency ? 'dependency-authoring-rules' : undefined}>
+        <DerivationRuleFields
+          format={definition.format}
+          rules={definition.rules}
+          labels={fields.derivationLabels}
+          onChange={(rules, derivationLabels) =>
+            onChange({
+              ...fields,
+              derivationLabels,
+              derivation: { ...definition, rules },
+            })
+          }
+        />
+      </div>
+      <div hidden={hideStatement}>
+        <label htmlFor="derivation-explanation">Reference explanation (optional)</label>
+        <textarea
+          id="derivation-explanation"
+          maxLength={DERIVATION_AUTHORING_LIMITS.explanation}
+          value={definition.explanation ?? ''}
+          onChange={(event) => change({ explanation: event.target.value || null })}
+        />
+        <p className="help">
+          The explanation is private reference-answer content. Changing the statement or rules
+          preserves the existing reference; check it again after saving.
+        </p>
+      </div>
       <ReferenceProofEditor
         onPendingChange={onPendingChange}
         definition={definition}
         onChange={(derivation) => onChange({ ...fields, derivation })}
       />
       <LocalReferenceCheck definition={definition} disabled={entryPending} />
-    </>
+    </div>
   );
 }

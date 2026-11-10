@@ -18,19 +18,23 @@ export function DependencyProofDisplay({
   onDelete,
   onDischarge,
   entry,
-  entryLabel,
+  entryLabel = 'New proof line',
+  readOnly = false,
+  label = 'Entered dependency proof',
 }: {
   proof: DependencyProof;
   rules: { id: string; label: string }[];
   selectedId: string | null;
-  onEdit: (id: string) => void;
+  onEdit?: (id: string) => void;
   disabled?: boolean;
-  onMove: (index: number, delta: -1 | 1) => void;
-  onInsert: (id: string) => void;
-  onDelete: (id: string) => void;
+  onMove?: (index: number, delta: -1 | 1) => void;
+  onInsert?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onDischarge?: (id: string) => void;
   entry?: ReactNode;
-  entryLabel: string;
+  entryLabel?: string;
+  readOnly?: boolean;
+  label?: string;
 }) {
   const assumptions = dependencyAssumptionGuides(proof.steps);
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
@@ -40,12 +44,7 @@ export function DependencyProofDisplay({
   const premiseBoundary = firstDerived === -1 ? proof.steps.length - 1 : firstDerived - 1;
 
   return (
-    <div
-      className="dependency-proof-display"
-      role="region"
-      aria-label="Entered dependency proof"
-      tabIndex={0}
-    >
+    <div className="dependency-proof-display" role="region" aria-label={label} tabIndex={0}>
       <table
         style={{ '--dependency-guide-width': `${assumptions.lanes * 0.6}rem` } as CSSProperties}
       >
@@ -56,7 +55,7 @@ export function DependencyProofDisplay({
             <th scope="col">Line</th>
             <th scope="col">Formula</th>
             <th scope="col">Justification</th>
-            <th scope="col">Actions</th>
+            {!readOnly && <th scope="col">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -117,26 +116,28 @@ export function DependencyProofDisplay({
                   'Assumption'
                 )}
               </td>
-              <td className="proof-line-action">
-                <DependencyLineActions
-                  index={index}
-                  count={proof.steps.length}
-                  disabled={disabled}
-                  onEdit={() => onEdit(step.id)}
-                  onMove={(delta) => onMove(index, delta)}
-                  onInsert={() => onInsert(step.id)}
-                  onDelete={() => onDelete(step.id)}
-                  onDischarge={
-                    step.kind === 'assumption' && onDischarge
-                      ? () => onDischarge(step.id)
-                      : undefined
-                  }
-                />
-              </td>
+              {!readOnly && onEdit && onMove && onInsert && onDelete && (
+                <td className="proof-line-action">
+                  <DependencyLineActions
+                    index={index}
+                    count={proof.steps.length}
+                    disabled={disabled}
+                    onEdit={() => onEdit(step.id)}
+                    onMove={(delta) => onMove(index, delta)}
+                    onInsert={() => onInsert(step.id)}
+                    onDelete={() => onDelete(step.id)}
+                    onDischarge={
+                      step.kind === 'assumption' && onDischarge
+                        ? () => onDischarge(step.id)
+                        : undefined
+                    }
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
-        {entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
+        {!readOnly && entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
       </table>
       {!proof.steps.length && <p>No proof lines entered yet.</p>}
     </div>
