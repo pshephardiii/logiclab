@@ -66,7 +66,7 @@ test('dependency owner HTTP round-trips drafts and versions without accepting mi
   };
   problems.create.mockResolvedValue(saved);
   problems.update.mockResolvedValue({ status: 'updated', problem: saved });
-  problems.list.mockResolvedValue([saved]);
+  problems.list.mockResolvedValue([{ ...saved, publication: null }]);
   problems.publish.mockResolvedValue({ status: 'published', version });
   problems.listVersions.mockResolvedValue([version]);
   problems.findVersion.mockResolvedValue(version);

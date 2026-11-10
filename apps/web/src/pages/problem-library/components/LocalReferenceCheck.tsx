@@ -1,3 +1,4 @@
+import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useState } from 'react';
 import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
@@ -11,7 +12,13 @@ import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/depend
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
-export function LocalReferenceCheck({ definition }: { definition: AuthoringDerivationDefinition }) {
+export function LocalReferenceCheck({
+  definition,
+  disabled = false,
+}: {
+  definition: AuthoringDerivationDefinition;
+  disabled?: boolean;
+}) {
   const snapshot = JSON.stringify(definition);
 
   const [checked, setChecked] = useState<{
@@ -20,9 +27,11 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
     error?: string;
   } | null>(null);
 
-  const current = checked?.snapshot === snapshot ? checked : null;
+  const current = !disabled && checked?.snapshot === snapshot ? checked : null;
 
   function check() {
+    if (disabled) return;
+
     const parsed = (
       definition.format === 'tree'
         ? treeDerivationDefinitionSchema
@@ -69,7 +78,7 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
 
   return (
     <section aria-label="Check current reference">
-      <button type="button" onClick={check}>
+      <button type="button" disabled={disabled} onClick={check}>
         Check current proof
       </button>
       <p className="help">
@@ -81,26 +90,38 @@ export function LocalReferenceCheck({ definition }: { definition: AuthoringDeriv
           {current.error}
         </p>
       )}
-      {current?.report && (
-        <>
-          <p role="status">
-            {current.report.status === 'accepted'
-              ? 'Current reference accepted. Save it before publishing.'
-              : current.report.status === 'needs_review'
-                ? 'Current reference needs correction.'
-                : 'Current reference could not be fully assessed.'}
-          </p>
-          <ul>
-            {current.report.diagnostics.map((diagnostic, index) => (
-              <li key={index}>
-                {diagnostic.stepIndex !== undefined &&
-                  `${definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
-                {diagnostic.message}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {current?.report &&
+        (definition.format === 'dependency' ? (
+          <ProofFeedback
+            report={current.report}
+            title={
+              current.report.status === 'accepted'
+                ? 'Current reference accepted. Save it before publishing.'
+                : current.report.status === 'needs_review'
+                  ? 'Current reference needs correction.'
+                  : 'Current reference could not be fully assessed.'
+            }
+          />
+        ) : (
+          <>
+            <p role="status">
+              {current.report.status === 'accepted'
+                ? 'Current reference accepted. Save it before publishing.'
+                : current.report.status === 'needs_review'
+                  ? 'Current reference needs correction.'
+                  : 'Current reference could not be fully assessed.'}
+            </p>
+            <ul>
+              {current.report.diagnostics.map((diagnostic, index) => (
+                <li key={index}>
+                  {diagnostic.stepIndex !== undefined &&
+                    `${definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
+                  {diagnostic.message}
+                </li>
+              ))}
+            </ul>
+          </>
+        ))}
     </section>
   );
 }

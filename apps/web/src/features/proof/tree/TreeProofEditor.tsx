@@ -1,3 +1,4 @@
+import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useState } from 'react';
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
@@ -12,6 +13,8 @@ import {
   treeNodeChoices,
 } from './editor';
 import '../proof.css';
+import { ProofHelp } from '../reference/ProofHelp';
+import { ProofEditorHeading } from '../components/ProofEditorHeading';
 
 export function TreeProofEditor({
   statement,
@@ -53,12 +56,17 @@ export function TreeProofEditor({
       className="proof-editor"
       aria-label={reference ? 'Tree reference proof editor' : 'Tree student proof editor'}
     >
-      <h3>{reference ? 'Reference proof' : 'Your proof'}</h3>
-      <p className="help">
-        Build from the conclusion toward its supporting premises or assumptions. Add a separate leaf
-        for every use; nodes cannot be shared. Choose ordinary supporting nodes and discharged
-        branches under each inference. Node numbers label entries, not proof order.
-      </p>
+      <ProofEditorHeading
+        title={reference ? 'Reference proof' : 'Your proof'}
+        goal={statement.conclusion}
+      />
+      {statement.premises.length > 0 && (
+        <p className="help">
+          Available premises: {statement.premises.map((premise) => premise.formula).join('; ')}
+        </p>
+      )}
+      <ProofHelp format="tree" rules={statement.rules} />
+      <p className="help">Build from the conclusion toward its premises.</p>
       {!proof ? (
         <>
           <p>
@@ -126,7 +134,11 @@ export function TreeProofEditor({
             {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
-            <div role="group" aria-label="Confirm tree deletion">
+            <ProofDeletionPrompt
+              modal={!('all' in deletion)}
+              label="Confirm tree deletion"
+              onCancel={() => setDeletion(null)}
+            >
               <p>
                 {'all' in deletion
                   ? reference
@@ -136,6 +148,7 @@ export function TreeProofEditor({
               </p>
               <button
                 type="button"
+                className="danger"
                 onClick={() =>
                   change('all' in deletion ? null : removeTreeNode(proof, deletion.id))
                 }
@@ -145,7 +158,7 @@ export function TreeProofEditor({
               <button type="button" className="secondary" onClick={() => setDeletion(null)}>
                 Keep proof
               </button>
-            </div>
+            </ProofDeletionPrompt>
           )}
         </>
       )}

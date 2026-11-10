@@ -4,7 +4,9 @@ import type { FastifyRequest } from 'fastify';
 import { sessionId } from '../../../../test/auth-fixture';
 test.each([0, 1, 2, 3])('lists bounded owner-scoped pages with %i fetched rows', async (count) => {
   const { context, problems, user } = problemFixture();
-  problems.list.mockResolvedValue(Array.from({ length: count }, () => problem));
+  problems.list.mockResolvedValue(
+    Array.from({ length: count }, () => ({ ...problem, publication: null })),
+  );
   const response = await getProblemsHandler(context)(
     {
       cookies: { logiclab_session: sessionId },
@@ -13,7 +15,7 @@ test.each([0, 1, 2, 3])('lists bounded owner-scoped pages with %i fetched rows',
     {} as never,
   );
   expect(response).toEqual({
-    problems: Array.from({ length: Math.min(count, 2) }, () => problem),
+    problems: Array.from({ length: Math.min(count, 2) }, () => ({ ...problem, publication: null })),
     nextOffset: count > 2 ? 6 : null,
   });
   expect(problems.list).toHaveBeenCalledWith(user.id, 3, 4, 'active');

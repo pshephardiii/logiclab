@@ -1,0 +1,61 @@
+.proof-setup-toolbar {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 1.6fr);
+  align-items: start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.proof-setup-toolbar select {
+  width: 100%;
+}
+.proof-setup-toolbar .proof-keyboard-guide {
+  padding-top: 2rem;
+  min-width: 0;
+}
+.proof-setup-toolbar summary {
+  cursor: pointer;
+  color: #176650;
+}
+.proof-setup-premises {
+  margin-block: 0 1.75rem;
+}
+.proof-setup-premises h3 {
+  margin: 0 0 1rem;
+}
+.proof-setup-premise {
+  margin-bottom: 1rem;
+}
+.proof-setup-premise > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.proof-setup-premise input {
+  width: 100%;
+  flex: 1 1 15rem;
+}
+.proof-setup-premises > button {
+  margin-top: 0.5rem;
+}
+.proof-setup-conclusion input {
+  width: 100%;
+}
+.proof-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+@media (max-width: 650px) {
+  .proof-setup-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .proof-setup-toolbar .proof-keyboard-guide {
+    padding-top: 0;
+  }
+}

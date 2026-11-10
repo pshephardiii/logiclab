@@ -38,11 +38,11 @@ test('creates and retains an incomplete Fitch draft without default rule permiss
     type: 'derivation',
     format: 'fitch',
     conclusion: '',
-    premises: [{ id: expect.any(String), formula: 'P &' }],
+    premises: [{ id: expect.any(String), formula: 'P ∧' }],
     rules: [],
     referenceProof: null,
   });
-  expect(screen.getByLabelText('Premise 1')).toHaveValue('P &');
+  expect(screen.getByLabelText('Premise 1')).toHaveValue('P ∧');
   expect(onDirty).toHaveBeenLastCalledWith(true);
   await user.click(screen.getByRole('button', { name: 'Preview draft' }));
   expect(onPreview).toHaveBeenCalledWith(value.definition);
@@ -81,7 +81,7 @@ test('premise edits/reorders preserve identity and reference citations; re-added
   expect(value).toMatchObject({
     premises: [
       { id: second, formula: 'Q' },
-      { id: first, formula: 'P & Q' },
+      { id: first, formula: 'P ∧ Q' },
     ],
     referenceProof: reference,
   });
@@ -136,11 +136,11 @@ test('type switches retain derivation fields while only the selected type is sav
     formula: 'P',
   });
   await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
-  expect(screen.getByLabelText('Conclusion')).toHaveValue('~P -> Q');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('¬P → Q');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave.mock.calls[1]![0].definition).toMatchObject({
     type: 'derivation',
-    conclusion: '~P -> Q',
+    conclusion: '¬P → Q',
     rules: derivationDefinition.rules,
   });
 });
@@ -192,7 +192,7 @@ test('saved dependency drafts open in their own editor without mutation', () => 
   const before = structuredClone(saved);
   const { onSave, onPreview } = setup(saved);
   expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
-  expect(screen.getByRole('button', { name: 'Start reference proof' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue to reference proof' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Open subproof' })).not.toBeInTheDocument();
   expect(onSave).not.toHaveBeenCalled();
   expect(onPreview).not.toHaveBeenCalled();

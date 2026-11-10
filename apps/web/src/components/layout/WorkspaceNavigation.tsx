@@ -30,7 +30,7 @@ export function WorkspaceNavigation() {
 
   return (
     <section className="account-workspace" aria-label="Account workspace">
-      <div className="account-workspace-content">
+      <div className="workspace-surface">
         <p className="workspace-title">
           {user.role === 'instructor' ? 'Instructor' : 'Student'} workspace
         </p>

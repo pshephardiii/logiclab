@@ -1,3 +1,9 @@
+import { ProblemOverview } from './ProblemOverview';
+import type {
+  LibraryProblemListItem,
+  LibraryProblemVersion,
+} from '@logiclab/contracts/problem-library';
+import type { DependencyAuthoringStep } from '../helpers/problem-editor';
 import { ConceptualProblemPreview } from './ConceptualProblemPreview';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -16,11 +22,15 @@ import '../problem-library.css';
 export function ProblemLibrary() {
   const library = useProblemLibrary();
   const [dirty, setDirty] = useState(false);
+  const [editing, setEditing] = useState(true);
+  const [published, setPublished] = useState<LibraryProblemVersion | null>(null);
 
   useUnsavedWork(dirty && !library.selected?.archivedAt);
 
   const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
+  const [dependencyStep, setDependencyStep] = useState<DependencyAuthoringStep>('details');
+  const focusedReference = dependencyStep === 'reference';
 
   const [preview, setPreview] = useState<{
     definition: LibraryProblemDefinition;
@@ -31,9 +41,12 @@ export function ProblemLibrary() {
     setPreview((previous) => ({ definition, key: (previous?.key ?? 0) + 1 }));
   }
 
-  function select(problem: typeof library.selected) {
+  function select(problem: LibraryProblemListItem | null) {
     confirmDiscard(() => {
       library.setSelected(problem);
+      setEditing(!problem?.publication);
+      setPublished(null);
+      setDependencyStep('details');
       setDirty(false);
       setEditorKey((value) => value + 1);
       setPreview(null);
@@ -52,8 +65,13 @@ export function ProblemLibrary() {
           {library.error}
         </p>
       )}
-      {library.notice && <p role="status">{library.notice}</p>}
-      <section className="panel" aria-label="Your problems" aria-busy={library.loading}>
+      {editing && library.notice && <p role="status">{library.notice}</p>}
+      <section
+        hidden={focusedReference}
+        className="panel"
+        aria-label="Your problems"
+        aria-busy={library.loading}
+      >
         <h2>Your problems</h2>
         <label htmlFor="library-filter">Show problems</label>
         <select
@@ -91,6 +109,11 @@ export function ProblemLibrary() {
                 {problem.title}
                 {problem.archivedAt ? ' (archived)' : ''}
               </button>
+              <span className={`problem-status-badge${problem.publication ? ' is-published' : ''}`}>
+                {problem.publication
+                  ? `Published v${problem.publication.version}${problem.publication.hasDraftChanges ? ' · Draft changes' : ''}`
+                  : 'Draft'}
+              </span>
             </li>
           ))}
         </ul>
@@ -109,25 +132,44 @@ export function ProblemLibrary() {
           discarding these edits.
         </p>
       )}
-      <ProblemForm
-        key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
-        problem={library.selected}
-        busy={library.busy}
-        saveError={library.saveError}
-        onDirty={setDirty}
-        onSave={library.save}
-        onPreview={showPreview}
-      />
-      {library.selected?.definition.type === 'derivation' && !dirty && !library.busy && (
-        <section className="panel">
-          <h2>Check saved derivation</h2>
-          <SavedReferenceCheck
-            key={`${library.selected.id}:${library.selected.updatedAt}`}
-            problem={library.selected}
-          />
-        </section>
+      {!editing && library.selected ? (
+        <ProblemOverview
+          key={library.selected.id}
+          problem={library.selected}
+          published={published}
+          onEdit={() => {
+            library.setSelected(library.selected);
+            setEditing(true);
+            setPublished(null);
+          }}
+        />
+      ) : (
+        <ProblemForm
+          key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
+          problem={library.selected}
+          initialDependencyStep={dependencyStep}
+          onDependencyStepChange={setDependencyStep}
+          busy={library.busy}
+          saveError={library.saveError}
+          onDirty={setDirty}
+          onSave={library.save}
+          onPreview={showPreview}
+        />
       )}
-      {library.selected && (
+      {editing &&
+        !focusedReference &&
+        library.selected?.definition.type === 'derivation' &&
+        !dirty &&
+        !library.busy && (
+          <section className="panel">
+            <h2>Check saved derivation</h2>
+            <SavedReferenceCheck
+              key={`${library.selected.id}:${library.selected.updatedAt}`}
+              problem={library.selected}
+            />
+          </section>
+        )}
+      {editing && !focusedReference && library.selected && (
         <>
           <section className="panel">
             <h2>Library status</h2>
@@ -145,10 +187,17 @@ export function ProblemLibrary() {
             problem={library.selected}
             disabled={library.busy || dirty}
             onPreview={showPreview}
+            onPublished={(version) => {
+              setPublished(version);
+              setEditing(false);
+              setDependencyStep('details');
+              setDirty(false);
+              void library.recordPublication(version);
+            }}
           />
         </>
       )}
-      {preview && (
+      {editing && !focusedReference && preview && (
         <>
           <button className="secondary" onClick={() => setPreview(null)}>
             Close preview

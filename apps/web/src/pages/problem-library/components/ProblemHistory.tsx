@@ -2,6 +2,7 @@ import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type {
   LibraryProblemDraft,
   LibraryProblemDefinition,
+  LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 import { DerivationSummary } from './DerivationSummary';
 import { useProblemHistory } from '../hooks/useProblemHistory';
@@ -10,10 +11,11 @@ type Props = {
   problem: LibraryProblemDraft;
   disabled: boolean;
   onPreview: (definition: LibraryProblemDefinition) => void;
+  onPublished?: (version: LibraryProblemVersion) => void;
 };
 
 /** Presents saved publication controls and immutable snapshot content. */
-export function ProblemHistory({ problem, disabled, onPreview }: Props) {
+export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Props) {
   const { versions, next, loading, publishing, error, notice, load, publish } = useProblemHistory(
     problem.id,
   );
@@ -29,7 +31,11 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
       <div className="action-row">
         <button
           disabled={disabled || publishing || loading || Boolean(problem.archivedAt)}
-          onClick={() => void publish()}
+          onClick={() =>
+            void publish().then((version) => {
+              if (version) onPublished?.(version);
+            })
+          }
         >
           {publishing ? 'Publishing…' : 'Publish saved draft'}
         </button>
@@ -37,7 +43,11 @@ export function ProblemHistory({ problem, disabled, onPreview }: Props) {
           Reload history
         </button>
       </div>
-      {notice && <p role="status">{notice}</p>}
+      {notice && (
+        <p role="status" className="publication-success">
+          ✓ {notice}
+        </p>
+      )}
       {error && (
         <p role="alert" className="error">
           {error}

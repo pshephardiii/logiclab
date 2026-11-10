@@ -18,9 +18,11 @@ import {
 import { FitchProofLine } from './FitchProofLine';
 import { FitchProofSummary } from './FitchProofSummary';
 import '../proof.css';
+import { ProofHelp } from '../reference/ProofHelp';
+import { ProofEditorHeading } from './ProofEditorHeading';
 
 type Props = {
-  statement: Pick<FitchDerivationContent, 'premises' | 'rules'>;
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> & { conclusion?: string };
   proof: FitchProof | null;
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
@@ -48,7 +50,8 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
         className="proof-editor"
         aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
       >
-        <h3>{heading}</h3>
+        <ProofEditorHeading title={heading} goal={statement.conclusion} />
+        <ProofHelp format="fitch" rules={statement.rules} />
         <p>
           {reference ? 'No reference proof yet.' : 'No proof started yet.'} Starting copies the
           current premises into root lines once; later statement edits do not rewrite them.
@@ -100,12 +103,8 @@ export function FitchProofEditor({ statement, proof, purpose, onChange }: Props)
       className="proof-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
-      <h3>{heading}</h3>
-      <p className="help">
-        Line numbers are display positions; citations keep their identity through moves. Moving a
-        line does not move a whole subproof. Set each block’s parent and final direct line
-        explicitly. Scope/order errors can be saved and checked while you work.
-      </p>
+      <ProofEditorHeading title={heading} goal={statement.conclusion} />
+      <ProofHelp format="fitch" rules={statement.rules} />
       {error && (
         <p role="alert" className="error">
           {error}

@@ -2,6 +2,7 @@ import type { FitchProofStep } from '@logiclab/contracts';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from './ProofChoice';
+import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 
 type InferenceStep = Extract<FitchProofStep, { kind: 'inference' }>;
 
@@ -33,6 +34,7 @@ export function FitchInferenceFields({ step, index, steps, rules, blocks, onChan
         choices={rules.map((rule) => ({ id: rule.id, label: rule.label }))}
         onChange={(ruleId) => onChange({ ...step, ruleId })}
       />
+      <ProofRuleHelp format="fitch" rules={rules} ruleId={step.ruleId} />
       {Array.from(
         { length: Math.max(rule?.lineReferences ?? 0, step.lineReferences.length) },
         (_, slot) => (

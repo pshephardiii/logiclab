@@ -44,12 +44,14 @@ export function DemoPage() {
         {demo.session && (
           <>
             <button
+              className="danger"
               disabled={demo.busy}
               onClick={() => confirmDiscard(() => void demo.run('reset'))}
             >
               Reset demo and discard changes
             </button>
             <button
+              className="secondary"
               disabled={demo.busy}
               onClick={() => confirmDiscard(() => void demo.run('logout'))}
             >

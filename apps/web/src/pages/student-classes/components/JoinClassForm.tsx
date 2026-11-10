@@ -18,6 +18,7 @@ export function JoinClassForm({ busy, onJoin }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
+      <h2>Join a class</h2>
       <label htmlFor="join-code">Invitation code</label>
       <div className="form-row">
         <input

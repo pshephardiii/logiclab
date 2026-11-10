@@ -30,7 +30,7 @@ export function DiscardChangesDialog({ onStay, onDiscard }: Props) {
         <button autoFocus onClick={onStay}>
           Stay
         </button>
-        <button className="secondary" onClick={onDiscard}>
+        <button className="danger" onClick={onDiscard}>
           Discard changes
         </button>
       </div>

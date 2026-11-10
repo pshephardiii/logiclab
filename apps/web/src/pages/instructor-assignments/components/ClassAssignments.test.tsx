@@ -80,7 +80,10 @@ beforeEach(() => {
   vi.mocked(reviews.listSubmissions).mockResolvedValue({ submissions: [], nextOffset: null });
   vi.mocked(api.listAssignments).mockResolvedValue({ assignments: [summary], nextOffset: null });
   vi.mocked(api.getAssignment).mockResolvedValue(assignment);
-  vi.mocked(library.listProblems).mockResolvedValue({ problems: [problem], nextOffset: null });
+  vi.mocked(library.listProblems).mockResolvedValue({
+    problems: [{ ...problem, publication: null }],
+    nextOffset: null,
+  });
   vi.mocked(library.listVersions).mockResolvedValue({
     versions: [version, second],
     nextOffset: null,

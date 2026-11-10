@@ -1,3 +1,4 @@
+import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -129,7 +130,7 @@ test('saved incomplete proofs retain their IDs and missing references without fi
   const f = setup({ type: 'derivation', proof });
   expect(f.onAnswer).not.toHaveBeenCalled();
   expect(f.onCheck).not.toHaveBeenCalled();
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P &');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P ∧');
   expect(screen.getByLabelText('Line 2 subproof 1')).toHaveValue(missing);
   expect(
     within(screen.getByLabelText('Line 2 subproof 1')).getByRole('option', {
@@ -225,7 +226,7 @@ test('clearing a proof requires confirmation, preserves work on Keep and emits a
   );
   expect(f.onAnswer).not.toHaveBeenCalled();
   await f.user.click(screen.getByRole('button', { name: 'Keep proof work' }));
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
   await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
   await f.user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(f.current()).toEqual({
@@ -277,4 +278,28 @@ test('unassessable feedback is explicit and does not invent a failed proof or nu
   expect(screen.getByText('The checking work limit was reached.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
   expect(screen.queryByText(/incorrect|zero credit|0 points/i)).not.toBeInTheDocument();
+});
+
+test('submitted dependency review keeps authoritative premises and uses the shared diagram without editing controls', async () => {
+  const user = userEvent.setup();
+  const source = dependencyWork.items[0]!;
+  if (!('content' in source) || source.content.type !== 'derivation')
+    throw new Error('Expected derivation fixture');
+  const onAnswer = vi.fn();
+  render(
+    <AssignedDerivation
+      item={{ ...source, content: source.content }}
+      answer={dependencyAnswer}
+      readOnly
+      onAnswer={onAnswer}
+    />,
+  );
+  expect(screen.getByRole('region', { name: 'Problem premises' })).toHaveTextContent('P');
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+  await user.click(screen.getByText('Your submitted proof', { exact: true }));
+  const diagram = screen.getByRole('region', { name: 'Your submitted proof diagram' });
+  expect(within(diagram).getByRole('columnheader', { name: 'Dependencies' })).toBeInTheDocument();
+  expect(within(diagram).queryByRole('button')).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(onAnswer).not.toHaveBeenCalled();
 });

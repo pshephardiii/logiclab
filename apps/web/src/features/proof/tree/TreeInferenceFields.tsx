@@ -1,8 +1,10 @@
+import { ProofFormulaInput } from '../components/ProofFormulaInput';
 import type { TreeProof, TreeProofNode, TreeProofBranch } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from '../components/ProofChoice';
 import { treeNodeChoices } from './editor';
+import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 
 type Inference = Extract<TreeProofNode, { kind: 'inference' }>;
 
@@ -34,6 +36,7 @@ export function TreeInferenceFields({
         choices={rules}
         onChange={(ruleId) => onChange({ ...node, ruleId })}
       />
+      <ProofRuleHelp format="tree" rules={rules} ruleId={node.ruleId} />
       {Array.from(
         { length: Math.max(rule?.lineReferences ?? 0, node.lineReferences.length) },
         (_, slot) => (
@@ -90,14 +93,14 @@ export function TreeInferenceFields({
               />
               <label>
                 Node {index + 1} branch {slot + 1} assumption formula
-                <input
+                <ProofFormulaInput
                   maxLength={PROOF_LIMITS.maxFormulaLength}
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck={false}
                   value={branch.assumptionFormula}
-                  onChange={(event) => change({ assumptionFormula: event.target.value })}
+                  onValueChange={(assumptionFormula) => change({ assumptionFormula })}
                 />
               </label>
               <p className="help">

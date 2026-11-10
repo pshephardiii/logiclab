@@ -1,21 +1,33 @@
 import type { ProofCheckReport } from '@logiclab/contracts';
+import './proof-feedback.css';
 
 /** Render only an authorized, snapshot-bound report; no local checking or grade inference. */
 export function ProofFeedback({
   report,
   stepLabel = 'Line',
+  title,
 }: {
   report: ProofCheckReport;
   stepLabel?: 'Line' | 'Node';
+  title?: string;
 }) {
   return (
-    <section className="proof-feedback" aria-label="Proof feedback">
-      <p role="status">
-        {report.status === 'accepted'
-          ? 'Proof verified.'
-          : report.status === 'needs_review'
-            ? 'Proof needs attention.'
-            : 'Proof could not be fully checked.'}
+    <section
+      className={`proof-feedback proof-feedback--${report.status}`}
+      aria-label="Proof feedback"
+    >
+      <p role="status" className="proof-feedback-title">
+        <span className="proof-feedback-icon" aria-hidden="true">
+          {report.status === 'accepted' ? '✓' : report.status === 'needs_review' ? '!' : '?'}
+        </span>
+        <strong>
+          {title ??
+            (report.status === 'accepted'
+              ? 'Proof verified.'
+              : report.status === 'needs_review'
+                ? 'Proof needs attention.'
+                : 'Proof could not be fully checked.')}
+        </strong>
       </p>
       <p>
         {report.target === 'established'

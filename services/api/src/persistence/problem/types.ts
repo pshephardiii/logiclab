@@ -4,6 +4,7 @@ import type {
   CreateLibraryProblemRequest,
   UpdateLibraryProblemRequest,
   LibraryProblemDraft,
+  LibraryProblemListItem,
   LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 
@@ -45,7 +46,7 @@ export interface ProblemStore {
     limit: number,
     offset: number,
     archive?: ProblemArchiveFilter,
-  ): Promise<LibraryProblemDraft[]>;
+  ): Promise<LibraryProblemListItem[]>;
   findOwned(ownerId: string, problemId: string): Promise<LibraryProblemDraft | null>;
   update(
     ownerId: string,

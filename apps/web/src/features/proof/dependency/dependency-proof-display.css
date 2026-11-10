@@ -1,0 +1,184 @@
+.dependency-proof-display {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 1rem 1.5rem;
+  padding-block: 0.5rem;
+}
+.dependency-proof-display table {
+  width: auto;
+  min-width: 27rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+/* Retain named columns for assistive technology without a visible table header or grid. */
+.dependency-proof-display caption,
+.dependency-proof-display thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dependency-proof-display th,
+.dependency-proof-display td {
+  padding: 0.2rem 0.65rem;
+  border: 0;
+  vertical-align: baseline;
+  background: transparent;
+}
+.dependency-proof-display .proof-line-dependencies {
+  white-space: nowrap;
+  max-width: 8rem;
+  padding-left: 0;
+  color: #465b65;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.dependency-proof-display .proof-line-number {
+  width: 2.5rem;
+  color: #64748b;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.dependency-proof-display .proof-line-formula {
+  position: relative;
+  padding-left: calc(0.65rem + var(--dependency-guide-width, 0rem));
+  min-width: 7rem;
+  max-width: 25rem;
+  padding-right: 1.5rem;
+  overflow-wrap: anywhere;
+}
+.dependency-proof-display .proof-line-formula code {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+}
+.dependency-proof-display .proof-line-justification {
+  min-width: 8rem;
+  max-width: 22rem;
+  color: #465b65;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.dependency-proof-display .proof-line-action {
+  padding-right: 0;
+  white-space: nowrap;
+}
+.dependency-proof-display .text-button {
+  min-width: 2.75rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.dependency-proof-display .text-button[aria-pressed='true'] {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.dependency-proof-display .selected-proof-line .proof-line-number {
+  color: #176650;
+  font-weight: 700;
+}
+.dependency-proof-display .premise-boundary .proof-line-formula {
+  border-bottom: 1px solid #70858d;
+}
+.dependency-proof-display > p {
+  margin: 0;
+}
+
+.dependency-proof-display .proof-line-action > .proof-dropdown-trigger {
+  border: 0;
+  min-width: 2rem;
+  min-height: 1.75rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 1.25rem;
+}
+.dependency-proof-display .dependency-entry-row td,
+.dependency-proof-display .dependency-entry-row th {
+  padding-top: 0.75rem;
+  vertical-align: top;
+}
+.dependency-proof-display .dependency-entry-row input,
+.dependency-proof-display .dependency-entry-row select {
+  padding: 0.4rem;
+  min-width: 0;
+  font-size: 0.95rem;
+}
+.dependency-entry-row .proof-line-formula input {
+  width: 10rem;
+  max-width: 100%;
+}
+.dependency-entry-row .proof-line-number {
+  padding-top: 1.15rem;
+}
+.dependency-entry-reasons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  width: 20rem;
+  max-width: 100%;
+  min-width: 12rem;
+}
+.dependency-entry-reasons > select,
+.dependency-entry-reasons > .dependency-discharge {
+  grid-column: 1 / -1;
+}
+.dependency-entry-reasons > div {
+  min-width: 0;
+}
+.dependency-entry-reasons select {
+  width: 100%;
+}
+.dependency-discharge {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.4rem;
+}
+.dependency-discharge > div {
+  min-width: 0;
+}
+.dependency-entry-row label:not(.dependency-source) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dependency-proof-display .dependency-entry-actions button {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+.dependency-entry-actions .text-button {
+  display: block;
+}
+.dependency-picker-title {
+  font-weight: 700;
+}
+
+.dependency-assumption-guides {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.65rem;
+  pointer-events: none;
+}
+.dependency-assumption-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0.35rem;
+  border-left: 2px solid #70858d;
+}
+.dependency-assumption-guide.guide-start {
+  top: 0.35rem;
+  border-top: 2px solid #70858d;
+}
+.dependency-assumption-guide.guide-end {
+  bottom: 0.1rem;
+  border-bottom: 2px solid #70858d;
+}

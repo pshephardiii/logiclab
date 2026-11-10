@@ -1,0 +1,116 @@
+.proof-rule-dialog {
+  width: min(58rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 1px solid #a8b9b1;
+  border-radius: 0.75rem;
+  color: #162a36;
+}
+.proof-rule-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.proof-rule-dialog::backdrop {
+  background: rgb(15 23 42 / 55%);
+}
+.proof-rule-dialog > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid #d6e0dc;
+}
+.proof-rule-dialog h2 {
+  margin: 0 0 0.25rem;
+}
+.proof-rule-dialog header span {
+  color: #465b65;
+  font-size: 0.9rem;
+}
+.proof-rule-options {
+  overflow-y: auto;
+  padding: 0 1.25rem 1.25rem;
+}
+.proof-rule-bulk {
+  display: flex;
+  gap: 0.75rem;
+  padding-block: 0.75rem;
+}
+.proof-rule-categories {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.proof-rule-dialog .proof-rule-category {
+  border: 1px solid #cbd8d3;
+  border-radius: 0.4rem;
+  padding: 0.75rem;
+  margin: 0;
+}
+.proof-rule-category legend {
+  font-weight: 700;
+  padding-inline: 0.25rem;
+}
+.proof-rule-category label {
+  display: flex;
+  align-items: start;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.5rem 0;
+  font-weight: 400;
+}
+.proof-rule-category input {
+  margin-top: 0.25rem;
+}
+.proof-rule-dialog > footer {
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: end;
+  border-top: 1px solid #d6e0dc;
+}
+@media (max-width: 650px) {
+  .proof-rule-categories {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .proof-rule-dialog > header,
+  .proof-rule-dialog > footer {
+    padding: 1rem;
+  }
+  .proof-rule-options {
+    padding-inline: 1rem;
+  }
+}
+
+.proof-rule-dialog .proof-rule-core {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.proof-rule-core > legend {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+.proof-rule-extra {
+  margin-top: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 650px) {
+  .proof-rule-extra {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.proof-rule-category .proof-rule-custom-label label {
+  display: block;
+  padding: 0;
+  font-size: 0.8rem;
+  color: #465b65;
+}
+.proof-rule-custom-label {
+  margin: 0 0 1rem 1.5rem;
+  min-width: 0;
+}
+.proof-rule-custom-label input {
+  width: 100%;
+}

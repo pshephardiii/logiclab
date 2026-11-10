@@ -5,6 +5,8 @@ import type { ProblemArchiveFilter } from '@logiclab/contracts';
 import type {
   CreateLibraryProblemRequest,
   LibraryProblemDraft,
+  LibraryProblemListItem,
+  LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 import * as apiModule from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
@@ -13,7 +15,7 @@ import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 export function useProblemLibrary() {
   const api = useResourceApi(apiModule);
   const [filter, setFilter] = useState<ProblemArchiveFilter>('active');
-  const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
+  const [problems, setProblems] = useState<LibraryProblemListItem[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [selected, setSelected] = useState<LibraryProblemDraft | null>(null);
   const [loading, setLoading] = useState(false);
@@ -99,6 +101,28 @@ export function useProblemLibrary() {
     return mutate((signal) => api.saveProblem(input, signal, selected?.id), 'Draft saved.', true);
   }
 
+  function recordPublication(version: LibraryProblemVersion) {
+    // Preserve the confirmed publication even if the subsequent list refresh fails.
+    setProblems((previous) =>
+      previous.map((problem) =>
+        problem.id !== version.problemId
+          ? problem
+          : {
+              ...problem,
+              publication: {
+                version: version.version,
+                publishedAt: version.publishedAt,
+                hasDraftChanges:
+                  problem.title !== version.title ||
+                  problem.instructions !== version.instructions ||
+                  JSON.stringify(problem.definition) !== JSON.stringify(version.definition),
+              },
+            },
+      ),
+    );
+    return load();
+  }
+
   function archive() {
     if (!selected) return;
 
@@ -117,6 +141,7 @@ export function useProblemLibrary() {
     setSelected: (problem: LibraryProblemDraft | null) => {
       setSelected(problem);
       setSaveError(null);
+      setNotice(null);
     },
     loading,
     busy,
@@ -126,5 +151,6 @@ export function useProblemLibrary() {
     load,
     save,
     archive,
+    recordPublication,
   };
 }

@@ -18,8 +18,9 @@ import { SubmissionSummary } from '../../../features/assignment/components/Submi
 /** Explicit item saves precede the irreversible final-submission confirmation. */
 export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const work = useAssignedAttempt(assignmentId);
+  const [entryPending, setEntryPending] = useState(false);
 
-  useUnsavedWork(work.dirty.length > 0 && !work.attempt?.submittedAt);
+  useUnsavedWork((entryPending || work.dirty.length > 0) && !work.attempt?.submittedAt);
 
   const confirmDiscard = useConfirmDiscard();
   const [position, setPosition] = useState(0);
@@ -66,7 +67,10 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const busy = work.action !== null;
 
   const submissionBlocked =
-    busy || work.dirty.length > 0 || (work.requiresCompleteAnswers && !work.completionReady);
+    busy ||
+    entryPending ||
+    work.dirty.length > 0 ||
+    (work.requiresCompleteAnswers && !work.completionReady);
 
   function reload() {
     confirmDiscard(() => {
@@ -77,9 +81,14 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   }
 
   function changeItem(index: number) {
-    work.cancelCheck();
-    setPosition(index);
-    setConfirmed(false);
+    const select = () => {
+      work.cancelCheck();
+      setPosition(index);
+      setConfirmed(false);
+    };
+
+    if (entryPending && index !== position) confirmDiscard(select);
+    else select();
   }
 
   return (
@@ -197,6 +206,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             />
           ) : item.content.type === 'derivation' ? (
             <AssignedDerivation
+              onPendingChange={setEntryPending}
               key={item.id}
               item={{ ...item, content: item.content }}
               answer={
@@ -260,10 +270,10 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           )}
           {!submitted && (
             <button
-              disabled={busy || !work.dirty.includes(item.id)}
+              disabled={busy || entryPending || !work.dirty.includes(item.id)}
               onClick={() => {
                 setConfirmed(false);
-                void work.save(item.id);
+                if (!entryPending) void work.save(item.id);
               }}
             >
               {work.action === 'save' ? 'Saving problem…' : 'Save problem'}
@@ -291,7 +301,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           blocked={submissionBlocked}
           submitting={work.action === 'submit'}
           onConfirmChange={setConfirmed}
-          onSubmit={() => void work.submit()}
+          onSubmit={() => {
+            if (!entryPending) void work.submit();
+          }}
         />
       )}
     </>

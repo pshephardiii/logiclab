@@ -80,6 +80,7 @@ Documentation is grouped by purpose:
 
 - [Step-by-step manual QA runbook](qa/manual-qa-runbook.md)
 - [QA results, findings and changes](qa/findings-and-changes.md)
+- [UI/UX audit baseline, findings and implementation sequence](qa/ui-ux-audit.md)
 
 ## Verification
 

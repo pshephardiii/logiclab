@@ -22,6 +22,13 @@ h2 {
 p {
   line-height: 1.6;
 }
+a {
+  color: #176650;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: #104b3b;
+}
 label {
   display: block;
   font-weight: 600;
@@ -29,16 +36,31 @@ label {
 }
 input,
 select,
+textarea,
 button {
   font: inherit;
   border-radius: 0.4rem;
 }
-input {
+input:not([type='checkbox']):not([type='radio']),
+textarea {
   flex: 1;
   min-width: 0;
   border: 1px solid #70858d;
+  background: white;
+  color: #162a36;
   padding: 0.8rem;
   font-size: 1.1rem;
+}
+textarea {
+  max-width: 100%;
+  line-height: 1.5;
+  resize: vertical;
+}
+input[type='checkbox'],
+input[type='radio'] {
+  flex: none;
+  width: auto;
+  accent-color: #176650;
 }
 button {
   border: 0;

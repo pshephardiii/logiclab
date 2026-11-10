@@ -1,6 +1,6 @@
 .demo-banner {
   max-width: 72rem;
-  margin: 1rem auto 0;
+  margin: 0.5rem auto 0;
   padding: 0 1.5rem;
 }
 .demo-banner-content {
@@ -8,12 +8,7 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  padding: 1rem 1.25rem;
-  background: #edf7f2;
-  border: 1px solid #cbd8d3;
-  border-radius: 0.6rem;
-  color: #34564a;
+  gap: 0.5rem 1.5rem;
   font-size: 0.9rem;
 }
 .demo-banner p {
@@ -21,16 +16,19 @@
   display: grid;
   gap: 0.2rem;
 }
-.demo-banner strong {
-  color: #176650;
+.demo-banner .workspace-title {
+  font-size: 1rem;
 }
 .demo-banner-role {
   text-transform: capitalize;
 }
-.demo-banner a {
-  color: #176650;
+.demo-banner-content > a {
+  color: white;
   font-weight: 600;
   text-underline-offset: 0.2em;
+}
+.demo-banner-content > a:hover {
+  color: #e4f2ed;
 }
 @media (max-width: 600px) {
   .demo-banner {

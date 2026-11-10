@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -6,6 +7,8 @@ import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import { derivationDefinition, derivationDraft } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
+
+installDialogStub();
 
 function setup(definition = derivationDefinition) {
   const onSave = vi
@@ -113,9 +116,9 @@ test('subproof deletion is explicit, removes its lines and leaves surviving subp
   expect(screen.getByRole('group', { name: 'Confirm reference deletion' })).toHaveTextContent(
     'Delete 1 reference line',
   );
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P → P');
   expect(screen.getByLabelText('Line 1 subproof 1')).toHaveValue(block);
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('needs correction');

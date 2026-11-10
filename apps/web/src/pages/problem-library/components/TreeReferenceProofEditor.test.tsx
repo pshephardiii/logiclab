@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -5,6 +6,8 @@ import type { CreateLibraryProblemRequest } from '@logiclab/contracts/problem-li
 import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
 import { treeDerivationDefinition, derivationDraft } from '../../../../test/derivation';
 import { ProblemForm } from './ProblemForm';
+
+installDialogStub();
 
 function setup(
   definition: TreeDerivationDefinition = { ...treeDerivationDefinition, referenceProof: null },
@@ -33,7 +36,7 @@ function setup(
 test('constructs and explicitly checks/saves an identity tree while drawing its entered branches', async () => {
   const { user, onSave, onDirty } = setup();
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
   await user.selectOptions(screen.getByLabelText('Rule for node 1'), 'implication_introduction');
   await user.click(screen.getByRole('button', { name: 'Add assumption node' }));
   await user.type(screen.getByLabelText('Formula for node 2'), 'P');
@@ -144,5 +147,5 @@ test('tree format is selectable for a new reference and cancelled switches retai
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P -> P');
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
 });

@@ -8,10 +8,12 @@ export function PracticeProofEditor({
   statement,
   proof,
   onChange,
+  onPendingChange,
 }: {
   statement: PracticeStatement;
   proof: PracticeProof | null;
   onChange: (proof: PracticeProof | null) => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   if (statement.format === 'tree')
     return (
@@ -26,6 +28,7 @@ export function PracticeProofEditor({
   if (statement.format === 'dependency')
     return (
       <DependencyProofEditor
+        onPendingChange={onPendingChange}
         statement={statement}
         proof={proof?.format === 'dependency' ? proof : null}
         purpose="student"

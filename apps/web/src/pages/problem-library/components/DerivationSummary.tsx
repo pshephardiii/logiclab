@@ -1,3 +1,5 @@
+import { proofNotation } from '../../../features/proof/helpers/proof-notation';
+import { PermittedRulesButton } from '../../../features/proof/reference/PermittedRulesButton';
 import { DerivationReferenceSummary } from './DerivationReferenceSummary';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 
@@ -22,7 +24,7 @@ export function DerivationSummary({
         <ol>
           {definition.premises.map((premise) => (
             <li key={premise.id}>
-              <code>{premise.formula || '(blank)'}</code>
+              <code>{proofNotation(premise.formula) || '(blank)'}</code>
             </li>
           ))}
         </ol>
@@ -30,18 +32,10 @@ export function DerivationSummary({
         <p>No premises.</p>
       )}
       <p>
-        <strong>Conclusion:</strong> <code>{definition.conclusion || '(blank)'}</code>
+        <strong>Conclusion:</strong>{' '}
+        <code>{proofNotation(definition.conclusion) || '(blank)'}</code>
       </p>
-      <h3>Permitted rules</h3>
-      {definition.rules.length ? (
-        <ul>
-          {definition.rules.map((rule) => (
-            <li key={rule.id}>{rule.label}</li>
-          ))}
-        </ul>
-      ) : (
-        <p>No rules enabled.</p>
-      )}
+      <PermittedRulesButton format={definition.format} rules={definition.rules} />
       <DerivationReferenceSummary definition={definition} />
     </div>
   );

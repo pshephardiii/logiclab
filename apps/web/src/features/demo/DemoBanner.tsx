@@ -10,13 +10,13 @@ export function DemoBanner({ children }: { children?: ReactNode }) {
 
   return (
     <aside className="demo-banner" aria-label="Demo notice">
-      <div className="demo-banner-content">
+      <div className="workspace-surface demo-banner-content">
         <p>
-          <strong>Demo workspace</strong>
-          <span>
-            <span className="demo-banner-role">{demo.session.user.role}</span> view · Synthetic data
-            · No real charges.
-          </span>
+          <strong className="workspace-title">
+            <span className="demo-banner-role">{demo.session.user.role}</span> workspace
+            <span className="workspace-badge">Demo</span>
+          </strong>
+          <span>Synthetic data · No real charges.</span>
         </p>
         <Link to="/demo">Switch role, reset, or end demo</Link>
         {children}

@@ -1,0 +1,23 @@
+.permitted-rules-dialog {
+  width: min(45rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid #cbd8d3;
+  border-radius: 0.6rem;
+  color: #162a36;
+  background: #fff;
+}
+.permitted-rules-dialog::backdrop {
+  background: rgb(15 23 42 / 45%);
+}
+.permitted-rules-dialog h2 {
+  margin: 0 0 1rem;
+}
+.permitted-rules-dialog select {
+  width: 100%;
+  margin-block: 0.5rem 1rem;
+}
+.permitted-rules-dialog > button {
+  margin-top: 1rem;
+}
