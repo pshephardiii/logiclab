@@ -1,41 +1,166 @@
 .dependency-proof-display {
   max-width: 100%;
   overflow-x: auto;
-  margin-block: 1rem;
-  border: 1px solid #cbd8d3;
-  border-radius: 0.4rem;
+  margin-block: 1rem 1.5rem;
+  padding-block: 0.5rem;
 }
 .dependency-proof-display table {
-  width: 100%;
-  min-width: 36rem;
-  border-collapse: collapse;
+  width: auto;
+  min-width: 27rem;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
 }
-.dependency-proof-display caption {
-  padding: 0.75rem;
-  text-align: left;
-  font-weight: 600;
-  background: #f4f7f6;
+/* Retain named columns for assistive technology without a visible table header or grid. */
+.dependency-proof-display caption,
+.dependency-proof-display thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .dependency-proof-display th,
 .dependency-proof-display td {
-  padding: 0.65rem;
-  border: 1px solid #d6e0dc;
-  vertical-align: top;
+  padding: 0.2rem 0.65rem;
+  border: 0;
+  vertical-align: baseline;
+  background: transparent;
+}
+.dependency-proof-display .proof-line-dependencies {
+  max-width: 8rem;
+  padding-left: 0;
+  color: #465b65;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-  max-width: 24rem;
 }
-.dependency-proof-display thead th {
-  background: #f4f7f6;
+.dependency-proof-display .proof-line-number {
+  width: 2.5rem;
+  color: #64748b;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
-.dependency-proof-display tbody th {
-  color: #162a36;
-  font-weight: 600;
+.dependency-proof-display .proof-line-formula {
+  min-width: 7rem;
+  max-width: 25rem;
+  padding-right: 1.5rem;
+  overflow-wrap: anywhere;
 }
-.dependency-proof-display .selected-proof-line {
-  background: #edf7f2;
+.dependency-proof-display .proof-line-formula code {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+}
+.dependency-proof-display .proof-line-justification {
+  min-width: 8rem;
+  max-width: 22rem;
+  color: #465b65;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.dependency-proof-display .proof-line-action {
+  padding-right: 0;
+  white-space: nowrap;
+}
+.dependency-proof-display .text-button {
+  min-width: 2.75rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+.dependency-proof-display .text-button[aria-pressed='true'] {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.dependency-proof-display .selected-proof-line .proof-line-number {
+  color: #176650;
+  font-weight: 700;
+}
+.dependency-proof-display .premise-boundary .proof-line-formula {
+  border-bottom: 1px solid #70858d;
 }
 .dependency-proof-display > p {
   margin: 0;
-  padding: 0.75rem;
+}
+
+.dependency-proof-display .proof-line-action > .proof-dropdown-trigger {
+  border: 0;
+  min-width: 2rem;
+  min-height: 1.75rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 1.25rem;
+}
+.dependency-proof-display .dependency-entry-row td,
+.dependency-proof-display .dependency-entry-row th {
+  padding-top: 0.75rem;
+  vertical-align: top;
+}
+.dependency-proof-display .dependency-entry-row input,
+.dependency-proof-display .dependency-entry-row select {
+  padding: 0.4rem;
+  min-width: 0;
+  font-size: 0.95rem;
+}
+.dependency-entry-row .proof-line-formula input {
+  width: 10rem;
+  max-width: 100%;
+}
+.dependency-entry-row .proof-line-number {
+  padding-top: 1.15rem;
+}
+.dependency-entry-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 12rem;
+  max-width: 25rem;
+}
+.dependency-entry-reasons > select {
+  flex: 1 1 10rem;
+  max-width: 15rem;
+}
+.dependency-entry-reasons > div {
+  flex: 1 1 5rem;
+  min-width: 0;
+}
+.dependency-entry-reasons select {
+  width: 100%;
+}
+.dependency-discharge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.dependency-discharge > div {
+  flex: 1 1 4rem;
+  min-width: 0;
+}
+.proof-control-label,
+.dependency-entry-row label:not(.dependency-source) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.dependency-proof-display .dependency-entry-actions button {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+.dependency-entry-actions .text-button {
+  display: block;
+}
+.dependency-input-guide {
+  margin-block: 0.75rem;
+}
+.dependency-input-guide summary {
+  cursor: pointer;
+}
+.dependency-input-guide table {
+  margin-top: 0.75rem;
 }

@@ -162,10 +162,10 @@ Validation: **411 web tests** and the web production build passed. Added coverag
 Suggested quick review:
 
 1. Open `/practice/proofs`, choose **Dependency**, add premise `P` and conclusion `P`, then choose **Begin proof practice** and **Start proof**.
-2. Choose **New inference line**. Enter `P`, select **Reiteration**, cite line 1 and select line 1 in the dependency set. The proof display should still contain only the original premise.
+2. In the bottom entry row, enter `P`, select **Reiteration**, cite line 1 and select line 1 in the dependencies dropdown. The proof display should still contain only the original premise.
 3. Choose **Add line**. The new line should appear in the proof; choose **Check proof** separately to verify it.
-4. Start another new line and enter `P &`. Checking should be unavailable until Add/Discard; discarding should leave the entered proof unchanged. Adding an unfinished line should be allowed without automatic correctness feedback.
-5. Use **Edit** on an earlier line, move lines and try a confirmed deletion. Review whether the display, line controls and unresolved references are understandable.
+4. In the next blank row, enter `P &`. Checking should be unavailable until Add/Discard; discarding should leave the entered proof unchanged. Adding an unfinished line should be allowed without automatic correctness feedback.
+5. Open **⋯** on an earlier line and choose **Edit**, move lines and try a confirmed deletion. Review whether the display, line controls and unresolved references are understandable.
 6. Optionally inspect `/demo/library` with **Conditional identity — Dependency**, and `/demo/work` with **Practice proofs in three formats**. Pending entry should block saving/checking; Stay on navigation should preserve it. Persisted work still requires an explicit save after Add line.
 
 ## Implementation: exact rule references and proof keyboard guidance
@@ -197,6 +197,30 @@ The keyboard guide now contains only its notation table, including A–Z and con
 ![Simplified rule help with pattern and worked table](images/ui-audit-029/dependency-help-simplified.png)
 
 Validation: **502 web tests**, the production build, formatting, whitespace and local Markdown targets passed. Reference regressions now assert that explanatory paragraphs are absent while notation/pattern/example content remains. Focused Chrome checked all three formats and 390px/320px layouts without page errors or document-wide overflow; temporary servers/schema were cleaned up. Local evidence: `.codex-local/ui-audit/029/proof-simplification/`. Backend/database suites and the broader accessibility/browser matrix were not repeated. This reduces copy and duplication; it does not complete the larger editor interaction redesign.
+
+## Implementation: compact dependency proof presentation
+
+**UI-029-008**, November 9, 2026: use the [Open Logic proof constructor](https://proofs.openlogicproject.org/) as a visual reference for a compact, textbook-like proof. Replace the dependency display's visible grid, column headers and outer card with aligned dependencies, quiet line numbers, mathematical formula typography and adjacent justifications. A thin rule separates the initial premises from subsequent lines. Keep small, always-available Edit controls; underline the selected control and emphasize its line number. Preserve semantic table labels for assistive technology while hiding the visual header. Necessary horizontal scrolling stays within the proof region.
+
+![Compact dependency proof with aligned formulas and justifications](images/ui-audit-029/dependency-mathematical-layout.png)
+
+This iteration changes only dependency presentation. Input text, IDs, citations, explicit checking, pending-entry handling and saves are unchanged; Fitch/tree presentation and entry controls remain for subsequent visual review. No source/assets from the reference site were incorporated.
+
+Validation: **502 web tests** passed, followed by a focused five-case editor rerun after final visual adjustments; the production build passed. Focused Chrome verified explicit checking, editing, moves/deletion with retained/missing references, desktop and 390px/320px local overflow, and no page errors. Temporary servers/schema were cleaned up. Final screenshots/logs: `.codex-local/ui-audit/029/dependency-math-layout/`. Formatting, whitespace and local Markdown targets passed. No new CSS-value tests, backend/database run or full assistive-technology/browser matrix. Ready for the user's next visual refinement pass.
+
+## Implementation: inline dependency entry and line-action menus
+
+**UI-029-009**, November 10, 2026: replace the separate dependency control panel with one input row at the bottom of the proof, aligned with dependencies, automatic line number, formula, rule/citations and confirmation. The dependencies dropdown uses checkboxes; Rule offers enabled inferences and Assumption. Starting premises are copied from the setup and no further premise insertion is offered by the dependency constructor. Existing lines retain editing/repair support. An untouched blank row stays clean and does not block checking or saving; changing it activates the existing pending-entry guards. Add line (or Enter in the formula field) confirms work without checking or saving. Discard retains the entered proof. Enter is intercepted to avoid submitting the surrounding authoring form.
+
+Each line's **⋯** opens Edit, Move up/down, Insert before and Delete. Keep stable identities and explicit deletion confirmation; unavailable references/dependencies remain repairable. Editing existing work uses the same bottom row, followed by Done editing. Move guidance into a collapsed Input guide; remove the New line button group and standalone editing card. Keep role/release rules, explicit saves and authoritative-replacement protection unchanged. Fitch/tree input changes remain for subsequent slices; review this dependency version first.
+
+![Dependency proof with compact bottom entry row](images/ui-audit-029/dependency-inline-entry.png)
+
+![Three-dot line-action popup](images/ui-audit-029/dependency-line-actions.png)
+
+Validation: **503 web tests** and the production build passed, followed by a focused 14-case authoring/editor rerun after final focus and Enter handling. Coverage includes clean idle rows, no new-premise option, checkbox dependencies, assumption/inference switching without losing typed fields, action menus, insertion/moves/deletion, stale-base protection, pending guards and Enter without implicit saving. Native top-layer popovers avoid clipping inside the proof's horizontal scroll area. jsdom uses a visibility/toggle stub; native behavior is separate browser evidence.
+
+Focused Chrome verified inference/assumption/discharge entry, explicit accepted checks, Add/Discard, line moves/deletion, menu initial focus/Escape/return, and 390px/320px top-layer popup positioning with local scrolling and no page errors. Temporary servers/schema were cleaned up. Evidence: `.codex-local/ui-audit/029/dependency-inline/`. Final Enter handling was tested in the authoring regression rather than a new browser run. Formatting, whitespace and local Markdown targets passed. No backend/database changes or full accessibility/browser matrix; secondary-browser native-popover coverage remains pending.
 
 ## Route/state inventory
 

@@ -1,0 +1,16 @@
+import { screen } from '@testing-library/react';
+import type userEvent from '@testing-library/user-event';
+
+type User = ReturnType<typeof userEvent.setup>;
+
+export async function lineAction(user: User, line: number, action: string) {
+  const trigger = screen.getByRole('button', { name: `Actions for line ${line}` });
+  if (trigger.getAttribute('aria-expanded') !== 'true') await user.click(trigger);
+  await user.click(screen.getByRole('button', { name: action }));
+}
+
+export async function openDependencies(user: User, line: number) {
+  const trigger = screen.getByRole('button', { name: `Dependencies for line ${line}` });
+  if (trigger.getAttribute('aria-expanded') !== 'true') await user.click(trigger);
+  return screen.getByRole('group', { name: `Dependencies for line ${line}` });
+}

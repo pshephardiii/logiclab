@@ -1,3 +1,4 @@
+import { lineAction, openDependencies } from '../../../../test/proof-controls';
 import { useState, type ComponentProps } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -44,6 +45,7 @@ test('dependency student editing keeps the pinned format, never checks automatic
   expect(screen.getByText('Dependency')).toBeInTheDocument();
   expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Open subproof' })).not.toBeInTheDocument();
+  await lineAction(f.user, 1, 'Edit line 1');
   await f.user.type(screen.getByLabelText('Formula for line 1'), ' &');
   expect(f.onCheck).not.toHaveBeenCalled();
   await f.user.click(screen.getByRole('button', { name: 'Check proof' }));
@@ -61,7 +63,8 @@ test('feedback is bound to its exact dependency snapshot and hidden after an edi
     feedback: { proof: dependencyAnswer.proof, report: dependencyChecked.feedback.report },
   });
   expect(screen.getByText(/Proof verified/)).toBeInTheDocument();
-  const sources = screen.getByRole('group', { name: 'Dependencies for line 1' });
+  await lineAction(f.user, 1, 'Edit line 1');
+  const sources = await openDependencies(f.user, 1);
   await f.user.click(within(sources).getByRole('checkbox'));
   expect(screen.queryByText(/Proof verified/)).not.toBeInTheDocument();
   expect(f.current()).toMatchObject({ proof: { steps: [{ dependencies: [] }] } });
@@ -100,6 +103,7 @@ test('a saved proof with the wrong format cannot be silently reinterpreted or ed
 
 test('disabled dependency controls cannot change answers or invoke checking', () => {
   setup({ disabled: true });
-  expect(screen.getByLabelText('Formula for line 1')).toBeDisabled();
+  expect(screen.getByLabelText('Formula for line 2')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Actions for line 1' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
 });

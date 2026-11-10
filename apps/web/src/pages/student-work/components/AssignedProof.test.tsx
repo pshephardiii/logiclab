@@ -41,7 +41,6 @@ test('pending dependency entry protects clean saved work, blocks checking/saving
     attempt: dependencySaved,
   });
   const { user } = await open();
-  await user.click(screen.getByRole('button', { name: 'New inference line' }));
   await user.type(screen.getByLabelText('Formula for line 2'), 'Q &');
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
@@ -58,7 +57,7 @@ test('pending dependency entry protects clean saved work, blocks checking/saving
   await screen.findByRole('heading', { name: 'Problem 2: Repeated proof' });
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
   expect(screen.queryByRole('region', { name: 'Unconfirmed proof entry' })).not.toBeInTheDocument();
-  expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P');
+  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).toHaveTextContent('P');
   const cleanUnload = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(cleanUnload);
   expect(cleanUnload.defaultPrevented).toBe(false);
@@ -76,7 +75,6 @@ test('pending dependency entry blocks final submission without changing or savin
   expect(confirmation).toBeEnabled();
   await user.click(confirmation);
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
-  await user.click(screen.getByRole('button', { name: 'New inference line' }));
   await user.type(screen.getByLabelText('Formula for line 2'), 'Q');
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
   expect(confirmation).toBeDisabled();

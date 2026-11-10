@@ -28,7 +28,13 @@ test.each(['fitch', 'dependency', 'tree'])(
     expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
     expect(
-      screen.getByLabelText(format === 'tree' ? 'Formula for node 1' : 'Formula for line 1'),
+      screen.getByLabelText(
+        format === 'tree'
+          ? 'Formula for node 1'
+          : format === 'dependency'
+            ? 'Formula for line 2'
+            : 'Formula for line 1',
+      ),
     ).toHaveAccessibleDescription(/Contradiction: type _\|_ for ⊥/);
     expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
@@ -60,7 +66,6 @@ test('pending dependency entry hides old feedback and requires Add line or disca
   fireEvent.click(screen.getByRole('button', { name: 'Start proof' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'New inference line' }));
   fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q &' } });
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
   expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
@@ -93,7 +98,11 @@ test.each([
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
   expect(screen.getByLabelText('Change proof format')).toHaveValue(from);
   expect(screen.getByRole('region', { name: 'Proof feedback' }).textContent).toBe(feedback);
-  expect(screen.getByDisplayValue('P')).toBeInTheDocument();
+  if (from === 'dependency') {
+    expect(
+      screen.getByRole('table', { name: 'Entered proof' }).querySelector('tbody'),
+    ).toHaveTextContent('P');
+  } else expect(screen.getByDisplayValue('P')).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText('Change proof format'), { target: { value: to } });
   fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: true, cancelable: true }));
@@ -130,7 +139,9 @@ test('reselecting the active format is a no-op; Start over confirms a same-forma
     target: { value: 'dependency' },
   });
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByDisplayValue('P')).toBeInTheDocument();
+  expect(
+    screen.getByRole('table', { name: 'Entered proof' }).querySelector('tbody'),
+  ).toHaveTextContent('P');
 
   fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
   fireEvent.click(

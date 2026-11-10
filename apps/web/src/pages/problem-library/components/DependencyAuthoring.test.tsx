@@ -1,3 +1,4 @@
+import { lineAction, openDependencies } from '../../../../test/proof-controls';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
@@ -58,10 +59,9 @@ function setup(
 test('authors and checks a dependency conditional proof, saves explicitly and retains it after failure', async () => {
   const { user, onSave, onDirty, onPreview } = setup();
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'New assumption line' }));
+  await user.selectOptions(screen.getByLabelText('Rule for line 1'), '__assumption__');
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
-  await user.click(screen.getByRole('button', { name: 'Add line' }));
-  await user.click(screen.getByRole('button', { name: 'New inference line' }));
+  await user.keyboard('{Enter}');
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   const assumption = screen.getByLabelText('Line 2 discharge 1 assumption') as HTMLSelectElement;
@@ -82,12 +82,11 @@ test('authors and checks a dependency conditional proof, saves explicitly and re
     },
   });
   expect(onDirty).toHaveBeenLastCalledWith(true);
+  await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
   await user.click(screen.getByRole('button', { name: 'Preview draft' }));
   expect(onPreview).toHaveBeenCalledWith(saved);
-  await user.click(
-    within(screen.getByRole('group', { name: 'Dependencies for line 2' })).getByRole('checkbox'),
-  );
+  await user.click(within(await openDependencies(user, 2)).getByRole('checkbox'));
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('needs correction');
@@ -102,7 +101,7 @@ test('format changes require explicit reference discard and preserve the stateme
     'discards the entire reference',
   );
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P -> P');
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
@@ -121,18 +120,19 @@ test('format changes require explicit reference discard and preserve the stateme
 
 test('moves and confirmed deletions preserve unresolved references and annotations for explicit repair', async () => {
   const { user } = setup(definition());
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
-  await user.click(screen.getByRole('button', { name: 'Move line 2 up' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await lineAction(user, 2, 'Move line 2 up');
   expect(screen.getByLabelText('Line 1 discharge 1 assumption')).toHaveTextContent(
     'Missing or unavailable',
   );
-  await user.click(screen.getByRole('button', { name: 'Move line 1 down' }));
-  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
-  await user.click(screen.getByRole('button', { name: 'Delete line 1' }));
+  await lineAction(user, 1, 'Move line 1 down');
+  await lineAction(user, 1, 'Edit line 1');
+  await lineAction(user, 1, 'Delete line 1');
   await user.click(screen.getByRole('button', { name: 'Keep proof' }));
-  expect(screen.getByRole('button', { name: 'Edit line 2' })).toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Delete line 1' }));
+  expect(screen.getByRole('button', { name: 'Actions for line 2' })).toBeInTheDocument();
+  await lineAction(user, 1, 'Delete line 1');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Line 1 discharge 1 assumption')).toHaveTextContent(
     'Missing or unavailable',
   );
@@ -153,8 +153,8 @@ test('private dependency previews show source sets, discharge lines and explanat
 test('archive and busy guards cover dependency editing and format changes', () => {
   const view = setup(definition(), true);
   expect(screen.getByLabelText('Proof format')).toBeDisabled();
-  expect(screen.getByLabelText('Formula for line 1')).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Delete line 1' })).toBeDisabled();
+  expect(screen.getByLabelText('Formula for line 3')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Actions for line 1' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Check current proof' })).toBeDisabled();
   view.rerender(
     <ProblemForm
@@ -172,7 +172,8 @@ test('unavailable sources are retained visibly until explicitly removed', async 
   const value = definition();
   value.referenceProof!.steps[1]!.dependencies = ['99999999-9999-4999-8999-999999999999'];
   const { user, onSave } = setup(value);
-  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await openDependencies(user, 2);
   expect(screen.getByText('Missing or unavailable dependency')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave.mock.calls[0]![0].definition).toMatchObject({
@@ -197,7 +198,6 @@ test('duplicate identities disable structural editing without hiding retained ev
 test('a clean saved draft becomes dirty for pending entry and blocks checks, preview and save until resolved', async () => {
   const { user, onSave, onPreview, onDirty } = setup(definition());
   expect(onDirty).toHaveBeenLastCalledWith(false);
-  await user.click(screen.getByRole('button', { name: 'New inference line' }));
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q &');
   expect(onDirty).toHaveBeenLastCalledWith(true);
   for (const name of ['Save draft', 'Preview draft', 'Check current proof']) {

@@ -1,55 +1,96 @@
+import { useId, useRef } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
 import { DependencyInferenceFields } from './DependencyInferenceFields';
-import { useId } from 'react';
-import { ProofFormulaHint } from '../reference/ProofKeyboardGuide';
+import { DependencySources } from './DependencySources';
 
+type Inference = Extract<DependencyProofStep, { kind: 'inference' }>;
+type Assumption = Extract<DependencyProofStep, { kind: 'assumption' }>;
+
+/** One compact bottom row, shared by new entries and editing an existing line. */
 export function DependencyProofLine({
   proof,
   index,
   statement,
   onChange,
-  onMove,
-  onDelete,
-  purpose = 'reference',
+  allowKindChange,
+  onConfirm,
+  onDiscard,
+  pending,
 }: {
   proof: DependencyProof;
-  purpose?: 'reference' | 'student';
   index: number;
   statement: {
     premises: { id: string; formula: string }[];
     rules: { id: string; label: string }[];
   };
   onChange: (step: DependencyProofStep) => void;
-  onMove?: (delta: -1 | 1) => void;
-  onDelete?: () => void;
+  allowKindChange: boolean;
+  pending: boolean;
+  onConfirm: () => void;
+  onDiscard: () => void;
 }) {
   const step = proof.steps[index]!;
   const formulaHint = useId();
+  const cached = useRef<{ inference?: Inference; assumption?: Assumption }>({});
 
-  const sources = proof.steps
-    .slice(0, index + 1)
-    .flatMap((line, position) =>
-      line.kind === 'inference'
-        ? []
-        : [{ id: line.id, label: `${position + 1}. ${line.formula || '(blank)'}` }],
-    );
+  function chooseRule(value: string) {
+    if (step.kind === 'premise') return;
+    if (step.kind === 'inference') cached.current.inference = step;
+    else cached.current.assumption = step;
 
-  const unavailable = step.dependencies.filter((id) => !sources.some((source) => source.id === id));
+    if (value === '__assumption__') {
+      onChange({
+        ...(cached.current.assumption ?? { kind: 'assumption', dependencies: [step.id] }),
+        id: step.id,
+        formula: step.formula,
+      });
+    } else {
+      onChange({
+        ...(cached.current.inference ?? {
+          kind: 'inference',
+          dependencies: [],
+          lineReferences: [],
+          discharges: [],
+        }),
+        id: step.id,
+        formula: step.formula,
+        ruleId: value || null,
+      });
+    }
+  }
 
   return (
-    <section
-      className="problem-option"
-      aria-label={`${purpose === 'reference' ? 'Reference' : 'Proof'} line ${index + 1}`}
+    <tr
+      className="dependency-entry-row"
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+        if (
+          !(event.target instanceof HTMLInputElement) ||
+          !event.target.hasAttribute('data-proof-formula')
+        )
+          return;
+        event.preventDefault();
+        onConfirm();
+      }}
     >
-      <h4>
-        Line {index + 1} — {step.kind}
-      </h4>
-      <label>
-        Formula for line {index + 1}
+      <td className="proof-line-dependencies">
+        <DependencySources steps={proof.steps} index={index} onChange={onChange} />
+      </td>
+      <th
+        className="proof-line-number"
+        scope="row"
+        aria-label={`${allowKindChange ? 'New' : 'Editing'} line ${index + 1}`}
+      >
+        {index + 1}
+      </th>
+      <td className="proof-line-formula">
         <input
-          maxLength={PROOF_LIMITS.maxFormulaLength}
+          data-proof-formula="true"
+          aria-label={`Formula for line ${index + 1}`}
           aria-describedby={formulaHint}
+          placeholder="Formula"
+          maxLength={PROOF_LIMITS.maxFormulaLength}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -57,93 +98,66 @@ export function DependencyProofLine({
           value={step.formula}
           onChange={(event) => onChange({ ...step, formula: event.target.value })}
         />
-      </label>
-      <ProofFormulaHint id={formulaHint} />
-      {step.kind === 'premise' && (
-        <ProofChoice
-          label={`Statement premise for line ${index + 1}`}
-          value={step.premiseId}
-          choices={statement.premises.map((premise, position) => ({
-            id: premise.id,
-            label: `${position + 1}. ${premise.formula || '(blank)'}`,
-          }))}
-          onChange={(premiseId) => onChange({ ...step, premiseId })}
-        />
-      )}
-      {step.kind === 'inference' && (
-        <DependencyInferenceFields
-          step={step}
-          index={index}
-          steps={proof.steps}
-          rules={statement.rules}
-          onChange={onChange}
-        />
-      )}
-      <fieldset className="dependency-sources">
-        <legend>Dependencies for line {index + 1}</legend>
-        <p className="help">Leave empty for no dependencies.</p>
-        {sources.map((source) => (
-          <label className="dependency-source" key={source.id}>
-            <input
-              type="checkbox"
-              checked={step.dependencies.includes(source.id)}
-              disabled={
-                !step.dependencies.includes(source.id) &&
-                step.dependencies.length >= PROOF_LIMITS.maxSteps
-              }
-              onChange={(event) =>
-                onChange({
-                  ...step,
-                  dependencies: event.target.checked
-                    ? [...step.dependencies, source.id]
-                    : step.dependencies.filter((id) => id !== source.id),
-                })
-              }
+        <span className="proof-control-label" id={formulaHint}>
+          Contradiction: type _|_ for ⊥.
+        </span>
+      </td>
+      <td className="proof-line-justification">
+        <div className="dependency-entry-reasons">
+          {step.kind === 'premise' ? (
+            <ProofChoice
+              label={`Statement premise for line ${index + 1}`}
+              value={step.premiseId}
+              empty="Premise"
+              choices={statement.premises.map((premise, index) => ({
+                id: premise.id,
+                label: `${index + 1}. ${premise.formula || '(blank)'}`,
+              }))}
+              onChange={(premiseId) => onChange({ ...step, premiseId })}
             />
-            {source.label}
-          </label>
-        ))}
-        {unavailable.map((id, position) => (
-          <div key={position}>
-            <span>Missing or unavailable dependency</span>
-            <button
-              type="button"
-              className="secondary"
-              onClick={() =>
-                onChange({
-                  ...step,
-                  dependencies: step.dependencies.filter((value) => value !== id),
-                })
-              }
+          ) : (
+            <select
+              aria-label={`Rule for line ${index + 1}`}
+              value={step.kind === 'assumption' ? '__assumption__' : (step.ruleId ?? '')}
+              disabled={!allowKindChange && step.kind === 'assumption'}
+              onChange={(event) => chooseRule(event.target.value)}
             >
-              Remove unavailable dependency {position + 1} from line {index + 1}
-            </button>
-          </div>
-        ))}
-      </fieldset>
-      {onMove && onDelete && (
-        <div className="action-row">
-          <button
-            type="button"
-            className="secondary"
-            disabled={index === 0}
-            onClick={() => onMove(-1)}
-          >
-            Move line {index + 1} up
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={index === proof.steps.length - 1}
-            onClick={() => onMove(1)}
-          >
-            Move line {index + 1} down
-          </button>
-          <button type="button" className="secondary" onClick={onDelete}>
-            Delete line {index + 1}
-          </button>
+              <option value="">Rule</option>
+              {(allowKindChange || step.kind === 'assumption') && (
+                <option value="__assumption__">Assumption</option>
+              )}
+              {step.kind === 'inference' &&
+                step.ruleId &&
+                !statement.rules.some((rule) => rule.id === step.ruleId) && (
+                  <option value={step.ruleId}>Unavailable rule</option>
+                )}
+              {statement.rules.map((rule) => (
+                <option key={rule.id} value={rule.id}>
+                  {rule.label}
+                </option>
+              ))}
+            </select>
+          )}
+          {step.kind === 'inference' && (
+            <DependencyInferenceFields
+              step={step}
+              index={index}
+              steps={proof.steps}
+              onChange={onChange}
+            />
+          )}
         </div>
-      )}
-    </section>
+      </td>
+      <td className="proof-line-action dependency-entry-actions">
+        <button type="button" onClick={onConfirm}>
+          {allowKindChange ? 'Add line' : 'Done editing'}
+        </button>
+        {allowKindChange && pending && (
+          <button type="button" className="text-button" onClick={onDiscard}>
+            Discard entry
+          </button>
+        )}
+      </td>
+    </tr>
   );
 }
