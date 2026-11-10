@@ -1,3 +1,4 @@
+import { DerivationPremiseFields } from './DerivationPremiseFields';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
@@ -52,12 +53,6 @@ export function DerivationProblemFields({
     >,
   ) {
     onChange({ ...fields, derivation: { ...definition, ...patch } });
-  }
-
-  function movePremise(index: number, delta: number) {
-    const premises = [...definition.premises];
-    [premises[index], premises[index + delta]] = [premises[index + delta]!, premises[index]!];
-    change({ premises });
   }
 
   return (
@@ -132,75 +127,10 @@ export function DerivationProblemFields({
               onPendingChange={onPremisePendingChange}
             />
           ) : (
-            <section
-              aria-label="Derivation premises"
-              className={dependency ? 'proof-setup-premises' : undefined}
-            >
-              <h3>Premises</h3>
-              {!definition.premises.length && (
-                <p>No premises. A derivation may prove a theorem without premises.</p>
-              )}
-              {definition.premises.map((premise, index) => (
-                <div
-                  className={dependency ? 'proof-setup-premise' : 'problem-option'}
-                  key={premise.id}
-                >
-                  <label htmlFor={`premise-${premise.id}`}>Premise {index + 1}</label>
-                  <ProofFormulaInput
-                    id={`premise-${premise.id}`}
-                    {...formulaInput}
-                    value={premise.formula}
-                    onValueChange={(formula) =>
-                      change({
-                        premises: definition.premises.map((value) =>
-                          value.id === premise.id ? { ...value, formula } : value,
-                        ),
-                      })
-                    }
-                  />
-                  <div className="action-row">
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={index === 0}
-                      onClick={() => movePremise(index, -1)}
-                    >
-                      Move premise {index + 1} up
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={index === definition.premises.length - 1}
-                      onClick={() => movePremise(index, 1)}
-                    >
-                      Move premise {index + 1} down
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() =>
-                        change({
-                          premises: definition.premises.filter((value) => value.id !== premise.id),
-                        })
-                      }
-                    >
-                      Remove premise {index + 1}
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                disabled={definition.premises.length >= PROOF_LIMITS.maxPremises}
-                onClick={() =>
-                  change({
-                    premises: [...definition.premises, { id: crypto.randomUUID(), formula: '' }],
-                  })
-                }
-              >
-                Add premise
-              </button>
-            </section>
+            <DerivationPremiseFields
+              premises={definition.premises}
+              onChange={(premises) => change({ premises })}
+            />
           )}
           <label htmlFor="derivation-conclusion">Conclusion</label>
           <ProofFormulaInput

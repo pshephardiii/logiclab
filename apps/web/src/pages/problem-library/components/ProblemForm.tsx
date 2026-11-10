@@ -1,4 +1,5 @@
-import { parseProofFormula } from '@logiclab/logic-engine/proof';
+import { referenceStatementError } from '../helpers/reference-statement';
+import { ProblemMetadataFields } from './ProblemMetadataFields';
 import { startDependencyProof } from '../../../features/proof/dependency/editor';
 import './dependency-authoring.css';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -78,31 +79,11 @@ export function ProblemForm({
   function goToStep(step: DependencyAuthoringStep) {
     if (!dependency || busy || workPending || step === dependencyStep) return;
 
-    if (
-      step === 'reference' &&
-      fields.derivation.premises.some((premise) => !premise.formula.trim())
-    ) {
-      setValidationError('Complete or remove blank premises before building the reference proof.');
-      return;
-    }
-
     if (step === 'reference') {
-      for (const [index, premise] of fields.derivation.premises.entries()) {
-        try {
-          parseProofFormula(premise.formula);
-        } catch (error) {
-          setValidationError(
-            `Premise ${index + 1}: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
-          );
-          return;
-        }
-      }
-      try {
-        parseProofFormula(fields.derivation.conclusion);
-      } catch (error) {
-        setValidationError(
-          `Conclusion: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
-        );
+      const error = referenceStatementError(fields.derivation);
+
+      if (error) {
+        setValidationError(error);
         return;
       }
     }
@@ -217,39 +198,12 @@ export function ProblemForm({
       >
         <fieldset disabled={busy || Boolean(problem?.archivedAt)}>
           <div hidden={referenceStep}>
-            <label htmlFor="problem-title">Title</label>
-            <input
-              id="problem-title"
-              required={!referenceStep}
-              maxLength={120}
-              value={fields.title}
-              onChange={(event) => change({ ...fields, title: event.target.value })}
+            <ProblemMetadataFields
+              fields={fields}
+              onChange={change}
+              typeDisabled={workPending}
+              titleRequired={!referenceStep}
             />
-            <label htmlFor="problem-instructions">Instructions</label>
-            <textarea
-              id="problem-instructions"
-              maxLength={5000}
-              value={fields.instructions}
-              onChange={(event) => change({ ...fields, instructions: event.target.value })}
-            />
-            <label htmlFor="problem-type">Problem type</label>
-            <select
-              id="problem-type"
-              disabled={workPending}
-              value={fields.type}
-              onChange={(event) =>
-                change({ ...fields, type: event.target.value as LibraryProblemDefinition['type'] })
-              }
-            >
-              <option value="truth_table">Truth table</option>
-              <option value="true_false">True/false</option>
-              <option value="multiple_choice">Multiple choice</option>
-              <option value="derivation">Derivation</option>
-            </select>
-            <p className="help">
-              Only the selected problem type is saved. Switching types keeps your fields until you
-              leave this editor.
-            </p>
           </div>
           {/* Show only the selected type's fields; other local draft fields survive type changes. */}
           {fields.type === 'derivation' ? (

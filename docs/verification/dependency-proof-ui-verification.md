@@ -16,6 +16,8 @@ The chronological [UI audit record](../qa/ui-ux-audit.md) contains findings, scr
 
 Ignored local logs: `.codex-local/verification/dependency-proof-ui/check.log` and `db.log`. Existing Jest VM-module advisories remain.
 
+After closeout review, straightforward frontend extractions separated assigned-editor selection, rule choices/grouping, dependency justification/assumption-guide rendering, discharge-entry construction, premise/metadata fields and reference-statement validation. State, focus, pending-entry and disclosure ownership remain with their existing components. The frontend type check, all 534 existing frontend tests (`--maxWorkers=4`), production build and formatting passed again; no test changes were needed. Logs use the `refactor-` prefix in the same ignored verification directory. The full workspace/database results above precede these frontend-only extractions; no browser sweep was repeated for them.
+
 ## Focused browser evidence
 
 Earlier slices used local Chrome and temporary isolated schemas to check growing dependency proofs, entry confirmation, line actions, modal deletion, sorted dependencies, assumption guides, rule selection/reference, notation conversion, feedback and retained work. Follow-up checks covered the shared authoring/student contexts and the separate reference-authoring step.

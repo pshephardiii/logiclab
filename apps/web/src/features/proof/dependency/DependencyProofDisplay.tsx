@@ -1,3 +1,5 @@
+import { DependencyJustification } from './DependencyJustification';
+import { DependencyAssumptionGuides } from './DependencyAssumptionGuides';
 import { dependencyNumbers } from './dependency-numbers';
 import { proofNotation } from '../helpers/proof-notation';
 import type { DependencyProof } from '@logiclab/contracts';
@@ -80,43 +82,11 @@ export function DependencyProofDisplay({
                 {index + 1}
               </th>
               <td className="proof-line-formula">
-                <span className="dependency-assumption-guides" aria-hidden="true">
-                  {assumptions.guides
-                    .filter((guide) => guide.start <= index && guide.end >= index)
-                    .map((guide) => (
-                      <span
-                        key={guide.id}
-                        className={`dependency-assumption-guide${guide.start === index ? ' guide-start' : ''}${guide.closed && guide.end === index ? ' guide-end' : ''}`}
-                        style={{ left: `${guide.lane * 0.6}rem` }}
-                        title={`Assumption on line ${guide.line}`}
-                      />
-                    ))}
-                </span>
+                <DependencyAssumptionGuides guides={assumptions.guides} index={index} />
                 <code>{proofNotation(step.formula) || '(blank)'}</code>
               </td>
               <td className="proof-line-justification">
-                {step.kind === 'inference' ? (
-                  <>
-                    {step.ruleId
-                      ? (labels.get(step.ruleId) ?? 'Unavailable rule')
-                      : 'No rule selected'}
-                    {step.lineReferences.length > 0 &&
-                      ` · ${step.lineReferences.map(line).join(', ')}`}
-                    {step.discharges.length > 0 && (
-                      <>
-                        {' '}
-                        · discharge{' '}
-                        {step.discharges
-                          .map((pair) => `${line(pair.assumptionId)}–${line(pair.conclusionId)}`)
-                          .join(', ')}
-                      </>
-                    )}
-                  </>
-                ) : step.kind === 'premise' ? (
-                  'Premise'
-                ) : (
-                  'Assumption'
-                )}
+                <DependencyJustification step={step} labels={labels} line={line} />
               </td>
               {!readOnly && onEdit && onMove && (onInsert || !allowInsert) && onDelete && (
                 <td className="proof-line-action">

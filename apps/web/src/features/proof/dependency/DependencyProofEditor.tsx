@@ -1,3 +1,4 @@
+import { createDependencyDischargeEntry } from './discharge-entry';
 import { proofNotation } from '../helpers/proof-notation';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -105,26 +106,12 @@ export function DependencyProofEditor({
 
   function dischargeAssumption(id: string) {
     if (!proof || !idle || pending) return;
-    const rule =
-      statement.rules.find((rule) => rule.id === 'implication_introduction') ??
-      statement.rules.find((rule) => getPropositionalRule(rule.id)?.subproofReferences);
-    if (!rule) return;
+    const next = createDependencyDischargeEntry(proof, statement.rules, id);
+    if (!next) return;
 
-    const index = proof.steps.length;
-    const draft = insertDependencyStep(proof, index, 'inference');
-    const closing = draft.steps[index]!;
-    if (closing.kind !== 'inference') return;
-
-    // Prefill only the explicit assumption reference. The student supplies the conclusion,
-    // ending line and remaining dependencies; no validity or support is inferred here.
-    draft.steps[index] = {
-      ...closing,
-      ruleId: rule.id,
-      discharges: [{ assumptionId: id, conclusionId: null }],
-    };
     setSelectedId(null);
     setBefore(null);
-    setEntry({ base: proof, draft, index });
+    setEntry(next);
     focusRequested.current = true;
   }
 

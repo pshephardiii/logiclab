@@ -1,3 +1,4 @@
+import { AssignedDerivationEditor } from './AssignedDerivationEditor';
 import { ProofHelp } from '../../proof/reference/ProofHelp';
 import { proofNotation } from '../../proof/helpers/proof-notation';
 import type { ProofCheckReport } from '@logiclab/contracts';
@@ -5,11 +6,8 @@ import type {
   SavedDerivationAnswer as DerivationAnswer,
   SavedDerivationSolution as DerivationSolution,
 } from '@logiclab/contracts/saved-student-work';
-import { DependencyProofEditor } from '../../proof/dependency/DependencyProofEditor';
-import { TreeProofEditor } from '../../proof/tree/TreeProofEditor';
 import { ProofSummary } from '../../proof/components/ProofSummary';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
-import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
 import { ProofFeedback } from '../../proof/components/ProofFeedback';
 import '../assignment.css';
 import { useCallback, useState } from 'react';
@@ -149,47 +147,14 @@ export function AssignedDerivation({
             </p>
           )}
           <fieldset disabled={disabled} aria-label="Edit proof">
-            {item.content.format === 'tree' ? (
-              <TreeProofEditor
-                statement={item.content}
-                proof={proof?.format === 'tree' ? proof : null}
-                purpose="student"
-                onChange={(next) => {
-                  if (!readOnly && !disabled)
-                    onAnswer({
-                      type: 'derivation',
-                      proof: next ?? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] },
-                    });
-                }}
-              />
-            ) : item.content.format === 'dependency' ? (
-              <DependencyProofEditor
-                onPendingChange={changePending}
-                statement={item.content}
-                proof={proof?.format === 'dependency' ? proof : null}
-                purpose="student"
-                onChange={(next) => {
-                  if (!readOnly && !disabled)
-                    onAnswer({
-                      type: 'derivation',
-                      proof: next ?? { proofVersion: 1, format: 'dependency', steps: [] },
-                    });
-                }}
-              />
-            ) : (
-              <FitchProofEditor
-                statement={item.content}
-                proof={proof?.format === 'fitch' ? proof : null}
-                purpose="student"
-                onChange={(next) => {
-                  if (!readOnly && !disabled)
-                    onAnswer({
-                      type: 'derivation',
-                      proof: next ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
-                    });
-                }}
-              />
-            )}
+            <AssignedDerivationEditor
+              statement={item.content}
+              proof={proof}
+              readOnly={readOnly}
+              disabled={disabled}
+              onAnswer={onAnswer}
+              onPendingChange={changePending}
+            />
             {onCheck && (
               <div className={dependency ? 'proof-check-actions' : undefined}>
                 <button

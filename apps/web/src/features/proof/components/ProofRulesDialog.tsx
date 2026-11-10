@@ -1,22 +1,8 @@
+import { ProofRuleChoice } from './ProofRuleChoice';
+import { coreGroups, categories } from './proof-rule-groups';
 import './proof-rules-dialog.css';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
-
-const coreGroups = [
-  { label: 'Reiteration', ids: ['reiteration'] },
-  { label: 'Conjunction', ids: ['and_introduction', 'and_elimination'] },
-  { label: 'Disjunction', ids: ['or_introduction', 'or_elimination'] },
-  { label: 'Implication', ids: ['implication_introduction', 'implication_elimination'] },
-  {
-    label: 'Negation and contradiction',
-    ids: ['negation_introduction', 'contradiction_introduction', 'contradiction_elimination'],
-  },
-  { label: 'Biconditional', ids: ['biconditional_introduction', 'biconditional_elimination'] },
-];
-const categories = [
-  { id: 'derived', label: 'Derived rules' },
-  { id: 'classical', label: 'Classical rules' },
-] as const;
 
 /** Settings apply immediately, including when Escape closes the dialog. */
 export function ProofRulesDialog({
@@ -33,27 +19,6 @@ export function ProofRulesDialog({
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
-  function ruleChoice(rule: (typeof PROPOSITIONAL_RULE_CATALOG)[number]) {
-    return (
-      <div key={rule.id}>
-        <label>
-          <input
-            type="checkbox"
-            checked={selected.includes(rule.id)}
-            onChange={(event) =>
-              onChange(
-                event.target.checked
-                  ? [...selected, rule.id]
-                  : selected.filter((id) => id !== rule.id),
-              )
-            }
-          />
-          <span>{rule.label}</span>
-        </label>
-        {renderDetails?.(rule)}
-      </div>
-    );
-  }
 
   useEffect(() => {
     const element = dialog.current!;
@@ -125,7 +90,15 @@ export function ProofRulesDialog({
               <fieldset className="proof-rule-category" key={group.label}>
                 <legend>{group.label}</legend>
                 {PROPOSITIONAL_RULE_CATALOG.filter((rule) => group.ids.includes(rule.id)).map(
-                  ruleChoice,
+                  (rule) => (
+                    <ProofRuleChoice
+                      key={rule.id}
+                      rule={rule}
+                      selected={selected}
+                      onChange={onChange}
+                      renderDetails={renderDetails}
+                    />
+                  ),
                 )}
               </fieldset>
             ))}
@@ -136,7 +109,15 @@ export function ProofRulesDialog({
             <fieldset className="proof-rule-category" key={category.id}>
               <legend>{category.label}</legend>
               {PROPOSITIONAL_RULE_CATALOG.filter((rule) => rule.category === category.id).map(
-                ruleChoice,
+                (rule) => (
+                  <ProofRuleChoice
+                    key={rule.id}
+                    rule={rule}
+                    selected={selected}
+                    onChange={onChange}
+                    renderDetails={renderDetails}
+                  />
+                ),
               )}
             </fieldset>
           ))}
