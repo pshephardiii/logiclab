@@ -1,3 +1,4 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -17,6 +18,7 @@ function setup(definition = derivationDefinition) {
   render(
     <ProblemForm
       problem={{ ...derivationDraft, definition }}
+      initialAuthoringStep="reference"
       busy={false}
       onSave={onSave}
       onPreview={vi.fn()}
@@ -31,17 +33,17 @@ async function conditionalProof() {
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
   const scope = screen.getByRole('combobox', {
     name: 'New line scope',
   }) as HTMLSelectElement;
   const block = scope.value;
-  const endpoint = screen.getByLabelText('Final line of Subproof 1 at line 1') as HTMLSelectElement;
-  await user.selectOptions(endpoint, endpoint.options[1]!.value);
-  await user.selectOptions(scope, '');
-  await user.click(screen.getByRole('button', { name: 'Add inference line' }));
+  await lineAction(user, 1, 'Close subproof at line 1');
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   await user.selectOptions(screen.getByLabelText('Line 2 subproof 1'), block);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await lineAction(user, 2, 'Edit line 2');
   return { ...view, block };
 }
 
@@ -77,7 +79,6 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
     rules: [{ id: 'implication_elimination', label: 'MP' }],
   });
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'Add inference line' }));
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q');
   await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'implication_elimination');
   const first = screen.getByLabelText('Line 3 citation 1') as HTMLSelectElement;
@@ -86,17 +87,23 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
     .map((option) => option.value);
   await user.selectOptions(first, ids[0]!);
   await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), ids[1]!);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('accepted');
-  await user.selectOptions(screen.getByLabelText('Insert before'), ids[0]!);
-  await user.click(screen.getByRole('button', { name: 'Add premise line at root' }));
+  await lineAction(user, 1, 'Insert before line 1');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await lineAction(user, 4, 'Edit line 4');
   expect(screen.getByLabelText('Line 4 citation 1')).toHaveValue(ids[0]);
   expect(screen.getByLabelText('Line 4 citation 2')).toHaveValue(ids[1]);
-  await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await lineAction(user, 2, 'Delete line 2');
   await user.click(screen.getByRole('button', { name: 'Keep reference work' }));
+  await lineAction(user, 4, 'Edit line 4');
   expect(screen.getByLabelText('Formula for line 4')).toHaveValue('Q');
-  await user.click(screen.getByRole('button', { name: 'Delete line 2' }));
+  await lineAction(user, 2, 'Edit line 2');
+  await lineAction(user, 2, 'Delete line 2');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await lineAction(user, 3, 'Edit line 3');
   expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue(ids[0]);
   expect(
     within(screen.getByLabelText('Line 3 citation 1')).getByRole('option', {
@@ -112,8 +119,8 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
 
 test('subproof deletion is explicit, removes its lines and leaves surviving subproof citations unresolved', async () => {
   const { user, block } = await conditionalProof();
-  await user.click(screen.getByRole('button', { name: 'Delete Subproof 1 at line 1' }));
-  expect(screen.getByRole('group', { name: 'Confirm reference deletion' })).toHaveTextContent(
+  await lineAction(user, 1, 'Delete subproof at line 1');
+  expect(screen.getByRole('dialog', { name: 'Confirm reference deletion' })).toHaveTextContent(
     'Delete 1 reference line',
   );
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
@@ -157,4 +164,26 @@ test('checks unsupported/incomplete statements explicitly and preserves blank re
   expect(screen.getByRole('status')).toHaveTextContent('could not be fully assessed');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave.mock.calls[0]![0].definition).toEqual(definition);
+});
+
+test('unconfirmed Fitch entries gate checking, saving and preview without saving a partial row', async () => {
+  const { user, onSave } = setup();
+  await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P &');
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Preview draft' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check current proof' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '1. Problem details' })).toBeDisabled();
+  expect(onSave).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P &');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const definition = onSave.mock.calls[0]![0].definition;
+  if (definition.type !== 'derivation' || definition.format !== 'fitch')
+    throw new Error('Expected Fitch');
+  expect(definition.referenceProof!.steps).toHaveLength(1);
+  expect(definition.referenceProof!.steps[0]!.formula).toBe('P ∧');
+  expect(screen.getByRole('region', { name: 'Entered Fitch proof' })).toHaveTextContent('P ∧');
 });

@@ -1,6 +1,7 @@
+import { lineAction } from '../../../../test/proof-controls';
 import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import type { FitchProof, ProofCheckReport } from '@logiclab/contracts';
@@ -80,6 +81,15 @@ function setup(initial?: FitchDerivationAnswer, options: Partial<Props> = {}) {
     );
   }
   const view = render(<Harness options={options} />);
+  // These cases inspect/edit retained work; enter its editor explicitly.
+  if (initial && !options.readOnly && !options.disabled) {
+    fireEvent.click(
+      screen.getByRole('button', { name: `Actions for line ${initial.proof.steps.length}` }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: `Edit line ${initial.proof.steps.length}` }),
+    );
+  }
   return {
     user: userEvent.setup(),
     onAnswer,
@@ -96,20 +106,21 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   await f.user.click(screen.getByRole('button', { name: 'Start proof' }));
   await f.user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await f.user.type(screen.getByLabelText('Formula for line 1'), 'P');
+  await f.user.click(screen.getByRole('button', { name: 'Add line' }));
   const scope = screen.getByLabelText('New line scope') as HTMLSelectElement;
   const block = scope.value;
-  const endpoint = screen.getByLabelText('Final line of Subproof 1 at line 1') as HTMLSelectElement;
-  await f.user.selectOptions(endpoint, endpoint.options[1]!.value);
-  await f.user.selectOptions(scope, '');
-  await f.user.click(screen.getByRole('button', { name: 'Add inference line' }));
+  await lineAction(f.user, 1, 'Close subproof at line 1');
   await f.user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   expect(
     within(screen.getByLabelText('Rule for line 2'))
       .getAllByRole('option')
       .map((option) => option.textContent),
-  ).toEqual(['None', 'Conditional proof']);
+  ).toEqual(['Rule', 'Conditional proof']);
   await f.user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   await f.user.selectOptions(screen.getByLabelText('Line 2 subproof 1'), block);
+  expect(f.onCheck).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  await f.user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(fitchDerivationAnswerSchema.safeParse(f.current()).success).toBe(true);
   expect(f.current()!.proof.blocks[0]!.endId).toBe(f.current()!.proof.steps[0]!.id);
   expect(f.onCheck).not.toHaveBeenCalled();
@@ -245,19 +256,19 @@ test('read-only submitted proofs expose no editor/check actions and preserve unr
   expect(screen.getByText('Your submitted proof')).toBeInTheDocument();
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-  expect(screen.getByText(/subproofs \?/)).toBeInTheDocument();
+  expect(screen.getByText(/Missing subproof/)).toBeInTheDocument();
   expect(f.onAnswer).not.toHaveBeenCalled();
 });
 
 test('busy state disables all editing and checking, and checking can be omitted independently', async () => {
   const f = setup({ type: 'derivation', proof: identity() }, { disabled: true });
-  expect(screen.getByLabelText('Formula for line 2')).toBeDisabled();
+  expect(screen.getByLabelText('Formula for line 3')).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
   await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
   expect(f.onAnswer).not.toHaveBeenCalled();
   f.rerender({ onCheck: undefined });
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
-  expect(screen.getByLabelText('Formula for line 2')).toBeEnabled();
+  expect(screen.getByLabelText('Formula for line 3')).toBeEnabled();
 });
 
 test('unassessable feedback is explicit and does not invent a failed proof or numerical score', () => {

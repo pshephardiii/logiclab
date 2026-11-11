@@ -2,20 +2,20 @@ import { DerivationPremiseFields } from './DerivationPremiseFields';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
-import './dependency-authoring.css';
+import './derivation-authoring.css';
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { DerivationRuleFields } from './DerivationRuleFields';
 import { useState } from 'react';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
-import type { DependencyAuthoringStep, ProblemEditorFields } from '../helpers/problem-editor';
+import type { DerivationAuthoringStep, ProblemEditorFields } from '../helpers/problem-editor';
 import { ReferenceProofEditor } from './ReferenceProofEditor';
 import { LocalReferenceCheck } from './LocalReferenceCheck';
 
 type Props = {
   fields: ProblemEditorFields;
-  dependencyStep?: DependencyAuthoringStep;
+  authoringStep?: DerivationAuthoringStep;
   onChange: (fields: ProblemEditorFields) => void;
   entryPending?: boolean;
   onPendingChange?: (pending: boolean) => void;
@@ -37,11 +37,11 @@ export function DerivationProblemFields({
   entryPending = false,
   onPendingChange,
   onPremisePendingChange,
-  dependencyStep = 'details',
+  authoringStep = 'details',
 }: Props) {
   const definition = fields.derivation;
-  const dependency = definition.format === 'dependency';
-  const hideStatement = dependency && dependencyStep === 'reference';
+  const staged = definition.format !== 'tree';
+  const hideStatement = staged && authoringStep === 'reference';
 
   const [pendingFormat, setPendingFormat] = useState<
     AuthoringDerivationDefinition['format'] | null
@@ -56,9 +56,9 @@ export function DerivationProblemFields({
   }
 
   return (
-    <div className={dependency ? 'dependency-authoring proof-editor' : undefined}>
+    <div className={staged ? 'derivation-authoring proof-editor' : undefined}>
       <div hidden={hideStatement}>
-        <div className={dependency ? 'proof-setup-toolbar' : undefined}>
+        <div className={staged ? 'proof-setup-toolbar' : undefined}>
           <div>
             <label htmlFor="derivation-format">Proof format</label>
             <select
@@ -85,7 +85,7 @@ export function DerivationProblemFields({
               <option value="tree">Natural-deduction tree</option>
             </select>
           </div>
-          {dependency && !hideStatement && <ProofKeyboardGuide />}
+          {staged && !hideStatement && <ProofKeyboardGuide />}
         </div>
         {pendingFormat && (
           <div role="group" aria-label="Confirm proof format change">
@@ -113,15 +113,16 @@ export function DerivationProblemFields({
         )}
         <section
           hidden={hideStatement}
-          className={dependency ? 'dependency-authoring-statement' : undefined}
+          className={staged ? 'derivation-authoring-statement' : undefined}
         >
           <p className="help">
             Save an unfinished statement now. Publication requires an accepted reference under these
             exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
             snapshots can be added to assignments.
           </p>
-          {dependency ? (
+          {staged ? (
             <ProofPremisesEditor
+              format={definition.format === 'fitch' ? 'fitch' : 'dependency'}
               premises={definition.premises}
               onChange={(premises) => change({ premises })}
               onPendingChange={onPremisePendingChange}
@@ -140,7 +141,7 @@ export function DerivationProblemFields({
             onValueChange={(conclusion) => change({ conclusion })}
           />
         </section>
-        <div className={dependency ? 'dependency-authoring-rules' : undefined}>
+        <div className={staged ? 'derivation-authoring-rules' : undefined}>
           <DerivationRuleFields
             format={definition.format}
             rules={definition.rules}
@@ -168,7 +169,7 @@ export function DerivationProblemFields({
           </p>
         </div>
       </div>
-      <div hidden={dependency && dependencyStep !== 'reference'}>
+      <div hidden={staged && authoringStep !== 'reference'}>
         <ReferenceProofEditor
           disabled={entryPending}
           onPendingChange={onPendingChange}

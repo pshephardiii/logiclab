@@ -37,13 +37,7 @@ test.each(['fitch', 'dependency', 'tree'])(
     expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
     expect(
-      screen.getByLabelText(
-        format === 'tree'
-          ? 'Formula for node 1'
-          : format === 'dependency'
-            ? 'Formula for line 2'
-            : 'Formula for line 1',
-      ),
+      screen.getByLabelText(format === 'tree' ? 'Formula for node 1' : 'Formula for line 2'),
     ).toHaveAccessibleDescription(/Contradiction: type _\|_ for ⊥/);
     expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
@@ -60,6 +54,8 @@ test('editing clears old diagnostics and never checks automatically', async () =
   fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 
+  fireEvent.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Edit line 1' }));
   fireEvent.change(screen.getByLabelText('Formula for line 1'), { target: { value: 'Q' } });
   expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
@@ -69,21 +65,30 @@ test('editing clears old diagnostics and never checks automatically', async () =
   );
 });
 
-test('pending dependency entry hides old feedback and requires Add line or discard before checking', async () => {
-  await enterProblem('dependency');
-  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
-  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q ∧' } });
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-  expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
-  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).not.toHaveTextContent(
-    'Q ∧',
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
-  expect(screen.getByRole('region', { name: 'Entered dependency proof' })).toHaveTextContent('Q ∧');
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
-  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
-});
+test.each(['dependency', 'fitch'])(
+  'pending %s entry hides old feedback and requires Add line or discard before checking',
+  async (format) => {
+    await enterProblem(format);
+    fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+    expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q ∧' } });
+    expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+    expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('region', {
+        name: format === 'fitch' ? 'Entered Fitch proof' : 'Entered dependency proof',
+      }),
+    ).not.toHaveTextContent('Q ∧');
+    fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+    expect(
+      screen.getByRole('region', {
+        name: format === 'fitch' ? 'Entered Fitch proof' : 'Entered dependency proof',
+      }),
+    ).toHaveTextContent('Q ∧');
+    expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+    expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  },
+);
 
 test.each([
   ['fitch', 'dependency'],
@@ -105,7 +110,7 @@ test.each([
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
   expect(screen.getByLabelText('Change proof format')).toHaveValue(from);
   expect(screen.getByRole('region', { name: 'Proof feedback' }).textContent).toBe(feedback);
-  if (from === 'dependency') {
+  if (from !== 'tree') {
     expect(
       screen.getByRole('table', { name: 'Entered proof' }).querySelector('tbody'),
     ).toHaveTextContent('P');

@@ -1,8 +1,11 @@
 import { parseProofFormula, sameFormula } from '@logiclab/logic-engine/proof';
+import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { DependencyDerivationDefinition } from '@logiclab/contracts/dependency-derivation';
 
 /** Compare statement sources only; this does not check inferences or repair an existing proof. */
-export function referencePremisesMatch(definition: DependencyDerivationDefinition): boolean {
+export function referencePremisesMatch(
+  definition: DependencyDerivationDefinition | FitchDerivationDefinition,
+): boolean {
   if (!definition.referenceProof) return true;
   const premises = new Map(definition.premises.map((premise) => [premise.id, premise.formula]));
   const seen = new Set<string>();

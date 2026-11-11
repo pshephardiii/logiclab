@@ -1,7 +1,8 @@
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
+import { startFitchProof } from '../../../features/proof/helpers/fitch-editor';
 import { startDependencyProof } from '../../../features/proof/dependency/editor';
-import './dependency-authoring.css';
+import './derivation-authoring.css';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   createLibraryProblemRequestSchema,
@@ -15,7 +16,7 @@ import {
   editorDefinition,
   editorSnapshot,
   type ProblemEditorFields,
-  type DependencyAuthoringStep,
+  type DerivationAuthoringStep,
 } from '../helpers/problem-editor';
 import { ConceptualProblemFields } from './ConceptualProblemFields';
 
@@ -26,8 +27,8 @@ type Props = {
   onSave: (input: CreateLibraryProblemRequest) => Promise<boolean>;
   onPreview: (definition: LibraryProblemDefinition) => void;
   onDirty: (dirty: boolean) => void;
-  initialDependencyStep?: DependencyAuthoringStep;
-  onDependencyStepChange?: (step: DependencyAuthoringStep) => void;
+  initialAuthoringStep?: DerivationAuthoringStep;
+  onAuthoringStepChange?: (step: DerivationAuthoringStep) => void;
 };
 
 /** Keeps each draft local through failures and type changes; archived records remain read-only. */
@@ -38,17 +39,17 @@ export function ProblemForm({
   onSave,
   onPreview,
   onDirty,
-  initialDependencyStep = 'details',
-  onDependencyStepChange,
+  initialAuthoringStep = 'details',
+  onAuthoringStepChange,
 }: Props) {
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
   const [entryPending, setEntryPending] = useState(false);
   const [premisePending, setPremisePending] = useState(false);
   const workPending = entryPending || premisePending;
-  const [dependencyStep, setDependencyStep] = useState(initialDependencyStep);
-  const dependency = fields.type === 'derivation' && fields.derivation.format === 'dependency';
-  const referenceStep = dependency && dependencyStep === 'reference';
+  const [authoringStep, setAuthoringStep] = useState(initialAuthoringStep);
+  const staged = fields.type === 'derivation' && fields.derivation.format !== 'tree';
+  const referenceStep = staged && authoringStep === 'reference';
   const stepHeading = useRef<HTMLHeadingElement>(null);
   const focusStep = useRef(false);
 
@@ -76,8 +77,8 @@ export function ProblemForm({
     setValidationError(null);
   }
 
-  function goToStep(step: DependencyAuthoringStep) {
-    if (!dependency || busy || workPending || step === dependencyStep) return;
+  function goToStep(step: DerivationAuthoringStep) {
+    if (!staged || busy || workPending || step === authoringStep) return;
 
     if (step === 'reference') {
       const error = referenceStatementError(fields.derivation);
@@ -91,19 +92,21 @@ export function ProblemForm({
     // Entering reference construction is explicit and local. Seed premises once, retaining
     // any existing reference identities when navigating back from statement edits.
     if (step === 'reference' && !fields.derivation.referenceProof && !problem?.archivedAt) {
+      const definition = fields.derivation;
+      if (definition.format === 'tree') return;
+
       change({
         ...fields,
-        derivation: {
-          ...fields.derivation,
-          format: 'dependency',
-          referenceProof: startDependencyProof(fields.derivation.premises),
-        },
+        derivation:
+          definition.format === 'fitch'
+            ? { ...definition, referenceProof: startFitchProof(definition) }
+            : { ...definition, referenceProof: startDependencyProof(definition.premises) },
       });
     }
 
     focusStep.current = true;
-    setDependencyStep(step);
-    onDependencyStepChange?.(step);
+    setAuthoringStep(step);
+    onAuthoringStepChange?.(step);
   }
 
   function validatedDefinition() {
@@ -164,8 +167,11 @@ export function ProblemForm({
             ? 'Edit draft'
             : 'Create a problem'}
       </h2>
-      {dependency && (
-        <nav aria-label="Dependency authoring steps" className="dependency-authoring-steps">
+      {staged && (
+        <nav
+          aria-label={`${fields.derivation.format === 'fitch' ? 'Fitch' : 'Dependency'} authoring steps`}
+          className="derivation-authoring-steps"
+        >
           <button
             type="button"
             className="secondary"
@@ -209,7 +215,7 @@ export function ProblemForm({
           {fields.type === 'derivation' ? (
             <DerivationProblemFields
               fields={fields}
-              dependencyStep={dependencyStep}
+              authoringStep={authoringStep}
               onChange={change}
               entryPending={workPending}
               onPendingChange={setEntryPending}
@@ -233,10 +239,10 @@ export function ProblemForm({
           ) : (
             <ConceptualProblemFields fields={fields} onChange={change} />
           )}
-          {dependency && !referenceStep && (
+          {staged && !referenceStep && (
             <button
               type="button"
-              className="dependency-reference-next"
+              className="derivation-reference-next"
               disabled={workPending}
               onClick={() => goToStep('reference')}
             >

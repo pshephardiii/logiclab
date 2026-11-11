@@ -47,7 +47,7 @@ test('saved trees preserve their reference during statement edits and explicit f
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('fitch');
-  expect(screen.getByRole('button', { name: 'Start reference proof' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Continue to reference proof' })).toBeInTheDocument();
 });
 
 test('private tree summaries display branches, instructor terminology and explanation without Fitch assumptions', async () => {

@@ -1,3 +1,5 @@
+import { FitchProofDisplay } from './FitchProofDisplay';
+import { uniqueFitchProofIds } from '../helpers/fitch-editor';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import type { FitchProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
@@ -26,7 +28,13 @@ export function FitchProofSummary({
   return (
     <details>
       <summary>{label}</summary>
-      {proof ? (
+      {!proof ? (
+        <p>No proof entered.</p>
+      ) : !proof.steps.length ? (
+        <p>No proof lines entered.</p>
+      ) : uniqueFitchProofIds(proof) ? (
+        <FitchProofDisplay proof={proof} rules={rules} readOnly label={`${label} diagram`} />
+      ) : (
         <ol>
           {proof.steps.map((step, index) => (
             <li key={index}>
@@ -49,10 +57,7 @@ export function FitchProofSummary({
             </li>
           ))}
         </ol>
-      ) : (
-        <p>No proof entered.</p>
       )}
-      {proof?.steps.length === 0 && <p>No proof lines entered.</p>}
       {children}
     </details>
   );

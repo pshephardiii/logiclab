@@ -13,28 +13,40 @@ type Props = {
   rules: FitchDerivationContent['rules'];
   blocks: { id: string; label: string }[];
   onChange: (step: InferenceStep) => void;
+  compact?: boolean;
 };
 
 /** Preserve existing citation slots and unresolved IDs when the selected rule changes. */
-export function FitchInferenceFields({ step, index, steps, rules, blocks, onChange }: Props) {
+export function FitchInferenceFields({
+  step,
+  index,
+  steps,
+  rules,
+  blocks,
+  onChange,
+  compact = false,
+}: Props) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
 
   return (
     <>
-      <ProofChoice
-        label={`Scope for line ${index + 1}`}
-        value={step.blockId}
-        empty="Root proof"
-        choices={blocks}
-        onChange={(blockId) => onChange({ ...step, blockId })}
-      />
+      {!compact && (
+        <ProofChoice
+          label={`Scope for line ${index + 1}`}
+          value={step.blockId}
+          empty="Root proof"
+          choices={blocks}
+          onChange={(blockId) => onChange({ ...step, blockId })}
+        />
+      )}
       <ProofChoice
         label={`Rule for line ${index + 1}`}
+        empty={compact ? 'Rule' : 'None'}
         value={step.ruleId}
         choices={rules.map((rule) => ({ id: rule.id, label: rule.label }))}
         onChange={(ruleId) => onChange({ ...step, ruleId })}
       />
-      <ProofRuleHelp format="fitch" rules={rules} ruleId={step.ruleId} />
+      {!compact && <ProofRuleHelp format="fitch" rules={rules} ruleId={step.ruleId} />}
       {Array.from(
         { length: Math.max(rule?.lineReferences ?? 0, step.lineReferences.length) },
         (_, slot) => (

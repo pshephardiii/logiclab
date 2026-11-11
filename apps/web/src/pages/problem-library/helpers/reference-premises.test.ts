@@ -61,3 +61,32 @@ test('detects missing, foreign, changed and blank extra premises while retaining
     expect(d).toEqual(before);
   }
 });
+
+test('Fitch source matching compares statement identities and notation without mutating references', async () => {
+  const { derivationDefinition } = await import('../../../../test/derivation');
+  const definition = {
+    ...derivationDefinition,
+    premises: [{ id: 'source', formula: '[P -> Q]' }],
+    referenceProof: {
+      proofVersion: 1 as const,
+      format: 'fitch' as const,
+      blocks: [],
+      steps: [
+        {
+          id: 'line',
+          kind: 'premise' as const,
+          blockId: null,
+          premiseId: 'source',
+          formula: 'P → Q',
+        },
+      ],
+    },
+  };
+  expect(referencePremisesMatch(definition)).toBe(true);
+  definition.referenceProof.steps[0]!.premiseId = 'foreign';
+  const before = structuredClone(definition);
+  expect(referencePremisesMatch(definition)).toBe(false);
+  expect(definition).toEqual(before);
+  definition.referenceProof.steps = [];
+  expect(referencePremisesMatch(definition)).toBe(false);
+});

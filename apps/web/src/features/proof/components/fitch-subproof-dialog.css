@@ -1,0 +1,24 @@
+.fitch-subproof-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1.25rem;
+  border: 1px solid #a8b9b1;
+  border-radius: 0.75rem;
+  color: #162a36;
+}
+.fitch-subproof-dialog::backdrop {
+  background: rgb(15 23 42 / 55%);
+}
+.fitch-subproof-dialog h2 {
+  margin-top: 0;
+}
+.fitch-subproof-dialog .fitch-subproof-fields {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.fitch-subproof-dialog h4 {
+  margin: 0;
+}

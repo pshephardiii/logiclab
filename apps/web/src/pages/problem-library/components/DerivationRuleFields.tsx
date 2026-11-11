@@ -18,7 +18,7 @@ type Props = {
 
 /** Preserve label drafts for disabled rules; the parent retains the full authored definition. */
 export function DerivationRuleFields({ format, rules, labels, onChange }: Props) {
-  if (format === 'dependency')
+  if (format !== 'tree')
     return (
       <ProofRulePicker
         selected={rules.map((rule) => rule.id)}

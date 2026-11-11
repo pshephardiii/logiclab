@@ -49,7 +49,7 @@ function setup(
   };
   const props = {
     problem,
-    initialDependencyStep: value.referenceProof ? ('reference' as const) : ('details' as const),
+    initialAuthoringStep: value.referenceProof ? ('reference' as const) : ('details' as const),
     busy: false,
     onSave: vi
       .fn<(input: CreateLibraryProblemRequest) => Promise<boolean>>()

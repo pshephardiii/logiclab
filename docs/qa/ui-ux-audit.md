@@ -376,6 +376,14 @@ The agreed next branches are **030 Fitch proof UI → 031 natural-deduction tree
 
 See [final branch verification](../verification/dependency-proof-ui-verification.md) for the final automated checks and the distinction between earlier focused browser evidence and checks rerun at closeout.
 
+## Fitch UI follow-up (030)
+
+November 11, 2026 closeout: 030 carries the dependency interaction approach into Fitch while keeping actual block ancestry, endpoints and discharge distinct. The visual proof grows through confirmed entry, line menus replace repeated controls, and focused modals handle subproof settings/deletion. Read-only views omit those controls. Instructor details/reference steps seed sources once, preserve unfinished drafts and expose a confirmed reset when statement premises no longer match.
+
+Automated coverage includes pending work across practice/authoring/assigned contexts, cancellation/retention, nested close/reopen, safe choices, stable citations and deletion targets, malformed retained work, and save/remount stage retention. Earlier focused Chrome runs cover practice/menu/modal interactions and mobile bounds; the latest authoring run uses real local demo APIs and an isolated disposable schema for save/check/publication, immutable version retention and source reset. See [final verification and screenshots](../verification/fitch-proof-ui-verification.md). No final full browser sweep or exhaustive product/accessibility audit is implied.
+
+The user explicitly deferred their visual QA until the general UI branch after trees. Continue with 031 trees, then 032 general audit; the existing baseline findings and assignment backlog remain carry-forward work. No next branch is created by this record.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.

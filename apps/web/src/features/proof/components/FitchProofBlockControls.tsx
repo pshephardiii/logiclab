@@ -22,7 +22,7 @@ export function FitchProofBlockControls({
   onDelete,
 }: Props) {
   return (
-    <section className="problem-option" aria-label={label}>
+    <section className="fitch-subproof-fields" aria-label={label}>
       <h4>{label}</h4>
       <ProofChoice
         label={`Parent of ${label}`}
