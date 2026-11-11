@@ -52,6 +52,7 @@ async function open() {
   const user = userEvent.setup();
   render(<AssignedAttempt assignmentId={work.id} />);
   await screen.findByRole('heading', { name: 'Problem 1: First proof' });
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   return user;
 }
 
@@ -67,6 +68,7 @@ test('tree edits retain work across failed saves, problem navigation and Stay wi
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Start proof' }));
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
@@ -97,7 +99,8 @@ test('explicit saves preserve tree identities and establish the confirmed reload
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
-  await waitFor(() => expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧'));
+  await user.click(await screen.findByRole('button', { name: 'Edit node 1' }));
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
 
@@ -131,4 +134,53 @@ test('late tree check responses are cancelled and cannot annotate a changed snap
   expect(signal.aborted).toBe(true);
   resolve({ itemId: itemA, feedback: { type: 'derivation', report } });
   await waitFor(() => expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument());
+});
+
+test('pending tree entry protects clean work, blocks save/check and retains it on Stay without API writes', async () => {
+  const user = await open();
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 3'), '~Q');
+  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  const unload = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(unload);
+  expect(unload.defaultPrevented).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Formula for node 3')).toHaveValue('¬Q');
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  expect(screen.queryByRole('region', { name: 'Unconfirmed proof node' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Edit node 3' })).not.toBeInTheDocument();
+  const clean = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(clean);
+  expect(clean.defaultPrevented).toBe(false);
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test('pending nodes prevent graded finalization and discard restores clean confirmed work', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...work, assessmentMode: 'graded', feedbackTiming: 'on_submission' },
+    attempt: saved,
+  });
+  const user = await open();
+  await user.click(
+    screen.getByRole('checkbox', {
+      name: 'I understand submission is final and cannot be edited.',
+    }),
+  );
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+  expect(
+    screen.getByRole('checkbox', {
+      name: 'I understand submission is final and cannot be edited.',
+    }),
+  ).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
 });

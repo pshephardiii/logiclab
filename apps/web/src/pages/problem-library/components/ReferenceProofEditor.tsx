@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { referencePremisesMatch } from '../helpers/reference-premises';
-import { startFitchProof } from '../../../features/proof/helpers/fitch-editor';
-import { startDependencyProof } from '../../../features/proof/dependency/editor';
+import { withFreshReference } from '../helpers/fresh-reference';
+import { treeReferenceStatementMatches } from '../helpers/tree-reference-statement';
 import { ProofDeletionPrompt } from '../../../features/proof/components/ProofDeletionPrompt';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
@@ -21,23 +21,26 @@ export function ReferenceProofEditor({
   disabled?: boolean;
 }) {
   const [resetting, setResetting] = useState(false);
-  if (definition.format === 'tree')
-    return (
-      <TreeProofEditor
-        key="tree"
-        statement={definition}
-        proof={definition.referenceProof}
-        onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
-      />
-    );
+  const matches =
+    definition.format === 'tree'
+      ? treeReferenceStatementMatches(definition)
+      : referencePremisesMatch(definition);
 
   return (
     <>
-      {!referencePremisesMatch(definition) && (
-        <section className="reference-premise-warning" aria-label="Reference premise mismatch">
+      {!matches && (
+        <section
+          className="reference-premise-warning"
+          aria-label={
+            definition.format === 'tree'
+              ? 'Reference statement mismatch'
+              : 'Reference premise mismatch'
+          }
+        >
           <p>
-            The reference starting premises differ from the statement. Review the premise lines or
-            restart the reference from the current statement.
+            {definition.format === 'tree'
+              ? 'The reference has a different conclusion or outdated premise leaves. Review the tree or restart it from the current statement.'
+              : 'The reference starting premises differ from the statement. Review the premise lines or restart the reference from the current statement.'}
           </p>
           <button
             type="button"
@@ -56,18 +59,15 @@ export function ReferenceProofEditor({
           onCancel={() => setResetting(false)}
         >
           <p>
-            This replaces the entire reference proof with the current starting premises. All derived
-            lines and assumptions will be removed.
+            {definition.format === 'tree'
+              ? 'This replaces the entire reference with a new unverified conclusion root. All existing nodes and discharge selections will be removed.'
+              : 'This replaces the entire reference proof with the current starting premises. All derived lines and assumptions will be removed.'}
           </p>
           <button
             type="button"
             className="danger"
             onClick={() => {
-              onChange(
-                definition.format === 'dependency'
-                  ? { ...definition, referenceProof: startDependencyProof(definition.premises) }
-                  : { ...definition, referenceProof: startFitchProof(definition) },
-              );
+              onChange(withFreshReference(definition));
               setResetting(false);
             }}
           >
@@ -78,7 +78,15 @@ export function ReferenceProofEditor({
           </button>
         </ProofDeletionPrompt>
       )}
-      {definition.format === 'dependency' ? (
+      {definition.format === 'tree' ? (
+        <TreeProofEditor
+          key="tree"
+          onPendingChange={onPendingChange}
+          statement={definition}
+          proof={definition.referenceProof}
+          onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
+        />
+      ) : definition.format === 'dependency' ? (
         <DependencyProofEditor
           onPendingChange={onPendingChange}
           key="dependency"

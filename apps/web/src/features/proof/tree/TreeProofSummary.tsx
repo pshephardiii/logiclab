@@ -1,7 +1,10 @@
 import type { TreeProof } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
+import { treePreviewLayout } from './editor';
+import { TreeProofPreview } from './TreeProofPreview';
+import { TreeProofNodeList } from './TreeProofNodeList';
 
-/** Flat diagnostic view tolerates unfinished/cyclic drafts alongside the visual preview. */
+/** Read-only entered work or an authorized reference, with a tolerant fallback for unsafe layouts. */
 export function TreeProofSummary({
   proof,
   rules,
@@ -13,48 +16,38 @@ export function TreeProofSummary({
   label: string;
   children?: ReactNode;
 }) {
-  const positions = new Map(proof?.nodes.map((node, index) => [node.id, index + 1]));
-  const position = (id: string | null) => (id ? (positions.get(id) ?? '?') : '?');
-  const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
+  const layout = proof ? treePreviewLayout(proof) : null;
+  const attached = new Set(layout?.order);
+  const detached = proof?.nodes.flatMap((_, index) => (attached.has(index) ? [] : [index])) ?? [];
+  const root = proof?.nodes.findIndex((node) => node.id === proof.rootId) ?? -1;
 
   return (
     <details>
       <summary>{label}</summary>
       {!proof ? (
         <p>No proof entered.</p>
+      ) : !proof.nodes.length ? (
+        <p>No proof nodes entered.</p>
+      ) : layout && layout.order.length > 0 ? (
+        <>
+          <TreeProofPreview proof={proof} rules={rules} label={`${label} diagram`} />
+          {detached.length > 0 && (
+            <section aria-label="Unattached proof nodes">
+              <h4>Unattached nodes</h4>
+              <TreeProofNodeList proof={proof} rules={rules} indices={detached} />
+            </section>
+          )}
+        </>
       ) : (
         <>
-          <p>Conclusion root: node {position(proof.rootId)}.</p>
-          {!proof.nodes.length ? (
-            <p>No proof nodes entered.</p>
-          ) : (
-            <ol>
-              {proof.nodes.map((node, index) => (
-                <li key={index}>
-                  <code>{node.formula || '(blank)'}</code> —{' '}
-                  {node.kind === 'inference' ? (
-                    <>
-                      {node.ruleId
-                        ? (labels.get(node.ruleId) ?? 'Rule not enabled')
-                        : 'No rule selected'}
-                      ; supporting nodes {node.lineReferences.map(position).join(', ') || 'none'};
-                      discharged branches{' '}
-                      {node.branches
-                        .map(
-                          (branch) =>
-                            `node ${position(branch.rootId)} assuming ${branch.assumptionFormula || '(blank)'}; discharge nodes ${branch.assumptionIds.map(position).join(', ') || 'none'}`,
-                        )
-                        .join(' / ') || 'none'}
-                    </>
-                  ) : node.kind === 'premise' ? (
-                    'Premise'
-                  ) : (
-                    'Assumption'
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
+          <p>
+            {layout
+              ? 'No existing conclusion root is selected.'
+              : 'Shared or cyclic links, duplicate identities or the node limit prevent a tree diagram.'}{' '}
+            All entered nodes are listed below.
+          </p>
+          <p>Conclusion root: node {root < 0 ? '?' : root + 1}.</p>
+          <TreeProofNodeList proof={proof} rules={rules} />
         </>
       )}
       {children}

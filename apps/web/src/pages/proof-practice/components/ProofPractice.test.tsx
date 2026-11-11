@@ -334,3 +334,19 @@ test('opening the rules modal leaves all rules selected; only a fresh checkbox c
   fireEvent.click(choice, { detail: 1 });
   expect(choice).not.toBeChecked();
 });
+
+test('pending tree nodes hide previous feedback and remain intact when restarting is cancelled', async () => {
+  await enterProblem('tree');
+  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByRole('region', { name: 'Proof feedback' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'New assumption node' }));
+  fireEvent.change(screen.getByLabelText('Formula for node 2'), { target: { value: '~Q' } });
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('Formula for node 2')).toHaveValue('¬Q');
+  fireEvent.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Edit node 2' })).not.toBeInTheDocument();
+});

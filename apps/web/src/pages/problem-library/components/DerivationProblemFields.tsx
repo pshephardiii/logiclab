@@ -1,4 +1,3 @@
-import { DerivationPremiseFields } from './DerivationPremiseFields';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
@@ -40,8 +39,7 @@ export function DerivationProblemFields({
   authoringStep = 'details',
 }: Props) {
   const definition = fields.derivation;
-  const staged = definition.format !== 'tree';
-  const hideStatement = staged && authoringStep === 'reference';
+  const hideStatement = authoringStep === 'reference';
 
   const [pendingFormat, setPendingFormat] = useState<
     AuthoringDerivationDefinition['format'] | null
@@ -56,9 +54,9 @@ export function DerivationProblemFields({
   }
 
   return (
-    <div className={staged ? 'derivation-authoring proof-editor' : undefined}>
+    <div className="derivation-authoring proof-editor">
       <div hidden={hideStatement}>
-        <div className={staged ? 'proof-setup-toolbar' : undefined}>
+        <div className="proof-setup-toolbar">
           <div>
             <label htmlFor="derivation-format">Proof format</label>
             <select
@@ -85,7 +83,7 @@ export function DerivationProblemFields({
               <option value="tree">Natural-deduction tree</option>
             </select>
           </div>
-          {staged && !hideStatement && <ProofKeyboardGuide />}
+          {!hideStatement && <ProofKeyboardGuide />}
         </div>
         {pendingFormat && (
           <div role="group" aria-label="Confirm proof format change">
@@ -111,28 +109,18 @@ export function DerivationProblemFields({
             </button>
           </div>
         )}
-        <section
-          hidden={hideStatement}
-          className={staged ? 'derivation-authoring-statement' : undefined}
-        >
+        <section hidden={hideStatement} className="derivation-authoring-statement">
           <p className="help">
             Save an unfinished statement now. Publication requires an accepted reference under these
             exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
             snapshots can be added to assignments.
           </p>
-          {staged ? (
-            <ProofPremisesEditor
-              format={definition.format === 'fitch' ? 'fitch' : 'dependency'}
-              premises={definition.premises}
-              onChange={(premises) => change({ premises })}
-              onPendingChange={onPremisePendingChange}
-            />
-          ) : (
-            <DerivationPremiseFields
-              premises={definition.premises}
-              onChange={(premises) => change({ premises })}
-            />
-          )}
+          <ProofPremisesEditor
+            format={definition.format}
+            premises={definition.premises}
+            onChange={(premises) => change({ premises })}
+            onPendingChange={onPremisePendingChange}
+          />
           <label htmlFor="derivation-conclusion">Conclusion</label>
           <ProofFormulaInput
             id="derivation-conclusion"
@@ -141,9 +129,8 @@ export function DerivationProblemFields({
             onValueChange={(conclusion) => change({ conclusion })}
           />
         </section>
-        <div className={staged ? 'derivation-authoring-rules' : undefined}>
+        <div className="derivation-authoring-rules">
           <DerivationRuleFields
-            format={definition.format}
             rules={definition.rules}
             labels={fields.derivationLabels}
             onChange={(rules, derivationLabels) =>
@@ -169,7 +156,7 @@ export function DerivationProblemFields({
           </p>
         </div>
       </div>
-      <div hidden={staged && authoringStep !== 'reference'}>
+      <div hidden={authoringStep !== 'reference'}>
         <ReferenceProofEditor
           disabled={entryPending}
           onPendingChange={onPendingChange}

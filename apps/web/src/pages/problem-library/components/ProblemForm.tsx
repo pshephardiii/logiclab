@@ -1,7 +1,6 @@
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
-import { startFitchProof } from '../../../features/proof/helpers/fitch-editor';
-import { startDependencyProof } from '../../../features/proof/dependency/editor';
+import { withFreshReference } from '../helpers/fresh-reference';
 import './derivation-authoring.css';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
@@ -48,7 +47,7 @@ export function ProblemForm({
   const [premisePending, setPremisePending] = useState(false);
   const workPending = entryPending || premisePending;
   const [authoringStep, setAuthoringStep] = useState(initialAuthoringStep);
-  const staged = fields.type === 'derivation' && fields.derivation.format !== 'tree';
+  const staged = fields.type === 'derivation';
   const referenceStep = staged && authoringStep === 'reference';
   const stepHeading = useRef<HTMLHeadingElement>(null);
   const focusStep = useRef(false);
@@ -89,19 +88,10 @@ export function ProblemForm({
       }
     }
 
-    // Entering reference construction is explicit and local. Seed premises once, retaining
+    // Entering reference construction is explicit and local. Seed its format once, retaining
     // any existing reference identities when navigating back from statement edits.
     if (step === 'reference' && !fields.derivation.referenceProof && !problem?.archivedAt) {
-      const definition = fields.derivation;
-      if (definition.format === 'tree') return;
-
-      change({
-        ...fields,
-        derivation:
-          definition.format === 'fitch'
-            ? { ...definition, referenceProof: startFitchProof(definition) }
-            : { ...definition, referenceProof: startDependencyProof(definition.premises) },
-      });
+      change({ ...fields, derivation: withFreshReference(fields.derivation) });
     }
 
     focusStep.current = true;
@@ -115,7 +105,9 @@ export function ProblemForm({
       return null;
     }
     if (entryPending) {
-      setValidationError('Add line or Discard entry before saving or previewing.');
+      setValidationError(
+        `${fields.derivation.format === 'tree' ? 'Add node' : 'Add line'} or Discard entry before saving or previewing.`,
+      );
       return null;
     }
 
@@ -169,7 +161,7 @@ export function ProblemForm({
       </h2>
       {staged && (
         <nav
-          aria-label={`${fields.derivation.format === 'fitch' ? 'Fitch' : 'Dependency'} authoring steps`}
+          aria-label={`${fields.derivation.format === 'fitch' ? 'Fitch' : fields.derivation.format === 'tree' ? 'Tree' : 'Dependency'} authoring steps`}
           className="derivation-authoring-steps"
         >
           <button

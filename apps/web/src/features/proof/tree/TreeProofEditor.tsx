@@ -1,17 +1,14 @@
+import { createTreeEntry, type TreeEntry } from './entry';
+import { TreeProofEntry } from './TreeProofEntry';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
-import { ProofChoice } from '../components/ProofChoice';
+import { TreeNodeActions } from './TreeNodeActions';
+import { createConnectedTreeEntry, confirmTreeEntry, treeConnectionSlots } from './connections';
 import { TreeProofNodeFields } from './TreeProofNodeFields';
 import { TreeProofPreview } from './TreeProofPreview';
 import { TreeProofSummary } from './TreeProofSummary';
-import {
-  startTreeProof,
-  appendTreeNode,
-  removeTreeNode,
-  uniqueTreeIds,
-  treeNodeChoices,
-} from './editor';
+import { startTreeProof, removeTreeNode, uniqueTreeIds } from './editor';
 import '../proof.css';
 import { ProofHelp } from '../reference/ProofHelp';
 import { ProofEditorHeading } from '../components/ProofEditorHeading';
@@ -21,6 +18,7 @@ export function TreeProofEditor({
   proof,
   onChange,
   purpose = 'reference',
+  onPendingChange,
 }: {
   statement: {
     conclusion: string;
@@ -30,8 +28,30 @@ export function TreeProofEditor({
   proof: TreeProof | null;
   purpose?: 'reference' | 'student';
   onChange: (proof: TreeProof | null) => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const reference = purpose === 'reference';
+  const [entry, setEntry] = useState<TreeEntry | null>(null);
+  const pending = entry !== null;
+
+  useEffect(() => {
+    onPendingChange?.(pending);
+    return () => onPendingChange?.(false);
+  }, [pending, onPendingChange]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const fields = useRef<HTMLDivElement>(null);
+  const focusRequested = useRef(false);
+  const position = proof?.nodes.findIndex((node) => node.id === selectedId) ?? -1;
+  const rootPosition = proof?.nodes.findIndex((node) => node.id === proof.rootId) ?? -1;
+  const selectedIndex = position >= 0 ? position : rootPosition >= 0 ? rootPosition : 0;
+  const selected = proof?.nodes[selectedIndex];
+
+  useEffect(() => {
+    if (!focusRequested.current) return;
+    fields.current?.querySelector<HTMLInputElement>('input[data-proof-formula]')?.focus();
+    focusRequested.current = false;
+  });
+
   const [deletion, setDeletion] = useState<{ id: string } | { all: true } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,13 +62,40 @@ export function TreeProofEditor({
   }
 
   function add(kind: TreeProofNode['kind']) {
-    if (!proof) return;
+    if (!proof || pending) return;
 
     try {
-      change(appendTreeNode(proof, kind));
+      setEntry(createTreeEntry(proof, kind));
+      setDeletion(null);
+      setError(null);
+      focusRequested.current = true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not add a proof node.');
     }
+  }
+
+  function discardEntry() {
+    setEntry(null);
+    setError(null);
+    focusRequested.current = true;
+  }
+
+  function confirmEntry() {
+    if (!entry) return;
+    if (proof !== entry.base) {
+      setError('The proof changed while this entry was open. Discard entry and try again.');
+      return;
+    }
+
+    setSelectedId(entry.draft.nodes[entry.index]!.id);
+    try {
+      change(confirmTreeEntry(entry));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not connect this node.');
+      return;
+    }
+    setEntry(null);
+    focusRequested.current = true;
   }
 
   return (
@@ -67,13 +114,25 @@ export function TreeProofEditor({
       )}
       <ProofHelp format="tree" rules={statement.rules} />
       <p className="help">Build from the conclusion toward its premises.</p>
+      {pending && (!proof || !uniqueTreeIds(proof)) && (
+        <p role="alert" className="error">
+          The proof changed while this entry was open. Discard entry and try again.
+          <button type="button" className="text-button" onClick={discardEntry}>
+            Discard entry
+          </button>
+        </p>
+      )}
       {!proof ? (
         <>
           <p>
             Starting creates an unverified conclusion root from the current target once. Later
             statement edits do not rewrite it.
           </p>
-          <button type="button" onClick={() => change(startTreeProof(statement.conclusion))}>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => change(startTreeProof(statement.conclusion))}
+          >
             {reference ? 'Start reference proof' : 'Start proof'}
           </button>
         </>
@@ -94,43 +153,127 @@ export function TreeProofEditor({
             </>
           ) : (
             <>
-              <TreeProofPreview proof={proof} rules={statement.rules} />
-              <ProofChoice
-                label="Conclusion root"
-                value={proof.rootId}
-                choices={treeNodeChoices(proof)}
-                onChange={(rootId) => change({ ...proof, rootId })}
+              <TreeProofPreview
+                proof={proof}
+                rules={statement.rules}
+                selectedId={pending ? null : (selected?.id ?? null)}
+                disabled={pending}
+                onSelect={(id) => {
+                  if (pending) return;
+                  if (selectedId === id || selected?.id === id)
+                    fields.current
+                      ?.querySelector<HTMLInputElement>('input[data-proof-formula]')
+                      ?.focus();
+                  setSelectedId(id);
+                  setDeletion(null);
+                  focusRequested.current = true;
+                }}
+                renderActions={(node, index) => (
+                  <TreeNodeActions
+                    index={index}
+                    disabled={pending}
+                    root={proof.rootId === node.id}
+                    slots={treeConnectionSlots(proof, node.id, statement.rules)}
+                    onEdit={() => {
+                      setSelectedId(node.id);
+                      setDeletion(null);
+                      focusRequested.current = true;
+                    }}
+                    onRoot={() => {
+                      if (!pending) change({ ...proof, rootId: node.id });
+                    }}
+                    onDelete={() => {
+                      setSelectedId(node.id);
+                      setDeletion({ id: node.id });
+                    }}
+                    onConnect={(kind, connection) => {
+                      if (pending) return;
+                      try {
+                        setEntry(
+                          createConnectedTreeEntry(
+                            proof,
+                            node.id,
+                            kind,
+                            connection,
+                            statement.rules,
+                          ),
+                        );
+                        setDeletion(null);
+                        setError(null);
+                        focusRequested.current = true;
+                      } catch (caught) {
+                        setError(
+                          caught instanceof Error
+                            ? caught.message
+                            : 'Could not start a connection.',
+                        );
+                      }
+                    }}
+                  />
+                )}
               />
-              <div className="action-row">
-                {(['premise', 'assumption', 'inference'] as const).map((kind) => (
-                  <button
-                    key={kind}
-                    type="button"
-                    disabled={proof.nodes.length >= PROOF_LIMITS.maxSteps}
-                    onClick={() => add(kind)}
-                  >
-                    Add {kind} node
-                  </button>
-                ))}
+              <fieldset disabled={pending} aria-label="Tree structure">
+                <div className="action-row">
+                  {(['premise', 'assumption', 'inference'] as const).map((kind) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      disabled={proof.nodes.length >= PROOF_LIMITS.maxSteps}
+                      onClick={() => add(kind)}
+                    >
+                      New {kind} node
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <div ref={fields}>
+                {entry ? (
+                  <TreeProofEntry
+                    key={entry.draft.nodes[entry.index]!.id}
+                    proof={entry.draft}
+                    index={entry.index}
+                    statement={statement}
+                    onChange={(next) =>
+                      setEntry({
+                        ...entry,
+                        draft: {
+                          ...entry.draft,
+                          nodes: entry.draft.nodes.map((node, index) =>
+                            index === entry.index ? next : node,
+                          ),
+                        },
+                      })
+                    }
+                    connection={entry.connection}
+                    onConnectionChange={(connection) => setEntry({ ...entry, connection })}
+                    onConfirm={confirmEntry}
+                    onDiscard={discardEntry}
+                  />
+                ) : (
+                  selected && (
+                    <TreeProofNodeFields
+                      key={selected.id}
+                      proof={proof}
+                      index={selectedIndex}
+                      statement={statement}
+                      onChange={(next) =>
+                        change({
+                          ...proof,
+                          nodes: proof.nodes.map((node) => (node.id === selected.id ? next : node)),
+                        })
+                      }
+                    />
+                  )
+                )}
               </div>
-              {proof.nodes.map((node, index) => (
-                <TreeProofNodeFields
-                  key={node.id}
-                  proof={proof}
-                  index={index}
-                  statement={statement}
-                  onChange={(next) =>
-                    change({
-                      ...proof,
-                      nodes: proof.nodes.map((value) => (value.id === node.id ? next : value)),
-                    })
-                  }
-                  onDelete={() => setDeletion({ id: node.id })}
-                />
-              ))}
             </>
           )}
-          <button type="button" className="secondary" onClick={() => setDeletion({ all: true })}>
+          <button
+            type="button"
+            className="secondary"
+            disabled={pending}
+            onClick={() => setDeletion({ all: true })}
+          >
             {reference ? 'Remove reference proof' : 'Clear proof'}
           </button>
           {deletion && (
