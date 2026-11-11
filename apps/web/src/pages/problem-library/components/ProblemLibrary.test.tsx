@@ -399,7 +399,7 @@ test('unsaved derivation edits cancel saved checks, protect selection, and retai
   ).not.toBeInTheDocument();
 });
 
-test.each(['dependency', 'fitch'] as const)(
+test.each(['dependency', 'fitch', 'tree'] as const)(
   '%s authoring stays on its chosen step after a successful save remount and resets for a new problem',
   async (format) => {
     const { derivationDefinition, derivationDraft } = await import('../../../../test/derivation');
@@ -430,7 +430,9 @@ test.each(['dependency', 'fitch'] as const)(
     expect(screen.getByLabelText('Title')).not.toBeVisible();
     expect(screen.queryByRole('region', { name: 'Your problems' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Published versions' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Formula for line 1')).toBeVisible();
+    expect(
+      screen.getByLabelText(format === 'tree' ? 'Formula for node 1' : 'Formula for line 1'),
+    ).toBeVisible();
     await user.click(screen.getByRole('button', { name: '1. Problem details' }));
     expect(screen.getByLabelText('Title')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'New problem' }));

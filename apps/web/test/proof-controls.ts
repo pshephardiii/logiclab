@@ -24,3 +24,12 @@ export async function nodeAction(user: User, node: number, action: string) {
     }),
   );
 }
+
+export async function premiseAction(user: User, premise: number, action: string) {
+  const label = `Actions for premise ${premise}`;
+  const trigger = screen.getByRole('button', { name: label });
+  if (trigger.getAttribute('aria-expanded') !== 'true') await user.click(trigger);
+  await user.click(
+    within(screen.getByRole('group', { name: label })).getByRole('button', { name: action }),
+  );
+}

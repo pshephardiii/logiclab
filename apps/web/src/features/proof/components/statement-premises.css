@@ -1,0 +1,32 @@
+.statement-premises ol {
+  padding-left: 1.5rem;
+}
+.statement-premises li > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+}
+.statement-premises code {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.1rem;
+  overflow-wrap: anywhere;
+}
+.statement-premises .selected-statement-premise {
+  background: #edf7f2;
+}
+.statement-premises .proof-dropdown-trigger {
+  flex: none;
+  border: 0;
+  padding: 0.1rem 0.4rem;
+  font-size: 1.25rem;
+}
+.statement-premise-entry {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+.statement-premise-entry input {
+  max-width: 20rem;
+}

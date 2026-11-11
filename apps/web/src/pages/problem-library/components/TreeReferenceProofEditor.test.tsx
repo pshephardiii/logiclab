@@ -1,4 +1,4 @@
-import { nodeAction } from '../../../../test/proof-controls';
+import { nodeAction, premiseAction } from '../../../../test/proof-controls';
 import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -20,6 +20,7 @@ function setup(
   const onDirty = vi.fn();
   render(
     <ProblemForm
+      initialAuthoringStep="reference"
       problem={{
         ...derivationDraft,
         definition,
@@ -89,9 +90,14 @@ test('premise copying is explicit and statement edits never rewrite entered node
   expect(screen.getByLabelText('Formula for node 2')).toHaveValue('');
   await user.click(screen.getByRole('button', { name: 'Copy statement premise to node 2' }));
   expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
-  await user.type(screen.getByLabelText('Premise 1'), ' & Q');
-  expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
   await user.click(screen.getByRole('button', { name: 'Add node' }));
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
+  await premiseAction(user, 1, 'Edit premise 1');
+  await user.type(screen.getByLabelText('Premise 1'), ' & Q');
+  await user.click(screen.getByRole('button', { name: 'Update premise' }));
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
+  expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
+  expect(screen.getByRole('region', { name: 'Reference statement mismatch' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave).toHaveBeenCalledOnce();
 });
@@ -125,7 +131,12 @@ test('confirmed node deletion retains missing child and assumption identities fo
 
 test('rule changes retain existing branch work and removed rule selections stay visible', async () => {
   const { user, onSave } = setup(treeDerivationDefinition);
-  await user.click(screen.getByRole('checkbox', { name: 'Allow Implication introduction' }));
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
+  await user.click(screen.getByRole('button', { name: 'Permitted rules (1 selected)' }));
+  await screen.findByRole('dialog', { name: 'Permitted rules' });
+  await user.click(screen.getByRole('checkbox', { name: 'Implication introduction' }));
+  await user.click(screen.getByRole('button', { name: 'Done' }));
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   expect(
     within(screen.getByLabelText('Rule for node 2')).getByRole('option', {
       name: /Missing or unavailable/,
@@ -149,13 +160,16 @@ test('archived tree drafts disable editor changes', () => {
   expect(screen.getByRole('button', { name: 'Remove reference proof' })).toBeDisabled();
 });
 
-test('tree format is selectable for a new reference and cancelled switches retain work', async () => {
+test('tree format is selectable and cancelled switches retain the reference', async () => {
   const { user } = setup();
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'dependency');
   await user.selectOptions(screen.getByLabelText('Proof format'), 'tree');
-  await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
 });
 
@@ -165,9 +179,9 @@ test('pending reference nodes gate check/save/preview and format replacement wit
   await user.click(screen.getByRole('button', { name: 'New assumption node' }));
   await user.type(screen.getByLabelText('Formula for node 2'), 'P &');
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Preview draft' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Preview draft' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Check current proof' })).toBeDisabled();
-  expect(screen.getByLabelText('Proof format')).toBeDisabled();
+  expect(screen.getByRole('button', { name: '1. Problem details' })).toBeDisabled();
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   await user.click(screen.getByRole('button', { name: 'Save draft' }));

@@ -20,13 +20,16 @@ test('saved trees preserve their reference during statement edits and explicit f
     />,
   );
   expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
+  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
   expect(screen.getByRole('region', { name: 'Tree reference proof editor' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Start reference proof' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   await user.clear(screen.getByLabelText('Conclusion'));
   await user.type(screen.getByLabelText('Conclusion'), 'Q');
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('needs correction');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
@@ -39,6 +42,7 @@ test('saved trees preserve their reference during statement edits and explicit f
       }),
     }),
   );
+  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
   expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
   expect(onDirty).toHaveBeenLastCalledWith(true);
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');

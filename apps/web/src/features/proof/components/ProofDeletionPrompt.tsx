@@ -24,7 +24,7 @@ export function ProofDeletionPrompt({
     const editor = previous?.closest('.proof-editor');
     const restore =
       previous
-        ?.closest('tr, [data-proof-node]')
+        ?.closest('tr, [data-proof-node], [data-proof-premise]')
         ?.querySelector<HTMLElement>('button[aria-controls]') ?? previous;
     element.showModal();
     element.querySelector<HTMLButtonElement>('button.secondary')?.focus();
