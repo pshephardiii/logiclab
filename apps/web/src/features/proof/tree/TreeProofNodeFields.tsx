@@ -11,6 +11,7 @@ export function TreeProofNodeFields({
   statement,
   onChange,
   onDelete,
+  staged = false,
 }: {
   proof: TreeProof;
   index: number;
@@ -19,7 +20,8 @@ export function TreeProofNodeFields({
     rules: { id: string; label: string }[];
   };
   onChange: (node: TreeProofNode) => void;
-  onDelete: () => void;
+  onDelete?: () => void;
+  staged?: boolean;
 }) {
   const node = proof.nodes[index]!;
   const formulaHint = useId();
@@ -32,7 +34,7 @@ export function TreeProofNodeFields({
   return (
     <section className="problem-option" aria-label={`Proof node ${index + 1}`}>
       <h4>
-        Node {index + 1} — {node.kind}
+        {staged ? 'New node' : 'Node'} {index + 1} — {node.kind}
         {proof.rootId === node.id ? ' (conclusion root)' : ''}
       </h4>
       <label>
@@ -82,9 +84,11 @@ export function TreeProofNodeFields({
           onChange={onChange}
         />
       )}
-      <button type="button" className="secondary" onClick={onDelete}>
-        Delete node {index + 1}
-      </button>
+      {onDelete && (
+        <button type="button" className="secondary" onClick={onDelete}>
+          Delete node {index + 1}
+        </button>
+      )}
     </section>
   );
 }

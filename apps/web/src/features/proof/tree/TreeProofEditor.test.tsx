@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import type { TreeProof } from '@logiclab/contracts';
@@ -59,8 +59,12 @@ test('selects a node in the visual tree without changing the proof and edits onl
 test('new unattached nodes open for editing without silently connecting or changing the root', async () => {
   const proof = structuredClone(treeDerivationDefinition.referenceProof!);
   const { user, current } = setup(proof);
-  await user.click(screen.getByRole('button', { name: 'Add assumption node' }));
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
   expect(screen.getByLabelText('Formula for node 3')).toHaveFocus();
+  expect(screen.queryByRole('region', { name: 'Unattached proof nodes' })).not.toBeInTheDocument();
+  expect(current()).toEqual(proof);
+  await user.type(screen.getByLabelText('Formula for node 3'), '~Q');
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
   const detached = screen.getByRole('region', { name: 'Unattached proof nodes' });
   expect(within(detached).getByRole('button', { name: 'Edit node 3' })).toHaveAttribute(
     'aria-pressed',
@@ -68,7 +72,6 @@ test('new unattached nodes open for editing without silently connecting or chang
   );
   expect(current().rootId).toBe(proof.rootId);
   expect(current().nodes.slice(0, 2)).toEqual(proof.nodes);
-  await user.type(screen.getByLabelText('Formula for node 3'), '~Q');
   await user.click(screen.getByRole('button', { name: 'Edit node 2' }));
   await user.click(screen.getByRole('button', { name: 'Edit node 3' }));
   expect(screen.getByLabelText('Formula for node 3')).toHaveValue('¬Q');
@@ -129,4 +132,84 @@ test('read-only previews render entered notation and provide no editing controls
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   expect(proof).toEqual(original);
+});
+
+test('new inference branches and discharge selections stay local until Add node', async () => {
+  const proof = structuredClone(treeDerivationDefinition.referenceProof!);
+  const { user, changed, current } = setup(proof);
+  await user.click(screen.getByRole('button', { name: 'New inference node' }));
+  await user.type(screen.getByLabelText('Formula for node 3'), 'P -> P');
+  await user.selectOptions(screen.getByLabelText('Rule for node 3'), 'implication_introduction');
+  await user.selectOptions(screen.getByLabelText('Node 3 branch 1 root'), proof.nodes[0]!.id);
+  await user.type(screen.getByLabelText('Node 3 branch 1 assumption formula'), 'P');
+  await user.click(screen.getByRole('checkbox', { name: /Discharge node 1/ }));
+  expect(changed).not.toHaveBeenCalled();
+  expect(current()).toEqual(proof);
+  expect(screen.getByRole('button', { name: 'Edit node 1' })).toBeDisabled();
+  expect(screen.getByLabelText('Conclusion root')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Clear proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
+  expect(current().nodes[2]).toMatchObject({
+    kind: 'inference',
+    formula: 'P → P',
+    ruleId: 'implication_introduction',
+    branches: [
+      { rootId: proof.nodes[0]!.id, assumptionFormula: 'P', assumptionIds: [proof.nodes[0]!.id] },
+    ],
+  });
+  expect(current().nodes.slice(0, 2)).toEqual(proof.nodes);
+  expect(current().rootId).toBe(proof.rootId);
+  expect(screen.getByRole('button', { name: 'Edit node 1' })).toBeEnabled();
+});
+
+test('discarding an entry preserves the confirmed proof; Enter confirms without checking incomplete formulas', async () => {
+  const { user, changed, current } = setup();
+  const initial = structuredClone(current());
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 3'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(changed).not.toHaveBeenCalled();
+  expect(current()).toEqual(initial);
+  expect(screen.getByLabelText('Formula for node 2')).toHaveFocus();
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 3'), 'P &');
+  fireEvent.keyDown(screen.getByLabelText('Formula for node 3'), {
+    key: 'Enter',
+    isComposing: true,
+  });
+  expect(changed).not.toHaveBeenCalled();
+  await user.keyboard('{Enter}');
+  expect(current().nodes[2]!.formula).toBe('P ∧');
+  expect(screen.queryByRole('region', { name: 'Unconfirmed proof node' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+});
+
+test('stale entries cannot replace reloaded/null proofs, and pending registration clears on discard or unmount', async () => {
+  const proof = structuredClone(treeDerivationDefinition.referenceProof!);
+  const changed = vi.fn(),
+    pending = vi.fn();
+  const props = {
+    statement: treeDerivationDefinition,
+    purpose: 'student' as const,
+    onChange: changed,
+    onPendingChange: pending,
+  };
+  const view = render(<TreeProofEditor {...props} proof={proof} />);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 3'), 'Q');
+  expect(pending).toHaveBeenLastCalledWith(true);
+  view.rerender(<TreeProofEditor {...props} proof={structuredClone(proof)} />);
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('proof changed');
+  expect(changed).not.toHaveBeenCalled();
+  view.rerender(<TreeProofEditor {...props} proof={null} />);
+  expect(screen.getByRole('button', { name: 'Start proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(pending).toHaveBeenLastCalledWith(false);
+  view.rerender(<TreeProofEditor {...props} proof={proof} />);
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  view.unmount();
+  expect(pending).toHaveBeenLastCalledWith(false);
+  expect(changed).not.toHaveBeenCalled();
 });

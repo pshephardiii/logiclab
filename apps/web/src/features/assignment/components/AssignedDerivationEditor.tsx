@@ -28,6 +28,7 @@ export function AssignedDerivationEditor({
     <>
       {statement.format === 'tree' ? (
         <TreeProofEditor
+          onPendingChange={onPendingChange}
           statement={statement}
           proof={proof?.format === 'tree' ? proof : null}
           purpose="student"

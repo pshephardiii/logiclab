@@ -115,7 +115,9 @@ export function ProblemForm({
       return null;
     }
     if (entryPending) {
-      setValidationError('Add line or Discard entry before saving or previewing.');
+      setValidationError(
+        `${fields.derivation.format === 'tree' ? 'Add node' : 'Add line'} or Discard entry before saving or previewing.`,
+      );
       return null;
     }
 

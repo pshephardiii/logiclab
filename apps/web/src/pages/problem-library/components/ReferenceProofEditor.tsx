@@ -24,6 +24,7 @@ export function ReferenceProofEditor({
   if (definition.format === 'tree')
     return (
       <TreeProofEditor
+        onPendingChange={onPendingChange}
         key="tree"
         statement={definition}
         proof={definition.referenceProof}

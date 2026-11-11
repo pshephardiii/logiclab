@@ -10,11 +10,13 @@ export function TreeProofPreview({
   rules,
   selectedId = null,
   onSelect,
+  disabled = false,
 }: {
   proof: TreeProof;
   rules: { id: string; label: string }[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
+  disabled?: boolean;
 }) {
   const layout = treePreviewLayout(proof);
   const rendered = new Map<string, ReactNode>();
@@ -79,6 +81,7 @@ export function TreeProofPreview({
             <button
               type="button"
               className="tree-node-select"
+              disabled={disabled}
               aria-label={`Edit node ${index + 1}`}
               aria-pressed={selectedId === node.id}
               onClick={() => onSelect(node.id)}
@@ -135,6 +138,7 @@ export function TreeProofPreview({
                 type="button"
                 key={node.id}
                 className="tree-node-select"
+                disabled={disabled}
                 aria-label={`Edit node ${positions.get(node.id)}`}
                 aria-pressed={selectedId === node.id}
                 onClick={() => onSelect(node.id)}

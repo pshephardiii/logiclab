@@ -38,8 +38,9 @@ test('constructs and explicitly checks/saves an identity tree while drawing its 
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
   await user.selectOptions(screen.getByLabelText('Rule for node 1'), 'implication_introduction');
-  await user.click(screen.getByRole('button', { name: 'Add assumption node' }));
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
   await user.type(screen.getByLabelText('Formula for node 2'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   const choice = within(screen.getByLabelText('Node 1 branch 1 root')).getByRole('option', {
     name: /2\. P/,
@@ -78,7 +79,7 @@ test('premise copying is explicit and statement edits never rewrite entered node
   };
   const { user, onSave } = setup(definition);
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'Add premise node' }));
+  await user.click(screen.getByRole('button', { name: 'New premise node' }));
   await user.selectOptions(
     screen.getByLabelText('Statement premise for node 2'),
     definition.premises[0]!.id,
@@ -88,6 +89,7 @@ test('premise copying is explicit and statement edits never rewrite entered node
   expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
   await user.type(screen.getByLabelText('Premise 1'), ' & Q');
   expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
   expect(onSave).toHaveBeenCalledOnce();
 });
@@ -141,7 +143,7 @@ test('archived tree drafts disable editor changes', () => {
   setup(treeDerivationDefinition, true);
   expect(screen.getByLabelText('Formula for node 2')).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Edit node 1' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Add assumption node' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'New assumption node' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Remove reference proof' })).toBeDisabled();
 });
 
@@ -153,4 +155,32 @@ test('tree format is selectable for a new reference and cancelled switches retai
   await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
   await user.click(screen.getByRole('button', { name: 'Keep current format' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
+});
+
+test('pending reference nodes gate check/save/preview and format replacement without omitting entries', async () => {
+  const { user, onSave } = setup();
+  await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 2'), 'P &');
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Preview draft' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Check current proof' })).toBeDisabled();
+  expect(screen.getByLabelText('Proof format')).toBeDisabled();
+  expect(onSave).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const original = onSave.mock.lastCall![0].definition;
+  if (original.type !== 'derivation' || original.format !== 'tree')
+    throw new Error('Expected tree');
+  expect(original.referenceProof!.nodes).toHaveLength(1);
+  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await user.type(screen.getByLabelText('Formula for node 2'), 'P &');
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  const confirmed = onSave.mock.lastCall![0].definition;
+  if (confirmed.type !== 'derivation' || confirmed.format !== 'tree')
+    throw new Error('Expected tree');
+  expect(confirmed.referenceProof!.nodes).toHaveLength(2);
+  expect(confirmed.referenceProof!.nodes[1]!.formula).toBe('P ∧');
+  expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P ∧');
 });
