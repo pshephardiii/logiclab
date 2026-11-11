@@ -59,7 +59,9 @@ export function AssignedDerivation({
       ? feedback.report
       : null;
   const dependency = item.content.format === 'dependency';
-  const showStatement = !dependency && (readOnly || !proof || proof.format !== item.content.format);
+  const visualReadOnly = readOnly && (dependency || item.content.format === 'tree');
+  const showStatement =
+    !dependency && !visualReadOnly && (readOnly || !proof || proof.format !== item.content.format);
 
   return (
     <section className="panel assigned-item proof-editor">
@@ -75,7 +77,7 @@ export function AssignedDerivation({
             ? 'Fitch'
             : 'Dependency'}
       </p>
-      {dependency && readOnly && (
+      {visualReadOnly && (
         <>
           {item.content.premises.length > 0 && (
             <section aria-label="Problem premises">
@@ -93,7 +95,7 @@ export function AssignedDerivation({
             <span>Conclusion</span>
             <code>{proofNotation(item.content.conclusion)}</code>
           </p>
-          <ProofHelp format="dependency" rules={item.content.rules} />
+          <ProofHelp format={item.content.format} rules={item.content.rules} />
         </>
       )}
       {showStatement && (

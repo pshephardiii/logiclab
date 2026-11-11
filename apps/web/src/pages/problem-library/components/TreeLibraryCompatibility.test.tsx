@@ -60,7 +60,10 @@ test('private tree summaries display branches, instructor terminology and explan
   expect(screen.getByText('Natural-deduction tree')).toBeInTheDocument();
   await user.click(screen.getByText('Private reference proof'));
   const details = screen.getByText('Private reference proof').closest('details')!;
-  expect(within(details).getByText(/Conclusion root: node 2/)).toBeInTheDocument();
+  const diagram = within(details).getByRole('region', { name: 'Private reference proof diagram' });
+  expect(diagram).toHaveTextContent('Node 2 · Conditional proof');
+  expect(within(details).queryByRole('list')).not.toBeInTheDocument();
+  expect(within(details).queryByRole('button')).not.toBeInTheDocument();
   expect(within(details).getByText(/discharge nodes 1/)).toBeInTheDocument();
   expect(within(details).getByText('Private tree explanation')).toBeInTheDocument();
 });

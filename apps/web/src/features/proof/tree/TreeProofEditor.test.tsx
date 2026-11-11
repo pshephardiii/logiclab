@@ -85,7 +85,7 @@ test('cyclic layouts expose a selectable repair list and retain their original r
   root.branches[0]!.rootId = root.id;
   const original = structuredClone(proof);
   const { user, changed, current } = setup(proof);
-  expect(screen.getByText(/Preview cannot draw shared or cyclic/)).toBeInTheDocument();
+  expect(screen.getByText(/The diagram cannot show shared or cyclic/)).toBeInTheDocument();
   expect(screen.getByRole('region', { name: 'Retained proof nodes' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveFocus();

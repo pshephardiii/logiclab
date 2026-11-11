@@ -8,12 +8,14 @@ import './tree-proof.css';
 export function TreeProofPreview({
   proof,
   rules,
+  label = 'Tree preview',
   selectedId = null,
   onSelect,
   disabled = false,
   renderActions,
 }: {
   proof: TreeProof;
+  label?: string;
   rules: { id: string; label: string }[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
@@ -70,7 +72,7 @@ export function TreeProofPreview({
                 <div key={`branch-${slot}`}>
                   {child(branch.rootId)}
                   <small>
-                    Assuming {proofNotation(branch.assumptionFormula) || '(blank)'}; discharge{' '}
+                    Assuming {proofNotation(branch.assumptionFormula) || '(blank)'}; discharge nodes{' '}
                     {branch.assumptionIds.map((id) => positions.get(id) ?? '?').join(', ') ||
                       'none'}
                   </small>
@@ -94,7 +96,7 @@ export function TreeProofPreview({
               {renderActions?.(node, index)}
             </div>
           ) : (
-            contents
+            <div className="tree-node-readonly">{contents}</div>
           )}
         </div>
       </div>,
@@ -102,20 +104,11 @@ export function TreeProofPreview({
   }
 
   return (
-    <section aria-label="Tree preview">
-      {!onSelect && (
-        <>
-          <h4>Tree preview</h4>
-          <p className="help">
-            Supporting formulas appear above their conclusion. This displays your entries without
-            checking correctness.
-          </p>
-        </>
-      )}
+    <section aria-label={label}>
       {!layout ? (
         <p>
-          Preview cannot draw shared or cyclic links or duplicate node identities. Repair the node
-          fields in the editor; your work is retained.
+          The diagram cannot show shared or cyclic links or duplicate node identities.
+          {onSelect && ' Repair the node fields in the editor; your work is retained.'}
         </p>
       ) : (
         <>
@@ -126,7 +119,8 @@ export function TreeProofPreview({
           )}
           {layout.unattached > 0 && (
             <p>
-              {layout.unattached} unattached node(s) remain in the draft and will also be checked.
+              {layout.unattached} node(s) are outside the conclusion tree.
+              {onSelect && ' They remain part of your work and will also be checked.'}
             </p>
           )}
         </>
