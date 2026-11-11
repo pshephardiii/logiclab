@@ -1,3 +1,4 @@
+import { nodeAction } from '../../../../test/proof-controls';
 import { useState } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -100,10 +101,12 @@ test('a missing root leaves every node accessible until the user explicitly choo
     screen.getByText('Select an existing conclusion root to draw the tree.'),
   ).toBeInTheDocument();
   expect(
-    within(screen.getByRole('region', { name: 'Unattached proof nodes' })).getAllByRole('button'),
+    within(screen.getByRole('region', { name: 'Unattached proof nodes' })).getAllByRole('button', {
+      name: /^Edit node [0-9]+$/,
+    }),
   ).toHaveLength(2);
   expect(changed).not.toHaveBeenCalled();
-  await user.selectOptions(screen.getByLabelText('Conclusion root'), proof.nodes[1]!.id);
+  await nodeAction(user, 2, 'Use node 2 as conclusion root');
   expect(current().nodes).toEqual(proof.nodes);
   expect(current().rootId).toBe(proof.nodes[1]!.id);
   expect(
@@ -115,7 +118,7 @@ test('deleting a selected assumption preserves unresolved references and selects
   const proof = structuredClone(treeDerivationDefinition.referenceProof!);
   const { user, current } = setup(proof);
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
-  await user.click(screen.getByRole('button', { name: 'Delete node 1' }));
+  await nodeAction(user, 1, 'Delete node 1');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(current().nodes).toEqual([proof.nodes[1]]);
   expect(current().rootId).toBe(proof.rootId);
@@ -146,7 +149,7 @@ test('new inference branches and discharge selections stay local until Add node'
   expect(changed).not.toHaveBeenCalled();
   expect(current()).toEqual(proof);
   expect(screen.getByRole('button', { name: 'Edit node 1' })).toBeDisabled();
-  expect(screen.getByLabelText('Conclusion root')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Actions for node 2' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Clear proof' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Add node' }));
   expect(current().nodes[2]).toMatchObject({
@@ -211,5 +214,53 @@ test('stale entries cannot replace reloaded/null proofs, and pending registratio
   await user.click(screen.getByRole('button', { name: 'New assumption node' }));
   view.unmount();
   expect(pending).toHaveBeenLastCalledWith(false);
+  expect(changed).not.toHaveBeenCalled();
+});
+
+test('guided branch creation connects a new assumption only on confirmation with explicit discharge', async () => {
+  const proof = structuredClone(treeDerivationDefinition.referenceProof!);
+  proof.nodes = [proof.nodes[1]!];
+  const root = proof.nodes[0]!;
+  if (root.kind !== 'inference') throw new Error('Expected inference');
+  root.branches = [];
+  const { user, current, changed } = setup(proof);
+  await nodeAction(user, 1, 'New branch assumption for node 1');
+  await user.type(screen.getByLabelText('Formula for node 2'), 'P');
+  await user.type(screen.getByLabelText('Branch assumption formula'), 'P');
+  const discharge = screen.getByRole('checkbox', { name: /Discharge node 2:/ });
+  expect(discharge).not.toBeChecked();
+  expect(changed).not.toHaveBeenCalled();
+  await user.click(discharge);
+  await user.click(screen.getByRole('button', { name: 'Add node' }));
+  expect(current().nodes[0]).toMatchObject({
+    branches: [
+      {
+        rootId: current().nodes[1]!.id,
+        assumptionFormula: 'P',
+        assumptionIds: [current().nodes[1]!.id],
+      },
+    ],
+  });
+  expect(current().rootId).toBe(proof.rootId);
+  expect(screen.queryByRole('region', { name: 'Unattached proof nodes' })).not.toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Tree preview' })).toHaveTextContent('[P]');
+});
+
+test('discarding a guided connection retains the parent and cancelled deletion restores its node menu focus', async () => {
+  const proof = structuredClone(treeDerivationDefinition.referenceProof!);
+  proof.nodes = [proof.nodes[1]!];
+  const root = proof.nodes[0]!;
+  if (root.kind !== 'inference') throw new Error('Expected inference');
+  root.branches = [];
+  const { user, current, changed } = setup(proof);
+  await nodeAction(user, 1, 'New branch inference for node 1');
+  await user.type(screen.getByLabelText('Formula for node 2'), 'Q');
+  expect(screen.getByRole('button', { name: 'Actions for node 1' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  expect(current()).toEqual(proof);
+  expect(changed).not.toHaveBeenCalled();
+  await nodeAction(user, 1, 'Delete node 1');
+  await user.click(screen.getByRole('button', { name: 'Keep proof' }));
+  expect(screen.getByRole('button', { name: 'Actions for node 1' })).toHaveFocus();
   expect(changed).not.toHaveBeenCalled();
 });

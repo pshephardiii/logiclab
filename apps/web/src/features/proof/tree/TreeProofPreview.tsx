@@ -1,5 +1,5 @@
 import { proofNotation } from '../helpers/proof-notation';
-import type { TreeProof } from '@logiclab/contracts';
+import type { TreeProof, TreeProofNode } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 import { treePreviewLayout } from './editor';
 import './tree-proof.css';
@@ -11,12 +11,14 @@ export function TreeProofPreview({
   selectedId = null,
   onSelect,
   disabled = false,
+  renderActions,
 }: {
   proof: TreeProof;
   rules: { id: string; label: string }[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
   disabled?: boolean;
+  renderActions?: (node: TreeProofNode, index: number) => ReactNode;
 }) {
   const layout = treePreviewLayout(proof);
   const rendered = new Map<string, ReactNode>();
@@ -78,16 +80,19 @@ export function TreeProofPreview({
           )}
         <div className={node.kind === 'inference' ? 'tree-conclusion' : undefined}>
           {onSelect ? (
-            <button
-              type="button"
-              className="tree-node-select"
-              disabled={disabled}
-              aria-label={`Edit node ${index + 1}`}
-              aria-pressed={selectedId === node.id}
-              onClick={() => onSelect(node.id)}
-            >
-              {contents}
-            </button>
+            <div className="tree-node-card" data-proof-node={node.id}>
+              <button
+                type="button"
+                className="tree-node-select"
+                disabled={disabled}
+                aria-label={`Edit node ${index + 1}`}
+                aria-pressed={selectedId === node.id}
+                onClick={() => onSelect(node.id)}
+              >
+                {contents}
+              </button>
+              {renderActions?.(node, index)}
+            </div>
           ) : (
             contents
           )}
@@ -134,20 +139,22 @@ export function TreeProofPreview({
           <h4>{layout ? 'Unattached nodes' : 'Proof nodes'}</h4>
           <div className="tree-unattached-nodes">
             {unattached.map((node) => (
-              <button
-                type="button"
-                key={node.id}
-                className="tree-node-select"
-                disabled={disabled}
-                aria-label={`Edit node ${positions.get(node.id)}`}
-                aria-pressed={selectedId === node.id}
-                onClick={() => onSelect(node.id)}
-              >
-                <code>{proofNotation(node.formula) || '(blank)'}</code>
-                <small>
-                  Node {positions.get(node.id)} · {node.kind}
-                </small>
-              </button>
+              <div className="tree-node-card" key={node.id} data-proof-node={node.id}>
+                <button
+                  type="button"
+                  className="tree-node-select"
+                  disabled={disabled}
+                  aria-label={`Edit node ${positions.get(node.id)}`}
+                  aria-pressed={selectedId === node.id}
+                  onClick={() => onSelect(node.id)}
+                >
+                  <code>{proofNotation(node.formula) || '(blank)'}</code>
+                  <small>
+                    Node {positions.get(node.id)} · {node.kind}
+                  </small>
+                </button>
+                {renderActions?.(node, positions.get(node.id)! - 1)}
+              </div>
             ))}
           </div>
         </section>

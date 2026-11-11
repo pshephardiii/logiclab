@@ -10,7 +10,6 @@ export function TreeProofNodeFields({
   index,
   statement,
   onChange,
-  onDelete,
   staged = false,
 }: {
   proof: TreeProof;
@@ -20,7 +19,6 @@ export function TreeProofNodeFields({
     rules: { id: string; label: string }[];
   };
   onChange: (node: TreeProofNode) => void;
-  onDelete?: () => void;
   staged?: boolean;
 }) {
   const node = proof.nodes[index]!;
@@ -83,11 +81,6 @@ export function TreeProofNodeFields({
           rules={statement.rules}
           onChange={onChange}
         />
-      )}
-      {onDelete && (
-        <button type="button" className="secondary" onClick={onDelete}>
-          Delete node {index + 1}
-        </button>
       )}
     </section>
   );

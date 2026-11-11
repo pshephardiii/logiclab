@@ -1,3 +1,4 @@
+import { nodeAction } from '../../../../test/proof-controls';
 import { installDialogStub } from '../../../../test/unsaved-work';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -38,16 +39,17 @@ test('constructs and explicitly checks/saves an identity tree while drawing its 
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P → P');
   await user.selectOptions(screen.getByLabelText('Rule for node 1'), 'implication_introduction');
-  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
+  await nodeAction(user, 1, 'New branch assumption for node 1');
   await user.type(screen.getByLabelText('Formula for node 2'), 'P');
+  await user.type(screen.getByLabelText('Branch assumption formula'), 'P');
+  expect(screen.getByRole('checkbox', { name: /Discharge node 2:/ })).not.toBeChecked();
+  await user.click(screen.getByRole('checkbox', { name: /Discharge node 2:/ }));
   await user.click(screen.getByRole('button', { name: 'Add node' }));
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   const choice = within(screen.getByLabelText('Node 1 branch 1 root')).getByRole('option', {
     name: /2\. P/,
   }) as HTMLOptionElement;
-  await user.selectOptions(screen.getByLabelText('Node 1 branch 1 root'), choice.value);
-  await user.type(screen.getByLabelText('Node 1 branch 1 assumption formula'), 'P');
-  await user.click(screen.getByRole('checkbox', { name: /Discharge node 2/ }));
+  expect(screen.getByLabelText('Node 1 branch 1 root')).toHaveValue(choice.value);
   expect(
     within(screen.getByRole('region', { name: 'Tree preview' })).getByText('[P]'),
   ).toBeInTheDocument();
@@ -97,11 +99,11 @@ test('premise copying is explicit and statement edits never rewrite entered node
 test('confirmed node deletion retains missing child and assumption identities for explicit repair', async () => {
   const { user, onSave } = setup(treeDerivationDefinition);
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
-  await user.click(screen.getByRole('button', { name: 'Delete node 1' }));
+  await nodeAction(user, 1, 'Delete node 1');
   await user.click(screen.getByRole('button', { name: 'Keep proof' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P');
   await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
-  await user.click(screen.getByRole('button', { name: 'Delete node 1' }));
+  await nodeAction(user, 1, 'Delete node 1');
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   const root = screen.getByLabelText('Node 1 branch 1 root');
   expect(within(root).getByRole('option', { name: /Missing or unavailable/ })).toBeInTheDocument();

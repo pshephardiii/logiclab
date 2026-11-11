@@ -1,13 +1,23 @@
+import { TreeConnectionFields } from './TreeConnectionFields';
+import type { TreeConnection } from './entry';
 import type { ComponentProps } from 'react';
 import { TreeProofNodeFields } from './TreeProofNodeFields';
 
-type Props = Omit<ComponentProps<typeof TreeProofNodeFields>, 'onDelete' | 'staged'> & {
+type Props = Omit<ComponentProps<typeof TreeProofNodeFields>, 'staged'> & {
   onConfirm: () => void;
   onDiscard: () => void;
+  connection?: TreeConnection;
+  onConnectionChange: (connection: TreeConnection) => void;
 };
 
 /** Confirmation adds local work; it neither checks correctness nor saves to the API. */
-export function TreeProofEntry({ onConfirm, onDiscard, ...fields }: Props) {
+export function TreeProofEntry({
+  onConfirm,
+  onDiscard,
+  connection,
+  onConnectionChange,
+  ...fields
+}: Props) {
   return (
     <section
       className="tree-entry"
@@ -25,6 +35,13 @@ export function TreeProofEntry({ onConfirm, onDiscard, ...fields }: Props) {
       }}
     >
       <TreeProofNodeFields {...fields} staged />
+      {connection && (
+        <TreeConnectionFields
+          connection={connection}
+          proof={fields.proof}
+          onChange={onConnectionChange}
+        />
+      )}
       <div className="action-row">
         <button type="button" onClick={onConfirm}>
           Add node

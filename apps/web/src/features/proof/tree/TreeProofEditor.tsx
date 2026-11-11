@@ -3,11 +3,12 @@ import { TreeProofEntry } from './TreeProofEntry';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
 import { useEffect, useRef, useState } from 'react';
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
-import { ProofChoice } from '../components/ProofChoice';
+import { TreeNodeActions } from './TreeNodeActions';
+import { createConnectedTreeEntry, confirmTreeEntry, treeConnectionSlots } from './connections';
 import { TreeProofNodeFields } from './TreeProofNodeFields';
 import { TreeProofPreview } from './TreeProofPreview';
 import { TreeProofSummary } from './TreeProofSummary';
-import { startTreeProof, removeTreeNode, uniqueTreeIds, treeNodeChoices } from './editor';
+import { startTreeProof, removeTreeNode, uniqueTreeIds } from './editor';
 import '../proof.css';
 import { ProofHelp } from '../reference/ProofHelp';
 import { ProofEditorHeading } from '../components/ProofEditorHeading';
@@ -87,7 +88,12 @@ export function TreeProofEditor({
     }
 
     setSelectedId(entry.draft.nodes[entry.index]!.id);
-    change(entry.draft);
+    try {
+      change(confirmTreeEntry(entry));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not connect this node.');
+      return;
+    }
     setEntry(null);
     focusRequested.current = true;
   }
@@ -162,14 +168,51 @@ export function TreeProofEditor({
                   setDeletion(null);
                   focusRequested.current = true;
                 }}
+                renderActions={(node, index) => (
+                  <TreeNodeActions
+                    index={index}
+                    disabled={pending}
+                    root={proof.rootId === node.id}
+                    slots={treeConnectionSlots(proof, node.id, statement.rules)}
+                    onEdit={() => {
+                      setSelectedId(node.id);
+                      setDeletion(null);
+                      focusRequested.current = true;
+                    }}
+                    onRoot={() => {
+                      if (!pending) change({ ...proof, rootId: node.id });
+                    }}
+                    onDelete={() => {
+                      setSelectedId(node.id);
+                      setDeletion({ id: node.id });
+                    }}
+                    onConnect={(kind, connection) => {
+                      if (pending) return;
+                      try {
+                        setEntry(
+                          createConnectedTreeEntry(
+                            proof,
+                            node.id,
+                            kind,
+                            connection,
+                            statement.rules,
+                          ),
+                        );
+                        setDeletion(null);
+                        setError(null);
+                        focusRequested.current = true;
+                      } catch (caught) {
+                        setError(
+                          caught instanceof Error
+                            ? caught.message
+                            : 'Could not start a connection.',
+                        );
+                      }
+                    }}
+                  />
+                )}
               />
               <fieldset disabled={pending} aria-label="Tree structure">
-                <ProofChoice
-                  label="Conclusion root"
-                  value={proof.rootId}
-                  choices={treeNodeChoices(proof)}
-                  onChange={(rootId) => change({ ...proof, rootId })}
-                />
                 <div className="action-row">
                   {(['premise', 'assumption', 'inference'] as const).map((kind) => (
                     <button
@@ -201,6 +244,8 @@ export function TreeProofEditor({
                         },
                       })
                     }
+                    connection={entry.connection}
+                    onConnectionChange={(connection) => setEntry({ ...entry, connection })}
                     onConfirm={confirmEntry}
                     onDiscard={discardEntry}
                   />
@@ -217,7 +262,6 @@ export function TreeProofEditor({
                           nodes: proof.nodes.map((node) => (node.id === selected.id ? next : node)),
                         })
                       }
-                      onDelete={() => setDeletion({ id: selected.id })}
                     />
                   )
                 )}
