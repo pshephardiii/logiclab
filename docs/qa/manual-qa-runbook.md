@@ -697,7 +697,7 @@ Use the automated suites as separate evidence for seven-day invitation expiry, p
 
 ## 18. Assigned Fitch proofs (022, focused follow-up)
 
-Use a disposable demo workspace; no proof is seeded by default. These are manual follow-up cases, not an exhaustive QA sign-off or claims that the user has executed them. Follow the [step-by-step proof walkthrough](../development/demo-walkthrough.md#optional-author-and-assign-a-fitch-derivation), recording findings in the existing ledger.
+Use a disposable demo workspace; current demos include seeded three-format proof examples. You can also author a separate disposable example. These are manual follow-up cases, not an exhaustive QA sign-off or claims that the user has executed them. Follow the [step-by-step proof walkthrough](../development/demo-walkthrough.md#optional-author-and-assign-a-fitch-derivation), recording findings in the existing ledger.
 
 1. **DRV-01 — Author and assign:** Complete walkthrough steps 1–7. Verify checked publication, practice, completion-only and graded proof admission, and correct instructor labels in the selected publication. Add the same publication twice and confirm separate ordered occurrences.
 2. **DRV-02 — Save and check:** Complete step 8. Change the first proof to unfinished work and save/reload it. Confirm no automatic proof check, retained incomplete fields and private references until the permitted solution action. Edit one occurrence and inspect the other; its work must remain separate.
@@ -705,6 +705,8 @@ Use a disposable demo workspace; no proof is seeded by default. These are manual
 4. **DRV-04 — Completion versus verification:** Complete steps 9–10. Try submitting with an open block, missing citation or wrong final target; finalization must remain unavailable. Restore a finished incorrect attempt, save and confirm submission. Expect no draft diagnostics, then score-free completion plus errors after submission. No further editing/saving is allowed.
 5. **DRV-05 — Instructor review and answers:** Complete step 11. Confirm only final work is listed, errors do not become numerical grades, and the actual submitted proof is visible independently of the reference. Reveal answers separately; the student's refreshed completion/report must stay unchanged. Verification-unavailable handling has automated coverage; do not fabricate or edit retained data to force this state.
 6. **DRV-06 — Isolation and layout:** In context B, try opening context A's assignment URL; expect denial without private content. At 390px, inspect proof controls and read-only feedback for overflow and legibility. Return to context A, perform step 12 and confirm old IDs no longer expose work.
+
+Fitch UI updated in 030: instructor authoring uses details/reference steps; confirm statement premises and proof rows explicitly. Use each line's three-dot menu for editing, scoped insertion, subproof closure/settings and deletion. Check, Save and Submit remain separate, and pending rows block those actions. Read-only submitted/reference views have no editor controls. The user's visual QA is deferred until the general UI branch after trees; [030 verification](../verification/fitch-proof-ui-verification.md) records agent checks separately.
 
 Automated evidence separately covers revision conflicts, cancellation/late responses, immutable retries, database/caller/demo rollback, observed archive/enrollment locks, independent reference policies and retained automatic/effective grading. See [branch evidence and limits](../verification/derivation-student-work-verification.md).
 

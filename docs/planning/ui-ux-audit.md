@@ -1,6 +1,6 @@
 # UI and UX audit
 
-Status: branch 029 is closing as `029-chore-dependency-proof-ui` (renamed from `029-chore-ui-ux-audit`), updated November 10, 2026. It delivers shared UI foundations, dependency-proof interaction across practice/authoring/student/review contexts, and related library improvements. It is **not completion of the general product UI/accessibility audit**. Evidence and explicit limits are in the [UI/UX audit record](../qa/ui-ux-audit.md). The agreed next sequence is Fitch, natural-deduction trees, then a renewed general UI audit before portfolio sandbox preparation. This plan does not authorize deployment.
+Status: `030-chore-fitch-proof-ui` is closing after the dependency UI delivery in 029, updated November 11, 2026. Fitch now shares the growing-proof, confirmed-entry and focused authoring approach across practice, student work, instructor references and read-only review. See [Fitch verification](../verification/fitch-proof-ui-verification.md) for evidence and limits. Next: `031-chore-tree-proof-ui`, then `032-chore-ui-ux-audit` before portfolio sandbox preparation. The user will review the broader visuals during the general audit after trees; this is **not** a completed product/accessibility audit or deployment authorization.
 
 The branch follows [branch conventions](../conventions/branch-naming-conventions.md). Keep historical branch numbers intact when updating the remaining release sequence.
 
@@ -63,11 +63,17 @@ This is a required usability deliverable for the planned UI branch, not an addit
 
 Provide an instructor settings page for preferred names/aliases by stable rule ID, so authors do not rename the same rules for every new derivation. Use those preferences as defaults for new problems, retain per-problem overrides, and keep effective labels pinned in published versions. Changing preferences must not rename existing published problems or student work. Plan this as a separate feature branch; no preferences storage or settings page is added by the current UI audit.
 
+## Fitch delivery (030)
+
+Fitch now has a visual proof with real nested-block guides, a confirmed next-line row, explicit assumption staging, line menus, scoped insertion and close/reopen actions. Subproof settings and line/subtree deletion use focused modals. Closing a block records an endpoint; the checker still decides scope/discharge validity. Unconfirmed entries block check/save/submission and remain protected on navigation. A stale entry cannot replace reloaded work.
+
+Read-only submitted proofs, owner review and authorized references reuse the display without action/entry controls; ambiguous retained data remains inspectable. Instructor Fitch authoring uses details/reference steps, confirmed statement premises, grouped rules/labels, one-time source seeding, save/remount step retention and an explicit mismatch/restart flow. Shared authoring names/styles now cover Fitch and dependency; tree redesign remains for 031. No checker, grading/release, backend contract, database or demo-template change is introduced. [Focused verification](../verification/fitch-proof-ui-verification.md) is separate from the user's deferred general visual QA.
+
 ## Next branch sequence after 029
 
 These names use the next unused local/planned work numbers; confirm availability when each branch is created. This plan does not create or start any branch.
 
-1. **`030-chore-fitch-proof-ui`**: carry the dependency editor's visual/interaction approach into Fitch practice, instructor reference authoring, student attempts and read-only review. Use a growing proof, deliberate entry confirmation, clear conclusion/help, line actions and modal deletion/settings. Adapt the presentation to real Fitch blocks, scope and discharge; retain checker semantics, stable IDs, explicit save/check/submit and release rules.
+1. **`030-chore-fitch-proof-ui` — delivered**: carry the dependency editor's visual/interaction approach into Fitch practice, instructor reference authoring, student attempts and read-only review. Use a growing proof, deliberate entry confirmation, clear conclusion/help, line actions and modal deletion/settings. Adapt the presentation to real Fitch blocks, scope and discharge; retain checker semantics, stable IDs, explicit save/check/submit and release rules.
 2. **`031-chore-tree-proof-ui`**: apply the same clarity to natural-deduction trees across those contexts. Make branch/node construction and explicit assumption discharge understandable; use tree-appropriate interactions rather than copying a numbered-line dependency editor. Build on the shared conventions and completed Fitch review.
 3. **`032-chore-ui-ux-audit`**: resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
 
