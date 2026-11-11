@@ -399,44 +399,49 @@ test('unsaved derivation edits cancel saved checks, protect selection, and retai
   ).not.toBeInTheDocument();
 });
 
-test('dependency authoring stays on its chosen step after a successful save remount and resets for a new problem', async () => {
-  const { derivationDefinition, derivationDraft } = await import('../../../../test/derivation');
-  const dependency = {
-    ...derivationDraft,
-    definition: { ...derivationDefinition, format: 'dependency' as const, referenceProof: null },
-  };
-  vi.mocked(api.listProblems).mockResolvedValue({
-    problems: [{ ...dependency, publication: null }],
-    nextOffset: null,
-  });
-  vi.mocked(api.listVersions).mockResolvedValue({ versions: [], nextOffset: null });
-  vi.mocked(api.saveProblem).mockImplementation(async (input) => ({
-    ...dependency,
-    ...input,
-    updatedAt: '2026-10-15T01:00:00.000Z',
-  }));
-  const user = userEvent.setup();
-  render(<ProblemLibrary />);
-  await user.click(await screen.findByRole('button', { name: dependency.title }));
-  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'Save draft' }));
-  await screen.findByText('Draft saved.');
-  expect(screen.getByRole('button', { name: '2. Reference proof' })).toHaveAttribute(
-    'aria-current',
-    'step',
-  );
-  expect(screen.getByLabelText('Title')).not.toBeVisible();
-  expect(screen.getByLabelText('Formula for line 1')).toBeVisible();
-  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
-  expect(screen.getByLabelText('Title')).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'New problem' }));
-  await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
-  await user.selectOptions(screen.getByLabelText('Proof format'), 'dependency');
-  expect(screen.getByRole('button', { name: '1. Problem details' })).toHaveAttribute(
-    'aria-current',
-    'step',
-  );
-});
+test.each(['dependency', 'fitch'] as const)(
+  '%s authoring stays on its chosen step after a successful save remount and resets for a new problem',
+  async (format) => {
+    const { derivationDefinition, derivationDraft } = await import('../../../../test/derivation');
+    const dependency = {
+      ...derivationDraft,
+      definition: { ...derivationDefinition, format, referenceProof: null },
+    };
+    vi.mocked(api.listProblems).mockResolvedValue({
+      problems: [{ ...dependency, publication: null }],
+      nextOffset: null,
+    });
+    vi.mocked(api.listVersions).mockResolvedValue({ versions: [], nextOffset: null });
+    vi.mocked(api.saveProblem).mockImplementation(async (input) => ({
+      ...dependency,
+      ...input,
+      updatedAt: '2026-10-15T01:00:00.000Z',
+    }));
+    const user = userEvent.setup();
+    render(<ProblemLibrary />);
+    await user.click(await screen.findByRole('button', { name: dependency.title }));
+    await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await screen.findByText('Draft saved.');
+    expect(screen.getByRole('button', { name: '2. Reference proof' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    expect(screen.getByLabelText('Title')).not.toBeVisible();
+    expect(screen.queryByRole('region', { name: 'Your problems' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Published versions' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Formula for line 1')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: '1. Problem details' }));
+    expect(screen.getByLabelText('Title')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'New problem' }));
+    await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
+    await user.selectOptions(screen.getByLabelText('Proof format'), format);
+    expect(screen.getByRole('button', { name: '1. Problem details' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+  },
+);
 
 test('published selection displays the latest immutable snapshot first and editing is explicit', async () => {
   const changed = {

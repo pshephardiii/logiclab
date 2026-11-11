@@ -3,7 +3,7 @@ import type {
   LibraryProblemListItem,
   LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
-import type { DependencyAuthoringStep } from '../helpers/problem-editor';
+import type { DerivationAuthoringStep } from '../helpers/problem-editor';
 import { ConceptualProblemPreview } from './ConceptualProblemPreview';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -29,8 +29,8 @@ export function ProblemLibrary() {
 
   const confirmDiscard = useConfirmDiscard();
   const [editorKey, setEditorKey] = useState(0);
-  const [dependencyStep, setDependencyStep] = useState<DependencyAuthoringStep>('details');
-  const focusedReference = dependencyStep === 'reference';
+  const [authoringStep, setAuthoringStep] = useState<DerivationAuthoringStep>('details');
+  const focusedReference = authoringStep === 'reference';
 
   const [preview, setPreview] = useState<{
     definition: LibraryProblemDefinition;
@@ -46,7 +46,7 @@ export function ProblemLibrary() {
       library.setSelected(problem);
       setEditing(!problem?.publication);
       setPublished(null);
-      setDependencyStep('details');
+      setAuthoringStep('details');
       setDirty(false);
       setEditorKey((value) => value + 1);
       setPreview(null);
@@ -147,8 +147,8 @@ export function ProblemLibrary() {
         <ProblemForm
           key={`${editorKey}:${library.selected?.id ?? 'new'}:${library.selected?.updatedAt ?? ''}`}
           problem={library.selected}
-          initialDependencyStep={dependencyStep}
-          onDependencyStepChange={setDependencyStep}
+          initialAuthoringStep={authoringStep}
+          onAuthoringStepChange={setAuthoringStep}
           busy={library.busy}
           saveError={library.saveError}
           onDirty={setDirty}
@@ -190,7 +190,7 @@ export function ProblemLibrary() {
             onPublished={(version) => {
               setPublished(version);
               setEditing(false);
-              setDependencyStep('details');
+              setAuthoringStep('details');
               setDirty(false);
               void library.recordPublication(version);
             }}

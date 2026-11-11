@@ -18,6 +18,7 @@ function setup(definition = derivationDefinition) {
   render(
     <ProblemForm
       problem={{ ...derivationDraft, definition }}
+      initialAuthoringStep="reference"
       busy={false}
       onSave={onSave}
       onPreview={vi.fn()}
@@ -170,9 +171,9 @@ test('unconfirmed Fitch entries gate checking, saving and preview without saving
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P &');
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Preview draft' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Preview draft' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Check current proof' })).toBeDisabled();
-  expect(screen.getByLabelText('Proof format')).toBeDisabled();
+  expect(screen.getByRole('button', { name: '1. Problem details' })).toBeDisabled();
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();

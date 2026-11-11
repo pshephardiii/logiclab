@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { referencePremisesMatch } from '../helpers/reference-premises';
+import { startFitchProof } from '../../../features/proof/helpers/fitch-editor';
 import { startDependencyProof } from '../../../features/proof/dependency/editor';
 import { ProofDeletionPrompt } from '../../../features/proof/components/ProofDeletionPrompt';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
@@ -30,7 +31,7 @@ export function ReferenceProofEditor({
       />
     );
 
-  return definition.format === 'dependency' ? (
+  return (
     <>
       {!referencePremisesMatch(definition) && (
         <section className="reference-premise-warning" aria-label="Reference premise mismatch">
@@ -62,10 +63,11 @@ export function ReferenceProofEditor({
             type="button"
             className="danger"
             onClick={() => {
-              onChange({
-                ...definition,
-                referenceProof: startDependencyProof(definition.premises),
-              });
+              onChange(
+                definition.format === 'dependency'
+                  ? { ...definition, referenceProof: startDependencyProof(definition.premises) }
+                  : { ...definition, referenceProof: startFitchProof(definition) },
+              );
               setResetting(false);
             }}
           >
@@ -76,22 +78,24 @@ export function ReferenceProofEditor({
           </button>
         </ProofDeletionPrompt>
       )}
-      <DependencyProofEditor
-        onPendingChange={onPendingChange}
-        key="dependency"
-        statement={definition}
-        proof={definition.referenceProof}
-        onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
-      />
+      {definition.format === 'dependency' ? (
+        <DependencyProofEditor
+          onPendingChange={onPendingChange}
+          key="dependency"
+          statement={definition}
+          proof={definition.referenceProof}
+          onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
+        />
+      ) : (
+        <FitchProofEditor
+          onPendingChange={onPendingChange}
+          key="fitch"
+          statement={definition}
+          proof={definition.referenceProof}
+          purpose="reference"
+          onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
+        />
+      )}
     </>
-  ) : (
-    <FitchProofEditor
-      onPendingChange={onPendingChange}
-      key="fitch"
-      statement={definition}
-      proof={definition.referenceProof}
-      purpose="reference"
-      onChange={(referenceProof) => onChange({ ...definition, referenceProof })}
-    />
   );
 }
