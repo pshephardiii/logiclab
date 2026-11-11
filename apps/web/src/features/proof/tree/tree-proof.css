@@ -44,3 +44,45 @@
 .proof-editor .tree-branch {
   margin-block: 1rem;
 }
+
+.tree-proof-preview .tree-node-select,
+.tree-unattached .tree-node-select {
+  display: block;
+  width: 100%;
+  min-width: 7rem;
+  background: transparent;
+  color: #162a36;
+  border: 1px solid transparent;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  font-weight: 400;
+}
+.tree-node-select code {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+}
+.tree-node-select[aria-pressed='true'] {
+  border-color: #176650;
+  background: #edf7f2;
+}
+.tree-node-select:hover:not(:disabled) {
+  background: #edf7f2;
+}
+.tree-unattached {
+  margin-block: 1rem;
+}
+.tree-unattached h4 {
+  margin-bottom: 0.5rem;
+}
+.tree-unattached-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.tree-unattached-nodes > .tree-node-select {
+  width: auto;
+}
+.tree-unattached-nodes small {
+  display: block;
+  font-size: 0.8rem;
+}

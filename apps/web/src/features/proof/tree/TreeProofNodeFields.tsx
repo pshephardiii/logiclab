@@ -38,6 +38,7 @@ export function TreeProofNodeFields({
       <label>
         Formula for node {index + 1}
         <ProofFormulaInput
+          data-proof-formula="true"
           maxLength={PROOF_LIMITS.maxFormulaLength}
           aria-describedby={formulaHint}
           autoComplete="off"

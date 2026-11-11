@@ -1,5 +1,5 @@
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PROOF_LIMITS, type TreeProof, type TreeProofNode } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
 import { TreeProofNodeFields } from './TreeProofNodeFields';
@@ -32,6 +32,20 @@ export function TreeProofEditor({
   onChange: (proof: TreeProof | null) => void;
 }) {
   const reference = purpose === 'reference';
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const fields = useRef<HTMLDivElement>(null);
+  const focusRequested = useRef(false);
+  const position = proof?.nodes.findIndex((node) => node.id === selectedId) ?? -1;
+  const rootPosition = proof?.nodes.findIndex((node) => node.id === proof.rootId) ?? -1;
+  const selectedIndex = position >= 0 ? position : rootPosition >= 0 ? rootPosition : 0;
+  const selected = proof?.nodes[selectedIndex];
+
+  useEffect(() => {
+    if (!focusRequested.current) return;
+    fields.current?.querySelector<HTMLInputElement>('input[data-proof-formula]')?.focus();
+    focusRequested.current = false;
+  });
+
   const [deletion, setDeletion] = useState<{ id: string } | { all: true } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,7 +59,10 @@ export function TreeProofEditor({
     if (!proof) return;
 
     try {
-      change(appendTreeNode(proof, kind));
+      const next = appendTreeNode(proof, kind);
+      setSelectedId(next.nodes.at(-1)!.id);
+      focusRequested.current = true;
+      change(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not add a proof node.');
     }
@@ -94,7 +111,20 @@ export function TreeProofEditor({
             </>
           ) : (
             <>
-              <TreeProofPreview proof={proof} rules={statement.rules} />
+              <TreeProofPreview
+                proof={proof}
+                rules={statement.rules}
+                selectedId={selected?.id ?? null}
+                onSelect={(id) => {
+                  if (selectedId === id || selected?.id === id)
+                    fields.current
+                      ?.querySelector<HTMLInputElement>('input[data-proof-formula]')
+                      ?.focus();
+                  setSelectedId(id);
+                  setDeletion(null);
+                  focusRequested.current = true;
+                }}
+              />
               <ProofChoice
                 label="Conclusion root"
                 value={proof.rootId}
@@ -113,21 +143,23 @@ export function TreeProofEditor({
                   </button>
                 ))}
               </div>
-              {proof.nodes.map((node, index) => (
-                <TreeProofNodeFields
-                  key={node.id}
-                  proof={proof}
-                  index={index}
-                  statement={statement}
-                  onChange={(next) =>
-                    change({
-                      ...proof,
-                      nodes: proof.nodes.map((value) => (value.id === node.id ? next : value)),
-                    })
-                  }
-                  onDelete={() => setDeletion({ id: node.id })}
-                />
-              ))}
+              <div ref={fields}>
+                {selected && (
+                  <TreeProofNodeFields
+                    key={selected.id}
+                    proof={proof}
+                    index={selectedIndex}
+                    statement={statement}
+                    onChange={(next) =>
+                      change({
+                        ...proof,
+                        nodes: proof.nodes.map((node) => (node.id === selected.id ? next : node)),
+                      })
+                    }
+                    onDelete={() => setDeletion({ id: selected.id })}
+                  />
+                )}
+              </div>
             </>
           )}
           <button type="button" className="secondary" onClick={() => setDeletion({ all: true })}>

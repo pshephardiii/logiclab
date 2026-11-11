@@ -52,6 +52,7 @@ async function open() {
   const user = userEvent.setup();
   render(<AssignedAttempt assignmentId={work.id} />);
   await screen.findByRole('heading', { name: 'Problem 1: First proof' });
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   return user;
 }
 
@@ -67,6 +68,7 @@ test('tree edits retain work across failed saves, problem navigation and Stay wi
   await user.click(screen.getByRole('button', { name: 'Next problem' }));
   await user.click(screen.getByRole('button', { name: 'Start proof' }));
   await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
@@ -97,7 +99,8 @@ test('explicit saves preserve tree identities and establish the confirmed reload
   await user.click(
     screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
   );
-  await waitFor(() => expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧'));
+  await user.click(await screen.findByRole('button', { name: 'Edit node 1' }));
+  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
 

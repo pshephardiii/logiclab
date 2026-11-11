@@ -40,6 +40,7 @@ test('constructs and explicitly checks/saves an identity tree while drawing its 
   await user.selectOptions(screen.getByLabelText('Rule for node 1'), 'implication_introduction');
   await user.click(screen.getByRole('button', { name: 'Add assumption node' }));
   await user.type(screen.getByLabelText('Formula for node 2'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   const choice = within(screen.getByLabelText('Node 1 branch 1 root')).getByRole('option', {
     name: /2\. P/,
   }) as HTMLOptionElement;
@@ -60,6 +61,7 @@ test('constructs and explicitly checks/saves an identity tree while drawing its 
   expect(value.referenceProof!.nodes[0]).toMatchObject({
     branches: [{ rootId: choice.value, assumptionFormula: 'P', assumptionIds: [choice.value] }],
   });
+  await user.click(screen.getByRole('button', { name: 'Edit node 2' }));
   expect(screen.getByLabelText('Formula for node 2')).toHaveValue('P');
   expect(onDirty).toHaveBeenLastCalledWith(true);
   await user.clear(screen.getByLabelText('Formula for node 2'));
@@ -92,9 +94,11 @@ test('premise copying is explicit and statement edits never rewrite entered node
 
 test('confirmed node deletion retains missing child and assumption identities for explicit repair', async () => {
   const { user, onSave } = setup(treeDerivationDefinition);
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   await user.click(screen.getByRole('button', { name: 'Delete node 1' }));
   await user.click(screen.getByRole('button', { name: 'Keep proof' }));
   expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P');
+  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   await user.click(screen.getByRole('button', { name: 'Delete node 1' }));
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   const root = screen.getByLabelText('Node 1 branch 1 root');
@@ -135,7 +139,8 @@ test('rule changes retain existing branch work and removed rule selections stay 
 
 test('archived tree drafts disable editor changes', () => {
   setup(treeDerivationDefinition, true);
-  expect(screen.getByLabelText('Formula for node 1')).toBeDisabled();
+  expect(screen.getByLabelText('Formula for node 2')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Edit node 1' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Add assumption node' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Remove reference proof' })).toBeDisabled();
 });
