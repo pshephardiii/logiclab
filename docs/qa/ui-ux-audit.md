@@ -384,6 +384,14 @@ Automated coverage includes pending work across practice/authoring/assigned cont
 
 The user explicitly deferred their visual QA until the general UI branch after trees. Continue with 031 trees, then 032 general audit; the existing baseline findings and assignment backlog remain carry-forward work. No next branch is created by this record.
 
+## Tree UI follow-up (031)
+
+Tree practice, authoring and student editing now show the proof with a selected-node form, staged node entry, guided supporting/branch connections and native action/deletion controls. Add node confirms editing only; assumption formulas/discharged occurrences remain explicit. Pending entries participate in unsaved-work protection and block check/save/finalization. Instructor details/reference steps retain source/node identities, custom labels, incomplete drafts and explicit mismatch restart decisions. Read-only views use one visual proof, retaining unattached/unsafe work in lists instead of hiding it.
+
+Focused local Chrome evidence covers practice checks, pending Stay/Discard, guided discharge/support, menus/deletion/focus, real demo authoring/save/publication, submitted work/instructor review and separately revealed solutions with grades still withheld. Desktop and 390px/320px bounds were checked. API fixture setup/finalization is distinguished from browser actions. See [final verification](../verification/tree-proof-ui-verification.md) for automated checks, screenshots and limits.
+
+The user will perform broader visual QA in `032-chore-ui-ux-audit`. The original route/state inventory is historical baseline evidence; these focused proof runs do not mark every baseline finding resolved. Carry the assignment-list/status/dates/settings/content-view backlog and other unresolved navigation/form/accessibility findings forward. No next branch or deployment is started here.
+
 ## Route/state inventory
 
 Each ID below has desktop/mobile captures and metadata in the ignored baseline folder. Some have an additional scrolled-content capture. All are presentation observations; source labels distinguish real local workflows from fixtures. The two CSS row comparisons are additional element captures, not separate route states.
