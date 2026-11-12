@@ -79,7 +79,7 @@ test.each(['dependency', 'fitch'])(
         name: format === 'fitch' ? 'Entered Fitch proof' : 'Entered dependency proof',
       }),
     ).not.toHaveTextContent('Q ∧');
-    if (format === 'fitch') {
+    if (format === 'fitch' || format === 'dependency') {
       expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
       fireEvent.change(screen.getByLabelText('Rule for line 2'), {
         target: { value: 'excluded_middle' },
@@ -494,5 +494,56 @@ test('editing one of two identical premise formulas follows its source identity 
   await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
   await user.click(screen.getByRole('button', { name: 'Done editing' }));
   await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+});
+
+test('dependency practice can edit its target and original premise without resetting confirmed or pending work', async () => {
+  await enterProblem('dependency');
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  await user.type(screen.getByLabelText('Formula for line 2'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('Q');
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('Q');
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof needs attention.')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  expect(screen.queryByLabelText('Statement premise for line 1')).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('Formula for line 1'));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.queryByText(/Premise formula does not match/)).not.toBeInTheDocument();
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+});
+
+test('dependency practice premise edits distinguish identical sources and recover from invalid target edits', async () => {
+  await enterProblem('dependency', async () => {
+    fireEvent.change(screen.getByLabelText('New premise'), { target: { value: 'P' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
+  });
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await user.clear(screen.getByLabelText('Formula for line 1'));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'P &');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByRole('alert')).toBeInTheDocument();
+  await user.keyboard('{Escape}');
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 });

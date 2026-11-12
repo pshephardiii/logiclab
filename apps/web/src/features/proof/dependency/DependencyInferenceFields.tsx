@@ -11,12 +11,14 @@ export function DependencyInferenceFields({
   steps,
   onChange,
   onStartAssumption,
+  staged = false,
 }: {
   step: Inference;
   index: number;
   steps: DependencyProofStep[];
   onChange: (step: Inference) => void;
   onStartAssumption?: () => void;
+  staged?: boolean;
 }) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
 
@@ -34,15 +36,21 @@ export function DependencyInferenceFields({
             key={`citation-${slot}`}
             label={`Line ${index + 1} citation ${slot + 1}`}
             empty={`Cite ${slot + 1}`}
-            value={step.lineReferences[slot] ?? null}
+            value={step.lineReferences[slot] || null}
             choices={earlier}
             onChange={(id) => {
               const refs = [...step.lineReferences];
 
-              if (id) refs[slot] = id;
-              else refs.splice(slot, 1);
-
-              onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              if (staged) {
+                for (let position = refs.length; position <= slot; position++) refs.push('');
+                refs[slot] = id ?? '';
+                while (refs.at(-1) === '') refs.pop();
+                onChange({ ...step, lineReferences: refs });
+              } else {
+                if (id) refs[slot] = id;
+                else refs.splice(slot, 1);
+                onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              }
             }}
           />
         ),

@@ -182,3 +182,9 @@
   bottom: 0.1rem;
   border-bottom: 2px solid #70858d;
 }
+
+.dependency-entry-requirement {
+  max-width: 13rem;
+  margin: 0.4rem 0;
+  white-space: normal;
+}

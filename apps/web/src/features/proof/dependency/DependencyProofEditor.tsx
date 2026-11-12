@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import { dependencyEntryRequirement } from './entry-requirements';
 import { createDependencyDischargeEntry } from './discharge-entry';
 import { proofNotation } from '../helpers/proof-notation';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
@@ -27,6 +29,8 @@ export function DependencyProofEditor({
   onChange,
   purpose = 'reference',
   onPendingChange,
+  conclusionActions,
+  onPremiseChange,
 }: {
   statement: {
     premises: { id: string; formula: string }[];
@@ -37,6 +41,8 @@ export function DependencyProofEditor({
   purpose?: 'reference' | 'student';
   onChange: (proof: DependencyProof | null) => void;
   onPendingChange?: (pending: boolean) => void;
+  conclusionActions?: ReactNode;
+  onPremiseChange?: (premiseId: string, formula: string) => void;
 }) {
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
@@ -91,6 +97,15 @@ export function DependencyProofEditor({
         ...proof,
         steps: proof.steps.map((step) => (step.id === selected.id ? next : step)),
       });
+      if (
+        selected.kind === 'premise' &&
+        next.kind === 'premise' &&
+        selected.premiseId &&
+        next.premiseId === selected.premiseId &&
+        next.formula !== selected.formula
+      ) {
+        onPremiseChange?.(selected.premiseId, next.formula);
+      }
     } else if (current) {
       setEntry({
         ...current,
@@ -136,6 +151,11 @@ export function DependencyProofEditor({
       setError('The proof changed while this entry was open. Discard entry and try again.');
       return;
     }
+    const requirement = dependencyEntryRequirement(current.draft, current.index, statement.rules);
+    if (requirement) {
+      setError(requirement);
+      return;
+    }
     change(current.draft);
     setSelectedId(null);
     setEntry(null);
@@ -150,7 +170,11 @@ export function DependencyProofEditor({
       className="proof-editor dependency-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
-      <ProofEditorHeading title={heading} goal={statement.conclusion} />
+      <ProofEditorHeading
+        title={heading}
+        goal={statement.conclusion}
+        goalActions={conclusionActions}
+      />
       <ProofHelp format="dependency" rules={statement.rules} />
       {!proof ? (
         <>
@@ -244,6 +268,7 @@ export function DependencyProofEditor({
                       index={fieldsIndex}
                       statement={statement}
                       allowKindChange={!selected}
+                      fixedPremiseSource={Boolean(onPremiseChange)}
                       pending={pending}
                       onChange={changeLine}
                       onConfirm={confirmLine}

@@ -104,7 +104,7 @@ export function ProofPractice() {
             onChange={changeProof}
             onPremiseChange={(premiseId, formula) => {
               setStatement((current) =>
-                current?.format === 'fitch'
+                current && current.format !== 'tree'
                   ? {
                       ...current,
                       premises: current.premises.map((premise) =>
@@ -118,7 +118,7 @@ export function ProofPractice() {
             onPendingChange={setEntryPending}
             actions={statement.format === 'fitch' ? checkAction : undefined}
             conclusionActions={
-              statement.format === 'fitch' ? (
+              statement.format !== 'tree' ? (
                 <PracticeConclusionEditor
                   conclusion={statement.conclusion}
                   onEditingChange={setConclusionEditing}

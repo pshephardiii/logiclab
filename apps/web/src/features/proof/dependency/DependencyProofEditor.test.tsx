@@ -13,7 +13,7 @@ const source = '11111111-1111-4111-8111-111111111111';
 const inference = '22222222-2222-4222-8222-222222222222';
 const statement = { premises: [], rules: [{ id: 'reiteration', label: 'Repeat' }] };
 
-function setup() {
+function setup(rules = statement.rules) {
   const initial: DependencyProof = {
     proofVersion: 1,
     format: 'dependency',
@@ -37,7 +37,7 @@ function setup() {
     const [proof, setProof] = useState<DependencyProof | null>(initial);
     return (
       <DependencyProofEditor
-        statement={statement}
+        statement={{ ...statement, rules }}
         onPendingChange={onPendingChange}
         proof={proof}
         purpose="student"
@@ -88,20 +88,29 @@ test('three-dot actions preserve references and keep the edited identity after m
   expect(onChange.mock.lastCall![0].steps).toEqual([initial.steps[1]]);
 });
 
-test('Insert before uses automatic numbering and confirms incomplete work without adding a premise', async () => {
-  const { user, onChange, initial } = setup();
+test('Insert before uses automatic numbering and requires a complete inference without adding a premise', async () => {
+  const { user, onChange, initial } = setup([{ id: 'excluded_middle', label: 'Excluded middle' }]);
   await lineAction(user, 1, 'Insert before line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P v !P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 1'), 'excluded_middle');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   const next = onChange.mock.lastCall![0] as DependencyProof;
   expect(next.steps.slice(1)).toEqual(initial.steps);
-  expect(next.steps[0]).toMatchObject({ kind: 'inference', formula: '', ruleId: null });
+  expect(next.steps[0]).toMatchObject({
+    kind: 'inference',
+    formula: 'P ∨ ¬P',
+    ruleId: 'excluded_middle',
+  });
   expect(screen.getByLabelText('Formula for line 4')).toHaveValue('');
 });
 
 test('the dependency dropdown preserves explicit empty support and pending entry until Add/Discard', async () => {
   const { user, onChange, onPendingChange } = setup();
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q');
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), source);
   const sources = await openDependencies(user, 3);
   await user.click(within(sources).getByRole('checkbox', { name: '1. P' }));
   expect(onChange).not.toHaveBeenCalled();
@@ -111,6 +120,32 @@ test('the dependency dropdown preserves explicit empty support and pending entry
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(onChange.mock.lastCall![0].steps[2]).toMatchObject({ formula: 'Q', dependencies: [] });
   expect(screen.getByLabelText('Formula for line 4')).toHaveFocus();
+});
+
+test('new inference entry preserves citation positions and blocks incomplete confirmation', async () => {
+  const { user, onChange } = setup([{ id: 'and_introduction', label: 'Conjunction introduction' }]);
+  const formula = screen.getByLabelText('Formula for line 3');
+  const add = screen.getByRole('button', { name: 'Add line' });
+  await user.type(formula, 'P & P');
+  expect(add).toBeDisabled();
+  await user.type(formula, '{Enter}');
+  expect(onChange).not.toHaveBeenCalled();
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'and_introduction');
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), inference);
+  expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue('');
+  expect(screen.getByLabelText('Line 3 citation 2')).toHaveValue(inference);
+  expect(add).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), source);
+  expect(add).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), '');
+  expect(add).toBeDisabled();
+  expect(screen.getByLabelText('Line 3 citation 2')).toHaveValue(inference);
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), source);
+  await user.click(add);
+  expect(onChange.mock.lastCall![0].steps[2]).toMatchObject({
+    lineReferences: [source, inference],
+    dependencies: [],
+  });
 });
 
 test('changing between Assumption and an inference retains typed formula and rule citations', async () => {
@@ -134,6 +169,7 @@ test('a replacement proof cannot be overwritten by a pending row', async () => {
   const props = { statement, proof, onChange };
   const view = render(<DependencyProofEditor {...props} />);
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 1'), '__assumption__');
   view.rerender(<DependencyProofEditor {...props} proof={{ ...proof }} />);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(onChange).not.toHaveBeenCalled();
@@ -186,6 +222,7 @@ test('conditional introduction explicitly starts an assumption and its line menu
   expect(screen.getByLabelText('Rule for line 2')).toHaveValue('implication_introduction');
   expect(screen.getByLabelText('Line 2 discharge 1 assumption')).toHaveValue(assumption.id);
   expect(screen.getByLabelText('Line 2 discharge 1 conclusion')).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Line 2 discharge 1 conclusion'), assumption.id);
   const sources = await openDependencies(user, 2);
