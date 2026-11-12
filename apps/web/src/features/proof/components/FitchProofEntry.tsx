@@ -18,6 +18,7 @@ export function FitchProofEntry({
   editing = false,
   premises = [],
   actions,
+  lineNumber,
 }: {
   proof: FitchProof;
   index: number;
@@ -26,6 +27,7 @@ export function FitchProofEntry({
   pending: boolean;
   editing?: boolean;
   actions?: ReactNode;
+  lineNumber?: ReactNode;
   premises?: FitchDerivationContent['premises'];
   onChange: (step: FitchProofStep) => void;
   onConfirm: () => void;
@@ -54,7 +56,7 @@ export function FitchProofEntry({
         className="fitch-line-number"
         aria-label={`${editing ? 'Edit' : 'New'} line ${index + 1}`}
       >
-        {index + 1}
+        {lineNumber ?? index + 1}
       </th>
       <td className="fitch-line-formula">
         <ProofFormulaInput

@@ -434,16 +434,55 @@ test('citation placeholders identify their purpose and None clears without silen
   expect(current().steps[2]).toMatchObject({ lineReferences: [] });
 });
 
-test('clear proof is modal, cancellation retains entries and Escape restores the trigger focus', async () => {
+test('range deletion is modal, cancellation retains entries and Escape restores the trigger focus', async () => {
   const initial = fixture();
   const { user, current, changed } = setup(initial);
-  const trigger = screen.getByRole('button', { name: 'Clear proof' });
+  const trigger = screen.getByRole('button', { name: 'Select line 2 for deletion' });
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
   await user.click(trigger);
-  const dialog = screen.getByRole('dialog', { name: 'Confirm proof deletion' });
+  const dialog = screen.getByRole('dialog', { name: 'Delete selected lines?' });
   expect(within(dialog).getByRole('button', { name: 'Keep proof work' })).toHaveFocus();
   fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(trigger).toHaveFocus();
   expect(current()).toEqual(initial);
+  expect(changed).not.toHaveBeenCalled();
+});
+
+test('reverse range selection highlights the range, cancels without writes and renumbers retained citations after confirmation', async () => {
+  const proof = fixture();
+  proof.steps.push(
+    ...Array.from({ length: 5 }, () => ({ ...proof.steps[1]!, id: crypto.randomUUID() })),
+  );
+  const last = proof.steps[6]!;
+  if (last.kind !== 'inference') throw new Error();
+  last.lineReferences = [proof.steps[4]!.id];
+  const { user, current, changed } = setup(proof);
+  expect(screen.queryByRole('button', { name: 'Clear proof' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Select line 6 for deletion' }));
+  expect(screen.getByRole('status')).toHaveTextContent('Line 6 selected');
+  await user.click(screen.getByRole('button', { name: 'Cancel selection' }));
+  expect(changed).not.toHaveBeenCalled();
+  await lineAction(user, 6, 'Delete a range starting at line 6');
+  await user.click(screen.getByRole('button', { name: 'Select line 4 for deletion' }));
+  const dialog = screen.getByRole('dialog', { name: 'Delete selected lines?' });
+  expect(dialog).toHaveTextContent('Delete lines 4–6?');
+  expect(document.querySelectorAll('.selected-proof-range')).toHaveLength(3);
+  await user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
+  expect(current().steps).toEqual([...proof.steps.slice(0, 3), last]);
+  expect(current().steps[3]).toMatchObject({ lineReferences: [proof.steps[4]!.id] });
+  expect(screen.getByText('Repeat · Missing line')).toBeInTheDocument();
+});
+
+test('unconfirmed entry blocks range selection and partial assumption deletion is explained without changing work', async () => {
+  const proof = nestedProof();
+  const { user, changed } = setup(proof);
+  await user.type(screen.getByLabelText('Formula for line 4'), 'R');
+  expect(screen.getByRole('button', { name: 'Select line 1 for deletion' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('entire subproof');
+  expect(screen.getByRole('button', { name: 'Delete selected lines' })).toBeDisabled();
   expect(changed).not.toHaveBeenCalled();
 });

@@ -22,10 +22,11 @@ export function ProofDeletionPrompt({
     const element = dialog.current!;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const editor = previous?.closest('.proof-editor');
-    const restore =
-      previous
-        ?.closest('tr, [data-proof-node], [data-proof-premise]')
-        ?.querySelector<HTMLElement>('button[aria-controls]') ?? previous;
+    const restore = previous?.hasAttribute('data-proof-range')
+      ? previous
+      : (previous
+          ?.closest('tr, [data-proof-node], [data-proof-premise]')
+          ?.querySelector<HTMLElement>('button[aria-controls]') ?? previous);
     element.showModal();
     element.querySelector<HTMLButtonElement>('button.secondary')?.focus();
 

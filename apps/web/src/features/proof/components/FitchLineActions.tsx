@@ -14,6 +14,7 @@ export function FitchLineActions({
   onCloseSubproof,
   onReopenSubproof,
   onContinueSubproof,
+  onRange,
 }: {
   index: number;
   count: number;
@@ -27,6 +28,7 @@ export function FitchLineActions({
   onCloseSubproof?: () => void;
   onReopenSubproof?: () => void;
   onContinueSubproof?: () => void;
+  onRange?: () => void;
 }) {
   return (
     <ProofDropdown
@@ -62,6 +64,7 @@ export function FitchLineActions({
             {onContinueSubproof &&
               action(`Continue subproof at line ${index + 1}`, onContinueSubproof)}
             {onReopenSubproof && action(`Reopen subproof at line ${index + 1}`, onReopenSubproof)}
+            {onRange && action(`Delete a range starting at line ${index + 1}`, onRange)}
             {onDelete && action(`Delete line ${index + 1}`, onDelete, false, true)}
             {onDeleteSubproof &&
               action(`Delete subproof at line ${index + 1}`, onDeleteSubproof, false, true)}

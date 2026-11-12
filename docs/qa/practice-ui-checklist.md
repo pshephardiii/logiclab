@@ -16,7 +16,7 @@ Use **Not run**, **Pass**, **Finding**, **Blocked** or **Deferred**. A visual pr
 | ----- | ---------------------------------------------- | -------------------------------------------------- |
 | A     | SET-01, NAV-01                                 | Start and discover practice                        |
 | B     | TT-01–TT-04                                    | Truth-table entry, checking and solutions          |
-| C     | SETUP-01–SETUP-02, FIT-01–FIT-03               | Proof setup and Fitch                              |
+| C     | SETUP-01–SETUP-02, FIT-01–FIT-04               | Proof setup and Fitch                              |
 | D     | DEP-01–DEP-03                                  | Dependency proofs                                  |
 | E     | TREE-01–TREE-03                                | Deferred: natural-deduction tree cases             |
 | F     | HELP-01, WORK-01, ACCESS-01–ACCESS-02, FAIL-01 | Shared help, retention, accessibility and recovery |
@@ -160,6 +160,19 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 6. In a temporary next-line formula, type `_|_`; inspect its conversion to `⊥`, then **Discard entry**.
 
 **Check:** nested guides/endpoints remain readable and entry scope is clear. This proof verifies; the extra contradiction entry must not change confirmed work or remain after discard. Literal `P & !P` is not the contradiction constant required by rules ending in `⊥`; help should make that distinction discoverable without an essay.
+
+### FIT-04 — Delete an inclusive range of lines
+
+- [ ] Reviewed; result: Not run
+
+1. Build a Fitch proof with at least eight confirmed lines. Select the displayed line number **7**, then **5** (or use line 7's menu → **Delete a range starting at line 7**, then select line number 5).
+2. Verify only lines 5–7 are highlighted and the modal previews those three formulas. Choose **Keep proof work** or Escape; all lines must remain.
+3. Repeat the selection and choose **Delete selected lines**. Verify lines 1–4 and the former line 8 remain, renumbered. Citations to deleted lines must stay explicitly missing rather than target another line.
+4. Select only the opening assumption of a multi-line subproof. The modal must explain why deletion is blocked; cancel and select the complete subproof to remove it.
+5. Select first and last line to delete all work; confirm that this leaves an empty proof. There is no separate **Clear proof** button in the Fitch student/practice editor.
+6. Try starting a selection while a new line is unconfirmed. Range controls must be disabled until Add line or Discard entry. Test cancellation/selection by keyboard as well as pointer.
+
+**Check:** reversed endpoints mean the same inclusive range, no unselected lines are silently removed, complete deleted subproofs lose their metadata, and remaining IDs/citations retain their meaning. Removing a surviving subproof's endpoint leaves that endpoint visibly unresolved for explicit repair. Reference authoring retains its distinct **Remove reference proof** action; this case replaces the Fitch **Clear proof** action, not dependency/tree controls.
 
 ## D. Dependency proofs
 
@@ -357,3 +370,12 @@ The user considers the truth-table UI satisfactory for this pass and moved on to
 **Rule clarification:** Disjunction introduction accepts either orientation: from `Q`, both `P ∨ Q` and `Q ∨ P` are permitted. Existing checker behavior already supports this; no rule-policy change was made. A subproof cited by negation introduction must still be closed explicitly, ending in the contradiction constant under the existing rule variant.
 
 **Status for PRA-UI-003–006:** implemented, awaiting user visual retest. Agent verification: all 607 frontend tests, frontend type checking/production build, formatting and whitespace passed. New coverage checks explicit/nested closure, pending guards, scope resumption/malformed ancestry, citation placeholder/None handling and modal Escape/focus. Focused Chrome verified a `P` premise / `¬P` assumption / `⊥` / `¬¬P` proof using explicit closure, inline edit/recovery, action alignment, modal behavior and 390px/320px bounds. It also verified `Q` to `P ∨ Q`. Only signed-out bootstrap API responses were intercepted; proofs used the real local engine. No backend/database or policy change. Evidence is ignored under `.codex-local/ui-audit/032/fitch-editing/`; screenshots were inspected. These checks are not a user visual sign-off or full accessibility audit.
+
+### PRA-UI-007 — Replace Fitch Clear proof with range selection
+
+- **Cases:** FIT-04, ACCESS-01; user-reported November 12, 2026.
+- **Request:** delete a selected inclusive span, such as 7 through 5, while keeping the other lines; remove the separate Clear proof button. This supersedes PRA-UI-005's paired Clear/Check design for Fitch student/practice work.
+- **Change:** selectable line numbers plus a line-menu range action, first-endpoint instruction/cancellation, highlighted inclusive selection and a native confirmation modal previewing every selected formula. Either endpoint order works; same-line selection can remove a single line. Selection itself writes nothing. Full selection leaves an empty proof. Unconfirmed entries block selection and stale authoritative snapshots block confirmation.
+- **Subproof rule:** selecting an assumption requires including all entered lines of its subproof/nested blocks. Partial selection is explained and blocked; no automatic expansion removes unselected work. Deleting interior lines is allowed. Surviving citations/endpoints stay unresolved rather than silently retargeting or regrading.
+- **Status:** implemented, awaiting user visual retest. Reference full-removal and malformed-proof recovery remain explicit controls; dependency/tree behavior is unchanged. No backend/database or checker-policy changes.
+- **Verification:** all 614 frontend tests, frontend type checking/build, formatting and whitespace passed. Focused Chrome verified 7→5 selection/preview/highlight, Escape/focus/Keep, exactly three removed lines, renumbering/missing citation, full deletion, partial-subproof blocking, whole-subproof deletion and 390px bounds without page errors. The real frontend/engine was used; only signed-out bootstrap responses were intercepted. Temporary frontend/Chrome stopped; no user database/server changed. Evidence: `.codex-local/ui-audit/032/fitch-range/` (ignored). Desktop and mobile screenshots inspected. No user visual sign-off or full accessibility audit is claimed.

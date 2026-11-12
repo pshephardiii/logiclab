@@ -25,8 +25,16 @@ export function FitchProofDisplay({
   onReopenBlock,
   renderLine,
   onContinueBlock,
+  onRangeSelect,
+  rangeStartId,
+  rangeEndId,
+  rangeDisabled = false,
 }: {
   proof: FitchProof;
+  onRangeSelect?: (id: string) => void;
+  rangeStartId?: string;
+  rangeEndId?: string;
+  rangeDisabled?: boolean;
   rules: { id: string; label: string }[];
   selectedId?: string | null;
   onEdit?: (id: string) => void;
@@ -43,13 +51,22 @@ export function FitchProofDisplay({
   onCloseBlock?: (id: string, endId: string) => void;
   onReopenBlock?: (id: string) => void;
   onContinueBlock?: (id: string) => void;
-  renderLine?: (step: FitchProof['steps'][number], index: number, actions: ReactNode) => ReactNode;
+  renderLine?: (
+    step: FitchProof['steps'][number],
+    index: number,
+    actions: ReactNode,
+    lineNumber: ReactNode,
+  ) => ReactNode;
 }) {
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
   const line = (id: string | null) => (id ? (positions.get(id) ?? 'Missing line') : 'Not selected');
   const firstDerived = proof.steps.findIndex((step) => step.kind !== 'premise');
+  const rangeStart = proof.steps.findIndex((step) => step.id === rangeStartId);
+  const rangeEnd = rangeEndId
+    ? proof.steps.findIndex((step) => step.id === rangeEndId)
+    : rangeStart;
   const premiseBoundary = firstDerived === -1 ? proof.steps.length - 1 : firstDerived - 1;
 
   return (
@@ -101,6 +118,7 @@ export function FitchProofDisplay({
                       ? () => onContinueBlock(opening.id)
                       : undefined
                   }
+                  onRange={onRangeSelect ? () => onRangeSelect(step.id) : undefined}
                   onReopenSubproof={
                     opening && opening.endId !== null && onReopenBlock
                       ? () => onReopenBlock(opening.id)
@@ -108,16 +126,47 @@ export function FitchProofDisplay({
                   }
                 />
               ) : undefined;
-            const editing = !readOnly && renderLine?.(step, index, actions);
+            const lineNumber =
+              !readOnly && onRangeSelect ? (
+                <button
+                  type="button"
+                  className="fitch-range-line"
+                  data-proof-range="true"
+                  aria-label={`Select line ${index + 1} for deletion`}
+                  aria-pressed={
+                    rangeStart >= 0 &&
+                    rangeEnd >= 0 &&
+                    index >= Math.min(rangeStart, rangeEnd) &&
+                    index <= Math.max(rangeStart, rangeEnd)
+                  }
+                  disabled={rangeDisabled}
+                  onClick={() => onRangeSelect(step.id)}
+                >
+                  {index + 1}
+                </button>
+              ) : (
+                index + 1
+              );
+            const editing = !readOnly && renderLine?.(step, index, actions, lineNumber);
             if (editing) return editing;
 
             return (
               <tr
                 key={step.id}
-                className={!readOnly && step.id === selectedId ? 'selected-proof-line' : undefined}
+                className={
+                  !readOnly &&
+                  rangeStart >= 0 &&
+                  rangeEnd >= 0 &&
+                  index >= Math.min(rangeStart, rangeEnd) &&
+                  index <= Math.max(rangeStart, rangeEnd)
+                    ? 'selected-proof-range'
+                    : !readOnly && step.id === selectedId
+                      ? 'selected-proof-line'
+                      : undefined
+                }
               >
                 <th scope="row" className="fitch-line-number">
-                  {index + 1}
+                  {lineNumber}
                 </th>
                 <td
                   className={`fitch-line-formula${index === premiseBoundary ? ' premise-boundary' : ''}`}

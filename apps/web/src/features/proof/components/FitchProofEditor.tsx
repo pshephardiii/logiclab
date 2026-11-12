@@ -1,3 +1,4 @@
+import { FitchRangeDeletionDialog } from './FitchRangeDeletionDialog';
 import { FitchProofDeletionConfirmation } from './FitchProofDeletionConfirmation';
 import { fitchEditorChoices } from '../helpers/proof-editor-choices';
 import { FitchSubproofDialog } from './FitchSubproofDialog';
@@ -34,7 +35,11 @@ type Props = {
   actions?: ReactNode;
 };
 
-type Deletion = { kind: 'line'; id: string } | { kind: 'block'; id: string } | { kind: 'proof' };
+type Deletion =
+  | { kind: 'line'; id: string }
+  | { kind: 'block'; id: string }
+  | { kind: 'proof' }
+  | { kind: 'range'; from: string; to: string; base: FitchProof };
 
 export function FitchProofEditor({
   statement,
@@ -52,6 +57,7 @@ export function FitchProofEditor({
   const [before, setBefore] = useState<string | null>(null);
   const [entry, setEntry] = useState<FitchEntry | null>(null);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
+  const [rangeStart, setRangeStart] = useState<{ id: string; base: FitchProof } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const editor = useRef<HTMLElement>(null);
@@ -85,8 +91,16 @@ export function FitchProofEditor({
     focusRequested.current = false;
   });
 
+  useEffect(() => {
+    if (!rangeStart || deletion) return;
+    editor.current
+      ?.querySelector<HTMLButtonElement>('button[data-proof-range][aria-pressed="true"]')
+      ?.focus();
+  }, [rangeStart, deletion]);
+
   function change(next: FitchProof | null) {
     setDeletion(null);
+    setRangeStart(null);
     setError(null);
     onChange(next);
   }
@@ -140,6 +154,29 @@ export function FitchProofEditor({
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not open a subproof.');
     }
+  }
+
+  function selectRange(id: string) {
+    if (!proof || pending || !safe) return;
+    if (rangeStart && rangeStart.base !== proof) {
+      setError('The proof changed. Cancel the selection and choose the lines again.');
+      return;
+    }
+    setSelectedId(null);
+    setSettingsId(null);
+    setBefore(null);
+    if (rangeStart) setDeletion({ kind: 'range', from: rangeStart.id, to: id, base: proof });
+    else {
+      setRangeStart({ id, base: proof });
+      setDeletion(null);
+      setError(null);
+    }
+  }
+
+  function cancelRange() {
+    setRangeStart(null);
+    setDeletion(null);
+    setError(null);
   }
 
   function closeBlock(id: string, endId: string) {
@@ -236,11 +273,30 @@ export function FitchProofEditor({
             </>
           ) : (
             <>
+              {rangeStart ? (
+                <div className="fitch-range-instructions">
+                  <p role="status">
+                    Line {proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'}{' '}
+                    selected. Select the line number at the other end of the range.
+                  </p>
+                  <button type="button" className="secondary" onClick={cancelRange}>
+                    Cancel selection
+                  </button>
+                </div>
+              ) : (
+                <p className="help">
+                  To delete several lines, select the first and last line numbers.
+                </p>
+              )}
               <FitchProofDisplay
                 proof={proof}
                 rules={statement.rules}
                 selectedId={selected?.id ?? null}
-                disabled={pending}
+                disabled={pending || rangeStart !== null}
+                onRangeSelect={selectRange}
+                rangeDisabled={pending}
+                rangeStartId={rangeStart?.id}
+                rangeEndId={deletion?.kind === 'range' ? deletion.to : undefined}
                 onEdit={(id) => {
                   if (selectedId === id)
                     editor.current
@@ -277,7 +333,7 @@ export function FitchProofEditor({
                   setBefore(null);
                   focusRequested.current = true;
                 }}
-                renderLine={(step, index, lineActions) =>
+                renderLine={(step, index, lineActions, lineNumber) =>
                   step.id === selected?.id && (
                     <FitchProofEntry
                       key={step.id}
@@ -288,6 +344,7 @@ export function FitchProofEditor({
                       blocks={blockChoices}
                       editing
                       actions={lineActions}
+                      lineNumber={lineNumber}
                       pending={false}
                       onChange={(next) =>
                         change({
@@ -318,7 +375,7 @@ export function FitchProofEditor({
                 }}
                 entryLabel={pending ? 'Unconfirmed proof entry' : 'New proof line'}
                 entry={
-                  !selected && current ? (
+                  !selected && !rangeStart && current ? (
                     <FitchProofEntry
                       key={entryStep!.id}
                       proof={current.draft}
@@ -356,7 +413,10 @@ export function FitchProofEditor({
                 </>
               ) : (
                 <>
-                  <fieldset disabled={pending} className="fitch-entry-options">
+                  <fieldset
+                    disabled={pending || rangeStart !== null}
+                    className="fitch-entry-options"
+                  >
                     <p
                       className="fitch-current-scope"
                       aria-label="Current proof scope"
@@ -467,42 +527,63 @@ export function FitchProofEditor({
             {announcement}
           </span>
           <div className="fitch-proof-actions">
-            <button
-              type="button"
-              className="secondary"
-              disabled={pending}
-              onClick={() => setDeletion({ kind: 'proof' })}
-            >
-              {reference ? 'Remove reference proof' : 'Clear proof'}
-            </button>
+            {(reference || !safe) && (
+              <button
+                type="button"
+                className="secondary"
+                disabled={pending || rangeStart !== null}
+                onClick={() => setDeletion({ kind: 'proof' })}
+              >
+                {reference ? 'Remove reference proof' : 'Discard malformed proof'}
+              </button>
+            )}
             {actions}
           </div>
-          {deletion && (
-            <FitchProofDeletionConfirmation
-              reference={reference}
-              kind={deletion.kind}
-              deletedCount={deletedCount}
-              onConfirm={() => {
-                if (deletion.kind === 'proof') {
-                  setScope(null);
-                  setBefore(null);
-                  setSelectedId(null);
-                  change(null);
-                } else if (deletion.kind === 'line') {
-                  if (before === deletion.id) setBefore(null);
-                  change(
-                    removeFitchProofStep(
-                      proof,
-                      proof.steps.findIndex((step) => step.id === deletion.id),
-                    ),
-                  );
-                } else {
-                  if (affected && scope && affected.has(scope)) setScope(null);
-                  change(removeFitchSubproof(proof, deletion.id));
-                }
+          {deletion?.kind === 'range' ? (
+            <FitchRangeDeletionDialog
+              proof={deletion.base}
+              currentProof={proof}
+              from={deletion.from}
+              to={deletion.to}
+              onCancel={cancelRange}
+              onConfirm={(next) => {
+                if (next.blocks.every((block) => block.id !== scope))
+                  setScope(resumedFitchScope(next));
+                setBefore(null);
+                setSelectedId(null);
+                change(next);
+                focusRequested.current = true;
+                setAnnouncement('Selected lines deleted. Remaining lines have been renumbered.');
               }}
-              onCancel={() => setDeletion(null)}
             />
+          ) : (
+            deletion && (
+              <FitchProofDeletionConfirmation
+                reference={reference}
+                kind={deletion.kind}
+                deletedCount={deletedCount}
+                onConfirm={() => {
+                  if (deletion.kind === 'proof') {
+                    setScope(null);
+                    setBefore(null);
+                    setSelectedId(null);
+                    change(null);
+                  } else if (deletion.kind === 'line') {
+                    if (before === deletion.id) setBefore(null);
+                    change(
+                      removeFitchProofStep(
+                        proof,
+                        proof.steps.findIndex((step) => step.id === deletion.id),
+                      ),
+                    );
+                  } else {
+                    if (affected && scope && affected.has(scope)) setScope(null);
+                    change(removeFitchSubproof(proof, deletion.id));
+                  }
+                }}
+                onCancel={() => setDeletion(null)}
+              />
+            )
           )}
         </>
       )}
