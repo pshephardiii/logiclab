@@ -1,8 +1,16 @@
 # UI and UX audit
 
-Status: `031-chore-tree-proof-ui` is closing, updated November 11, 2026. Natural-deduction trees now share the focused proof workflow across practice, instructor references, assigned work and read-only review, with tree-specific node/branch controls. See [tree UI verification](../verification/tree-proof-ui-verification.md) for evidence and limits. Next: `032-chore-ui-ux-audit` for the user's broader visual QA and remaining product/assignment backlog, followed by portfolio sandbox preparation. This is **not** a completed product/accessibility audit or deployment authorization.
+Status: the proof UI branches 029–031 are delivered. On November 12, 2026, the user split the remaining whole-product audit into journey-focused branches. Current: `032-chore-practice-ui-audit`, using the [practice checklist](../qa/practice-ui-checklist.md). Follow with the demo teaching flow, then genuine-account product review before portfolio sandbox preparation. Earlier branch names below are historical sequencing. This is **not** a completed product/accessibility audit or deployment authorization.
 
 The branch follows [branch conventions](../conventions/branch-naming-conventions.md). Keep historical branch numbers intact when updating the remaining release sequence.
+
+## Remaining audit branches — agreed November 12, 2026
+
+1. **`032-chore-practice-ui-audit`**: anonymous truth tables and self-created Fitch, dependency and tree practice. Follow the [step-by-step checklist](../qa/practice-ui-checklist.md), including setup, guides, editing/checking, errors, temporary work, keyboard and mobile/zoom/reduced-motion review. Conceptual questions are assigned content, not an independent-practice mode.
+2. **`033-chore-demo-teaching-flow-audit`**: instructor problem authoring through assignment settings/publication, student attempts/submission, instructor grading/feedback and student result/reference access. Include truth tables, conceptual questions and all proof formats. Address the assignment backlog below in focused slices; split further if the branch grows too large.
+3. **`034-chore-account-product-ui-audit`**: genuine signup/confirmation, login/recovery, normal classes/invitations/enrollment, assignment access, billing simulation and normal/demo boundaries. Use real account flows while distinguishing simulator billing from real charges.
+
+Then prepare the inexpensive portfolio sandbox and run a short hosted smoke check. Confirm unused numbering when creating subsequent branches. Shared fixes may benefit other journeys, but do not expand a branch into another whole-product review. Each branch records its own checks, findings and explicit deferrals. Do not rewrite the historical 029–031 evidence or interpret this plan as permission to deploy.
 
 ## Goal and boundaries
 
@@ -81,7 +89,7 @@ These names use the next unused local/planned work numbers; confirm availability
 
 1. **`030-chore-fitch-proof-ui` — delivered**: carry the dependency editor's visual/interaction approach into Fitch practice, instructor reference authoring, student attempts and read-only review. Use a growing proof, deliberate entry confirmation, clear conclusion/help, line actions and modal deletion/settings. Adapt the presentation to real Fitch blocks, scope and discharge; retain checker semantics, stable IDs, explicit save/check/submit and release rules.
 2. **`031-chore-tree-proof-ui` — delivered**: apply the same clarity to natural-deduction trees across those contexts. Make branch/node construction and explicit assumption discharge understandable; use tree-appropriate interactions rather than copying a numbered-line dependency editor. Build on the shared conventions and completed Fitch review.
-3. **`032-chore-ui-ux-audit`**: resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
+3. **`032-chore-ui-ux-audit` — superseded by the journey split above**: the original plan was to resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
 
 Existing shared improvements for all formats remain in place. Further Fitch/tree editor redesign is outside the closing 029 branch.
 
