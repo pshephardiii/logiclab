@@ -13,6 +13,7 @@ export function FitchLineActions({
   onDeleteSubproof,
   onCloseSubproof,
   onReopenSubproof,
+  onContinueSubproof,
 }: {
   index: number;
   count: number;
@@ -25,6 +26,7 @@ export function FitchLineActions({
   onDeleteSubproof?: () => void;
   onCloseSubproof?: () => void;
   onReopenSubproof?: () => void;
+  onContinueSubproof?: () => void;
 }) {
   return (
     <ProofDropdown
@@ -57,6 +59,8 @@ export function FitchLineActions({
             {onInsert && action(`Insert before line ${index + 1}`, onInsert)}
             {onCloseSubproof && action(`Close subproof at line ${index + 1}`, onCloseSubproof)}
             {onSettings && action(`Subproof settings for line ${index + 1}`, onSettings)}
+            {onContinueSubproof &&
+              action(`Continue subproof at line ${index + 1}`, onContinueSubproof)}
             {onReopenSubproof && action(`Reopen subproof at line ${index + 1}`, onReopenSubproof)}
             {onDelete && action(`Delete line ${index + 1}`, onDelete, false, true)}
             {onDeleteSubproof &&

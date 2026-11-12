@@ -18,7 +18,7 @@ export function FitchProofDeletionConfirmation({
 }: Props) {
   return (
     <ProofDeletionPrompt
-      modal={kind !== 'proof'}
+      modal
       label={reference ? 'Confirm reference deletion' : 'Confirm proof deletion'}
       onCancel={onCancel}
     >
@@ -29,8 +29,8 @@ export function FitchProofDeletionConfirmation({
           : kind === 'proof'
             ? ' and all subproofs'
             : ''}
-        ? Surviving citations will remain missing until you repair them. This changes the local
-        draft; save explicitly to persist.
+        ? Surviving citations will remain missing until you repair them. This changes your current
+        proof.
       </p>
       <button type="button" className="danger" onClick={onConfirm}>
         Confirm deletion

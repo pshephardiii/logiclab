@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { lineAction } from '../../../../test/proof-controls';
 import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
@@ -11,6 +12,8 @@ import {
 } from '@logiclab/contracts/derivation-work';
 import { derivationDefinition } from '../../../../test/derivation';
 import { AssignedDerivation } from './AssignedDerivation';
+
+installDialogStub();
 
 type Props = ComponentProps<typeof AssignedDerivation>;
 const { referenceProof: _reference, explanation: _explanation, ...content } = derivationDefinition;
@@ -107,8 +110,7 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   await f.user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await f.user.type(screen.getByLabelText('Formula for line 1'), 'P');
   await f.user.click(screen.getByRole('button', { name: 'Add line' }));
-  const scope = screen.getByLabelText('New line scope') as HTMLSelectElement;
-  const block = scope.value;
+  const block = screen.getByLabelText('Current proof scope').getAttribute('data-scope-id')!;
   await lineAction(f.user, 1, 'Close subproof at line 1');
   await f.user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   expect(
@@ -232,7 +234,7 @@ test('answer reveal is separate from feedback and never overwrites student work'
 test('clearing a proof requires confirmation, preserves work on Keep and emits an explicit empty response', async () => {
   const f = setup({ type: 'derivation', proof: identity() });
   await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
-  expect(screen.getByRole('group', { name: 'Confirm proof deletion' })).toHaveTextContent(
+  expect(screen.getByRole('dialog', { name: 'Confirm proof deletion' })).toHaveTextContent(
     'Delete 2 proof line(s)',
   );
   expect(f.onAnswer).not.toHaveBeenCalled();

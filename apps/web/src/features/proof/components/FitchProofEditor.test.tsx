@@ -93,6 +93,7 @@ test('adding selects the new line and movement retains its identity and citation
   expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P');
   expect(current().steps[1]).toEqual(added);
   expect(screen.getByLabelText('Line 2 citation 1')).toHaveValue(initial.steps[0]!.id);
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
   expect(
     within(screen.getByRole('region', { name: 'Entered Fitch proof' })).getByText('Repeat · 1'),
   ).toBeInTheDocument();
@@ -110,6 +111,7 @@ test('selected source deletion keeps incoming references visibly missing', async
   expect(current().steps).toEqual([last]);
   await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Formula for line 1')).toHaveValue('P → Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
   expect(
     within(screen.getByRole('region', { name: 'Entered Fitch proof' })).getByText(
       'Repeat · Missing line',
@@ -143,7 +145,9 @@ test('nested display marks actual assumption/end lines and open subproof referen
   const original = structuredClone(proof);
   render(<FitchProofDisplay proof={proof} rules={rules} selectedId={null} onEdit={vi.fn()} />);
   expect(
-    screen.getByText('Repeat · 1 · subproof 1–open, 2–2, Missing subproof'),
+    screen.getByText(
+      'Repeat · 1 · subproof starting at line 1 (not closed), 2–2, Missing subproof',
+    ),
   ).toBeInTheDocument();
   expect(screen.getByText('Inside subproof 1, 2')).toBeInTheDocument();
   expect(document.querySelectorAll('.scope-start')).toHaveLength(2);
@@ -176,7 +180,7 @@ test('an untouched row is clean; typing stays local until confirmation and suppo
   expect(changed).not.toHaveBeenCalled();
   expect(current()).toEqual(initial);
   expect(screen.getByRole('button', { name: 'Actions for line 1' })).toBeDisabled();
-  expect(screen.getByLabelText('New line scope')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Open subproof' })).toBeDisabled();
   fireEvent.keyDown(screen.getByLabelText('Formula for line 3'), {
     key: 'Enter',
     isComposing: true,
@@ -207,7 +211,7 @@ test('opening an assumption is staged, discarded without a block, and confirmed 
     endId: null,
     assumptionId: current().steps[2]!.id,
   });
-  expect(screen.getByLabelText('New line scope')).toHaveValue(outer.id);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', outer.id);
   await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
@@ -285,11 +289,17 @@ test('closing/reopening a nested subproof changes only its endpoint and active e
   expect(current().blocks[1]!.endId).toBe(proof.steps[1]!.id);
   expect(current().blocks[0]).toEqual(proof.blocks[0]);
   expect(current().steps).toEqual(proof.steps);
-  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[0]!.id);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute(
+    'data-scope-id',
+    proof.blocks[0]!.id,
+  );
   await lineAction(user, 2, 'Reopen subproof at line 2');
   expect(current().blocks).toEqual(proof.blocks);
   expect(current().steps).toEqual(proof.steps);
-  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[1]!.id);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute(
+    'data-scope-id',
+    proof.blocks[1]!.id,
+  );
 });
 
 test('subproof settings are modal, constrain parent/end choices and retain explicit changes on Escape', async () => {
@@ -321,7 +331,10 @@ test('inserting before an assumption uses its parent scope and retains existing 
   const proof = nestedProof();
   const { user, changed, current } = setup(proof);
   await lineAction(user, 2, 'Insert before line 2');
-  expect(screen.getByLabelText('New line scope')).toHaveValue(proof.blocks[0]!.id);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute(
+    'data-scope-id',
+    proof.blocks[0]!.id,
+  );
   expect(changed).not.toHaveBeenCalled();
   await user.type(screen.getByLabelText('Formula for line 2'), 'P');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
@@ -382,4 +395,55 @@ test('an orphan block remains inspectable and explicitly removable without a mat
   await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
   expect(current().blocks).toEqual([]);
   expect(current().steps).toEqual(proof.steps);
+});
+
+test('explicit Close subproof records the confirmed endpoint, returns to its parent and never closes pending work', async () => {
+  const { user, current } = setup();
+  expect(screen.queryByLabelText('New line scope')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Current proof scope')).toHaveTextContent('Main proof');
+  expect(screen.getByRole('button', { name: 'Close subproof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Open subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P');
+  expect(screen.getByRole('button', { name: 'Close subproof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Open subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(current().blocks[1]!.endId).toBe(current().steps[3]!.id);
+  expect(current().blocks[0]!.endId).toBeNull();
+  expect(screen.getByLabelText('Current proof scope')).toHaveTextContent('starting at line 3');
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(current().blocks[0]!.endId).toBe(current().steps[2]!.id);
+  expect(screen.getByRole('button', { name: 'Close subproof' })).toBeDisabled();
+  await lineAction(user, 3, 'Reopen subproof at line 3');
+  expect(screen.getByRole('button', { name: 'Close subproof' })).toBeEnabled();
+});
+
+test('citation placeholders identify their purpose and None clears without silently choosing a line', async () => {
+  const initial = fixture();
+  const { user, current } = setup(initial);
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'reiteration');
+  const citation = screen.getByLabelText('Line 3 citation 1');
+  expect(citation).toHaveDisplayValue('Line 1');
+  expect(within(citation).getByRole('option', { name: 'None' })).toBeInTheDocument();
+  await user.selectOptions(citation, initial.steps[0]!.id);
+  await user.selectOptions(citation, '');
+  expect(citation).toHaveDisplayValue('Line 1');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps[2]).toMatchObject({ lineReferences: [] });
+});
+
+test('clear proof is modal, cancellation retains entries and Escape restores the trigger focus', async () => {
+  const initial = fixture();
+  const { user, current, changed } = setup(initial);
+  const trigger = screen.getByRole('button', { name: 'Clear proof' });
+  await user.click(trigger);
+  const dialog = screen.getByRole('dialog', { name: 'Confirm proof deletion' });
+  expect(within(dialog).getByRole('button', { name: 'Keep proof work' })).toHaveFocus();
+  fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  expect(current()).toEqual(initial);
+  expect(changed).not.toHaveBeenCalled();
 });

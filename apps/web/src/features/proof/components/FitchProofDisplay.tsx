@@ -23,6 +23,8 @@ export function FitchProofDisplay({
   onDeleteBlock,
   onCloseBlock,
   onReopenBlock,
+  renderLine,
+  onContinueBlock,
 }: {
   proof: FitchProof;
   rules: { id: string; label: string }[];
@@ -40,6 +42,8 @@ export function FitchProofDisplay({
   onDeleteBlock?: (id: string) => void;
   onCloseBlock?: (id: string, endId: string) => void;
   onReopenBlock?: (id: string) => void;
+  onContinueBlock?: (id: string) => void;
+  renderLine?: (step: FitchProof['steps'][number], index: number, actions: ReactNode) => ReactNode;
 }) {
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const blocks = new Map(proof.blocks.map((block) => [block.id, block]));
@@ -68,6 +72,44 @@ export function FitchProofDisplay({
                 ? proof.blocks.find((block) => block.assumptionId === step.id)
                 : undefined;
             const containing = step.blockId ? blocks.get(step.blockId) : undefined;
+
+            const actions =
+              !readOnly && onEdit ? (
+                <FitchLineActions
+                  index={index}
+                  count={proof.steps.length}
+                  disabled={disabled}
+                  onEdit={() => onEdit(step.id)}
+                  onMove={onMove ? (delta) => onMove(index, delta) : undefined}
+                  onInsert={onInsert ? () => onInsert(step.id) : undefined}
+                  onDelete={
+                    step.kind !== 'assumption' && onDelete ? () => onDelete(step.id) : undefined
+                  }
+                  onSettings={
+                    opening && onBlockSettings ? () => onBlockSettings(opening.id) : undefined
+                  }
+                  onDeleteSubproof={
+                    opening && onDeleteBlock ? () => onDeleteBlock(opening.id) : undefined
+                  }
+                  onCloseSubproof={
+                    containing && onCloseBlock && containing.endId === null
+                      ? () => onCloseBlock(containing.id, step.id)
+                      : undefined
+                  }
+                  onContinueSubproof={
+                    opening && opening.endId === null && onContinueBlock
+                      ? () => onContinueBlock(opening.id)
+                      : undefined
+                  }
+                  onReopenSubproof={
+                    opening && opening.endId !== null && onReopenBlock
+                      ? () => onReopenBlock(opening.id)
+                      : undefined
+                  }
+                />
+              ) : undefined;
+            const editing = !readOnly && renderLine?.(step, index, actions);
+            if (editing) return editing;
 
             return (
               <tr
@@ -109,7 +151,9 @@ export function FitchProofDisplay({
                           .map((id) => {
                             const block = blocks.get(id);
                             return block
-                              ? `${line(block.assumptionId)}–${block.endId ? line(block.endId) : 'open'}`
+                              ? block.endId
+                                ? `${line(block.assumptionId)}–${line(block.endId)}`
+                                : `starting at line ${line(block.assumptionId)} (not closed)`
                               : 'Missing subproof';
                           })
                           .join(', ')}`}
@@ -127,37 +171,7 @@ export function FitchProofDisplay({
                   )}
                   {scope.warning && <span className="fitch-scope-warning">{scope.warning}</span>}
                 </td>
-                {!readOnly && onEdit && (
-                  <td>
-                    <FitchLineActions
-                      index={index}
-                      count={proof.steps.length}
-                      disabled={disabled}
-                      onEdit={() => onEdit(step.id)}
-                      onMove={onMove ? (delta) => onMove(index, delta) : undefined}
-                      onInsert={onInsert ? () => onInsert(step.id) : undefined}
-                      onDelete={
-                        step.kind !== 'assumption' && onDelete ? () => onDelete(step.id) : undefined
-                      }
-                      onSettings={
-                        opening && onBlockSettings ? () => onBlockSettings(opening.id) : undefined
-                      }
-                      onDeleteSubproof={
-                        opening && onDeleteBlock ? () => onDeleteBlock(opening.id) : undefined
-                      }
-                      onCloseSubproof={
-                        containing && onCloseBlock && containing.endId === null
-                          ? () => onCloseBlock(containing.id, step.id)
-                          : undefined
-                      }
-                      onReopenSubproof={
-                        opening && opening.endId !== null && onReopenBlock
-                          ? () => onReopenBlock(opening.id)
-                          : undefined
-                      }
-                    />
-                  </td>
-                )}
+                {!readOnly && onEdit && <td>{actions}</td>}
               </tr>
             );
           })}

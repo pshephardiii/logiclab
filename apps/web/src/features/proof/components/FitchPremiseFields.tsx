@@ -9,17 +9,21 @@ type Props = {
   index: number;
   premises: FitchDerivationContent['premises'];
   onChange: (step: PremiseStep) => void;
+  compact?: boolean;
 };
 
-export function FitchPremiseFields({ step, index, premises, onChange }: Props) {
+export function FitchPremiseFields({ step, index, premises, onChange, compact = false }: Props) {
   return (
     <>
-      <p className="help">
-        Match this line’s formula to its selected statement premise. Linking a premise does not
-        rewrite the formula.
-      </p>
+      {!compact && (
+        <p className="help">
+          Match this line’s formula to its selected statement premise. Linking a premise does not
+          rewrite the formula.
+        </p>
+      )}
       <ProofChoice
         label={`Statement premise for line ${index + 1}`}
+        placeholder={compact ? 'Statement premise' : undefined}
         value={step.premiseId}
         choices={premises.map((premise, position) => ({
           id: premise.id,

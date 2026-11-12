@@ -11,7 +11,7 @@ type Props = {
   index: number;
   steps: FitchProofStep[];
   rules: FitchDerivationContent['rules'];
-  blocks: { id: string; label: string }[];
+  blocks: { id: string; label: string; citationLabel?: string }[];
   onChange: (step: InferenceStep) => void;
   compact?: boolean;
 };
@@ -53,6 +53,7 @@ export function FitchInferenceFields({
           <ProofChoice
             key={`line-${slot}`}
             label={`Line ${index + 1} citation ${slot + 1}`}
+            placeholder={compact ? `Line ${slot + 1}` : undefined}
             value={step.lineReferences[slot] ?? null}
             choices={steps.slice(0, index).map((line, position) => ({
               id: line.id,
@@ -75,8 +76,12 @@ export function FitchInferenceFields({
           <ProofChoice
             key={`block-${slot}`}
             label={`Line ${index + 1} subproof ${slot + 1}`}
+            placeholder={compact ? `Subproof ${slot + 1}` : undefined}
             value={step.subproofReferences[slot] ?? null}
-            choices={blocks}
+            choices={blocks.map((block) => ({
+              id: block.id,
+              label: block.citationLabel ?? block.label,
+            }))}
             onChange={(id) => {
               const refs = [...step.subproofReferences];
 

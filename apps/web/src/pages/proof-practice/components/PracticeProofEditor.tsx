@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
 import { DependencyProofEditor } from '../../../features/proof/dependency/DependencyProofEditor';
 import { TreeProofEditor } from '../../../features/proof/tree/TreeProofEditor';
@@ -9,11 +10,13 @@ export function PracticeProofEditor({
   proof,
   onChange,
   onPendingChange,
+  actions,
 }: {
   statement: PracticeStatement;
   proof: PracticeProof | null;
   onChange: (proof: PracticeProof | null) => void;
   onPendingChange?: (pending: boolean) => void;
+  actions?: ReactNode;
 }) {
   if (statement.format === 'tree')
     return (
@@ -39,6 +42,7 @@ export function PracticeProofEditor({
 
   return (
     <FitchProofEditor
+      actions={actions}
       onPendingChange={onPendingChange}
       statement={statement}
       proof={proof?.format === 'fitch' ? proof : null}

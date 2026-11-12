@@ -38,6 +38,16 @@ export function ProofPractice() {
     });
   }
 
+  const checkAction = (
+    <button
+      type="button"
+      disabled={!proof || entryPending}
+      onClick={() => proof && !entryPending && setReport(checkPracticeProof(statement!, proof))}
+    >
+      Check proof
+    </button>
+  );
+
   return (
     <div className="proof-practice">
       <header>
@@ -86,18 +96,11 @@ export function ProofPractice() {
             proof={proof}
             onChange={changeProof}
             onPendingChange={setEntryPending}
+            actions={statement.format === 'fitch' ? checkAction : undefined}
           />
-          <div className="practice-check-actions">
-            <button
-              type="button"
-              disabled={!proof || entryPending}
-              onClick={() =>
-                proof && !entryPending && setReport(checkPracticeProof(statement, proof))
-              }
-            >
-              Check proof
-            </button>
-          </div>
+          {statement.format !== 'fitch' && (
+            <div className="practice-check-actions">{checkAction}</div>
+          )}
           {report && !entryPending && (
             <ProofFeedback
               report={report}

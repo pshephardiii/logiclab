@@ -129,11 +129,11 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 1. Choose **Fitch**, no premises, conclusion `P -> P`. Keep **Implication introduction** enabled and begin.
 2. Select **Open subproof**. Enter assumption `P`, then **Add line**.
-3. From line 1's three-dot menu, close the subproof at line 1. The assumption is also its endpoint.
+3. Select **Close subproof**. It closes at the latest confirmed direct line (here the assumption itself) and returns entry to the main proof.
 4. At root scope, enter `P -> P`, select **Implication introduction** and cite that closed subproof. Select **Add line**.
 5. Select **Check proof** and expand **Line-by-line checks**.
 
-**Check:** the confirmed proof grows with automatic numbering, visible scope guides and readable rule/citations. The conclusion remains easy to locate. Opening/closing a subproof is discoverable and does not itself imply correctness. The final check verifies the proof and its support. Pending entry cannot be silently included or omitted by checking.
+**Check:** the confirmed proof grows with automatic numbering, visible scope guides and readable rule/citations. The conclusion remains easy to locate. **Close subproof** is disabled in the main proof or while an entry is pending. Opening/closing a subproof is discoverable and does not itself imply correctness. The final check verifies the proof and its support. Pending entry cannot be silently included or omitted by checking.
 
 ### FIT-02 — Edit, insert, move and delete
 
@@ -155,8 +155,8 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 1. Start fresh Fitch practice with no premises and conclusion `P -> (Q -> P)`; enable Reiteration and Implication introduction.
 2. Open an outer assumption `P`, then an inner assumption `Q`.
 3. Inside the inner subproof, add `P` by Reiteration citing the outer assumption.
-4. Close the inner subproof at that new `P`. In the outer scope add `Q -> P` by Implication introduction citing the inner subproof.
-5. Close the outer subproof there. At root add `P -> (Q -> P)` by Implication introduction citing the outer subproof, then check.
+4. Select **Close subproof** at that new `P`. In the outer scope add `Q -> P` by Implication introduction citing the inner subproof.
+5. Select **Close subproof** there. At root add `P -> (Q -> P)` by Implication introduction citing the outer subproof, then check.
 6. In a temporary next-line formula, type `_|_`; inspect its conversion to `⊥`, then **Discard entry**.
 
 **Check:** nested guides/endpoints remain readable and entry scope is clear. This proof verifies; the extra contradiction entry must not change confirmed work or remain after discard. Literal `P & !P` is not the contradiction constant required by rules ending in `⊥`; help should make that distinction discoverable without an essay.
@@ -341,3 +341,19 @@ At closeout, resolve or explicitly defer findings, record tested/untested areas,
 - **Decision:** user confirmed November 12, 2026 that the intended tree method is semantic tableaux, not the existing natural-deduction proof tree implementation.
 - **Disposition:** defer TREE-01–TREE-03 and exclude that method from shared practice audit repetitions. Plan 033 to guard new use while retaining implementation/history and explicitly renaming ambiguous format-specific files, directories and symbols. Plan semantic tableaux separately.
 - **Status:** Deferred to planned branch 033; no guards or renames implemented here. Current practice navigation still advertises the existing method until that branch updates availability/language. See the [implementation plan](../planning/proof-method-availability.md).
+
+### November 12 Fitch review — user observations and first fixes
+
+The user considers the truth-table UI satisfactory for this pass and moved on to Fitch. This records visual acceptance, not an assertion that every truth-table functional checklist step was executed.
+
+**PRA-UI-003 — Citation purpose and spacing** (FIT-01, FIT-02): citation inputs appeared after rule selection without a visible indication of their purpose. Add **Line 1**, **Line 2**, etc. and **Subproof 1**, etc. placeholders while retaining a **None** option. Selected subproof citations show compact line ranges or an explicit not-closed description. Add spacing around help and proof actions.
+
+**PRA-UI-004 — Explicit subproof lifecycle** (FIT-01, FIT-03): replace the new-line scope dropdown with current-context text and **Open subproof** / **Close subproof**. Closing records the latest direct confirmed endpoint and returns to the parent; pending entries, main scope and open nested children cannot be closed through this control. Existing line-menu settings, close/reopen and explicit continuation remain available for repair. Resume open ancestry from the last saved line. Replace cryptic `3–open` citation text with “starting at line 3 (not closed)”. Selecting an inference never implicitly closes a subproof or verifies it.
+
+**PRA-UI-005 — Clear/check actions and modal confirmation** (WORK-01, ACCESS-01): put practice Fitch **Clear proof** and **Check proof** in one wrapping action row. Make full-proof deletion use the native modal, with spaced buttons, initial Keep focus, Escape cancellation and focus restoration.
+
+**PRA-UI-006 — Inline editing** (FIT-02): edit an existing line using the same formula/justification row as entry, with **Done editing** and the existing line-action menu retained. Confirmed-line edits remain immediate local draft changes; this does not introduce another staging/save layer. Preserve premise linking and explicit inference-scope repair.
+
+**Rule clarification:** Disjunction introduction accepts either orientation: from `Q`, both `P ∨ Q` and `Q ∨ P` are permitted. Existing checker behavior already supports this; no rule-policy change was made. A subproof cited by negation introduction must still be closed explicitly, ending in the contradiction constant under the existing rule variant.
+
+**Status for PRA-UI-003–006:** implemented, awaiting user visual retest. Agent verification: all 607 frontend tests, frontend type checking/production build, formatting and whitespace passed. New coverage checks explicit/nested closure, pending guards, scope resumption/malformed ancestry, citation placeholder/None handling and modal Escape/focus. Focused Chrome verified a `P` premise / `¬P` assumption / `⊥` / `¬¬P` proof using explicit closure, inline edit/recovery, action alignment, modal behavior and 390px/320px bounds. It also verified `Q` to `P ∨ Q`. Only signed-out bootstrap API responses were intercepted; proofs used the real local engine. No backend/database or policy change. Evidence is ignored under `.codex-local/ui-audit/032/fitch-editing/`; screenshots were inspected. These checks are not a user visual sign-off or full accessibility audit.

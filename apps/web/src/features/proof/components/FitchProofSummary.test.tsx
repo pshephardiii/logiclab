@@ -116,7 +116,7 @@ test('missing citations, open endpoints, blank formulas and cyclic scopes remain
   const display = screen.getByRole('region', { name: 'Retained draft diagram' });
   expect(within(display).getByText('(blank)')).toBeInTheDocument();
   expect(display).toHaveTextContent(
-    'Unavailable rule · Missing line · subproof 1–open, Missing subproof',
+    'Unavailable rule · Missing line · subproof starting at line 1 (not closed), Missing subproof',
   );
   expect(within(display).getAllByText('Cyclic subproof scope').length).toBeGreaterThan(0);
   expect(proof).toEqual(original);

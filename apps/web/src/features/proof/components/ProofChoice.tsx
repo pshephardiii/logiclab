@@ -5,11 +5,19 @@ type Props = {
   value: string | null;
   choices: { id: string; label: string }[];
   empty?: string;
+  placeholder?: string;
   onChange: (id: string | null) => void;
 };
 
 /** Retain unresolved IDs as explicit choices instead of silently selecting another target. */
-export function ProofChoice({ label, value, choices, empty = 'None', onChange }: Props) {
+export function ProofChoice({
+  label,
+  value,
+  choices,
+  empty = 'None',
+  placeholder,
+  onChange,
+}: Props) {
   const id = useId();
 
   return (
@@ -17,9 +25,14 @@ export function ProofChoice({ label, value, choices, empty = 'None', onChange }:
       <label htmlFor={id}>{label}</label>
       <select
         id={id}
-        value={value ?? ''}
+        value={value ?? (placeholder ? '__placeholder__' : '')}
         onChange={(event) => onChange(event.target.value || null)}
       >
+        {placeholder && (
+          <option value="__placeholder__" disabled>
+            {placeholder}
+          </option>
+        )}
         <option value="">{empty}</option>
         {value && !choices.some((choice) => choice.id === value) && (
           <option value={value}>Missing or unavailable target — choose a replacement</option>

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import './proof-deletion-prompt.css';
 
-/** Individual entries use a native modal; whole-proof/subproof prompts retain their current flow. */
+/** Shared deletion confirmation with optional native modal behavior and focus restoration. */
 export function ProofDeletionPrompt({
   modal,
   label,

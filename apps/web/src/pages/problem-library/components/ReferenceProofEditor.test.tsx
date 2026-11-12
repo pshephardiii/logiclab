@@ -34,10 +34,7 @@ async function conditionalProof() {
   await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
-  const scope = screen.getByRole('combobox', {
-    name: 'New line scope',
-  }) as HTMLSelectElement;
-  const block = scope.value;
+  const block = screen.getByLabelText('Current proof scope').getAttribute('data-scope-id')!;
   await lineAction(user, 1, 'Close subproof at line 1');
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
@@ -83,7 +80,7 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
   await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'implication_elimination');
   const first = screen.getByLabelText('Line 3 citation 1') as HTMLSelectElement;
   const ids = Array.from(first.options)
-    .slice(1)
+    .filter((option) => option.value && !option.disabled)
     .map((option) => option.value);
   await user.selectOptions(first, ids[0]!);
   await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), ids[1]!);

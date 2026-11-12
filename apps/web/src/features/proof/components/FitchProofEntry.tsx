@@ -2,7 +2,8 @@ import { PROOF_LIMITS, type FitchProof, type FitchProofStep } from '@logiclab/co
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { ProofFormulaInput } from './ProofFormulaInput';
 import { FitchInferenceFields } from './FitchInferenceFields';
-import { useId } from 'react';
+import { FitchPremiseFields } from './FitchPremiseFields';
+import { useId, type ReactNode } from 'react';
 
 /** Confirm an editing action, not correctness or saving. Incomplete work may be added explicitly. */
 export function FitchProofEntry({
@@ -14,12 +15,18 @@ export function FitchProofEntry({
   onChange,
   onConfirm,
   onDiscard,
+  editing = false,
+  premises = [],
+  actions,
 }: {
   proof: FitchProof;
   index: number;
   rules: FitchDerivationContent['rules'];
-  blocks: { id: string; label: string }[];
+  blocks: { id: string; label: string; citationLabel?: string }[];
   pending: boolean;
+  editing?: boolean;
+  actions?: ReactNode;
+  premises?: FitchDerivationContent['premises'];
   onChange: (step: FitchProofStep) => void;
   onConfirm: () => void;
   onDiscard: () => void;
@@ -42,7 +49,11 @@ export function FitchProofEntry({
         onConfirm();
       }}
     >
-      <th scope="row" className="fitch-line-number" aria-label={`New line ${index + 1}`}>
+      <th
+        scope="row"
+        className="fitch-line-number"
+        aria-label={`${editing ? 'Edit' : 'New'} line ${index + 1}`}
+      >
         {index + 1}
       </th>
       <td className="fitch-line-formula">
@@ -76,19 +87,28 @@ export function FitchProofEntry({
               onChange={onChange}
             />
           </div>
+        ) : step.kind === 'premise' ? (
+          <FitchPremiseFields
+            step={step}
+            index={index}
+            premises={premises}
+            onChange={onChange}
+            compact
+          />
         ) : (
-          <span>Assumption · opens a subproof</span>
+          <span>{editing ? 'Assumption' : 'Assumption · opens a subproof'}</span>
         )}
       </td>
       <td className="fitch-entry-actions">
         <button type="button" onClick={onConfirm}>
-          Add line
+          {editing ? 'Done editing' : 'Add line'}
         </button>
-        {pending && (
+        {pending && !editing && (
           <button type="button" className="text-button" onClick={onDiscard}>
             Discard entry
           </button>
         )}
+        {actions}
       </td>
     </tr>
   );
