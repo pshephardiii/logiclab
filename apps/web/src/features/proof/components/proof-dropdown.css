@@ -46,3 +46,15 @@
 .proof-line-menu .delete-action {
   color: #9d2626;
 }
+
+.proof-line-menu .proof-submenu-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+.proof-line-menu .proof-submenu-back {
+  border-bottom: 1px solid #d6e0dc;
+  margin-bottom: 0.25rem;
+  color: #176650;
+}

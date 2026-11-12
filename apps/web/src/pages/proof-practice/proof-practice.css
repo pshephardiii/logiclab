@@ -54,3 +54,21 @@
     font-size: 0.9rem;
   }
 }
+
+.practice-conclusion-editor {
+  width: min(22rem, 100%);
+  padding: 0.75rem;
+  border: 1px solid #a8b9b1;
+  border-radius: 0.4rem;
+}
+.practice-conclusion-editor input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+.practice-conclusion-editor .action-row {
+  margin-top: 0.75rem;
+}
+.practice-conclusion-editor .error {
+  margin: 0.75rem 0 0;
+}

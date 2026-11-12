@@ -350,3 +350,80 @@ test('pending tree nodes hide previous feedback and remain intact when restartin
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
   expect(screen.queryByRole('button', { name: 'Edit node 2' })).not.toBeInTheDocument();
 });
+
+test('changing the Fitch practice conclusion preserves confirmed and pending proof entries and requires a fresh explicit check', async () => {
+  await enterProblem();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  await user.type(screen.getByLabelText('Formula for line 2'), 'P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'reiteration');
+  const citation = screen.getByLabelText('Line 2 citation 1');
+  const premise = within(citation)
+    .getAllByRole('option')
+    .find((option) => option.getAttribute('value') && !option.hasAttribute('disabled'))!;
+  const premiseId = premise.getAttribute('value')!;
+  await user.selectOptions(citation, premiseId);
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  expect(screen.getByLabelText('New conclusion')).toHaveFocus();
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('Q');
+  expect(screen.getByRole('button', { name: 'Edit conclusion' })).toHaveFocus();
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P');
+  expect(screen.getByLabelText('Line 2 citation 1')).toHaveValue(premiseId);
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByRole('region', { name: 'Proof feedback' })).toHaveTextContent(
+    'The conclusion is not established.',
+  );
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'P{Enter}');
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+});
+
+test('invalid or cancelled target edits leave the active conclusion, proof and earlier check unchanged', async () => {
+  await enterProblem();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('Enter a conclusion');
+  await user.type(screen.getByLabelText('New conclusion'), 'P &');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByRole('alert')).toBeInTheDocument();
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+  await user.keyboard('{Escape}');
+  expect(screen.queryByLabelText('New conclusion')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Edit conclusion' })).toHaveFocus();
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  expect(screen.getByLabelText('New conclusion')).toHaveValue('P');
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+});
+
+test('discarding a practice session while editing its conclusion resets edit/check state for the next proof', async () => {
+  await enterProblem();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  await user.click(screen.getByRole('button', { name: 'Start over' }));
+  await user.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByLabelText('New conclusion')).toHaveValue('P');
+  await user.click(screen.getByRole('button', { name: 'Start over' }));
+  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await user.type(screen.getByLabelText('Conclusion'), 'P -> P');
+  await user.click(screen.getByRole('button', { name: 'Begin proof practice' }));
+  expect(screen.queryByLabelText('New conclusion')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+});

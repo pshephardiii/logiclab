@@ -121,6 +121,7 @@
 }
 .fitch-entry-reasons > div:first-child {
   grid-column: 1 / -1;
+  margin-bottom: 0.35rem;
 }
 .fitch-entry-reasons > div {
   min-width: 0;

@@ -106,6 +106,7 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   const f = setup();
   expect(screen.getByText('No premises.')).toBeInTheDocument();
   expect(screen.getByText('Prove the conclusion.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Edit conclusion' })).not.toBeInTheDocument();
   await f.user.click(screen.getByRole('button', { name: 'Start proof' }));
   await f.user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await f.user.type(screen.getByLabelText('Formula for line 1'), 'P');

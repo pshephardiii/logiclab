@@ -129,7 +129,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 1. Choose **Fitch**, no premises, conclusion `P -> P`. Keep **Implication introduction** enabled and begin.
 2. Select **Open subproof**. Enter assumption `P`, then **Add line**.
-3. Select **Close subproof**. It closes at the latest confirmed direct line (here the assumption itself) and returns entry to the main proof.
+3. Select **Close subproof**. It closes at the latest confirmed direct line (here the assumption itself) and returns entry to the main proof. Try the adjacent **Reopen subproof** shortcut, verify entry returns inside the same block, then close it again.
 4. At root scope, enter `P -> P`, select **Implication introduction** and cite that closed subproof. Select **Add line**.
 5. Select **Check proof** and expand **Line-by-line checks**.
 
@@ -165,7 +165,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 - [ ] Reviewed; result: Not run
 
-1. Build a Fitch proof with at least eight confirmed lines. Select the displayed line number **7**, then **5** (or use line 7's menu → **Delete a range starting at line 7**, then select line number 5).
+1. Build a Fitch proof with at least eight confirmed lines. Select the displayed line number **7**, then **5** (or use line 7's menu → **Delete ›** → **Delete a range starting at line 7**, then select line number 5).
 2. Verify only lines 5–7 are highlighted and the modal previews those three formulas. Choose **Keep proof work** or Escape; all lines must remain.
 3. Repeat the selection and choose **Delete selected lines**. Verify lines 1–4 and the former line 8 remain, renumbered. Citations to deleted lines must stay explicitly missing rather than target another line.
 4. Select only the opening assumption of a multi-line subproof. The modal must explain why deletion is blocked; cancel and select the complete subproof to remove it.
@@ -379,3 +379,27 @@ The user considers the truth-table UI satisfactory for this pass and moved on to
 - **Subproof rule:** selecting an assumption requires including all entered lines of its subproof/nested blocks. Partial selection is explained and blocked; no automatic expansion removes unselected work. Deleting interior lines is allowed. Surviving citations/endpoints stay unresolved rather than silently retargeting or regrading.
 - **Status:** implemented, awaiting user visual retest. Reference full-removal and malformed-proof recovery remain explicit controls; dependency/tree behavior is unchanged. No backend/database or checker-policy changes.
 - **Verification:** all 614 frontend tests, frontend type checking/build, formatting and whitespace passed. Focused Chrome verified 7→5 selection/preview/highlight, Escape/focus/Keep, exactly three removed lines, renumbering/missing citation, full deletion, partial-subproof blocking, whole-subproof deletion and 390px bounds without page errors. The real frontend/engine was used; only signed-out bootstrap responses were intercepted. Temporary frontend/Chrome stopped; no user database/server changed. Evidence: `.codex-local/ui-audit/032/fitch-range/` (ignored). Desktop and mobile screenshots inspected. No user visual sign-off or full accessibility audit is claimed.
+
+### PRA-UI-008 — Recover immediately from an accidental subproof close
+
+- **Case:** FIT-01/FIT-03; user-reported November 12, 2026. The existing assumption-menu Reopen action was not discoverable enough for accidental closure.
+- **Change:** show **Reopen subproof** beside Open/Close immediately after closing a block. It clears only that block's endpoint, restores its entry context and focuses the next formula. No line/formula/citation is removed or rewritten. The shortcut is disabled while a new entry or range selection is pending.
+- **Boundary:** this is a quick reversal of the latest closure, not general undo. A subsequent confirmed edit or authoritative replacement invalidates the shortcut; the existing assumption-menu Reopen action remains available for deliberate later changes. Nested closure targets the just-closed child, not its parent or siblings.
+- **Status:** implemented, awaiting user retest. Agent verification: all 617 frontend tests and frontend type checking/production build passed; changed-file formatting and whitespace passed. Added regression cases cover exact restoration, continued entry in the reopened scope, a later endpoint on re-closing, nested scope and pending-entry guards, and the durable menu fallback after another confirmed line. No new browser run is claimed for this small follow-up; the user visual retest remains pending. No backend/checker/persistence change.
+
+### PRA-UI-009 — Group Fitch line actions into submenus
+
+- **Cases:** FIT-02/FIT-03, ACCESS-01/ACCESS-02; user-requested November 12, 2026.
+- **Grouping:** **Move line ›** contains Up/Down. **Subproof ›** contains the available Close/Continue/Reopen/Settings actions. **Delete ›** now groups single-line removal, a range starting at the current line and whole-subproof removal where applicable. Edit and Insert stay at the main level. Groups are omitted when inapplicable; movement boundary guards remain.
+- **Interaction:** native nested popovers support mouse hover with a short pointer bridge, click/tap and normal button keyboard navigation. ArrowRight opens/focuses an enabled action; ArrowLeft or Escape returns to the group trigger without closing the parent. **Back to line actions** supports touch. Selecting an action closes both levels; outside dismissal, parent closure and scrolling invalidate nested views. Flyouts choose an available side and remain within narrow viewports.
+- **Status:** implemented, awaiting user visual retest. Shared Fitch authoring/student/practice line menus use the grouping; dependency/tree menus are unchanged. No proof or assessment policy change.
+- **Verification:** all 621 frontend tests, frontend type checking/production build, formatting and whitespace passed. New tests cover direct versus nested actions, disabled boundaries, exactly-once callbacks, parent retention, keyboard focus/Escape, Back/reset and hover group replacement. The jsdom popover stub now preserves ancestor popovers; native behavior was checked separately in Chrome. Focused Chrome passed hover pointer crossing, movement, keyboard open/Escape, settings-dialog transition, touch Back/Reopen and 390px/320px bounded menus without page errors. Only signed-out bootstrap API responses were intercepted. Temporary frontend/Chrome stopped. Desktop/mobile screenshots inspected; evidence under `.codex-local/ui-audit/032/fitch-submenus/` is ignored local evidence rather than CI or full accessibility conformance.
+
+**PRA-UI-009 follow-up:** at the user's request, deletion now has its own **Delete ›** submenu. Single-line and range actions retain their existing confirmation/selection flows; an assumption offers whole-subproof deletion rather than unsafe removal of its opening line alone. Tests cover distinct callbacks, submenu dismissal and the assumption guard. No mutation or confirmation semantics changed. User visual retest remains pending.
+
+### PRA-UI-010 — Edit the Fitch practice conclusion without restarting
+
+- **Case:** FIT-01/FIT-02, WORK-01; user-requested November 12, 2026.
+- **Change:** **Edit conclusion** appears beside the target in self-created Fitch practice only. Enter a new formula and choose **Apply conclusion**, or Enter; Cancel/Escape leaves the active target unchanged and returns focus. Empty/malformed formulas show a local error without changing the target or proof.
+- **Retention/disclosure:** applying changes only the practice statement's conclusion, preserving all confirmed proof identities/formulas/citations/scopes and the unconfirmed next entry. Existing reports are cleared and no check runs automatically. Checking is disabled and old feedback hidden while the target editor is open; cancelling restores still-current prior feedback. Start-over/format discard resets the editor too. Assigned problems and instructor reference statements receive no new target-edit control.
+- **Status:** implemented, awaiting user visual retest. All 626 frontend tests, frontend type checking/production build, formatting and whitespace passed. New tests cover target rechecking, pending/confirmed retention, invalid/cancelled edits, focus, restart cleanup and absence from assigned work. Focused Chrome checked the same flow with explicit valid/invalid rechecking, Enter/Escape/Cancel, desktop/390px/320px bounds and no page errors. Only signed-out bootstrap API responses were intercepted; proof checking used the real frontend engine. Temporary frontend/Chrome stopped. Screenshots inspected; ignored evidence: `.codex-local/ui-audit/032/practice-conclusion/`. No API/database/grading-policy change or full accessibility audit.

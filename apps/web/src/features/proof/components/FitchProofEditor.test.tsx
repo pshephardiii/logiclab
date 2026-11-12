@@ -486,3 +486,59 @@ test('unconfirmed entry blocks range selection and partial assumption deletion i
   expect(screen.getByRole('button', { name: 'Delete selected lines' })).toBeDisabled();
   expect(changed).not.toHaveBeenCalled();
 });
+
+test('visible Reopen reverses the latest closure and the next confirmed line continues inside the same block', async () => {
+  const { user, current } = setup();
+  await user.click(screen.getByRole('button', { name: 'Open subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  const open = structuredClone(current());
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(screen.getByLabelText('Current proof scope')).toHaveTextContent('Main proof');
+  expect(current().blocks[0]!.endId).toBe(open.steps[2]!.id);
+  await user.click(screen.getByRole('button', { name: 'Reopen subproof' }));
+  expect(current()).toEqual(open);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute(
+    'data-scope-id',
+    open.blocks[0]!.id,
+  );
+  expect(screen.getByLabelText('Formula for line 4')).toHaveFocus();
+  expect(screen.queryByRole('button', { name: 'Reopen subproof' })).not.toBeInTheDocument();
+  await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps[3]!.blockId).toBe(open.blocks[0]!.id);
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(current().blocks[0]!.endId).toBe(current().steps[3]!.id);
+});
+
+test('nested Reopen targets only the just-closed child and cannot discard an unconfirmed entry', async () => {
+  const proof = nestedProof();
+  const { user, current } = setup(proof);
+  // Resume the inner scope explicitly: this fixture's last line is in the outer scope.
+  await lineAction(user, 2, 'Continue subproof at line 2');
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 4'), 'R');
+  expect(screen.getByRole('button', { name: 'Reopen subproof' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  await user.click(screen.getByRole('button', { name: 'Reopen subproof' }));
+  expect(current().blocks).toEqual(proof.blocks);
+  expect(current().steps).toEqual(proof.steps);
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute(
+    'data-scope-id',
+    proof.blocks[1]!.id,
+  );
+});
+
+test('quick Reopen disappears after a new confirmed line rather than undoing later work', async () => {
+  const { user, current } = setup();
+  await user.click(screen.getByRole('button', { name: 'Open subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(screen.queryByRole('button', { name: 'Reopen subproof' })).not.toBeInTheDocument();
+  expect(current().blocks[0]!.endId).toBe(current().steps[2]!.id);
+  await lineAction(user, 3, 'Reopen subproof at line 3');
+  expect(current().blocks[0]!.endId).toBeNull();
+});

@@ -33,6 +33,7 @@ type Props = {
   onChange: (proof: FitchProof | null) => void;
   onPendingChange?: (pending: boolean) => void;
   actions?: ReactNode;
+  conclusionActions?: ReactNode;
 };
 
 type Deletion =
@@ -48,11 +49,15 @@ export function FitchProofEditor({
   onChange,
   onPendingChange,
   actions,
+  conclusionActions,
 }: Props) {
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [recentlyClosed, setRecentlyClosed] = useState<{ id: string; proof: FitchProof } | null>(
+    null,
+  );
   const [scope, setScope] = useState<string | null>(() => resumedFitchScope(proof));
   const [before, setBefore] = useState<string | null>(null);
   const [entry, setEntry] = useState<FitchEntry | null>(null);
@@ -101,6 +106,7 @@ export function FitchProofEditor({
   function change(next: FitchProof | null) {
     setDeletion(null);
     setRangeStart(null);
+    setRecentlyClosed(null);
     setError(null);
     onChange(next);
   }
@@ -183,16 +189,41 @@ export function FitchProofEditor({
     if (!proof || pending) return;
     const block = proof.blocks.find((block) => block.id === id);
     if (!block) return;
-    change({
+    const next = {
       ...proof,
       blocks: proof.blocks.map((value) => (value.id === id ? { ...value, endId } : value)),
-    });
+    };
+    change(next);
+    setRecentlyClosed({ id, proof: next });
     setScope(block.parentId);
     setSelectedId(null);
     setBefore(null);
     focusRequested.current = true;
     setAnnouncement('Subproof closed. Continue in the parent proof.');
   }
+
+  function reopenBlock(id: string) {
+    if (!proof || pending || !safe) return;
+    const block = proof.blocks.find((value) => value.id === id);
+    if (!block || block.endId === null) return;
+    change({
+      ...proof,
+      blocks: proof.blocks.map((value) => (value.id === id ? { ...value, endId: null } : value)),
+    });
+    setScope(id);
+    setSelectedId(null);
+    setBefore(null);
+    focusRequested.current = true;
+    setAnnouncement('Subproof reopened. Continue inside it.');
+  }
+
+  const reopenCandidate =
+    recentlyClosed?.proof === proof
+      ? proof?.blocks.find(
+          (block) =>
+            block.id === recentlyClosed.id && block.endId !== null && block.parentId === scope,
+        )
+      : undefined;
 
   const activeBlock = proof?.blocks.find((block) => block.id === scope);
   const endpoint = proof ? fitchScopeEndpoint(proof, scope, before) : null;
@@ -224,7 +255,11 @@ export function FitchProofEditor({
       className="proof-editor fitch-editor"
       aria-label={reference ? 'Reference proof editor' : 'Student proof editor'}
     >
-      <ProofEditorHeading title={heading} goal={statement.conclusion} />
+      <ProofEditorHeading
+        title={heading}
+        goal={statement.conclusion}
+        goalActions={conclusionActions}
+      />
       <ProofHelp format="fitch" rules={statement.rules} />
       {!proof && pending && (
         <p role="alert" className="error">
@@ -360,19 +395,7 @@ export function FitchProofEditor({
                     />
                   )
                 }
-                onReopenBlock={(id) => {
-                  change({
-                    ...proof,
-                    blocks: proof.blocks.map((block) =>
-                      block.id === id ? { ...block, endId: null } : block,
-                    ),
-                  });
-                  setScope(id);
-                  setSelectedId(null);
-                  setBefore(null);
-                  focusRequested.current = true;
-                  setAnnouncement('Subproof reopened.');
-                }}
+                onReopenBlock={reopenBlock}
                 entryLabel={pending ? 'Unconfirmed proof entry' : 'New proof line'}
                 entry={
                   !selected && !rangeStart && current ? (
@@ -451,6 +474,15 @@ export function FitchProofEditor({
                     >
                       Close subproof
                     </button>
+                    {reopenCandidate && (
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => reopenBlock(reopenCandidate.id)}
+                      >
+                        Reopen subproof
+                      </button>
+                    )}
                   </fieldset>
                   {before && (
                     <p className="help">

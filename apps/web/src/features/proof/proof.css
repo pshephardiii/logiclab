@@ -75,3 +75,13 @@
 .proof-check-actions {
   margin-top: 1.25rem;
 }
+
+.proof-conclusion-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+  max-width: 100%;
+  min-width: 0;
+}

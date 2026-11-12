@@ -3,6 +3,7 @@ import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
+import { PracticeConclusionEditor } from './PracticeConclusionEditor';
 import { PracticeProofEditor } from './PracticeProofEditor';
 import { ProofPracticeSetup } from './ProofPracticeSetup';
 import {
@@ -22,6 +23,7 @@ export function ProofPractice() {
   const [proof, setProof] = useState<PracticeProof | null>(null);
   const [report, setReport] = useState<ProofCheckReport | null>(null);
   const [entryPending, setEntryPending] = useState(false);
+  const [conclusionEditing, setConclusionEditing] = useState(false);
   useUnsavedWork(statement !== null);
 
   function changeProof(next: PracticeProof | null) {
@@ -41,8 +43,13 @@ export function ProofPractice() {
   const checkAction = (
     <button
       type="button"
-      disabled={!proof || entryPending}
-      onClick={() => proof && !entryPending && setReport(checkPracticeProof(statement!, proof))}
+      disabled={!proof || entryPending || conclusionEditing}
+      onClick={() =>
+        proof &&
+        !entryPending &&
+        !conclusionEditing &&
+        setReport(checkPracticeProof(statement!, proof))
+      }
     >
       Check proof
     </button>
@@ -97,11 +104,23 @@ export function ProofPractice() {
             onChange={changeProof}
             onPendingChange={setEntryPending}
             actions={statement.format === 'fitch' ? checkAction : undefined}
+            conclusionActions={
+              statement.format === 'fitch' ? (
+                <PracticeConclusionEditor
+                  conclusion={statement.conclusion}
+                  onEditingChange={setConclusionEditing}
+                  onApply={(conclusion) => {
+                    setStatement({ ...statement, conclusion });
+                    setReport(null);
+                  }}
+                />
+              ) : undefined
+            }
           />
           {statement.format !== 'fitch' && (
             <div className="practice-check-actions">{checkAction}</div>
           )}
-          {report && !entryPending && (
+          {report && !entryPending && !conclusionEditing && (
             <ProofFeedback
               report={report}
               stepLabel={statement.format === 'tree' ? 'Node' : 'Line'}
