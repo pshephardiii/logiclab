@@ -79,6 +79,12 @@ test.each(['dependency', 'fitch'])(
         name: format === 'fitch' ? 'Entered Fitch proof' : 'Entered dependency proof',
       }),
     ).not.toHaveTextContent('Q ∧');
+    if (format === 'fitch') {
+      expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+      fireEvent.change(screen.getByLabelText('Rule for line 2'), {
+        target: { value: 'excluded_middle' },
+      });
+    }
     fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
     expect(
       screen.getByRole('region', {
@@ -426,4 +432,67 @@ test('discarding a practice session while editing its conclusion resets edit/che
   await user.click(screen.getByRole('button', { name: 'Begin proof practice' }));
   expect(screen.queryByLabelText('New conclusion')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+});
+
+test('editing an original Fitch practice premise updates its supplied statement without rewriting derived lines', async () => {
+  await enterProblem();
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText('Formula for line 2'), 'P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'reiteration');
+  const citation = screen.getByLabelText('Line 2 citation 1');
+  const id = within(citation)
+    .getAllByRole('option')
+    .find((option) => option.getAttribute('value') && !option.hasAttribute('disabled'))!
+    .getAttribute('value')!;
+  await user.selectOptions(citation, id);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  expect(screen.queryByLabelText('Statement premise for line 1')).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('Formula for line 1'));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.queryByText(/Premise formula does not match/)).not.toBeInTheDocument();
+  expect(screen.getByText('Proof needs attention.')).toBeInTheDocument(); // The retained P reiteration is now wrong.
+  await user.click(screen.getByRole('button', { name: 'Actions for line 2' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 2' }));
+  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P');
+  expect(screen.getByLabelText('Line 2 citation 1')).toHaveValue(id);
+  await user.clear(screen.getByLabelText('Formula for line 2'));
+  await user.type(screen.getByLabelText('Formula for line 2'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  await user.clear(screen.getByLabelText('New conclusion'));
+  await user.type(screen.getByLabelText('New conclusion'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+});
+
+test('editing one of two identical premise formulas follows its source identity and recovers from incomplete text', async () => {
+  const user = userEvent.setup();
+  await enterProblem('fitch', async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
+    fireEvent.change(screen.getByLabelText('Premise 2'), { target: { value: 'P' } });
+  });
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await user.clear(screen.getByLabelText('Formula for line 1'));
+  await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument(); // The second premise P is unchanged and is the target.
+  await user.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+  await user.click(screen.getByRole('button', { name: 'Edit line 1' }));
+  await user.clear(screen.getByLabelText('Formula for line 1'));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof could not be fully checked.')).toBeInTheDocument();
+  await user.type(screen.getByLabelText('Formula for line 1'), 'Q');
+  await user.click(screen.getByRole('button', { name: 'Done editing' }));
+  await user.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 });

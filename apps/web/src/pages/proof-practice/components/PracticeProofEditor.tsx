@@ -12,6 +12,7 @@ export function PracticeProofEditor({
   onPendingChange,
   actions,
   conclusionActions,
+  onPremiseChange,
 }: {
   statement: PracticeStatement;
   proof: PracticeProof | null;
@@ -19,6 +20,7 @@ export function PracticeProofEditor({
   onPendingChange?: (pending: boolean) => void;
   actions?: ReactNode;
   conclusionActions?: ReactNode;
+  onPremiseChange?: (premiseId: string, formula: string) => void;
 }) {
   if (statement.format === 'tree')
     return (
@@ -46,6 +48,7 @@ export function PracticeProofEditor({
     <FitchProofEditor
       actions={actions}
       conclusionActions={conclusionActions}
+      onPremiseChange={onPremiseChange}
       onPendingChange={onPendingChange}
       statement={statement}
       proof={proof?.format === 'fitch' ? proof : null}

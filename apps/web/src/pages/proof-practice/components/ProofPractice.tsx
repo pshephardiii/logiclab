@@ -102,6 +102,19 @@ export function ProofPractice() {
             statement={statement}
             proof={proof}
             onChange={changeProof}
+            onPremiseChange={(premiseId, formula) => {
+              setStatement((current) =>
+                current?.format === 'fitch'
+                  ? {
+                      ...current,
+                      premises: current.premises.map((premise) =>
+                        premise.id === premiseId ? { ...premise, formula } : premise,
+                      ),
+                    }
+                  : current,
+              );
+              setReport(null);
+            }}
             onPendingChange={setEntryPending}
             actions={statement.format === 'fitch' ? checkAction : undefined}
             conclusionActions={

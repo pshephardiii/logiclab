@@ -321,3 +321,41 @@ test('submitted dependency review keeps authoritative premises and uses the shar
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   expect(onAnswer).not.toHaveBeenCalled();
 });
+
+test('editing an assigned premise answer never changes the instructor-supplied problem premise', async () => {
+  const source = { id: crypto.randomUUID(), formula: 'P' };
+  const proof: FitchProof = {
+    proofVersion: 1,
+    format: 'fitch',
+    blocks: [],
+    steps: [
+      {
+        kind: 'premise',
+        id: crypto.randomUUID(),
+        blockId: null,
+        premiseId: source.id,
+        formula: 'P',
+      },
+    ],
+  };
+  const assignedItem = { ...item, content: { ...content, premises: [source], conclusion: 'P' } };
+  const before = structuredClone(assignedItem);
+  const onAnswer = vi.fn();
+  render(
+    <AssignedDerivation
+      item={assignedItem}
+      answer={{ type: 'derivation', proof }}
+      readOnly={false}
+      onAnswer={onAnswer}
+    />,
+  );
+  const user = userEvent.setup();
+  await lineAction(user, 1, 'Edit line 1');
+  expect(screen.getByLabelText('Statement premise for line 1')).toHaveValue(source.id);
+  fireEvent.change(screen.getByLabelText('Formula for line 1'), { target: { value: 'Q' } });
+  expect(onAnswer.mock.lastCall![0].proof.steps[0]).toMatchObject({
+    premiseId: source.id,
+    formula: 'Q',
+  });
+  expect(assignedItem).toEqual(before);
+});

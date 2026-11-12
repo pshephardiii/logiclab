@@ -38,7 +38,7 @@ function fixture(): FitchProof {
 
 const rules = [{ id: 'reiteration', label: 'Repeat' }];
 
-function setup(initial = fixture()) {
+function setup(initial = fixture(), allowedRules = rules) {
   const changed = vi.fn();
   let current = initial;
 
@@ -46,7 +46,7 @@ function setup(initial = fixture()) {
     const [proof, setProof] = useState<FitchProof | null>(initial);
     return (
       <FitchProofEditor
-        statement={{ premises: [], rules, conclusion: 'P -> Q' }}
+        statement={{ premises: [], rules: allowedRules, conclusion: 'P -> Q' }}
         proof={proof}
         purpose="student"
         onChange={(next) => {
@@ -187,6 +187,11 @@ test('an untouched row is clean; typing stays local until confirmation and suppo
   });
   expect(changed).not.toHaveBeenCalled();
   await user.keyboard('{Enter}');
+  expect(current().steps).toHaveLength(2);
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), initial.steps[0]!.id);
+  await user.click(screen.getByLabelText('Formula for line 3'));
+  await user.keyboard('{Enter}');
   expect(current().steps).toHaveLength(3);
   expect(current().steps[2]!.formula).toBe('Q ∧');
   expect(screen.getByLabelText('Formula for line 4')).toHaveFocus();
@@ -232,6 +237,8 @@ test('a stale entry cannot overwrite authoritative work and pending state clears
   const view = render(<FitchProofEditor {...props} proof={proof} />);
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Formula for line 3'), 'P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), proof.steps[0]!.id);
   expect(pending).toHaveBeenLastCalledWith(true);
   const replacement = structuredClone(proof);
   replacement.steps[0]!.formula = 'R';
@@ -337,6 +344,8 @@ test('inserting before an assumption uses its parent scope and retains existing 
   );
   expect(changed).not.toHaveBeenCalled();
   await user.type(screen.getByLabelText('Formula for line 2'), 'P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 2 citation 1'), proof.steps[0]!.id);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(current().steps[1]!.blockId).toBe(proof.blocks[0]!.id);
   expect(current().steps.filter((_, index) => index !== 1)).toEqual(proof.steps);
@@ -423,6 +432,7 @@ test('explicit Close subproof records the confirmed endpoint, returns to its par
 test('citation placeholders identify their purpose and None clears without silently choosing a line', async () => {
   const initial = fixture();
   const { user, current } = setup(initial);
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P');
   await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'reiteration');
   const citation = screen.getByLabelText('Line 3 citation 1');
   expect(citation).toHaveDisplayValue('Line 1');
@@ -431,7 +441,11 @@ test('citation placeholders identify their purpose and None clears without silen
   await user.selectOptions(citation, '');
   expect(citation).toHaveDisplayValue('Line 1');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
-  expect(current().steps[2]).toMatchObject({ lineReferences: [] });
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+  expect(current()).toEqual(initial);
+  await user.selectOptions(citation, initial.steps[0]!.id);
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps[2]).toMatchObject({ lineReferences: [initial.steps[0]!.id] });
 });
 
 test('range deletion is modal, cancellation retains entries and Escape restores the trigger focus', async () => {
@@ -505,6 +519,8 @@ test('visible Reopen reverses the latest closure and the next confirmed line con
   expect(screen.getByLabelText('Formula for line 4')).toHaveFocus();
   expect(screen.queryByRole('button', { name: 'Reopen subproof' })).not.toBeInTheDocument();
   await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
+  await user.selectOptions(screen.getByLabelText('Rule for line 4'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 4 citation 1'), current().steps[0]!.id);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(current().steps[3]!.blockId).toBe(open.blocks[0]!.id);
   await user.click(screen.getByRole('button', { name: 'Close subproof' }));
@@ -536,9 +552,72 @@ test('quick Reopen disappears after a new confirmed line rather than undoing lat
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   await user.click(screen.getByRole('button', { name: 'Close subproof' }));
   await user.type(screen.getByLabelText('Formula for line 4'), 'Q');
+  await user.selectOptions(screen.getByLabelText('Rule for line 4'), 'reiteration');
+  await user.selectOptions(screen.getByLabelText('Line 4 citation 1'), current().steps[0]!.id);
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(screen.queryByRole('button', { name: 'Reopen subproof' })).not.toBeInTheDocument();
   expect(current().blocks[0]!.endId).toBe(current().steps[2]!.id);
   await lineAction(user, 3, 'Reopen subproof at line 3');
   expect(current().blocks[0]!.endId).toBeNull();
+});
+
+test('Add line waits for the rule and every citation, retaining a second-slot-first selection and ignoring incomplete Enter', async () => {
+  const proof = fixture();
+  const allowed = [...rules, { id: 'and_introduction', label: 'And intro' }];
+  const { user, current, changed } = setup(proof, allowed);
+  const add = screen.getByRole('button', { name: 'Add line' });
+  expect(add).toBeDisabled();
+  await user.type(screen.getByLabelText('Formula for line 3'), 'Q');
+  await user.keyboard('{Enter}');
+  expect(changed).not.toHaveBeenCalled();
+  expect(screen.getByText('Choose a rule.')).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'and_introduction');
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), proof.steps[1]!.id);
+  expect(screen.getByLabelText('Line 3 citation 1')).toHaveDisplayValue('Line 1');
+  expect(screen.getByLabelText('Line 3 citation 2')).toHaveValue(proof.steps[1]!.id);
+  expect(add).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), proof.steps[0]!.id);
+  expect(add).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), '');
+  expect(add).toBeDisabled();
+  expect(screen.getByLabelText('Line 3 citation 2')).toHaveValue(proof.steps[1]!.id);
+  await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), proof.steps[0]!.id);
+  await user.click(add);
+  expect(current().steps[2]).toMatchObject({
+    formula: 'Q',
+    lineReferences: [proof.steps[0]!.id, proof.steps[1]!.id],
+  });
+});
+
+test('Add line handles a zero-input rule and closed-subproof citations without requiring irrelevant fields', async () => {
+  const proof = fixture();
+  proof.blocks = [
+    {
+      id: crypto.randomUUID(),
+      parentId: null,
+      assumptionId: proof.steps[0]!.id,
+      endId: proof.steps[0]!.id,
+    },
+  ];
+  const allowed = [
+    ...rules,
+    { id: 'excluded_middle', label: 'Excluded middle' },
+    { id: 'implication_introduction', label: 'Conditional proof' },
+  ];
+  const { user, current } = setup(proof, allowed);
+  await user.type(screen.getByLabelText('Formula for line 3'), 'P -> P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'implication_introduction');
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 subproof 1'), proof.blocks[0]!.id);
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'excluded_middle');
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Line 3 subproof 1'), '');
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps[2]).toMatchObject({
+    ruleId: 'excluded_middle',
+    lineReferences: [],
+    subproofReferences: [],
+  });
 });

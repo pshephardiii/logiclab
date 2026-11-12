@@ -18,6 +18,7 @@ import {
 import { createFitchEntry, type FitchEntry } from '../helpers/fitch-entry';
 import { resumedFitchScope, fitchScopeEndpoint } from '../helpers/fitch-entry-scope';
 import type { ReactNode } from 'react';
+import { fitchEntryRequirement } from '../helpers/fitch-entry-requirements';
 import { FitchProofEntry } from './FitchProofEntry';
 import { FitchProofSummary } from './FitchProofSummary';
 import { ProofChoice } from './ProofChoice';
@@ -34,6 +35,7 @@ type Props = {
   onPendingChange?: (pending: boolean) => void;
   actions?: ReactNode;
   conclusionActions?: ReactNode;
+  onPremiseChange?: (premiseId: string, formula: string) => void;
 };
 
 type Deletion =
@@ -50,6 +52,7 @@ export function FitchProofEditor({
   onPendingChange,
   actions,
   conclusionActions,
+  onPremiseChange,
 }: Props) {
   const reference = purpose === 'reference';
   const heading = reference ? 'Reference proof' : 'Your proof';
@@ -139,6 +142,12 @@ export function FitchProofEditor({
     // Never replace reloaded/authoritative work with an entry based on an older snapshot.
     if (proof !== current.base) {
       setError('The proof changed while this entry was open. Discard entry and try again.');
+      return;
+    }
+
+    const requirement = fitchEntryRequirement(current.draft, current.index, statement.rules);
+    if (requirement) {
+      setError(requirement);
       return;
     }
 
@@ -376,17 +385,29 @@ export function FitchProofEditor({
                       index={index}
                       rules={statement.rules}
                       premises={statement.premises}
+                      fixedPremiseSource={Boolean(onPremiseChange)}
                       blocks={blockChoices}
                       editing
                       actions={lineActions}
                       lineNumber={lineNumber}
                       pending={false}
-                      onChange={(next) =>
+                      onChange={(next) => {
                         change({
                           ...proof,
                           steps: proof.steps.map((value) => (value.id === step.id ? next : value)),
-                        })
-                      }
+                        });
+                        // Only the owner of a self-created practice statement supplies this callback.
+                        // Stable source identity distinguishes identical formulas in separate premises.
+                        if (
+                          step.kind === 'premise' &&
+                          next.kind === 'premise' &&
+                          step.premiseId &&
+                          next.premiseId === step.premiseId &&
+                          next.formula !== step.formula
+                        ) {
+                          onPremiseChange?.(step.premiseId, next.formula);
+                        }
+                      }}
                       onConfirm={() => {
                         setSelectedId(null);
                         focusRequested.current = true;

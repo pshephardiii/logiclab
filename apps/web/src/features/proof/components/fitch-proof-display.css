@@ -203,3 +203,9 @@
 .fitch-range-preview code {
   overflow-wrap: anywhere;
 }
+
+.fitch-entry-requirement {
+  max-width: 13rem;
+  margin: 0.4rem 0;
+  white-space: normal;
+}
