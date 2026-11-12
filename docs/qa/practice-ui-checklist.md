@@ -1,10 +1,10 @@
 # Practice UI audit checklist
 
-Branch: `032-chore-practice-ui-audit`. Created November 12, 2026. Status: **Not started**. This checklist is an execution guide, not evidence that a case passed.
+Branch: `032-chore-practice-ui-audit`. Created November 12, 2026. Status: **In progress; natural-deduction tree cases deferred**. This checklist is an execution guide, not evidence that a case passed.
 
 ## Scope and working agreement
 
-Review anonymous independent practice: truth tables at `/` and Fitch, dependency and natural-deduction tree proofs at `/practice/proofs`. Include visual clarity, mathematical presentation, interaction, errors, recovery, navigation, keyboard use and responsive behavior. Instructor-authored true/false and multiple-choice questions have no independent-practice screen; review them in the later teaching-flow audit rather than treating their absence here as a defect.
+Current scope, updated November 12, 2026: review anonymous independent practice truth tables at `/` and Fitch/dependency proofs at `/practice/proofs`. Natural-deduction tree cases are deferred; the method remains visible until the planned disabling branch. See the [availability/naming plan](../planning/proof-method-availability.md). Semantic tableaux are not implemented and are not tested here. Include visual clarity, mathematical presentation, interaction, errors, recovery, navigation, keyboard use and responsive behavior. Instructor-authored true/false and multiple-choice questions have no independent-practice screen; review them in the later teaching-flow audit rather than treating their absence here as a defect.
 
 You perform the steps and report observations using the case ID, for example **DEP-02: citations wrap beneath the rule**. The agent records the checkout, run IDs, findings, screenshots when available, fixes, verification and retest status. You do not need to collect that evidence yourself. Fix one coherent issue at a time, verify it and leave a reviewable commit-sized change before continuing. Do not infer that unreported steps passed; confirm completed cases/blocks together.
 
@@ -18,7 +18,7 @@ Use **Not run**, **Pass**, **Finding**, **Blocked** or **Deferred**. A visual pr
 | B     | TT-01–TT-04                                    | Truth-table entry, checking and solutions          |
 | C     | SETUP-01–SETUP-02, FIT-01–FIT-03               | Proof setup and Fitch                              |
 | D     | DEP-01–DEP-03                                  | Dependency proofs                                  |
-| E     | TREE-01–TREE-03                                | Natural-deduction trees                            |
+| E     | TREE-01–TREE-03                                | Deferred: natural-deduction tree cases             |
 | F     | HELP-01, WORK-01, ACCESS-01–ACCESS-02, FAIL-01 | Shared help, retention, accessibility and recovery |
 
 Take each block separately. Each test begins from the stated setup; do not rely on leftover answers from another case. Use the site's **Start over** action and discard confirmation to reset proof practice between examples. Final audit sign-off covers only cases actually exercised.
@@ -108,9 +108,9 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 3. Add premises `P` and `Q`; remove one. In dependency setup, type into **New premise**, verify beginning is blocked until **Add premise** or **Discard premise**, then test both actions.
 4. With entered setup data, choose another format. Select **Stay**; verify the original fields and selected format remain.
 5. Change format again and select **Discard changes**. Inspect the new setup.
-6. Repeat a simple setup in all three formats. Notice whether different premise-entry patterns are confusing.
+6. Repeat a simple setup in Fitch and dependency formats. Notice whether different premise-entry patterns are confusing.
 
-**Check:** validation is actionable and preserves inputs. Format switching clears the entire previous setup only after consent. Premises are optional; incomplete added premises cannot start a proof. Dependency uses confirmed premise entry; current Fitch/tree setup uses added premise fields—record consistency improvements rather than assuming all three already match. No setup action checks solvability.
+**Check:** validation is actionable and preserves inputs. Format switching clears the entire previous setup only after consent. Premises are optional; incomplete added premises cannot start a proof. Dependency uses confirmed premise entry; current Fitch setup uses added premise fields—record consistency improvements rather than assuming both already match. No setup action checks solvability.
 
 ### SETUP-02 — Permitted rules and an impossible target
 
@@ -200,11 +200,13 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 **Check:** feedback separates a locally matching step from invalid upstream support. Unused mistakes still prevent an error-free verified proof; deleting the mistake allows the final correct route to verify. Missing citations remain visible when deleting a cited line. Do not interpret a matching final formula alone as a verified proof.
 
-## E. Natural-deduction trees
+## E. Natural-deduction trees — deferred
+
+Do not execute this block on 032. These are historical natural-deduction tree cases, not semantic tableaux tests. They are retained only for a future decision to reactivate that method. Their deferral is intentional, not a pass or an unresolved implementation failure.
 
 ### TREE-01 — Guided conditional branch
 
-- [ ] Reviewed; result: Not run
+- [ ] Deferred by user; result: Deferred
 
 1. Start fresh **Natural-deduction tree** practice, no premises, conclusion `P -> P`, with Implication introduction enabled.
 2. Confirm the initial node is an unverified conclusion root. Select Implication introduction for node 1.
@@ -217,7 +219,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 ### TREE-02 — Premise copying and a supporting node
 
-- [ ] Reviewed; result: Not run
+- [ ] Deferred by user; result: Deferred
 
 1. Start fresh tree practice with premise `P`, conclusion `P` and Reiteration enabled.
 2. Select Reiteration for the initial root. From its menu choose **New supporting premise for node 1**.
@@ -229,7 +231,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 ### TREE-03 — Unattached nodes, root choice and deletion
 
-- [ ] Reviewed; result: Not run
+- [ ] Deferred by user; result: Deferred
 
 1. Keep TREE-02's proof. Use global **New assumption node** to enter `Q`, then **Add node**.
 2. Find the unattached node and select it. Check the proof.
@@ -248,12 +250,12 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 1. In an active proof, open **Keyboard guide**, then **Rule reference**.
 2. Select Implication introduction and Contradiction introduction in the rule selector; inspect each visual pattern.
-3. Repeat the rule view in Fitch, dependency and tree practice, noting different citations/discharge requirements.
+3. Repeat the rule view in Fitch and dependency practice, noting different citations/discharge requirements.
 4. Close/reopen both guides. Use them while keeping the proof visible on a short screen.
 
 **Check:** keyboard help is concise; rule patterns match the exact variants implemented, including `⊥`. The rule selector offers enabled rules, terminology is consistent, and help is navigable without a wall of explanatory text. Note any format-specific citation requirement that remains unclear.
 
-### WORK-01 — Pending work, navigation and restart (repeat for all three proof formats)
+### WORK-01 — Pending work, navigation and restart (repeat for Fitch and dependency)
 
 - [ ] Reviewed; result: Not run
 
@@ -270,7 +272,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 - [ ] Reviewed; result: Not run
 
-1. Without the mouse, complete a short truth table and one proof in each format using Tab/Shift+Tab, typing, arrow keys and Enter/Space.
+1. Without the mouse, complete a short truth table and one proof in each in-scope format using Tab/Shift+Tab, typing, arrow keys and Enter/Space.
 2. Open a rule dialog, move forward/backward through controls, close with Escape and reopen it.
 3. Open a line/node menu, use its controls and dismiss it with Escape.
 4. Open a deletion dialog, cancel and inspect focus; then repeat with confirmed deletion.
@@ -282,11 +284,11 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 - [ ] Reviewed; result: Not run
 
-1. Revisit one truth table and a finished proof in each format at approximately 390px and 320px width.
-2. Open a two-citation row, nested Fitch proof, dependency selector, tree branch/discharge controls and permitted-rules dialog at narrow width.
+1. Revisit one truth table and a finished proof in each in-scope format at approximately 390px and 320px width.
+2. Open a two-citation row, nested Fitch proof, dependency selector, permitted-rules dialog at narrow width.
 3. Use a short desktop viewport and 200% browser zoom. Confirm key actions remain reachable without overlapping labels.
 4. Enable reduced motion in OS/browser settings or DevTools Rendering; create a new truth table again.
-5. Compare typography, whitespace, buttons, headings, selected entries, errors and success feedback across all four practice experiences.
+5. Compare typography, whitespace, buttons, headings, selected entries, errors and success feedback across the three in-scope practice experiences.
 
 **Check:** necessary table/tree scrolling stays within its container; the whole page does not scroll sideways. Menus/dialogs fit and can scroll, text does not obscure inputs, and controls are comfortably usable. Reduced motion avoids animated table scrolling. Verification/error/answer states remain legible without color alone. Record improvements in wording and density as well as defects. The agent can perform measured contrast/accessible-name checks for reported areas; screenshots alone do not establish contrast or accessibility compliance.
 
@@ -304,7 +306,7 @@ Take each block separately. Each test begins from the stated setup; do not rely 
 
 ## Agent-owned run and findings record
 
-No cases have been executed for this branch yet. Historical 029–031 evidence is linked in the [audit record](ui-ux-audit.md); it does not mark this checklist passed.
+NAV-01 has a user-reported discovery finding below; no complete manual case/block pass is claimed yet. Historical 029–031 evidence is linked in the [audit record](ui-ux-audit.md); it does not mark this checklist passed.
 
 | Run ID | Checkout / configuration | Cases exercised | Outcome / evidence |
 | ------ | ------------------------ | --------------- | ------------------ |
@@ -333,3 +335,9 @@ At closeout, resolve or explicitly defer findings, record tested/untested areas,
 - **Change:** replace reciprocal text links with a shared, labeled practice-type navigation on both pages. Give Truth tables and Derivations equal prominence, name all three proof formats and mark the active destination. Stack choices on narrow screens. Routes and session ownership remain unchanged.
 - **Status:** Fixed awaiting retest. User should revisit `/`, locate Derivations, open it and confirm that both practice choices remain visible with the correct active state.
 - **Verification:** 37 focused frontend tests passed (routing, proof practice and truth-table practice); frontend type checking/production build and changed-file formatting/whitespace passed. No user/browser retest or screenshot is claimed yet.
+
+### PRA-UI-002 — Natural-deduction trees are outside the current audience
+
+- **Decision:** user confirmed November 12, 2026 that the intended tree method is semantic tableaux, not the existing natural-deduction proof tree implementation.
+- **Disposition:** defer TREE-01–TREE-03 and exclude that method from shared practice audit repetitions. Plan 033 to guard new use while retaining implementation/history and explicitly renaming ambiguous format-specific files, directories and symbols. Plan semantic tableaux separately.
+- **Status:** Deferred to planned branch 033; no guards or renames implemented here. Current practice navigation still advertises the existing method until that branch updates availability/language. See the [implementation plan](../planning/proof-method-availability.md).
