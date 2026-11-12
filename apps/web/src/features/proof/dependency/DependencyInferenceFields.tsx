@@ -35,7 +35,7 @@ export function DependencyInferenceFields({
           <ProofChoice
             key={`citation-${slot}`}
             label={`Line ${index + 1} citation ${slot + 1}`}
-            empty={`Cite ${slot + 1}`}
+            placeholder={`Line ${slot + 1}`}
             value={step.lineReferences[slot] || null}
             choices={earlier}
             onChange={(id) => {
@@ -97,14 +97,14 @@ export function DependencyInferenceFields({
             <div className="dependency-discharge" key={`discharge-${slot}`}>
               <ProofChoice
                 label={`Line ${index + 1} discharge ${slot + 1} assumption`}
-                empty="Discharge assumption"
+                placeholder="Discharge assumption"
                 value={pair.assumptionId}
                 choices={assumptions}
                 onChange={(assumptionId) => change({ assumptionId })}
               />
               <ProofChoice
                 label={`Line ${index + 1} discharge ${slot + 1} conclusion`}
-                empty="Concluding line"
+                placeholder="Concluding line"
                 value={pair.conclusionId}
                 choices={earlier.filter(
                   (_, position) => assumptionIndex >= 0 && position >= assumptionIndex,

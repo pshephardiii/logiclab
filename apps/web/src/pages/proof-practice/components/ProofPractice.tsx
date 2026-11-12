@@ -116,7 +116,7 @@ export function ProofPractice() {
               setReport(null);
             }}
             onPendingChange={setEntryPending}
-            actions={statement.format === 'fitch' ? checkAction : undefined}
+            actions={statement.format !== 'tree' ? checkAction : undefined}
             conclusionActions={
               statement.format !== 'tree' ? (
                 <PracticeConclusionEditor
@@ -130,7 +130,7 @@ export function ProofPractice() {
               ) : undefined
             }
           />
-          {statement.format !== 'fitch' && (
+          {statement.format === 'tree' && (
             <div className="practice-check-actions">{checkAction}</div>
           )}
           {report && !entryPending && !conclusionEditing && (

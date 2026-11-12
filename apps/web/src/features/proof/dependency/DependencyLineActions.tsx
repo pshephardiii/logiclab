@@ -1,3 +1,4 @@
+import { ProofSubmenu } from '../components/ProofSubmenu';
 import { ProofDropdown } from '../components/ProofDropdown';
 
 export function DependencyLineActions({
@@ -9,6 +10,7 @@ export function DependencyLineActions({
   onInsert,
   onDelete,
   onDischarge,
+  onRange,
 }: {
   index: number;
   count: number;
@@ -18,6 +20,7 @@ export function DependencyLineActions({
   onInsert?: () => void;
   onDelete: () => void;
   onDischarge?: () => void;
+  onRange?: () => void;
 }) {
   return (
     <ProofDropdown
@@ -25,7 +28,7 @@ export function DependencyLineActions({
       trigger={<span aria-hidden="true">⋯</span>}
       disabled={disabled}
     >
-      {(close) => (
+      {(close, open) => (
         <div className="proof-line-menu">
           <button
             type="button"
@@ -47,26 +50,28 @@ export function DependencyLineActions({
               Discharge assumption {index + 1}
             </button>
           )}
-          <button
-            type="button"
-            disabled={index === 0}
-            onClick={() => {
-              close();
-              onMove(-1);
-            }}
-          >
-            Move line {index + 1} up
-          </button>
-          <button
-            type="button"
-            disabled={index === count - 1}
-            onClick={() => {
-              close();
-              onMove(1);
-            }}
-          >
-            Move line {index + 1} down
-          </button>
+          <ProofSubmenu label="Move line" parentOpen={open}>
+            <button
+              type="button"
+              disabled={index === 0}
+              onClick={() => {
+                close();
+                onMove(-1);
+              }}
+            >
+              Move line {index + 1} up
+            </button>
+            <button
+              type="button"
+              disabled={index === count - 1}
+              onClick={() => {
+                close();
+                onMove(1);
+              }}
+            >
+              Move line {index + 1} down
+            </button>
+          </ProofSubmenu>
           {onInsert && (
             <button
               type="button"
@@ -78,16 +83,29 @@ export function DependencyLineActions({
               Insert before line {index + 1}
             </button>
           )}
-          <button
-            type="button"
-            className="delete-action"
-            onClick={() => {
-              close();
-              onDelete();
-            }}
-          >
-            Delete line {index + 1}
-          </button>
+          <ProofSubmenu label="Delete" parentOpen={open}>
+            <button
+              type="button"
+              className="delete-action"
+              onClick={() => {
+                close();
+                onDelete();
+              }}
+            >
+              Delete line {index + 1}
+            </button>
+            {onRange && (
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  onRange();
+                }}
+              >
+                Delete a range starting at line {index + 1}
+              </button>
+            )}
+          </ProofSubmenu>
         </div>
       )}
     </ProofDropdown>

@@ -1,3 +1,4 @@
+import { DependencyRangeDeletionDialog } from './DependencyRangeDeletionDialog';
 import type { ReactNode } from 'react';
 import { dependencyEntryRequirement } from './entry-requirements';
 import { createDependencyDischargeEntry } from './discharge-entry';
@@ -17,7 +18,6 @@ import {
   uniqueDependencyIds,
   insertDependencyStep,
   moveDependencyStep,
-  removeDependencyStep,
 } from './editor';
 import '../proof.css';
 
@@ -31,6 +31,7 @@ export function DependencyProofEditor({
   onPendingChange,
   conclusionActions,
   onPremiseChange,
+  actions,
 }: {
   statement: {
     premises: { id: string; formula: string }[];
@@ -42,6 +43,7 @@ export function DependencyProofEditor({
   onChange: (proof: DependencyProof | null) => void;
   onPendingChange?: (pending: boolean) => void;
   conclusionActions?: ReactNode;
+  actions?: ReactNode;
   onPremiseChange?: (premiseId: string, formula: string) => void;
 }) {
   const reference = purpose === 'reference';
@@ -56,9 +58,9 @@ export function DependencyProofEditor({
   const editor = useRef<HTMLElement>(null);
   const focusRequested = useRef(false);
   const [announcement, setAnnouncement] = useState('');
-  const [deletion, setDeletion] = useState<{ kind: 'line'; id: string } | { kind: 'proof' } | null>(
-    null,
-  );
+  const [deletion, setDeletion] = useState<{ kind: 'proof' } | null>(null);
+  const [rangeStart, setRangeStart] = useState<{ id: string; base: DependencyProof } | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // The untouched next row is only a visual draft. It does not dirty or extend the proof.
@@ -85,10 +87,41 @@ export function DependencyProofEditor({
     focusRequested.current = false;
   });
 
+  useEffect(() => {
+    if (!rangeStart || rangeEnd) return;
+    editor.current
+      ?.querySelector<HTMLButtonElement>('button[data-proof-range][aria-pressed="true"]')
+      ?.focus();
+  }, [rangeStart, rangeEnd]);
+
   function change(next: DependencyProof | null) {
     setDeletion(null);
+    setRangeStart(null);
+    setRangeEnd(null);
     setError(null);
     onChange(next);
+  }
+
+  function cancelRange() {
+    setRangeStart(null);
+    setRangeEnd(null);
+    setError(null);
+  }
+
+  function selectRange(id: string) {
+    if (!proof || pending || !safe) return;
+    if (rangeStart && rangeStart.base !== proof) {
+      setError('The proof changed. Cancel the selection and choose the lines again.');
+      return;
+    }
+    setSelectedId(null);
+    setBefore(null);
+    setDeletion(null);
+    if (rangeStart) setRangeEnd(id);
+    else {
+      setRangeStart({ id, base: proof });
+      setError(null);
+    }
   }
 
   function changeLine(next: DependencyProofStep) {
@@ -223,11 +256,30 @@ export function DependencyProofEditor({
             </>
           ) : (
             <>
+              {rangeStart ? (
+                <div className="dependency-range-instructions">
+                  <p role="status">
+                    Line {proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'}{' '}
+                    selected. Select the line number at the other end of the range.
+                  </p>
+                  <button type="button" className="secondary" onClick={cancelRange}>
+                    Cancel selection
+                  </button>
+                </div>
+              ) : (
+                <p className="help">
+                  To delete several lines, select the first and last line numbers.
+                </p>
+              )}
               <DependencyProofDisplay
                 proof={proof}
                 rules={statement.rules}
                 selectedId={selected?.id ?? null}
-                disabled={pending}
+                disabled={pending || rangeStart !== null}
+                onRangeSelect={selectRange}
+                rangeDisabled={pending}
+                rangeStartId={rangeStart?.id}
+                rangeEndId={rangeEnd ?? undefined}
                 onEdit={(id) => {
                   if (selectedId === id) {
                     editor.current
@@ -246,7 +298,12 @@ export function DependencyProofEditor({
                   setDeletion(null);
                   focusRequested.current = true;
                 }}
-                onDelete={(id) => setDeletion({ kind: 'line', id })}
+                onDelete={(id) => {
+                  setRangeStart({ id, base: proof });
+                  setRangeEnd(id);
+                  setSelectedId(null);
+                  setBefore(null);
+                }}
                 onDischarge={
                   idle &&
                   statement.rules.some((rule) => getPropositionalRule(rule.id)?.subproofReferences)
@@ -261,7 +318,7 @@ export function DependencyProofEditor({
                       : 'New proof line'
                 }
                 entry={
-                  fieldsProof && fieldsIndex !== undefined && fieldsStep ? (
+                  !rangeStart && fieldsProof && fieldsIndex !== undefined && fieldsStep ? (
                     <DependencyProofLine
                       key={fieldsStep.id}
                       proof={fieldsProof}
@@ -297,41 +354,48 @@ export function DependencyProofEditor({
               </span>
             </>
           )}
-          <button
-            type="button"
-            className="text-button"
-            disabled={pending}
-            onClick={() => setDeletion({ kind: 'proof' })}
-          >
-            {reference ? 'Remove reference proof' : 'Clear proof'}
-          </button>
+          <div className="dependency-proof-actions">
+            {(reference || !safe) && (
+              <button
+                type="button"
+                className="text-button"
+                disabled={pending || rangeStart !== null}
+                onClick={() => setDeletion({ kind: 'proof' })}
+              >
+                {reference ? 'Remove reference proof' : 'Remove proof'}
+              </button>
+            )}
+            {actions}
+          </div>
+          {rangeStart && rangeEnd && (
+            <DependencyRangeDeletionDialog
+              proof={rangeStart.base}
+              currentProof={proof}
+              from={rangeStart.id}
+              to={rangeEnd}
+              onCancel={cancelRange}
+              onConfirm={(next) => {
+                setSelectedId(null);
+                setBefore(null);
+                change(next);
+                focusRequested.current = true;
+              }}
+            />
+          )}
           {deletion && (
             <ProofDeletionPrompt
-              modal={deletion.kind === 'line'}
+              modal
               label="Confirm proof deletion"
               onCancel={() => setDeletion(null)}
             >
-              <p>
-                {deletion.kind === 'proof'
-                  ? reference
-                    ? 'Remove the entire reference proof?'
-                    : 'Clear the entire proof?'
-                  : 'Delete this line? Citations and dependency sets referring to it will need repair.'}
-              </p>
+              <p>{reference ? 'Remove the entire reference proof?' : 'Remove the entire proof?'}</p>
               <button
                 type="button"
                 className="danger"
                 onClick={() => {
-                  if (deletion.kind === 'proof') {
-                    setBefore(null);
-                    setSelectedId(null);
-                    change(null);
-                  } else {
-                    const index = proof.steps.findIndex((step) => step.id === deletion.id);
-                    if (before === deletion.id) setBefore(null);
-                    if (selectedId === deletion.id) setSelectedId(null);
-                    change(removeDependencyStep(proof, index));
-                  }
+                  setBefore(null);
+                  setSelectedId(null);
+                  change(null);
                 }}
               >
                 Confirm deletion

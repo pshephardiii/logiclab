@@ -24,6 +24,10 @@ export function DependencyProofDisplay({
   readOnly = false,
   label = 'Entered dependency proof',
   allowInsert = true,
+  onRangeSelect,
+  rangeDisabled = false,
+  rangeStartId,
+  rangeEndId,
 }: {
   proof: DependencyProof;
   rules: { id: string; label: string }[];
@@ -39,6 +43,10 @@ export function DependencyProofDisplay({
   readOnly?: boolean;
   label?: string;
   allowInsert?: boolean;
+  onRangeSelect?: (id: string) => void;
+  rangeDisabled?: boolean;
+  rangeStartId?: string;
+  rangeEndId?: string;
 }) {
   const assumptions = dependencyAssumptionGuides(proof.steps);
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
@@ -46,6 +54,11 @@ export function DependencyProofDisplay({
   const line = (id: string | null) => (id ? (positions.get(id) ?? 'Missing line') : 'Not selected');
   const firstDerived = proof.steps.findIndex((step) => step.kind !== 'premise');
   const premiseBoundary = firstDerived === -1 ? proof.steps.length - 1 : firstDerived - 1;
+
+  const start = proof.steps.findIndex((step) => step.id === rangeStartId);
+  const end = rangeEndId ? proof.steps.findIndex((step) => step.id === rangeEndId) : start;
+  const inRange = (index: number) =>
+    start >= 0 && end >= 0 && index >= Math.min(start, end) && index <= Math.max(start, end);
 
   return (
     <div className="dependency-proof-display" role="region" aria-label={label} tabIndex={0}>
@@ -68,6 +81,7 @@ export function DependencyProofDisplay({
               key={step.id}
               className={[
                 step.id === selectedId ? 'selected-proof-line' : '',
+                inRange(index) ? 'selected-range-line' : '',
                 index === premiseBoundary ? 'premise-boundary' : '',
               ]
                 .filter(Boolean)
@@ -79,7 +93,21 @@ export function DependencyProofDisplay({
                 {'}'}
               </td>
               <th className="proof-line-number" scope="row">
-                {index + 1}
+                {!readOnly && onRangeSelect ? (
+                  <button
+                    type="button"
+                    className="text-button"
+                    data-proof-range
+                    aria-label={`Select line ${index + 1} for deletion`}
+                    aria-pressed={inRange(index)}
+                    disabled={rangeDisabled}
+                    onClick={() => onRangeSelect(step.id)}
+                  >
+                    {index + 1}
+                  </button>
+                ) : (
+                  index + 1
+                )}
               </th>
               <td className="proof-line-formula">
                 <DependencyAssumptionGuides guides={assumptions.guides} index={index} />
@@ -98,6 +126,7 @@ export function DependencyProofDisplay({
                     onMove={(delta) => onMove(index, delta)}
                     onInsert={allowInsert && onInsert ? () => onInsert(step.id) : undefined}
                     onDelete={() => onDelete(step.id)}
+                    onRange={onRangeSelect ? () => onRangeSelect(step.id) : undefined}
                     onDischarge={
                       step.kind === 'assumption' && onDischarge
                         ? () => onDischarge(step.id)

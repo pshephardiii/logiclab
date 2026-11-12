@@ -81,7 +81,7 @@ test('three-dot actions preserve references and keep the edited identity after m
   expect(screen.getByLabelText('Rule for line 1')).toHaveValue('reiteration');
   expect(onChange.mock.lastCall![0].steps[0]).toEqual(initial.steps[1]);
   await lineAction(user, 2, 'Delete line 2');
-  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
   expect(screen.getByRole('region', { name: 'Entered dependency proof' })).toHaveTextContent(
     'Missing line',
   );
@@ -132,7 +132,7 @@ test('new inference entry preserves citation positions and blocks incomplete con
   expect(onChange).not.toHaveBeenCalled();
   await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'and_introduction');
   await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), inference);
-  expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue('');
+  expect(screen.getByLabelText('Line 3 citation 1')).toHaveValue('__placeholder__');
   expect(screen.getByLabelText('Line 3 citation 2')).toHaveValue(inference);
   expect(add).toBeDisabled();
   await user.selectOptions(screen.getByLabelText('Line 3 citation 1'), source);
@@ -221,7 +221,7 @@ test('conditional introduction explicitly starts an assumption and its line menu
   await lineAction(user, 1, 'Discharge assumption 1');
   expect(screen.getByLabelText('Rule for line 2')).toHaveValue('implication_introduction');
   expect(screen.getByLabelText('Line 2 discharge 1 assumption')).toHaveValue(assumption.id);
-  expect(screen.getByLabelText('Line 2 discharge 1 conclusion')).toHaveValue('');
+  expect(screen.getByLabelText('Line 2 discharge 1 conclusion')).toHaveValue('__placeholder__');
   expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Line 2 discharge 1 conclusion'), assumption.id);
@@ -240,15 +240,49 @@ test('conditional introduction explicitly starts an assumption and its line menu
 test('line deletion opens a modal focused on Keep; Escape preserves the proof', async () => {
   const { user, onChange } = setup();
   await lineAction(user, 1, 'Delete line 1');
-  const dialog = screen.getByRole('dialog', { name: 'Confirm proof deletion' });
-  expect(within(dialog).getByRole('button', { name: 'Keep proof' })).toHaveFocus();
+  const dialog = screen.getByRole('dialog', { name: 'Delete selected lines?' });
+  expect(within(dialog).getByRole('button', { name: 'Keep proof work' })).toHaveFocus();
   expect(onChange).not.toHaveBeenCalled();
   fireEvent(dialog, new Event('cancel', { bubbles: true, cancelable: true }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(onChange).not.toHaveBeenCalled();
   await lineAction(user, 1, 'Delete line 1');
-  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
   expect(onChange.mock.lastCall![0].steps.map((step: { id: string }) => step.id)).toEqual([
     inference,
   ]);
+});
+
+test('range selection previews either endpoint order and cancels without changing work', async () => {
+  const { user, onChange, initial } = setup();
+  expect(screen.queryByRole('button', { name: 'Clear proof' })).not.toBeInTheDocument();
+  await lineAction(user, 2, 'Delete a range starting at line 2');
+  expect(screen.getByRole('button', { name: 'Select line 2 for deletion' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(screen.queryByLabelText('Formula for line 3')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  const dialog = screen.getByRole('dialog', { name: 'Delete selected lines?' });
+  expect(dialog).toHaveTextContent('Delete lines 1–2?');
+  expect(within(dialog).getAllByRole('listitem')).toHaveLength(2);
+  expect(within(dialog).getByRole('button', { name: 'Keep proof work' })).toHaveFocus();
+  await user.click(within(dialog).getByRole('button', { name: 'Keep proof work' }));
+  expect(onChange).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Select line 2 for deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
+  expect(onChange).toHaveBeenLastCalledWith({ ...initial, steps: [] });
+  expect(screen.getByLabelText('Formula for line 1')).toHaveFocus();
+});
+
+test('pending entries prevent range selection and cancellation restores the idle entry', async () => {
+  const { user, onChange } = setup();
+  await user.type(screen.getByLabelText('Formula for line 3'), 'Q');
+  expect(screen.getByRole('button', { name: 'Select line 1 for deletion' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
+  await user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Cancel selection' }));
+  expect(screen.getByLabelText('Formula for line 3')).toHaveValue('');
+  expect(onChange).not.toHaveBeenCalled();
 });

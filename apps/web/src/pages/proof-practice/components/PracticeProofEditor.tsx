@@ -36,6 +36,7 @@ export function PracticeProofEditor({
   if (statement.format === 'dependency')
     return (
       <DependencyProofEditor
+        actions={actions}
         conclusionActions={conclusionActions}
         onPremiseChange={onPremiseChange}
         onPendingChange={onPendingChange}
