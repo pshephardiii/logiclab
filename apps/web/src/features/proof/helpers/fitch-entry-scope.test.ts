@@ -24,7 +24,7 @@ test('closing uses the latest direct confirmed line and does not close an ancest
   expect(fitchScopeEndpoint(proof, outer!.id, null)?.id).toBe(proof.steps[0]!.id);
 });
 
-test('resuming follows the last line to its innermost open ancestor and handles closed/root scopes', () => {
+test('resuming chooses the deepest open subproof and handles closed/root scopes', () => {
   const proof = nested();
   expect(resumedFitchScope(proof)).toBe(proof.blocks[1]!.id);
   proof.blocks[1]!.endId = proof.steps[2]!.id;
@@ -43,4 +43,15 @@ test('cyclic and missing ancestry do not become editable or closable scopes', ()
   proof.blocks[0]!.parentId = 'missing';
   expect(resumedFitchScope(proof)).toBeNull();
   expect(fitchScopeEndpoint(proof, proof.blocks[1]!.id, null)).toBeNull();
+});
+
+test('a trailing root or outer-scope repair does not allow appending outside an open child', () => {
+  let proof = nested();
+  const [outer, inner] = proof.blocks;
+  proof = insertFitchProofStep(proof, proof.steps.length, null);
+  expect(resumedFitchScope(proof)).toBe(inner!.id);
+  inner!.endId = proof.steps[2]!.id;
+  expect(resumedFitchScope(proof)).toBe(outer!.id);
+  outer!.endId = proof.steps[0]!.id;
+  expect(resumedFitchScope(proof)).toBeNull();
 });

@@ -530,7 +530,7 @@ test('visible Reopen reverses the latest closure and the next confirmed line con
 test('nested Reopen targets only the just-closed child and cannot discard an unconfirmed entry', async () => {
   const proof = nestedProof();
   const { user, current } = setup(proof);
-  // Resume the inner scope explicitly: this fixture's last line is in the outer scope.
+  // Explicit continuation remains available; append also resumes the open inner scope.
   await lineAction(user, 2, 'Continue subproof at line 2');
   await user.click(screen.getByRole('button', { name: 'Close subproof' }));
   await user.type(screen.getByLabelText('Formula for line 4'), 'R');
@@ -620,4 +620,31 @@ test('Add line handles a zero-input rule and closed-subproof citations without r
     lineReferences: [],
     subproofReferences: [],
   });
+});
+
+test('returning from insertion resumes the innermost open subproof until each scope is closed', async () => {
+  const proof = nestedProof();
+  const { user, current } = setup(proof, [{ id: 'excluded_middle', label: 'Excluded middle' }]);
+  const [outer, inner] = proof.blocks;
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', inner!.id);
+  await lineAction(user, 1, 'Continue subproof at line 1');
+  expect(screen.getByRole('alert')).toHaveTextContent('Close the innermost open subproof');
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', inner!.id);
+  // Earlier insertion is still available for deliberate repairs, but cannot change append context.
+  await lineAction(user, 1, 'Insert before line 1');
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', '');
+  await user.click(screen.getByRole('button', { name: 'Append at end instead' }));
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', inner!.id);
+  await user.type(screen.getByLabelText('Formula for line 4'), 'P v !P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 4'), 'excluded_middle');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps.at(-1)!.blockId).toBe(inner!.id);
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', outer!.id);
+  await user.click(screen.getByRole('button', { name: 'Close subproof' }));
+  expect(screen.getByLabelText('Current proof scope')).toHaveAttribute('data-scope-id', '');
+  await user.type(screen.getByLabelText('Formula for line 5'), 'P v !P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 5'), 'excluded_middle');
+  await user.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(current().steps.at(-1)!.blockId).toBeNull();
 });

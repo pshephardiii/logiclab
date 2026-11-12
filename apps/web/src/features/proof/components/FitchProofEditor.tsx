@@ -61,8 +61,10 @@ export function FitchProofEditor({
   const [recentlyClosed, setRecentlyClosed] = useState<{ id: string; proof: FitchProof } | null>(
     null,
   );
-  const [scope, setScope] = useState<string | null>(() => resumedFitchScope(proof));
+  const [insertionScope, setScope] = useState<string | null>(() => resumedFitchScope(proof));
   const [before, setBefore] = useState<string | null>(null);
+  // Explicit insertion can repair earlier work; normal append cannot skip an open subproof.
+  const scope = before === null ? resumedFitchScope(proof) : insertionScope;
   const [entry, setEntry] = useState<FitchEntry | null>(null);
   const [deletion, setDeletion] = useState<Deletion | null>(null);
   const [rangeStart, setRangeStart] = useState<{ id: string; base: FitchProof } | null>(null);
@@ -372,6 +374,11 @@ export function FitchProofEditor({
                 onDeleteBlock={(id) => setDeletion({ kind: 'block', id })}
                 onCloseBlock={closeBlock}
                 onContinueBlock={(id) => {
+                  if (id !== resumedFitchScope(proof)) {
+                    setError('Close the innermost open subproof before continuing in its parent.');
+                    return;
+                  }
+                  setError(null);
                   setScope(id);
                   setSelectedId(null);
                   setBefore(null);
@@ -467,7 +474,7 @@ export function FitchProofEditor({
                       data-scope-id={scope ?? ''}
                     >
                       {activeBlock
-                        ? `Inside subproof starting at line ${proof.steps.findIndex((step) => step.id === activeBlock.assumptionId) + 1 || '?'}`
+                        ? `Inside subproof starting at line ${proof.steps.findIndex((step) => step.id === activeBlock.assumptionId) + 1 || '?'}${before === null ? ' — close it to continue in the parent proof.' : ''}`
                         : scope
                           ? 'Unavailable subproof scope'
                           : 'Main proof'}
