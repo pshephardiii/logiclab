@@ -35,3 +35,5 @@ export * from './proof';
 export * from './dependency-proof';
 
 export * from './natural-deduction-tree';
+
+export * from './proof-method-availability';

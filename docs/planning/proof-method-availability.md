@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Availability guards and semantic tableaux are planned, not implemented.** Practice UI branch `032-chore-practice-ui-audit` is closing; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: shared availability policy is implemented; endpoint/UI enforcement and semantic tableaux are not implemented yet.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -13,6 +13,13 @@ Do not repurpose the existing natural-deduction tree checker for tableaux or tre
 ## Next branch: 033-chore-disable-natural-deduction-trees
 
 This branch both guards availability and clarifies terminology throughout the codebase. Keep the implementation available for future work; do not delete it or convert stored proofs into another method.
+
+### Slice 1 — availability foundation (November 13, 2026)
+
+- Shared contracts expose the available-format list (Fitch/dependency) and a fail-closed availability predicate. This is application admission policy, not a narrower historical transport schema.
+- The application has an explicit new-work guard and an actionable `409 PROOF_METHOD_UNAVAILABLE` error mapping shared by problem, assignment and student-work route error handlers. Call the guard after existing validation/authorization at the mutation boundaries in the next slices; it does not authorize historical reads.
+- Focused tests retain natural-deduction tree transport validation, owner-definition validation and real reference checking while rejecting that format under the new admission policy. No checker, stored discriminant or historical validator was removed.
+- **Not yet hidden or enforced at endpoints:** tree selectors, authoring/assignment/student mutations and demo seeds remain unchanged in this foundation slice. Next wire guarded owner authoring/publication and assignment admission under existing locks, retaining historical projections; then address student mutations, UI/seeds and coordinated explicit renaming.
 
 ### Availability guards
 
