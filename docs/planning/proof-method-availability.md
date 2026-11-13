@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards, available-only selection controls and retained read-only views are implemented; explicit naming cleanup is implemented; final branch verification remains in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 implementation and final verification are complete. Owner/student admission guards, available-only selectors, retained read-only views and explicit naming are delivered. Semantic tableaux are not implemented.** See the [verification record](../verification/natural-deduction-tree-availability-verification.md). Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -10,7 +10,7 @@ LogicLab targets introductory logic/philosophy. Fitch and dependency-style natur
 
 Do not repurpose the existing natural-deduction tree checker for tableaux or treat the difference as a visual orientation change. Share suitable formula/runtime infrastructure while keeping their representations, rules and checking obligations distinct.
 
-## Next branch: 033-chore-disable-natural-deduction-trees
+## Completed branch: 033-chore-disable-natural-deduction-trees
 
 This branch both guards availability and clarifies terminology throughout the codebase. Keep the implementation available for future work; do not delete it or convert stored proofs into another method.
 
@@ -57,6 +57,10 @@ This branch both guards availability and clarifies terminology throughout the co
 - Validation: `npm run check` passed all 2,294 tests (587 engine, 1,067 API, 640 frontend), workspace type checks and production builds. `npm run db:test` passed 315 checks (184 database, 131 API/workflow). Built CJS/ESM public-entry smoke verified renamed schemas/checker/completion, preserved `format: 'tree'` payloads and unavailable admission, plus removal of the old package entry. All 45 moved tracked source/test files have corresponding new paths; 71 changed-document local file targets resolve (heading anchors not checked). Formatting/whitespace passed. Application data and migration history were not rewritten.
 - Remaining closeout: focused browser verification of the guarded entry points/retained views, final verification documentation and local PR notes. No new browser run is claimed by this naming slice.
 
+### Slice 6 — final verification and closeout (November 13, 2026)
+
+Final type checks, 2,294 tests, builds and 315 isolated PostgreSQL checks passed. Focused Chrome verified anonymous practice and normal/demo retained instructor/student views, per-version publication pagination, mixed-work read-only behavior, mobile page bounds and empty storage. Browser resource/session responses were synthetic; real backend boundary evidence comes from the HTTP/database suite. See the [verification record](../verification/natural-deduction-tree-availability-verification.md) for evidence and limits. Local PR notes are prepared; no PR was published or next branch started. Earlier remaining-work notes above describe their individual slice boundaries.
+
 ### Availability guards
 
 - Remove natural-deduction trees from public practice setup, instructor format controls and new assignment problem selection in normal/demo modes. Update navigation/help text that currently advertises three active proof formats.
@@ -85,9 +89,9 @@ Success means the application no longer offers new natural-deduction tree work, 
 
 The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass. This is not exhaustive functional/accessibility sign-off. The agreed next sequence is:
 
-1. **`033-chore-disable-natural-deduction-trees`**: implement the guards, retained-history behavior and explicit naming above while keeping the underlying implementation for possible future inclusion.
+1. **`033-chore-disable-natural-deduction-trees` — complete**: guards, retained-history behavior, explicit naming and focused verification are delivered; the implementation is retained for possible future inclusion.
 2. **`034-feat-semantic-tableaux`** (proposed): add truth trees as a distinct method. Settle decomposition/branching, closure, finished-open-branch counterexamples, authoring, student responses, feedback and grading before their dependent slices. Reuse suitable propositional infrastructure without repurposing natural-deduction tree semantics. Split implementation into further numbered branches if necessary rather than treating this reservation as a fixed-size commitment.
 3. **`035-chore-truth-tree-practice-ui-audit`** (proposed, after tableaux delivery): fine-tune independent truth-tree practice using a dedicated checklist, representative validity/counterexample journeys, branching/closure interactions, keyboard controls and visual/mobile QA. Do not claim the current practice checklist verifies an unimplemented method.
 4. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
 
-The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This plan does not create a branch, implement guards or authorize deployment.
+The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This sequence does not create the next branch or authorize deployment.
