@@ -64,3 +64,21 @@ test('confirmed dependency numbers display in ascending order even when clicked 
   expect(screen.getByRole('cell', { name: '{2, 3, 12}' })).toBeInTheDocument();
   expect(proof).toEqual(before);
 });
+
+test('practice can omit assumption guides without changing proof data or the default display', () => {
+  const proof: DependencyProof = {
+    proofVersion: 1,
+    format: 'dependency',
+    steps: [{ id: 'assumption', kind: 'assumption', formula: 'P', dependencies: ['assumption'] }],
+  };
+  const before = structuredClone(proof);
+  const props = { proof, rules: [], selectedId: null };
+  const view = render(<DependencyProofDisplay {...props} />);
+  expect(view.container.querySelector('.dependency-assumption-guide')).not.toBeNull();
+  view.rerender(<DependencyProofDisplay {...props} showAssumptionGuides={false} />);
+  expect(view.container.querySelector('.dependency-assumption-guides')).toBeNull();
+  expect(view.container.querySelector('table')).toHaveStyle('--dependency-guide-width: 0rem');
+  expect(screen.getByRole('cell', { name: '{1}' })).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: 'Assumption' })).toBeInTheDocument();
+  expect(proof).toEqual(before);
+});

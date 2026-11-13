@@ -11,12 +11,14 @@ export function DependencyInferenceFields({
   steps,
   onChange,
   onStartAssumption,
+  staged = false,
 }: {
   step: Inference;
   index: number;
   steps: DependencyProofStep[];
   onChange: (step: Inference) => void;
   onStartAssumption?: () => void;
+  staged?: boolean;
 }) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
 
@@ -33,16 +35,22 @@ export function DependencyInferenceFields({
           <ProofChoice
             key={`citation-${slot}`}
             label={`Line ${index + 1} citation ${slot + 1}`}
-            empty={`Cite ${slot + 1}`}
-            value={step.lineReferences[slot] ?? null}
+            placeholder={`Line ${slot + 1}`}
+            value={step.lineReferences[slot] || null}
             choices={earlier}
             onChange={(id) => {
               const refs = [...step.lineReferences];
 
-              if (id) refs[slot] = id;
-              else refs.splice(slot, 1);
-
-              onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              if (staged) {
+                for (let position = refs.length; position <= slot; position++) refs.push('');
+                refs[slot] = id ?? '';
+                while (refs.at(-1) === '') refs.pop();
+                onChange({ ...step, lineReferences: refs });
+              } else {
+                if (id) refs[slot] = id;
+                else refs.splice(slot, 1);
+                onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              }
             }}
           />
         ),
@@ -89,14 +97,14 @@ export function DependencyInferenceFields({
             <div className="dependency-discharge" key={`discharge-${slot}`}>
               <ProofChoice
                 label={`Line ${index + 1} discharge ${slot + 1} assumption`}
-                empty="Discharge assumption"
+                placeholder="Discharge assumption"
                 value={pair.assumptionId}
                 choices={assumptions}
                 onChange={(assumptionId) => change({ assumptionId })}
               />
               <ProofChoice
                 label={`Line ${index + 1} discharge ${slot + 1} conclusion`}
-                empty="Concluding line"
+                placeholder="Concluding line"
                 value={pair.conclusionId}
                 choices={earlier.filter(
                   (_, position) => assumptionIndex >= 0 && position >= assumptionIndex,

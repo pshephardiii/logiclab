@@ -2,6 +2,10 @@
 
 Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-dependency-proof-ui` (started as `029-chore-ui-ux-audit`). Baseline checkout: `97a0db3`. The baseline slice inventoried presentation without changing application code. Subsequent implementation and verification are recorded below; findings remain open unless explicitly resolved.
 
+## Current audit entry point
+
+The remaining audit was split into journey-focused branches on November 12, 2026. Start with the [practice UI checklist](practice-ui-checklist.md) on `032-chore-practice-ui-audit`; its run/findings record is separate from this historical baseline. Demo teaching-flow and genuine-account product audits follow, as described in the [updated plan](../planning/ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026). Branch 032 closeout and the subsequent tree-availability/tableaux/practice-audit sequence are recorded in [practice verification](../verification/practice-ui-audit-verification.md). This does not mark the broader baseline findings as resolved.
+
 ## Agreed direction and working targets
 
 The user accepted a calm, clean academic direction: readable typography, restrained color, clear workspace navigation and meaningful action hierarchy. Keep the existing teal/slate/neutral palette as a starting point, system fonts, and textual correctness/verification signals. Avoid a wholesale component-library migration. Desktop is primary; mobile must remain usable.

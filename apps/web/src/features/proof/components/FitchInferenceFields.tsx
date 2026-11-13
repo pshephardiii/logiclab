@@ -11,9 +11,10 @@ type Props = {
   index: number;
   steps: FitchProofStep[];
   rules: FitchDerivationContent['rules'];
-  blocks: { id: string; label: string }[];
+  blocks: { id: string; label: string; citationLabel?: string }[];
   onChange: (step: InferenceStep) => void;
   compact?: boolean;
+  staged?: boolean;
 };
 
 /** Preserve existing citation slots and unresolved IDs when the selected rule changes. */
@@ -25,6 +26,7 @@ export function FitchInferenceFields({
   blocks,
   onChange,
   compact = false,
+  staged = false,
 }: Props) {
   const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
 
@@ -53,7 +55,8 @@ export function FitchInferenceFields({
           <ProofChoice
             key={`line-${slot}`}
             label={`Line ${index + 1} citation ${slot + 1}`}
-            value={step.lineReferences[slot] ?? null}
+            placeholder={compact ? `Line ${slot + 1}` : undefined}
+            value={step.lineReferences[slot] || null}
             choices={steps.slice(0, index).map((line, position) => ({
               id: line.id,
               label: `${position + 1}. ${line.formula || '(blank)'}`,
@@ -61,10 +64,16 @@ export function FitchInferenceFields({
             onChange={(id) => {
               const refs = [...step.lineReferences];
 
-              if (id) refs[slot] = id;
-              else refs.splice(slot, 1);
-
-              onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              if (staged) {
+                for (let position = refs.length; position <= slot; position++) refs.push('');
+                refs[slot] = id ?? '';
+                while (refs.at(-1) === '') refs.pop();
+                onChange({ ...step, lineReferences: refs });
+              } else {
+                if (id) refs[slot] = id;
+                else refs.splice(slot, 1);
+                onChange({ ...step, lineReferences: refs.filter(Boolean) });
+              }
             }}
           />
         ),
@@ -75,15 +84,25 @@ export function FitchInferenceFields({
           <ProofChoice
             key={`block-${slot}`}
             label={`Line ${index + 1} subproof ${slot + 1}`}
-            value={step.subproofReferences[slot] ?? null}
-            choices={blocks}
+            placeholder={compact ? `Subproof ${slot + 1}` : undefined}
+            value={step.subproofReferences[slot] || null}
+            choices={blocks.map((block) => ({
+              id: block.id,
+              label: block.citationLabel ?? block.label,
+            }))}
             onChange={(id) => {
               const refs = [...step.subproofReferences];
 
-              if (id) refs[slot] = id;
-              else refs.splice(slot, 1);
-
-              onChange({ ...step, subproofReferences: refs.filter(Boolean) });
+              if (staged) {
+                for (let position = refs.length; position <= slot; position++) refs.push('');
+                refs[slot] = id ?? '';
+                while (refs.at(-1) === '') refs.pop();
+                onChange({ ...step, subproofReferences: refs });
+              } else {
+                if (id) refs[slot] = id;
+                else refs.splice(slot, 1);
+                onChange({ ...step, subproofReferences: refs.filter(Boolean) });
+              }
             }}
           />
         ),

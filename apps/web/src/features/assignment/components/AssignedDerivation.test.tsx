@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { lineAction } from '../../../../test/proof-controls';
 import { dependencyAnswer, dependencyWork } from '../../../../test/dependency-work-fixture';
 import { useState, type ComponentProps } from 'react';
@@ -11,6 +12,8 @@ import {
 } from '@logiclab/contracts/derivation-work';
 import { derivationDefinition } from '../../../../test/derivation';
 import { AssignedDerivation } from './AssignedDerivation';
+
+installDialogStub();
 
 type Props = ComponentProps<typeof AssignedDerivation>;
 const { referenceProof: _reference, explanation: _explanation, ...content } = derivationDefinition;
@@ -103,12 +106,12 @@ test('student constructs a Fitch proof using instructor labels and checks only o
   const f = setup();
   expect(screen.getByText('No premises.')).toBeInTheDocument();
   expect(screen.getByText('Prove the conclusion.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Edit conclusion' })).not.toBeInTheDocument();
   await f.user.click(screen.getByRole('button', { name: 'Start proof' }));
   await f.user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await f.user.type(screen.getByLabelText('Formula for line 1'), 'P');
   await f.user.click(screen.getByRole('button', { name: 'Add line' }));
-  const scope = screen.getByLabelText('New line scope') as HTMLSelectElement;
-  const block = scope.value;
+  const block = screen.getByLabelText('Current proof scope').getAttribute('data-scope-id')!;
   await lineAction(f.user, 1, 'Close subproof at line 1');
   await f.user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   expect(
@@ -229,17 +232,21 @@ test('answer reveal is separate from feedback and never overwrites student work'
   expect(screen.queryByText('PRIVATE_EXPLANATION')).not.toBeInTheDocument();
 });
 
-test('clearing a proof requires confirmation, preserves work on Keep and emits an explicit empty response', async () => {
-  const f = setup({ type: 'derivation', proof: identity() });
-  await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
-  expect(screen.getByRole('group', { name: 'Confirm proof deletion' })).toHaveTextContent(
-    'Delete 2 proof line(s)',
+test('deleting all selected lines requires confirmation, preserves work on Keep and emits an empty response', async () => {
+  const original = identity();
+  const f = setup({ type: 'derivation', proof: original });
+  expect(screen.queryByRole('button', { name: 'Clear proof' })).not.toBeInTheDocument();
+  await f.user.click(screen.getByRole('button', { name: 'Select line 2 for deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  expect(screen.getByRole('dialog', { name: 'Delete selected lines?' })).toHaveTextContent(
+    'Delete lines 1–2?',
   );
   expect(f.onAnswer).not.toHaveBeenCalled();
   await f.user.click(screen.getByRole('button', { name: 'Keep proof work' }));
-  expect(screen.getByLabelText('Formula for line 2')).toHaveValue('P → P');
-  await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
-  await f.user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  expect(f.current()!.proof).toEqual(original);
+  await f.user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Select line 2 for deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
   expect(f.current()).toEqual({
     type: 'derivation',
     proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
@@ -264,7 +271,7 @@ test('busy state disables all editing and checking, and checking can be omitted 
   const f = setup({ type: 'derivation', proof: identity() }, { disabled: true });
   expect(screen.getByLabelText('Formula for line 3')).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-  await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
+  await f.user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
   expect(f.onAnswer).not.toHaveBeenCalled();
   f.rerender({ onCheck: undefined });
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
@@ -313,4 +320,42 @@ test('submitted dependency review keeps authoritative premises and uses the shar
   expect(within(diagram).queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   expect(onAnswer).not.toHaveBeenCalled();
+});
+
+test('editing an assigned premise answer never changes the instructor-supplied problem premise', async () => {
+  const source = { id: crypto.randomUUID(), formula: 'P' };
+  const proof: FitchProof = {
+    proofVersion: 1,
+    format: 'fitch',
+    blocks: [],
+    steps: [
+      {
+        kind: 'premise',
+        id: crypto.randomUUID(),
+        blockId: null,
+        premiseId: source.id,
+        formula: 'P',
+      },
+    ],
+  };
+  const assignedItem = { ...item, content: { ...content, premises: [source], conclusion: 'P' } };
+  const before = structuredClone(assignedItem);
+  const onAnswer = vi.fn();
+  render(
+    <AssignedDerivation
+      item={assignedItem}
+      answer={{ type: 'derivation', proof }}
+      readOnly={false}
+      onAnswer={onAnswer}
+    />,
+  );
+  const user = userEvent.setup();
+  await lineAction(user, 1, 'Edit line 1');
+  expect(screen.getByLabelText('Statement premise for line 1')).toHaveValue(source.id);
+  fireEvent.change(screen.getByLabelText('Formula for line 1'), { target: { value: 'Q' } });
+  expect(onAnswer.mock.lastCall![0].proof.steps[0]).toMatchObject({
+    premiseId: source.id,
+    formula: 'Q',
+  });
+  expect(assignedItem).toEqual(before);
 });

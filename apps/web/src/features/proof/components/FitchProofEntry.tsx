@@ -2,9 +2,11 @@ import { PROOF_LIMITS, type FitchProof, type FitchProofStep } from '@logiclab/co
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { ProofFormulaInput } from './ProofFormulaInput';
 import { FitchInferenceFields } from './FitchInferenceFields';
-import { useId } from 'react';
+import { fitchEntryRequirement } from '../helpers/fitch-entry-requirements';
+import { FitchPremiseFields } from './FitchPremiseFields';
+import { useId, type ReactNode } from 'react';
 
-/** Confirm an editing action, not correctness or saving. Incomplete work may be added explicitly. */
+/** New entries need their fields filled in; confirmation does not assert logical correctness. */
 export function FitchProofEntry({
   proof,
   index,
@@ -14,18 +16,30 @@ export function FitchProofEntry({
   onChange,
   onConfirm,
   onDiscard,
+  editing = false,
+  premises = [],
+  actions,
+  lineNumber,
+  fixedPremiseSource = false,
 }: {
   proof: FitchProof;
   index: number;
   rules: FitchDerivationContent['rules'];
-  blocks: { id: string; label: string }[];
+  blocks: { id: string; label: string; citationLabel?: string }[];
   pending: boolean;
+  editing?: boolean;
+  actions?: ReactNode;
+  lineNumber?: ReactNode;
+  fixedPremiseSource?: boolean;
+  premises?: FitchDerivationContent['premises'];
   onChange: (step: FitchProofStep) => void;
   onConfirm: () => void;
   onDiscard: () => void;
 }) {
   const step = proof.steps[index]!;
   const hint = useId();
+  const requirementHint = useId();
+  const requirement = editing ? null : fitchEntryRequirement(proof, index, rules);
 
   return (
     <tr
@@ -39,17 +53,21 @@ export function FitchProofEntry({
         )
           return;
         event.preventDefault();
-        onConfirm();
+        if (!requirement) onConfirm();
       }}
     >
-      <th scope="row" className="fitch-line-number" aria-label={`New line ${index + 1}`}>
-        {index + 1}
+      <th
+        scope="row"
+        className="fitch-line-number"
+        aria-label={`${editing ? 'Edit' : 'New'} line ${index + 1}`}
+      >
+        {lineNumber ?? index + 1}
       </th>
       <td className="fitch-line-formula">
         <ProofFormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
-          aria-describedby={hint}
+          aria-describedby={requirement ? `${hint} ${requirementHint}` : hint}
           placeholder={step.kind === 'assumption' ? 'Assumption formula' : 'Formula'}
           maxLength={PROOF_LIMITS.maxFormulaLength}
           autoComplete="off"
@@ -68,6 +86,7 @@ export function FitchProofEntry({
           <div className="fitch-entry-reasons">
             <FitchInferenceFields
               compact
+              staged={!editing}
               step={step}
               index={index}
               steps={proof.steps}
@@ -76,19 +95,40 @@ export function FitchProofEntry({
               onChange={onChange}
             />
           </div>
+        ) : step.kind === 'premise' && fixedPremiseSource ? (
+          <span>Premise</span>
+        ) : step.kind === 'premise' ? (
+          <FitchPremiseFields
+            step={step}
+            index={index}
+            premises={premises}
+            onChange={onChange}
+            compact
+          />
         ) : (
-          <span>Assumption · opens a subproof</span>
+          <span>{editing ? 'Assumption' : 'Assumption · opens a subproof'}</span>
         )}
       </td>
       <td className="fitch-entry-actions">
-        <button type="button" onClick={onConfirm}>
-          Add line
+        <button
+          type="button"
+          disabled={Boolean(requirement)}
+          aria-describedby={requirement ? requirementHint : undefined}
+          onClick={onConfirm}
+        >
+          {editing ? 'Done editing' : 'Add line'}
         </button>
-        {pending && (
+        {requirement && (
+          <p id={requirementHint} className="help fitch-entry-requirement">
+            {requirement}
+          </p>
+        )}
+        {pending && !editing && (
           <button type="button" className="text-button" onClick={onDiscard}>
             Discard entry
           </button>
         )}
+        {actions}
       </td>
     </tr>
   );

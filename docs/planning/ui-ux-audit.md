@@ -1,8 +1,20 @@
 # UI and UX audit
 
-Status: `031-chore-tree-proof-ui` is closing, updated November 11, 2026. Natural-deduction trees now share the focused proof workflow across practice, instructor references, assigned work and read-only review, with tree-specific node/branch controls. See [tree UI verification](../verification/tree-proof-ui-verification.md) for evidence and limits. Next: `032-chore-ui-ux-audit` for the user's broader visual QA and remaining product/assignment backlog, followed by portfolio sandbox preparation. This is **not** a completed product/accessibility audit or deployment authorization.
+Status: proof UI branches 029–031 are delivered. Branch `032-chore-practice-ui-audit` is closing on November 13, 2026: the user accepted truth-table, Fitch and dependency practice UI for this pass; see [verification](../verification/practice-ui-audit-verification.md) and the [practice checklist](../qa/practice-ui-checklist.md). Next: 033 disables/clarifies retained natural-deduction trees, 034 adds semantic tableaux, and 035 audits truth-tree practice UI. Then resume demo teaching-flow and genuine-account audits. Earlier branch names below are historical sequencing. This is **not** a completed product/accessibility audit or deployment authorization.
 
 The branch follows [branch conventions](../conventions/branch-naming-conventions.md). Keep historical branch numbers intact when updating the remaining release sequence.
+
+## Remaining audit branches — agreed November 12, 2026
+
+1. **`032-chore-practice-ui-audit`**: anonymous truth tables and self-created Fitch/dependency proofs, using the [checklist](../qa/practice-ui-checklist.md). Natural-deduction tree UI cases are deferred by the November 12 audience/method decision. Conceptual questions remain assigned content.
+2. **`033-chore-disable-natural-deduction-trees`**: guard the retained method across normal/demo UI and server admission, preserve authorized historical reads and rename ambiguous format-specific files, directories and symbols. See the [availability and naming plan](proof-method-availability.md). Semantic tableaux require separate planning/implementation and are not a rename of this checker.
+3. **`034-feat-semantic-tableaux`** (proposed): settle and implement truth-tree semantics and workflows as a distinct method; split delivery if necessary. See the [proof-method plan](proof-method-availability.md#following-work).
+4. **`035-chore-truth-tree-practice-ui-audit`** (proposed): a dedicated practice checklist and visual/interaction refinement after tableaux are available.
+5. **Demo teaching-flow audit — number to be reassigned**: instructor authoring through assignment settings/publication, student attempts/submission, instructor grading/feedback and student result/reference access. Include truth tables, conceptual questions and enabled proof methods. Address the assignment backlog in focused slices; split further if necessary.
+6. **Genuine-account product audit — number to be reassigned**: signup/confirmation, login/recovery, normal classes/invitations/enrollment, assignment access, billing simulation and normal/demo boundaries. Distinguish simulator billing from real charges.
+
+The earlier proposed `033-chore-demo-teaching-flow-audit` and `034-chore-account-product-ui-audit` numbers are superseded. The November 13 sequence reserves proposed 034/035 for tableaux and its practice UI audit, then resumes the remaining audits. Recheck numbers if tableaux delivery is split.
+Then prepare the inexpensive portfolio sandbox and run a short hosted smoke check. Confirm unused numbering when creating subsequent branches. Shared fixes may benefit other journeys, but do not expand a branch into another whole-product review. Each branch records its own checks, findings and explicit deferrals. Do not rewrite the historical 029–031 evidence or interpret this plan as permission to deploy.
 
 ## Goal and boundaries
 
@@ -81,7 +93,7 @@ These names use the next unused local/planned work numbers; confirm availability
 
 1. **`030-chore-fitch-proof-ui` — delivered**: carry the dependency editor's visual/interaction approach into Fitch practice, instructor reference authoring, student attempts and read-only review. Use a growing proof, deliberate entry confirmation, clear conclusion/help, line actions and modal deletion/settings. Adapt the presentation to real Fitch blocks, scope and discharge; retain checker semantics, stable IDs, explicit save/check/submit and release rules.
 2. **`031-chore-tree-proof-ui` — delivered**: apply the same clarity to natural-deduction trees across those contexts. Make branch/node construction and explicit assumption discharge understandable; use tree-appropriate interactions rather than copying a numbered-line dependency editor. Build on the shared conventions and completed Fitch review.
-3. **`032-chore-ui-ux-audit`**: resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
+3. **`032-chore-ui-ux-audit` — superseded by the journey split above**: the original plan was to resume the whole-product audit, including the assignment backlog below, shared form/navigation/state consistency, instructor review, account/billing/demo journeys and focused visual/keyboard/mobile/accessibility checks. Revisit unresolved baseline findings and any inconsistencies exposed by the proof branches. Keep the inexpensive portfolio sandbox after this work; report focused evidence and gaps without treating it as exhaustive contingency QA.
 
 Existing shared improvements for all formats remain in place. Further Fitch/tree editor redesign is outside the closing 029 branch.
 

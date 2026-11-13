@@ -3,6 +3,7 @@ import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
+import { PracticeConclusionEditor } from './PracticeConclusionEditor';
 import { PracticeProofEditor } from './PracticeProofEditor';
 import { ProofPracticeSetup } from './ProofPracticeSetup';
 import {
@@ -22,6 +23,7 @@ export function ProofPractice() {
   const [proof, setProof] = useState<PracticeProof | null>(null);
   const [report, setReport] = useState<ProofCheckReport | null>(null);
   const [entryPending, setEntryPending] = useState(false);
+  const [conclusionEditing, setConclusionEditing] = useState(false);
   useUnsavedWork(statement !== null);
 
   function changeProof(next: PracticeProof | null) {
@@ -37,6 +39,21 @@ export function ProofPractice() {
       setReport(null);
     });
   }
+
+  const checkAction = (
+    <button
+      type="button"
+      disabled={!proof || entryPending || conclusionEditing}
+      onClick={() =>
+        proof &&
+        !entryPending &&
+        !conclusionEditing &&
+        setReport(checkPracticeProof(statement!, proof))
+      }
+    >
+      Check proof
+    </button>
+  );
 
   return (
     <div className="proof-practice">
@@ -85,20 +102,38 @@ export function ProofPractice() {
             statement={statement}
             proof={proof}
             onChange={changeProof}
+            onPremiseChange={(premiseId, formula) => {
+              setStatement((current) =>
+                current && current.format !== 'tree'
+                  ? {
+                      ...current,
+                      premises: current.premises.map((premise) =>
+                        premise.id === premiseId ? { ...premise, formula } : premise,
+                      ),
+                    }
+                  : current,
+              );
+              setReport(null);
+            }}
             onPendingChange={setEntryPending}
+            actions={statement.format !== 'tree' ? checkAction : undefined}
+            conclusionActions={
+              statement.format !== 'tree' ? (
+                <PracticeConclusionEditor
+                  conclusion={statement.conclusion}
+                  onEditingChange={setConclusionEditing}
+                  onApply={(conclusion) => {
+                    setStatement({ ...statement, conclusion });
+                    setReport(null);
+                  }}
+                />
+              ) : undefined
+            }
           />
-          <div className="practice-check-actions">
-            <button
-              type="button"
-              disabled={!proof || entryPending}
-              onClick={() =>
-                proof && !entryPending && setReport(checkPracticeProof(statement, proof))
-              }
-            >
-              Check proof
-            </button>
-          </div>
-          {report && !entryPending && (
+          {statement.format === 'tree' && (
+            <div className="practice-check-actions">{checkAction}</div>
+          )}
+          {report && !entryPending && !conclusionEditing && (
             <ProofFeedback
               report={report}
               stepLabel={statement.format === 'tree' ? 'Node' : 'Line'}

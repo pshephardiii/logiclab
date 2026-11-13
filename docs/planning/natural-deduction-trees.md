@@ -1,5 +1,7 @@
 # Natural-deduction trees
 
+Current direction, November 12, 2026: natural-deduction proof trees are outside the intended introductory offering. Planned branch `033-chore-disable-natural-deduction-trees` will guard new application use while retaining implementation/history, and explicitly rename ambiguous format-specific files/directories/symbols. Semantic tableaux (truth trees) are wanted as a separate method with separate planning/checking. See the [availability and naming decision](proof-method-availability.md). The implementation sequence below records historical work; it does not mean natural-deduction trees are tableaux or that the guards already exist.
+
 Branch: `026-feat-natural-deduction-trees`, following the completed Fitch and dependency workflows. See [the agreed derivation sequence](logical-derivations.md#025-and-026-additional-formats). Implementation and final verification are complete as of November 6, 2026; this document retains the historical slice boundaries. See [consolidated verification](../verification/natural-deduction-trees-verification.md) for current behavior and limits.
 
 ## Confirmed representation — November 5, 2026

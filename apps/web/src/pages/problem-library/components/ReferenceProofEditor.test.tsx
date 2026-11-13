@@ -34,10 +34,7 @@ async function conditionalProof() {
   await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
-  const scope = screen.getByRole('combobox', {
-    name: 'New line scope',
-  }) as HTMLSelectElement;
-  const block = scope.value;
+  const block = screen.getByLabelText('Current proof scope').getAttribute('data-scope-id')!;
   await lineAction(user, 1, 'Close subproof at line 1');
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
@@ -76,14 +73,17 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
       { id: implication, formula: 'P -> Q' },
     ],
     conclusion: 'Q',
-    rules: [{ id: 'implication_elimination', label: 'MP' }],
+    rules: [
+      { id: 'implication_elimination', label: 'MP' },
+      { id: 'excluded_middle', label: 'Excluded middle' },
+    ],
   });
   await user.click(screen.getByRole('button', { name: 'Start reference proof' }));
   await user.type(screen.getByLabelText('Formula for line 3'), 'Q');
   await user.selectOptions(screen.getByLabelText('Rule for line 3'), 'implication_elimination');
   const first = screen.getByLabelText('Line 3 citation 1') as HTMLSelectElement;
   const ids = Array.from(first.options)
-    .slice(1)
+    .filter((option) => option.value && !option.disabled)
     .map((option) => option.value);
   await user.selectOptions(first, ids[0]!);
   await user.selectOptions(screen.getByLabelText('Line 3 citation 2'), ids[1]!);
@@ -91,6 +91,8 @@ test('line insertion/deletion preserve selected citation IDs and expose missing 
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('accepted');
   await lineAction(user, 1, 'Insert before line 1');
+  await user.type(screen.getByLabelText('Formula for line 1'), 'P v !P');
+  await user.selectOptions(screen.getByLabelText('Rule for line 1'), 'excluded_middle');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   await lineAction(user, 4, 'Edit line 4');
   expect(screen.getByLabelText('Line 4 citation 1')).toHaveValue(ids[0]);
@@ -177,6 +179,7 @@ test('unconfirmed Fitch entries gate checking, saving and preview without saving
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Open subproof' }));
   await user.type(screen.getByLabelText('Formula for line 1'), 'P &');
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   await user.click(screen.getByRole('button', { name: 'Save draft' }));

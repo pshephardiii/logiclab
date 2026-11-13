@@ -21,7 +21,7 @@ if (typeof HTMLElement.prototype.togglePopover !== 'function') {
       configurable: true,
       value: function (this: HTMLElement) {
         for (const other of document.querySelectorAll<HTMLElement>('[data-test-popover-open]')) {
-          if (other !== this) other.hidePopover();
+          if (other !== this && !other.contains(this)) other.hidePopover();
         }
         this.setAttribute('data-test-popover-open', '');
         this.style.display = 'block';
@@ -31,6 +31,8 @@ if (typeof HTMLElement.prototype.togglePopover !== 'function') {
     hidePopover: {
       configurable: true,
       value: function (this: HTMLElement) {
+        for (const child of this.querySelectorAll<HTMLElement>('[data-test-popover-open]'))
+          child.hidePopover();
         this.removeAttribute('data-test-popover-open');
         this.style.display = 'none';
         toggleEvent(this, false);

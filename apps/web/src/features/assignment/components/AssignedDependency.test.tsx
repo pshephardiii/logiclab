@@ -1,3 +1,4 @@
+import { installDialogStub } from '../../../../test/unsaved-work';
 import { lineAction, openDependencies } from '../../../../test/proof-controls';
 import { useState, type ComponentProps } from 'react';
 import { render, screen, within } from '@testing-library/react';
@@ -12,6 +13,7 @@ import {
 import { proofAnswer } from '../../../../test/proof-work-fixture';
 import { AssignedDerivation } from './AssignedDerivation';
 type Props = ComponentProps<typeof AssignedDerivation>;
+installDialogStub();
 const item = dependencyWork.items[0]!;
 if (!('content' in item) || item.content.type !== 'derivation') throw new Error('Expected proof');
 const proofItem: Props['item'] = { ...item, content: item.content };
@@ -41,17 +43,22 @@ function setup(options: Partial<Props> = {}) {
 }
 
 test('dependency student editing keeps the pinned format, never checks automatically and preserves explicit empty work', async () => {
+  const before = structuredClone(proofItem);
   const f = setup();
+  expect(screen.queryByRole('button', { name: 'Edit conclusion' })).not.toBeInTheDocument();
   expect(screen.getByText('Dependency')).toBeInTheDocument();
   expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Open subproof' })).not.toBeInTheDocument();
   await lineAction(f.user, 1, 'Edit line 1');
   await f.user.type(screen.getByLabelText('Formula for line 1'), ' &');
   expect(f.onCheck).not.toHaveBeenCalled();
+  expect(proofItem).toEqual(before);
+  expect(screen.getByLabelText('Statement premise for line 1')).toBeInTheDocument();
   await f.user.click(screen.getByRole('button', { name: 'Check proof' }));
   expect(f.onCheck).toHaveBeenCalledOnce();
-  await f.user.click(screen.getByRole('button', { name: 'Clear proof' }));
-  await f.user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Select line 1 for deletion' }));
+  await f.user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
   expect(f.current()).toEqual({
     type: 'derivation',
     proof: { proofVersion: 1, format: 'dependency', steps: [] },

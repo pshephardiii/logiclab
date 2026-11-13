@@ -1,5 +1,7 @@
 # Logical derivations
 
+Current direction, November 12, 2026: natural-deduction proof trees are outside the intended introductory offering. Planned branch `033-chore-disable-natural-deduction-trees` will guard new application use while retaining implementation/history, and explicitly rename ambiguous format-specific files/directories/symbols. Semantic tableaux (truth trees) are wanted as a separate method with separate planning/checking. See the [availability and naming decision](proof-method-availability.md). The implementation sequence below records historical work; it does not mean natural-deduction trees are tableaux or that the guards already exist.
+
 Status: scoring, checked authoring, student work and grading/review support Fitch, dependency and natural-deduction tree proofs. Branch 028 adds page-local self-created practice, confirmed full format resets and template-7 examples across all three formats. See [the implementation record](derivation-practice-and-demo.md) and [final verification](../verification/derivation-practice-and-demo-verification.md). The next agreed work is the UI/visual audit and proof-editor interaction redesign before sandbox deployment; this document does not start another branch.
 
 ## Product direction and scope

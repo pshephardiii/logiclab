@@ -12,6 +12,9 @@ export function fitchEditorChoices(proof: FitchProof) {
   const blockChoices = proof.blocks.map((block, index) => ({
     id: block.id,
     label: `Subproof ${index + 1} at line ${proof.steps.findIndex((step) => step.id === block.assumptionId) + 1 || '?'}`,
+    citationLabel: block.endId
+      ? `Lines ${proof.steps.findIndex((step) => step.id === block.assumptionId) + 1 || '?'}–${proof.steps.findIndex((step) => step.id === block.endId) + 1 || '?'}`
+      : `From line ${proof.steps.findIndex((step) => step.id === block.assumptionId) + 1 || '?'} (not closed)`,
   }));
 
   return { lines, lineScopes, blockChoices };

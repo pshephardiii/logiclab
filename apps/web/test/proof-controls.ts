@@ -6,7 +6,17 @@ type User = ReturnType<typeof userEvent.setup>;
 export async function lineAction(user: User, line: number, action: string) {
   const trigger = screen.getByRole('button', { name: `Actions for line ${line}` });
   if (trigger.getAttribute('aria-expanded') !== 'true') await user.click(trigger);
-  await user.click(screen.getByRole('button', { name: action }));
+  const group = screen.getByRole('group', { name: `Actions for line ${line}` });
+  const submenuName = action.startsWith('Move line ')
+    ? 'Move line'
+    : /^(Subproof settings|Close subproof at|Reopen subproof at|Continue subproof at)/.test(action)
+      ? 'Subproof'
+      : action.startsWith('Delete ')
+        ? 'Delete'
+        : null;
+  const submenu = submenuName ? within(group).queryByRole('button', { name: submenuName }) : null;
+  if (submenu && submenu.getAttribute('aria-expanded') !== 'true') await user.click(submenu);
+  await user.click(within(group).getByRole('button', { name: action }));
 }
 
 export async function openDependencies(user: User, line: number) {

@@ -1,3 +1,4 @@
+import { dependencyEntryRequirement } from './entry-requirements';
 import { ProofFormulaInput } from '../components/ProofFormulaInput';
 import { useId, useRef } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
@@ -18,6 +19,7 @@ export function DependencyProofLine({
   onConfirm,
   onDiscard,
   pending,
+  fixedPremiseSource = false,
 }: {
   proof: DependencyProof;
   index: number;
@@ -28,11 +30,16 @@ export function DependencyProofLine({
   onChange: (step: DependencyProofStep) => void;
   allowKindChange: boolean;
   pending: boolean;
+  fixedPremiseSource?: boolean;
   onConfirm: () => void;
   onDiscard: () => void;
 }) {
   const step = proof.steps[index]!;
   const formulaHint = useId();
+  const requirementHint = useId();
+  const requirement = allowKindChange
+    ? dependencyEntryRequirement(proof, index, statement.rules)
+    : null;
   const cached = useRef<{ inference?: Inference; assumption?: Assumption }>({});
 
   function chooseRule(value: string) {
@@ -72,7 +79,7 @@ export function DependencyProofLine({
         )
           return;
         event.preventDefault();
-        onConfirm();
+        if (!requirement) onConfirm();
       }}
     >
       <td className="proof-line-dependencies">
@@ -89,7 +96,7 @@ export function DependencyProofLine({
         <ProofFormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
-          aria-describedby={formulaHint}
+          aria-describedby={requirement ? `${formulaHint} ${requirementHint}` : formulaHint}
           placeholder={step.kind === 'assumption' ? 'Assumption formula' : 'Formula'}
           maxLength={PROOF_LIMITS.maxFormulaLength}
           autoComplete="off"
@@ -105,7 +112,9 @@ export function DependencyProofLine({
       </td>
       <td className="proof-line-justification">
         <div className="dependency-entry-reasons">
-          {step.kind === 'premise' ? (
+          {step.kind === 'premise' && fixedPremiseSource ? (
+            <span>Premise</span>
+          ) : step.kind === 'premise' ? (
             <ProofChoice
               label={`Statement premise for line ${index + 1}`}
               value={step.premiseId}
@@ -145,15 +154,26 @@ export function DependencyProofLine({
               index={index}
               steps={proof.steps}
               onChange={onChange}
+              staged={allowKindChange}
               onStartAssumption={allowKindChange ? () => chooseRule('__assumption__') : undefined}
             />
           )}
         </div>
       </td>
       <td className="proof-line-action dependency-entry-actions">
-        <button type="button" onClick={onConfirm}>
+        <button
+          type="button"
+          disabled={Boolean(requirement)}
+          aria-describedby={requirement ? requirementHint : undefined}
+          onClick={onConfirm}
+        >
           {allowKindChange ? 'Add line' : 'Done editing'}
         </button>
+        {requirement && (
+          <p className="help dependency-entry-requirement" id={requirementHint}>
+            {requirement}
+          </p>
+        )}
         {allowKindChange && pending && (
           <button type="button" className="text-button" onClick={onDiscard}>
             Discard entry

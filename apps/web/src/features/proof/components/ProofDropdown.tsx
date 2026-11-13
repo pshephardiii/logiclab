@@ -11,7 +11,7 @@ export function ProofDropdown({
   label: string;
   trigger: ReactNode;
   disabled?: boolean;
-  children: (close: () => void) => ReactNode;
+  children: (close: () => void, open: boolean) => ReactNode;
 }) {
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
@@ -75,6 +75,7 @@ export function ProofDropdown({
         aria-hidden={!open}
         style={position}
         onToggle={(event) => {
+          if (event.target !== event.currentTarget) return;
           const next = event.newState === 'open';
           setOpen(next);
           if (next) {
@@ -85,7 +86,7 @@ export function ProofDropdown({
           }
         }}
       >
-        {children(() => panel.current?.hidePopover())}
+        {children(() => panel.current?.hidePopover(), open)}
       </div>
     </>
   );

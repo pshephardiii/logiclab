@@ -69,9 +69,15 @@ test('authors and checks a dependency conditional proof, saves explicitly and re
   await user.type(screen.getByLabelText('Formula for line 2'), 'P -> P');
   await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'implication_introduction');
   const assumption = screen.getByLabelText('Line 2 discharge 1 assumption') as HTMLSelectElement;
-  await user.selectOptions(assumption, assumption.options[1]!.value);
+  await user.selectOptions(
+    assumption,
+    Array.from(assumption.options).find((option) => option.value && !option.disabled)!.value,
+  );
   const conclusion = screen.getByLabelText('Line 2 discharge 1 conclusion') as HTMLSelectElement;
-  await user.selectOptions(conclusion, conclusion.options[1]!.value);
+  await user.selectOptions(
+    conclusion,
+    Array.from(conclusion.options).find((option) => option.value && !option.disabled)!.value,
+  );
   await user.click(screen.getByRole('button', { name: 'Add line' }));
   expect(onSave).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
@@ -138,10 +144,10 @@ test('moves and confirmed deletions preserve unresolved references and annotatio
   await lineAction(user, 1, 'Move line 1 down');
   await lineAction(user, 1, 'Edit line 1');
   await lineAction(user, 1, 'Delete line 1');
-  await user.click(screen.getByRole('button', { name: 'Keep proof' }));
+  await user.click(screen.getByRole('button', { name: 'Keep proof work' }));
   expect(screen.getByRole('button', { name: 'Actions for line 2' })).toBeInTheDocument();
   await lineAction(user, 1, 'Delete line 1');
-  await user.click(screen.getByRole('button', { name: 'Confirm deletion' }));
+  await user.click(screen.getByRole('button', { name: 'Delete selected lines' }));
   await lineAction(user, 1, 'Edit line 1');
   expect(screen.getByLabelText('Line 1 discharge 1 assumption')).toHaveTextContent(
     'Missing or unavailable',
