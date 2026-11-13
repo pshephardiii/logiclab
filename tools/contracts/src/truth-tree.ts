@@ -9,6 +9,10 @@ export { TRUTH_TREE_LIMITS, TRUTH_TREE_RULE_IDS, truthTreeRuleIdSchema } from '.
 
 export type { TruthTreeRuleId } from './truth-tree-fields';
 
+export { truthTreeDiagnosticSchema } from './truth-tree-diagnostics';
+
+export type { TruthTreeDiagnostic } from './truth-tree-diagnostics';
+
 /** Source identity is distinct from formula text, including repeated premises or occurrences. */
 export const truthTreeOccurrenceSchema = z.strictObject({
   id,

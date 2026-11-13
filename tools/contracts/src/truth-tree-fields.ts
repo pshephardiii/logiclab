@@ -1,12 +1,15 @@
 import { z } from 'zod';
 
-/** Transport budgets; accepting this shape does not establish a well-formed or correct tree. */
+/** Payload/checking budgets; accepting transport does not establish a well-formed or correct tree. */
 export const TRUTH_TREE_LIMITS = Object.freeze({
   maxOccurrences: 200,
   maxBranches: 127,
   maxExpansions: 200,
   maxPremises: 50,
   maxFormulaLength: 256,
+  maxBranchDepth: 32,
+  maxDiagnostics: 200,
+  maxCheckWork: 100_000,
 });
 
 export const truthTreeIdSchema = z.uuid().transform((value) => value.toLowerCase());

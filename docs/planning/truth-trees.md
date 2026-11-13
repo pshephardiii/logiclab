@@ -65,10 +65,29 @@ The engine catalog now uses the shared known-rule identity type. Its formula-lev
 
 Validation: workspace type checks and required package builds passed, along with all 634 engine tests and 64 focused API contract tests (35 new truth-tree cases plus existing proof contracts). CommonJS/ESM contract entry smoke, catalog parity and changed-file formatting/whitespace passed. No database, browser or full API regression run was repeated for this transport-only slice.
 
+## Slice 3 — structural checking
+
+`analyzeTruthTreeStructure` is exposed through `@logiclab/logic-engine/truth-tree`. It accepts raw input, bounds known collections before transport parsing, normalizes references through the contracts, then resolves identities, parent/child relationships, ordered ownership and reference paths in stages. It does not parse formulas or issue argument-validity verdicts.
+
+The stage checks:
+
+- Globally unique branch/occurrence/expansion identities, one initial branch, reciprocal split-child parents, connected acyclic ancestry and exclusive occurrence membership. Initial premise/conclusion occurrences must precede generated formulas in the root segment.
+- Each result occurrence's originating expansion, correct owning segment, distinct results and exact split-child coverage. A nonbranching expansion inserts adjacent results in its current segment; a splitting expansion starts each child segment with its results. Component order and left/right alternative order remain free.
+- Earlier accessible sources, excluding self, forward, descendant and sibling citations. An ancestor may be expanded separately on different descendant branches using distinct events. Event table order does not determine chronology.
+- Distinct closure witnesses on the closing branch's ancestor path. Whether their formulas are complementary or falsity remains a subsequent logical check.
+
+Results distinguish `resolved`, `incomplete`, `invalid` and `unassessable`. Missing selections and partial splits/closure claims produce incomplete diagnostics; malformed references/graphs produce invalid diagnostics. Unsupported transport/versions and exceeded resource limits remain unassessable. Only resolved results expose normalized data, reference maps, ordered branch traversal and inherited paths. Shared structural diagnostics are bounded contracts with optional branch/occurrence/expansion identities; they contain neither points nor a truth-tree validity verdict.
+
+Traversal is iterative, with a 32-level branch-depth bound, 200-diagnostic bound and deterministic 100,000-work-unit budget. Resource exhaustion returns an explicit failure without partial resolved maps or silently truncated evidence. The same internal budget can be carried into the subsequent logical stages. These work units are implementation bounds, not elapsed-time guarantees or an authorization boundary.
+
+No authoritative argument comparison, formula/rule matching, complete-open-branch check, counterexample, grading, API workflow or UI is enabled by this slice. A structurally resolved tree can still contain a syntax error, unknown rule or false closure claim; tests explicitly preserve this distinction.
+
+Validation: workspace type checks and required package builds, all 697 engine tests (63 new structural cases), 64 focused API contract tests, built CommonJS/ESM entry smoke and changed-file formatting/whitespace passed. Tests cover inherited paths, ordering freedom, duplicate/wrong-kind identities, disconnected cycles, ownership, forward/self/sibling references, partial work and raw/depth/work/diagnostic limits. No database or browser run was needed; no live tree workflow is exposed yet.
+
 ## Following slices and decisions
 
-1. Structure/transport foundation is implemented above. Next add structural validation and diagnostics/report contracts, separately from natural-deduction proofs and without assuming a shape-valid draft is logically correct.
-2. Validate initial premises plus negated conclusion, path ancestry, exact decomposition alternatives and occurrence-level expansion coverage. Reject cross-branch citations and malformed structures. Establish resource bounds before accepting untrusted trees.
+1. Structure/transport and structural validation are implemented above. Next compose formula/decomposition validation and its evidence report separately from natural-deduction proofs.
+2. Validate the authoritative initial premises plus negated conclusion, exact decomposition alternatives and occurrence-level expansion coverage. Reference/path safety is already resolved by the structural stage; its `resolved` result is not logical acceptance.
 3. Validate branch closure and completeness; extract and independently verify counterexamples against the authoritative original argument. Keep incomplete, erroneous and resource-limited work distinct from a verified validity/invalidity result.
 4. Settle instructor reference requirements, allowed exercise goals and grading/review/completion semantics before integrating versioned authoring, assignments and student work. Reuse authorization, explicit saves, review and independent release where semantics agree; do not assume a natural-deduction report already fits.
 5. Add practice and instructional UI/demo workflows, splitting into additional numbered branches if needed. Follow delivery with the dedicated truth-tree practice UI audit, then resume demo teaching-flow and genuine-account product audits. Confirm numbering when splitting; no additional branch or deployment is started by this plan.

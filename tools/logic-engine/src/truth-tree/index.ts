@@ -9,3 +9,7 @@ export { decomposeTruthTreeFormula } from './decompose-formula';
 export { areTruthTreeComplements } from './contradiction';
 
 export type { TruthTreeFormula, TruthTreeFormulaExpansion, TruthTreeDecomposition } from './types';
+
+export { analyzeTruthTreeStructure } from './structure';
+
+export type { TruthTreeStructureResult } from './structure';
