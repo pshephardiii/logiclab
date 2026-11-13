@@ -19,11 +19,23 @@ beforeEach(() => {
   vi.mocked(listProblems).mockResolvedValue({ problems: [], nextOffset: null });
 });
 
-test('tree publications remain selectable across pagination with other supported formats', async () => {
-  const { treeDerivationDefinition, derivationDraft } = await import('../../../../test/derivation');
+test('unavailable publications are filtered without losing later supported pages', async () => {
+  const { naturalDeductionTreeDerivationDefinition, derivationDraft } =
+    await import('../../../../test/derivation');
+  vi.mocked(listProblems).mockResolvedValue({
+    problems: [
+      {
+        ...derivationDraft,
+        id: version.problemId,
+        definition: naturalDeductionTreeDerivationDefinition,
+        publication: null,
+      },
+    ],
+    nextOffset: null,
+  });
   vi.mocked(listVersions)
     .mockResolvedValueOnce({
-      versions: [{ ...version, definition: treeDerivationDefinition }],
+      versions: [{ ...version, definition: naturalDeductionTreeDerivationDefinition }],
       nextOffset: 20,
     })
     .mockResolvedValueOnce({
@@ -33,13 +45,12 @@ test('tree publications remain selectable across pagination with other supported
   const hook = renderHook(() => usePublishedProblemChoices(true));
   act(() => hook.result.current.selectProblem(version.problemId));
   await waitFor(() => expect(hook.result.current.versionNext).toBe(20));
-  expect(hook.result.current.versions).toHaveLength(1);
-  expect(hook.result.current.versions[0]!.definition).toEqual(treeDerivationDefinition);
+  expect(hook.result.current.versions).toHaveLength(0);
+  await waitFor(() => expect(hook.result.current.problems).toHaveLength(1));
   await act(async () => {
     await hook.result.current.loadVersions(20);
   });
   expect(hook.result.current.versions.map((v) => v.definition.type)).toEqual([
-    'derivation',
     'derivation',
     'truth_table',
   ]);

@@ -145,7 +145,9 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
             answers: Object.fromEntries(
               Object.keys(source.proofCompletionFinal.answers).map((id) => [
                 id,
-                structuredClone(format === 'tree' ? source.treeAnswer : dependencyAnswer),
+                structuredClone(
+                  format === 'tree' ? source.naturalDeductionTreeAnswer : dependencyAnswer,
+                ),
               ]),
             ),
           };

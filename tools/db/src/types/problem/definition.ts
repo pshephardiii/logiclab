@@ -1,7 +1,7 @@
 import type { ProblemType } from './enums.ts';
 import type { FitchDerivationDefinition } from './derivation.ts';
 import type { DependencyDerivationDefinition } from './dependency-derivation.ts';
-import type { TreeDerivationDefinition } from './tree-derivation.ts';
+import type { NaturalDeductionTreeDerivationDefinition } from './natural-deduction-tree-derivation.ts';
 
 export type TruthTableDefinition = {
   type: `${ProblemType.TruthTable}`;
@@ -38,4 +38,4 @@ export type ProblemDefinition =
   | ConceptualProblemDefinition
   | FitchDerivationDefinition
   | DependencyDerivationDefinition
-  | TreeDerivationDefinition;
+  | NaturalDeductionTreeDerivationDefinition;

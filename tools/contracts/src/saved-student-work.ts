@@ -21,17 +21,20 @@ import {
   saveDependencyAnswersSchema,
   checkDependencyAnswersSchema,
 } from './dependency-derivation-work';
-import { treeDerivationContentSchema, treeDerivationSolutionSchema } from './tree-derivation';
 import {
-  treeDerivationAnswerSchema,
-  saveTreeAnswersSchema,
-  checkTreeAnswersSchema,
-} from './tree-derivation-work';
+  naturalDeductionTreeDerivationContentSchema,
+  naturalDeductionTreeDerivationSolutionSchema,
+} from './natural-deduction-tree-derivation';
+import {
+  naturalDeductionTreeDerivationAnswerSchema,
+  saveNaturalDeductionTreeAnswersSchema,
+  checkNaturalDeductionTreeAnswersSchema,
+} from './natural-deduction-tree-derivation-work';
 
 export const savedDerivationAnswerSchema = z.union([
   fitchDerivationAnswerSchema,
   dependencyDerivationAnswerSchema,
-  treeDerivationAnswerSchema,
+  naturalDeductionTreeDerivationAnswerSchema,
 ]);
 
 export type SavedDerivationAnswer = z.infer<typeof savedDerivationAnswerSchema>;
@@ -39,7 +42,7 @@ export type SavedDerivationAnswer = z.infer<typeof savedDerivationAnswerSchema>;
 export const savedDerivationContentSchema = z.discriminatedUnion('format', [
   fitchDerivationContentSchema,
   dependencyDerivationContentSchema,
-  treeDerivationContentSchema,
+  naturalDeductionTreeDerivationContentSchema,
 ]);
 
 export type SavedDerivationContent = z.infer<typeof savedDerivationContentSchema>;
@@ -47,7 +50,7 @@ export type SavedDerivationContent = z.infer<typeof savedDerivationContentSchema
 export const savedDerivationSolutionSchema = z.discriminatedUnion('format', [
   fitchDerivationSolutionSchema,
   dependencyDerivationSolutionSchema,
-  treeDerivationSolutionSchema,
+  naturalDeductionTreeDerivationSolutionSchema,
 ]);
 
 export type SavedDerivationSolution = z.infer<typeof savedDerivationSolutionSchema>;
@@ -184,7 +187,7 @@ export const savedStudentAnswersSchema = z.union([
   saveStudentAnswersSchema,
   saveFitchAnswersSchema,
   saveDependencyAnswersSchema,
-  saveTreeAnswersSchema,
+  saveNaturalDeductionTreeAnswersSchema,
 ]);
 
 export type SavedStudentAnswers = z.infer<typeof savedStudentAnswersSchema>;
@@ -193,7 +196,7 @@ export const savedStudentCheckSchema = z.union([
   checkStudentAnswersSchema,
   checkFitchAnswersSchema,
   checkDependencyAnswersSchema,
-  checkTreeAnswersSchema,
+  checkNaturalDeductionTreeAnswersSchema,
 ]);
 
 export type SavedStudentCheck = z.infer<typeof savedStudentCheckSchema>;

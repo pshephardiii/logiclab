@@ -1,8 +1,8 @@
 import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
 import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
-import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
+import type { NaturalDeductionTreeDerivationDefinition } from '@logiclab/contracts/natural-deduction-tree-derivation';
 
-export const treeDerivationDefinition: TreeDerivationDefinition = {
+export const naturalDeductionTreeDerivationDefinition: NaturalDeductionTreeDerivationDefinition = {
   type: 'derivation',
   definitionVersion: 1,
   format: 'tree',

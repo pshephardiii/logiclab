@@ -7,7 +7,7 @@ import {
   parseProofFormula,
   checkFitchProof,
   checkDependencyProof,
-  checkTreeProof,
+  checkNaturalDeductionTreeProof,
 } from '@logiclab/logic-engine/proof';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 
@@ -80,7 +80,7 @@ export function checkPracticeProof(
 
   const check =
     statement.format === 'tree'
-      ? checkTreeProof
+      ? checkNaturalDeductionTreeProof
       : statement.format === 'dependency'
         ? checkDependencyProof
         : checkFitchProof;

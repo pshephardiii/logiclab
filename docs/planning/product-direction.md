@@ -264,3 +264,9 @@ Natural-deduction trees now use selected-node editing, confirmed node/connection
 ## Introductory proof methods and semantic tableaux — November 12, 2026
 
 The agreed active methods are Fitch and dependency-style proofs. The existing natural-deduction tree implementation does not match the intended truth-tree/tableau teaching workflow. Next branch `033-chore-disable-natural-deduction-trees` will guard new application use, retain authorized historical data and implementation, and disambiguate format-specific files/directories/identifiers and user-facing language. Semantic tableaux are wanted and require separate planning/implementation: premises plus negated conclusion, decomposition, branching, closure and completed open-branch counterexamples. See the [scope and naming plan](proof-method-availability.md). Practice audit 032 now excludes natural-deduction tree cases; subsequent teaching/account audit numbers will be reassigned after this intervening work. No guards or tableaux implementation are delivered by this planning update.
+
+## Natural-deduction tree availability delivered (033)
+
+Fitch/dependency remain active. New natural-deduction tree work is guarded in normal/demo UI and server admission; authorized retained history remains read-only, with review/release/lifecycle access preserved. Explicit module/symbol names distinguish the retained implementation from semantic tableaux. Template 8 seeds supported methods only; existing visitors upgrade on reset. See [verification](../verification/natural-deduction-tree-availability-verification.md).
+
+Next: proposed `034-feat-semantic-tableaux`, with semantics settled before implementation and delivery split if needed; then a dedicated truth-tree practice UI audit, followed by demo teaching-flow and genuine-account audits and portfolio sandbox preparation. Confirm numbering if delivery splits. No tableaux, new branch or deployment is started here.

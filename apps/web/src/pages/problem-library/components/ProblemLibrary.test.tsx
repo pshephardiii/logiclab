@@ -399,7 +399,7 @@ test('unsaved derivation edits cancel saved checks, protect selection, and retai
   ).not.toBeInTheDocument();
 });
 
-test.each(['dependency', 'fitch', 'tree'] as const)(
+test.each(['dependency', 'fitch'] as const)(
   '%s authoring stays on its chosen step after a successful save remount and resets for a new problem',
   async (format) => {
     const { derivationDefinition, derivationDraft } = await import('../../../../test/derivation');
@@ -430,9 +430,7 @@ test.each(['dependency', 'fitch', 'tree'] as const)(
     expect(screen.getByLabelText('Title')).not.toBeVisible();
     expect(screen.queryByRole('region', { name: 'Your problems' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Published versions' })).not.toBeInTheDocument();
-    expect(
-      screen.getByLabelText(format === 'tree' ? 'Formula for node 1' : 'Formula for line 1'),
-    ).toBeVisible();
+    expect(screen.getByLabelText('Formula for line 1')).toBeVisible();
     await user.click(screen.getByRole('button', { name: '1. Problem details' }));
     expect(screen.getByLabelText('Title')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'New problem' }));
@@ -498,4 +496,35 @@ test('a confirmed publication remains published when refreshing the library list
     'Published · Version 2',
   );
   expect(api.publishProblem).toHaveBeenCalledOnce();
+});
+
+test('retained tree library records allow history and archive/restore without edit or publication controls', async () => {
+  const { naturalDeductionTreeDerivationDefinition } = await import('../../../../test/derivation');
+  const retained = { ...draft, definition: naturalDeductionTreeDerivationDefinition };
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...retained, publication: null }],
+    nextOffset: null,
+  });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [{ ...version, definition: naturalDeductionTreeDerivationDefinition }],
+    nextOffset: null,
+  });
+  vi.mocked(api.archiveProblem)
+    .mockResolvedValueOnce({ ...retained, archivedAt: draft.updatedAt })
+    .mockResolvedValueOnce(retained);
+  const user = userEvent.setup();
+  render(<ProblemLibrary />);
+  await user.click(await screen.findByRole('button', { name: draft.title }));
+  expect(screen.getByRole('status')).toHaveTextContent('retained draft is read-only');
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Publish saved draft' })).not.toBeInTheDocument();
+  await screen.findByRole('heading', { name: 'Version 1: Original snapshot' });
+  await user.click(screen.getByRole('button', { name: 'Archive problem' }));
+  await user.click(await screen.findByRole('button', { name: 'Restore problem' }));
+  await screen.findByRole('button', { name: 'Archive problem' });
+  expect(api.archiveProblem).toHaveBeenCalledTimes(2);
+  expect(api.publishProblem).not.toHaveBeenCalled();
+  expect(api.saveProblem).not.toHaveBeenCalled();
+  expect(api.checkReference).not.toHaveBeenCalled();
+  expect(protectedWork()).toBe(false);
 });

@@ -1,3 +1,4 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
 import {
   ASSIGNMENT_POINT_LIMITS,
@@ -31,7 +32,10 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   const [policy, setPolicy] = useState(() => assignmentLearningPolicySchema.parse(defaults.policy));
   const [gradeReleaseTiming, setGradeReleaseTiming] = useState(defaults.gradeReleaseTiming);
   const [items, setItems] = useState<SelectedProblem[]>(defaults.items);
-  const readOnly = Boolean(assignment?.publishedAt || assignment?.archivedAt);
+  const unavailable = Boolean(
+    assignment?.items.some((item) => !isProblemMethodAvailable(item.problemVersion.definition)),
+  );
+  const readOnly = unavailable || Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
   const graded = policy.assessmentMode === 'graded';
 
@@ -50,7 +54,12 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   }, [dirty, onDirty]);
 
   function add(version: LibraryProblemVersion) {
-    if (version.definition.type === 'derivation' && !allowsProofs) return;
+    if (
+      readOnly ||
+      !isProblemMethodAvailable(version.definition) ||
+      (version.definition.type === 'derivation' && !allowsProofs)
+    )
+      return;
 
     setItems((previous) =>
       previous.length >= 50 ? previous : [...previous, { key: crypto.randomUUID(), version }],
@@ -106,6 +115,13 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
             : 'Edit assignment draft'
           : 'Create an assignment'}
       </h2>
+      {unavailable && (
+        <p role="status">
+          This retained assignment contains unavailable natural-deduction tree work. Its content is
+          read-only; create a replacement assignment using supported problems. Existing submissions
+          and release controls remain available.
+        </p>
+      )}
       <form onSubmit={(event) => void submit(event)}>
         <fieldset disabled={busy || readOnly}>
           <label htmlFor="assignment-title">Assignment title</label>
@@ -169,9 +185,11 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
       </form>
       {readOnly && (
         <p className="help">
-          {assignment?.publishedAt
-            ? 'Published content and policy are locked. Restoring an archived publication does not unlock it.'
-            : 'Restore this archived draft to continue editing.'}
+          {unavailable
+            ? 'Archive and historical review remain available. Restoring does not enable new tree work.'
+            : assignment?.publishedAt
+              ? 'Published content and policy are locked. Restoring an archived publication does not unlock it.'
+              : 'Restore this archived draft to continue editing.'}
         </p>
       )}
     </section>

@@ -1,3 +1,4 @@
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { useState, type FormEvent } from 'react';
@@ -27,7 +28,9 @@ export function ProofPracticeSetup({
   initialFormat?: PracticeStatement['format'];
 }) {
   const confirmDiscard = useConfirmDiscard();
-  const [format, setFormat] = useState(initialFormat);
+  const [format, setFormat] = useState<PracticeStatement['format']>(() =>
+    isProofFormatAvailable(initialFormat) ? initialFormat : 'fitch',
+  );
   const [premises, setPremises] = useState<PracticeStatement['premises']>([]);
   const [conclusion, setConclusion] = useState('');
   const [ruleIds, setRuleIds] = useState<string[]>(
@@ -43,7 +46,7 @@ export function ProofPracticeSetup({
   );
 
   function changeFormat(next: PracticeStatement['format']) {
-    if (next === format) return;
+    if (!isProofFormatAvailable(next) || next === format) return;
 
     confirmDiscard(() => {
       setFormat(next);
@@ -57,6 +60,10 @@ export function ProofPracticeSetup({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    if (!isProofFormatAvailable(format)) {
+      setError('Choose an available proof format.');
+      return;
+    }
     if (premisePending) {
       setError('Add or discard the premise before beginning.');
       return;
@@ -86,7 +93,6 @@ export function ProofPracticeSetup({
           >
             <option value="fitch">Fitch</option>
             <option value="dependency">Dependency</option>
-            <option value="tree">Natural-deduction tree</option>
           </select>
         </div>
         <ProofKeyboardGuide />

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import {
   dependencyDefinitionFixture,
   derivationDefinitionFixture,
-  treeDefinitionFixture,
+  naturalDeductionTreeDefinitionFixture,
 } from '../derivation-fixture';
 import { StudentWorkError } from '../../src/application/student-work/errors';
 import { createProblemStore } from '../../src/persistence/problem/store';
@@ -25,8 +25,8 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
-const variants = [dependencyDefinitionFixture, treeDefinitionFixture].flatMap((definitionFixture) =>
-  (['normal', 'demo'] as const).map((mode) => ({ definitionFixture, mode })),
+const variants = [dependencyDefinitionFixture, naturalDeductionTreeDefinitionFixture].flatMap(
+  (definitionFixture) => (['normal', 'demo'] as const).map((mode) => ({ definitionFixture, mode })),
 );
 for (const { definitionFixture, mode } of variants) {
   test(`${mode} ${definitionFixture().format} draft HTTP work preserves revision locks, privacy, format matching and independent checks/solutions`, async () => {
@@ -116,9 +116,31 @@ for (const { definitionFixture, mode } of variants) {
       }
       const problems = await createProblemStore(orm);
       const definition = definitionFixture();
-      const draft = await problems.create(owner.id, { title: 'Pinned dependency', definition });
-      const published = await problems.publish(owner.id, draft.id);
-      if (published.status !== 'published') assert.fail('Expected fixture publication');
+      let version;
+      let problemId: string;
+      if (definition.format === 'tree') {
+        // Retained fixtures bypass new-work admission only in this disposable test schema.
+        const problem = em.create(db.Problem, {
+          owner,
+          title: 'Retained natural-deduction tree',
+          definition,
+        });
+        version = em.create(db.ProblemVersion, {
+          problem,
+          version: 1,
+          title: problem.title,
+          definition,
+        });
+        problemId = problem.id;
+        em.persist([problem, version]);
+        await em.flush();
+      } else {
+        const draft = await problems.create(owner.id, { title: 'Pinned dependency', definition });
+        problemId = draft.id;
+        const published = await problems.publish(owner.id, draft.id);
+        if (published.status !== 'published') assert.fail('Expected fixture publication');
+        version = em.getReference(db.ProblemVersion, published.version.id);
+      }
       // Direct persistence fixture isolates draft HTTP behavior from assignment authoring.
       const assignment = em.create(db.Assignment, {
         classroom,
@@ -127,7 +149,6 @@ for (const { definitionFixture, mode } of variants) {
         feedbackTiming: db.FeedbackTiming.Immediate,
         solutionAccess: db.SolutionAccess.Never,
       });
-      const version = em.getReference(db.ProblemVersion, published.version.id);
       const first = em.create(db.AssignmentItem, {
         assignment,
         problemVersion: version,
@@ -159,6 +180,66 @@ for (const { definitionFixture, mode } of variants) {
       assert(!read.body.includes('referenceProof'));
       assert(!read.body.includes('Assuming P permits'));
       const counts = await em.count(db.AssignmentAttempt, { assignment: assignment.id });
+      if (definition.format === 'tree') {
+        const table = em.create(db.Problem, {
+          owner,
+          title: 'Retained mixed table',
+          definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
+        });
+        const tableVersion = em.create(db.ProblemVersion, {
+          problem: table,
+          version: 1,
+          title: table.title,
+          definition: table.definition,
+        });
+        const activeItem = em.create(db.AssignmentItem, {
+          assignment,
+          problemVersion: tableVersion,
+          position: 3,
+          maxPoints: 10,
+        });
+        em.persist([table, tableVersion, activeItem]);
+        await em.flush();
+        for (const [method, path, payload] of [
+          ['POST', `${prefix}/check`, { itemId: first.id, answers: valid }],
+          ['POST', `${prefix}/check`, { itemId: activeItem.id, answers: [] }],
+          ['PATCH', `${prefix}/attempt`, { revision: 0, itemId: activeItem.id, answers: [] }],
+          ['PATCH', `${prefix}/attempt`, { revision: 0, itemId: first.id, answers: valid }],
+        ] as const) {
+          const rejected = await request(method, path, cookie, payload);
+          assert.equal(rejected.statusCode, 409, rejected.body);
+          assert.equal(rejected.json().error.code, 'PROOF_METHOD_UNAVAILABLE');
+        }
+        assert.equal(await em.fork().count(db.AssignmentAttempt, { assignment: assignment.id }), 0);
+        const retained = em.create(db.AssignmentAttempt, {
+          assignment,
+          student,
+          revision: 4,
+          answers: { [first.id]: valid },
+        });
+        em.persist(retained);
+        await em.flush();
+        const history = await request('GET', prefix, cookie);
+        assert.equal(history.statusCode, 200, history.body);
+        assert.equal(history.json().assignment.items.length, 3);
+        assert.deepEqual(history.json().attempt.answers[first.id], valid);
+        const rejected = await request('PATCH', `${prefix}/attempt`, cookie, {
+          revision: 4,
+          itemId: second.id,
+          answers: valid,
+        });
+        assert.equal(rejected.statusCode, 409, rejected.body);
+        const unchanged = await em.fork().findOneOrFail(db.AssignmentAttempt, retained.id);
+        assert.equal(unchanged.revision, 4);
+        assert.deepEqual(unchanged.answers, { [first.id]: valid });
+        await em.fork().nativeUpdate(db.Assignment, assignment.id, {
+          solutionAccess: db.SolutionAccess.Anytime,
+        });
+        const solution = await request('GET', `${prefix}/items/${first.id}/solution`, cookie);
+        assert.equal(solution.statusCode, 200, solution.body);
+        assert.deepEqual(solution.json().solution.referenceProof, definition.referenceProof);
+        return;
+      }
       const checked = await request('POST', `${prefix}/check`, cookie, {
         itemId: first.id,
         answers: valid,
@@ -263,7 +344,7 @@ for (const { definitionFixture, mode } of variants) {
       const parsedSolution = savedStudentSolutionResponseSchema.parse(solution.json()).solution;
       assert.equal('type' in parsedSolution ? parsedSolution.type : null, 'derivation');
       assert.deepEqual(solution.json().solution.referenceProof, definition.referenceProof);
-      await problems.update(owner.id, draft.id, {
+      const edit = problems.update(owner.id, problemId, {
         definition: {
           ...definition,
           conclusion: 'Q',
@@ -271,6 +352,7 @@ for (const { definitionFixture, mode } of variants) {
           explanation: 'CHANGED_PRIVATE_EXPLANATION',
         },
       });
+      await edit;
       assert.deepEqual(
         (await request('GET', `${prefix}/items/${first.id}/solution`, cookie)).json(),
         solution.json(),

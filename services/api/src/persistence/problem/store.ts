@@ -3,6 +3,7 @@ import { ownedProblem, lockedProblem } from './queries';
 import { libraryProblemDraft } from './draft-response';
 import {
   libraryProblemDefinition,
+  authoringDefinition,
   publicationDefinition,
   libraryReferenceCheck,
 } from '../../application/problem/library-definition';
@@ -117,7 +118,7 @@ export async function createProblemStore(
         owner: em.getReference(User, ownerId),
         title: input.title,
         instructions: input.instructions ?? undefined,
-        definition: libraryProblemDefinition(input.definition),
+        definition: authoringDefinition(input.definition),
       });
 
       em.persist(problem);
@@ -187,13 +188,18 @@ export async function createProblemStore(
 
         if (problem.archivedAt) return { status: 'archived' as const };
 
+        // Check the retained and replacement definitions before changing any part of the draft.
+        // Archive/restore and historical projections deliberately use separate paths.
+        authoringDefinition(problem.definition);
+        const definition =
+          input.definition !== undefined ? authoringDefinition(input.definition) : undefined;
+
         if (input.title !== undefined) problem.title = input.title;
 
         if (input.instructions !== undefined)
           problem.instructions = input.instructions ?? undefined;
 
-        if (input.definition !== undefined)
-          problem.definition = libraryProblemDefinition(input.definition);
+        if (definition !== undefined) problem.definition = definition;
 
         await em.flush();
 

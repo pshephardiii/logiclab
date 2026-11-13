@@ -367,6 +367,8 @@ Keep derivation/reference contracts in `@logiclab/contracts/derivation` and comb
 
 ## Proof format ownership
 
+Retained natural-deduction tree code belongs under explicit `natural-deduction-tree/` directories; format-specific symbols use `NaturalDeductionTree…` / `naturalDeductionTree…`. Reserve semantic-tableau/truth-tree names for the separate future method. Keep generic graph terms inside a clearly scoped algorithm, and preserve the historical serialized `format: 'tree'` tag rather than renaming stored data with code symbols. New-work availability guards remain separate from historical parsing/checking/projection.
+
 Keep format-specific structure, reference resolution and step evaluation under `logic-engine/src/proof/fitch/` and `dependency/`; keep formula equality/parsing, local inference patterns, budgets, diagnostics and report construction shared. Application reference validation belongs under `application/problem/derivation/<format>/`, with shared configuration/errors/projections outside either format. Dispatch from the authoritative pinned format at application boundaries. Do not coerce another representation through Fitch or trust student-entered dependency annotations as authoritative support.
 
 Transport validation retains incomplete drafts; completion readiness, correctness checking and awarded grades are separate operations. A filled completion-only proof may be wrong and should retain its diagnostics without becoming a correctness grade. Select the format-specific validator/checker/completion predicate explicitly; use shared saved-work unions at HTTP/UI boundaries rather than a Fitch-only schema. Preserve public package entries when moving internal files, and verify their built exports as well as source-level imports.

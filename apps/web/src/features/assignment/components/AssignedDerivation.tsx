@@ -1,6 +1,7 @@
 import { AssignedDerivationEditor } from './AssignedDerivationEditor';
 import { ProofHelp } from '../../proof/reference/ProofHelp';
 import { proofNotation } from '../../proof/helpers/proof-notation';
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import type {
   SavedDerivationAnswer as DerivationAnswer,
@@ -34,13 +35,15 @@ export function AssignedDerivation({
   answer,
   feedback,
   solution,
-  readOnly,
+  readOnly: requestedReadOnly,
   checking = false,
   disabled = false,
   onAnswer,
   onCheck,
   onPendingChange,
 }: Props) {
+  const unavailable = !isProofFormatAvailable(item.content.format);
+  const readOnly = requestedReadOnly || unavailable;
   const proof = answer?.proof ?? null;
   const [entryPending, setEntryPending] = useState(false);
   const changePending = useCallback(
@@ -69,6 +72,12 @@ export function AssignedDerivation({
         Problem {item.position}: {item.title}
       </h2>
       {item.instructions && <p>{item.instructions}</p>}
+      {unavailable && (
+        <p className="help">
+          Natural-deduction tree proofs are unavailable for new work. Retained work is shown
+          read-only.
+        </p>
+      )}
       <p>
         <strong>Format:</strong>{' '}
         {item.content.format === 'tree'
@@ -137,7 +146,7 @@ export function AssignedDerivation({
           proof={proof}
           format={item.content.format}
           rules={item.content.rules}
-          label="Your submitted proof"
+          label={unavailable ? 'Your retained proof' : 'Your submitted proof'}
         />
       ) : (
         <>

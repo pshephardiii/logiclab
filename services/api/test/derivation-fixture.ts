@@ -1,11 +1,11 @@
 import type { DependencyDerivationDefinition } from '@logiclab/contracts/dependency-derivation';
 import type { FitchDerivationDefinition } from '@logiclab/contracts/derivation';
-import type { TreeDerivationDefinition } from '@logiclab/contracts/tree-derivation';
+import type { NaturalDeductionTreeDerivationDefinition } from '@logiclab/contracts/natural-deduction-tree-derivation';
 
 const a = 'a1111111-1111-4111-8111-111111111111';
 const b = 'b2222222-2222-4222-8222-222222222222';
 const c = 'c3333333-3333-4333-8333-333333333333';
-export function treeDefinitionFixture(): TreeDerivationDefinition {
+export function naturalDeductionTreeDefinitionFixture(): NaturalDeductionTreeDerivationDefinition {
   return {
     ...derivationDefinitionFixture(),
     format: 'tree',

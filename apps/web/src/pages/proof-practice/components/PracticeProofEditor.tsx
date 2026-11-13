@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
 import { DependencyProofEditor } from '../../../features/proof/dependency/DependencyProofEditor';
-import { TreeProofEditor } from '../../../features/proof/tree/TreeProofEditor';
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import type { PracticeStatement, PracticeProof } from '../helpers/practice-proof';
 
 /** Reuse student controls without importing owner-library drafts or private references. */
@@ -22,16 +22,8 @@ export function PracticeProofEditor({
   conclusionActions?: ReactNode;
   onPremiseChange?: (premiseId: string, formula: string) => void;
 }) {
-  if (statement.format === 'tree')
-    return (
-      <TreeProofEditor
-        onPendingChange={onPendingChange}
-        statement={statement}
-        proof={proof?.format === 'tree' ? proof : null}
-        purpose="student"
-        onChange={onChange}
-      />
-    );
+  if (!isProofFormatAvailable(statement.format))
+    return <p role="status">This proof method is unavailable for new practice.</p>;
 
   if (statement.format === 'dependency')
     return (

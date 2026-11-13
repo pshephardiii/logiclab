@@ -1,4 +1,8 @@
 import {
+  retainedNaturalDeductionTreeWork,
+  naturalDeductionTreeAnswer,
+} from '../../../../test/proof-work-fixture';
+import {
   conceptualWork,
   conceptualSaved,
   optionA,
@@ -432,3 +436,38 @@ test('pending answer saves block repeat writes and edits, then permit a fresh un
   expect(result.current.answers[itemA]![cellKey('r1', 'expr:v1:P')]).toBe(true);
   expect(api.saveAssignedAnswers).toHaveBeenCalledTimes(1);
 });
+
+test.each(['graded', 'ungraded_practice'] as const)(
+  'an unavailable item freezes %s mixed work and direct hook calls cannot send it',
+  async (assessmentMode) => {
+    vi.mocked(api.readAssignedWork).mockResolvedValue({
+      assignment: {
+        ...retainedNaturalDeductionTreeWork,
+        feedbackTiming: assessmentMode === 'graded' ? 'on_submission' : 'immediate',
+        assessmentMode,
+        solutionAccess: 'anytime',
+      },
+      attempt: null,
+    });
+    const { result } = await open();
+    expect(result.current.workUnavailable).toBe(true);
+    expect(result.current.assignment!.items).toHaveLength(2);
+    act(() => {
+      result.current.changeAnswer(itemA, 'r1', 'expr:v1:P', true);
+      result.current.changeProofAnswer(itemB, naturalDeductionTreeAnswer);
+    });
+    await act(async () => {
+      await result.current.save(itemA);
+      await result.current.save(itemB);
+      await result.current.check(itemA);
+      await result.current.check(itemB);
+      await result.current.submit();
+      await vi.advanceTimersByTimeAsync(IMMEDIATE_CHECK_DELAY_MS);
+    });
+    expect(result.current.dirty).toEqual([]);
+    expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+    expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+    expect(api.submitAssignedWork).not.toHaveBeenCalled();
+    expect(result.current.solutionAvailable).toBe(true);
+  },
+);

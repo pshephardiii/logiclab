@@ -3,7 +3,7 @@ import type {
   SavedDerivationAnswer as DerivationAnswer,
 } from '@logiclab/contracts/saved-student-work';
 import { DependencyProofEditor } from '../../proof/dependency/DependencyProofEditor';
-import { TreeProofEditor } from '../../proof/tree/TreeProofEditor';
+import { NaturalDeductionTreeProofEditor } from '../../proof/natural-deduction-tree/NaturalDeductionTreeProofEditor';
 import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
 
 type Item = Extract<SavedStudentAssignment['items'][number], { content: { type: 'derivation' } }>;
@@ -27,7 +27,7 @@ export function AssignedDerivationEditor({
   return (
     <>
       {statement.format === 'tree' ? (
-        <TreeProofEditor
+        <NaturalDeductionTreeProofEditor
           onPendingChange={onPendingChange}
           statement={statement}
           proof={proof?.format === 'tree' ? proof : null}

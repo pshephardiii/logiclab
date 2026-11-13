@@ -267,3 +267,54 @@ test('proof-containing drafts retain failed saves and switch among completion, p
     true,
   );
 });
+
+test('retained unavailable assignment content is read-only while archive/reload remain usable', async () => {
+  const { naturalDeductionTreeDerivationDefinition } = await import('../../../../test/derivation');
+  const { AssignmentPublicationControls } = await import('./AssignmentPublicationControls');
+  const historical: AssignmentDetail = {
+    ...assignment,
+    items: [
+      {
+        id: 'item',
+        position: 1,
+        problemVersion: {
+          id: 'version',
+          problemId: 'problem',
+          version: 1,
+          title: 'Retained proof',
+          instructions: null,
+          publishedAt: assignment.createdAt,
+          definition: naturalDeductionTreeDerivationDefinition,
+        },
+      },
+    ],
+  };
+  const onSave = vi.fn(),
+    onDirty = vi.fn(),
+    onDuplicate = vi.fn(),
+    onArchive = vi.fn();
+  render(
+    <>
+      <AssignmentForm assignment={historical} busy={false} onDirty={onDirty} onSave={onSave} />
+      <AssignmentPublicationControls
+        assignment={historical}
+        dirty={false}
+        busy={false}
+        onDuplicate={onDuplicate}
+        onPublish={vi.fn()}
+        onToggleArchive={onArchive}
+        onReload={vi.fn()}
+      />
+    </>,
+  );
+  expect(screen.getByRole('status')).toHaveTextContent('content is read-only');
+  expect(screen.getByLabelText('Assignment title')).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Save assignment draft' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Publish assignment' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Duplicate as draft' })).toBeDisabled();
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Archive assignment' }));
+  expect(onArchive).toHaveBeenCalledOnce();
+  expect(onSave).not.toHaveBeenCalled();
+  expect(onDuplicate).not.toHaveBeenCalled();
+  expect(onDirty).toHaveBeenLastCalledWith(false);
+});

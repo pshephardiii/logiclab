@@ -1,12 +1,21 @@
+import { ProofMethodUnavailableError } from '../proof/availability';
+import { naturalDeductionTreeDefinitionFixture } from '../../../test/derivation-fixture';
 import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
-import { supportedAssignmentDefinition } from '../assignment/definition-support';
+import {
+  assignmentAdmissionDefinition,
+  supportedAssignmentDefinition,
+} from '../assignment/definition-support';
 import { DerivationPublicationError, DerivationAuthoringError } from './derivation/errors';
 import {
   createLibraryProblemRequestSchema,
   updateLibraryProblemRequestSchema,
 } from '@logiclab/contracts/problem-library';
 import { derivationDefinitionFixture as definition } from '../../../test/derivation-fixture';
-import { libraryProblemDefinition, publicationDefinition } from './library-definition';
+import {
+  authoringDefinition,
+  libraryProblemDefinition,
+  publicationDefinition,
+} from './library-definition';
 import { mapProblemError } from '../../routes/problem/errors';
 
 import { validateObjectiveDefinition } from './definition-support';
@@ -78,5 +87,31 @@ test.each(['graded', 'completion_only', 'ungraded_practice'])(
         feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
       }),
     ).toEqual(value);
+  },
+);
+
+test('new authoring and publication reject unavailable tree work while retained validation still accepts it', () => {
+  const value = naturalDeductionTreeDefinitionFixture();
+  expect(libraryProblemDefinition(value)).toEqual(value);
+  expect(() => authoringDefinition(value)).toThrow(ProofMethodUnavailableError);
+  expect(() => publicationDefinition(value)).toThrow(ProofMethodUnavailableError);
+  expect(authoringDefinition(definition())).toEqual(definition());
+  expect(authoringDefinition(dependencyDefinitionFixture())).toEqual(dependencyDefinitionFixture());
+});
+
+test.each(['graded', 'completion_only', 'ungraded_practice'])(
+  'new %s assignments reject tree versions without changing historical projection support',
+  (assessmentMode) => {
+    const value = naturalDeductionTreeDefinitionFixture();
+    const policy = {
+      assessmentMode,
+      feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
+    };
+    expect(supportedAssignmentDefinition(value, policy)).toEqual(value);
+    expect(() => assignmentAdmissionDefinition(value, policy)).toThrow(ProofMethodUnavailableError);
+    expect(assignmentAdmissionDefinition(definition(), policy)).toEqual(definition());
+    expect(assignmentAdmissionDefinition(dependencyDefinitionFixture(), policy)).toEqual(
+      dependencyDefinitionFixture(),
+    );
   },
 );

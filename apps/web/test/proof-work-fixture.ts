@@ -5,13 +5,13 @@ import type {
 import type { FitchDerivationAnswer } from '@logiclab/contracts/derivation-work';
 import type { FitchDerivationSolution } from '@logiclab/contracts/derivation';
 import type { ProofCheckReport } from '@logiclab/contracts';
-import type { TreeDerivationAnswer } from '@logiclab/contracts/tree-derivation-work';
+import type { NaturalDeductionTreeDerivationAnswer } from '@logiclab/contracts/natural-deduction-tree-derivation-work';
 import { work, itemA, itemB, saved } from './assignment-work-fixture';
 export { itemA, itemB };
 export const tableId = 'a6666666-6666-4666-8666-666666666666';
 const premiseId = 'b1111111-1111-4111-8111-111111111111';
 const stepId = 'b2222222-2222-4222-8222-222222222222';
-export const treeAnswer: TreeDerivationAnswer = {
+export const naturalDeductionTreeAnswer: NaturalDeductionTreeDerivationAnswer = {
   type: 'derivation',
   proof: {
     proofVersion: 1,
@@ -169,4 +169,20 @@ export const proofCompletionFinal: SavedStudentAttempt = {
       proofVerification: { verified: 1, errorsFound: 1, unavailable: 0, total: 2 },
     },
   },
+};
+
+/** Retained mixed assignment: active table plus an unavailable historical tree item. */
+export const retainedNaturalDeductionTreeWork: SavedStudentAssignment = {
+  ...work,
+  items: [
+    work.items[0]!,
+    {
+      id: itemB,
+      position: 2,
+      title: 'Retained natural-deduction tree',
+      instructions: null,
+      maxPoints: 10,
+      content: { ...content, format: 'tree' },
+    },
+  ],
 };

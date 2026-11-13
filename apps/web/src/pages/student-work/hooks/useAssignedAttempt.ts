@@ -61,6 +61,7 @@ export function useAssignedAttempt(assignmentId: string) {
   const writes = useAbortableRequest();
 
   const {
+    workUnavailable,
     hasFinalSubmission,
     requiresCompleteAnswers,
     allowsImmediateFeedback,
@@ -120,7 +121,7 @@ export function useAssignedAttempt(assignmentId: string) {
   }, [load, reads.cancelRequest, cancelCheck]);
 
   function changeAnswer(itemId: string, row: string, column: string, value: boolean | null) {
-    if (loading || action || attempt?.submittedAt) return;
+    if (workUnavailable || loading || action || attempt?.submittedAt) return;
 
     cancelCheck();
 
@@ -150,7 +151,7 @@ export function useAssignedAttempt(assignmentId: string) {
   }
 
   function changeConceptualAnswer(itemId: string, snapshot: ConceptualAnswer) {
-    if (loading || action || attempt?.submittedAt) return;
+    if (workUnavailable || loading || action || attempt?.submittedAt) return;
 
     const item = assignment?.items.find((value) => value.id === itemId);
 
@@ -176,7 +177,7 @@ export function useAssignedAttempt(assignmentId: string) {
   }
 
   function changeProofAnswer(itemId: string, snapshot: DerivationAnswer) {
-    if (loading || action || attempt?.submittedAt) return;
+    if (workUnavailable || loading || action || attempt?.submittedAt) return;
 
     const item = assignment?.items.find((value) => value.id === itemId);
 
@@ -208,7 +209,7 @@ export function useAssignedAttempt(assignmentId: string) {
   }
 
   async function save(itemId: string) {
-    if (!assignment || action || attempt?.submittedAt) return;
+    if (workUnavailable || !assignment || action || attempt?.submittedAt) return;
 
     const item = assignment.items.find((value) => value.id === itemId);
 
@@ -250,6 +251,7 @@ export function useAssignedAttempt(assignmentId: string) {
 
   async function submit() {
     if (
+      workUnavailable ||
       !assignment ||
       !hasFinalSubmission ||
       action ||
@@ -370,6 +372,7 @@ export function useAssignedAttempt(assignmentId: string) {
   return {
     assignment,
     attempt,
+    workUnavailable,
     feedback,
     proofFeedback,
     checkingItem,

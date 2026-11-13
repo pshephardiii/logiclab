@@ -1,3 +1,6 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
+import { DerivationSummary } from './DerivationSummary';
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
@@ -53,6 +56,8 @@ export function DerivationProblemFields({
     onChange({ ...fields, derivation: { ...definition, ...patch } });
   }
 
+  if (!isProblemMethodAvailable(definition)) return <DerivationSummary definition={definition} />;
+
   return (
     <div className="derivation-authoring proof-editor">
       <div hidden={hideStatement}>
@@ -66,6 +71,7 @@ export function DerivationProblemFields({
               onChange={(event) => {
                 const format = event.target.value as AuthoringDerivationDefinition['format'];
 
+                if (!isProofFormatAvailable(format)) return;
                 setPendingFormat(null);
 
                 if (format === definition.format) return;
@@ -80,7 +86,6 @@ export function DerivationProblemFields({
             >
               <option value="fitch">Fitch</option>
               <option value="dependency">Dependency</option>
-              <option value="tree">Natural-deduction tree</option>
             </select>
           </div>
           {!hideStatement && <ProofKeyboardGuide />}
@@ -112,8 +117,8 @@ export function DerivationProblemFields({
         <section hidden={hideStatement} className="derivation-authoring-statement">
           <p className="help">
             Save an unfinished statement now. Publication requires an accepted reference under these
-            exact premises, conclusion and permitted rules. Published Fitch, dependency and tree
-            snapshots can be added to assignments.
+            exact premises, conclusion and permitted rules. Published Fitch and dependency snapshots
+            can be added to assignments.
           </p>
           <ProofPremisesEditor
             format={definition.format}

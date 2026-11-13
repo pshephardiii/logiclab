@@ -1,3 +1,4 @@
+import { assertProofFormatAvailable } from '../proof/availability';
 import { DerivationPublicationError } from './derivation/errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { validateObjectiveDefinition } from './definition-support';
@@ -7,7 +8,10 @@ import {
   checkDependencyReference,
 } from './derivation/dependency/authoring';
 import type { DerivationReferenceCheck } from './derivation/reference-check';
-import { validateTreeDefinition, checkTreeReference } from './derivation/tree/authoring';
+import {
+  validateNaturalDeductionTreeDefinition,
+  checkNaturalDeductionTreeReference,
+} from './derivation/natural-deduction-tree/authoring';
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
@@ -17,7 +21,8 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
     'type' in value &&
     value.type === 'derivation'
   ) {
-    if ('format' in value && value.format === 'tree') return validateTreeDefinition(value);
+    if ('format' in value && value.format === 'tree')
+      return validateNaturalDeductionTreeDefinition(value);
 
     return 'format' in value && value.format === 'dependency'
       ? validateDependencyDefinition(value)
@@ -27,11 +32,18 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
   return validateObjectiveDefinition(value);
 }
 
+/** New owner work uses availability policy; historical validation above remains format-complete. */
+export function authoringDefinition(value: unknown): LibraryProblemDefinition {
+  const definition = libraryProblemDefinition(value);
+  if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
+  return definition;
+}
+
 /** Check the authoritative saved definition with its own format's checker. */
 export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
 ): DerivationReferenceCheck {
-  if (definition.format === 'tree') return checkTreeReference(definition);
+  if (definition.format === 'tree') return checkNaturalDeductionTreeReference(definition);
 
   return definition.format === 'dependency'
     ? checkDependencyReference(definition)
@@ -40,7 +52,7 @@ export function libraryReferenceCheck(
 
 /** Call under the saved problem's lock immediately before creating its immutable snapshot. */
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
-  const definition = libraryProblemDefinition(value);
+  const definition = authoringDefinition(value);
 
   if (definition.type === 'derivation') {
     const check = libraryReferenceCheck(definition);
