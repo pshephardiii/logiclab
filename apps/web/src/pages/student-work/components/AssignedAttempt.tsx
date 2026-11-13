@@ -43,6 +43,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const currentFeedback = item ? work.feedback[item.id] : undefined;
   const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
+  const readOnly = submitted || work.workUnavailable;
   const proofAnswer = item ? work.proofAnswers[item.id] : undefined;
   const proofReport = item ? proofSubmissionFeedback(work.attempt?.result, item.id) : null;
 
@@ -103,29 +104,39 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               {work.assignment.items.reduce((sum, value) => sum + value.maxPoints!, 0)} points.
             </p>
           )}
-        <p>
-          {submitted
-            ? 'Final answers are read-only.'
-            : work.allowsImmediateFeedback
-              ? 'Truth-table and question entries are checked shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
-              : work.allowsExplicitCheck
-                ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
-                : work.assignment.assessmentMode === 'graded' &&
-                    work.assignment.gradeReleaseTiming === 'instructor_release'
-                  ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
-                  : 'Use Save problem to persist changes. Results arrive after final submission.'}
-        </p>
-        {work.assignment.items.some(
-          (value) => 'content' in value && value.content.type === 'derivation',
-        ) && (
-          <p>
-            {work.assignment.assessmentMode === 'ungraded_practice'
-              ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
-              : work.assignment.assessmentMode === 'graded'
-                ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
-                : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
+        {work.workUnavailable && (
+          <p role="status">
+            This assignment contains natural-deduction tree work, which is unavailable for new
+            attempts. All saved problems remain visible read-only; this assignment cannot be edited,
+            checked or submitted. Contact your instructor for a supported replacement.
           </p>
         )}
+        {!work.workUnavailable && (
+          <p>
+            {submitted
+              ? 'Final answers are read-only.'
+              : work.allowsImmediateFeedback
+                ? 'Truth-table and question entries are checked shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
+                : work.allowsExplicitCheck
+                  ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
+                  : work.assignment.assessmentMode === 'graded' &&
+                      work.assignment.gradeReleaseTiming === 'instructor_release'
+                    ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
+                    : 'Use Save problem to persist changes. Results arrive after final submission.'}
+          </p>
+        )}
+        {!work.workUnavailable &&
+          work.assignment.items.some(
+            (value) => 'content' in value && value.content.type === 'derivation',
+          ) && (
+            <p>
+              {work.assignment.assessmentMode === 'ungraded_practice'
+                ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
+                : work.assignment.assessmentMode === 'graded'
+                  ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
+                  : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
+            </p>
+          )}
         {!work.hasFinalSubmission && (
           <p>
             Ungraded practice: no final submission or official score. Your practice answers stay
@@ -197,8 +208,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                     : null
               }
               solution={currentSolution && 'rows' in currentSolution ? currentSolution : null}
-              neutralBlanks={!submitted && work.allowsImmediateFeedback}
-              readOnly={busy || submitted}
+              neutralBlanks={!readOnly && work.allowsImmediateFeedback}
+              readOnly={busy || readOnly}
               onAnswer={(row, column, value) => {
                 setConfirmed(false);
                 work.changeAnswer(item.id, row, column, value);
@@ -227,7 +238,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                   ? currentSolution
                   : null
               }
-              readOnly={submitted}
+              readOnly={readOnly}
               disabled={busy}
               checking={work.checkingItem === item.id}
               onAnswer={(answer) => {
@@ -235,7 +246,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeProofAnswer(item.id, answer);
               }}
               onCheck={
-                !submitted &&
+                !readOnly &&
                 work.assignment.assessmentMode === 'ungraded_practice' &&
                 work.allowsExplicitCheck
                   ? () => void work.check(item.id)
@@ -260,15 +271,15 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                   ? currentSolution
                   : null
               }
-              neutralBlanks={!submitted && work.allowsImmediateFeedback}
-              readOnly={busy || submitted}
+              neutralBlanks={!readOnly && work.allowsImmediateFeedback}
+              readOnly={busy || readOnly}
               onAnswer={(answer) => {
                 setConfirmed(false);
                 work.changeConceptualAnswer(item.id, answer);
               }}
             />
           )}
-          {!submitted && (
+          {!readOnly && (
             <button
               disabled={busy || entryPending || !work.dirty.includes(item.id)}
               onClick={() => {
@@ -279,7 +290,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               {work.action === 'save' ? 'Saving problem…' : 'Save problem'}
             </button>
           )}
-          {!submitted && !isProof && work.allowsExplicitCheck && (
+          {!readOnly && !isProof && work.allowsExplicitCheck && (
             <button
               disabled={busy || work.checkingItem !== null}
               onClick={() => void work.check(item.id)}
@@ -294,7 +305,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           )}
         </>
       )}
-      {!submitted && work.hasFinalSubmission && (
+      {!readOnly && work.hasFinalSubmission && (
         <FinalSubmissionPanel
           requiresCompleteAnswers={work.requiresCompleteAnswers}
           confirmed={confirmed}

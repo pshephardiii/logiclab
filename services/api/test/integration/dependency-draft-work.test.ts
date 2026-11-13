@@ -1,4 +1,3 @@
-import { ProofMethodUnavailableError } from '../../src/application/proof/availability';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -181,6 +180,66 @@ for (const { definitionFixture, mode } of variants) {
       assert(!read.body.includes('referenceProof'));
       assert(!read.body.includes('Assuming P permits'));
       const counts = await em.count(db.AssignmentAttempt, { assignment: assignment.id });
+      if (definition.format === 'tree') {
+        const table = em.create(db.Problem, {
+          owner,
+          title: 'Retained mixed table',
+          definition: { type: 'truth_table', definitionVersion: 1, formula: 'P' },
+        });
+        const tableVersion = em.create(db.ProblemVersion, {
+          problem: table,
+          version: 1,
+          title: table.title,
+          definition: table.definition,
+        });
+        const activeItem = em.create(db.AssignmentItem, {
+          assignment,
+          problemVersion: tableVersion,
+          position: 3,
+          maxPoints: 10,
+        });
+        em.persist([table, tableVersion, activeItem]);
+        await em.flush();
+        for (const [method, path, payload] of [
+          ['POST', `${prefix}/check`, { itemId: first.id, answers: valid }],
+          ['POST', `${prefix}/check`, { itemId: activeItem.id, answers: [] }],
+          ['PATCH', `${prefix}/attempt`, { revision: 0, itemId: activeItem.id, answers: [] }],
+          ['PATCH', `${prefix}/attempt`, { revision: 0, itemId: first.id, answers: valid }],
+        ] as const) {
+          const rejected = await request(method, path, cookie, payload);
+          assert.equal(rejected.statusCode, 409, rejected.body);
+          assert.equal(rejected.json().error.code, 'PROOF_METHOD_UNAVAILABLE');
+        }
+        assert.equal(await em.fork().count(db.AssignmentAttempt, { assignment: assignment.id }), 0);
+        const retained = em.create(db.AssignmentAttempt, {
+          assignment,
+          student,
+          revision: 4,
+          answers: { [first.id]: valid },
+        });
+        em.persist(retained);
+        await em.flush();
+        const history = await request('GET', prefix, cookie);
+        assert.equal(history.statusCode, 200, history.body);
+        assert.equal(history.json().assignment.items.length, 3);
+        assert.deepEqual(history.json().attempt.answers[first.id], valid);
+        const rejected = await request('PATCH', `${prefix}/attempt`, cookie, {
+          revision: 4,
+          itemId: second.id,
+          answers: valid,
+        });
+        assert.equal(rejected.statusCode, 409, rejected.body);
+        const unchanged = await em.fork().findOneOrFail(db.AssignmentAttempt, retained.id);
+        assert.equal(unchanged.revision, 4);
+        assert.deepEqual(unchanged.answers, { [first.id]: valid });
+        await em.fork().nativeUpdate(db.Assignment, assignment.id, {
+          solutionAccess: db.SolutionAccess.Anytime,
+        });
+        const solution = await request('GET', `${prefix}/items/${first.id}/solution`, cookie);
+        assert.equal(solution.statusCode, 200, solution.body);
+        assert.deepEqual(solution.json().solution.referenceProof, definition.referenceProof);
+        return;
+      }
       const checked = await request('POST', `${prefix}/check`, cookie, {
         itemId: first.id,
         answers: valid,
@@ -293,8 +352,7 @@ for (const { definitionFixture, mode } of variants) {
           explanation: 'CHANGED_PRIVATE_EXPLANATION',
         },
       });
-      if (definition.format === 'tree') await assert.rejects(edit, ProofMethodUnavailableError);
-      else await edit;
+      await edit;
       assert.deepEqual(
         (await request('GET', `${prefix}/items/${first.id}/solution`, cookie)).json(),
         solution.json(),

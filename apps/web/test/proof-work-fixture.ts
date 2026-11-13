@@ -170,3 +170,19 @@ export const proofCompletionFinal: SavedStudentAttempt = {
     },
   },
 };
+
+/** Retained mixed assignment: active table plus an unavailable historical tree item. */
+export const retainedTreeWork: SavedStudentAssignment = {
+  ...work,
+  items: [
+    work.items[0]!,
+    {
+      id: itemB,
+      position: 2,
+      title: 'Retained natural-deduction tree',
+      instructions: null,
+      maxPoints: 10,
+      content: { ...content, format: 'tree' },
+    },
+  ],
+};

@@ -1,3 +1,5 @@
+import { ProofMethodUnavailableError } from '../../src/application/proof/availability';
+import { calculateSubmissionResult } from '../../src/persistence/student-work/submission-result';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import type { AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import { test } from 'node:test';
@@ -181,6 +183,76 @@ for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((m
           { type: 'derivation' as const, proof: fitch.referenceProof! },
           { type: 'true_false' as const, answer: true },
         ];
+        if (primary.format === 'tree') {
+          // Unavailable items freeze the complete mixed assignment, including its active/objective items.
+          for (const index of [0, 2, 3])
+            await assert.rejects(
+              studentRun(true, () =>
+                studentStore.save(
+                  student.id,
+                  assignment.id,
+                  savedStudentAnswersSchema.parse({
+                    revision: 0,
+                    itemId: items[index]!.id,
+                    answers: answers[index],
+                  }),
+                ),
+              ),
+              ProofMethodUnavailableError,
+            );
+          await assert.rejects(
+            studentRun(true, () => studentStore.submit(student.id, assignment.id, 0)),
+            ProofMethodUnavailableError,
+          );
+          assert.equal(
+            await em.fork().count(db.AssignmentAttempt, { assignment: assignment.id }),
+            0,
+          );
+          // Historical finals are explicit fixtures. Never call a new-work endpoint to manufacture one.
+          await em.populate(items, ['problemVersion']);
+          const retainedAnswers = {
+            [items[0]!.id]: answers[0]!,
+            [items[1]!.id]: answers[0]!,
+            [items[2]!.id]: answers[2]!,
+            [items[3]!.id]: answers[3]!,
+          };
+          const calculated = calculateSubmissionResult(assignment, items, retainedAnswers);
+          const retained = em.create(db.AssignmentAttempt, {
+            assignment,
+            student,
+            answers: retainedAnswers,
+            result: calculated.result,
+            ...(calculated.score ? { score: calculated.score } : {}),
+            submittedAt: new Date(),
+            revision: 5,
+          });
+          em.persist(retained);
+          await em.flush();
+          const read = await studentRun(false, () => studentStore.read(student.id, assignment.id));
+          assert.equal(read.attempt!.revision, 5);
+          assert.equal(read.attempt!.gradePending, assessment === 'graded');
+          if (assessment === 'graded') assert.equal(read.attempt!.result, null);
+          const review = await ownerRun(false, () =>
+            reviewStore.findSubmission(owner.id, assignment.id, retained.id),
+          );
+          assert.deepEqual(review.attempt.result, calculated.result);
+          await ownerRun(true, () => assignments.release(owner.id, assignment.id, 'answers'));
+          const reference = await studentRun(false, () =>
+            studentStore.solution(student.id, assignment.id, items[0]!.id),
+          );
+          assert('type' in reference.solution && reference.solution.type === 'derivation');
+          assert.deepEqual(reference.solution.referenceProof, primary.referenceProof);
+          if (assessment === 'graded')
+            await ownerRun(true, () => assignments.release(owner.id, assignment.id, 'grades'));
+          const replay = await studentRun(true, () =>
+            studentStore.submit(student.id, assignment.id, 0),
+          );
+          assert.equal(replay.revision, 5);
+          assert.deepEqual(replay.answers, retainedAnswers);
+          assert.deepEqual(replay.result, calculated.result);
+          assert.deepEqual(replay.score, calculated.score);
+          return;
+        }
         for (const [index, answer] of answers.entries())
           await studentRun(true, () =>
             studentStore.save(

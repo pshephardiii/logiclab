@@ -1,3 +1,4 @@
+import { retainedTreeWork, treeAnswer } from '../../../../test/proof-work-fixture';
 import { pointScore } from '../../../../test/assignment-score-fixture';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
 import { truthTableSubmissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
@@ -585,4 +586,25 @@ test('withheld grades never render instructor feedback even when answer access i
   ).toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Instructor feedback' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Show assigned solution' })).toBeInTheDocument();
+});
+
+test('retained mixed tree work stays navigable and read-only without save/check/submission controls', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: retainedTreeWork,
+    attempt: { ...saved, answers: { [itemB]: treeAnswer } },
+  });
+  const { user } = await open();
+  expect(screen.getByRole('status')).toHaveTextContent('unavailable for new attempts');
+  expect(screen.queryByRole('button', { name: 'Save problem' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Submit final answers' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+  for (const cell of screen.getAllByRole('combobox', { name: /Row/ })) expect(cell).toBeDisabled();
+  const chooser = screen.getByLabelText('Problem');
+  await user.selectOptions(chooser, itemB);
+  expect(
+    screen.getByRole('heading', { name: 'Problem 2: Retained natural-deduction tree' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Add node' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
 });

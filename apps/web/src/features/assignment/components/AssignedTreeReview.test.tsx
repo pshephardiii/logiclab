@@ -27,8 +27,8 @@ test('submitted tree shows the normalized conclusion and readonly diagram withou
   expect(screen.queryByText('Permitted rules')).not.toBeInTheDocument();
   expect(screen.queryByText(explanation!)).not.toBeInTheDocument();
   expect(screen.queryByText('Instructor reference proof')).not.toBeInTheDocument();
-  await userEvent.setup().click(screen.getByText('Your submitted proof'));
-  const diagram = screen.getByRole('region', { name: 'Your submitted proof diagram' });
+  await userEvent.setup().click(screen.getByText('Your retained proof'));
+  const diagram = screen.getByRole('region', { name: 'Your retained proof diagram' });
   expect(diagram).toHaveTextContent('Conditional proof');
   expect(within(diagram).queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
@@ -51,9 +51,9 @@ test('authorized reference and submitted tree remain separately labeled without 
     />,
   );
   const user = userEvent.setup();
-  await user.click(screen.getByText('Your submitted proof'));
+  await user.click(screen.getByText('Your retained proof'));
   await user.click(screen.getByText('Instructor reference proof'));
-  expect(screen.getByRole('region', { name: 'Your submitted proof diagram' })).toHaveTextContent(
+  expect(screen.getByRole('region', { name: 'Your retained proof diagram' })).toHaveTextContent(
     '[Q]',
   );
   expect(
@@ -63,4 +63,23 @@ test('authorized reference and submitted tree remain separately labeled without 
   expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
   expect(onAnswer).not.toHaveBeenCalled();
   expect(studentProof).toEqual(before);
+});
+
+test('unavailable tree work remains read-only even when its caller requests editing', () => {
+  const onAnswer = vi.fn(),
+    onCheck = vi.fn();
+  render(
+    <AssignedDerivation
+      item={item}
+      answer={{ type: 'derivation', proof: referenceProof! }}
+      readOnly={false}
+      onAnswer={onAnswer}
+      onCheck={onCheck}
+    />,
+  );
+  expect(screen.getByText(/unavailable for new work/)).toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
+  expect(onAnswer).not.toHaveBeenCalled();
+  expect(onCheck).not.toHaveBeenCalled();
 });

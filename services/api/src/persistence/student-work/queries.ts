@@ -1,3 +1,4 @@
+import { assertProofFormatAvailable } from '../../application/proof/availability';
 import type { DatabaseManager } from '../transactions';
 import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
 import { StudentWorkError } from '../../application/student-work/errors';
@@ -60,6 +61,16 @@ export async function items(em: DatabaseManager, assignmentId: string) {
     { assignment: assignmentId },
     { orderBy: { position: 'ASC' }, populate: ['problemVersion'] },
   );
+}
+
+/** New work is all-or-nothing for mixed assignments; retained reads use items() directly. */
+export async function admittedItems(em: DatabaseManager, assignmentId: string) {
+  const assigned = await items(em, assignmentId);
+  for (const item of assigned) {
+    const definition = item.problemVersion.definition;
+    if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
+  }
+  return assigned;
 }
 
 export async function lockedAttempt(em: DatabaseManager, studentId: string, assignmentId: string) {

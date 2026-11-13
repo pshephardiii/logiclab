@@ -52,135 +52,77 @@ async function open() {
   const user = userEvent.setup();
   render(<AssignedAttempt assignmentId={work.id} />);
   await screen.findByRole('heading', { name: 'Problem 1: First proof' });
-  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
   return user;
 }
 
-test('tree edits retain work across failed saves, problem navigation and Stay without changing the assigned format', async () => {
+test('retained tree drafts are readable and navigable without entry, save or check controls', async () => {
+  const before = structuredClone(saved);
   const user = await open();
-  expect(screen.getByRole('region', { name: 'Tree student proof editor' })).toBeInTheDocument();
-  expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
-  await user.type(screen.getByLabelText('Formula for node 1'), ' &');
-  vi.mocked(api.saveAssignedAnswers).mockRejectedValueOnce(new Error('Save unavailable'));
-  await user.click(screen.getByRole('button', { name: 'Save problem' }));
-  await screen.findByText('Save unavailable');
-  await user.click(screen.getByRole('button', { name: 'Next problem' }));
-  await user.click(screen.getByRole('button', { name: 'Start proof' }));
-  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
-  await user.click(screen.getByRole('button', { name: 'Edit node 1' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
-  await user.click(
-    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
-  );
-  await user.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
-});
-
-test('explicit saves preserve tree identities and establish the confirmed reload baseline', async () => {
-  const user = await open();
-  await user.type(screen.getByLabelText('Formula for node 1'), ' &');
-  const edited = structuredClone(answer);
-  edited.proof.nodes[0]!.formula = 'P ∧';
-  const next = { ...saved, revision: saved.revision + 1, answers: { [itemA]: edited } };
-  vi.mocked(api.saveAssignedAnswers).mockResolvedValue(next);
-  await user.click(screen.getByRole('button', { name: 'Save problem' }));
-  await screen.findByText('Problem 1 saved.');
-  expect(api.saveAssignedAnswers).toHaveBeenCalledWith(
-    work.id,
-    { revision: saved.revision, itemId: itemA, answers: edited },
-    expect.any(AbortSignal),
-  );
-  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
-  const unloading = new Event('beforeunload', { cancelable: true });
-  window.dispatchEvent(unloading);
-  expect(unloading.defaultPrevented).toBe(false);
-  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: work, attempt: next });
-  await user.click(
-    screen.getByRole('button', { name: 'Reload saved work (discard unsaved edits)' }),
-  );
-  await user.click(await screen.findByRole('button', { name: 'Edit node 1' }));
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P ∧');
-  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
-});
-
-test('checks and separately authorized references never save or replace the student tree', async () => {
-  const user = await open();
-  expect(screen.queryByText('PRIVATE_TREE_REFERENCE')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Check proof' }));
-  await screen.findByText('Proof verified.');
-  expect(screen.getByText('Node-by-node checks')).toBeInTheDocument();
-  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
-  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
-  await screen.findByText('PRIVATE_TREE_REFERENCE');
-  expect(screen.getByLabelText('Formula for node 1')).toHaveValue('P');
-  await user.type(screen.getByLabelText('Formula for node 1'), ' &');
-  expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
-  expect(api.checkAssignedAnswers).toHaveBeenCalledTimes(1);
-});
-
-test('late tree check responses are cancelled and cannot annotate a changed snapshot', async () => {
-  let resolve!: (value: Awaited<ReturnType<typeof api.checkAssignedAnswers>>) => void;
-  vi.mocked(api.checkAssignedAnswers).mockImplementationOnce(
-    () =>
-      new Promise((done) => {
-        resolve = done;
-      }),
-  );
-  const user = await open();
-  await user.click(screen.getByRole('button', { name: 'Check proof' }));
-  const signal = vi.mocked(api.checkAssignedAnswers).mock.calls[0]![2];
-  await user.type(screen.getByLabelText('Formula for node 1'), ' &');
-  expect(signal.aborted).toBe(true);
-  resolve({ itemId: itemA, feedback: { type: 'derivation', report } });
-  await waitFor(() => expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument());
-});
-
-test('pending tree entry protects clean work, blocks save/check and retains it on Stay without API writes', async () => {
-  const user = await open();
-  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
-  await user.type(screen.getByLabelText('Formula for node 3'), '~Q');
-  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-  const unload = new Event('beforeunload', { cancelable: true });
-  window.dispatchEvent(unload);
-  expect(unload.defaultPrevented).toBe(true);
-  await user.click(screen.getByRole('button', { name: 'Next problem' }));
-  await user.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for node 3')).toHaveValue('¬Q');
-  await user.click(screen.getByRole('button', { name: 'Next problem' }));
-  await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
-  expect(screen.queryByRole('region', { name: 'Unconfirmed proof node' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Edit node 3' })).not.toBeInTheDocument();
-  const clean = new Event('beforeunload', { cancelable: true });
-  window.dispatchEvent(clean);
-  expect(clean.defaultPrevented).toBe(false);
-  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
-  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
-});
-
-test('pending nodes prevent graded finalization and discard restores clean confirmed work', async () => {
-  vi.mocked(api.readAssignedWork).mockResolvedValue({
-    assignment: { ...work, assessmentMode: 'graded', feedbackTiming: 'on_submission' },
-    attempt: saved,
-  });
-  const user = await open();
-  await user.click(
-    screen.getByRole('checkbox', {
-      name: 'I understand submission is final and cannot be edited.',
-    }),
-  );
-  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
-  await user.click(screen.getByRole('button', { name: 'New assumption node' }));
-  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+  expect(screen.getByRole('status')).toHaveTextContent('unavailable for new attempts');
   expect(
-    screen.getByRole('checkbox', {
-      name: 'I understand submission is final and cannot be edited.',
-    }),
-  ).toBeDisabled();
-  await user.click(screen.getByRole('button', { name: 'Discard entry' }));
-  expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeEnabled();
-  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+    screen.queryByRole('region', { name: 'Tree student proof editor' }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save problem' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
+  await user.click(screen.getByText('Your retained proof'));
+  expect(screen.getByRole('region', { name: 'Your retained proof diagram' })).toHaveTextContent(
+    'Conditional proof',
+  );
+  await user.click(screen.getByRole('button', { name: 'Next problem' }));
+  expect(screen.getByRole('heading', { name: 'Problem 2: Repeated proof' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Previous problem' }));
+  expect(saved).toEqual(before);
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test('authorized retained references stay separate from saved student work without enabling mutations', async () => {
+  const user = await open();
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  expect(await screen.findByText('PRIVATE_TREE_REFERENCE')).toBeInTheDocument();
+  await user.click(screen.getByText('Instructor reference proof'));
+  await user.click(screen.getByText('Your retained proof'));
+  expect(
+    screen.getByRole('region', { name: 'Instructor reference proof diagram' }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Your retained proof diagram' })).toBeInTheDocument();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test('retained pending grades and locked answers remain protected until an authoritative refresh', async () => {
+  const released = {
+    ...work,
+    assessmentMode: 'graded' as const,
+    feedbackTiming: 'on_submission' as const,
+    solutionAccess: 'instructor_release' as const,
+    answersRevealedAt: null,
+  };
+  const final = {
+    ...saved,
+    submittedAt: '2026-11-01T12:00:00.000Z',
+    gradePending: true,
+    result: null,
+  };
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: released, attempt: final });
+  const user = await open();
+  expect(
+    screen.getByRole('heading', { name: 'Submitted — awaiting grade release' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Show assigned solution' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Proof verified.')).not.toBeInTheDocument();
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: { ...released, answersRevealedAt: '2026-11-02T12:00:00.000Z' },
+    attempt: final,
+  });
+  await user.click(screen.getByRole('button', { name: 'Refresh results and answer access' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Show assigned solution' })).toBeInTheDocument(),
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Submitted — awaiting grade release' }),
+  ).toBeInTheDocument();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
 });

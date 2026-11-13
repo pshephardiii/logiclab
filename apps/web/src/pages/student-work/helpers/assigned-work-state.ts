@@ -1,3 +1,4 @@
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import type { ConceptualAnswer } from '@logiclab/contracts';
 import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
@@ -18,12 +19,21 @@ export function assignedWorkCapabilities(
   assignment: StudentAssignment | null,
   attempt: StudentAttempt | null,
 ) {
+  const workUnavailable = Boolean(
+    assignment?.items.some(
+      (item) =>
+        'content' in item &&
+        item.content.type === 'derivation' &&
+        !isProofFormatAvailable(item.content.format),
+    ),
+  );
   const hasFinalSubmission =
     assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
 
   const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
-  const allowsImmediateFeedback = assignment?.feedbackTiming === 'immediate';
-  const allowsExplicitCheck = assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback;
+  const allowsImmediateFeedback = !workUnavailable && assignment?.feedbackTiming === 'immediate';
+  const allowsExplicitCheck =
+    !workUnavailable && (assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback);
 
   const solutionAvailable =
     assignment?.solutionAccess === 'anytime' ||
@@ -32,6 +42,7 @@ export function assignedWorkCapabilities(
     (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
 
   return {
+    workUnavailable,
     hasFinalSubmission,
     requiresCompleteAnswers,
     allowsImmediateFeedback,

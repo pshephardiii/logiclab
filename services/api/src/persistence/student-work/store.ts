@@ -4,7 +4,14 @@ import type {
   AssignmentAttempt as AttemptEntity,
 } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { StudentWorkStore } from './types';
-import { enrolled, accessible, submittableAssignment, items, lockedAttempt } from './queries';
+import {
+  enrolled,
+  accessible,
+  submittableAssignment,
+  items,
+  admittedItems,
+  lockedAttempt,
+} from './queries';
 import { policyFor, checkRevision } from './validation';
 import { calculateSubmissionResult } from './submission-result';
 import { assertProofWorkPolicy } from '../../application/student-work/proof-policy';
@@ -102,6 +109,8 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
+        await admittedItems(em, assignmentId);
+
         const definition = item.problemVersion.definition;
 
         if (definition.type === 'derivation') {
@@ -157,6 +166,8 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
+        await admittedItems(em, assignmentId);
+
         const definition = item.problemVersion.definition;
 
         if (definition.type === 'derivation') {
@@ -193,13 +204,20 @@ export async function createStudentWorkStore(
     async submit(studentId, assignmentId, revision) {
       return transact(async (em) => {
         const assignment = await submittableAssignment(em, studentId, assignmentId);
+        // An immutable final can be replayed even when its method is no longer admitted.
+        // Do not create or lock a new attempt before checking the complete pinned assignment.
+        const retained = await em.findOne(AssignmentAttempt, {
+          assignment: assignmentId,
+          student: studentId,
+        });
+        if (retained?.submittedAt) return response(em, retained, assignment);
+        const assigned = await admittedItems(em, assignmentId);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
 
         if (attempt.submittedAt) return response(em, attempt, assignment);
 
         checkRevision(attempt, revision);
 
-        const assigned = await items(em, assignmentId);
         const calculated = calculateSubmissionResult(assignment, assigned, attempt.answers);
 
         attempt.result = calculated.result;

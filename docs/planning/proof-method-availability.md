@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: availability policy plus owner authoring/assignment admission guards are implemented; student mutation guards, UI controls and explicit renaming remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards and retained student read-only views are implemented; practice/instructor selection controls and explicit renaming remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -29,6 +29,15 @@ This branch both guards availability and clarifies terminology throughout the co
 - Test setup for retained natural-deduction trees uses explicit disposable-schema historical records rather than newly admitting unavailable work through stores. Dedicated normal/demo HTTP coverage verifies write rejection, retained reads, archive/restore and rollback. Underlying transport/checker and retained student-work regression coverage are preserved.
 - Validation: all 1,067 API unit tests and 131 API PostgreSQL workflow checks passed, along with API type checking/build and changed-file formatting/whitespace. Database runs used disposable isolated test schemas; no application database was migrated/reset. No browser run or UI hiding is claimed for this slice.
 - **Remaining:** student attempts/saves/checks/finalization still need their boundary guards, including mixed-assignment behavior. UI selectors/controls still advertise the old method until their slice; format-specific naming cleanup follows coordinated consumer changes. This is not branch completion or a claim that trees are fully hidden yet.
+
+### Slice 3 — student mutation guards and retained read-only work (November 13, 2026)
+
+- Student save/check/finalization validates the complete pinned assignment after existing authorization. Any unavailable proof makes the whole mixed assignment unavailable for new work, including writes/checks targeting supported problems. No item is dropped or treated as completed. Admission precedes attempt creation, and rejected writes retain saved answers/revisions.
+- Already-final submissions remain replayable without re-evaluation or revision changes. Historical assignment/attempt reads, authorized references, instructor review, grading and independent grade/answer release remain available. No historical attempt is rewritten to implement the availability policy.
+- Student pages explain unavailable content, retain navigation across all items and render saved work read-only. Edit/save/check/finalization controls are suppressed; hook methods also guard direct invocations and automatic checks. The assigned-tree panel itself defaults to read-only even if a caller requests editing. Answers and released results still follow their original access policy.
+- Existing active-tree student UI tests now cover retained draft/final viewing, blocked work and independent reference access. Underlying tree editor/checker tests remain intact. Disposable historical database fixtures exercise both normal/demo boundaries, mixed active/unavailable items, no-attempt creation, unchanged saved revisions and final replay/release.
+- Validation: 649 frontend tests and all 131 API PostgreSQL workflow checks passed, along with API/frontend type checking and production builds, changed-file formatting and whitespace. No browser run or database migration/reset was performed for this slice.
+- **Remaining:** remove unavailable choices from public practice, instructor authoring and publication selection; make retained instructor records read-only with clear messaging. Then complete the coordinated explicit natural-deduction-tree naming pass and branch verification. Tree practice/authoring selectors are still present until that next slice; this is not full app hiding or branch completion.
 
 ### Availability guards
 

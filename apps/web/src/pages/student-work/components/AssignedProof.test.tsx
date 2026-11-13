@@ -316,20 +316,30 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
           };
     vi.mocked(api.readAssignedWork).mockResolvedValue({
       assignment: proofCompletionWork,
-      attempt: { ...proofCompletionFinal, submittedAt: null, result: null },
+      attempt:
+        format === 'tree'
+          ? proofCompletionFinal
+          : { ...proofCompletionFinal, submittedAt: null, result: null },
     });
     vi.mocked(api.submitAssignedWork).mockResolvedValue(proofCompletionFinal);
     const { user } = await open();
     expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
     expect(screen.queryByText(/Premise does not match/)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Show solution/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
-    await user.click(
-      screen.getByRole('checkbox', {
-        name: 'I understand submission is final and cannot be edited.',
-      }),
-    );
-    await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+    if (format !== 'tree') {
+      expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
+      await user.click(
+        screen.getByRole('checkbox', {
+          name: 'I understand submission is final and cannot be edited.',
+        }),
+      );
+      await user.click(screen.getByRole('button', { name: 'Submit final answers' }));
+    } else {
+      expect(
+        screen.queryByRole('button', { name: 'Submit final answers' }),
+      ).not.toBeInTheDocument();
+      expect(api.submitAssignedWork).not.toHaveBeenCalled();
+    }
     await screen.findByText(/Completed 2 of 2 responses/);
     expect(screen.queryByLabelText('Point score')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next problem' }));
