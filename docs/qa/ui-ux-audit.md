@@ -4,7 +4,7 @@ Run: **UI-029-001**, November 9, 2026. Branch: `029-chore-dependency-proof-ui` (
 
 ## Current audit entry point
 
-The remaining audit was split into journey-focused branches on November 12, 2026. Start with the [practice UI checklist](practice-ui-checklist.md) on `032-chore-practice-ui-audit`; its run/findings record is separate from this historical baseline. Demo teaching-flow and genuine-account product audits follow, as described in the [updated plan](../planning/ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026). No new manual results are claimed by this planning update.
+The remaining audit was split into journey-focused branches on November 12, 2026. Start with the [practice UI checklist](practice-ui-checklist.md) on `032-chore-practice-ui-audit`; its run/findings record is separate from this historical baseline. Demo teaching-flow and genuine-account product audits follow, as described in the [updated plan](../planning/ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026). Branch 032 closeout and the subsequent tree-availability/tableaux/practice-audit sequence are recorded in [practice verification](../verification/practice-ui-audit-verification.md). This does not mark the broader baseline findings as resolved.
 
 ## Agreed direction and working targets
 

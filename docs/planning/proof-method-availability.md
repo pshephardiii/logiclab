@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026. **Planned, not implemented.** Current practice UI work remains on `032-chore-practice-ui-audit`.
+Decision: November 12, 2026; sequence confirmed November 13. **Availability guards and semantic tableaux are planned, not implemented.** Practice UI branch `032-chore-practice-ui-audit` is closing; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -40,6 +40,11 @@ Success means the application no longer offers new natural-deduction tree work, 
 
 ## Following work
 
-Finish the current practice audit using truth tables, Fitch and dependency only. After the disabling/naming branch, plan semantic tableaux in a dedicated branch and determine its implementation slices. Do not claim tableaux are available or assume an exact checker/editor/grading design yet.
+The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass. This is not exhaustive functional/accessibility sign-off. The agreed next sequence is:
 
-The remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026)—demo teaching flow, then genuine-account product review—remain planned. Their former proposed numbers 033/034 are superseded; assign fresh numbers after the intervening proof-method work is sequenced. Keep portfolio sandbox preparation after the agreed release work. This plan does not create a branch, implement guards or authorize deployment.
+1. **`033-chore-disable-natural-deduction-trees`**: implement the guards, retained-history behavior and explicit naming above while keeping the underlying implementation for possible future inclusion.
+2. **`034-feat-semantic-tableaux`** (proposed): add truth trees as a distinct method. Settle decomposition/branching, closure, finished-open-branch counterexamples, authoring, student responses, feedback and grading before their dependent slices. Reuse suitable propositional infrastructure without repurposing natural-deduction tree semantics. Split implementation into further numbered branches if necessary rather than treating this reservation as a fixed-size commitment.
+3. **`035-chore-truth-tree-practice-ui-audit`** (proposed, after tableaux delivery): fine-tune independent truth-tree practice using a dedicated checklist, representative validity/counterexample journeys, branching/closure interactions, keyboard controls and visual/mobile QA. Do not claim the current practice checklist verifies an unimplemented method.
+4. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
+
+The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This plan does not create a branch, implement guards or authorize deployment.

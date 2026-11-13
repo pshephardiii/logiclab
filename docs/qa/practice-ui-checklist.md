@@ -1,6 +1,6 @@
 # Practice UI audit checklist
 
-Branch: `032-chore-practice-ui-audit`. Created November 12, 2026. Status: **In progress; natural-deduction tree cases deferred**. This checklist is an execution guide, not evidence that a case passed.
+Branch: `032-chore-practice-ui-audit`. Created November 12, 2026. Status: **Closing November 13, 2026; user accepts truth-table/Fitch/dependency practice UI for this pass; natural-deduction tree cases deferred**. This checklist is an execution guide, not evidence that every case passed. Final checks and limits are recorded in the [verification record](../verification/practice-ui-audit-verification.md).
 
 ## Scope and working agreement
 
@@ -447,3 +447,9 @@ The user considers the truth-table UI satisfactory for this pass and moved on to
 - **Request:** remove Fitch-like vertical assumption guides and their extra formula-column indentation from independent dependency practice. Retain the distinction between supplied **Premise** lines and temporary **Assumption** lines.
 - **Change:** practice opts into a flat, aligned formula column while retaining explicit dependency sets, numbered lines, rule/citation justifications and assumption/concluding-line discharge references. The shared display keeps its existing default for instructor references and assigned work; Fitch is unaffected. No proof data, checker semantics or persistence changes.
 - **Verification:** 63 focused frontend tests across practice, dependency display/editor, assigned dependency work and dependency authoring passed. Frontend type checking/production build, changed-file formatting and whitespace passed. New cases verify omitted guides/zero guide indentation, retained labels/dependencies/discharge citations, unchanged default display and input data, and successful real-engine checking after discharge. No additional browser run or full frontend suite was performed for this small presentation change; user visual retest remains pending.
+
+## Branch closeout — November 13, 2026
+
+The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass and requested final validation/PR notes. This does not retroactively mark every checklist item or earlier retest as passed. In particular, no complete screen-reader/browser matrix or exhaustive manual case sweep was performed. Findings above retain their original slice evidence and dates.
+
+Next: disable new natural-deduction tree use while retaining/clarifying its code on 033, add semantic tableaux on proposed 034, fine-tune truth-tree practice UI on proposed 035, then resume the demo teaching-flow and genuine-account product audits. See the [current sequence](../planning/proof-method-availability.md#following-work). Natural-deduction trees remain available until 033 implements the guards; tableaux are not available yet.
