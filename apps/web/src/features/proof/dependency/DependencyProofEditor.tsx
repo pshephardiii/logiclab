@@ -1,9 +1,10 @@
+import { ProofRangeSelectionHelp } from '../components/ProofRangeSelectionHelp';
 import { DependencyRangeDeletionDialog } from './DependencyRangeDeletionDialog';
 import type { ReactNode } from 'react';
 import { dependencyEntryRequirement } from './entry-requirements';
 import { createDependencyDischargeEntry } from './discharge-entry';
 import { proofNotation } from '../helpers/proof-notation';
-import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
+import { DependencyProofRemovalDialog } from './DependencyProofRemovalDialog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
@@ -258,21 +259,15 @@ export function DependencyProofEditor({
             </>
           ) : (
             <>
-              {rangeStart ? (
-                <div className="dependency-range-instructions">
-                  <p role="status">
-                    Line {proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'}{' '}
-                    selected. Select the line number at the other end of the range.
-                  </p>
-                  <button type="button" className="secondary" onClick={cancelRange}>
-                    Cancel selection
-                  </button>
-                </div>
-              ) : (
-                <p className="help">
-                  To delete several lines, select the first and last line numbers.
-                </p>
-              )}
+              <ProofRangeSelectionHelp
+                className="dependency-range-instructions"
+                startLine={
+                  rangeStart
+                    ? proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'
+                    : undefined
+                }
+                onCancel={cancelRange}
+              />
               <DependencyProofDisplay
                 showAssumptionGuides={showAssumptionGuides}
                 proof={proof}
@@ -386,27 +381,15 @@ export function DependencyProofEditor({
             />
           )}
           {deletion && (
-            <ProofDeletionPrompt
-              modal
-              label="Confirm proof deletion"
+            <DependencyProofRemovalDialog
+              reference={reference}
               onCancel={() => setDeletion(null)}
-            >
-              <p>{reference ? 'Remove the entire reference proof?' : 'Remove the entire proof?'}</p>
-              <button
-                type="button"
-                className="danger"
-                onClick={() => {
-                  setBefore(null);
-                  setSelectedId(null);
-                  change(null);
-                }}
-              >
-                Confirm deletion
-              </button>
-              <button type="button" className="secondary" onClick={() => setDeletion(null)}>
-                Keep proof
-              </button>
-            </ProofDeletionPrompt>
+              onConfirm={() => {
+                setBefore(null);
+                setSelectedId(null);
+                change(null);
+              }}
+            />
           )}
         </>
       )}

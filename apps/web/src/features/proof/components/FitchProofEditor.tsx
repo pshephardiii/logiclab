@@ -1,3 +1,5 @@
+import { FitchEntryControls } from './FitchEntryControls';
+import { ProofRangeSelectionHelp } from './ProofRangeSelectionHelp';
 import { FitchRangeDeletionDialog } from './FitchRangeDeletionDialog';
 import { FitchProofDeletionConfirmation } from './FitchProofDeletionConfirmation';
 import { fitchEditorChoices } from '../helpers/proof-editor-choices';
@@ -13,7 +15,6 @@ import {
   removeFitchSubproof,
   fitchProofSubtree,
   uniqueFitchProofIds,
-  fitchProofDepth,
 } from '../helpers/fitch-editor';
 import { createFitchEntry, type FitchEntry } from '../helpers/fitch-entry';
 import { resumedFitchScope, fitchScopeEndpoint } from '../helpers/fitch-entry-scope';
@@ -319,21 +320,15 @@ export function FitchProofEditor({
             </>
           ) : (
             <>
-              {rangeStart ? (
-                <div className="fitch-range-instructions">
-                  <p role="status">
-                    Line {proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'}{' '}
-                    selected. Select the line number at the other end of the range.
-                  </p>
-                  <button type="button" className="secondary" onClick={cancelRange}>
-                    Cancel selection
-                  </button>
-                </div>
-              ) : (
-                <p className="help">
-                  To delete several lines, select the first and last line numbers.
-                </p>
-              )}
+              <ProofRangeSelectionHelp
+                className="fitch-range-instructions"
+                startLine={
+                  rangeStart
+                    ? proof.steps.findIndex((step) => step.id === rangeStart.id) + 1 || '?'
+                    : undefined
+                }
+                onCancel={cancelRange}
+              />
               <FitchProofDisplay
                 proof={proof}
                 rules={statement.rules}
@@ -464,68 +459,21 @@ export function FitchProofEditor({
                 </>
               ) : (
                 <>
-                  <fieldset
+                  <FitchEntryControls
+                    proof={proof}
+                    scope={scope}
+                    before={before}
                     disabled={pending || rangeStart !== null}
-                    className="fitch-entry-options"
-                  >
-                    <p
-                      className="fitch-current-scope"
-                      aria-label="Current proof scope"
-                      data-scope-id={scope ?? ''}
-                    >
-                      {activeBlock
-                        ? `Inside subproof starting at line ${proof.steps.findIndex((step) => step.id === activeBlock.assumptionId) + 1 || '?'}${before === null ? ' — close it to continue in the parent proof.' : ''}`
-                        : scope
-                          ? 'Unavailable subproof scope'
-                          : 'Main proof'}
-                    </p>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={
-                        proof.steps.length >= PROOF_LIMITS.maxSteps ||
-                        proof.blocks.length >= PROOF_LIMITS.maxBlocks ||
-                        (fitchProofDepth(proof, scope) ?? PROOF_LIMITS.maxBlockDepth) >=
-                          PROOF_LIMITS.maxBlockDepth
-                      }
-                      onClick={openSubproof}
-                    >
-                      Open subproof
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={!endpoint}
-                      onClick={() =>
-                        activeBlock && endpoint && closeBlock(activeBlock.id, endpoint.id)
-                      }
-                    >
-                      Close subproof
-                    </button>
-                    {reopenCandidate && (
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => reopenBlock(reopenCandidate.id)}
-                      >
-                        Reopen subproof
-                      </button>
-                    )}
-                  </fieldset>
-                  {before && (
-                    <p className="help">
-                      Inserting before line{' '}
-                      {proof.steps.findIndex((step) => step.id === before) + 1 || '?'}.
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={pending}
-                        onClick={() => setBefore(null)}
-                      >
-                        Append at end instead
-                      </button>
-                    </p>
-                  )}
+                    pending={pending}
+                    onOpen={openSubproof}
+                    onClose={
+                      activeBlock && endpoint
+                        ? () => closeBlock(activeBlock.id, endpoint.id)
+                        : undefined
+                    }
+                    onReopen={reopenCandidate ? () => reopenBlock(reopenCandidate.id) : undefined}
+                    onAppend={() => setBefore(null)}
+                  />
                   {!current && (
                     <p role="status">
                       {proof.steps.length >= PROOF_LIMITS.maxSteps

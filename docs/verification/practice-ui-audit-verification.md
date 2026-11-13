@@ -1,6 +1,6 @@
 # Practice UI audit verification
 
-Branch: `032-chore-practice-ui-audit`. Application checkout: `29fc76b`, followed by documentation-only closeout. Final validation recorded November 13, 2026.
+Branch: `032-chore-practice-ui-audit`. Application baseline: `29fc76b`, followed by the presentation-only extraction noted below and closeout documentation. Final validation recorded November 13, 2026.
 
 ## Result and scope
 
@@ -20,6 +20,7 @@ Both entry flows require a formula, enabled rule and the rule's required citatio
 
 - `npm run format:check`, branch/working-tree whitespace and changed local Markdown file targets: passed (176 local file targets; heading anchors were not checked).
 - Final logs are local: `/private/tmp/practice-audit-final-check.log` (initial failure), `/private/tmp/practice-audit-final-check-unrestricted.log` (passing rerun), and `/private/tmp/practice-audit-final-format.log`.
+- After code review, extracted Fitch scoped formulas, justifications and entry controls, dependency full-removal confirmation and shared range-selection help into controlled components. State, mutation ordering, focus effects, callbacks, DOM structure and styling remain with their existing owners/semantics. All 648 frontend tests and frontend type checking/production build were rerun successfully after this extraction; existing behavior tests cover the moved code without new tests tied to file boundaries. No additional browser or backend run was performed for this presentation-only cleanup.
 - No API, persistence, shared contract, logic-engine or database schema code changed. PostgreSQL checks were not repeated for this frontend/planning branch.
 - Existing Jest VM-module advisories remain; no warning threshold or test configuration was weakened.
 

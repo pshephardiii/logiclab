@@ -1,7 +1,8 @@
 import { FitchLineActions } from './FitchLineActions';
 import type { ReactNode } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
-import { proofNotation } from '../helpers/proof-notation';
+import { FitchScopedFormula } from './FitchScopedFormula';
+import { FitchJustification } from './FitchJustification';
 import { fitchDisplayScope } from '../helpers/fitch-display';
 import './fitch-proof-display.css';
 
@@ -171,54 +172,16 @@ export function FitchProofDisplay({
                 <td
                   className={`fitch-line-formula${index === premiseBoundary ? ' premise-boundary' : ''}`}
                 >
-                  <span
-                    className="fitch-scoped-formula"
-                    style={{ paddingLeft: `${scope.path.length * 0.7}rem` }}
-                  >
-                    <span className="fitch-scope-guides" aria-hidden="true">
-                      {scope.path.map((block, depth) => (
-                        <span
-                          key={block.id}
-                          className={`fitch-scope-guide${block.assumptionId === step.id ? ' scope-start' : ''}${block.endId === step.id ? ' scope-end' : ''}`}
-                          style={{ left: `${depth * 0.7}rem` }}
-                        />
-                      ))}
-                    </span>
-                    <code>{proofNotation(step.formula) || '(blank)'}</code>
-                  </span>
+                  <FitchScopedFormula step={step} path={scope.path} />
                 </td>
                 <td className="fitch-line-justification">
-                  {step.kind === 'inference' ? (
-                    <>
-                      {step.ruleId
-                        ? (labels.get(step.ruleId) ?? 'Unavailable rule')
-                        : 'No rule selected'}
-                      {step.lineReferences.length > 0 &&
-                        ` · ${step.lineReferences.map(line).join(', ')}`}
-                      {step.subproofReferences.length > 0 &&
-                        ` · subproof ${step.subproofReferences
-                          .map((id) => {
-                            const block = blocks.get(id);
-                            return block
-                              ? block.endId
-                                ? `${line(block.assumptionId)}–${line(block.endId)}`
-                                : `starting at line ${line(block.assumptionId)} (not closed)`
-                              : 'Missing subproof';
-                          })
-                          .join(', ')}`}
-                    </>
-                  ) : step.kind === 'premise' ? (
-                    'Premise'
-                  ) : (
-                    'Assumption'
-                  )}
-                  {scope.path.length > 0 && (
-                    <span className="proof-control-label">
-                      Inside subproof{' '}
-                      {scope.path.map((block) => line(block.assumptionId)).join(', ')}
-                    </span>
-                  )}
-                  {scope.warning && <span className="fitch-scope-warning">{scope.warning}</span>}
+                  <FitchJustification
+                    step={step}
+                    labels={labels}
+                    blocks={blocks}
+                    line={line}
+                    scope={scope}
+                  />
                 </td>
                 {!readOnly && onEdit && <td>{actions}</td>}
               </tr>
