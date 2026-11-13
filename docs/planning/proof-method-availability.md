@@ -87,6 +87,8 @@ Success means the application no longer offers new natural-deduction tree work, 
 
 ## Following work
 
+Branch 034 has started with the [truth-tree formula/rule foundation](truth-trees.md). This does not yet enable truth-tree exercises; branch structure, checking and application workflows follow in separate slices.
+
 The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass. This is not exhaustive functional/accessibility sign-off. The agreed next sequence is:
 
 1. **`033-chore-disable-natural-deduction-trees` — complete**: guards, retained-history behavior, explicit naming and focused verification are delivered; the implementation is retained for possible future inclusion.
