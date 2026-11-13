@@ -8,7 +8,7 @@ import { createProblemStore } from '../../src/persistence/problem/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
-import { derivationDefinitionFixture, treeDefinitionFixture } from '../derivation-fixture';
+import { derivationDefinitionFixture, dependencyDefinitionFixture } from '../derivation-fixture';
 import type { ResourceUser } from '../../src/routes/resource-context';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -16,7 +16,7 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-for (const definitionFixture of [derivationDefinitionFixture, treeDefinitionFixture]) {
+for (const definitionFixture of [derivationDefinitionFixture, dependencyDefinitionFixture]) {
   test(`${definitionFixture().format}: private normal/demo HTTP authoring preserves reference and assignment boundaries`, async () => {
     const db = await import('@logiclab/db');
     const schema = `derivation_http_${randomUUID().replaceAll('-', '')}`;

@@ -1,3 +1,4 @@
+import { assertProofFormatAvailable } from '../proof/availability';
 import { DerivationPublicationError } from './derivation/errors';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { validateObjectiveDefinition } from './definition-support';
@@ -27,6 +28,13 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
   return validateObjectiveDefinition(value);
 }
 
+/** New owner work uses availability policy; historical validation above remains format-complete. */
+export function authoringDefinition(value: unknown): LibraryProblemDefinition {
+  const definition = libraryProblemDefinition(value);
+  if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
+  return definition;
+}
+
 /** Check the authoritative saved definition with its own format's checker. */
 export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
@@ -40,7 +48,7 @@ export function libraryReferenceCheck(
 
 /** Call under the saved problem's lock immediately before creating its immutable snapshot. */
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
-  const definition = libraryProblemDefinition(value);
+  const definition = authoringDefinition(value);
 
   if (definition.type === 'derivation') {
     const check = libraryReferenceCheck(definition);

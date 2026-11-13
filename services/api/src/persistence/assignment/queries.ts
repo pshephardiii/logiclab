@@ -4,7 +4,7 @@ import type { Assignment as AssignmentEntity } from '@logiclab/db' with {
 import type { AssignmentDetail } from '@logiclab/contracts';
 import type { DatabaseManager } from '../transactions';
 import { AssignmentOperationError } from '../../application/assignment/errors';
-import { supportedAssignmentDefinition } from '../../application/assignment/definition-support';
+import { assignmentAdmissionDefinition } from '../../application/assignment/definition-support';
 import { assignmentDetail } from './detail-response';
 
 // Use the caller's manager so ownership checks and locks stay in the operation's transaction.
@@ -52,7 +52,7 @@ export async function ownedVersions(
 
   if (versions.length !== uniqueIds.length) throw new AssignmentOperationError('version_not_found');
 
-  versions.forEach((version) => supportedAssignmentDefinition(version.definition, policy));
+  versions.forEach((version) => assignmentAdmissionDefinition(version.definition, policy));
   return new Map(versions.map((version) => [version.id, version]));
 }
 

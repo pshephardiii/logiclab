@@ -1,3 +1,4 @@
+import { ProofMethodUnavailableError } from '../../../proof/availability';
 import type {
   TreeProof,
   TreeProofNode,
@@ -248,7 +249,7 @@ test('format-specific certification cannot reuse an accepted Fitch or dependency
   );
 });
 
-test('tree admission supports each assessment mode while retaining proof feedback-policy checks', () => {
+test('historical tree projection supports each assessment mode while new publication is unavailable', () => {
   const value = treePublicationDefinition(treeDefinitionFixture());
   expect(libraryProblemDefinitionSchema.safeParse(value).success).toBe(true);
   expect(
@@ -256,7 +257,7 @@ test('tree admission supports each assessment mode while retaining proof feedbac
       .success,
   ).toBe(true);
   expect(libraryProblemDefinition(value)).toEqual(value);
-  expect(publicationDefinition(value)).toEqual(value);
+  expect(() => publicationDefinition(value)).toThrow(ProofMethodUnavailableError);
   expect(publicDerivationContent(value)).toEqual(treeContent(value));
   expect(derivationReferenceSolution(value)).toEqual(treeReferenceSolution(value));
   expect(

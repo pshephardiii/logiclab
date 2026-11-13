@@ -88,7 +88,7 @@ test('cleanup removes frozen demo work, sessions and financial data while retain
       await em.count(db.ClassEntitlement, { sourceReference: purchase.checkoutReference }),
       0,
     );
-    assert.equal(await em.count(db.ProblemVersion, {}), 6);
+    assert.equal(await em.count(db.ProblemVersion, {}), 5);
     assert.equal(await em.count(db.DemoWorkspace, { id: live.workspaceId }), 1);
     assert.equal(await em.count(db.Classroom, { id: classroom.id }), 1);
     assert.equal(await em.count(db.BillingPlan, {}), 1);

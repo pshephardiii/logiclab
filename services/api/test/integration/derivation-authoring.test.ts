@@ -2,11 +2,7 @@ import { DerivationPublicationError } from '../../src/application/problem/deriva
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import {
-  derivationDefinitionFixture,
-  dependencyDefinitionFixture,
-  treeDefinitionFixture,
-} from '../derivation-fixture';
+import { derivationDefinitionFixture, dependencyDefinitionFixture } from '../derivation-fixture';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
@@ -39,11 +35,7 @@ async function fixture(
   }
 }
 
-for (const definition of [
-  derivationDefinitionFixture,
-  dependencyDefinitionFixture,
-  treeDefinitionFixture,
-]) {
+for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixture]) {
   const format = definition().format;
   const checkReference = (value: unknown) => {
     const parsed = libraryProblemDefinition(value);
@@ -160,23 +152,6 @@ for (const definition of [
         feedbackTiming: 'on_submission',
         solutionAccess: 'never',
       } as const;
-      if (format === 'tree') {
-        for (const assessmentMode of ['graded', 'completion_only', 'ungraded_practice'] as const) {
-          const created = await assignments.create(owner.id, classroom.id, {
-            ...input,
-            assessmentMode,
-            feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',
-            problemVersionIds: [...input.problemVersionIds],
-          });
-          assert.equal(created.items[0]!.problemVersion.id, published.version.id);
-        }
-        assert.equal(await em.fork().count(db.Assignment, { classroom: classroom.id }), 3);
-        assert.equal(
-          await em.fork().count(db.AssignmentItem, { problemVersion: published.version.id }),
-          3,
-        );
-        return;
-      }
       const graded = await assignments.create(owner.id, classroom.id, {
         ...input,
         problemVersionIds: [...input.problemVersionIds],

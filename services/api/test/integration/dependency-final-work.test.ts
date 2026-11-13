@@ -122,17 +122,36 @@ for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((m
         em.persist(assignment);
         const items: AssignmentItem[] = [];
         for (const [index, definition] of definitionList.entries()) {
-          const draft = await problems.create(owner.id, {
-            title: `Final item ${index + 1}`,
-            definition,
-          });
-          const published = await problems.publish(owner.id, draft.id);
-          if (published.status !== 'published') assert.fail('Expected publication');
+          let version;
+          if (definition.type === 'derivation' && definition.format === 'tree') {
+            // Historical tree setup is direct data, never a newly admitted authoring operation.
+            const problem = em.create(db.Problem, {
+              owner,
+              title: `Retained item ${index + 1}`,
+              definition,
+            });
+            version = em.create(db.ProblemVersion, {
+              problem,
+              version: 1,
+              title: problem.title,
+              definition,
+            });
+            em.persist([problem, version]);
+            await em.flush();
+          } else {
+            const draft = await problems.create(owner.id, {
+              title: `Final item ${index + 1}`,
+              definition,
+            });
+            const published = await problems.publish(owner.id, draft.id);
+            if (published.status !== 'published') assert.fail('Expected publication');
+            version = em.getReference(db.ProblemVersion, published.version.id);
+          }
           const item = em.create(db.AssignmentItem, {
             assignment,
             position: index + 1,
             maxPoints: [20, 10, 5, 5][index]!,
-            problemVersion: em.getReference(db.ProblemVersion, published.version.id),
+            problemVersion: version,
           });
           items.push(item);
           em.persist(item);

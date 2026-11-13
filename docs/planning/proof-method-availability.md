@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: shared availability policy is implemented; endpoint/UI enforcement and semantic tableaux are not implemented yet.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: availability policy plus owner authoring/assignment admission guards are implemented; student mutation guards, UI controls and explicit renaming remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -20,6 +20,15 @@ This branch both guards availability and clarifies terminology throughout the co
 - The application has an explicit new-work guard and an actionable `409 PROOF_METHOD_UNAVAILABLE` error mapping shared by problem, assignment and student-work route error handlers. Call the guard after existing validation/authorization at the mutation boundaries in the next slices; it does not authorize historical reads.
 - Focused tests retain natural-deduction tree transport validation, owner-definition validation and real reference checking while rejecting that format under the new admission policy. No checker, stored discriminant or historical validator was removed.
 - **Not yet hidden or enforced at endpoints:** tree selectors, authoring/assignment/student mutations and demo seeds remain unchanged in this foundation slice. Next wire guarded owner authoring/publication and assignment admission under existing locks, retaining historical projections; then address student mutations, UI/seeds and coordinated explicit renaming.
+
+### Slice 2 — owner admission and demo seed (November 13, 2026)
+
+- Problem create, saved-draft edits (including metadata-only changes or format replacement), and new reference publication enforce availability. Existing draft/version reads, historical reference checking, and archive/restore remain available under their existing authorization. Guard saved/replacement definitions before editing fields, under the existing lock/transaction where applicable.
+- Assignment create, replacement, policy/weight/title updates, duplication and first publication validate every effective pinned version. Mixed assignments cannot silently drop unavailable items or bypass the guard through omitted item lists. Historical detail/list/review projections and existing published-state retries remain separate from new admission. A draft may be repaired by explicitly replacing its items with only supported versions; a rejected write rolls back the entire mutation.
+- Seeding uses these stores too, so **template 8** is part of this slice: new/reset visitors receive Fitch/dependency examples only, with 40 possible graded proof points. Existing visitors retain their template/data until explicit reset; reset preserves the original absolute deadline and other visitors' records. No user development database reset or migration is needed.
+- Test setup for retained natural-deduction trees uses explicit disposable-schema historical records rather than newly admitting unavailable work through stores. Dedicated normal/demo HTTP coverage verifies write rejection, retained reads, archive/restore and rollback. Underlying transport/checker and retained student-work regression coverage are preserved.
+- Validation: all 1,067 API unit tests and 131 API PostgreSQL workflow checks passed, along with API type checking/build and changed-file formatting/whitespace. Database runs used disposable isolated test schemas; no application database was migrated/reset. No browser run or UI hiding is claimed for this slice.
+- **Remaining:** student attempts/saves/checks/finalization still need their boundary guards, including mixed-assignment behavior. UI selectors/controls still advertise the old method until their slice; format-specific naming cleanup follows coordinated consumer changes. This is not branch completion or a claim that trees are fully hidden yet.
 
 ### Availability guards
 
