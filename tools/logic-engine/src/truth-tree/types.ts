@@ -5,7 +5,7 @@ import type { TruthTreeRuleId } from './rule-catalog';
 export type TruthTreeFormula = FormulaNode<{ readonly type: 'bottom' }>;
 
 /** Alternatives split branches; formulas inside each alternative stay together. */
-export type TruthTreeExpansion = {
+export type TruthTreeFormulaExpansion = {
   kind: 'expansion';
   ruleId: TruthTreeRuleId;
   branches:
@@ -14,4 +14,4 @@ export type TruthTreeExpansion = {
 };
 
 export type TruthTreeDecomposition =
-  TruthTreeExpansion | { kind: 'literal' } | { kind: 'constant'; value: boolean };
+  TruthTreeFormulaExpansion | { kind: 'literal' } | { kind: 'constant'; value: boolean };

@@ -8,4 +8,4 @@ export { decomposeTruthTreeFormula } from './decompose-formula';
 
 export { areTruthTreeComplements } from './contradiction';
 
-export type { TruthTreeFormula, TruthTreeExpansion, TruthTreeDecomposition } from './types';
+export type { TruthTreeFormula, TruthTreeFormulaExpansion, TruthTreeDecomposition } from './types';

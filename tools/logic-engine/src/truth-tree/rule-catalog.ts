@@ -1,3 +1,7 @@
+import type { TruthTreeRuleId } from '@logiclab/contracts/truth-tree';
+
+export type { TruthTreeRuleId } from '@logiclab/contracts/truth-tree';
+
 /** Exact unsigned classical decomposition variants; independent of deduction rule permissions. */
 export const TRUTH_TREE_RULE_CATALOG_VERSION = 1;
 
@@ -11,9 +15,7 @@ const definitions = [
   { id: 'negated_conditional', label: 'Negated conditional', branching: false },
   { id: 'biconditional', label: 'Biconditional', branching: true },
   { id: 'negated_biconditional', label: 'Negated biconditional', branching: true },
-] as const;
-
-export type TruthTreeRuleId = (typeof definitions)[number]['id'];
+] as const satisfies readonly { id: TruthTreeRuleId; label: string; branching: boolean }[];
 
 export const TRUTH_TREE_RULE_CATALOG = Object.freeze(
   definitions.map((definition) => Object.freeze(definition)),

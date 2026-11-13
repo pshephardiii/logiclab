@@ -11,6 +11,11 @@
       "browser": "./dist/browser/index.js",
       "default": "./dist/index.js"
     },
+    "./truth-tree": {
+      "types": "./dist/truth-tree.d.ts",
+      "browser": "./dist/browser/truth-tree.js",
+      "default": "./dist/truth-tree.js"
+    },
     "./derivation": {
       "types": "./dist/derivation.d.ts",
       "browser": "./dist/browser/derivation.js",

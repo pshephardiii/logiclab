@@ -37,3 +37,5 @@ export * from './dependency-proof';
 export * from './natural-deduction-tree';
 
 export * from './proof-method-availability';
+
+export * from './truth-tree';
