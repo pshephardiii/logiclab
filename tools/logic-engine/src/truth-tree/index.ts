@@ -13,3 +13,5 @@ export type { TruthTreeFormula, TruthTreeFormulaExpansion, TruthTreeDecompositio
 export { analyzeTruthTreeStructure } from './structure';
 
 export type { TruthTreeStructureResult } from './structure';
+
+export { checkTruthTreeSteps } from './check-steps';

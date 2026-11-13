@@ -13,6 +13,10 @@ export { truthTreeDiagnosticSchema } from './truth-tree-diagnostics';
 
 export type { TruthTreeDiagnostic } from './truth-tree-diagnostics';
 
+export { truthTreeStepReportSchema } from './truth-tree-step-report';
+
+export type { TruthTreeStepReport } from './truth-tree-step-report';
+
 /** Source identity is distinct from formula text, including repeated premises or occurrences. */
 export const truthTreeOccurrenceSchema = z.strictObject({
   id,

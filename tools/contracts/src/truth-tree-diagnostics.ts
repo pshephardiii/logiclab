@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { truthTreeIdSchema as id } from './truth-tree-fields';
 
-/** Structural evidence only; no argument-validity verdict or awarded points. */
+/** Checking evidence only; no argument-validity verdict or awarded points. */
 export const truthTreeDiagnosticSchema = z.strictObject({
   code: z.enum([
     'UNSUPPORTED_VERSION',
@@ -9,6 +9,12 @@ export const truthTreeDiagnosticSchema = z.strictObject({
     'INVALID_STRUCTURE',
     'INVALID_REFERENCE',
     'INCOMPLETE_TREE',
+    'INVALID_PROBLEM',
+    'INVALID_FORMULA',
+    'INITIAL_MISMATCH',
+    'UNKNOWN_RULE',
+    'RULE_MISMATCH',
+    'INVALID_CLOSURE',
   ]),
   message: z.string().min(1).max(500),
   branchId: id.optional(),
