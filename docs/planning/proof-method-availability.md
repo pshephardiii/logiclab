@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards, available-only selection controls and retained read-only views are implemented; explicit naming cleanup and final verification remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards, available-only selection controls and retained read-only views are implemented; explicit naming cleanup is implemented; final branch verification remains in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -48,6 +48,15 @@ This branch both guards availability and clarifies terminology throughout the co
 - Validation: all 640 frontend tests and frontend type checking/production build passed, plus changed-file formatting and whitespace. New cases cover unavailable-choice injection, version-only filtering across an empty page, retained library archive/restore/history, fixed instructor content and disabled duplicate/publication actions. This frontend-only slice did not repeat database checks or browser QA.
 - **Next:** coordinated format-specific file/directory/symbol naming, preserving serialized `format: 'tree'`, followed by branch-wide validation and focused browser verification. No semantic tableaux or automatic data conversion is introduced here.
 
+### Slice 5 — explicit retained-method naming (November 13, 2026)
+
+- Engine/source/test, application-authoring and frontend implementation directories use `natural-deduction-tree/`. Format-specific components, helpers, contracts, database JSON types and fixtures have corresponding explicit names, including `NaturalDeductionTreeProof`, `naturalDeductionTreeProofSchema` and `checkNaturalDeductionTreeProof`.
+- Private contract package entries are now `@logiclab/contracts/natural-deduction-tree-derivation` and `@logiclab/contracts/natural-deduction-tree-derivation-work`. All workspace consumers move together; there are no old-name compatibility re-exports. Rebuild matching workspaces before running applications/tests. Root engine `/proof` and `/proof/completion` entries remain the same, with explicit format-specific exported function names.
+- Stored `format: 'tree'`, object fields, versions, IDs, rules and retained evidence formats are unchanged. CSS selectors and associated retained-view labels are renamed together; shared proof orchestration remains generic. No migration or data rewrite accompanies the naming changes.
+- Current API/architecture/convention references use the new names and clarify unavailable new work. Original branch names, verification records and screenshots retain their historical filenames/names. Semantic tableaux are still unimplemented and must not reuse the retained checker as though the two methods differed only in presentation.
+- Validation: `npm run check` passed all 2,294 tests (587 engine, 1,067 API, 640 frontend), workspace type checks and production builds. `npm run db:test` passed 315 checks (184 database, 131 API/workflow). Built CJS/ESM public-entry smoke verified renamed schemas/checker/completion, preserved `format: 'tree'` payloads and unavailable admission, plus removal of the old package entry. All 45 moved tracked source/test files have corresponding new paths; 71 changed-document local file targets resolve (heading anchors not checked). Formatting/whitespace passed. Application data and migration history were not rewritten.
+- Remaining closeout: focused browser verification of the guarded entry points/retained views, final verification documentation and local PR notes. No new browser run is claimed by this naming slice.
+
 ### Availability guards
 
 - Remove natural-deduction trees from public practice setup, instructor format controls and new assignment problem selection in normal/demo modes. Update navigation/help text that currently advertises three active proof formats.
@@ -63,8 +72,8 @@ Use **natural-deduction tree** in user-facing text and documentation for the ret
 
 Scan frontend, backend, shared tools, tests and documentation together. Include file and directory names, identifiers, schemas/types, imports/exports, fixtures, comments, diagnostics and help labels—not just visible dropdown text.
 
-- Rename format-specific `tree/` directories to an explicit name such as `natural-deduction-tree/`, following the owning area's conventions.
-- Rename ambiguous format-specific files/components such as `TreeProofEditor`, `TreeProofSummary` and their tests to corresponding `NaturalDeductionTree…` names. Apply the same clarity to format-specific contract/checker/helper modules and symbols such as `TreeProof` where appropriate.
+- Retained format-specific directories use `natural-deduction-tree/`, following the owning area's conventions.
+- Keep format-specific files/components and their tests explicit, such as `NaturalDeductionTreeProofEditor`, `NaturalDeductionTreeProofSummary` and `NaturalDeductionTreeProof`. Apply the same clarity to contract, checker, helper and fixture symbols.
 - Keep genuinely multi-format proof orchestration generic. Do not rename a shared proof report or formula helper as though it belonged only to natural-deduction trees.
 - Update imports and public package entries with their consumers in one coordinated change. Avoid internal compatibility re-exports that obscure the new ownership; document any actual external compatibility boundary before changing it.
 - Preserve existing serialized discriminants, versions, IDs, JSON keys and persisted data unless a separately reviewed migration requires otherwise. In particular, the historical `format: 'tree'` tag can remain as a documented storage/transport value while code and UI names become explicit. A filename/type rename is not justification for silently changing stored records.

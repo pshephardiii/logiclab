@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import {
   dependencyDefinitionFixture,
   derivationDefinitionFixture,
-  treeDefinitionFixture,
+  naturalDeductionTreeDefinitionFixture,
 } from '../derivation-fixture';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
@@ -29,7 +29,7 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((mode) =>
-  [dependencyDefinitionFixture, treeDefinitionFixture].map(
+  [dependencyDefinitionFixture, naturalDeductionTreeDefinitionFixture].map(
     (definitionFixture) => [mode, definitionFixture] as const,
   ),
 ))

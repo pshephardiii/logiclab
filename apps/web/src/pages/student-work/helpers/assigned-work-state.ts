@@ -8,7 +8,7 @@ import type {
 import {
   isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
-  isFinishedTreeProofAttempt,
+  isFinishedNaturalDeductionTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
 import type { Answers } from '../../../features/truthTable/types';
 import { submittedAnswers } from '../../../features/truthTable/helpers/submitted-answers';
@@ -76,7 +76,7 @@ export function assignmentCompletionReady(
             )
           : item.content.type === 'derivation'
             ? (item.content.format === 'tree'
-                ? isFinishedTreeProofAttempt
+                ? isFinishedNaturalDeductionTreeProofAttempt
                 : item.content.format === 'dependency'
                   ? isFinishedDependencyProofAttempt
                   : isFinishedFitchProofAttempt)({

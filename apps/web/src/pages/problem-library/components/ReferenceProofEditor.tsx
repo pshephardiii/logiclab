@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { referencePremisesMatch } from '../helpers/reference-premises';
 import { withFreshReference } from '../helpers/fresh-reference';
-import { treeReferenceStatementMatches } from '../helpers/tree-reference-statement';
+import { naturalDeductionTreeReferenceStatementMatches } from '../helpers/natural-deduction-tree-reference-statement';
 import { ProofDeletionPrompt } from '../../../features/proof/components/ProofDeletionPrompt';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 import { FitchProofEditor } from '../../../features/proof/components/FitchProofEditor';
 import { DependencyProofEditor } from '../../../features/proof/dependency/DependencyProofEditor';
-import { TreeProofEditor } from '../../../features/proof/tree/TreeProofEditor';
+import { NaturalDeductionTreeProofEditor } from '../../../features/proof/natural-deduction-tree/NaturalDeductionTreeProofEditor';
 
 /** Private definition stays at the authoring boundary; controls receive no explanation/key. */
 export function ReferenceProofEditor({
@@ -23,7 +23,7 @@ export function ReferenceProofEditor({
   const [resetting, setResetting] = useState(false);
   const matches =
     definition.format === 'tree'
-      ? treeReferenceStatementMatches(definition)
+      ? naturalDeductionTreeReferenceStatementMatches(definition)
       : referencePremisesMatch(definition);
 
   return (
@@ -79,7 +79,7 @@ export function ReferenceProofEditor({
         </ProofDeletionPrompt>
       )}
       {definition.format === 'tree' ? (
-        <TreeProofEditor
+        <NaturalDeductionTreeProofEditor
           key="tree"
           onPendingChange={onPendingChange}
           statement={definition}

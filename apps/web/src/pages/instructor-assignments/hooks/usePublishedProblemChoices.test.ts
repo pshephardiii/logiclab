@@ -20,13 +20,14 @@ beforeEach(() => {
 });
 
 test('unavailable publications are filtered without losing later supported pages', async () => {
-  const { treeDerivationDefinition, derivationDraft } = await import('../../../../test/derivation');
+  const { naturalDeductionTreeDerivationDefinition, derivationDraft } =
+    await import('../../../../test/derivation');
   vi.mocked(listProblems).mockResolvedValue({
     problems: [
       {
         ...derivationDraft,
         id: version.problemId,
-        definition: treeDerivationDefinition,
+        definition: naturalDeductionTreeDerivationDefinition,
         publication: null,
       },
     ],
@@ -34,7 +35,7 @@ test('unavailable publications are filtered without losing later supported pages
   });
   vi.mocked(listVersions)
     .mockResolvedValueOnce({
-      versions: [{ ...version, definition: treeDerivationDefinition }],
+      versions: [{ ...version, definition: naturalDeductionTreeDerivationDefinition }],
       nextOffset: 20,
     })
     .mockResolvedValueOnce({

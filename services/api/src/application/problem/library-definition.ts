@@ -8,7 +8,10 @@ import {
   checkDependencyReference,
 } from './derivation/dependency/authoring';
 import type { DerivationReferenceCheck } from './derivation/reference-check';
-import { validateTreeDefinition, checkTreeReference } from './derivation/tree/authoring';
+import {
+  validateNaturalDeductionTreeDefinition,
+  checkNaturalDeductionTreeReference,
+} from './derivation/natural-deduction-tree/authoring';
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
@@ -18,7 +21,8 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
     'type' in value &&
     value.type === 'derivation'
   ) {
-    if ('format' in value && value.format === 'tree') return validateTreeDefinition(value);
+    if ('format' in value && value.format === 'tree')
+      return validateNaturalDeductionTreeDefinition(value);
 
     return 'format' in value && value.format === 'dependency'
       ? validateDependencyDefinition(value)
@@ -39,7 +43,7 @@ export function authoringDefinition(value: unknown): LibraryProblemDefinition {
 export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
 ): DerivationReferenceCheck {
-  if (definition.format === 'tree') return checkTreeReference(definition);
+  if (definition.format === 'tree') return checkNaturalDeductionTreeReference(definition);
 
   return definition.format === 'dependency'
     ? checkDependencyReference(definition)

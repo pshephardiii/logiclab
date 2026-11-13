@@ -1,7 +1,7 @@
 import type { SavedDerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import { FitchProofSummary } from './FitchProofSummary';
 import { DependencyProofSummary } from '../dependency/DependencyProofSummary';
-import { TreeProofSummary } from '../tree/TreeProofSummary';
+import { NaturalDeductionTreeProofSummary } from '../natural-deduction-tree/NaturalDeductionTreeProofSummary';
 
 /** Read-only entered work or an already authorized reference; this component grants no access. */
 export function ProofSummary({
@@ -18,7 +18,7 @@ export function ProofSummary({
   if (format === 'tree') {
     const tree = proof?.format === 'tree' ? proof : null;
 
-    return <TreeProofSummary proof={tree} rules={rules} label={label} />;
+    return <NaturalDeductionTreeProofSummary proof={tree} rules={rules} label={label} />;
   }
 
   return format === 'dependency' ? (

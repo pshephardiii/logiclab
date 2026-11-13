@@ -355,7 +355,7 @@ test('practice offers only available formats and rejects an injected unavailable
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P → P');
   expect(
-    screen.queryByRole('region', { name: 'Tree student proof editor' }),
+    screen.queryByRole('region', { name: 'Natural-deduction tree student proof editor' }),
   ).not.toBeInTheDocument();
 });
 

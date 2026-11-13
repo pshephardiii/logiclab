@@ -1,0 +1,133 @@
+.natural-deduction-tree-proof-preview {
+  max-width: 100%;
+  max-height: 28rem;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+}
+.natural-deduction-tree-preview-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: max-content;
+  min-width: 7rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.natural-deduction-tree-supports {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+.natural-deduction-tree-preview-node small {
+  display: block;
+  font-size: 0.8rem;
+}
+.natural-deduction-tree-conclusion {
+  width: 100%;
+  border-top: 2px solid #64748b;
+  padding: 0.4rem;
+}
+.natural-deduction-tree-placeholder {
+  font-style: italic;
+}
+.natural-deduction-tree-assumption-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.natural-deduction-tree-assumption-choice input {
+  width: auto;
+}
+.proof-editor .natural-deduction-tree-branch {
+  margin-block: 1rem;
+}
+
+.natural-deduction-tree-proof-preview .natural-deduction-tree-node-select,
+.natural-deduction-tree-unattached .natural-deduction-tree-node-select {
+  display: block;
+  width: 100%;
+  min-width: 7rem;
+  background: transparent;
+  color: #162a36;
+  border: 1px solid transparent;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  font-weight: 400;
+}
+.natural-deduction-tree-node-select code {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+}
+.natural-deduction-tree-node-select[aria-pressed='true'] {
+  border-color: #176650;
+  background: #edf7f2;
+}
+.natural-deduction-tree-node-select:hover:not(:disabled) {
+  background: #edf7f2;
+}
+.natural-deduction-tree-unattached {
+  margin-block: 1rem;
+}
+.natural-deduction-tree-unattached h4 {
+  margin-bottom: 0.5rem;
+}
+.natural-deduction-tree-unattached-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.natural-deduction-tree-unattached-nodes > .natural-deduction-tree-node-select {
+  width: auto;
+}
+.natural-deduction-tree-unattached-nodes small {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.natural-deduction-tree-entry > .action-row {
+  margin-block: 0.75rem 1rem;
+}
+
+.natural-deduction-tree-node-card {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.natural-deduction-tree-node-card > .natural-deduction-tree-node-select {
+  min-width: 0;
+}
+.natural-deduction-tree-node-card > .proof-dropdown-trigger {
+  flex: none;
+  border: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 1.25rem;
+}
+.natural-deduction-tree-unattached-nodes > .natural-deduction-tree-node-card {
+  max-width: 100%;
+}
+.natural-deduction-tree-connection {
+  margin-block: 1rem;
+}
+.natural-deduction-tree-connection > label {
+  display: grid;
+  gap: 0.4rem;
+}
+.natural-deduction-tree-connection fieldset {
+  margin-block: 1rem;
+}
+
+.natural-deduction-tree-node-readonly {
+  padding: 0.4rem 0.65rem;
+}
+.natural-deduction-tree-node-readonly code,
+.natural-deduction-tree-node-list code {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 1.2rem;
+}
+.natural-deduction-tree-node-list li {
+  margin-block: 0.75rem;
+  overflow-wrap: anywhere;
+}

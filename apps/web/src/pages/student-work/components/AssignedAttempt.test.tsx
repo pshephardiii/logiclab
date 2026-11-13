@@ -1,4 +1,7 @@
-import { retainedTreeWork, treeAnswer } from '../../../../test/proof-work-fixture';
+import {
+  retainedNaturalDeductionTreeWork,
+  naturalDeductionTreeAnswer,
+} from '../../../../test/proof-work-fixture';
 import { pointScore } from '../../../../test/assignment-score-fixture';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
 import { truthTableSubmissionFeedback } from '../../../features/assignment/helpers/submission-feedback';
@@ -590,8 +593,8 @@ test('withheld grades never render instructor feedback even when answer access i
 
 test('retained mixed tree work stays navigable and read-only without save/check/submission controls', async () => {
   vi.mocked(api.readAssignedWork).mockResolvedValue({
-    assignment: retainedTreeWork,
-    attempt: { ...saved, answers: { [itemB]: treeAnswer } },
+    assignment: retainedNaturalDeductionTreeWork,
+    attempt: { ...saved, answers: { [itemB]: naturalDeductionTreeAnswer } },
   });
   const { user } = await open();
   expect(screen.getByRole('status')).toHaveTextContent('unavailable for new attempts');

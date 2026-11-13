@@ -8,19 +8,19 @@ import {
 import { proofProblemSchema } from './proof';
 
 /** One supporting subtree and the assumption occurrences discharged from that branch only. */
-export const treeProofBranchSchema = z.strictObject({
+export const naturalDeductionTreeProofBranchSchema = z.strictObject({
   rootId: id.nullable(),
   // Explicit even for vacuous discharge, where there are no occurrences to read it from.
   assumptionFormula: formula,
   assumptionIds: z.array(id).max(PROOF_LIMITS.maxSteps),
 });
 
-export type TreeProofBranch = z.infer<typeof treeProofBranchSchema>;
+export type NaturalDeductionTreeProofBranch = z.infer<typeof naturalDeductionTreeProofBranchSchema>;
 
 const fields = { id, formula };
 
 /** References point toward supporting children, never toward a parent or a display position. */
-export const treeProofNodeSchema = z.discriminatedUnion('kind', [
+export const naturalDeductionTreeProofNodeSchema = z.discriminatedUnion('kind', [
   z.strictObject({ ...fields, kind: z.literal('premise'), premiseId: id.nullable() }),
   z.strictObject({ ...fields, kind: z.literal('assumption') }),
   z.strictObject({
@@ -30,26 +30,28 @@ export const treeProofNodeSchema = z.discriminatedUnion('kind', [
     // Ordinary children correspond to the catalog's line-reference operands.
     lineReferences: z.array(id).max(2),
     // Discharged children correspond to the catalog's subproof operands.
-    branches: z.array(treeProofBranchSchema).max(2),
+    branches: z.array(naturalDeductionTreeProofBranchSchema).max(2),
   }),
 ]);
 
-export type TreeProofNode = z.infer<typeof treeProofNodeSchema>;
+export type NaturalDeductionTreeProofNode = z.infer<typeof naturalDeductionTreeProofNodeSchema>;
 
 /** Flat bounded draft data; uniqueness, connectivity, scope and logical validity need a checker. */
-export const treeProofSchema = z.strictObject({
+export const naturalDeductionTreeProofSchema = z.strictObject({
   proofVersion: z.literal(1),
   format: z.literal('tree'),
   rootId: id.nullable(),
-  nodes: z.array(treeProofNodeSchema).max(PROOF_LIMITS.maxSteps),
+  nodes: z.array(naturalDeductionTreeProofNodeSchema).max(PROOF_LIMITS.maxSteps),
 });
 
-export type TreeProof = z.infer<typeof treeProofSchema>;
+export type NaturalDeductionTreeProof = z.infer<typeof naturalDeductionTreeProofSchema>;
 
 /** Standalone transport only; this does not enable tree problems in live assignment workflows. */
-export const treeProofCheckInputSchema = z.strictObject({
+export const naturalDeductionTreeProofCheckInputSchema = z.strictObject({
   problem: proofProblemSchema,
-  proof: treeProofSchema,
+  proof: naturalDeductionTreeProofSchema,
 });
 
-export type TreeProofCheckInput = z.infer<typeof treeProofCheckInputSchema>;
+export type NaturalDeductionTreeProofCheckInput = z.infer<
+  typeof naturalDeductionTreeProofCheckInputSchema
+>;

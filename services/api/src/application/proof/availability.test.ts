@@ -1,7 +1,7 @@
 import { AVAILABLE_PROOF_FORMATS, isProofFormatAvailable } from '@logiclab/contracts';
-import { treeProofSchema } from '@logiclab/contracts';
-import { treeDerivationDefinitionSchema } from '@logiclab/contracts/tree-derivation';
-import { treeDefinitionFixture } from '../../../test/derivation-fixture';
+import { naturalDeductionTreeProofSchema } from '@logiclab/contracts';
+import { naturalDeductionTreeDerivationDefinitionSchema } from '@logiclab/contracts/natural-deduction-tree-derivation';
+import { naturalDeductionTreeDefinitionFixture } from '../../../test/derivation-fixture';
 import { libraryProblemDefinition, libraryReferenceCheck } from '../problem/library-definition';
 import { assertProofFormatAvailable, ProofMethodUnavailableError } from './availability';
 
@@ -22,10 +22,12 @@ test.each(['tree', '', 'semantic_tableau', 'future_format', 'Fitch'])(
 );
 
 test('unavailable natural-deduction trees retain transport, historical validation and checker support', () => {
-  const definition = treeDefinitionFixture();
+  const definition = naturalDeductionTreeDefinitionFixture();
   const before = structuredClone(definition);
-  expect(treeDerivationDefinitionSchema.parse(definition)).toEqual(definition);
-  expect(treeProofSchema.parse(definition.referenceProof)).toEqual(definition.referenceProof);
+  expect(naturalDeductionTreeDerivationDefinitionSchema.parse(definition)).toEqual(definition);
+  expect(naturalDeductionTreeProofSchema.parse(definition.referenceProof)).toEqual(
+    definition.referenceProof,
+  );
   expect(libraryProblemDefinition(definition)).toEqual(definition);
   const check = libraryReferenceCheck(definition);
   expect(check.status).toBe('checked');

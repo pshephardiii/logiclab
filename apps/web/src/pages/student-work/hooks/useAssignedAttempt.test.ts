@@ -1,4 +1,7 @@
-import { retainedTreeWork, treeAnswer } from '../../../../test/proof-work-fixture';
+import {
+  retainedNaturalDeductionTreeWork,
+  naturalDeductionTreeAnswer,
+} from '../../../../test/proof-work-fixture';
 import {
   conceptualWork,
   conceptualSaved,
@@ -439,7 +442,7 @@ test.each(['graded', 'ungraded_practice'] as const)(
   async (assessmentMode) => {
     vi.mocked(api.readAssignedWork).mockResolvedValue({
       assignment: {
-        ...retainedTreeWork,
+        ...retainedNaturalDeductionTreeWork,
         feedbackTiming: assessmentMode === 'graded' ? 'on_submission' : 'immediate',
         assessmentMode,
         solutionAccess: 'anytime',
@@ -451,7 +454,7 @@ test.each(['graded', 'ungraded_practice'] as const)(
     expect(result.current.assignment!.items).toHaveLength(2);
     act(() => {
       result.current.changeAnswer(itemA, 'r1', 'expr:v1:P', true);
-      result.current.changeProofAnswer(itemB, treeAnswer);
+      result.current.changeProofAnswer(itemB, naturalDeductionTreeAnswer);
     });
     await act(async () => {
       await result.current.save(itemA);

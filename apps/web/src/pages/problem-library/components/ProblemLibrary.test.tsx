@@ -499,14 +499,14 @@ test('a confirmed publication remains published when refreshing the library list
 });
 
 test('retained tree library records allow history and archive/restore without edit or publication controls', async () => {
-  const { treeDerivationDefinition } = await import('../../../../test/derivation');
-  const retained = { ...draft, definition: treeDerivationDefinition };
+  const { naturalDeductionTreeDerivationDefinition } = await import('../../../../test/derivation');
+  const retained = { ...draft, definition: naturalDeductionTreeDerivationDefinition };
   vi.mocked(api.listProblems).mockResolvedValue({
     problems: [{ ...retained, publication: null }],
     nextOffset: null,
   });
   vi.mocked(api.listVersions).mockResolvedValue({
-    versions: [{ ...version, definition: treeDerivationDefinition }],
+    versions: [{ ...version, definition: naturalDeductionTreeDerivationDefinition }],
     nextOffset: null,
   });
   vi.mocked(api.archiveProblem)

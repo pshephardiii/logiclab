@@ -1,4 +1,4 @@
-import { treeDefinitionFixture } from '../derivation-fixture';
+import { naturalDeductionTreeDefinitionFixture } from '../derivation-fixture';
 import {
   savedStudentCheckSchema,
   savedStudentAnswersSchema,
@@ -908,7 +908,7 @@ test('a retained tree visitor upgrades to template 8 only on reset, preserving i
       const problem = em.create(db.Problem, {
         owner,
         title: legacyTitle,
-        definition: treeDefinitionFixture(),
+        definition: naturalDeductionTreeDefinitionFixture(),
       });
       em.persist([
         problem,
@@ -916,7 +916,7 @@ test('a retained tree visitor upgrades to template 8 only on reset, preserving i
           problem,
           version: 1,
           title: legacyTitle,
-          definition: treeDefinitionFixture(),
+          definition: naturalDeductionTreeDefinitionFixture(),
         }),
       ]);
       await em.flush();

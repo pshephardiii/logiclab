@@ -8,7 +8,7 @@ import { createSubmissionReviewStore } from '../../src/persistence/submission-re
 import { createSubmissionGradingStore } from '../../src/persistence/submission-review/grading-store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
-import { treeDefinitionFixture } from '../derivation-fixture';
+import { naturalDeductionTreeDefinitionFixture } from '../derivation-fixture';
 import type { ResourceUser } from '../../src/routes/resource-context';
 
 const url = process.env.TEST_DATABASE_URL;
@@ -97,7 +97,7 @@ test('normal/demo authoring and assignment admission block new tree work while p
       },
     ]) {
       const path = `${scope.prefix}/problems`;
-      const definition = treeDefinitionFixture();
+      const definition = naturalDeductionTreeDefinitionFixture();
       const count = await em.fork().count(db.Problem, { owner: scope.ownerId });
       await unavailable('POST', path, scope.cookie, { title: 'Unavailable new tree', definition });
       assert.equal(await em.fork().count(db.Problem, { owner: scope.ownerId }), count);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { fitchDerivationDefinitionSchema } from './derivation';
 import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
-import { treeDerivationDefinitionSchema } from './tree-derivation';
+import { naturalDeductionTreeDerivationDefinitionSchema } from './natural-deduction-tree-derivation';
 import {
   objectiveProblemDefinitionSchema,
   problemDraftSchema,
@@ -15,7 +15,7 @@ export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
   z.discriminatedUnion('format', [
     fitchDerivationDefinitionSchema,
     dependencyDerivationDefinitionSchema,
-    treeDerivationDefinitionSchema,
+    naturalDeductionTreeDerivationDefinitionSchema,
   ]),
 ]);
 

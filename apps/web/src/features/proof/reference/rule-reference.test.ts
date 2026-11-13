@@ -1,12 +1,16 @@
 import { expect, test } from 'vitest';
-import type { DependencyProof, FitchProof, TreeProofNode } from '@logiclab/contracts';
+import type {
+  DependencyProof,
+  FitchProof,
+  NaturalDeductionTreeProofNode,
+} from '@logiclab/contracts';
 import {
   PROPOSITIONAL_RULE_CATALOG,
   checkLocalRule,
   parseProofFormula,
   checkFitchProof,
   checkDependencyProof,
-  checkTreeProof,
+  checkNaturalDeductionTreeProof,
   sameFormula,
 } from '@logiclab/logic-engine/proof';
 import { getRuleReference, RULE_REFERENCE, type ExampleLine } from './rule-reference';
@@ -90,7 +94,7 @@ function dependency(lines: ExampleLine[]): DependencyProof {
 }
 
 function tree(lines: ExampleLine[]) {
-  const nodes: TreeProofNode[] = [];
+  const nodes: NaturalDeductionTreeProofNode[] = [];
   const origins = new Map<string, number>();
   let counter = 2000;
 
@@ -163,7 +167,7 @@ for (const format of ['fitch', 'dependency', 'tree'] as const) {
           ? checkFitchProof({ problem: problem(lines), proof: fitch(lines) })
           : format === 'dependency'
             ? checkDependencyProof({ problem: problem(lines), proof: dependency(lines) })
-            : checkTreeProof({ problem: problem(lines), proof: tree(lines) });
+            : checkNaturalDeductionTreeProof({ problem: problem(lines), proof: tree(lines) });
       expect(report.diagnostics).toEqual([]);
       expect(report.status).toBe('accepted');
     },

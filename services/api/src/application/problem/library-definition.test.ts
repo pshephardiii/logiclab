@@ -1,5 +1,5 @@
 import { ProofMethodUnavailableError } from '../proof/availability';
-import { treeDefinitionFixture } from '../../../test/derivation-fixture';
+import { naturalDeductionTreeDefinitionFixture } from '../../../test/derivation-fixture';
 import { dependencyDefinitionFixture } from '../../../test/derivation-fixture';
 import {
   assignmentAdmissionDefinition,
@@ -91,7 +91,7 @@ test.each(['graded', 'completion_only', 'ungraded_practice'])(
 );
 
 test('new authoring and publication reject unavailable tree work while retained validation still accepts it', () => {
-  const value = treeDefinitionFixture();
+  const value = naturalDeductionTreeDefinitionFixture();
   expect(libraryProblemDefinition(value)).toEqual(value);
   expect(() => authoringDefinition(value)).toThrow(ProofMethodUnavailableError);
   expect(() => publicationDefinition(value)).toThrow(ProofMethodUnavailableError);
@@ -102,7 +102,7 @@ test('new authoring and publication reject unavailable tree work while retained 
 test.each(['graded', 'completion_only', 'ungraded_practice'])(
   'new %s assignments reject tree versions without changing historical projection support',
   (assessmentMode) => {
-    const value = treeDefinitionFixture();
+    const value = naturalDeductionTreeDefinitionFixture();
     const policy = {
       assessmentMode,
       feedbackTiming: assessmentMode === 'ungraded_practice' ? 'on_check' : 'on_submission',

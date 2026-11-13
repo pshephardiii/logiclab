@@ -105,9 +105,9 @@ The demo includes seeded proofs. You can also author a separate disposable examp
 9. Switch to instructor and duplicate the assignment as a draft. Give the copy a distinct title, choose **Completion only** and **When I reveal answers**, then save and publish. Completion proof feedback is at submission, not immediate/manual checking.
 10. As student, open the completion copy. Start the proof. Enter a finished but incorrect attempt: use `Q` for the assumption and confirm it with **Add line**. Use its three-dot menu to close the block on the assumption line, then enter root `P -> P` with implication introduction citing that block and confirm **Add line**. This fills required fields and reaches the target, but the inference is wrong. There must be no **Check proof** or pre-submission diagnostics. Save, confirm final submission and submit.
 11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
-12. Reset discards these owner-authored examples and student work, restoring seed template 7 while retaining the original workspace deadline, including the seeded Fitch/dependency/tree proof journeys.
+12. Reset discards these owner-authored examples and student work, restoring seed template 8 while retaining the original workspace deadline, including the seeded Fitch/dependency proof journeys.
 
-This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency and natural-deduction tree proofs are also available. For graded instructor review, continue below.
+This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency proofs are also available; natural-deduction trees are retained for historical review only. For graded instructor review, continue below.
 
 ## Optional: grade a Fitch submission
 
@@ -127,6 +127,8 @@ See [grading/review verification](../verification/derivation-grading-review-veri
 
 ## Optional: author a natural-deduction tree
 
+**Historical walkthrough (026–031), unavailable for new work since 033.** These steps describe the retained implementation and cannot be followed through the current authoring/practice UI. New/reset template-8 demos contain Fitch/dependency only; existing visitor trees remain read-only until explicit reset removes their workspace data. Do not substitute semantic tableaux for this old method. The historical steps below are kept for context.
+
 Template 7 includes a seeded tree. This optional walkthrough creates a separate instructor-authored example.
 
 1. As demo instructor, open **Problem library**, create a titled **Derivation**, choose **Natural-deduction tree**, leave premises empty and enter conclusion `P -> P`.
@@ -143,7 +145,7 @@ Template 7 includes a seeded tree. This optional walkthrough creates a separate 
 
 1. Open **Practice**, then **Try derivation practice**, or go directly to `/practice/proofs`. Choose a format before beginning. This activity is separate from saved classroom/demo assignments.
 2. Add premise `P`, enter conclusion `P`, inspect the permitted rules and select **Begin proof practice**. Rules default to the supported catalog, including classical rules; a reference solution is not required.
-3. The proof opens directly. In Fitch/dependency the premise is copied into a line. For a tree, add a premise node, select/copy the statement premise, select that node as the conclusion root and delete the unused initial inference node with confirmation.
+3. The proof opens directly. In Fitch/dependency the premise is copied into a line. Natural-deduction trees are not offered in current independent practice.
 4. Select **Check proof** and expect verification. Change the entered formula to `Q`: the old report disappears. Check again and expect an error. Entries are never checked automatically.
 5. Choose another format. **Stay** or Escape preserves the setup, proof and report. Repeat and choose **Discard changes**: expect an empty setup in the selected format, no premises/target/proof/feedback, and all default rules restored. **Start over** performs the same confirmed reset without changing format.
 6. Leaving or reloading entered work requests discard/unload protection where the browser supports it. Reload/remount clears page memory; no database save, browser-storage backup or official grade is created. A failed check does not search for a solution or prove that the selected goal is impossible.

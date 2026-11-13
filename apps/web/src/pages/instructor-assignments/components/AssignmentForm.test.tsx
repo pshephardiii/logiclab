@@ -269,7 +269,7 @@ test('proof-containing drafts retain failed saves and switch among completion, p
 });
 
 test('retained unavailable assignment content is read-only while archive/reload remain usable', async () => {
-  const { treeDerivationDefinition } = await import('../../../../test/derivation');
+  const { naturalDeductionTreeDerivationDefinition } = await import('../../../../test/derivation');
   const { AssignmentPublicationControls } = await import('./AssignmentPublicationControls');
   const historical: AssignmentDetail = {
     ...assignment,
@@ -284,7 +284,7 @@ test('retained unavailable assignment content is read-only while archive/reload 
           title: 'Retained proof',
           instructions: null,
           publishedAt: assignment.createdAt,
-          definition: treeDerivationDefinition,
+          definition: naturalDeductionTreeDerivationDefinition,
         },
       },
     ],

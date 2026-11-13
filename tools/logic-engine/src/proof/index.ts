@@ -43,10 +43,13 @@ export type { DependencyStructureResult, DependencyReferences } from './dependen
 
 export { checkDependencyProof } from './dependency/check-proof';
 
-export { checkTreeProof } from './tree/check-proof';
+export { checkNaturalDeductionTreeProof } from './natural-deduction-tree/check-proof';
 
-export { analyzeTreeStructure } from './tree/structure';
+export { analyzeNaturalDeductionTreeStructure } from './natural-deduction-tree/structure';
 
-export type { TreeReferences, TreeStructureResult } from './tree/structure';
+export type {
+  NaturalDeductionTreeReferences,
+  NaturalDeductionTreeStructureResult,
+} from './natural-deduction-tree/structure';
 
-export { isFinishedTreeProofAttempt } from './tree/completeness';
+export { isFinishedNaturalDeductionTreeProofAttempt } from './natural-deduction-tree/completeness';

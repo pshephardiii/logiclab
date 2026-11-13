@@ -5,9 +5,9 @@ import type { ProofCheckReport } from '@logiclab/contracts';
 import {
   checkFitchProof,
   checkDependencyProof,
-  checkTreeProof,
+  checkNaturalDeductionTreeProof,
 } from '@logiclab/logic-engine/proof';
-import { treeDerivationDefinitionSchema } from '@logiclab/contracts/tree-derivation';
+import { naturalDeductionTreeDerivationDefinitionSchema } from '@logiclab/contracts/natural-deduction-tree-derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
@@ -34,7 +34,7 @@ export function LocalReferenceCheck({
 
     const parsed = (
       definition.format === 'tree'
-        ? treeDerivationDefinitionSchema
+        ? naturalDeductionTreeDerivationDefinitionSchema
         : definition.format === 'dependency'
           ? dependencyDerivationDefinitionSchema
           : fitchDerivationDefinitionSchema
@@ -61,7 +61,7 @@ export function LocalReferenceCheck({
     setChecked({
       snapshot,
       report: (value.format === 'tree'
-        ? checkTreeProof
+        ? checkNaturalDeductionTreeProof
         : value.format === 'dependency'
           ? checkDependencyProof
           : checkFitchProof)({

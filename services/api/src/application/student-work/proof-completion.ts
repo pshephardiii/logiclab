@@ -1,7 +1,7 @@
 import {
   isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
-  isFinishedTreeProofAttempt,
+  isFinishedNaturalDeductionTreeProofAttempt,
 } from '@logiclab/logic-engine/proof/completion';
 import {
   proofCompletionSubmissionResultSchema,
@@ -34,7 +34,7 @@ export function evaluateProofCompletion(
     if (
       !(
         content.format === 'tree'
-          ? isFinishedTreeProofAttempt
+          ? isFinishedNaturalDeductionTreeProofAttempt
           : content.format === 'dependency'
             ? isFinishedDependencyProofAttempt
             : isFinishedFitchProofAttempt

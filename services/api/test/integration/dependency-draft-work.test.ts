@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import {
   dependencyDefinitionFixture,
   derivationDefinitionFixture,
-  treeDefinitionFixture,
+  naturalDeductionTreeDefinitionFixture,
 } from '../derivation-fixture';
 import { StudentWorkError } from '../../src/application/student-work/errors';
 import { createProblemStore } from '../../src/persistence/problem/store';
@@ -25,8 +25,8 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
-const variants = [dependencyDefinitionFixture, treeDefinitionFixture].flatMap((definitionFixture) =>
-  (['normal', 'demo'] as const).map((mode) => ({ definitionFixture, mode })),
+const variants = [dependencyDefinitionFixture, naturalDeductionTreeDefinitionFixture].flatMap(
+  (definitionFixture) => (['normal', 'demo'] as const).map((mode) => ({ definitionFixture, mode })),
 );
 for (const { definitionFixture, mode } of variants) {
   test(`${mode} ${definitionFixture().format} draft HTTP work preserves revision locks, privacy, format matching and independent checks/solutions`, async () => {
