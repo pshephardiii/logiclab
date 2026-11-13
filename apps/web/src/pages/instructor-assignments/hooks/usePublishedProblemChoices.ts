@@ -1,3 +1,4 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -108,9 +109,12 @@ export function usePublishedProblemChoices(includeDerivations = false) {
     loadProblems,
     problemId,
     selectProblem,
-    versions: includeDerivations
-      ? versions
-      : versions.filter((version) => version.definition.type !== 'derivation'),
+    // Filter publications, not source drafts: a retired draft may have older supported versions.
+    versions: versions.filter(
+      (version) =>
+        isProblemMethodAvailable(version.definition) &&
+        (includeDerivations || version.definition.type !== 'derivation'),
+    ),
     versionNext,
     versionLoading,
     versionError,

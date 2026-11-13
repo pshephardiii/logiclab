@@ -1,3 +1,5 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
+import { DerivationSummary } from './DerivationSummary';
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
 import { withFreshReference } from '../helpers/fresh-reference';
@@ -41,6 +43,7 @@ export function ProblemForm({
   initialAuthoringStep = 'details',
   onAuthoringStepChange,
 }: Props) {
+  const unavailable = Boolean(problem && !isProblemMethodAvailable(problem.definition));
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
   const [entryPending, setEntryPending] = useState(false);
@@ -68,8 +71,8 @@ export function ProblemForm({
   }, [error]);
 
   useEffect(() => {
-    onDirty(workPending || editorSnapshot(fields) !== editorSnapshot(initial));
-  }, [fields, initial, onDirty, workPending]);
+    onDirty(!unavailable && (workPending || editorSnapshot(fields) !== editorSnapshot(initial)));
+  }, [fields, initial, onDirty, workPending, unavailable]);
 
   function change(next: ProblemEditorFields) {
     setFields(next);
@@ -149,6 +152,19 @@ export function ProblemForm({
 
     await onSave(input.data);
   }
+
+  if (unavailable && problem?.definition.type === 'derivation')
+    return (
+      <section className="panel" aria-label="Retained problem">
+        <h2>{problem.title}</h2>
+        <p role="status">
+          Natural-deduction tree authoring is unavailable. This retained draft is read-only; archive
+          and published history remain available.
+        </p>
+        {problem.instructions && <p>{problem.instructions}</p>}
+        <DerivationSummary definition={problem.definition} />
+      </section>
+    );
 
   return (
     <section className="panel">

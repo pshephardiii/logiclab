@@ -1,3 +1,4 @@
+import { isProofFormatAvailable } from '@logiclab/contracts';
 import { useState } from 'react';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
@@ -32,6 +33,7 @@ export function ProofPractice() {
   }
 
   function restart(format: PracticeStatement['format']) {
+    if (!isProofFormatAvailable(format)) return;
     confirmDiscard(() => {
       setSetupFormat(format);
       setStatement(null);
@@ -66,6 +68,7 @@ export function ProofPractice() {
         <ProofPracticeSetup
           initialFormat={setupFormat}
           onStart={(next) => {
+            if (!isProofFormatAvailable(next.format)) return;
             setStatement(next);
             setProof(startPracticeProof(next));
             setReport(null);
@@ -88,7 +91,6 @@ export function ProofPractice() {
               >
                 <option value="fitch">Fitch</option>
                 <option value="dependency">Dependency</option>
-                <option value="tree">Natural-deduction tree</option>
               </select>
             </div>
             <p id="practice-reset-description" className="proof-control-label">

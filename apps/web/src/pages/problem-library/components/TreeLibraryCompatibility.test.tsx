@@ -6,52 +6,30 @@ import { ProblemForm } from './ProblemForm';
 import { DerivationSummary } from './DerivationSummary';
 import { TreeProofSummary } from '../../../features/proof/tree/TreeProofSummary';
 
-test('saved trees preserve their reference during statement edits and explicit failed saves', async () => {
-  const user = userEvent.setup();
-  const onSave = vi.fn().mockResolvedValue(false);
-  const onDirty = vi.fn();
+test('saved tree drafts retain their private reference without exposing editing or save controls', async () => {
+  const onSave = vi.fn(),
+    onDirty = vi.fn();
+  const problem = { ...derivationDraft, definition: treeDerivationDefinition };
+  const before = structuredClone(problem);
   render(
     <ProblemForm
-      problem={{ ...derivationDraft, definition: treeDerivationDefinition }}
+      problem={problem}
       busy={false}
       onSave={onSave}
       onDirty={onDirty}
       onPreview={vi.fn()}
     />,
   );
-  expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
-  await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
-  expect(screen.getByRole('region', { name: 'Tree reference proof editor' })).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Start reference proof' })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'Check current proof' }));
-  expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
-  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
-  await user.clear(screen.getByLabelText('Conclusion'));
-  await user.type(screen.getByLabelText('Conclusion'), 'Q');
-  expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: '2. Reference proof' }));
-  await user.click(screen.getByRole('button', { name: 'Check current proof' }));
-  expect(screen.getByRole('status')).toHaveTextContent('needs correction');
-  await user.click(screen.getByRole('button', { name: 'Save draft' }));
-  expect(onSave).toHaveBeenCalledWith(
-    expect.objectContaining({
-      definition: expect.objectContaining({
-        format: 'tree',
-        conclusion: 'Q',
-        referenceProof: treeDerivationDefinition.referenceProof,
-      }),
-    }),
+  expect(screen.getByRole('status')).toHaveTextContent('retained draft is read-only');
+  expect(screen.queryByLabelText('Proof format')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  await userEvent.setup().click(screen.getByText('Private reference proof'));
+  expect(screen.getByRole('region', { name: 'Private reference proof diagram' })).toHaveTextContent(
+    'Conditional proof',
   );
-  await user.click(screen.getByRole('button', { name: '1. Problem details' }));
-  expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
-  expect(onDirty).toHaveBeenLastCalledWith(true);
-  await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
-  await user.click(screen.getByRole('button', { name: 'Keep current format' }));
-  expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
-  await user.selectOptions(screen.getByLabelText('Proof format'), 'fitch');
-  await user.click(screen.getByRole('button', { name: 'Change format and discard reference' }));
-  expect(screen.getByLabelText('Proof format')).toHaveValue('fitch');
-  expect(screen.getByRole('button', { name: 'Continue to reference proof' })).toBeInTheDocument();
+  expect(onSave).not.toHaveBeenCalled();
+  expect(onDirty).toHaveBeenLastCalledWith(false);
+  expect(problem).toEqual(before);
 });
 
 test('private tree summaries display branches, instructor terminology and explanation without Fitch assumptions', async () => {

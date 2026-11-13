@@ -26,7 +26,7 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
       </p>
       <p className="help">
         {allowDerivations
-          ? 'Published Fitch, dependency and tree proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
+          ? 'Published Fitch and dependency proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
           : 'Choose feedback at submission or Ungraded practice to assign proofs.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>

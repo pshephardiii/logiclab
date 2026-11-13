@@ -24,7 +24,7 @@ async function enterProblem(format = 'fitch', configure?: () => Promise<void>) {
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
 }
 
-test.each(['fitch', 'dependency', 'tree'])(
+test.each(['fitch', 'dependency'])(
   '%s practice starts locally and checks only on request',
   async (format) => {
     const fetch = vi
@@ -98,11 +98,7 @@ test.each(['dependency', 'fitch'])(
 
 test.each([
   ['fitch', 'dependency'],
-  ['fitch', 'tree'],
   ['dependency', 'fitch'],
-  ['dependency', 'tree'],
-  ['tree', 'fitch'],
-  ['tree', 'dependency'],
 ])('%s → %s requires consent and resets the entire practice session', async (from, to) => {
   await enterProblem(from, async () => {
     fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
@@ -180,7 +176,7 @@ test('changing format during setup protects fields, selected rules and validatio
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
 
-  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'tree' } });
+  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'dependency' } });
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('fitch');
   expect(screen.getByLabelText('Conclusion')).toHaveValue('P ∧');
@@ -191,11 +187,11 @@ test('changing format during setup protects fields, selected rules and validatio
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 
-  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'tree' } });
+  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'dependency' } });
   fireEvent.click(
     within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard changes' }),
   );
-  expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
+  expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
   expect(screen.getByLabelText('Conclusion')).toHaveValue('');
   expect(screen.queryByLabelText('Premise 1')).not.toBeInTheDocument();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -206,17 +202,17 @@ test('changing format during setup protects fields, selected rules and validatio
 
 test('an untouched setup changes format freely, but rule-only edits require confirmation', async () => {
   renderWithUnsavedWork(<ProofPractice />);
-  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'tree' } });
+  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'dependency' } });
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
+  expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
 
   fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
   fireEvent.click(screen.getByRole('button', { name: 'Done' }));
-  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'dependency' } });
+  fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'fitch' } });
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Proof format')).toHaveValue('tree');
+  expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
   fireEvent.click(screen.getByText('Permitted rules (18 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
@@ -341,20 +337,26 @@ test('opening the rules modal leaves all rules selected; only a fresh checkbox c
   expect(choice).not.toBeChecked();
 });
 
-test('pending tree nodes hide previous feedback and remain intact when restarting is cancelled', async () => {
-  await enterProblem('tree');
-  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
-  expect(screen.getByRole('region', { name: 'Proof feedback' })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'New assumption node' }));
-  fireEvent.change(screen.getByLabelText('Formula for node 2'), { target: { value: '~Q' } });
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
-  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
-  expect(screen.getByLabelText('Formula for node 2')).toHaveValue('¬Q');
-  fireEvent.click(screen.getByRole('button', { name: 'Discard entry' }));
-  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: 'Edit node 2' })).not.toBeInTheDocument();
+test('practice offers only available formats and rejects an injected unavailable choice without discarding work', async () => {
+  renderWithUnsavedWork(<ProofPractice />);
+  expect(
+    within(screen.getByLabelText('Proof format'))
+      .getAllByRole('option')
+      .map((option) => option.getAttribute('value')),
+  ).toEqual(['fitch', 'dependency']);
+  fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P -> P' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
+  const select = screen.getByLabelText('Change proof format');
+  expect(
+    within(select).queryByRole('option', { name: 'Natural-deduction tree' }),
+  ).not.toBeInTheDocument();
+  select.appendChild(new Option('Injected unavailable format', 'tree'));
+  fireEvent.change(select, { target: { value: 'tree' } });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P → P');
+  expect(
+    screen.queryByRole('region', { name: 'Tree student proof editor' }),
+  ).not.toBeInTheDocument();
 });
 
 test('changing the Fitch practice conclusion preserves confirmed and pending proof entries and requires a fresh explicit check', async () => {

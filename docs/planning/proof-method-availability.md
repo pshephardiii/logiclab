@@ -1,6 +1,6 @@
 # Proof-method availability and unambiguous naming
 
-Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards and retained student read-only views are implemented; practice/instructor selection controls and explicit renaming remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
+Decision: November 12, 2026; sequence confirmed November 13. **Branch 033 in progress: owner/student admission guards, available-only selection controls and retained read-only views are implemented; explicit naming cleanup and final verification remain in progress. Semantic tableaux are not implemented.** Practice UI branch 032 is complete for its agreed scope; see its [verification](../verification/practice-ui-audit-verification.md).
 
 ## Audience and terminology
 
@@ -38,6 +38,15 @@ This branch both guards availability and clarifies terminology throughout the co
 - Existing active-tree student UI tests now cover retained draft/final viewing, blocked work and independent reference access. Underlying tree editor/checker tests remain intact. Disposable historical database fixtures exercise both normal/demo boundaries, mixed active/unavailable items, no-attempt creation, unchanged saved revisions and final replay/release.
 - Validation: 649 frontend tests and all 131 API PostgreSQL workflow checks passed, along with API/frontend type checking and production builds, changed-file formatting and whitespace. No browser run or database migration/reset was performed for this slice.
 - **Remaining:** remove unavailable choices from public practice, instructor authoring and publication selection; make retained instructor records read-only with clear messaging. Then complete the coordinated explicit natural-deduction-tree naming pass and branch verification. Tree practice/authoring selectors are still present until that next slice; this is not full app hiding or branch completion.
+
+### Slice 4 — practice/instructor availability controls (November 13, 2026)
+
+- Public practice setup and format switching offer only Fitch/dependency, reject injected unavailable choices without discarding work, and guard the editor boundary. Navigation no longer advertises natural-deduction trees. Retained pure helpers/checkers remain format-complete; broader transport support is not an app entry point.
+- New instructor authoring offers only available formats. Retained tree drafts render a read-only summary without constructing a reference, changing dirty state or exposing edit/save/new-publication controls. History, private retained reference display and archive/restore remain available. Published overview navigation labels these as retained drafts rather than editable work.
+- Assignment choices filter each immutable version for availability while preserving raw pagination offsets. Do not filter solely by the current source draft: older supported versions remain selectable even if that draft's method is now unavailable. Instructor assignments containing retired work render all saved content read-only, suppress publication and disable duplication; archive/reload, result release and historical review remain separate controls.
+- Obsolete active-tree app journeys now assert hidden choices and read-only retained behavior. Direct reference-editor construction, explicit local checking and deletion/repair tests continue exercising retained implementation outside the guarded app workflow; existing tree engine/editor suites remain available.
+- Validation: all 640 frontend tests and frontend type checking/production build passed, plus changed-file formatting and whitespace. New cases cover unavailable-choice injection, version-only filtering across an empty page, retained library archive/restore/history, fixed instructor content and disabled duplicate/publication actions. This frontend-only slice did not repeat database checks or browser QA.
+- **Next:** coordinated format-specific file/directory/symbol naming, preserving serialized `format: 'tree'`, followed by branch-wide validation and focused browser verification. No semantic tableaux or automatic data conversion is introduced here.
 
 ### Availability guards
 

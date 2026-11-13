@@ -1,3 +1,4 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type {
   LibraryProblemDraft,
@@ -20,25 +21,35 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
     problem.id,
   );
 
+  const unavailable = !isProblemMethodAvailable(problem.definition);
   return (
     <section className="panel" aria-label="Published versions" aria-busy={loading || publishing}>
       <h2>Published versions</h2>
-      <p>
-        Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
-        Publication does not grant student access. Add a published version to a class assignment to
-        share it.
-      </p>
+      {unavailable ? (
+        <p>
+          New publication is unavailable for this proof method. Retained versions remain available
+          below.
+        </p>
+      ) : (
+        <p>
+          Publish the saved draft “{problem.title}”. Each click creates a new immutable version.
+          Publication does not grant student access. Add a published version to a class assignment
+          to share it.
+        </p>
+      )}
       <div className="action-row">
-        <button
-          disabled={disabled || publishing || loading || Boolean(problem.archivedAt)}
-          onClick={() =>
-            void publish().then((version) => {
-              if (version) onPublished?.(version);
-            })
-          }
-        >
-          {publishing ? 'Publishing…' : 'Publish saved draft'}
-        </button>
+        {!unavailable && (
+          <button
+            disabled={disabled || publishing || loading || Boolean(problem.archivedAt)}
+            onClick={() =>
+              void publish().then((version) => {
+                if (version) onPublished?.(version);
+              })
+            }
+          >
+            {publishing ? 'Publishing…' : 'Publish saved draft'}
+          </button>
+        )}
         <button className="secondary" disabled={publishing || loading} onClick={() => void load()}>
           Reload history
         </button>

@@ -12,7 +12,7 @@ export function PracticeNavigation() {
       </NavLink>
       <NavLink to={proofPracticePath}>
         <strong>Derivations</strong>
-        <span>Fitch, dependency and natural-deduction trees</span>
+        <span>Fitch and dependency proofs</span>
       </NavLink>
     </nav>
   );

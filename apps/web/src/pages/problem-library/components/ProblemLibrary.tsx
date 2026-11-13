@@ -1,3 +1,4 @@
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ProblemOverview } from './ProblemOverview';
 import type {
   LibraryProblemListItem,
@@ -159,6 +160,7 @@ export function ProblemLibrary() {
       {editing &&
         !focusedReference &&
         library.selected?.definition.type === 'derivation' &&
+        isProblemMethodAvailable(library.selected.definition) &&
         !dirty &&
         !library.busy && (
           <section className="panel">
@@ -174,9 +176,11 @@ export function ProblemLibrary() {
           <section className="panel">
             <h2>Library status</h2>
             <p>
-              {library.selected.archivedAt
-                ? 'Archived: restore to edit or publish. Published versions remain available.'
-                : 'Active: available in your private library.'}
+              {!isProblemMethodAvailable(library.selected.definition)
+                ? 'Retained proof method: read-only. Restoring does not enable editing or publication.'
+                : library.selected.archivedAt
+                  ? 'Archived: restore to edit or publish. Published versions remain available.'
+                  : 'Active: available in your private library.'}
             </p>
             <button disabled={library.busy || dirty} onClick={() => void library.archive()}>
               {library.selected.archivedAt ? 'Restore problem' : 'Archive problem'}
