@@ -32,6 +32,7 @@ export function DependencyProofEditor({
   conclusionActions,
   onPremiseChange,
   actions,
+  showAssumptionGuides = true,
 }: {
   statement: {
     premises: { id: string; formula: string }[];
@@ -44,6 +45,7 @@ export function DependencyProofEditor({
   onPendingChange?: (pending: boolean) => void;
   conclusionActions?: ReactNode;
   actions?: ReactNode;
+  showAssumptionGuides?: boolean;
   onPremiseChange?: (premiseId: string, formula: string) => void;
 }) {
   const reference = purpose === 'reference';
@@ -272,6 +274,7 @@ export function DependencyProofEditor({
                 </p>
               )}
               <DependencyProofDisplay
+                showAssumptionGuides={showAssumptionGuides}
                 proof={proof}
                 rules={statement.rules}
                 selectedId={selected?.id ?? null}

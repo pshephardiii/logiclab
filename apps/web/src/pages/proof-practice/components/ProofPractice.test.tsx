@@ -547,3 +547,36 @@ test('dependency practice premise edits distinguish identical sources and recove
   expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
   expect(screen.getByText('Proof verified.')).toBeInTheDocument();
 });
+
+test('dependency practice uses aligned formulas without scope guides while retaining assumptions and discharge', async () => {
+  await enterProblem('dependency', async () => {
+    fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'Q -> Q' } });
+  });
+  const display = screen.getByRole('region', { name: 'Entered dependency proof' });
+  fireEvent.change(screen.getByLabelText('Rule for line 2'), {
+    target: { value: '__assumption__' },
+  });
+  fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'Q' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(within(display).getByRole('cell', { name: 'Premise' })).toBeInTheDocument();
+  expect(within(display).getByRole('cell', { name: 'Assumption' })).toBeInTheDocument();
+  expect(within(display).getByRole('cell', { name: '{2}' })).toBeInTheDocument();
+  expect(display.querySelector('.dependency-assumption-guides')).toBeNull();
+  expect(display.querySelector('table')).toHaveStyle('--dependency-guide-width: 0rem');
+
+  fireEvent.change(screen.getByLabelText('Formula for line 3'), { target: { value: 'Q -> Q' } });
+  fireEvent.change(screen.getByLabelText('Rule for line 3'), {
+    target: { value: 'implication_introduction' },
+  });
+  const assumption = screen.getByLabelText('Line 3 discharge 1 assumption');
+  const option = within(assumption).getByRole('option', { name: '2. Q' }) as HTMLOptionElement;
+  fireEvent.change(assumption, { target: { value: option.value } });
+  fireEvent.change(screen.getByLabelText('Line 3 discharge 1 conclusion'), {
+    target: { value: option.value },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(display).toHaveTextContent('discharge 2–2');
+  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByText('Proof verified.')).toBeInTheDocument();
+  expect(display.querySelector('.dependency-assumption-guides')).toBeNull();
+});

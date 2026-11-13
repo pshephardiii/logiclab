@@ -28,6 +28,7 @@ export function DependencyProofDisplay({
   rangeDisabled = false,
   rangeStartId,
   rangeEndId,
+  showAssumptionGuides = true,
 }: {
   proof: DependencyProof;
   rules: { id: string; label: string }[];
@@ -47,8 +48,9 @@ export function DependencyProofDisplay({
   rangeDisabled?: boolean;
   rangeStartId?: string;
   rangeEndId?: string;
+  showAssumptionGuides?: boolean;
 }) {
-  const assumptions = dependencyAssumptionGuides(proof.steps);
+  const assumptions = showAssumptionGuides ? dependencyAssumptionGuides(proof.steps) : null;
   const positions = new Map(proof.steps.map((step, index) => [step.id, index + 1]));
   const labels = new Map(rules.map((rule) => [rule.id, rule.label]));
   const line = (id: string | null) => (id ? (positions.get(id) ?? 'Missing line') : 'Not selected');
@@ -63,7 +65,9 @@ export function DependencyProofDisplay({
   return (
     <div className="dependency-proof-display" role="region" aria-label={label} tabIndex={0}>
       <table
-        style={{ '--dependency-guide-width': `${assumptions.lanes * 0.6}rem` } as CSSProperties}
+        style={
+          { '--dependency-guide-width': `${(assumptions?.lanes ?? 0) * 0.6}rem` } as CSSProperties
+        }
       >
         <caption>Entered proof</caption>
         <thead>
@@ -110,7 +114,9 @@ export function DependencyProofDisplay({
                 )}
               </th>
               <td className="proof-line-formula">
-                <DependencyAssumptionGuides guides={assumptions.guides} index={index} />
+                {assumptions && (
+                  <DependencyAssumptionGuides guides={assumptions.guides} index={index} />
+                )}
                 <code>{proofNotation(step.formula) || '(blank)'}</code>
               </td>
               <td className="proof-line-justification">
