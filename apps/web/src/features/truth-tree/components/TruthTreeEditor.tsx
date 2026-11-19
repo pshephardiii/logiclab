@@ -9,7 +9,8 @@ import {
   undoTruthTreeExpansion,
   editableTree,
 } from '../helpers/construction';
-import { ProofDeletionPrompt } from '../../proof/components/ProofDeletionPrompt';
+import { TruthTreeClosureFields } from './TruthTreeClosureFields';
+import { TruthTreeUndoDialog } from './TruthTreeUndoDialog';
 
 type Props = {
   tree: TruthTree;
@@ -132,60 +133,31 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
                   }
                 />
               </fieldset>
-              <fieldset disabled={Boolean(entry.sourceId || entry.ruleId)}>
-                <legend>Close branch</legend>
-                <label htmlFor={`${id}-closure`}>Closure type</label>
-                <select
-                  id={`${id}-closure`}
-                  value={closureKind}
-                  onChange={(event) => {
-                    setClosureKind(event.target.value as typeof closureKind);
-                    setFirst('');
-                    setSecond('');
-                  }}
-                >
-                  <option value="complement">Contradictory pair</option>
-                  <option value="falsity">Contradiction symbol</option>
-                </select>
-                {[0, ...(closureKind === 'complement' ? [1] : [])].map((index) => (
-                  <div key={index}>
-                    <label htmlFor={`${id}-witness-${index}`}>Witness {index + 1}</label>
-                    <select
-                      id={`${id}-witness-${index}`}
-                      value={index === 0 ? first : second}
-                      onChange={(event) =>
-                        index === 0 ? setFirst(event.target.value) : setSecond(event.target.value)
-                      }
-                    >
-                      <option value="">Choose formula</option>
-                      {sources.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.number}. {item.formula || '(blank)'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  disabled={
-                    !first || (closureKind === 'complement' && (!second || first === second))
-                  }
-                  onClick={() =>
-                    commit(() =>
-                      closeTruthTreeBranch(
-                        tree,
-                        branchId,
-                        closureKind === 'falsity'
-                          ? { kind: 'falsity', occurrenceId: first }
-                          : { kind: 'complement', occurrenceIds: [first, second] },
-                      ),
-                    )
-                  }
-                >
-                  Close branch
-                </button>
-              </fieldset>
+              <TruthTreeClosureFields
+                disabled={Boolean(entry.sourceId || entry.ruleId)}
+                closureKind={closureKind}
+                first={first}
+                second={second}
+                sources={sources}
+                onKindChange={(kind) => {
+                  setClosureKind(kind);
+                  setFirst('');
+                  setSecond('');
+                }}
+                onFirstChange={setFirst}
+                onSecondChange={setSecond}
+                onClose={() =>
+                  commit(() =>
+                    closeTruthTreeBranch(
+                      tree,
+                      branchId,
+                      closureKind === 'falsity'
+                        ? { kind: 'falsity', occurrenceId: first }
+                        : { kind: 'complement', occurrenceIds: [first, second] },
+                    ),
+                  )
+                }
+              />
             </>
           ) : branch?.ending.kind === 'closed' ? (
             <button
@@ -213,25 +185,14 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
         </fieldset>
       )}
       {undoing && (
-        <ProofDeletionPrompt modal label="Undo last expansion?" onCancel={() => setUndoing(false)}>
-          <p>
-            Remove the latest expansion and its resulting formulas or child branches. Any closure on
-            the affected branches is removed too.
-          </p>
-          <button
-            type="button"
-            disabled={disabled || !undo}
-            onClick={() => {
-              if (undo) commit(() => undo);
-              setUndoing(false);
-            }}
-          >
-            Undo expansion
-          </button>
-          <button type="button" className="secondary" onClick={() => setUndoing(false)}>
-            Keep expansion
-          </button>
-        </ProofDeletionPrompt>
+        <TruthTreeUndoDialog
+          disabled={disabled || !undo}
+          onCancel={() => setUndoing(false)}
+          onConfirm={() => {
+            if (undo) commit(() => undo);
+            setUndoing(false);
+          }}
+        />
       )}
     </div>
   );
