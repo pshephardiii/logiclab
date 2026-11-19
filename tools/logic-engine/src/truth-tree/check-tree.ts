@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { TruthTreeCheckReport, TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { analyzeTruthTreeSteps } from './check-steps';
 import { truthTreeBranchOutcomes } from './branch-outcomes';
@@ -5,7 +6,8 @@ import { truthTreeCounterexample } from './counterexample';
 import { truthTreeBudget, TruthTreeResourceLimit, type TruthTreeBudget } from './structure-context';
 
 function failure(
-  code: 'RESOURCE_LIMIT' | 'VERIFICATION_FAILED',
+  code:
+    typeof CheckerDiagnosticCode.ResourceLimit | typeof CheckerDiagnosticCode.VerificationFailed,
   message: string,
 ): TruthTreeCheckReport {
   const steps: TruthTreeStepReport = {
@@ -41,7 +43,7 @@ export function checkTruthTree(
     if (!evidence) {
       if (steps.status === 'checked')
         return failure(
-          'VERIFICATION_FAILED',
+          CheckerDiagnosticCode.VerificationFailed,
           'Checked step evidence was not available for branch verification.',
         );
       return {
@@ -70,7 +72,7 @@ export function checkTruthTree(
       const counterexample = truthTreeCounterexample(evidence, open.branchId);
       if (!counterexample)
         return failure(
-          'VERIFICATION_FAILED',
+          CheckerDiagnosticCode.VerificationFailed,
           'The completed branch did not yield an independently verified counterexample.',
         );
       return {
@@ -91,13 +93,13 @@ export function checkTruthTree(
       counterexample: null,
       diagnostics: [
         {
-          code: 'INCOMPLETE_TREE',
+          code: CheckerDiagnosticCode.IncompleteTree,
           message: 'Close contradictory branches explicitly or finish decomposing an open branch.',
         },
       ],
     };
   } catch (error) {
     if (!(error instanceof TruthTreeResourceLimit)) throw error;
-    return failure('RESOURCE_LIMIT', error.message);
+    return failure(CheckerDiagnosticCode.ResourceLimit, error.message);
   }
 }

@@ -1,3 +1,4 @@
+import { ClassCapability } from '@logiclab/contracts/billing-values';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { CheckoutSession, PurchaseTerms } from '../../../application/billing/provider';
@@ -7,7 +8,7 @@ const termsSchema = z.strictObject({
   amountMinor: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   currency: z.string().regex(/^[A-Z]{3}$/),
   coverageDays: z.number().int().positive().max(2147483647),
-  capability: z.literal('publish_assignments'),
+  capability: z.literal(ClassCapability.PublishAssignments),
 });
 
 /** No provider network call, real charge, browser redirect, or access grant occurs here. */

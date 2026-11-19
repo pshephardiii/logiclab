@@ -36,6 +36,8 @@ const checkSummarySchema = z.strictObject({
   total: z.number().int().nonnegative(),
 });
 
+export type SubmissionCounts = z.infer<typeof checkSummarySchema>;
+
 const truthTableErrorSchema = z.strictObject({
   code: z.string(),
   message: z.string(),

@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   TRUTH_TREE_LIMITS,
   truthTreeProblemSchema,
@@ -41,7 +42,7 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   )
     return failed('unassessable', [
       {
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Provide exactly an authoritative problem and a submitted tree.',
       },
     ]);
@@ -51,7 +52,10 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
     const { premises, conclusion, ruleCatalogVersion } = input.problem;
     if (ruleCatalogVersion !== 1)
       return failed('unassessable', [
-        { code: 'UNSUPPORTED_VERSION', message: 'Unsupported truth-tree rule catalog.' },
+        {
+          code: CheckerDiagnosticCode.UnsupportedVersion,
+          message: 'Unsupported truth-tree rule catalog.',
+        },
       ]);
     if (
       (Array.isArray(premises) && premises.length > TRUTH_TREE_LIMITS.maxPremises) ||
@@ -70,7 +74,7 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   if (!parsed.success)
     return failed('unassessable', [
       {
-        code: 'INVALID_PROBLEM',
+        code: CheckerDiagnosticCode.InvalidProblem,
         message: 'The supplied argument does not match the supported contract.',
       },
     ]);
@@ -81,12 +85,18 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   } catch (error) {
     if (!(error instanceof FormulaParseError)) throw error;
     return failed('unassessable', [
-      { code: 'INVALID_PROBLEM', message: 'The supplied argument contains an invalid formula.' },
+      {
+        code: CheckerDiagnosticCode.InvalidProblem,
+        message: 'The supplied argument contains an invalid formula.',
+      },
     ]);
   }
   if (!argument)
     return failed('unassessable', [
-      { code: 'INVALID_PROBLEM', message: 'Supplied premise identities must be distinct.' },
+      {
+        code: CheckerDiagnosticCode.InvalidProblem,
+        message: 'Supplied premise identities must be distinct.',
+      },
     ]);
 
   const resolved = analyzeTruthTreeStructure(input.tree, budget);

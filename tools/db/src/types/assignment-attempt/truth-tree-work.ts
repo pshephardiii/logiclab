@@ -1,12 +1,6 @@
-import type { TruthTree } from '../truth-tree/work.ts';
-import type { TruthTreeCheckReport } from '../truth-tree/report.ts';
+/** Stored JSON shares its schema-inferred contract type; this adds no runtime validation. */
 
-export type TruthTreeAnswer = { type: 'truth_tree'; tree: TruthTree };
-
-export interface TruthTreeEvaluationEvidence {
-  evaluationVersion: 'truth_tree_v1';
-  type: 'truth_tree';
-  itemId: string;
-  problemVersionId: string;
-  report: TruthTreeCheckReport;
-}
+export type {
+  TruthTreeAnswer,
+  TruthTreeEvaluationEvidence,
+} from '@logiclab/contracts/truth-tree-work';

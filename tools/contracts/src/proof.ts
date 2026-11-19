@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CheckerDiagnosticCode } from './checker-diagnostic-code';
 
 import {
   PROOF_LIMITS,
@@ -64,22 +65,24 @@ export const fitchProofCheckInputSchema = z.strictObject({
 
 export type FitchProofCheckInput = z.infer<typeof fitchProofCheckInputSchema>;
 
-const diagnosticCode = z.enum([
-  'UNSUPPORTED_VERSION',
-  'RESOURCE_LIMIT',
-  'INVALID_STRUCTURE',
-  'INVALID_FORMULA',
-  'UNKNOWN_RULE',
-  'RULE_DISABLED',
-  'INVALID_REFERENCE',
-  'RULE_MISMATCH',
-  'INVALID_DEPENDENCY',
-  'INCOMPLETE_PROOF',
-  'TARGET_NOT_ESTABLISHED',
+export const proofDiagnosticCodeSchema = z.enum([
+  CheckerDiagnosticCode.UnsupportedVersion,
+  CheckerDiagnosticCode.ResourceLimit,
+  CheckerDiagnosticCode.InvalidStructure,
+  CheckerDiagnosticCode.InvalidFormula,
+  CheckerDiagnosticCode.UnknownRule,
+  CheckerDiagnosticCode.RuleDisabled,
+  CheckerDiagnosticCode.InvalidReference,
+  CheckerDiagnosticCode.RuleMismatch,
+  CheckerDiagnosticCode.InvalidDependency,
+  CheckerDiagnosticCode.IncompleteProof,
+  CheckerDiagnosticCode.TargetNotEstablished,
 ]);
 
+export type ProofDiagnosticCode = z.infer<typeof proofDiagnosticCodeSchema>;
+
 export const proofDiagnosticSchema = z.strictObject({
-  code: diagnosticCode,
+  code: proofDiagnosticCodeSchema,
   message: z.string().min(1).max(500),
   stepIndex: z
     .number()

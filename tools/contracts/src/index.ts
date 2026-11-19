@@ -20,6 +20,8 @@ export * from './submission-review';
 
 export * from './billing';
 
+export * from './billing-values';
+
 export * from './demo';
 
 export * from './assignment-learning-policy';
@@ -37,6 +39,8 @@ export * from './assignment-scoring';
 export * from './assignment-grading';
 
 export * from './proof';
+
+export * from './checker-diagnostic-code';
 
 export * from './dependency-proof';
 

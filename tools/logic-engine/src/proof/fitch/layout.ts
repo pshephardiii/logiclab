@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
 import type { FitchBlockSpan, FitchLayout } from './types';
 import type { StructureDiagnostics } from '../structure-diagnostics';
@@ -15,7 +16,7 @@ export function buildFitchLayout(
   proof.steps.forEach((step, stepIndex) => {
     if (stepIndices.has(step.id))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Step IDs must be unique.',
         stepIndex,
       });
@@ -28,7 +29,7 @@ export function buildFitchLayout(
   for (const block of proof.blocks) {
     if (blockIds.has(block.id) || stepIndices.has(block.id))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Block IDs must be unique and distinct from step IDs.',
         blockId: block.id,
       });
@@ -37,7 +38,7 @@ export function buildFitchLayout(
 
     if (block.parentId !== null && !declarations.has(block.parentId))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Block parent does not exist.',
         blockId: block.id,
       });
@@ -52,7 +53,7 @@ export function buildFitchLayout(
       assumption.blockId !== block.id
     ) {
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Block must open with its own declared assumption step.',
         blockId: block.id,
       });
@@ -67,7 +68,7 @@ export function buildFitchLayout(
         (endIndex < assumptionIndex || proof.steps[endIndex]!.blockId !== block.id))
     ) {
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Block endpoint must be its final direct step, at or after its assumption.',
         blockId: block.id,
       });
@@ -80,14 +81,14 @@ export function buildFitchLayout(
   for (const step of proof.steps) {
     if (step.blockId !== null && !declarations.has(step.blockId))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Step belongs to an unknown block.',
         stepIndex: stepIndices.get(step.id),
       });
 
     if (step.kind === 'assumption' && declarations.get(step.blockId)?.assumptionId !== step.id)
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Assumption step is not the declared opening of its block.',
         stepIndex: stepIndices.get(step.id),
       });
@@ -103,7 +104,7 @@ export function buildFitchLayout(
     while (cursor !== null) {
       if (seen.has(cursor)) {
         diagnostics.add({
-          code: 'INVALID_STRUCTURE',
+          code: CheckerDiagnosticCode.InvalidStructure,
           message: 'Block parents must not form a cycle.',
           blockId: block.id,
         });
@@ -117,7 +118,7 @@ export function buildFitchLayout(
 
     if (seen.size > PROOF_LIMITS.maxBlockDepth)
       diagnostics.add({
-        code: 'RESOURCE_LIMIT',
+        code: CheckerDiagnosticCode.ResourceLimit,
         message: 'Block nesting limit exceeded.',
         blockId: block.id,
       });
@@ -137,7 +138,7 @@ export function buildFitchLayout(
 
       if (block.parentId !== scope) {
         diagnostics.add({
-          code: 'INVALID_STRUCTURE',
+          code: CheckerDiagnosticCode.InvalidStructure,
           message: 'Subproof must open inside its declared current parent.',
           stepIndex,
           blockId: block.id,
@@ -148,7 +149,7 @@ export function buildFitchLayout(
       stack.push(block);
     } else if (step.blockId !== scope) {
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Step must remain in the current innermost open block.',
         stepIndex,
       });
@@ -163,7 +164,7 @@ export function buildFitchLayout(
 
   for (const block of stack) {
     diagnostics.add({
-      code: 'INCOMPLETE_PROOF',
+      code: CheckerDiagnosticCode.IncompleteProof,
       message: 'Subproof has no closing endpoint.',
       blockId: block.id,
       stepIndex: block.assumptionIndex,

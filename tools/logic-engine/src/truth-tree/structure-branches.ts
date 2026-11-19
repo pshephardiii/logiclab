@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { TRUTH_TREE_LIMITS } from '@logiclab/contracts/truth-tree';
 import { TruthTreeResourceLimit, type StructureContext } from './structure-context';
 
@@ -13,7 +14,7 @@ export function indexTruthTree(context: StructureContext) {
     context.budget.spend();
     if (ids.has(entry.id)) {
       context.diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Submitted identities must be globally unique.',
       });
     }
@@ -33,7 +34,7 @@ export function resolveTruthTreeBranches(context: StructureContext) {
 
   if (tree.rootBranchId === null) {
     diagnostics.add({
-      code: 'INCOMPLETE_TREE',
+      code: CheckerDiagnosticCode.IncompleteTree,
       message: 'Choose the initial branch before checking.',
     });
     return;
@@ -41,7 +42,7 @@ export function resolveTruthTreeBranches(context: StructureContext) {
 
   if (!root) {
     diagnostics.add({
-      code: 'INVALID_REFERENCE',
+      code: CheckerDiagnosticCode.InvalidReference,
       message: 'The initial branch must identify a submitted branch.',
     });
     return;
@@ -50,7 +51,11 @@ export function resolveTruthTreeBranches(context: StructureContext) {
   for (const branch of branches.values()) {
     context.budget.spend();
     const fail = (message: string) =>
-      diagnostics.add({ code: 'INVALID_STRUCTURE', message, branchId: branch.id });
+      diagnostics.add({
+        code: CheckerDiagnosticCode.InvalidStructure,
+        message,
+        branchId: branch.id,
+      });
 
     if (branch.id === root.id) {
       if (branch.parentId !== null) fail('The initial branch cannot have a parent.');
@@ -69,7 +74,7 @@ export function resolveTruthTreeBranches(context: StructureContext) {
     const children = branch.ending.childBranchIds;
     if (children.length < 2 || branch.ending.expansionId === null)
       diagnostics.add({
-        code: 'INCOMPLETE_TREE',
+        code: CheckerDiagnosticCode.IncompleteTree,
         message: 'Finish the split and its expansion selection.',
         branchId: branch.id,
       });
@@ -97,7 +102,7 @@ export function resolveTruthTreeBranches(context: StructureContext) {
 
     if (context.paths.has(branch.id)) {
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Branch ancestry must be acyclic.',
         branchId: branch.id,
       });
@@ -116,7 +121,7 @@ export function resolveTruthTreeBranches(context: StructureContext) {
 
   if (context.paths.size !== branches.size)
     diagnostics.add({
-      code: 'INVALID_STRUCTURE',
+      code: CheckerDiagnosticCode.InvalidStructure,
       message:
         'Every submitted branch must descend from the initial branch; detached cycles are not allowed.',
     });
@@ -132,7 +137,7 @@ export function resolveTruthTreeOccurrences(context: StructureContext) {
 
       if (!occurrence || context.locations.has(id)) {
         context.diagnostics.add({
-          code: 'INVALID_STRUCTURE',
+          code: CheckerDiagnosticCode.InvalidStructure,
           message: 'Every branch entry must identify a distinct submitted occurrence.',
           branchId: branch.id,
         });
@@ -145,21 +150,21 @@ export function resolveTruthTreeOccurrences(context: StructureContext) {
         generated = true;
         if (occurrence.origin.expansionId === null)
           context.diagnostics.add({
-            code: 'INCOMPLETE_TREE',
+            code: CheckerDiagnosticCode.IncompleteTree,
             message: 'Select the expansion that generated this occurrence.',
             occurrenceId: id,
           });
       } else {
         if (branch.id !== context.tree.rootBranchId || generated)
           context.diagnostics.add({
-            code: 'INVALID_STRUCTURE',
+            code: CheckerDiagnosticCode.InvalidStructure,
             message: 'Initial formulas must form the beginning of the initial branch.',
             occurrenceId: id,
           });
 
         if (occurrence.origin.kind === 'premise' && occurrence.origin.premiseId === null)
           context.diagnostics.add({
-            code: 'INCOMPLETE_TREE',
+            code: CheckerDiagnosticCode.IncompleteTree,
             message: 'Select the supplied premise for this occurrence.',
             occurrenceId: id,
           });
@@ -170,7 +175,7 @@ export function resolveTruthTreeOccurrences(context: StructureContext) {
   for (const occurrence of context.occurrences.values()) {
     if (!context.locations.has(occurrence.id))
       context.diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Every submitted occurrence must belong to exactly one branch segment.',
         occurrenceId: occurrence.id,
       });

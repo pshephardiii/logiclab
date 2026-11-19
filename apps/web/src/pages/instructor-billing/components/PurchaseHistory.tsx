@@ -1,3 +1,4 @@
+import { PurchaseStatus } from '@logiclab/contracts/billing-values';
 import { formatPrice } from '../helpers/format-price';
 import type { ClassBillingResponse, SimulatorRequest } from '@logiclab/contracts';
 
@@ -25,25 +26,28 @@ export function PurchaseHistory({
               Purchase {purchase.id} · {new Date(purchase.createdAt).toLocaleString()}
             </p>
             <div className="action-row">
-              {purchase.status === 'pending' && (
+              {purchase.status === PurchaseStatus.Pending && (
                 <>
-                  <button disabled={disabled} onClick={() => void simulate(purchase.id, 'paid')}>
+                  <button
+                    disabled={disabled}
+                    onClick={() => void simulate(purchase.id, PurchaseStatus.Paid)}
+                  >
                     Simulate success
                   </button>
                   <button
                     className="secondary"
                     disabled={disabled}
-                    onClick={() => void simulate(purchase.id, 'failed')}
+                    onClick={() => void simulate(purchase.id, PurchaseStatus.Failed)}
                   >
                     Simulate failure
                   </button>
                 </>
               )}
-              {purchase.status === 'paid' && (
+              {purchase.status === PurchaseStatus.Paid && (
                 <button
                   className="secondary"
                   disabled={disabled}
-                  onClick={() => void simulate(purchase.id, 'refunded')}
+                  onClick={() => void simulate(purchase.id, PurchaseStatus.Refunded)}
                 >
                   Simulate refund
                 </button>

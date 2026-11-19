@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { NaturalDeductionTreeProofCheckInput, ProofCheckReport } from '@logiclab/contracts';
 import type { NaturalDeductionTreeStructureResult } from './structure';
 import type { ParsedProofFormula } from '../proof-formulas';
@@ -42,14 +43,14 @@ export function evaluateNaturalDeductionTreeNodes(
       if (node.premiseId === null) {
         localStatus = 'unassessable';
         diagnostics.add({
-          code: 'INCOMPLETE_PROOF',
+          code: CheckerDiagnosticCode.IncompleteProof,
           message: 'Premise leaf has no selected problem premise.',
           stepIndex: index,
         });
       } else if (!premise?.formula) {
         localStatus = 'invalid';
         diagnostics.add({
-          code: 'INVALID_REFERENCE',
+          code: CheckerDiagnosticCode.InvalidReference,
           message: 'Premise leaf must identify a supplied problem premise.',
           stepIndex: index,
         });
@@ -59,7 +60,7 @@ export function evaluateNaturalDeductionTreeNodes(
         if (!sameFormula(current.formula, premise.formula)) {
           localStatus = 'invalid';
           diagnostics.add({
-            code: 'RULE_MISMATCH',
+            code: CheckerDiagnosticCode.RuleMismatch,
             message: 'Premise leaf formula does not match its supplied problem premise.',
             stepIndex: index,
           });
@@ -116,7 +117,7 @@ export function evaluateNaturalDeductionTreeNodes(
             // This also rejects occurrences already discharged deeper in the subtree.
             dependencyStatus = 'invalid';
             diagnostics.add({
-              code: 'INVALID_DEPENDENCY',
+              code: CheckerDiagnosticCode.InvalidDependency,
               message:
                 'Discharge must name an open assumption occurrence in its own supporting subtree.',
               stepIndex: index,
@@ -125,7 +126,7 @@ export function evaluateNaturalDeductionTreeNodes(
             if (!sameFormula(declared.formula, formula.formula)) {
               dependencyStatus = 'invalid';
               diagnostics.add({
-                code: 'INVALID_DEPENDENCY',
+                code: CheckerDiagnosticCode.InvalidDependency,
                 message:
                   'Discharged assumption occurrence does not match the branch assumption formula.',
                 stepIndex: index,
@@ -156,7 +157,10 @@ export function evaluateNaturalDeductionTreeNodes(
 
       if (dependencyStatus !== 'valid')
         diagnostics.add({
-          code: dependencyStatus === 'invalid' ? 'INVALID_DEPENDENCY' : 'INCOMPLETE_PROOF',
+          code:
+            dependencyStatus === 'invalid'
+              ? CheckerDiagnosticCode.InvalidDependency
+              : CheckerDiagnosticCode.IncompleteProof,
           message:
             dependencyStatus === 'invalid'
               ? 'Node depends on invalid supporting work or discharge.'

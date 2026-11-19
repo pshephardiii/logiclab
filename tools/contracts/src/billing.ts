@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ClassCapability, purchaseStatusSchema, simulatorOutcomeSchema } from './billing-values';
 
 export const billingClassParamsSchema = z.strictObject({ classId: z.uuid() });
 
@@ -9,7 +10,7 @@ export const checkoutRequestSchema = z.strictObject({ planId: z.uuid(), requestI
 export type CheckoutRequest = z.infer<typeof checkoutRequestSchema>;
 
 export const simulatorRequestSchema = z.strictObject({
-  outcome: z.enum(['paid', 'failed', 'refunded']),
+  outcome: simulatorOutcomeSchema,
 });
 
 export type SimulatorRequest = z.infer<typeof simulatorRequestSchema>;
@@ -19,11 +20,11 @@ export const purchaseResponseSchema = z.strictObject({
     id: z.uuid(),
     classId: z.uuid(),
     planId: z.uuid(),
-    status: z.enum(['pending', 'paid', 'failed', 'refunded']),
+    status: purchaseStatusSchema,
     amountMinor: z.number().int().nonnegative(),
     currency: z.string(),
     coverageDays: z.number().int().positive(),
-    capability: z.literal('publish_assignments'),
+    capability: z.literal(ClassCapability.PublishAssignments),
   }),
   mode: z.literal('simulated'),
   notice: z.string(),
@@ -52,7 +53,7 @@ export const billingPlanSchema = z.strictObject({
   amountMinor: z.number().int().nonnegative(),
   currency: z.string(),
   coverageDays: z.number().int().positive(),
-  capability: z.literal('publish_assignments'),
+  capability: z.literal(ClassCapability.PublishAssignments),
 });
 
 export type BillingPlanChoice = z.infer<typeof billingPlanSchema>;

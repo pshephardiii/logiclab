@@ -1,6 +1,1 @@
-export enum PurchaseStatus {
-  Pending = 'pending',
-  Paid = 'paid',
-  Failed = 'failed',
-  Refunded = 'refunded',
-}
+export { PurchaseStatus } from '@logiclab/contracts/billing-values';

@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { StructureContext } from './structure-context';
 
 /** Resolve generated occurrences before checking their formulas against a decomposition rule. */
@@ -9,7 +10,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
     budget.spend();
     const at = { expansionId: expansion.id };
     const fail = (message: string) =>
-      diagnostics.add({ code: 'INVALID_REFERENCE', message, ...at });
+      diagnostics.add({ code: CheckerDiagnosticCode.InvalidReference, message, ...at });
     const branch = context.branches.get(expansion.branchId);
 
     if (!branch) {
@@ -22,7 +23,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
 
     if (expansion.sourceId === null || expansion.ruleId === null || groups.length === 0)
       diagnostics.add({
-        code: 'INCOMPLETE_TREE',
+        code: CheckerDiagnosticCode.IncompleteTree,
         message: 'Select a source, rule and generated results for this expansion.',
         ...at,
       });
@@ -30,7 +31,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
     if (splitting) {
       if (groups.length < 2)
         diagnostics.add({
-          code: 'INCOMPLETE_TREE',
+          code: CheckerDiagnosticCode.IncompleteTree,
           message: 'A split needs results for both child branches.',
           ...at,
         });
@@ -57,7 +58,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
 
       if (group.occurrenceIds.length === 0)
         diagnostics.add({
-          code: 'INCOMPLETE_TREE',
+          code: CheckerDiagnosticCode.IncompleteTree,
           message: 'Fill the generated occurrences in this result group.',
           ...at,
         });
@@ -127,7 +128,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
       !claimed.has(occurrence.id)
     )
       context.diagnostics.add({
-        code: 'INVALID_REFERENCE',
+        code: CheckerDiagnosticCode.InvalidReference,
         message: 'A generated occurrence must be listed exactly once by its originating expansion.',
         occurrenceId: occurrence.id,
       });
@@ -139,7 +140,7 @@ export function resolveTruthTreeExpansions(context: StructureContext) {
     const expansion = context.expansions.get(branch.ending.expansionId);
     if (!expansion || expansion.branchId !== branch.id)
       context.diagnostics.add({
-        code: 'INVALID_REFERENCE',
+        code: CheckerDiagnosticCode.InvalidReference,
         message: 'The split must cite an expansion applied on this segment.',
         branchId: branch.id,
       });
@@ -153,7 +154,7 @@ export function resolveTruthTreeClosures(context: StructureContext) {
     const closure = branch.ending.closure;
     if (closure === null) {
       context.diagnostics.add({
-        code: 'INCOMPLETE_TREE',
+        code: CheckerDiagnosticCode.IncompleteTree,
         message: 'Select the evidence for closing this branch.',
         branchId: branch.id,
       });
@@ -166,7 +167,7 @@ export function resolveTruthTreeClosures(context: StructureContext) {
 
     if (new Set(ids).size !== ids.length || ids.some((id) => !path.includes(id)))
       context.diagnostics.add({
-        code: 'INVALID_REFERENCE',
+        code: CheckerDiagnosticCode.InvalidReference,
         message:
           'Closure witnesses must be distinct occurrences on this branch or its ancestor path.',
         branchId: branch.id,

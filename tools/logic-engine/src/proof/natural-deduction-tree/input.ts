@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   PROOF_LIMITS,
   naturalDeductionTreeProofCheckInputSchema,
@@ -28,7 +29,10 @@ export function readNaturalDeductionTreeInput(
       (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
       (proof.format !== undefined && proof.format !== 'tree')
     )
-      throw new InputFailure('UNSUPPORTED_VERSION', 'Unsupported tree proof format or version.');
+      throw new InputFailure(
+        CheckerDiagnosticCode.UnsupportedVersion,
+        'Unsupported tree proof format or version.',
+      );
 
     ids(proof, ['rootId']);
 
@@ -84,7 +88,7 @@ export function readNaturalDeductionTreeInput(
       ? { input: parsed.data }
       : {
           diagnostic: {
-            code: 'INVALID_STRUCTURE',
+            code: CheckerDiagnosticCode.InvalidStructure,
             message: 'Natural-deduction tree proof input does not match the supported contract.',
           },
         };
@@ -94,7 +98,7 @@ export function readNaturalDeductionTreeInput(
         error instanceof InputFailure
           ? { code: error.code, message: error.message }
           : {
-              code: 'INVALID_STRUCTURE',
+              code: CheckerDiagnosticCode.InvalidStructure,
               message: 'Natural-deduction tree proof input could not be inspected as plain data.',
             },
     };

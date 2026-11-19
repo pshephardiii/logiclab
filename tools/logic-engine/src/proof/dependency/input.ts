@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   PROOF_LIMITS,
   dependencyProofCheckInputSchema,
@@ -28,7 +29,7 @@ export function readDependencyInput(
       (proof.format !== undefined && proof.format !== 'dependency')
     )
       throw new InputFailure(
-        'UNSUPPORTED_VERSION',
+        CheckerDiagnosticCode.UnsupportedVersion,
         'Unsupported dependency proof format or version.',
       );
 
@@ -82,7 +83,7 @@ export function readDependencyInput(
       ? { input: parsed.data }
       : {
           diagnostic: {
-            code: 'INVALID_STRUCTURE',
+            code: CheckerDiagnosticCode.InvalidStructure,
             message: 'Dependency proof input does not match the supported contract.',
           },
         };
@@ -92,7 +93,7 @@ export function readDependencyInput(
         error instanceof InputFailure
           ? { code: error.code, message: error.message }
           : {
-              code: 'INVALID_STRUCTURE',
+              code: CheckerDiagnosticCode.InvalidStructure,
               message: 'Dependency proof input could not be inspected as plain data.',
             },
     };

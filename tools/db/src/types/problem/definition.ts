@@ -1,33 +1,18 @@
-import type { ProblemType } from './enums.ts';
+import type {
+  TruthTableDefinition,
+  ConceptualQuestionDefinition as ConceptualProblemDefinition,
+} from '@logiclab/contracts';
 import type { FitchDerivationDefinition } from './derivation.ts';
 import type { DependencyDerivationDefinition } from './dependency-derivation.ts';
 import type { NaturalDeductionTreeDerivationDefinition } from './natural-deduction-tree-derivation.ts';
 import type { TruthTreeDefinition } from './truth-tree.ts';
 
-export type TruthTableDefinition = {
-  type: typeof ProblemType.TruthTable;
-  definitionVersion: 1;
-  formula: string;
-};
-
-export type TrueFalseDefinition = {
-  type: typeof ProblemType.TrueFalse;
-  definitionVersion: 1;
-  question: string;
-  correctAnswer: boolean;
-  explanation?: string | null;
-};
-
-export type MultipleChoiceDefinition = {
-  type: typeof ProblemType.MultipleChoice;
-  definitionVersion: 1;
-  question: string;
-  options: { id: string; text: string }[];
-  correctOptionId: string;
-  explanation?: string | null;
-};
-
-export type ConceptualProblemDefinition = TrueFalseDefinition | MultipleChoiceDefinition;
+export type {
+  TruthTableDefinition,
+  TrueFalseDefinition,
+  MultipleChoiceDefinition,
+  ConceptualQuestionDefinition as ConceptualProblemDefinition,
+} from '@logiclab/contracts';
 
 /**
  * JSON content shared by mutable drafts and immutable published snapshots.

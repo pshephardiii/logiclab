@@ -44,12 +44,13 @@ export async function applyPaymentEvent(
   const occurred = validatedPaymentEventTime(purchase, event);
 
   // Ignore older deliveries even when their event ID differs. Refunded coverage cannot be restored.
-  const ignored = event.sequence <= purchase.lastEventSequence && event.outcome !== 'refunded';
+  const ignored =
+    event.sequence <= purchase.lastEventSequence && event.outcome !== PurchaseStatus.Refunded;
 
   if (!ignored) {
     purchase.lastEventSequence = Math.max(purchase.lastEventSequence, event.sequence);
 
-    if (event.outcome === 'refunded') {
+    if (event.outcome === PurchaseStatus.Refunded) {
       purchase.status = PurchaseStatus.Refunded;
 
       const grants = await em.find(ClassEntitlement, {
@@ -59,7 +60,10 @@ export async function applyPaymentEvent(
       });
 
       for (const grant of grants) grant.revokedAt ??= occurred;
-    } else if (event.outcome === 'paid' && purchase.status === PurchaseStatus.Pending) {
+    } else if (
+      event.outcome === PurchaseStatus.Paid &&
+      purchase.status === PurchaseStatus.Pending
+    ) {
       purchase.status = PurchaseStatus.Paid;
 
       const endsAt = new Date(occurred.getTime() + purchase.coverageDays * 86_400_000);
@@ -77,7 +81,10 @@ export async function applyPaymentEvent(
           endsAt,
         }),
       );
-    } else if (event.outcome === 'failed' && purchase.status === PurchaseStatus.Pending)
+    } else if (
+      event.outcome === PurchaseStatus.Failed &&
+      purchase.status === PurchaseStatus.Pending
+    )
       purchase.status = PurchaseStatus.Failed;
   }
 

@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { decomposeTruthTreeFormula } from './decompose-formula';
 import { TRUTH_TREE_RULE_CATALOG } from './rule-catalog';
@@ -26,13 +27,19 @@ export function checkStepExpansions(context: StepContext): TruthTreeStepReport['
       expansionId: expansion.id,
       status,
     });
-    const fail = (code: 'UNKNOWN_RULE' | 'RULE_MISMATCH', message: string) => {
+    const fail = (
+      code: typeof CheckerDiagnosticCode.UnknownRule | typeof CheckerDiagnosticCode.RuleMismatch,
+      message: string,
+    ) => {
       context.diagnostics.add({ code, message, expansionId: expansion.id });
       return result('invalid');
     };
     context.budget.spend();
     if (!TRUTH_TREE_RULE_CATALOG.some((rule) => rule.id === expansion.ruleId))
-      return fail('UNKNOWN_RULE', 'Choose a rule from the supported truth-tree catalog.');
+      return fail(
+        CheckerDiagnosticCode.UnknownRule,
+        'Choose a rule from the supported truth-tree catalog.',
+      );
 
     const source = context.formulas.get(expansion.sourceId!);
     const actual = expansion.resultGroups.map((group) =>
@@ -43,7 +50,10 @@ export function checkStepExpansions(context: StepContext): TruthTreeStepReport['
 
     const expected = decomposeTruthTreeFormula(source);
     if (expected.kind !== 'expansion' || expected.ruleId !== expansion.ruleId)
-      return fail('RULE_MISMATCH', 'The selected rule does not decompose this source formula.');
+      return fail(
+        CheckerDiagnosticCode.RuleMismatch,
+        'The selected rule does not decompose this source formula.',
+      );
 
     // Both alternatives must match, but neither left/right order nor component order is fixed.
     const unmatched = [...expected.branches];
@@ -52,7 +62,7 @@ export function checkStepExpansions(context: StepContext): TruthTreeStepReport['
       const index = unmatched.findIndex((branch) => matchesGroup(parsed, branch, context));
       if (index < 0)
         return fail(
-          'RULE_MISMATCH',
+          CheckerDiagnosticCode.RuleMismatch,
           'Generated formulas must match the complete decomposition, including every alternative and repeated component.',
         );
       unmatched.splice(index, 1);
@@ -60,7 +70,7 @@ export function checkStepExpansions(context: StepContext): TruthTreeStepReport['
 
     return unmatched.length === 0
       ? result('valid')
-      : fail('RULE_MISMATCH', 'The decomposition is missing an alternative.');
+      : fail(CheckerDiagnosticCode.RuleMismatch, 'The decomposition is missing an alternative.');
   });
 }
 
@@ -85,7 +95,7 @@ export function checkStepClosures(context: StepContext): TruthTreeStepReport['cl
     results.push({ branchId: branch.id, status: valid ? 'valid' : 'invalid' });
     if (!valid)
       context.diagnostics.add({
-        code: 'INVALID_CLOSURE',
+        code: CheckerDiagnosticCode.InvalidClosure,
         message: 'Close a branch using an exact complementary pair or explicit falsity.',
         branchId: branch.id,
       });

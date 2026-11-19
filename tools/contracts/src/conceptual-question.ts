@@ -89,6 +89,10 @@ export const conceptualQuestionDefinitionSchema = z.discriminatedUnion('type', [
 
 export type ConceptualQuestionDefinition = z.infer<typeof conceptualQuestionDefinitionSchema>;
 
+export type TrueFalseDefinition = z.infer<typeof trueFalseDefinitionSchema>;
+
+export type MultipleChoiceDefinition = z.infer<typeof multipleChoiceDefinitionSchema>;
+
 /** Ordinary student content contains no answer key or instructor explanation. */
 export const conceptualQuestionContentSchema = z.discriminatedUnion('type', [
   trueFalseDefinitionSchema.omit({ correctAnswer: true, explanation: true }),

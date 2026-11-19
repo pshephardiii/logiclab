@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   TRUTH_TREE_LIMITS,
   type TruthTree,
@@ -50,7 +51,7 @@ export function structureDiagnostics() {
     items,
     add,
     get invalid() {
-      return items.some((item) => item.code !== 'INCOMPLETE_TREE');
+      return items.some((item) => item.code !== CheckerDiagnosticCode.IncompleteTree);
     },
   };
 }

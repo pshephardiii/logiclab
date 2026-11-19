@@ -1,13 +1,3 @@
-import type { ProblemType } from './enums.ts';
-import type { TruthTree } from '../truth-tree/work.ts';
+/** Stored JSON shares its schema-inferred contract type; this adds no runtime validation. */
 
-export type TruthTreeDefinition = {
-  type: typeof ProblemType.TruthTree;
-  definitionVersion: 1;
-  checkerVersion: 1;
-  ruleCatalogVersion: 1;
-  premises: { id: string; formula: string }[];
-  conclusion: string;
-  referenceTree: TruthTree | null;
-  explanation?: string | null;
-};
+export type { TruthTreeDefinition } from '@logiclab/contracts/truth-tree-authoring';

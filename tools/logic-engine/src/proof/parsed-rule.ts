@@ -1,4 +1,5 @@
 import type { ProofProblem, ProofCheckReport } from '@logiclab/contracts';
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { checkLocalRule } from './local-rule';
 import { PROPOSITIONAL_RULE_CATALOG } from './rule-catalog';
 import type { ParsedProofFormula } from './proof-formulas';
@@ -6,12 +7,13 @@ import type { ProofBudget } from './proof-budget';
 import type { StructureDiagnostics } from './structure-diagnostics';
 
 const messages = {
-  UNKNOWN_RULE: 'Step cites an unsupported rule identity.',
-  RULE_DISABLED: 'Step cites a rule that is not permitted for this problem.',
-  INVALID_REFERENCE: 'Step does not supply exactly the citations required by its rule.',
-  RULE_MISMATCH: 'Formula does not match the cited rule pattern.',
-  UNSUPPORTED_VERSION: 'Unsupported rule catalog version.',
-  INCOMPLETE_PROOF: 'Step has no selected rule.',
+  [CheckerDiagnosticCode.UnknownRule]: 'Step cites an unsupported rule identity.',
+  [CheckerDiagnosticCode.RuleDisabled]: 'Step cites a rule that is not permitted for this problem.',
+  [CheckerDiagnosticCode.InvalidReference]:
+    'Step does not supply exactly the citations required by its rule.',
+  [CheckerDiagnosticCode.RuleMismatch]: 'Formula does not match the cited rule pattern.',
+  [CheckerDiagnosticCode.UnsupportedVersion]: 'Unsupported rule catalog version.',
+  [CheckerDiagnosticCode.IncompleteProof]: 'Step has no selected rule.',
 } as const;
 
 /** Formula matching shared by structural adapters; callers resolve access and support separately. */

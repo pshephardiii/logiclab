@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { readNaturalDeductionTreeInput } from './input';
 import { analyzeNaturalDeductionTreeStructure } from './structure';
@@ -100,7 +101,7 @@ export function checkNaturalDeductionTreeProof(value: unknown): ProofCheckReport
 
     if (target !== 'established')
       diagnostics.add({
-        code: 'TARGET_NOT_ESTABLISHED',
+        code: CheckerDiagnosticCode.TargetNotEstablished,
         message:
           'The root must establish the requested conclusion with no open temporary assumptions.',
       });
@@ -116,7 +117,7 @@ export function checkNaturalDeductionTreeProof(value: unknown): ProofCheckReport
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 
     diagnostics.add({
-      code: 'RESOURCE_LIMIT',
+      code: CheckerDiagnosticCode.ResourceLimit,
       message: error.message,
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),

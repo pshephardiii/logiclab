@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { ProofProblem } from '@logiclab/contracts';
 import { FormulaParseError } from '../parser/errors';
 import { getPropositionalRule } from './rule-catalog';
@@ -20,7 +21,7 @@ export function readFormula(
 
   if (!source.trim()) {
     diagnostics.add({
-      code: 'INCOMPLETE_PROOF',
+      code: CheckerDiagnosticCode.IncompleteProof,
       message: 'Formula is blank.',
       ...(stepIndex === undefined ? {} : { stepIndex }),
     });
@@ -55,7 +56,7 @@ export function readFormula(
       throw new ProofBudgetExceeded(error.message, error.position, stepIndex);
 
     diagnostics.add({
-      code: 'INVALID_FORMULA',
+      code: CheckerDiagnosticCode.InvalidFormula,
       message: error.message,
       position: error.position,
       ...(stepIndex === undefined ? {} : { stepIndex }),
@@ -74,7 +75,7 @@ export function readProblem(
   for (const premise of input.problem.premises) {
     if (premises.has(premise.id))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Problem premise IDs must be unique.',
       });
 
@@ -85,11 +86,14 @@ export function readProblem(
 
   for (const rule of input.problem.permittedRuleIds) {
     if (rules.has(rule))
-      diagnostics.add({ code: 'INVALID_STRUCTURE', message: 'Permitted rule IDs must be unique.' });
+      diagnostics.add({
+        code: CheckerDiagnosticCode.InvalidStructure,
+        message: 'Permitted rule IDs must be unique.',
+      });
 
     if (!getPropositionalRule(rule))
       diagnostics.add({
-        code: 'UNKNOWN_RULE',
+        code: CheckerDiagnosticCode.UnknownRule,
         message: 'Problem permits an unsupported rule identity.',
       });
 

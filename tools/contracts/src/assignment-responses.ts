@@ -50,6 +50,8 @@ export const objectiveGradedSubmissionResultSchema = z.strictObject({
   summary: truthTableCheckResponseSchema.shape.summary,
 });
 
+export type ObjectiveGradedItem = z.infer<typeof objectiveGradedItemSchema>;
+
 export type ObjectiveGradedSubmissionResult = z.infer<typeof objectiveGradedSubmissionResultSchema>;
 
 const responseCountsSchema = z.strictObject({

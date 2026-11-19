@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { TruthTreeProblem, TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { FormulaParseError } from '../parser/errors';
 import { sameFormula } from '../proof/formula-equality';
@@ -53,7 +54,7 @@ export function parseStepFormulas(context: StepContext): TruthTreeStepReport['oc
     context.budget.spend(occurrence.formula.length + 1);
     if (!occurrence.formula.trim()) {
       context.diagnostics.add({
-        code: 'INCOMPLETE_TREE',
+        code: CheckerDiagnosticCode.IncompleteTree,
         message: 'Enter a formula for this occurrence.',
         occurrenceId: occurrence.id,
       });
@@ -65,7 +66,7 @@ export function parseStepFormulas(context: StepContext): TruthTreeStepReport['oc
     } catch (error) {
       if (!(error instanceof FormulaParseError)) throw error;
       context.diagnostics.add({
-        code: 'INVALID_FORMULA',
+        code: CheckerDiagnosticCode.InvalidFormula,
         message: error.message,
         occurrenceId: occurrence.id,
       });
@@ -100,7 +101,7 @@ export function checkInitialFormulas(
     if (!expected || repeated || (actual && !sameStepFormula(actual, expected, context.budget))) {
       invalid = true;
       context.diagnostics.add({
-        code: 'INITIAL_MISMATCH',
+        code: CheckerDiagnosticCode.InitialMismatch,
         message:
           'Initial occurrences must match the supplied premises once each and the explicit negation of the supplied conclusion.',
         occurrenceId: occurrence.id,
@@ -112,7 +113,7 @@ export function checkInitialFormulas(
   if (conclusions > 1) {
     invalid = true;
     context.diagnostics.add({
-      code: 'INITIAL_MISMATCH',
+      code: CheckerDiagnosticCode.InitialMismatch,
       message: 'Include the negated conclusion exactly once.',
     });
   }
@@ -120,7 +121,7 @@ export function checkInitialFormulas(
   if (conclusions === 0 || [...argument.premises.keys()].some((id) => !seen.has(id))) {
     incomplete = true;
     context.diagnostics.add({
-      code: 'INCOMPLETE_TREE',
+      code: CheckerDiagnosticCode.IncompleteTree,
       message: 'Include every supplied premise and the negated conclusion in the initial segment.',
     });
   }

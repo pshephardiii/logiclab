@@ -1,3 +1,4 @@
+import type { SimulatorOutcome } from '@logiclab/contracts/billing-values';
 import type { BillingConfig } from '../../config/billing';
 import type { BillingStore } from '../../persistence/billing/types';
 import { createHash } from 'node:crypto';
@@ -31,7 +32,7 @@ export function createBillingService(
     checkout: (ownerId: string, classId: string, input: Parameters<BillingStore['checkout']>[2]) =>
       store.checkout(ownerId, classId, input, provider),
     webhook: async (body: string, signature: string) => store.process(verify(body, signature)),
-    simulate: (ownerId: string, purchaseId: string, outcome: 'paid' | 'failed' | 'refunded') =>
+    simulate: (ownerId: string, purchaseId: string, outcome: SimulatorOutcome) =>
       store.simulate(ownerId, purchaseId, (reference, sequence) => {
         const signed = signSimulatorEvent(
           createSimulatorWrapper(config),

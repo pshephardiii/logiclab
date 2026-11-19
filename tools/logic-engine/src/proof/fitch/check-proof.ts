@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { analyzeFitchStructure } from './structure';
 import { sameFormula } from '../formula-equality';
@@ -92,7 +93,7 @@ export function checkFitchProof(value: unknown): ProofCheckReport {
 
     if (target !== 'established')
       diagnostics.add({
-        code: 'TARGET_NOT_ESTABLISHED',
+        code: CheckerDiagnosticCode.TargetNotEstablished,
         message:
           target === 'unknown'
             ? 'The final root-level target could not be fully assessed.'
@@ -109,7 +110,7 @@ export function checkFitchProof(value: unknown): ProofCheckReport {
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 
     diagnostics.add({
-      code: 'RESOURCE_LIMIT',
+      code: CheckerDiagnosticCode.ResourceLimit,
       message: error.message,
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),

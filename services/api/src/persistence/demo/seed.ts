@@ -1,3 +1,4 @@
+import { PurchaseStatus } from '@logiclab/contracts/billing-values';
 import {
   SolutionAccess,
   AssessmentMode,
@@ -102,7 +103,7 @@ export async function seedDemoWorkspace(
     requestId: randomUUID(),
   });
 
-  await billing.simulate(instructor.id, checkout.purchase.id, 'paid');
+  await billing.simulate(instructor.id, checkout.purchase.id, PurchaseStatus.Paid);
 
   const assignments = await createAssignmentStore(orm, em);
 

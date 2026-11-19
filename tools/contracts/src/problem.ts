@@ -9,6 +9,8 @@ export const truthTableDefinitionSchema = z.strictObject({
   formula: z.string().min(1).max(256),
 });
 
+export type TruthTableDefinition = z.infer<typeof truthTableDefinitionSchema>;
+
 export const objectiveProblemDefinitionSchema = z.discriminatedUnion('type', [
   truthTableDefinitionSchema,
   trueFalseDefinitionSchema,

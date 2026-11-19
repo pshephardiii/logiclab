@@ -1,10 +1,12 @@
+import type { ClassCapability, SimulatorOutcome } from '@logiclab/contracts/billing-values';
+
 /** Frozen server-selected terms; adapters never accept prices from a browser checkout. */
 export interface PurchaseTerms {
   planId: string;
   amountMinor: number;
   currency: string;
   coverageDays: number;
-  capability: 'publish_assignments';
+  capability: typeof ClassCapability.PublishAssignments;
 }
 
 export interface CheckoutSession {
@@ -19,7 +21,7 @@ export interface PaymentEvent {
   id: string;
   sourceReference: string;
   sequence: number;
-  outcome: 'paid' | 'failed' | 'refunded';
+  outcome: SimulatorOutcome;
   occurredAt: string;
 }
 

@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { PROOF_LIMITS, type DependencyProof, type ProofDiagnostic } from '@logiclab/contracts';
 import { structureDiagnostics } from '../structure-diagnostics';
 
@@ -26,7 +27,10 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
     return {
       status: 'unassessable',
       diagnostics: [
-        { code: 'UNSUPPORTED_VERSION', message: 'Unsupported dependency proof format or version.' },
+        {
+          code: CheckerDiagnosticCode.UnsupportedVersion,
+          message: 'Unsupported dependency proof format or version.',
+        },
       ],
     };
 
@@ -41,7 +45,12 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
   )
     return {
       status: 'unassessable',
-      diagnostics: [{ code: 'RESOURCE_LIMIT', message: 'Dependency proof list limit exceeded.' }],
+      diagnostics: [
+        {
+          code: CheckerDiagnosticCode.ResourceLimit,
+          message: 'Dependency proof list limit exceeded.',
+        },
+      ],
     };
 
   // Ambiguous identities must be rejected before interpreting citations or written source sets.
@@ -50,7 +59,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
   for (const [stepIndex, step] of proof.steps.entries()) {
     if (indices.has(step.id))
       diagnostics.add({
-        code: 'INVALID_STRUCTURE',
+        code: CheckerDiagnosticCode.InvalidStructure,
         message: 'Step IDs must be unique.',
         stepIndex,
       });
@@ -81,7 +90,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
       ) {
         annotationValid = false;
         diagnostics.add({
-          code: 'INVALID_DEPENDENCY',
+          code: CheckerDiagnosticCode.InvalidDependency,
           message: 'Dependencies must be distinct available premise or assumption line IDs.',
           stepIndex,
         });
@@ -102,7 +111,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
 
     const fail = (message: string) => {
       invalid = true;
-      diagnostics.add({ code: 'INVALID_REFERENCE', message, stepIndex });
+      diagnostics.add({ code: CheckerDiagnosticCode.InvalidReference, message, stepIndex });
     };
 
     const lineIndices: number[] = [];
@@ -123,7 +132,7 @@ export function analyzeDependencyStructure(proof: DependencyProof): DependencySt
       if (pair.assumptionId === null || pair.conclusionId === null) {
         incomplete = true;
         diagnostics.add({
-          code: 'INCOMPLETE_PROOF',
+          code: CheckerDiagnosticCode.IncompleteProof,
           message: 'Discharge needs an assumption and a concluding line.',
           stepIndex,
         });

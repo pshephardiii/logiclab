@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { type TruthTreeDiagnostic, type TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { readTruthTreeInput } from './step-input';
 import {
@@ -90,6 +91,8 @@ export function analyzeTruthTreeSteps(
     };
   } catch (error) {
     if (!(error instanceof TruthTreeResourceLimit)) throw error;
-    return stopped('unassessable', [{ code: 'RESOURCE_LIMIT', message: error.message }]);
+    return stopped('unassessable', [
+      { code: CheckerDiagnosticCode.ResourceLimit, message: error.message },
+    ]);
   }
 }

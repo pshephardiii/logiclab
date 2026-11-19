@@ -1,4 +1,3 @@
-import type { DependencyProof } from '../proof/dependency-work.ts';
+/** Stored JSON shares its schema-inferred contract type; this adds no runtime validation. */
 
-/** Exact student-owned dependency JSON; no statement, reference, permissions or report. */
-export type DependencyDerivationAnswer = { type: 'derivation'; proof: DependencyProof };
+export type { DependencyDerivationAnswer } from '@logiclab/contracts/dependency-derivation-work';

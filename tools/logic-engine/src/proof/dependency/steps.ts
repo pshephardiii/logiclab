@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { DependencyProofCheckInput, ProofCheckReport } from '@logiclab/contracts';
 import type { DependencyStructureResult } from './structure';
 import { inferenceDependencyIds, dependencySetsMatch } from './sets';
@@ -28,7 +29,7 @@ function sourceStatus(
 
   if (step.premiseId === null) {
     diagnostics.add({
-      code: 'INCOMPLETE_PROOF',
+      code: CheckerDiagnosticCode.IncompleteProof,
       message: 'Premise declaration has no selected problem premise.',
       stepIndex: index,
     });
@@ -39,7 +40,7 @@ function sourceStatus(
 
   if (!premise?.formula) {
     diagnostics.add({
-      code: 'INVALID_REFERENCE',
+      code: CheckerDiagnosticCode.InvalidReference,
       message: 'Premise declaration must identify a supplied problem premise.',
       stepIndex: index,
     });
@@ -51,7 +52,7 @@ function sourceStatus(
   if (sameFormula(current.formula, premise.formula)) return 'valid';
 
   diagnostics.add({
-    code: 'RULE_MISMATCH',
+    code: CheckerDiagnosticCode.RuleMismatch,
     message: 'Premise formula does not match its supplied problem premise.',
     stepIndex: index,
   });
@@ -170,7 +171,7 @@ export function evaluateDependencySteps(
 
       if (structure.annotationsValid[stepIndex])
         diagnostics.add({
-          code: 'INVALID_DEPENDENCY',
+          code: CheckerDiagnosticCode.InvalidDependency,
           message: 'Declared dependencies do not match the computed premise/assumption support.',
           stepIndex,
         });
@@ -184,7 +185,10 @@ export function evaluateDependencySteps(
       (computed === null || dependencySetsMatch(step.dependencies, computed))
     ) {
       diagnostics.add({
-        code: dependencyStatus === 'invalid' ? 'INVALID_DEPENDENCY' : 'INCOMPLETE_PROOF',
+        code:
+          dependencyStatus === 'invalid'
+            ? CheckerDiagnosticCode.InvalidDependency
+            : CheckerDiagnosticCode.IncompleteProof,
         message:
           dependencyStatus === 'invalid'
             ? 'Step depends on invalid earlier work.'

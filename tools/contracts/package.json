@@ -85,6 +85,16 @@
       "types": "./dist/user-role.d.ts",
       "browser": "./dist/browser/user-role.js",
       "default": "./dist/user-role.js"
+    },
+    "./checker-diagnostic-code": {
+      "types": "./dist/checker-diagnostic-code.d.ts",
+      "browser": "./dist/browser/checker-diagnostic-code.js",
+      "default": "./dist/checker-diagnostic-code.js"
+    },
+    "./billing-values": {
+      "types": "./dist/billing-values.d.ts",
+      "browser": "./dist/browser/billing-values.js",
+      "default": "./dist/billing-values.js"
     }
   },
   "files": [

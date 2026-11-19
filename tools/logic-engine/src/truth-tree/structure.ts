@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { TruthTreeDiagnostic } from '@logiclab/contracts/truth-tree';
 import { readTruthTree } from './structure-input';
 import {
@@ -38,7 +39,9 @@ export function analyzeTruthTreeStructure(
         status: 'unassessable',
         diagnostics: [
           {
-            code: unsupported ? 'UNSUPPORTED_VERSION' : 'INVALID_STRUCTURE',
+            code: unsupported
+              ? CheckerDiagnosticCode.UnsupportedVersion
+              : CheckerDiagnosticCode.InvalidStructure,
             message: unsupported
               ? 'Unsupported truth-tree format or version.'
               : 'Truth-tree input does not match the bounded transport contract.',
@@ -92,7 +95,7 @@ export function analyzeTruthTreeStructure(
 
     return {
       status: 'unassessable',
-      diagnostics: [{ code: 'RESOURCE_LIMIT', message: error.message }],
+      diagnostics: [{ code: CheckerDiagnosticCode.ResourceLimit, message: error.message }],
     };
   }
 }

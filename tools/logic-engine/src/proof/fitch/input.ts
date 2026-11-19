@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { InputFailure, record, array, stringLimit, ids } from '../proof-input-fields';
 import {
   PROOF_LIMITS,
@@ -27,7 +28,10 @@ export function readFitchInput(
       (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
       (proof.format !== undefined && proof.format !== 'fitch')
     )
-      throw new InputFailure('UNSUPPORTED_VERSION', 'Unsupported proof format or version.');
+      throw new InputFailure(
+        CheckerDiagnosticCode.UnsupportedVersion,
+        'Unsupported proof format or version.',
+      );
 
     stringLimit(problem.conclusion, PROOF_LIMITS.maxFormulaLength);
 
@@ -77,7 +81,7 @@ export function readFitchInput(
       ? { input: parsed.data }
       : {
           diagnostic: {
-            code: 'INVALID_STRUCTURE',
+            code: CheckerDiagnosticCode.InvalidStructure,
             message: 'Proof input does not match the supported contract.',
           },
         };
@@ -87,7 +91,7 @@ export function readFitchInput(
         error instanceof InputFailure
           ? { code: error.code, message: error.message }
           : {
-              code: 'INVALID_STRUCTURE',
+              code: CheckerDiagnosticCode.InvalidStructure,
               message: 'Proof input could not be inspected as plain data.',
             },
     };
