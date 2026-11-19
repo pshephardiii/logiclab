@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import type { AuthUserResponse } from '@logiclab/contracts';
 
 export type AccountUser = AuthUserResponse['user'];
@@ -41,7 +42,7 @@ export const routeDefinitions = {
     path: '/classes',
     navigation: { label: 'Classes' },
     access: {
-      allowedRoles: ['instructor'],
+      allowedRoles: [UserRole.Instructor],
       deniedTitle: 'Instructor access required',
       deniedMessage: 'Classes are currently managed through instructor accounts.',
     },
@@ -50,7 +51,7 @@ export const routeDefinitions = {
     path: '/library',
     navigation: { label: 'Problem library' },
     access: {
-      allowedRoles: ['instructor'],
+      allowedRoles: [UserRole.Instructor],
       deniedTitle: 'Instructor access required',
       deniedMessage: 'Problem libraries require an instructor account.',
     },
@@ -59,7 +60,7 @@ export const routeDefinitions = {
     path: '/assignments',
     navigation: { label: 'Assignments' },
     access: {
-      allowedRoles: ['instructor'],
+      allowedRoles: [UserRole.Instructor],
       deniedTitle: 'Instructor access required',
       deniedMessage: 'Assignment authoring requires an instructor account.',
     },
@@ -68,7 +69,7 @@ export const routeDefinitions = {
     path: '/billing',
     navigation: { label: 'Billing (simulated)' },
     access: {
-      allowedRoles: ['instructor'],
+      allowedRoles: [UserRole.Instructor],
       deniedTitle: 'Instructor access required',
       deniedMessage: 'Class billing requires an instructor account.',
     },
@@ -77,7 +78,7 @@ export const routeDefinitions = {
     path: '/work',
     navigation: { label: 'Assigned work' },
     access: {
-      allowedRoles: ['student'],
+      allowedRoles: [UserRole.Student],
       deniedTitle: 'Student access required',
       deniedMessage: 'Assigned work requires a student account.',
     },
@@ -86,7 +87,7 @@ export const routeDefinitions = {
     path: '/enrollments',
     navigation: { label: 'My classes' },
     access: {
-      allowedRoles: ['student'],
+      allowedRoles: [UserRole.Student],
       deniedTitle: 'Student access required',
       deniedMessage: 'Joining classes requires a student account.',
     },

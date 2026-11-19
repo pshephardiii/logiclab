@@ -11,7 +11,7 @@ import type { AuthContext } from '../../src/routes/auth/context';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { generateTruthTable } from '@logiclab/logic-engine';
-import type { ObjectiveProblemDefinition } from '@logiclab/contracts';
+import type { AssessmentMode, ObjectiveProblemDefinition } from '@logiclab/contracts';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
@@ -124,7 +124,7 @@ async function fixture() {
     });
   };
   // Pin fixtures directly to isolate storage/release checks from the separately tested authoring flow.
-  async function pinned(mode = db.AssessmentMode.Graded) {
+  async function pinned(mode: AssessmentMode = db.AssessmentMode.Graded) {
     const assignment = em.create(db.Assignment, {
       classroom,
       title: mode,

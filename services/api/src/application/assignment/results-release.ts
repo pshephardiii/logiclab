@@ -1,26 +1,27 @@
-import type { GradeReleaseTiming } from '@logiclab/contracts';
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
+import { GradeReleaseTiming } from '@logiclab/contracts';
 
 type ResultVisibilityInput =
   | {
-      assessmentMode: 'graded';
+      assessmentMode: typeof AssessmentMode.Graded;
       gradeReleaseTiming: GradeReleaseTiming;
       gradesReleased: boolean;
       submitted: boolean;
     }
   | {
-      assessmentMode: 'completion_only';
+      assessmentMode: typeof AssessmentMode.CompletionOnly;
       submitted: boolean;
     }
   | {
-      assessmentMode: 'ungraded_practice';
+      assessmentMode: typeof AssessmentMode.UngradedPractice;
       submitted: boolean;
     };
 
 /** Disclosure only: callers still authorize enrollment and project the student response. */
 export function canViewAssignmentResults(input: ResultVisibilityInput): boolean {
-  if (!input.submitted || input.assessmentMode === 'ungraded_practice') return false;
+  if (!input.submitted || input.assessmentMode === AssessmentMode.UngradedPractice) return false;
 
-  if (input.assessmentMode === 'completion_only') return true;
+  if (input.assessmentMode === AssessmentMode.CompletionOnly) return true;
 
-  return input.gradeReleaseTiming === 'on_submission' || input.gradesReleased;
+  return input.gradeReleaseTiming === GradeReleaseTiming.OnSubmission || input.gradesReleased;
 }

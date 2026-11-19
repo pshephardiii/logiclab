@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import {
   assignmentPointAllocationsSchema,
   weightedAssignmentItemsSchema,
@@ -20,7 +21,7 @@ export function validateDraftScoringInput(assessmentMode: string, input: DraftSc
   )
     throw new AssignmentOperationError('invalid_scoring');
 
-  const graded = assessmentMode === 'graded';
+  const graded = assessmentMode === AssessmentMode.Graded;
 
   if ((input.items !== undefined || input.pointAllocations !== undefined) && !graded)
     throw new AssignmentOperationError('invalid_scoring');

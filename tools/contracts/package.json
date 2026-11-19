@@ -75,6 +75,16 @@
       "types": "./dist/problem-type.d.ts",
       "browser": "./dist/browser/problem-type.js",
       "default": "./dist/problem-type.js"
+    },
+    "./assignment-policy-values": {
+      "types": "./dist/assignment-policy-values.d.ts",
+      "browser": "./dist/browser/assignment-policy-values.js",
+      "default": "./dist/assignment-policy-values.js"
+    },
+    "./user-role": {
+      "types": "./dist/user-role.d.ts",
+      "browser": "./dist/browser/user-role.js",
+      "default": "./dist/user-role.js"
     }
   },
   "files": [

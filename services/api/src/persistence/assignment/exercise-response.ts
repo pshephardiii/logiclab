@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
 import { validateObjectiveDefinition } from '../../application/problem/definition-support';
@@ -26,7 +27,9 @@ export function savedAssignmentExercises(
         return {
           id: item.id,
           position: item.position,
-          ...(assignment.assessmentMode === 'graded' ? { maxPoints: item.maxPoints } : {}),
+          ...(assignment.assessmentMode === AssessmentMode.Graded
+            ? { maxPoints: item.maxPoints }
+            : {}),
           title: item.problemVersion.title,
           instructions: item.problemVersion.instructions ?? null,
           content: truthTreeContent(stored),
@@ -43,7 +46,9 @@ export function savedAssignmentExercises(
       const common = {
         id: item.id,
         position: item.position,
-        ...(assignment.assessmentMode === 'graded' ? { maxPoints: item.maxPoints } : {}),
+        ...(assignment.assessmentMode === AssessmentMode.Graded
+          ? { maxPoints: item.maxPoints }
+          : {}),
         title: item.problemVersion.title,
         instructions: item.problemVersion.instructions ?? null,
       };

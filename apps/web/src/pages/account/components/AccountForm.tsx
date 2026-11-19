@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import { ACCOUNT_FORM_TITLES } from '../constants/account-copy';
 import { PasswordFields } from './PasswordFields';
 import type { FormEvent, MouseEvent } from 'react';
@@ -54,9 +55,9 @@ export function AccountForm({ view, email, busy, onSubmit, onResend }: Props) {
         {view === 'signup' && (
           <>
             <label htmlFor="account-role">Account role</label>
-            <select id="account-role" name="role" defaultValue="student">
-              <option value="student">Student</option>
-              <option value="instructor">Instructor</option>
+            <select id="account-role" name="role" defaultValue={UserRole.Student}>
+              <option value={UserRole.Student}>Student</option>
+              <option value={UserRole.Instructor}>Instructor</option>
             </select>
             <p className="help">
               Choose your role when creating your account. An instructor preview does not create a

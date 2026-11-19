@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { AssignmentPublicationControls } from './AssignmentPublicationControls';
 import { AssignmentReleaseControls } from './AssignmentReleaseControls';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -167,7 +168,7 @@ export function ClassAssignments({ classId }: Props) {
               />
             )}
             {state.selected?.publishedAt &&
-              state.selected.assessmentMode !== 'ungraded_practice' && (
+              state.selected.assessmentMode !== AssessmentMode.UngradedPractice && (
                 <SubmissionReview
                   key={state.selected.id}
                   assignmentId={state.selected.id}

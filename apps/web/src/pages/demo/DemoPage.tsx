@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
 import './demo.css';
 import { useNavigate } from 'react-router';
@@ -10,9 +11,9 @@ export function DemoPage() {
   const navigate = useNavigate();
   const confirmDiscard = useConfirmDiscard();
 
-  async function explore(role: 'instructor' | 'student') {
+  async function explore(role: UserRole) {
     if (await demo.run(demo.session ? 'role' : 'start', role))
-      navigate(role === 'instructor' ? '/demo/classes' : '/demo/work');
+      navigate(role === UserRole.Instructor ? '/demo/classes' : '/demo/work');
   }
 
   return (
@@ -34,11 +35,14 @@ export function DemoPage() {
       <div className="demo-actions">
         <button
           disabled={demo.busy}
-          onClick={() => confirmDiscard(() => void explore('instructor'))}
+          onClick={() => confirmDiscard(() => void explore(UserRole.Instructor))}
         >
           Explore as instructor
         </button>
-        <button disabled={demo.busy} onClick={() => confirmDiscard(() => void explore('student'))}>
+        <button
+          disabled={demo.busy}
+          onClick={() => confirmDiscard(() => void explore(UserRole.Student))}
+        >
           Explore as student
         </button>
         {demo.session && (

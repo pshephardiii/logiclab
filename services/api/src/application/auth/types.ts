@@ -1,4 +1,6 @@
-export type Role = 'student' | 'instructor';
+import type { UserRole } from '@logiclab/contracts/user-role';
+
+export type Role = UserRole;
 
 export type AppUser = { id: string; subject: string; role: Role };
 

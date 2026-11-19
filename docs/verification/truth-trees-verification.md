@@ -14,7 +14,7 @@ Student trees have per-occurrence saves, revision/lifecycle guards and explicit 
 
 ## Automated validation
 
-- `npm run check`: workspace type checks, **2,688 tests** (836 engine, 1,172 API, 680 web) and production builds passed.
+- `npm run check`: workspace type checks, **2,696 tests** (836 engine, 1,180 API, 680 web) and production builds passed.
 - `npm run db:test`: **321 PostgreSQL checks** (184 database, 137 API/workflow) passed. These include authoring/publication/privacy, occurrence-specific saves, transient checking, frozen finals, completion flags, grading/release, reset/isolation and historical workflow regressions.
 - The three new pure demo-template tests validate both verified outcomes and finished references. A focused 19-test demo/reset/cleanup run also passed before the full database run.
 - After adjusting the owner-authoring test to select its own created IDs instead of assuming no seeded truth trees, the API type check and full database suite were repeated.
@@ -37,6 +37,8 @@ Earlier focused authoring/student walkthroughs additionally covered UI publicati
 Display-label helpers now use explicit cases instead of nested rendering ternaries. Closure fields and the undo dialog are controlled components; editor state, pending-work handling and tree mutations remain in the editor.
 
 Problem types now share one `as const` enum-style object, literal-union type and Zod enum in `@logiclab/contracts/problem-type`. Schemas, UI selectors, comparisons and constructed payloads use the named values. The database re-exports the same object through its existing API and declares the internal workspace dependency. A built Node smoke verified object identity and the five unchanged wire values. Two contract regressions verify those values, unknown-type rejection and unchanged objective-only admission. Workflow-specific support remains independently guarded. The full workspace and PostgreSQL checks were repeated after this cleanup; logs use `/private/tmp/problem-type-*`. No external package or database migration was added.
+
+The subsequent policy/role cleanup applies the same approach to assessment mode, feedback timing, solution access, grade-release timing and account roles. Each dimension keeps its own value object/type/schema, existing exports and wire values. Full schemas reuse the canonical enums; restricted practice/graded/role schemas retain their narrower sets. Persistence no longer maps validated policy values back to identical database values. Unrelated score statuses, editor purposes and relationship names are unchanged. Eight additional contract tests cover export/value compatibility, all 72 policy combinations, auth/demo role validation and authoring defaults. One integration fixture needed an explicit assessment-mode parameter type after enum defaults became literal values. Full validation and PostgreSQL checks were repeated, plus focused account-form tests; logs use `/private/tmp/policy-values-*`. No migration, package dependency or environment variable was added by this follow-up. No additional browser walkthrough was performed for these value-only refactors.
 
 ## Demo and rollout
 

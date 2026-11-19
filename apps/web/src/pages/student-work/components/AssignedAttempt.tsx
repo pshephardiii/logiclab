@@ -1,3 +1,8 @@
+import {
+  AssessmentMode,
+  GradeReleaseTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { FinalSubmissionPanel } from './FinalSubmissionPanel';
 import { AssignedProblemNavigation } from './AssignedProblemNavigation';
@@ -103,7 +108,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       <section className="panel">
         <h2>{work.assignment.title}</h2>
         {work.assignment.instructions && <p>{work.assignment.instructions}</p>}
-        {work.assignment.assessmentMode === 'graded' &&
+        {work.assignment.assessmentMode === AssessmentMode.Graded &&
           work.assignment.items.every((value) => value.maxPoints != null) && (
             <p>
               Total available:{' '}
@@ -125,8 +130,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 ? 'Truth-table and question entries are checked shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
                 : work.allowsExplicitCheck
                   ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
-                  : work.assignment.assessmentMode === 'graded' &&
-                      work.assignment.gradeReleaseTiming === 'instructor_release'
+                  : work.assignment.assessmentMode === AssessmentMode.Graded &&
+                      work.assignment.gradeReleaseTiming === GradeReleaseTiming.InstructorRelease
                     ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
                     : 'Use Save problem to persist changes. Results arrive after final submission.'}
           </p>
@@ -139,9 +144,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 value.content.type === ProblemType.TruthTree),
           ) && (
             <p>
-              {work.assignment.assessmentMode === 'ungraded_practice'
+              {work.assignment.assessmentMode === AssessmentMode.UngradedPractice
                 ? 'Derivations and truth trees use their explicit check buttons. Editing them never checks automatically.'
-                : work.assignment.assessmentMode === 'graded'
+                : work.assignment.assessmentMode === AssessmentMode.Graded
                   ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
                   : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
             </p>
@@ -177,7 +182,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           </p>
         </section>
       )}
-      {work.assignment.solutionAccess === 'instructor_release' &&
+      {work.assignment.solutionAccess === SolutionAccess.InstructorRelease &&
         !work.assignment.answersRevealedAt && (
           <p className="help">
             Correct answers are hidden until your instructor reveals them. Answer reveal is separate
@@ -201,7 +206,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             selectedId={item.id}
             position={position}
             busy={busy}
-            maxPoints={work.assignment.assessmentMode === 'graded' ? item.maxPoints : undefined}
+            maxPoints={
+              work.assignment.assessmentMode === AssessmentMode.Graded ? item.maxPoints : undefined
+            }
             onSelect={changeItem}
           />
           {/* Each problem type uses its own editor; submitted work uses retained final feedback. */}
@@ -239,7 +246,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               }}
               onCheck={
                 !readOnly &&
-                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.assignment.assessmentMode === AssessmentMode.UngradedPractice &&
                 work.allowsExplicitCheck
                   ? () => void work.check(item.id)
                   : undefined
@@ -293,7 +300,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               }}
               onCheck={
                 !readOnly &&
-                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.assignment.assessmentMode === AssessmentMode.UngradedPractice &&
                 work.allowsExplicitCheck
                   ? () => void work.check(item.id)
                   : undefined

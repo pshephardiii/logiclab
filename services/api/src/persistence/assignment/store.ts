@@ -1,3 +1,4 @@
+import { FeedbackTiming } from '@logiclab/contracts/assignment-policy-values';
 import { duplicateAssignmentTitle } from '../../application/assignment/duplicate-title';
 import { validAssignmentScoring } from '../../application/assignment/scoring-policy';
 import { assignmentLearningPolicySchema } from '@logiclab/contracts';
@@ -34,7 +35,10 @@ export async function createAssignmentStore(
       return transact(async (em) => {
         const classroom = await ownedClass(em, ownerId, classId);
 
-        if (input.assessmentMode !== 'graded' && input.gradeReleaseTiming === 'instructor_release')
+        if (
+          input.assessmentMode !== AssessmentMode.Graded &&
+          input.gradeReleaseTiming === GradeReleaseTiming.InstructorRelease
+        )
           throw new AssignmentOperationError('invalid_policy');
 
         const assignment = em.create(Assignment, {
@@ -42,15 +46,15 @@ export async function createAssignmentStore(
           title: input.title,
           instructions: input.instructions ?? undefined,
           gradeReleaseTiming:
-            input.gradeReleaseTiming === 'instructor_release'
+            input.gradeReleaseTiming === GradeReleaseTiming.InstructorRelease
               ? GradeReleaseTiming.InstructorRelease
               : GradeReleaseTiming.OnSubmission,
           ...(await policyFields(
             resolveAssignmentLearningPolicy(
               {
-                assessmentMode: 'graded',
-                feedbackTiming: 'on_submission',
-                solutionAccess: 'never',
+                assessmentMode: AssessmentMode.Graded,
+                feedbackTiming: FeedbackTiming.OnSubmission,
+                solutionAccess: SolutionAccess.Never,
               },
               {
                 assessmentMode: input.assessmentMode,
@@ -170,11 +174,14 @@ export async function createAssignmentStore(
 
         const gradeTiming = input.gradeReleaseTiming ?? assignment.gradeReleaseTiming;
 
-        if (policy.assessmentMode !== 'graded' && gradeTiming === 'instructor_release')
+        if (
+          policy.assessmentMode !== AssessmentMode.Graded &&
+          gradeTiming === GradeReleaseTiming.InstructorRelease
+        )
           throw new AssignmentOperationError('invalid_policy');
 
         assignment.gradeReleaseTiming =
-          gradeTiming === 'instructor_release'
+          gradeTiming === GradeReleaseTiming.InstructorRelease
             ? GradeReleaseTiming.InstructorRelease
             : GradeReleaseTiming.OnSubmission;
 

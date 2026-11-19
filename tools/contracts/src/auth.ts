@@ -1,3 +1,4 @@
+import { userRoleSchema as accountRoleSchema } from './user-role';
 import { z } from 'zod';
 
 // Reusable field and data shapes.
@@ -13,8 +14,6 @@ const newPasswordSchema = z
   .regex(/[^A-Za-z0-9]/);
 
 const loginPasswordSchema = z.string().min(1).max(128);
-
-const accountRoleSchema = z.enum(['student', 'instructor']);
 
 const confirmationCodeSchema = z.string().regex(/^\d{6}$/);
 

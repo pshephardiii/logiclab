@@ -15,12 +15,12 @@ export async function createDemoAccess(orm: Database) {
     generation: number,
     role: Role,
   ): Promise<DemoActor | null> {
-    if (role !== 'instructor' && role !== 'student') return null;
+    if (role !== UserRole.Instructor && role !== UserRole.Student) return null;
 
     const user = await em.findOne(User, {
       identityProvider: UserIdentityProvider.Demo,
       demoWorkspace: workspaceId,
-      role: role === 'instructor' ? UserRole.Instructor : UserRole.Student,
+      role: role === UserRole.Instructor ? UserRole.Instructor : UserRole.Student,
     });
 
     return user ? { id: user.id, role: user.role, workspaceId, generation } : null;

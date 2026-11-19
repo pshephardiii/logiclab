@@ -1,7 +1,4 @@
-export enum UserRole {
-  Student = 'student',
-  Instructor = 'instructor',
-}
+export { UserRole } from '@logiclab/contracts/user-role';
 
 export enum UserIdentityProvider {
   Cognito = 'cognito',

@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { submissionGradingState } from './grading-state';
 import {
   INSTRUCTOR_GRADING_LIMITS,
@@ -50,7 +51,7 @@ export async function createSubmissionGradingStore(
 
     if (write && assignment.archivedAt) throw new SubmissionGradingError('archived');
 
-    if (!assignment.publishedAt || assignment.assessmentMode !== 'graded')
+    if (!assignment.publishedAt || assignment.assessmentMode !== AssessmentMode.Graded)
       throw new SubmissionGradingError('grading_unavailable');
 
     const attempt = await em.findOne(

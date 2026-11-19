@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import type { ResourceUser } from '../resource-context';
 import type { FastifyRequest } from 'fastify';
 import type { ClassroomContext } from './context';
@@ -20,7 +21,7 @@ export class ClassroomError extends Error {
 export async function instructor(request: FastifyRequest, context: ClassroomContext) {
   const user = await classroomUser(request, context);
 
-  if (user.role !== 'instructor') {
+  if (user.role !== UserRole.Instructor) {
     throw new ClassroomError(403, 'INSTRUCTOR_REQUIRED', 'An instructor account is required.');
   }
 
@@ -30,7 +31,7 @@ export async function instructor(request: FastifyRequest, context: ClassroomCont
 export async function student(request: FastifyRequest, context: ClassroomContext) {
   const user = await classroomUser(request, context);
 
-  if (user.role !== 'student') {
+  if (user.role !== UserRole.Student) {
     throw new ClassroomError(403, 'STUDENT_REQUIRED', 'A student account is required.');
   }
 

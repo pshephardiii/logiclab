@@ -1,3 +1,8 @@
+import {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
 import { assignmentPolicyTransition } from '../helpers/assignment-policy-transition';
 import { useState, type ChangeEvent } from 'react';
 import {
@@ -5,7 +10,7 @@ import {
   gradeReleaseTimingSchema,
   solutionAccessSchema,
   type AssignmentLearningPolicy,
-  type GradeReleaseTiming,
+  GradeReleaseTiming,
 } from '@logiclab/contracts';
 
 type Props = {
@@ -25,11 +30,12 @@ export function AssignmentPolicyFields({
   onGradeReleaseChange,
 }: Props) {
   const [notice, setNotice] = useState<string | null>(null);
-  const practice = policy.assessmentMode === 'ungraded_practice';
-  const graded = policy.assessmentMode === 'graded';
+  const practice = policy.assessmentMode === AssessmentMode.UngradedPractice;
+  const graded = policy.assessmentMode === AssessmentMode.Graded;
 
   const legacyAssistance =
-    policy.assessmentMode === 'completion_only' && policy.feedbackTiming !== 'on_submission';
+    policy.assessmentMode === AssessmentMode.CompletionOnly &&
+    policy.feedbackTiming !== FeedbackTiming.OnSubmission;
 
   function changeMode(event: ChangeEvent<HTMLSelectElement>) {
     const assessmentMode = event.target.value;
@@ -37,7 +43,8 @@ export function AssignmentPolicyFields({
 
     onChange(next.policy);
 
-    if (assessmentMode !== 'graded') onGradeReleaseChange('on_submission');
+    if (assessmentMode !== AssessmentMode.Graded)
+      onGradeReleaseChange(GradeReleaseTiming.OnSubmission);
 
     setNotice(
       next.resetSolutions
@@ -71,9 +78,9 @@ export function AssignmentPolicyFields({
         onChange={changeMode}
         aria-describedby="assignment-mode-help"
       >
-        <option value="graded">Graded</option>
-        <option value="completion_only">Completion only</option>
-        <option value="ungraded_practice">Ungraded practice</option>
+        <option value={AssessmentMode.Graded}>Graded</option>
+        <option value={AssessmentMode.CompletionOnly}>Completion only</option>
+        <option value={AssessmentMode.UngradedPractice}>Ungraded practice</option>
       </select>
       <p id="assignment-mode-help" className="help">
         {graded
@@ -95,8 +102,8 @@ export function AssignmentPolicyFields({
               onGradeReleaseChange(gradeReleaseTimingSchema.parse(event.target.value))
             }
           >
-            <option value="on_submission">At submission</option>
-            <option value="instructor_release">When I release grades</option>
+            <option value={GradeReleaseTiming.OnSubmission}>At submission</option>
+            <option value={GradeReleaseTiming.InstructorRelease}>When I release grades</option>
           </select>
           <p id="assignment-grade-help" className="help">
             Grades include correctness feedback. For true/false entries, this can reveal answers by
@@ -114,15 +121,17 @@ export function AssignmentPolicyFields({
             aria-describedby="assignment-feedback-help"
           >
             {legacyAssistance && (
-              <option value="on_submission">At submission (no pre-submission checks)</option>
+              <option value={FeedbackTiming.OnSubmission}>
+                At submission (no pre-submission checks)
+              </option>
             )}
-            <option value="on_check">On explicit Check answers</option>
-            <option value="immediate">Immediately after an answer changes</option>
+            <option value={FeedbackTiming.OnCheck}>On explicit Check answers</option>
+            <option value={FeedbackTiming.Immediate}>Immediately after an answer changes</option>
           </select>
           <p id="assignment-feedback-help" className="help">
             {legacyAssistance &&
               'This saved completion policy retains legacy pre-submission assistance. '}
-            {policy.feedbackTiming === 'immediate'
+            {policy.feedbackTiming === FeedbackTiming.Immediate
               ? 'Incorrect entries are highlighted without revealing the answer key. Manual Check answers remains available; saving is still explicit.'
               : 'Students choose Check answers for correctness feedback. Saving is still explicit.'}
             {containsProof && ' Derivations and truth trees use explicit check buttons.'}
@@ -136,26 +145,26 @@ export function AssignmentPolicyFields({
         onChange={changeSolutions}
         aria-describedby="assignment-solutions-help"
       >
-        <option value="never">Never</option>
+        <option value={SolutionAccess.Never}>Never</option>
         {!practice && (
           <>
-            <option value="after_submission">After final submission</option>
-            <option value="instructor_release">When I reveal answers</option>
+            <option value={SolutionAccess.AfterSubmission}>After final submission</option>
+            <option value={SolutionAccess.InstructorRelease}>When I reveal answers</option>
           </>
         )}
-        <option value="anytime">Anytime</option>
+        <option value={SolutionAccess.Anytime}>Anytime</option>
       </select>
       <p id="assignment-solutions-help" className="help">
-        {policy.solutionAccess === 'never'
+        {policy.solutionAccess === SolutionAccess.Never
           ? 'Students cannot reveal the correct answers through solution controls, even after submission.'
-          : policy.solutionAccess === 'after_submission'
+          : policy.solutionAccess === SolutionAccess.AfterSubmission
             ? 'Students may reveal the correct answers only after final submission.'
-            : policy.solutionAccess === 'instructor_release'
+            : policy.solutionAccess === SolutionAccess.InstructorRelease
               ? 'Answers remain hidden until you explicitly reveal them. This is independent of grade release.'
               : 'Students may reveal the correct answers at any time, even before attempting the problems.'}{' '}
         These settings are locked after publication.
         {graded &&
-          policy.solutionAccess === 'anytime' &&
+          policy.solutionAccess === SolutionAccess.Anytime &&
           ' Anytime allows answers to be viewed before graded submission.'}
       </p>
       {notice && <p role="status">{notice}</p>}

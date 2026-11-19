@@ -1,3 +1,4 @@
+import type { UserRole } from '@logiclab/contracts/user-role';
 import { demoSessionResponseSchema, demoMessageResponseSchema } from '@logiclab/contracts';
 import { requestAccountJson } from '../account-request';
 import { AccountApiError } from '../errors';
@@ -22,7 +23,7 @@ export async function loadDemoSession(signal: AbortSignal) {
 export function demoAction(
   action: 'start' | 'role' | 'reset',
   signal: AbortSignal,
-  role?: 'student' | 'instructor',
+  role?: UserRole,
 ) {
   return requestAccountJson(`/api/demo/${action}`, {
     signal,

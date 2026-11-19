@@ -1,3 +1,11 @@
+import {
+  AssessmentMode,
+  FeedbackTiming,
+  GradeReleaseTiming,
+  SolutionAccess,
+  assessmentModeSchema,
+  feedbackTimingSchema,
+} from './assignment-policy-values';
 import { ProblemType } from './problem-type';
 import {
   assignmentItemPointsSchema,
@@ -15,8 +23,8 @@ export type { AssignmentProblemDefinition } from './assignment-problem';
 // Independent policy dimensions; additional modes require application/database support.
 export const assignmentPolicySchema = z
   .strictObject({
-    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']),
-    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']),
+    assessmentMode: assessmentModeSchema,
+    feedbackTiming: feedbackTimingSchema,
     solutionAccess: solutionAccessSchema,
     gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })
@@ -31,7 +39,8 @@ export const assignmentPolicySchema = z
   )
   .refine(
     (policy) =>
-      policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
+      policy.assessmentMode === AssessmentMode.Graded ||
+      policy.gradeReleaseTiming !== GradeReleaseTiming.InstructorRelease,
     'Only graded work has grade release.',
   );
 
@@ -68,9 +77,11 @@ export const assignmentSchema = assignmentSummarySchema
   })
   .refine(
     (assignment) =>
-      assignment.assessmentMode === 'ungraded_practice' ||
-      (['graded', 'completion_only'].includes(assignment.assessmentMode) &&
-        assignment.feedbackTiming === 'on_submission') ||
+      assignment.assessmentMode === AssessmentMode.UngradedPractice ||
+      ([AssessmentMode.Graded, AssessmentMode.CompletionOnly].some(
+        (candidate) => candidate === assignment.assessmentMode,
+      ) &&
+        assignment.feedbackTiming === FeedbackTiming.OnSubmission) ||
       !assignment.items.some(
         (item) => item.problemVersion.definition.type === ProblemType.Derivation,
       ),
@@ -101,9 +112,9 @@ export const createAssignmentRequestSchema = z
     instructions: z.string().trim().max(5000).nullable().optional(),
     problemVersionIds: z.array(z.uuid()).max(50).default([]),
     items: weightedAssignmentItemsSchema.optional(),
-    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).default('graded'),
-    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).default('on_submission'),
-    solutionAccess: solutionAccessSchema.default('never'),
+    assessmentMode: assessmentModeSchema.default(AssessmentMode.Graded),
+    feedbackTiming: feedbackTimingSchema.default(FeedbackTiming.OnSubmission),
+    solutionAccess: solutionAccessSchema.default(SolutionAccess.Never),
     gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })
   .refine(
@@ -117,7 +128,8 @@ export const createAssignmentRequestSchema = z
   )
   .refine(
     (policy) =>
-      policy.assessmentMode === 'graded' || policy.gradeReleaseTiming !== 'instructor_release',
+      policy.assessmentMode === AssessmentMode.Graded ||
+      policy.gradeReleaseTiming !== GradeReleaseTiming.InstructorRelease,
     'Only graded work has grade release.',
   )
   .refine(
@@ -125,7 +137,7 @@ export const createAssignmentRequestSchema = z
     'Use items or problemVersionIds, not both.',
   )
   .refine(
-    (input) => input.items === undefined || input.assessmentMode === 'graded',
+    (input) => input.items === undefined || input.assessmentMode === AssessmentMode.Graded,
     'Only graded assignments use points.',
   );
 
@@ -139,8 +151,8 @@ export const updateAssignmentRequestSchema = z
     problemVersionIds: z.array(z.uuid()).max(50).optional(),
     items: weightedAssignmentItemsSchema.optional(),
     pointAllocations: assignmentPointAllocationsSchema.optional(),
-    assessmentMode: z.enum(['graded', 'completion_only', 'ungraded_practice']).optional(),
-    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']).optional(),
+    assessmentMode: assessmentModeSchema.optional(),
+    feedbackTiming: feedbackTimingSchema.optional(),
     solutionAccess: solutionAccessSchema.optional(),
     gradeReleaseTiming: gradeReleaseTimingSchema.optional(),
   })

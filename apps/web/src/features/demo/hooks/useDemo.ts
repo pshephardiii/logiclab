@@ -1,3 +1,4 @@
+import type { UserRole } from '@logiclab/contracts/user-role';
 import { useEffect, useState } from 'react';
 import {
   demoAction,
@@ -41,10 +42,7 @@ export function useDemo(enabled: boolean) {
     return cancelRequest;
   }, [enabled, startRequest, cancelRequest]);
 
-  async function run(
-    action: 'start' | 'role' | 'reset' | 'logout',
-    role?: 'student' | 'instructor',
-  ) {
+  async function run(action: 'start' | 'role' | 'reset' | 'logout', role?: UserRole) {
     const signal = startRequest();
 
     setBusy(true);

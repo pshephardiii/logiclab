@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { latestSubmissionGrading } from '../submission-review/grading-state';
 import type {
@@ -185,7 +186,7 @@ export async function createStudentWorkStore(
         if (definition.type === ProblemType.TruthTree) {
           assertTruthTreeWorkPolicy(assignment);
 
-          if (assignment.assessmentMode !== 'ungraded_practice')
+          if (assignment.assessmentMode !== AssessmentMode.UngradedPractice)
             throw new StudentWorkError('unsupported_policy');
 
           const evidence = evaluateTruthTreeAnswer(
@@ -206,7 +207,7 @@ export async function createStudentWorkStore(
         if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
 
-          if (assignment.assessmentMode !== 'ungraded_practice')
+          if (assignment.assessmentMode !== AssessmentMode.UngradedPractice)
             throw new StudentWorkError('unsupported_policy');
 
           const evidence = evaluateProofAnswer(

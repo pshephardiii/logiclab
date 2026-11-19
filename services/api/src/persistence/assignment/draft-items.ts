@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import type { Assignment as AssignmentEntity } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -46,7 +47,7 @@ export async function draftScoring(
 
   validateDraftScoringInput(assignment.assessmentMode, input);
 
-  const graded = assignment.assessmentMode === 'graded';
+  const graded = assignment.assessmentMode === AssessmentMode.Graded;
 
   let items = await em.find(
     AssignmentItem,

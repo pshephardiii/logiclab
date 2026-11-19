@@ -1,6 +1,2 @@
-import { z } from 'zod';
-
-/** Grade disclosure for graded work; answer reveal has its own policy. */
-export const gradeReleaseTimingSchema = z.enum(['on_submission', 'instructor_release']);
-
-export type GradeReleaseTiming = z.infer<typeof gradeReleaseTimingSchema>;
+/** Preserve the existing contract exports; canonical values live with the other policy dimensions. */
+export { GradeReleaseTiming, gradeReleaseTimingSchema } from './assignment-policy-values';

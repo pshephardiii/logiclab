@@ -4,6 +4,8 @@ export * from './truth-table';
 
 export * from './auth';
 
+export * from './user-role';
+
 export * from './classroom';
 
 export * from './problem';
@@ -21,6 +23,8 @@ export * from './billing';
 export * from './demo';
 
 export * from './assignment-learning-policy';
+
+export * from './assignment-policy-values';
 
 export * from './assignment-results-release';
 

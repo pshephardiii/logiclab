@@ -1,3 +1,4 @@
+import { AssessmentMode, FeedbackTiming } from './assignment-policy-values';
 import { ProblemType } from './problem-type';
 import {
   proofSubmissionResultSchema,
@@ -66,9 +67,9 @@ export const submissionReviewSchema = z
         !hasProof ||
         !(completion || graded) ||
         (completion
-          ? review.assignment.assessmentMode !== 'completion_only' ||
-            review.assignment.feedbackTiming !== 'on_submission'
-          : review.assignment.assessmentMode !== 'graded') ||
+          ? review.assignment.assessmentMode !== AssessmentMode.CompletionOnly ||
+            review.assignment.feedbackTiming !== FeedbackTiming.OnSubmission
+          : review.assignment.assessmentMode !== AssessmentMode.Graded) ||
         review.attempt.gradePending !== false ||
         review.submission.id !== review.attempt.id ||
         review.submission.submittedAt !== review.attempt.submittedAt ||

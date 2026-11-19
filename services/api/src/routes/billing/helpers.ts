@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import type { FastifyRequest } from 'fastify';
 import type { BillingContext } from './context';
 import { AuthError } from '../../application/auth/service';
@@ -15,7 +16,7 @@ export async function billingInstructor(request: FastifyRequest, context: Billin
 
   const user = await context.service.authenticate(token);
 
-  if (user.role !== 'instructor') throw new BillingError('instructor_required');
+  if (user.role !== UserRole.Instructor) throw new BillingError('instructor_required');
 
   cached.billingUser = user;
   return user;

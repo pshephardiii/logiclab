@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import type { Assignment, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -8,7 +9,7 @@ import { StudentWorkError } from '../../application/student-work/errors';
 export function retainedProofCompletion(attempt: AssignmentAttempt, assignment: Assignment) {
   if (
     !attempt.submittedAt ||
-    assignment.assessmentMode !== 'completion_only' ||
+    assignment.assessmentMode !== AssessmentMode.CompletionOnly ||
     attempt.score != null
   )
     throw new StudentWorkError('unsupported_policy');

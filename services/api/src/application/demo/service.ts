@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import { createHash, randomBytes } from 'node:crypto';
 import type { Role } from '../auth/types';
 import type { DemoSessionStore } from './types';
@@ -17,7 +18,7 @@ const newId = () => randomBytes(32).toString('base64url');
 
 const validId = (id: string) => /^[A-Za-z0-9_-]{43}$/.test(id);
 
-const validRole = (role: Role) => role === 'student' || role === 'instructor';
+const validRole = (role: Role) => role === UserRole.Student || role === UserRole.Instructor;
 
 /** Issues and rotates internal demo credentials; no Cognito/provider calls or HTTP wiring. */
 export function createDemoSessionService(store: DemoSessionStore) {

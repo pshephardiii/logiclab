@@ -1,3 +1,8 @@
+import {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import { isFinishedTruthTreeAttempt } from '@logiclab/logic-engine/truth-tree';
@@ -31,18 +36,21 @@ export function assignedWorkCapabilities(
     ),
   );
   const hasFinalSubmission =
-    assignment !== null && assignment.assessmentMode !== 'ungraded_practice';
+    assignment !== null && assignment.assessmentMode !== AssessmentMode.UngradedPractice;
 
-  const requiresCompleteAnswers = assignment?.assessmentMode === 'completion_only';
-  const allowsImmediateFeedback = !workUnavailable && assignment?.feedbackTiming === 'immediate';
+  const requiresCompleteAnswers = assignment?.assessmentMode === AssessmentMode.CompletionOnly;
+  const allowsImmediateFeedback =
+    !workUnavailable && assignment?.feedbackTiming === FeedbackTiming.Immediate;
   const allowsExplicitCheck =
-    !workUnavailable && (assignment?.feedbackTiming === 'on_check' || allowsImmediateFeedback);
+    !workUnavailable &&
+    (assignment?.feedbackTiming === FeedbackTiming.OnCheck || allowsImmediateFeedback);
 
   const solutionAvailable =
-    assignment?.solutionAccess === 'anytime' ||
-    (assignment?.solutionAccess === 'instructor_release' &&
+    assignment?.solutionAccess === SolutionAccess.Anytime ||
+    (assignment?.solutionAccess === SolutionAccess.InstructorRelease &&
       Boolean(assignment.answersRevealedAt)) ||
-    (assignment?.solutionAccess === 'after_submission' && Boolean(attempt?.submittedAt));
+    (assignment?.solutionAccess === SolutionAccess.AfterSubmission &&
+      Boolean(attempt?.submittedAt));
 
   return {
     workUnavailable,

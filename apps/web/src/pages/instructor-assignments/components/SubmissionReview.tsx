@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { SubmissionGradingPanel } from './SubmissionGradingPanel';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -136,7 +137,7 @@ export function SubmissionReview({
             />
           )}
           {/* Only graded submissions expose point adjustments; completion remains score-free. */}
-          {review.assignment.assessmentMode === 'graded' && review.attempt.score && (
+          {review.assignment.assessmentMode === AssessmentMode.Graded && review.attempt.score && (
             <SubmissionGradingPanel
               key={review.attempt.id}
               assignmentId={assignmentId}

@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
@@ -38,7 +39,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
   );
   const readOnly = unavailable || Boolean(assignment?.publishedAt || assignment?.archivedAt);
   const ids = items.map((item) => item.version.id);
-  const graded = policy.assessmentMode === 'graded';
+  const graded = policy.assessmentMode === AssessmentMode.Graded;
 
   const {
     itemsChanged,
@@ -94,7 +95,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
       createAssignmentRequestSchema.parse({
         title,
         instructions: instructions || null,
-        ...(policy.assessmentMode === 'graded'
+        ...(policy.assessmentMode === AssessmentMode.Graded
           ? {
               items: items.map((item) => ({
                 problemVersionId: item.version.id,

@@ -1,3 +1,4 @@
+import { AssessmentMode, FeedbackTiming } from '@logiclab/contracts/assignment-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../proof/availability';
 import { libraryProblemDefinition } from '../problem/library-definition';
@@ -13,10 +14,11 @@ export function supportedAssignmentDefinition(
 
   if (
     (definition.type === ProblemType.Derivation || definition.type === ProblemType.TruthTree) &&
-    policy.assessmentMode !== 'ungraded_practice' &&
+    policy.assessmentMode !== AssessmentMode.UngradedPractice &&
     !(
-      ['graded', 'completion_only'].includes(policy.assessmentMode) &&
-      policy.feedbackTiming === 'on_submission'
+      [AssessmentMode.Graded, AssessmentMode.CompletionOnly].some(
+        (candidate) => candidate === policy.assessmentMode,
+      ) && policy.feedbackTiming === FeedbackTiming.OnSubmission
     )
   )
     throw new AssignmentOperationError('proof_mode_unavailable');
@@ -35,7 +37,7 @@ export function assignmentAdmissionDefinition(
 
   if (
     definition.type === ProblemType.TruthTree &&
-    policy.assessmentMode === 'completion_only' &&
+    policy.assessmentMode === AssessmentMode.CompletionOnly &&
     !hasFinishedTruthTreeReference(definition)
   )
     throw new AssignmentOperationError('truth_tree_reference_incomplete');
