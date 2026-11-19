@@ -20,7 +20,7 @@ beforeEach(() => {
   vi.mocked(listProblems).mockResolvedValue({ problems: [], nextOffset: null });
 });
 
-test('truth-tree publications stay out of assignment choices without dropping supported later pages', async () => {
+test('truth-tree publications appear in proof-enabled assignment choices without dropping later pages', async () => {
   vi.mocked(listProblems).mockResolvedValue({
     problems: [{ ...truthTreeDraft, publication: null }],
     nextOffset: null,
@@ -35,9 +35,12 @@ test('truth-tree publications stay out of assignment choices without dropping su
   await waitFor(() => expect(result.current.problemLoading).toBe(false));
   act(() => result.current.selectProblem(truthTreeDraft.id));
   await waitFor(() => expect(result.current.versionNext).toBe(20));
-  expect(result.current.versions).toEqual([]);
+  expect(result.current.versions.map((item) => item.definition.type)).toEqual(['truth_tree']);
   await act(() => result.current.loadVersions(20));
-  expect(result.current.versions).toEqual([version]);
+  expect(result.current.versions.map((item) => item.definition.type)).toEqual([
+    'truth_tree',
+    'truth_table',
+  ]);
 });
 
 test('unavailable publications are filtered without losing later supported pages', async () => {
@@ -193,4 +196,15 @@ test('dependency publications appear when derivations are permitted and preserve
   });
   expect(hook.result.current.versions).toEqual([dependency, version]);
   expect(hook.result.current.versionNext).toBeNull();
+});
+
+test('legacy completion checking modes cannot select truth-tree publications', async () => {
+  vi.mocked(listVersions).mockResolvedValue({
+    versions: [{ ...version, definition: truthTreeDraft.definition }, version],
+    nextOffset: null,
+  });
+  const { result } = renderHook(() => usePublishedProblemChoices(false));
+  act(() => result.current.selectProblem(truthTreeDraft.id));
+  await waitFor(() => expect(result.current.versionLoading).toBe(false));
+  await waitFor(() => expect(result.current.versions).toEqual([version]));
 });

@@ -619,19 +619,15 @@ test('retained mixed tree work stays navigable and read-only without save/check/
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
 });
 
-test('staged mixed truth-tree practice preserves saved work read-only and reveals only requested answers', async () => {
+test('mixed truth-tree practice opens editable work without revealing a private reference', async () => {
   vi.mocked(api.readAssignedWork).mockResolvedValue({
     assignment: truthTreeWork,
     attempt: { ...saved, answers: { [itemB]: truthTreeAnswer } },
   });
   vi.mocked(api.readAssignedSolution).mockResolvedValue(truthTreeSolution);
   const { user } = await open();
-  expect(screen.getByRole('status')).toHaveTextContent(
-    'Truth-tree editing controls are not available',
-  );
-  expect(screen.queryByRole('button', { name: 'Save problem' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
-  for (const cell of cells()) expect(cell).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
+  for (const cell of cells()) expect(cell).toBeEnabled();
   await user.selectOptions(screen.getByLabelText('Problem'), itemB);
   expect(screen.getByRole('region', { name: 'Assigned truth tree' })).toHaveTextContent('R');
   expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();

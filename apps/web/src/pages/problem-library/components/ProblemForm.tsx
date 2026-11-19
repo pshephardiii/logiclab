@@ -1,4 +1,4 @@
-import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
 import { TruthTreeProblemFields } from './TruthTreeProblemFields';
 import { initialTruthTree } from '../../../features/truth-tree/helpers/construction';
@@ -45,7 +45,7 @@ export function ProblemForm({
   initialAuthoringStep = 'details',
   onAuthoringStepChange,
 }: Props) {
-  const unavailable = Boolean(problem && !isProblemAuthoringAvailable(problem.definition));
+  const unavailable = Boolean(problem && !isProblemMethodAvailable(problem.definition));
   const [initial] = useState(() => initialProblemFields(problem));
   const [fields, setFields] = useState(initial);
   const [entryPending, setEntryPending] = useState(false);

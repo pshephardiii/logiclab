@@ -41,7 +41,10 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
     );
 
   const item = work.assignment.items[position] ?? work.assignment.items[0];
-  const isProof = item && 'content' in item && item.content.type === 'derivation';
+  const isProof =
+    item &&
+    'content' in item &&
+    (item.content.type === 'derivation' || item.content.type === 'truth_tree');
   const currentFeedback = item ? work.feedback[item.id] : undefined;
   const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
@@ -108,11 +111,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           )}
         {work.workUnavailable && (
           <p role="status">
-            {work.assignment.items.some(
-              (item) => 'content' in item && item.content.type === 'truth_tree',
-            )
-              ? 'Truth-tree editing controls are not available in this view yet. Saved work remains readable.'
-              : 'This assignment contains natural-deduction tree work, which is unavailable for new attempts. All saved problems remain visible read-only; this assignment cannot be edited, checked or submitted. Contact your instructor for a supported replacement.'}
+            This assignment contains natural-deduction tree work, which is unavailable for new
+            attempts. All saved problems remain visible read-only; this assignment cannot be edited,
+            checked or submitted. Contact your instructor for a supported replacement.
           </p>
         )}
         {!work.workUnavailable && (
@@ -131,11 +132,13 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
         )}
         {!work.workUnavailable &&
           work.assignment.items.some(
-            (value) => 'content' in value && value.content.type === 'derivation',
+            (value) =>
+              'content' in value &&
+              (value.content.type === 'derivation' || value.content.type === 'truth_tree'),
           ) && (
             <p>
               {work.assignment.assessmentMode === 'ungraded_practice'
-                ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
+                ? 'Derivations and truth trees use their explicit check buttons. Editing them never checks automatically.'
                 : work.assignment.assessmentMode === 'graded'
                   ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
                   : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
@@ -223,7 +226,31 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             <AssignedTruthTree
               item={{ ...item, content: item.content }}
               answer={work.truthTreeAnswers[item.id]}
-              report={truthTreeSubmissionFeedback(work.attempt?.result, item.id)}
+              key={item.id}
+              readOnly={readOnly}
+              disabled={busy}
+              checking={work.checkingItem === item.id}
+              onPendingChange={setEntryPending}
+              onAnswer={(answer) => {
+                setConfirmed(false);
+                work.changeTruthTreeAnswer(item.id, answer);
+              }}
+              onCheck={
+                !readOnly &&
+                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.allowsExplicitCheck
+                  ? () => void work.check(item.id)
+                  : undefined
+              }
+              report={
+                submitted
+                  ? truthTreeSubmissionFeedback(work.attempt?.result, item.id)
+                  : currentFeedback &&
+                      'type' in currentFeedback &&
+                      currentFeedback.type === 'truth_tree'
+                    ? currentFeedback.report
+                    : null
+              }
               solution={
                 currentSolution &&
                 'type' in currentSolution &&

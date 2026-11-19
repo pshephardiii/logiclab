@@ -1,3 +1,5 @@
+import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
+import { isFinishedTruthTreeAttempt } from '@logiclab/logic-engine/truth-tree';
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import type { ConceptualAnswer } from '@logiclab/contracts';
 import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
@@ -23,8 +25,8 @@ export function assignedWorkCapabilities(
     assignment?.items.some(
       (item) =>
         'content' in item &&
-        (item.content.type === 'truth_tree' ||
-          (item.content.type === 'derivation' && !isProofFormatAvailable(item.content.format))),
+        item.content.type === 'derivation' &&
+        !isProofFormatAvailable(item.content.format),
     ),
   );
   const hasFinalSubmission =
@@ -60,10 +62,12 @@ export function assignmentCompletionReady(
     answers,
     choiceAnswers,
     proofAnswers,
+    truthTreeAnswers = {},
   }: {
     answers: Record<string, Answers>;
     choiceAnswers: Record<string, ConceptualAnswer>;
     proofAnswers: Record<string, DerivationAnswer>;
+    truthTreeAnswers?: Record<string, TruthTreeAnswer>;
   },
 ) {
   return (
@@ -74,21 +78,30 @@ export function assignmentCompletionReady(
           ? submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
               (answer) => answer.value !== null,
             )
-          : item.content.type === 'derivation'
-            ? (item.content.format === 'tree'
-                ? isFinishedNaturalDeductionTreeProofAttempt
-                : item.content.format === 'dependency'
-                  ? isFinishedDependencyProofAttempt
-                  : isFinishedFitchProofAttempt)({
+          : item.content.type === 'truth_tree'
+            ? isFinishedTruthTreeAttempt({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,
                   conclusion: item.content.conclusion,
-                  permittedRuleIds: item.content.rules.map((rule) => rule.id),
                 },
-                proof: proofAnswers[item.id]?.proof,
+                tree: truthTreeAnswers[item.id]?.tree,
               })
-            : conceptualAnswerFilled(choiceAnswers[item.id]),
+            : item.content.type === 'derivation'
+              ? (item.content.format === 'tree'
+                  ? isFinishedNaturalDeductionTreeProofAttempt
+                  : item.content.format === 'dependency'
+                    ? isFinishedDependencyProofAttempt
+                    : isFinishedFitchProofAttempt)({
+                  problem: {
+                    ruleCatalogVersion: item.content.ruleCatalogVersion,
+                    premises: item.content.premises,
+                    conclusion: item.content.conclusion,
+                    permittedRuleIds: item.content.rules.map((rule) => rule.id),
+                  },
+                  proof: proofAnswers[item.id]?.proof,
+                })
+              : conceptualAnswerFilled(choiceAnswers[item.id]),
       ),
     )
   );

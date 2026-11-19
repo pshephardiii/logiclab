@@ -6,14 +6,14 @@ import { routeDefinitions } from '../../../routing/route-definitions';
 
 type Props = {
   disabled: boolean;
-  allowDerivations?: boolean;
+  allowProofs?: boolean;
   onAdd: (version: LibraryProblemVersion) => void;
 };
 
 /** Selects immutable publications, including retained versions of archived library problems. */
-export function PublishedProblemPicker({ disabled, allowDerivations = false, onAdd }: Props) {
+export function PublishedProblemPicker({ disabled, allowProofs = false, onAdd }: Props) {
   const accountPath = useAccountPath();
-  const choices = usePublishedProblemChoices(allowDerivations);
+  const choices = usePublishedProblemChoices(allowProofs);
 
   return (
     <section aria-label="Add published problems">
@@ -25,8 +25,8 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
         create and publish it first. Save your assignment draft before leaving to keep your edits.
       </p>
       <p className="help">
-        {allowDerivations
-          ? 'Published Fitch and dependency proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
+        {allowProofs
+          ? 'Published Fitch, dependency and truth-tree problems are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
           : 'Choose feedback at submission or Ungraded practice to assign proofs.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>

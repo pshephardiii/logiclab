@@ -1,0 +1,173 @@
+import { useState, type FormEvent } from 'react';
+import { Page } from '../../components/layout/Page';
+import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
+import { ProofPremisesEditor } from '../../features/proof/components/ProofPremisesEditor';
+import { ProofFormulaInput } from '../../features/proof/components/ProofFormulaInput';
+import { ProofKeyboardGuide } from '../../features/proof/reference/ProofKeyboardGuide';
+import { useUnsavedWork } from '../../features/unsaved-work/hooks/useUnsavedWork';
+import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
+import { TruthTreeEditor } from '../../features/truth-tree/components/TruthTreeEditor';
+import { TruthTreeSummary } from '../../features/truth-tree/components/TruthTreeSummary';
+import { TruthTreeFeedback } from '../../features/truth-tree/components/TruthTreeFeedback';
+import { initialTruthTree } from '../../features/truth-tree/helpers/construction';
+import {
+  truthTreeContentSchema,
+  type TruthTreeContent,
+} from '@logiclab/contracts/truth-tree-authoring';
+import {
+  TRUTH_TREE_LIMITS,
+  type TruthTree,
+  type TruthTreeCheckReport,
+} from '@logiclab/contracts/truth-tree';
+import { checkTruthTree, parseTruthTreeFormula } from '@logiclab/logic-engine/truth-tree';
+import '../../features/proof/components/proof-setup.css';
+
+/** Anonymous page-session work; no account API, expected reference, points or browser storage. */
+export function TruthTreePracticePage() {
+  const [premises, setPremises] = useState<TruthTreeContent['premises']>([]);
+  const [conclusion, setConclusion] = useState('');
+  const [premisePending, setPremisePending] = useState(false);
+  const [entryPending, setEntryPending] = useState(false);
+  const [active, setActive] = useState<{ statement: TruthTreeContent; tree: TruthTree } | null>(
+    null,
+  );
+  const [report, setReport] = useState<TruthTreeCheckReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useUnsavedWork(active !== null || premisePending || premises.length > 0 || conclusion.length > 0);
+  const confirmDiscard = useConfirmDiscard();
+
+  function start(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (premisePending) return;
+
+    try {
+      const statement = truthTreeContentSchema.parse({
+        type: 'truth_tree',
+        definitionVersion: 1,
+        checkerVersion: 1,
+        ruleCatalogVersion: 1,
+        premises,
+        conclusion,
+      });
+      for (const [index, premise] of statement.premises.entries()) {
+        try {
+          parseTruthTreeFormula(premise.formula);
+        } catch (error) {
+          throw new Error(
+            `Premise ${index + 1}: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
+          );
+        }
+      }
+      try {
+        parseTruthTreeFormula(statement.conclusion);
+      } catch (error) {
+        throw new Error(
+          `Conclusion: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
+        );
+      }
+      setActive({ statement, tree: initialTruthTree(statement) });
+      setError(null);
+      setReport(null);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Check the argument.');
+    }
+  }
+
+  function restart() {
+    confirmDiscard(() => {
+      setActive(null);
+      setPremises([]);
+      setConclusion('');
+      setReport(null);
+      setError(null);
+      setEntryPending(false);
+    });
+  }
+
+  return (
+    <Page>
+      <PracticeNavigation />
+      <header>
+        <p className="eyebrow">LogicLab / Independent practice</p>
+        <h1>Practice a truth tree.</h1>
+        {!active && (
+          <p>
+            Enter premises and a conclusion. Start with the premises and the negated conclusion.
+          </p>
+        )}
+      </header>
+      {!active ? (
+        <form
+          className="panel proof-editor"
+          aria-label="Truth-tree practice setup"
+          onSubmit={start}
+        >
+          <ProofKeyboardGuide />
+          <ProofPremisesEditor
+            format="tree"
+            premises={premises}
+            onChange={setPremises}
+            onPendingChange={setPremisePending}
+          />
+          <label htmlFor="truth-tree-practice-conclusion">Conclusion</label>
+          <ProofFormulaInput
+            id="truth-tree-practice-conclusion"
+            required
+            maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={conclusion}
+            onValueChange={setConclusion}
+          />
+          {error && (
+            <p role="alert" className="error">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={premisePending}>
+            Begin truth-tree practice
+          </button>
+        </form>
+      ) : (
+        <section className="panel proof-editor">
+          <TruthTreeSummary definition={active.statement} />
+          <ProofKeyboardGuide />
+          <button type="button" className="secondary" onClick={restart}>
+            Start over
+          </button>
+          <TruthTreeEditor
+            tree={active.tree}
+            onPendingChange={setEntryPending}
+            onChange={(tree) => {
+              setActive({ ...active, tree });
+              setReport(null);
+            }}
+          />
+          <button
+            type="button"
+            disabled={entryPending}
+            onClick={() => {
+              if (!entryPending)
+                setReport(
+                  checkTruthTree({
+                    problem: {
+                      ruleCatalogVersion: active.statement.ruleCatalogVersion,
+                      premises: active.statement.premises,
+                      conclusion: active.statement.conclusion,
+                    },
+                    tree: active.tree,
+                  }),
+                );
+            }}
+          >
+            Check tree
+          </button>
+          {report && !entryPending && <TruthTreeFeedback report={report} />}
+        </section>
+      )}
+      <p className="help">Work is temporary; reloading clears this practice session.</p>
+    </Page>
+  );
+}

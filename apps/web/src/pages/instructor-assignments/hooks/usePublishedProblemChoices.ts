@@ -10,7 +10,7 @@ import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Paginated library choices; switching problems cancels stale version reads. */
-export function usePublishedProblemChoices(includeDerivations = false) {
+export function usePublishedProblemChoices(includeProofs = false) {
   const { listProblems, listVersions } = useResourceApi(problemsApi);
   const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
   const [problemNext, setProblemNext] = useState<number | null>(null);
@@ -113,7 +113,8 @@ export function usePublishedProblemChoices(includeDerivations = false) {
     versions: versions.filter(
       (version) =>
         isProblemMethodAvailable(version.definition) &&
-        (includeDerivations || version.definition.type !== 'derivation'),
+        (includeProofs ||
+          (version.definition.type !== 'derivation' && version.definition.type !== 'truth_tree')),
     ),
     versionNext,
     versionLoading,

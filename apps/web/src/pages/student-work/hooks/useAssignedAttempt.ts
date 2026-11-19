@@ -1,3 +1,4 @@
+import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import { assignedWorkCapabilities } from '../helpers/assigned-work-state';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -37,6 +38,7 @@ export function useAssignedAttempt(assignmentId: string) {
     changeTableAnswers,
     changeChoiceAnswers,
     changeProofAnswers,
+    changeTruthTreeAnswers,
     markSaved,
     responseFor,
   } = useAssignedAnswers(assignment);
@@ -207,6 +209,24 @@ export function useAssignedAttempt(assignmentId: string) {
 
     changeProofAnswers(itemId, snapshot);
     // Proof diagnostics are always explicit, including mixed immediate-feedback assignments.
+  }
+
+  function changeTruthTreeAnswer(itemId: string, snapshot: TruthTreeAnswer) {
+    if (workUnavailable || loading || action || attempt?.submittedAt) return;
+
+    const item = assignment?.items.find((value) => value.id === itemId);
+    if (!item || !('content' in item) || item.content.type !== 'truth_tree') return;
+
+    cancelCheck();
+    setFeedback((previous) => {
+      const next = { ...previous };
+      delete next[itemId];
+      return next;
+    });
+    setError(null);
+    setNotice(null);
+    changeTruthTreeAnswers(itemId, snapshot);
+    // Like derivations, truth-tree diagnostics are explicit even in immediate-feedback practice.
   }
 
   async function save(itemId: string) {
@@ -399,6 +419,7 @@ export function useAssignedAttempt(assignmentId: string) {
     changeAnswer,
     changeConceptualAnswer,
     changeProofAnswer,
+    changeTruthTreeAnswer,
     save,
     submit,
     toggleSolution,

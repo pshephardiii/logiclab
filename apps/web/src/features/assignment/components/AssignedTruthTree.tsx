@@ -1,59 +1,134 @@
-import { TruthTreeFeedback } from '../../truth-tree/components/TruthTreeFeedback';
+import { useCallback, useState } from 'react';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import type { TruthTreeSolution } from '@logiclab/contracts/truth-tree-authoring';
 import type { TruthTreeCheckReport } from '@logiclab/contracts/truth-tree';
 import { TruthTreeSummary } from '../../truth-tree/components/TruthTreeSummary';
+import { TruthTreeFeedback } from '../../truth-tree/components/TruthTreeFeedback';
+import { TruthTreeEditor } from '../../truth-tree/components/TruthTreeEditor';
+import { TruthTreeDisplay } from '../../truth-tree/components/TruthTreeDisplay';
+import { TruthTreeSolutionView } from '../../truth-tree/components/TruthTreeSolutionView';
+import { initialTruthTree } from '../../truth-tree/helpers/construction';
+import { ProofKeyboardGuide } from '../../proof/reference/ProofKeyboardGuide';
+import { ProofDeletionPrompt } from '../../proof/components/ProofDeletionPrompt';
 
-/** Read-only saved-work compatibility while the truth-tree construction UI is staged. */
+type Props = {
+  item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'truth_tree' } }>;
+  answer?: TruthTreeAnswer;
+  /** Already-authorized retained results or the latest server check; never a local assigned-work check. */
+  report?: TruthTreeCheckReport | null;
+  solution?: TruthTreeSolution | null;
+  readOnly?: boolean;
+  disabled?: boolean;
+  checking?: boolean;
+  onAnswer?: (answer: TruthTreeAnswer) => void;
+  onCheck?: () => void;
+  onPendingChange?: (pending: boolean) => void;
+};
+
+/** Pinned statement and explicit saves belong to the caller; reference reveal stays independent. */
 export function AssignedTruthTree({
   item,
   answer,
   solution,
   report,
-}: {
-  item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'truth_tree' } }>;
-  answer?: TruthTreeAnswer;
-  solution?: TruthTreeSolution | null;
-  report?: TruthTreeCheckReport | null;
-}) {
+  readOnly = true,
+  disabled = false,
+  checking = false,
+  onAnswer,
+  onCheck,
+  onPendingChange,
+}: Props) {
+  const [pending, setPending] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const changePending = useCallback(
+    (value: boolean) => {
+      setPending(value);
+      onPendingChange?.(value);
+    },
+    [onPendingChange],
+  );
+
+  function start() {
+    if (readOnly || disabled || !onAnswer) return;
+    try {
+      onAnswer({ type: 'truth_tree', tree: initialTruthTree(item.content) });
+      setError(null);
+      setResetting(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not start the tree.');
+      setResetting(false);
+    }
+  }
+
   return (
-    <section className="panel assigned-item" aria-label="Assigned truth tree">
+    <section className="panel assigned-item proof-editor" aria-label="Assigned truth tree">
       <h2>
         Problem {item.position}: {item.title}
       </h2>
       {item.instructions && <p>{item.instructions}</p>}
       <TruthTreeSummary definition={item.content} />
+      {!readOnly && <ProofKeyboardGuide />}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
       {answer ? (
-        <details>
-          <summary>Saved formula occurrences</summary>
-          <ul>
-            {answer.tree.occurrences.map((occurrence) => (
-              <li key={occurrence.id}>
-                <code>{occurrence.formula || '(blank)'}</code>
-              </li>
-            ))}
-          </ul>
-        </details>
+        readOnly ? (
+          <TruthTreeDisplay tree={answer.tree} />
+        ) : (
+          <TruthTreeEditor
+            tree={answer.tree}
+            disabled={disabled}
+            onPendingChange={changePending}
+            onChange={(tree) => onAnswer?.({ type: 'truth_tree', tree })}
+          />
+        )
       ) : (
         <p>No saved tree.</p>
       )}
-      {report && <TruthTreeFeedback report={report} />}
-      {solution && (
-        <section aria-label="Revealed truth-tree answer">
-          <p>Argument: {solution.argumentStatus}.</p>
-          <details>
-            <summary>Reference formula occurrences</summary>
-            <ul>
-              {solution.referenceTree.occurrences.map((occurrence) => (
-                <li key={occurrence.id}>
-                  <code>{occurrence.formula || '(blank)'}</code>
-                </li>
-              ))}
-            </ul>
-          </details>
-          {solution.explanation && <p>{solution.explanation}</p>}
-        </section>
+      {!readOnly && (
+        <>
+          <button
+            type="button"
+            className="secondary"
+            disabled={disabled || pending}
+            onClick={() => (answer ? setResetting(true) : start())}
+          >
+            {answer ? 'Start tree over' : 'Start tree'}
+          </button>
+          {onCheck && (
+            <button
+              type="button"
+              disabled={disabled || checking || pending || !answer}
+              onClick={() => !pending && onCheck()}
+            >
+              {checking ? 'Checking tree…' : 'Check tree'}
+            </button>
+          )}
+        </>
+      )}
+      {report && !pending && <TruthTreeFeedback report={report} />}
+      {solution && <TruthTreeSolutionView solution={solution} />}
+      {resetting && (
+        <ProofDeletionPrompt
+          modal
+          label="Start this tree over?"
+          onCancel={() => setResetting(false)}
+        >
+          <p>
+            Replace this problem's tree with its starting premises and negated conclusion. Save
+            problem to keep the replacement.
+          </p>
+          <button type="button" disabled={disabled} onClick={start}>
+            Replace tree
+          </button>
+          <button type="button" className="secondary" onClick={() => setResetting(false)}>
+            Keep tree
+          </button>
+        </ProofDeletionPrompt>
       )}
     </section>
   );

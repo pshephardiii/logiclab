@@ -1,3 +1,8 @@
+import {
+  blankTruthTreeAnswer,
+  savedTruthTreeAnswers,
+  sameTruthTreeAnswer,
+} from '../../../features/assignment/helpers/truth-tree-answers';
 import { assignmentCompletionReady } from '../helpers/assigned-work-state';
 import { useCallback, useMemo, useState } from 'react';
 import type { ConceptualAnswer } from '@logiclab/contracts';
@@ -35,8 +40,13 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
   const [proofBaseline, setProofBaseline] = useState<Record<string, DerivationAnswer>>({});
   const [truthTreeAnswers, setTruthTreeAnswers] = useState<Record<string, TruthTreeAnswer>>({});
 
+  const [truthTreeBaseline, setTruthTreeBaseline] = useState<Record<string, TruthTreeAnswer>>({});
+
   const dirty = useMemo(
     () => [
+      ...Object.keys(truthTreeAnswers).filter(
+        (id) => !sameTruthTreeAnswer(truthTreeAnswers[id]!, truthTreeBaseline[id]),
+      ),
       ...Object.keys(answers).filter((id) => !sameTruthTableAnswers(answers[id]!, baseline[id])),
       ...Object.keys(proofAnswers).filter(
         (id) => !sameProofAnswer(proofAnswers[id]!, proofBaseline[id]),
@@ -45,12 +55,27 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
         (id) => !sameConceptualAnswer(choiceAnswers[id]!, choiceBaseline[id]),
       ),
     ],
-    [answers, baseline, choiceAnswers, choiceBaseline, proofAnswers, proofBaseline],
+    [
+      answers,
+      baseline,
+      choiceAnswers,
+      choiceBaseline,
+      proofAnswers,
+      proofBaseline,
+      truthTreeAnswers,
+      truthTreeBaseline,
+    ],
   );
 
   const completionReady = useMemo(
-    () => assignmentCompletionReady(assignment, { answers, choiceAnswers, proofAnswers }),
-    [assignment, answers, choiceAnswers, proofAnswers],
+    () =>
+      assignmentCompletionReady(assignment, {
+        answers,
+        choiceAnswers,
+        proofAnswers,
+        truthTreeAnswers,
+      }),
+    [assignment, answers, choiceAnswers, proofAnswers, truthTreeAnswers],
   );
 
   const resetAnswers = useCallback((source: StudentAssignment, attempt: StudentAttempt | null) => {
@@ -68,14 +93,9 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
 
     setProofAnswers(proofs);
     setProofBaseline(proofs);
-    setTruthTreeAnswers(
-      Object.fromEntries(
-        Object.entries(attempt?.answers ?? {}).filter(
-          (entry): entry is [string, TruthTreeAnswer] =>
-            !Array.isArray(entry[1]) && entry[1].type === 'truth_tree',
-        ),
-      ),
-    );
+    const trees = savedTruthTreeAnswers(source, attempt);
+    setTruthTreeAnswers(trees);
+    setTruthTreeBaseline(trees);
   }, []);
 
   const changeTableAnswers = useCallback((itemId: string, snapshot: Answers) => {
@@ -90,6 +110,10 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     setProofAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
   }, []);
 
+  const changeTruthTreeAnswers = useCallback((itemId: string, snapshot: TruthTreeAnswer) => {
+    setTruthTreeAnswers((previous) => ({ ...previous, [itemId]: snapshot }));
+  }, []);
+
   // Advance only the confirmed snapshot's baseline, leaving every other draft untouched.
   const markSaved = useCallback(
     (itemId: string, tableSnapshot: Answers, response: AssignmentResponseValue) => {
@@ -98,7 +122,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
       else if (response.type === 'derivation')
         setProofBaseline((previous) => ({ ...previous, [itemId]: response }));
       else if (response.type === 'truth_tree')
-        setTruthTreeAnswers((previous) => ({ ...previous, [itemId]: response }));
+        setTruthTreeBaseline((previous) => ({ ...previous, [itemId]: response }));
       else setChoiceBaseline((previous) => ({ ...previous, [itemId]: response }));
     },
     [],
@@ -113,17 +137,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
       : item.content.type === 'derivation'
         ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
         : item.content.type === 'truth_tree'
-          ? (truthTreeAnswers[item.id] ?? {
-              type: 'truth_tree',
-              tree: {
-                treeVersion: 1,
-                format: 'truth_tree',
-                rootBranchId: null,
-                occurrences: [],
-                branches: [],
-                expansions: [],
-              },
-            })
+          ? (truthTreeAnswers[item.id] ?? blankTruthTreeAnswer())
           : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
   }
 
@@ -138,6 +152,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     changeTableAnswers,
     changeChoiceAnswers,
     changeProofAnswers,
+    changeTruthTreeAnswers,
     markSaved,
     responseFor,
   };

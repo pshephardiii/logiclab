@@ -5,7 +5,7 @@ import { expect, test, vi } from 'vitest';
 import { useAccountContext } from '../features/auth/AccountProvider';
 import { AppRoutes } from './AppRoutes';
 import { UnsavedWorkProvider } from '../features/unsaved-work/UnsavedWorkProvider';
-import { proofPracticePath } from './route-definitions';
+import { proofPracticePath, truthTreePracticePath } from './route-definitions';
 
 vi.mock('../features/auth/AccountProvider', () => ({ useAccountContext: vi.fn() }));
 vi.mock('../components/layout/Page', () => ({
@@ -84,4 +84,32 @@ test.each([
 ] as const)('loads %s for its authorized role', async (path, role, heading) => {
   visit(path, role);
   expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+});
+
+test('truth-tree practice is directly accessible without an account', async () => {
+  vi.mocked(useAccountContext).mockReturnValue({
+    user: null,
+    busy: false,
+    demoMode: false,
+  } as ReturnType<typeof useAccountContext>);
+  const router = createMemoryRouter(
+    [
+      {
+        path: '*',
+        element: (
+          <UnsavedWorkProvider>
+            <AppRoutes />
+          </UnsavedWorkProvider>
+        ),
+      },
+    ],
+    { initialEntries: [truthTreePracticePath] },
+  );
+  render(<RouterProvider router={router} />);
+  expect(
+    await screen.findByRole('heading', { name: 'Practice a truth tree.' }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('form', { name: 'Truth-tree practice setup' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /Truth trees/ })).toHaveAttribute('aria-current', 'page');
+  expect(screen.queryByRole('heading', { name: 'Account' })).not.toBeInTheDocument();
 });

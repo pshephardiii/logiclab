@@ -14,6 +14,14 @@ export function TruthTreeFeedback({ report }: { report: TruthTreeCheckReport }) 
           ))}
         </ul>
       )}
+      {report.counterexample && (
+        <p>
+          Counterexample:{' '}
+          {Object.entries(report.counterexample.assignment)
+            .map(([name, value]) => `${name} = ${value ? 'T' : 'F'}`)
+            .join(', ')}
+        </p>
+      )}
       <ul>
         {[...report.steps.diagnostics, ...report.diagnostics].map((diagnostic, index) => (
           <li key={index}>{diagnostic.message}</li>

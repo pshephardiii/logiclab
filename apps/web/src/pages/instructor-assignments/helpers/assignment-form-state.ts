@@ -64,7 +64,11 @@ export function assignmentFormState(assignment: AssignmentDetail | null, values:
     values.policy.assessmentMode === 'graded',
   );
 
-  const containsProof = values.items.some((item) => item.version.definition.type === 'derivation');
+  const containsProof = values.items.some(
+    (item) =>
+      item.version.definition.type === 'derivation' ||
+      item.version.definition.type === 'truth_tree',
+  );
   const allowsProofs = allowsAssignmentProofs(values.policy);
 
   return {

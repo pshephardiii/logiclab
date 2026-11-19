@@ -318,3 +318,45 @@ test('retained unavailable assignment content is read-only while archive/reload 
   expect(onDuplicate).not.toHaveBeenCalled();
   expect(onDirty).toHaveBeenLastCalledWith(false);
 });
+
+test('truth-tree drafts require submission-time feedback when using completion-only mode', async () => {
+  const { truthTreeDraft } = await import('../../../../test/truth-tree');
+  const onSave = vi.fn().mockResolvedValue(false);
+  const user = userEvent.setup();
+  render(
+    <AssignmentForm
+      assignment={{
+        ...assignment,
+        assessmentMode: 'completion_only',
+        feedbackTiming: 'on_check',
+        items: [
+          {
+            id: assignment.id,
+            position: 1,
+            problemVersion: {
+              id: truthTreeDraft.id,
+              problemId: truthTreeDraft.id,
+              version: 1,
+              title: truthTreeDraft.title,
+              instructions: null,
+              definition: truthTreeDraft.definition,
+              publishedAt: assignment.createdAt,
+            },
+          },
+        ],
+      }}
+      busy={false}
+      onSave={onSave}
+      onDirty={vi.fn()}
+    />,
+  );
+  expect(screen.getByRole('button', { name: 'Save assignment draft' })).toBeDisabled();
+  expect(screen.getByLabelText('Assignment title')).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Feedback timing'), 'on_submission');
+  expect(screen.getByRole('button', { name: 'Save assignment draft' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Save assignment draft' }));
+  expect(onSave).toHaveBeenCalledWith(
+    expect.objectContaining({ assessmentMode: 'completion_only', feedbackTiming: 'on_submission' }),
+    false,
+  );
+});

@@ -471,3 +471,98 @@ test.each(['graded', 'ungraded_practice'] as const)(
     expect(result.current.solutionAvailable).toBe(true);
   },
 );
+
+test('truth-tree edits stay explicit, cancel late reports and preserve failed-save snapshots', async () => {
+  const { truthTreeWork } = await import('../../../../test/truth-tree-work-fixture');
+  const { initialTruthTree } = await import('../../../features/truth-tree/helpers/construction');
+  const { checkTruthTree } = await import('@logiclab/logic-engine/truth-tree');
+  const item = truthTreeWork.items[1]!;
+  if (!('content' in item) || item.content.type !== 'truth_tree') throw new Error('Expected tree');
+  const answer = { type: 'truth_tree' as const, tree: initialTruthTree(item.content) };
+  const report = checkTruthTree({
+    problem: {
+      ruleCatalogVersion: 1,
+      premises: item.content.premises,
+      conclusion: item.content.conclusion,
+    },
+    tree: answer.tree,
+  });
+  vi.mocked(api.readAssignedWork).mockResolvedValue({ assignment: truthTreeWork, attempt: null });
+  const { result } = await open();
+  act(() => result.current.changeTruthTreeAnswer(itemB, answer));
+  await tick();
+  expect(result.current.dirty).toEqual([itemB]);
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  let finish!: (value: Awaited<ReturnType<typeof api.checkAssignedAnswers>>) => void;
+  vi.mocked(api.checkAssignedAnswers).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  let pending!: Promise<void>;
+  act(() => {
+    pending = result.current.check(itemB);
+  });
+  const signal = vi.mocked(api.checkAssignedAnswers).mock.calls[0]![2] as AbortSignal;
+  const edited = structuredClone(answer);
+  edited.tree.occurrences[0]!.formula = '';
+  act(() => result.current.changeTruthTreeAnswer(itemB, edited));
+  expect(signal.aborted).toBe(true);
+  await act(async () => {
+    finish({ itemId: itemB, feedback: { type: 'truth_tree', report } });
+    await pending;
+  });
+  expect(result.current.feedback[itemB]).toBeUndefined();
+  vi.mocked(api.saveAssignedAnswers).mockRejectedValueOnce(new Error('Save unavailable'));
+  await act(async () => {
+    await result.current.save(itemB);
+  });
+  expect(result.current.truthTreeAnswers[itemB]).toEqual(edited);
+  expect(result.current.dirty).toEqual([itemB]);
+  vi.mocked(api.saveAssignedAnswers).mockResolvedValue({ ...saved, answers: { [itemB]: edited } });
+  await act(async () => {
+    await result.current.save(itemB);
+  });
+  expect(result.current.dirty).toEqual([]);
+  expect(api.saveAssignedAnswers).toHaveBeenLastCalledWith(
+    work.id,
+    { revision: 0, itemId: itemB, answers: edited },
+    expect.any(AbortSignal),
+  );
+  expect(api.submitAssignedWork).not.toHaveBeenCalled();
+});
+
+test('completion-only truth trees use finished attempts without pre-submission check requests', async () => {
+  const { truthTreeWork } = await import('../../../../test/truth-tree-work-fixture');
+  const { initialTruthTree, closeTruthTreeBranch } =
+    await import('../../../features/truth-tree/helpers/construction');
+  const item = truthTreeWork.items[1]!;
+  if (!('content' in item) || item.content.type !== 'truth_tree') throw new Error('Expected tree');
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: {
+      ...truthTreeWork,
+      items: [item],
+      assessmentMode: 'completion_only',
+      feedbackTiming: 'on_submission',
+      solutionAccess: 'never',
+    },
+    attempt: null,
+  });
+  const { result } = await open();
+  expect(result.current.completionReady).toBe(false);
+  const initial = initialTruthTree(item.content);
+  const incorrect = closeTruthTreeBranch(initial, initial.rootBranchId!, {
+    kind: 'falsity',
+    occurrenceId: initial.occurrences[0]!.id,
+  });
+  act(() => result.current.changeTruthTreeAnswer(itemB, { type: 'truth_tree', tree: incorrect }));
+  expect(result.current.completionReady).toBe(true);
+  await act(async () => {
+    await result.current.check(itemB);
+    await result.current.submit();
+  });
+  await tick();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.submitAssignedWork).not.toHaveBeenCalled(); // Save remains explicit before final submission.
+});

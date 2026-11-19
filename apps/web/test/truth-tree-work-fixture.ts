@@ -8,9 +8,16 @@ export const truthTreeAnswer: TruthTreeAnswer = {
   tree: {
     treeVersion: 1,
     format: 'truth_tree',
-    rootBranchId: null,
+    rootBranchId: 'b3333333-3333-4333-8333-333333333333',
     occurrences: [{ id: itemB, formula: 'R', origin: { kind: 'negated_conclusion' } }],
-    branches: [],
+    branches: [
+      {
+        id: 'b3333333-3333-4333-8333-333333333333',
+        parentId: null,
+        occurrenceIds: [itemB],
+        ending: { kind: 'open' },
+      },
+    ],
     expansions: [],
   },
 };
@@ -44,8 +51,11 @@ export const truthTreeSolution: TruthTreeSolution = {
   definitionVersion: 1,
   checkerVersion: 1,
   ruleCatalogVersion: 1,
-  referenceTree: { ...truthTreeAnswer.tree, occurrences: [] },
-  argumentStatus: 'valid',
-  counterexample: null,
+  referenceTree: {
+    ...truthTreeAnswer.tree,
+    occurrences: [{ id: itemB, formula: '¬P', origin: { kind: 'negated_conclusion' } }],
+  },
+  argumentStatus: 'invalid',
+  counterexample: { branchId: 'b3333333-3333-4333-8333-333333333333', assignment: { P: false } },
   explanation: 'PRIVATE_REFERENCE_EXPLANATION',
 };

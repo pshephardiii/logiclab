@@ -125,6 +125,7 @@ export function AssignmentPolicyFields({
             {policy.feedbackTiming === 'immediate'
               ? 'Incorrect entries are highlighted without revealing the answer key. Manual Check answers remains available; saving is still explicit.'
               : 'Students choose Check answers for correctness feedback. Saving is still explicit.'}
+            {containsProof && ' Derivations and truth trees use explicit check buttons.'}
           </p>
         </>
       )}

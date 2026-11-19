@@ -57,7 +57,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     if (
       readOnly ||
       !isProblemMethodAvailable(version.definition) ||
-      (version.definition.type === 'derivation' && !allowsProofs)
+      ((version.definition.type === 'derivation' || version.definition.type === 'truth_tree') &&
+        !allowsProofs)
     )
       return;
 
@@ -172,7 +173,7 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
           {!readOnly && (
             <PublishedProblemPicker
               disabled={busy || items.length >= 50}
-              allowDerivations={allowsProofs}
+              allowProofs={allowsProofs}
               onAdd={add}
             />
           )}

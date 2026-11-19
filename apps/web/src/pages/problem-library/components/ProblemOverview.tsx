@@ -1,4 +1,4 @@
-import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import type {
   LibraryProblemDraft,
   LibraryProblemVersion,
@@ -36,7 +36,7 @@ export function ProblemOverview({
       <div className="problem-overview-heading">
         <h2>{version?.title ?? 'Published problem'}</h2>
         <button type="button" className="secondary" onClick={onEdit}>
-          {!isProblemAuthoringAvailable(problem.definition)
+          {!isProblemMethodAvailable(problem.definition)
             ? 'View retained draft'
             : problem.archivedAt
               ? 'View archived draft'

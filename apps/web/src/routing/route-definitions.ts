@@ -23,6 +23,8 @@ interface RouteDefinition {
 /** Reached from independent practice without adding a second top-level navigation item. */
 export const proofPracticePath = '/practice/proofs';
 
+export const truthTreePracticePath = '/practice/truth-trees';
+
 export const routeDefinitions = {
   practice: {
     path: '/',

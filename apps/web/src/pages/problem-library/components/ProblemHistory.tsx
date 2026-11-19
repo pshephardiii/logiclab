@@ -1,4 +1,4 @@
-import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type {
   LibraryProblemDraft,
@@ -22,7 +22,7 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
     problem.id,
   );
 
-  const unavailable = !isProblemAuthoringAvailable(problem.definition);
+  const unavailable = !isProblemMethodAvailable(problem.definition);
   return (
     <section className="panel" aria-label="Published versions" aria-busy={loading || publishing}>
       <h2>Published versions</h2>
