@@ -1,6 +1,6 @@
 import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
 
-/** Readable owner-library compatibility while the construction editor is staged separately. */
+/** Public statement shared by owner-library and assigned-work read-only views. */
 export function TruthTreeSummary({ definition }: { definition: TruthTreeContent }) {
   return (
     <section aria-label="Truth-tree statement">

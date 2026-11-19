@@ -23,8 +23,8 @@ export function assignedWorkCapabilities(
     assignment?.items.some(
       (item) =>
         'content' in item &&
-        item.content.type === 'derivation' &&
-        !isProofFormatAvailable(item.content.format),
+        (item.content.type === 'truth_tree' ||
+          (item.content.type === 'derivation' && !isProofFormatAvailable(item.content.format))),
     ),
   );
   const hasFinalSubmission =

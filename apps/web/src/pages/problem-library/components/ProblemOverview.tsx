@@ -5,7 +5,7 @@ import type {
 } from '@logiclab/contracts/problem-library';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 import { DerivationSummary } from './DerivationSummary';
-import { TruthTreeSummary } from './TruthTreeSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 
 /** Display the immutable published snapshot, not a potentially different editable draft. */

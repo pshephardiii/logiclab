@@ -6,7 +6,7 @@ import type {
   LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 import { DerivationSummary } from './DerivationSummary';
-import { TruthTreeSummary } from './TruthTreeSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
 type Props = {

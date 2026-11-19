@@ -4,10 +4,12 @@ import { fitchDerivationDefinitionSchema } from './derivation';
 import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
 import { naturalDeductionTreeDerivationDefinitionSchema } from './natural-deduction-tree-derivation';
 import { libraryProblemVersionSchema } from './problem-library';
+import { truthTreeDefinitionSchema } from './truth-tree-authoring';
 
-/** Assigned transport stays narrower while truth-tree student workflows are staged. */
+/** Transport supports practice truth trees; server policy keeps final-submission modes guarded. */
 export const assignmentProblemDefinitionSchema = z.discriminatedUnion('type', [
   ...objectiveProblemDefinitionSchema.options,
+  truthTreeDefinitionSchema,
   z.discriminatedUnion('format', [
     fitchDerivationDefinitionSchema,
     dependencyDerivationDefinitionSchema,

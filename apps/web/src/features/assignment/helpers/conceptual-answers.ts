@@ -20,12 +20,18 @@ export function savedConceptualAnswers(
   const answers: Record<string, ConceptualAnswer> = {};
 
   for (const item of assignment.items) {
-    if (!('content' in item) || item.content.type === 'derivation') continue;
+    if (
+      !('content' in item) ||
+      (item.content.type !== 'true_false' && item.content.type !== 'multiple_choice')
+    )
+      continue;
 
     const saved = attempt?.answers[item.id];
 
     answers[item.id] =
-      saved && !Array.isArray(saved) && saved.type !== 'derivation'
+      saved &&
+      !Array.isArray(saved) &&
+      (saved.type === 'true_false' || saved.type === 'multiple_choice')
         ? saved
         : blankConceptualAnswer({ content: item.content });
   }

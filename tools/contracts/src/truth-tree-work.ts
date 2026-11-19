@@ -9,7 +9,7 @@ export const truthTreeAnswerSchema = z.strictObject({
 
 export type TruthTreeAnswer = z.infer<typeof truthTreeAnswerSchema>;
 
-/** Staged requests; active save/check routes keep their existing supported unions until integration. */
+/** Revisioned practice requests; assignment admission and finalization are enforced separately. */
 export const saveTruthTreeAnswersSchema = z.strictObject({
   revision: z.number().int().nonnegative().max(2147483646),
   itemId: z.uuid(),

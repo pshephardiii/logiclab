@@ -21,7 +21,7 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked snapshots and keeps assignment/student admission closed', async () => {
+test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked snapshots and keeps final-submission assignment admission closed', async () => {
   const db = await import('@logiclab/db');
   const schema = `truth_tree_authoring_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });

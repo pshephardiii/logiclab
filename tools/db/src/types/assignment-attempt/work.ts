@@ -2,6 +2,7 @@ import type { ProofSubmissionResult, ProofCompletionSubmissionResult } from './p
 import type { FitchDerivationAnswer } from './derivation-work.ts';
 import type { DependencyDerivationAnswer } from './dependency-derivation-work.ts';
 import type { NaturalDeductionTreeDerivationAnswer } from './natural-deduction-tree-derivation-work.ts';
+import type { TruthTreeAnswer } from './truth-tree-work.ts';
 import type {
   ConceptualResponse,
   ObjectiveGradedSubmissionResult,
@@ -21,6 +22,7 @@ export type AttemptAnswers = Record<
   | FitchDerivationAnswer
   | DependencyDerivationAnswer
   | NaturalDeductionTreeDerivationAnswer
+  | TruthTreeAnswer
 >;
 
 export interface SubmissionCounts {

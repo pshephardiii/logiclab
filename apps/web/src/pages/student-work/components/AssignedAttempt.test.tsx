@@ -1,4 +1,9 @@
 import {
+  truthTreeWork,
+  truthTreeAnswer,
+  truthTreeSolution,
+} from '../../../../test/truth-tree-work-fixture';
+import {
   retainedNaturalDeductionTreeWork,
   naturalDeductionTreeAnswer,
 } from '../../../../test/proof-work-fixture';
@@ -610,4 +615,28 @@ test('retained mixed tree work stays navigable and read-only without save/check/
   expect(screen.queryByRole('button', { name: 'Add node' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test('staged mixed truth-tree practice preserves saved work read-only and reveals only requested answers', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: truthTreeWork,
+    attempt: { ...saved, answers: { [itemB]: truthTreeAnswer } },
+  });
+  vi.mocked(api.readAssignedSolution).mockResolvedValue(truthTreeSolution);
+  const { user } = await open();
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Truth-tree editing controls are not available',
+  );
+  expect(screen.queryByRole('button', { name: 'Save problem' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+  for (const cell of cells()) expect(cell).toBeDisabled();
+  await user.selectOptions(screen.getByLabelText('Problem'), itemB);
+  expect(screen.getByRole('region', { name: 'Assigned truth tree' })).toHaveTextContent('R');
+  expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  expect(await screen.findByText('PRIVATE_REFERENCE_EXPLANATION')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });

@@ -41,6 +41,15 @@ import {
   objectiveSolution,
 } from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
+import {
+  validateTruthTreeAnswer,
+  evaluateTruthTreeAnswer,
+} from '../../application/student-work/truth-tree-response';
+import { assertTruthTreePracticePolicy } from '../../application/student-work/truth-tree-policy';
+import {
+  truthTreeContent,
+  truthTreeReferenceSolution,
+} from '../../application/problem/truth-tree/authoring';
 import { assignmentSummary } from '../assignment/summary';
 
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
@@ -109,7 +118,7 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
-        await admittedItems(em, assignmentId);
+        await admittedItems(em, assignment);
 
         const definition = item.problemVersion.definition;
 
@@ -125,9 +134,11 @@ export async function createStudentWorkStore(
         checkRevision(attempt, input.revision);
 
         const answers =
-          definition.type === 'derivation'
-            ? validateProofAnswer(definition, input.answers)
-            : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
+          definition.type === 'truth_tree'
+            ? validateTruthTreeAnswer(input.answers)
+            : definition.type === 'derivation'
+              ? validateProofAnswer(definition, input.answers)
+              : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
 
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
@@ -166,9 +177,27 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
-        await admittedItems(em, assignmentId);
+        await admittedItems(em, assignment);
 
         const definition = item.problemVersion.definition;
+
+        if (definition.type === 'truth_tree') {
+          assertTruthTreePracticePolicy(assignment);
+
+          const evidence = evaluateTruthTreeAnswer(
+            {
+              itemId: item.id,
+              problemVersionId: item.problemVersion.id,
+              content: truthTreeContent(definition),
+            },
+            input.answers,
+          );
+
+          return {
+            itemId: item.id,
+            feedback: { type: 'truth_tree' as const, report: evidence.report },
+          };
+        }
 
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);
@@ -211,7 +240,7 @@ export async function createStudentWorkStore(
           student: studentId,
         });
         if (retained?.submittedAt) return response(em, retained, assignment);
-        const assigned = await admittedItems(em, assignmentId);
+        const assigned = await admittedItems(em, assignment);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
 
         if (attempt.submittedAt) return response(em, attempt, assignment);
@@ -259,6 +288,11 @@ export async function createStudentWorkStore(
         if (!item) throw new StudentWorkError('not_found');
 
         const definition = item.problemVersion.definition;
+
+        if (definition.type === 'truth_tree') {
+          assertTruthTreePracticePolicy(assignment);
+          return { itemId, solution: truthTreeReferenceSolution(definition) };
+        }
 
         if (definition.type === 'derivation') {
           assertProofWorkPolicy(assignment);

@@ -1,6 +1,7 @@
 import { assignmentCompletionReady } from '../helpers/assigned-work-state';
 import { useCallback, useMemo, useState } from 'react';
 import type { ConceptualAnswer } from '@logiclab/contracts';
+import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentResponseValue as AssignmentResponseValue,
@@ -32,6 +33,7 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
   const [choiceBaseline, setChoiceBaseline] = useState<Record<string, ConceptualAnswer>>({});
   const [proofAnswers, setProofAnswers] = useState<Record<string, DerivationAnswer>>({});
   const [proofBaseline, setProofBaseline] = useState<Record<string, DerivationAnswer>>({});
+  const [truthTreeAnswers, setTruthTreeAnswers] = useState<Record<string, TruthTreeAnswer>>({});
 
   const dirty = useMemo(
     () => [
@@ -66,6 +68,14 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
 
     setProofAnswers(proofs);
     setProofBaseline(proofs);
+    setTruthTreeAnswers(
+      Object.fromEntries(
+        Object.entries(attempt?.answers ?? {}).filter(
+          (entry): entry is [string, TruthTreeAnswer] =>
+            !Array.isArray(entry[1]) && entry[1].type === 'truth_tree',
+        ),
+      ),
+    );
   }, []);
 
   const changeTableAnswers = useCallback((itemId: string, snapshot: Answers) => {
@@ -87,6 +97,8 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
         setBaseline((previous) => ({ ...previous, [itemId]: tableSnapshot }));
       else if (response.type === 'derivation')
         setProofBaseline((previous) => ({ ...previous, [itemId]: response }));
+      else if (response.type === 'truth_tree')
+        setTruthTreeAnswers((previous) => ({ ...previous, [itemId]: response }));
       else setChoiceBaseline((previous) => ({ ...previous, [itemId]: response }));
     },
     [],
@@ -100,13 +112,26 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
       ? submittedAnswers(item.exercise, tableSnapshot)
       : item.content.type === 'derivation'
         ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
-        : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
+        : item.content.type === 'truth_tree'
+          ? (truthTreeAnswers[item.id] ?? {
+              type: 'truth_tree',
+              tree: {
+                treeVersion: 1,
+                format: 'truth_tree',
+                rootBranchId: null,
+                occurrences: [],
+                branches: [],
+                expansions: [],
+              },
+            })
+          : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
   }
 
   return {
     answers,
     choiceAnswers,
     proofAnswers,
+    truthTreeAnswers,
     dirty,
     completionReady,
     resetAnswers,

@@ -1,6 +1,6 @@
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
-import { TruthTreeSummary } from './TruthTreeSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
 import { withFreshReference } from '../helpers/fresh-reference';

@@ -1,6 +1,7 @@
 import { SubmissionGradingPanel } from './SubmissionGradingPanel';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { AssignedTruthTree } from '../../../features/assignment/components/AssignedTruthTree';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import {
@@ -173,6 +174,15 @@ export function SubmissionReview({
                 readOnly
                 onAnswer={() => {}}
               />
+            ) : item.content.type === 'truth_tree' ? (
+              <AssignedTruthTree
+                item={{ ...item, content: item.content }}
+                answer={
+                  response && !Array.isArray(response) && response.type === 'truth_tree'
+                    ? response
+                    : undefined
+                }
+              />
             ) : item.content.type === 'derivation' ? (
               <AssignedDerivation
                 item={{ ...item, content: item.content }}
@@ -185,7 +195,9 @@ export function SubmissionReview({
               <AssignedConceptualQuestion
                 item={{ ...item, content: item.content }}
                 answer={
-                  response && !Array.isArray(response) && response.type !== 'derivation'
+                  response &&
+                  !Array.isArray(response) &&
+                  (response.type === 'true_false' || response.type === 'multiple_choice')
                     ? response
                     : undefined
                 }

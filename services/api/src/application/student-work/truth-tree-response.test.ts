@@ -201,9 +201,9 @@ test('unfilled completion is rejected and repeated occurrences retain separate g
   });
 });
 
-test('staged truth-tree responses still fail live saved-work admission', () => {
+test('saved practice transport accepts truth-tree drafts but never trusts fabricated scoring evidence', () => {
   const { answer } = fixture();
-  expect(savedStudentResponsesSchema.safeParse({ [itemId]: answer }).success).toBe(false);
+  expect(savedStudentResponsesSchema.safeParse({ [itemId]: answer }).success).toBe(true);
   expect(() => truthTreeScoringOutcome({ itemId, report: { status: 'verified' } })).toThrow(
     AssignmentScoringError,
   );

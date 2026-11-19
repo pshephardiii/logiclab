@@ -1,6 +1,6 @@
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ProblemOverview } from './ProblemOverview';
-import { TruthTreeSummary } from './TruthTreeSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import type {
   LibraryProblemListItem,
   LibraryProblemVersion,

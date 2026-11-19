@@ -9,7 +9,9 @@ export function supportedAssignmentDefinition(
   policy: { assessmentMode: string; feedbackTiming: string },
 ) {
   const definition = libraryProblemDefinition(input);
-  if (definition.type === 'truth_tree') throw new UnsupportedProblemDefinitionError();
+
+  if (definition.type === 'truth_tree' && policy.assessmentMode !== 'ungraded_practice')
+    throw new UnsupportedProblemDefinitionError();
 
   if (
     definition.type === 'derivation' &&

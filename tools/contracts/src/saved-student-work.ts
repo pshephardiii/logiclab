@@ -3,6 +3,13 @@ import {
   proofCompletionSubmissionResultSchema,
 } from './proof-submission';
 import { z } from 'zod';
+import {
+  truthTreeAnswerSchema,
+  saveTruthTreeAnswersSchema,
+  checkTruthTreeAnswersSchema,
+  truthTreeCheckFeedbackSchema,
+} from './truth-tree-work';
+import { truthTreeContentSchema, truthTreeSolutionSchema } from './truth-tree-authoring';
 import { assignmentSummarySchema } from './assignment';
 import { objectiveAssignmentResponseValueSchema } from './assignment-responses';
 import {
@@ -69,6 +76,7 @@ import {
 export const savedStudentResponseValueSchema = z.union([
   objectiveAssignmentResponseValueSchema,
   savedDerivationAnswerSchema,
+  truthTreeAnswerSchema,
 ]);
 
 export type SavedStudentResponseValue = z.infer<typeof savedStudentResponseValueSchema>;
@@ -169,6 +177,7 @@ export const savedStudentAssignmentSchema = assignmentSummarySchema.safeExtend({
       z.union([
         studentAssignmentItemSchema,
         z.strictObject({ ...studentAssignmentItemFields, content: savedDerivationContentSchema }),
+        z.strictObject({ ...studentAssignmentItemFields, content: truthTreeContentSchema }),
       ]),
     )
     .max(50),
@@ -188,6 +197,7 @@ export const savedStudentAnswersSchema = z.union([
   saveFitchAnswersSchema,
   saveDependencyAnswersSchema,
   saveNaturalDeductionTreeAnswersSchema,
+  saveTruthTreeAnswersSchema,
 ]);
 
 export type SavedStudentAnswers = z.infer<typeof savedStudentAnswersSchema>;
@@ -197,18 +207,27 @@ export const savedStudentCheckSchema = z.union([
   checkFitchAnswersSchema,
   checkDependencyAnswersSchema,
   checkNaturalDeductionTreeAnswersSchema,
+  checkTruthTreeAnswersSchema,
 ]);
 
 export type SavedStudentCheck = z.infer<typeof savedStudentCheckSchema>;
 
 export const savedStudentCheckResponseSchema = studentCheckResponseSchema.extend({
-  feedback: z.union([studentCheckResponseSchema.shape.feedback, derivationCheckFeedbackSchema]),
+  feedback: z.union([
+    studentCheckResponseSchema.shape.feedback,
+    derivationCheckFeedbackSchema,
+    truthTreeCheckFeedbackSchema,
+  ]),
 });
 
 export type SavedStudentCheckResponse = z.infer<typeof savedStudentCheckResponseSchema>;
 
 export const savedStudentSolutionResponseSchema = studentSolutionResponseSchema.extend({
-  solution: z.union([studentSolutionResponseSchema.shape.solution, savedDerivationSolutionSchema]),
+  solution: z.union([
+    studentSolutionResponseSchema.shape.solution,
+    savedDerivationSolutionSchema,
+    truthTreeSolutionSchema,
+  ]),
 });
 
 export type SavedStudentSolutionResponse = z.infer<typeof savedStudentSolutionResponseSchema>;

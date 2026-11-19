@@ -1,6 +1,7 @@
 import { FinalSubmissionPanel } from './FinalSubmissionPanel';
 import { AssignedProblemNavigation } from './AssignedProblemNavigation';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { AssignedTruthTree } from '../../../features/assignment/components/AssignedTruthTree';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -106,9 +107,11 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           )}
         {work.workUnavailable && (
           <p role="status">
-            This assignment contains natural-deduction tree work, which is unavailable for new
-            attempts. All saved problems remain visible read-only; this assignment cannot be edited,
-            checked or submitted. Contact your instructor for a supported replacement.
+            {work.assignment.items.some(
+              (item) => 'content' in item && item.content.type === 'truth_tree',
+            )
+              ? 'Truth-tree editing controls are not available in this view yet. Saved work remains readable.'
+              : 'This assignment contains natural-deduction tree work, which is unavailable for new attempts. All saved problems remain visible read-only; this assignment cannot be edited, checked or submitted. Contact your instructor for a supported replacement.'}
           </p>
         )}
         {!work.workUnavailable && (
@@ -215,6 +218,18 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeAnswer(item.id, row, column, value);
               }}
             />
+          ) : item.content.type === 'truth_tree' ? (
+            <AssignedTruthTree
+              item={{ ...item, content: item.content }}
+              answer={work.truthTreeAnswers[item.id]}
+              solution={
+                currentSolution &&
+                'type' in currentSolution &&
+                currentSolution.type === 'truth_tree'
+                  ? currentSolution
+                  : null
+              }
+            />
           ) : item.content.type === 'derivation' ? (
             <AssignedDerivation
               onPendingChange={setEntryPending}
@@ -267,7 +282,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                currentSolution.type !== 'derivation'
+                (currentSolution.type === 'true_false' ||
+                  currentSolution.type === 'multiple_choice')
                   ? currentSolution
                   : null
               }
