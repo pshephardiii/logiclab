@@ -96,9 +96,11 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
             <code>
               {version.definition.type === 'truth_table'
                 ? version.definition.formula
-                : version.definition.type === 'derivation'
-                  ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
-                  : version.definition.question}
+                : version.definition.type === 'truth_tree'
+                  ? `Truth tree · ${version.definition.conclusion}`
+                  : version.definition.type === 'derivation'
+                    ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
+                    : version.definition.question}
             </code>
             <button type="button" disabled={disabled} onClick={() => onAdd(version)}>
               Add version {version.version}

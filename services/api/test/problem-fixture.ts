@@ -3,7 +3,7 @@ import type {
   ProblemDraft,
   PublishedProblemVersion,
 } from '@logiclab/contracts';
-import type { DerivationReferenceCheckResponse } from '@logiclab/contracts/derivation';
+import type { LibraryReferenceCheckResponse } from '@logiclab/contracts/problem-library';
 import type {
   CreateLibraryProblemRequest as CreateProblemRequest,
   UpdateLibraryProblemRequest as UpdateProblemRequest,
@@ -38,10 +38,8 @@ export function problemFixture() {
   const auth = authFixture();
   const problems = {
     previewReference: jest.fn(
-      async (
-        _ownerId: string,
-        _problemId: string,
-      ): Promise<DerivationReferenceCheckResponse | null> => null,
+      async (_ownerId: string, _problemId: string): Promise<LibraryReferenceCheckResponse | null> =>
+        null,
     ),
     publish: jest.fn(
       async (

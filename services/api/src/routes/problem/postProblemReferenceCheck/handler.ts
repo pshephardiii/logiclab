@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify';
 import { emptyProblemRequestSchema, problemParamsSchema } from '@logiclab/contracts';
-import { derivationReferenceCheckResponseSchema } from '@logiclab/contracts/derivation';
+import { libraryReferenceCheckResponseSchema } from '@logiclab/contracts/problem-library';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
 import { ProblemError } from '../errors';
@@ -17,6 +17,6 @@ export function postProblemReferenceCheckHandler(context: ProblemContext) {
 
     if (!result) throw new ProblemError(404, 'PROBLEM_NOT_FOUND', 'Problem not found.');
 
-    return derivationReferenceCheckResponseSchema.parse(result);
+    return libraryReferenceCheckResponseSchema.parse(result);
   };
 }

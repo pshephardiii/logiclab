@@ -1,5 +1,6 @@
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeSummary } from './TruthTreeSummary';
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
 import { withFreshReference } from '../helpers/fresh-reference';
@@ -152,6 +153,16 @@ export function ProblemForm({
 
     await onSave(input.data);
   }
+
+  if (problem?.definition.type === 'truth_tree')
+    return (
+      <section className="panel" aria-label="Saved truth tree">
+        <h2>{problem.title}</h2>
+        <p role="status">Truth-tree editing controls are not available in this view yet.</p>
+        {problem.instructions && <p>{problem.instructions}</p>}
+        <TruthTreeSummary definition={problem.definition} />
+      </section>
+    );
 
   if (unavailable && problem?.definition.type === 'derivation')
     return (

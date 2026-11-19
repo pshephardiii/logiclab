@@ -75,6 +75,10 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
 
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
+  // This type has a read-only panel until its editor is ready. An injected selection must
+  // fail draft validation rather than overwrite the saved reference with another question type.
+  if (fields.type === 'truth_tree') return { type: 'truth_tree' };
+
   if (fields.type === 'derivation') return fields.derivation;
 
   const common = { type: fields.type, definitionVersion: 1 };

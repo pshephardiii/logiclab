@@ -30,7 +30,8 @@ export async function createProblemStore(
 
       const definition = libraryProblemDefinition(problem.definition);
 
-      if (definition.type !== 'derivation') throw new UnsupportedProblemDefinitionError();
+      if (definition.type !== 'derivation' && definition.type !== 'truth_tree')
+        throw new UnsupportedProblemDefinitionError();
 
       return {
         problemId: problem.id,

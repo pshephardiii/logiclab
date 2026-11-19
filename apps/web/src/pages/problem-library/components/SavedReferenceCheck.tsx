@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { DerivationReferenceCheckResponse } from '@logiclab/contracts/derivation';
+import type { LibraryReferenceCheckResponse } from '@logiclab/contracts/problem-library';
 import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
 import * as api from '../../../api/problems/api';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
@@ -9,7 +9,7 @@ import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft }) {
   const { checkReference } = useResourceApi(api);
   const request = useAbortableRequest();
-  const [result, setResult] = useState<DerivationReferenceCheckResponse | null>(null);
+  const [result, setResult] = useState<LibraryReferenceCheckResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +37,10 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
   }
 
   const report = result?.check.status === 'checked' ? result.check.report : null;
+  const diagnostics =
+    report && 'argumentStatus' in report
+      ? [...report.steps.diagnostics, ...report.diagnostics]
+      : (report?.diagnostics ?? []);
 
   return (
     <section aria-label="Saved reference check" aria-busy={busy}>
@@ -44,7 +48,7 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
         {busy ? 'Checking…' : 'Check saved reference'}
       </button>
       <p className="help">
-        Checks the saved statement and permitted rules. Publication always checks again.
+        Checks the saved statement and reference. Publication always checks again.
       </p>
       {error && (
         <p role="alert" className="error">
@@ -54,19 +58,26 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
       {result && (
         <p role="status">
           {result.check.status === 'missing'
-            ? 'No reference proof saved.'
-            : report?.status === 'accepted'
-              ? 'Reference accepted.'
-              : report?.status === 'needs_review'
-                ? 'Reference needs correction before publication.'
-                : 'Reference could not be fully assessed.'}
+            ? problem.definition.type === 'truth_tree'
+              ? 'No reference tree saved.'
+              : 'No reference proof saved.'
+            : report && 'argumentStatus' in report && report.status === 'verified'
+              ? `Reference verified: ${report.argumentStatus} argument.`
+              : report?.status === 'accepted'
+                ? 'Reference accepted.'
+                : report?.status === 'needs_review' ||
+                    report?.status === 'invalid' ||
+                    report?.status === 'incomplete'
+                  ? 'Reference needs correction before publication.'
+                  : 'Reference could not be fully assessed.'}
         </p>
       )}
-      {report && report.diagnostics.length > 0 && (
+      {diagnostics.length > 0 && (
         <ul>
-          {report.diagnostics.map((diagnostic, index) => (
+          {diagnostics.map((diagnostic, index) => (
             <li key={index}>
-              {diagnostic.stepIndex !== undefined &&
+              {'stepIndex' in diagnostic &&
+                diagnostic.stepIndex !== undefined &&
                 `${problem.definition.type === 'derivation' && problem.definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
               {diagnostic.message}
             </li>

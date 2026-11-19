@@ -3,6 +3,8 @@ import { problemFixture, problem } from '../../../../test/problem-fixture';
 import { sessionId } from '../../../../test/auth-fixture';
 import { derivationDefinitionFixture } from '../../../../test/derivation-fixture';
 import { checkFitchReference } from '../../../application/problem/derivation/fitch/authoring';
+import { checkTruthTreeReference } from '../../../application/problem/truth-tree/authoring';
+import { truthTreeDefinitionFixture } from '../../../../test/truth-tree-fixture';
 
 const url = `/api/problems/${problem.id}/reference-check`;
 const result = {
@@ -10,6 +12,33 @@ const result = {
   updatedAt: problem.updatedAt,
   check: checkFitchReference(derivationDefinitionFixture()),
 };
+
+test.each(['valid', 'invalid'] as const)(
+  'serializes a verified %s truth-tree report through the owner route',
+  async (outcome) => {
+    const { context, headers, problems } = problemFixture();
+    const expected = {
+      problemId: problem.id,
+      updatedAt: problem.updatedAt,
+      check: checkTruthTreeReference(truthTreeDefinitionFixture(outcome)),
+    };
+    problems.previewReference.mockResolvedValue(expected);
+    const app = buildApp({ problem: context });
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url,
+        payload: {},
+        headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+      });
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['cache-control']).toBe('no-store');
+      expect(response.json()).toEqual(expected);
+    } finally {
+      await app.close();
+    }
+  },
+);
 
 test('checks the saved owner reference, returns bounded diagnostics and never mutates library data', async () => {
   const { context, headers, problems, user } = problemFixture();

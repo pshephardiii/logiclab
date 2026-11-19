@@ -5,6 +5,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import type { ProblemDraft, PublishedProblemVersion } from '@logiclab/contracts';
 import * as api from '../../../api/problems/api';
 import { ProblemLibrary } from './ProblemLibrary';
+import { truthTreeDraft } from '../../../../test/truth-tree';
 
 installDialogStub();
 
@@ -45,6 +46,56 @@ beforeEach(() => {
   });
   vi.mocked(api.listVersions).mockResolvedValue({ versions: [version], nextOffset: null });
   vi.mocked(api.publishProblem).mockResolvedValue({ ...version, version: 2 });
+});
+
+test('truth-tree library/history/preview are safe to read while editing and assignment use are staged', async () => {
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [{ ...truthTreeDraft, publication: null }],
+    nextOffset: null,
+  });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [{ ...version, title: 'Truth-tree snapshot', definition: truthTreeDraft.definition }],
+    nextOffset: null,
+  });
+  render(<ProblemLibrary />);
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: truthTreeDraft.title }));
+  await screen.findByRole('heading', { name: 'Version 1: Truth-tree snapshot' });
+  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check saved reference' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Archive problem' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Publish saved draft' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
+  expect(screen.getByRole('region', { name: 'Truth-tree version preview' })).toHaveTextContent(
+    'Conclusion: Q',
+  );
+  expect(api.saveProblem).not.toHaveBeenCalled();
+  expect(protectedWork()).toBe(false);
+});
+
+test('published truth trees open as snapshots with an explicit read-only draft view', async () => {
+  vi.mocked(api.listProblems).mockResolvedValue({
+    problems: [
+      {
+        ...truthTreeDraft,
+        publication: { version: 1, publishedAt: version.publishedAt, hasDraftChanges: false },
+      },
+    ],
+    nextOffset: null,
+  });
+  vi.mocked(api.listVersions).mockResolvedValue({
+    versions: [{ ...version, title: 'Truth-tree snapshot', definition: truthTreeDraft.definition }],
+    nextOffset: null,
+  });
+  render(<ProblemLibrary />);
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: truthTreeDraft.title }));
+  await screen.findByRole('heading', { name: 'Truth-tree snapshot' });
+  expect(screen.queryByRole('button', { name: 'Edit draft' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'View saved draft' }));
+  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
 });
 function protectedWork() {
   const event = new Event('beforeunload', { cancelable: true });

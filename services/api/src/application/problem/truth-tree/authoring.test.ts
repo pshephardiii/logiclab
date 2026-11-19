@@ -17,6 +17,11 @@ import {
 } from './authoring';
 import { TruthTreeAuthoringError, TruthTreePublicationError } from './errors';
 import { authoringDefinition } from '../library-definition';
+import { supportedAssignmentDefinition } from '../../assignment/definition-support';
+import type {
+  TruthTreeDefinition as StoredDefinition,
+  TruthTree as StoredTree,
+} from '@logiclab/db' with { 'resolution-mode': 'import' };
 import {
   truthTreeDefinitionFixture as fixture,
   truthTreeIds,
@@ -248,14 +253,28 @@ test('reveal contracts reject missing/mismatched counterexamples and foreign bra
   ).toBe(false);
 });
 
-test('staged authoring support leaves live problem and assignment admission guarded', () => {
+test('owner-library admission remains separate from guarded assignment admission', () => {
   const definition = fixture();
   expect(truthTreeDefinitionSchema.safeParse(definition).success).toBe(true);
-  expect(libraryProblemDefinitionSchema.safeParse(definition).success).toBe(false);
+  expect(libraryProblemDefinitionSchema.safeParse(definition).success).toBe(true);
   expect(createProblemRequestSchema.safeParse({ title: 'Truth tree', definition }).success).toBe(
     false,
   );
-  expect(() => authoringDefinition(definition)).toThrow();
+  expect(authoringDefinition(definition)).toEqual(definition);
+  expect(() =>
+    supportedAssignmentDefinition(definition, {
+      assessmentMode: 'graded',
+      feedbackTiming: 'on_submission',
+    }),
+  ).toThrow();
   expect(isProofFormatAvailable('truth_tree')).toBe(false);
   expect(isProofFormatAvailable('tree')).toBe(false);
+});
+
+test('stored truth-tree/reference JSON types exactly round-trip through transport contracts', () => {
+  const stored: StoredDefinition = fixture();
+  const transported: ReturnType<typeof fixture> = stored;
+  const reference: StoredTree = transported.referenceTree!;
+  expect(reference).toEqual(stored.referenceTree);
+  expect(truthTreeDefinitionSchema.parse(JSON.parse(JSON.stringify(stored)))).toEqual(transported);
 });

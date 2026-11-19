@@ -1,4 +1,4 @@
-import { derivationReferenceCheckResponseSchema } from '@logiclab/contracts/derivation';
+import { libraryReferenceCheckResponseSchema } from '@logiclab/contracts/problem-library';
 import {
   libraryProblemListResponseSchema,
   libraryProblemResponseSchema,
@@ -73,7 +73,7 @@ export function createApi(request: typeof requestAccountJson = requestAccountJso
 
   function checkReference(id: string, signal: AbortSignal) {
     return request(`/api/problems/${id}/reference-check`, {
-      schema: derivationReferenceCheckResponseSchema,
+      schema: libraryReferenceCheckResponseSchema,
       ...problemRequestOptions,
       signal,
       body: {},

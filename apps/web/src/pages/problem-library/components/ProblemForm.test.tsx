@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest';
 import type { ProblemDraft } from '@logiclab/contracts';
 import { ProblemForm } from './ProblemForm';
 import { ConceptualProblemPreview } from './ConceptualProblemPreview';
+import { truthTreeDraft } from '../../../../test/truth-tree';
 
 function setup(problem: ProblemDraft | null = null) {
   const props = {
@@ -31,6 +32,31 @@ const saved: ProblemDraft = {
     explanation: 'Private explanation.',
   },
 };
+
+test('truth-tree drafts are readable without save/conversion controls or dirty registrations', () => {
+  const onDirty = vi.fn();
+  const onSave = vi.fn();
+  render(
+    <ProblemForm
+      problem={truthTreeDraft}
+      busy={false}
+      onDirty={onDirty}
+      onSave={onSave}
+      onPreview={vi.fn()}
+    />,
+  );
+  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toHaveTextContent(
+    'Truth-tree argument',
+  );
+  expect(screen.getByRole('region', { name: 'Truth-tree statement' })).toHaveTextContent(
+    'Conclusion: Q',
+  );
+  expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  expect(screen.queryByText('PRIVATE_TREE_EXPLANATION')).not.toBeInTheDocument();
+  expect(onDirty).toHaveBeenCalledWith(false);
+  expect(onSave).not.toHaveBeenCalled();
+});
 
 test('authors true/false with an explicit false key and trimmed explanation', async () => {
   const { user, onSave } = setup();

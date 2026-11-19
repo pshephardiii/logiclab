@@ -40,6 +40,8 @@ export {
 } from './types/assignment/enums.ts';
 
 export { ProblemType } from './types/problem/enums.ts';
+export type { TruthTreeDefinition } from './types/problem/truth-tree.ts';
+export type { TruthTree } from './types/truth-tree/work.ts';
 export type {
   FitchDerivationDefinition,
   FitchReferenceProof,

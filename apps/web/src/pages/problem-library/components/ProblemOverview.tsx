@@ -5,6 +5,7 @@ import type {
 } from '@logiclab/contracts/problem-library';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeSummary } from './TruthTreeSummary';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 
 /** Display the immutable published snapshot, not a potentially different editable draft. */
@@ -25,17 +26,23 @@ export function ProblemOverview({
       {published && (
         <div role="status" className="publication-success">
           <strong>✓ Published version {published.version}.</strong>
-          <p>Your problem is ready to add to an assignment.</p>
+          <p>
+            {problem.definition.type === 'truth_tree'
+              ? 'Snapshot saved. Truth trees are not yet available in assignments.'
+              : 'Your problem is ready to add to an assignment.'}
+          </p>
         </div>
       )}
       <div className="problem-overview-heading">
         <h2>{version?.title ?? 'Published problem'}</h2>
         <button type="button" className="secondary" onClick={onEdit}>
-          {!isProblemMethodAvailable(problem.definition)
-            ? 'View retained draft'
-            : problem.archivedAt
-              ? 'View archived draft'
-              : 'Edit draft'}
+          {problem.definition.type === 'truth_tree'
+            ? 'View saved draft'
+            : !isProblemMethodAvailable(problem.definition)
+              ? 'View retained draft'
+              : problem.archivedAt
+                ? 'View archived draft'
+                : 'Edit draft'}
         </button>
       </div>
       {problem.archivedAt && (
@@ -54,7 +61,9 @@ export function ProblemOverview({
         <>
           <p className="problem-status-badge">Published · Version {version.version}</p>
           {version.instructions && <p>{version.instructions}</p>}
-          {version.definition.type === 'derivation' ? (
+          {version.definition.type === 'truth_tree' ? (
+            <TruthTreeSummary definition={version.definition} />
+          ) : version.definition.type === 'derivation' ? (
             <DerivationSummary definition={version.definition} />
           ) : version.definition.type === 'truth_table' ? (
             <p>

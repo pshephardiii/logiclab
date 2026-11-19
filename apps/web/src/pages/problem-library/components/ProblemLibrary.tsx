@@ -1,5 +1,6 @@
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ProblemOverview } from './ProblemOverview';
+import { TruthTreeSummary } from './TruthTreeSummary';
 import type {
   LibraryProblemListItem,
   LibraryProblemVersion,
@@ -159,12 +160,16 @@ export function ProblemLibrary() {
       )}
       {editing &&
         !focusedReference &&
-        library.selected?.definition.type === 'derivation' &&
-        isProblemMethodAvailable(library.selected.definition) &&
+        (library.selected?.definition.type === 'truth_tree' ||
+          (library.selected?.definition.type === 'derivation' &&
+            isProblemMethodAvailable(library.selected.definition))) &&
         !dirty &&
         !library.busy && (
           <section className="panel">
-            <h2>Check saved derivation</h2>
+            <h2>
+              Check saved{' '}
+              {library.selected.definition.type === 'truth_tree' ? 'truth tree' : 'derivation'}
+            </h2>
             <SavedReferenceCheck
               key={`${library.selected.id}:${library.selected.updatedAt}`}
               problem={library.selected}
@@ -176,11 +181,13 @@ export function ProblemLibrary() {
           <section className="panel">
             <h2>Library status</h2>
             <p>
-              {!isProblemMethodAvailable(library.selected.definition)
-                ? 'Retained proof method: read-only. Restoring does not enable editing or publication.'
-                : library.selected.archivedAt
-                  ? 'Archived: restore to edit or publish. Published versions remain available.'
-                  : 'Active: available in your private library.'}
+              {library.selected.definition.type === 'truth_tree'
+                ? 'Truth tree: read-only in this view.'
+                : !isProblemMethodAvailable(library.selected.definition)
+                  ? 'Retained proof method: read-only. Restoring does not enable editing or publication.'
+                  : library.selected.archivedAt
+                    ? 'Archived: restore to edit or publish. Published versions remain available.'
+                    : 'Active: available in your private library.'}
             </p>
             <button disabled={library.busy || dirty} onClick={() => void library.archive()}>
               {library.selected.archivedAt ? 'Restore problem' : 'Archive problem'}
@@ -206,7 +213,12 @@ export function ProblemLibrary() {
           <button className="secondary" onClick={() => setPreview(null)}>
             Close preview
           </button>
-          {preview.definition.type === 'derivation' ? (
+          {preview.definition.type === 'truth_tree' ? (
+            <section className="panel" aria-label="Truth-tree version preview">
+              <h2>Truth-tree preview</h2>
+              <TruthTreeSummary definition={preview.definition} />
+            </section>
+          ) : preview.definition.type === 'derivation' ? (
             <section className="panel" aria-label="Derivation version preview">
               <h2>Derivation preview</h2>
               <DerivationSummary definition={preview.definition} />

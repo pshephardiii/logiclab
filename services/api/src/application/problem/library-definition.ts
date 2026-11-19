@@ -8,6 +8,12 @@ import {
   checkDependencyReference,
 } from './derivation/dependency/authoring';
 import type { DerivationReferenceCheck } from './derivation/reference-check';
+import type { TruthTreeReferenceCheck } from '@logiclab/contracts/truth-tree-authoring';
+import {
+  validateTruthTreeDefinition,
+  checkTruthTreeReference,
+  truthTreePublicationDefinition,
+} from './truth-tree/authoring';
 import {
   validateNaturalDeductionTreeDefinition,
   checkNaturalDeductionTreeReference,
@@ -15,6 +21,9 @@ import {
 
 /** Private library validation; this is deliberately not an assignment-admission helper. */
 export function libraryProblemDefinition(value: unknown): LibraryProblemDefinition {
+  if (typeof value === 'object' && value !== null && 'type' in value && value.type === 'truth_tree')
+    return validateTruthTreeDefinition(value);
+
   if (
     typeof value === 'object' &&
     value !== null &&
@@ -42,7 +51,18 @@ export function authoringDefinition(value: unknown): LibraryProblemDefinition {
 /** Check the authoritative saved definition with its own format's checker. */
 export function libraryReferenceCheck(
   definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>,
-): DerivationReferenceCheck {
+): DerivationReferenceCheck;
+export function libraryReferenceCheck(
+  definition: Extract<LibraryProblemDefinition, { type: 'truth_tree' }>,
+): TruthTreeReferenceCheck;
+export function libraryReferenceCheck(
+  definition: Extract<LibraryProblemDefinition, { type: 'derivation' | 'truth_tree' }>,
+): DerivationReferenceCheck | TruthTreeReferenceCheck;
+export function libraryReferenceCheck(
+  definition: Extract<LibraryProblemDefinition, { type: 'derivation' | 'truth_tree' }>,
+): DerivationReferenceCheck | TruthTreeReferenceCheck {
+  if (definition.type === 'truth_tree') return checkTruthTreeReference(definition);
+
   if (definition.format === 'tree') return checkNaturalDeductionTreeReference(definition);
 
   return definition.format === 'dependency'
@@ -53,6 +73,8 @@ export function libraryReferenceCheck(
 /** Call under the saved problem's lock immediately before creating its immutable snapshot. */
 export function publicationDefinition(value: unknown): LibraryProblemDefinition {
   const definition = authoringDefinition(value);
+
+  if (definition.type === 'truth_tree') return truthTreePublicationDefinition(definition);
 
   if (definition.type === 'derivation') {
     const check = libraryReferenceCheck(definition);

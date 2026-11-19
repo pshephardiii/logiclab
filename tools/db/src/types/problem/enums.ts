@@ -4,4 +4,5 @@ export enum ProblemType {
   TrueFalse = 'true_false',
   MultipleChoice = 'multiple_choice',
   Derivation = 'derivation',
+  TruthTree = 'truth_tree',
 }

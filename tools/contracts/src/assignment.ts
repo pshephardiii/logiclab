@@ -6,7 +6,10 @@ import {
 import { gradeReleaseTimingSchema } from './assignment-results-release';
 import { z } from 'zod';
 import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
-import { libraryProblemVersionSchema } from './problem-library';
+import { assignmentProblemVersionSchema } from './assignment-problem';
+
+export { assignmentProblemDefinitionSchema } from './assignment-problem';
+export type { AssignmentProblemDefinition } from './assignment-problem';
 
 // Independent policy dimensions; additional modes require application/database support.
 export const assignmentPolicySchema = z
@@ -52,7 +55,7 @@ export const assignmentItemSchema = z.strictObject({
   id: z.uuid(),
   position: z.number().int().positive(),
   maxPoints: assignmentItemPointsSchema.optional(),
-  problemVersion: libraryProblemVersionSchema,
+  problemVersion: assignmentProblemVersionSchema,
 });
 
 export type AssignmentItem = z.infer<typeof assignmentItemSchema>;

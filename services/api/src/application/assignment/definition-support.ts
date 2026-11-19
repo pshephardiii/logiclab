@@ -1,6 +1,7 @@
 import { assertProofFormatAvailable } from '../proof/availability';
 import { libraryProblemDefinition } from '../problem/library-definition';
 import { AssignmentOperationError } from './errors';
+import { UnsupportedProblemDefinitionError } from '../problem/definition-support';
 
 /** Proofs in final-submission modes expose diagnostics only under result-release policy. */
 export function supportedAssignmentDefinition(
@@ -8,6 +9,7 @@ export function supportedAssignmentDefinition(
   policy: { assessmentMode: string; feedbackTiming: string },
 ) {
   const definition = libraryProblemDefinition(input);
+  if (definition.type === 'truth_tree') throw new UnsupportedProblemDefinitionError();
 
   if (
     definition.type === 'derivation' &&

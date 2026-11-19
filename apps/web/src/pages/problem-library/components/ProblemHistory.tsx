@@ -6,6 +6,7 @@ import type {
   LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeSummary } from './TruthTreeSummary';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
 type Props = {
@@ -27,8 +28,9 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
       <h2>Published versions</h2>
       {unavailable ? (
         <p>
-          New publication is unavailable for this proof method. Retained versions remain available
-          below.
+          {problem.definition.type === 'truth_tree'
+            ? 'Truth-tree publication controls are not available in this view yet. Saved versions remain visible.'
+            : 'New publication is unavailable for this proof method. Retained versions remain available below.'}
         </p>
       ) : (
         <p>
@@ -73,7 +75,9 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
               Version {version.version}: {version.title}
             </h3>
             <p>{version.instructions || 'No instructions.'}</p>
-            {version.definition.type === 'derivation' ? (
+            {version.definition.type === 'truth_tree' ? (
+              <TruthTreeSummary definition={version.definition} />
+            ) : version.definition.type === 'derivation' ? (
               <DerivationSummary definition={version.definition} />
             ) : version.definition.type === 'truth_table' ? (
               <code>{version.definition.formula}</code>
