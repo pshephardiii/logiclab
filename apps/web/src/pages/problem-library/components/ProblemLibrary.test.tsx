@@ -48,7 +48,7 @@ beforeEach(() => {
   vi.mocked(api.publishProblem).mockResolvedValue({ ...version, version: 2 });
 });
 
-test('truth-tree library/history/preview are safe to read while editing and assignment use are staged', async () => {
+test('truth-tree library editing/publication is available while assigned construction stays staged', async () => {
   vi.mocked(api.listProblems).mockResolvedValue({
     problems: [{ ...truthTreeDraft, publication: null }],
     nextOffset: null,
@@ -61,11 +61,11 @@ test('truth-tree library/history/preview are safe to read while editing and assi
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: truthTreeDraft.title }));
   await screen.findByRole('heading', { name: 'Version 1: Truth-tree snapshot' });
-  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Title')).toHaveValue(truthTreeDraft.title);
   expect(screen.getByRole('button', { name: 'Check saved reference' })).toBeEnabled();
   expect(screen.getByRole('button', { name: 'Archive problem' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Publish saved draft' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Publish saved draft' })).toBeEnabled();
   await user.click(screen.getByRole('button', { name: 'Preview version 1' }));
   expect(screen.getByRole('region', { name: 'Truth-tree version preview' })).toHaveTextContent(
     'Conclusion: Q',
@@ -74,7 +74,7 @@ test('truth-tree library/history/preview are safe to read while editing and assi
   expect(protectedWork()).toBe(false);
 });
 
-test('published truth trees open as snapshots with an explicit read-only draft view', async () => {
+test('published truth trees open as snapshots with an explicit draft edit action', async () => {
   vi.mocked(api.listProblems).mockResolvedValue({
     problems: [
       {
@@ -92,10 +92,10 @@ test('published truth trees open as snapshots with an explicit read-only draft v
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: truthTreeDraft.title }));
   await screen.findByRole('heading', { name: 'Truth-tree snapshot' });
-  expect(screen.queryByRole('button', { name: 'Edit draft' })).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: 'View saved draft' }));
-  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Edit draft' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Edit draft' }));
+  expect(screen.getByLabelText('Title')).toHaveValue(truthTreeDraft.title);
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
 });
 function protectedWork() {
   const event = new Event('beforeunload', { cancelable: true });

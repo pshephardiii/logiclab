@@ -1,3 +1,4 @@
+import { TruthTreeFeedback } from '../../truth-tree/components/TruthTreeFeedback';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import type { TruthTreeSolution } from '@logiclab/contracts/truth-tree-authoring';
@@ -37,25 +38,7 @@ export function AssignedTruthTree({
       ) : (
         <p>No saved tree.</p>
       )}
-      {report && (
-        <section aria-label="Truth-tree feedback">
-          <p>
-            Tree check: {report.status}. Argument: {report.argumentStatus}.
-          </p>
-          {report.branches.length > 0 && (
-            <ul>
-              {report.branches.map((branch) => (
-                <li key={branch.branchId}>Path: {branch.status.replaceAll('_', ' ')}.</li>
-              ))}
-            </ul>
-          )}
-          <ul>
-            {[...report.steps.diagnostics, ...report.diagnostics].map((diagnostic, index) => (
-              <li key={index}>{diagnostic.message}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {report && <TruthTreeFeedback report={report} />}
       {solution && (
         <section aria-label="Revealed truth-tree answer">
           <p>Argument: {solution.argumentStatus}.</p>

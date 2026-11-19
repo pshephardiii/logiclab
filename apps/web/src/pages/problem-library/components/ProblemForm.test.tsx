@@ -33,7 +33,7 @@ const saved: ProblemDraft = {
   },
 };
 
-test('truth-tree drafts are readable without save/conversion controls or dirty registrations', () => {
+test('truth-tree drafts load editable private fields without creating work or becoming dirty', () => {
   const onDirty = vi.fn();
   const onSave = vi.fn();
   render(
@@ -45,15 +45,12 @@ test('truth-tree drafts are readable without save/conversion controls or dirty r
       onPreview={vi.fn()}
     />,
   );
-  expect(screen.getByRole('region', { name: 'Saved truth tree' })).toHaveTextContent(
-    'Truth-tree argument',
+  expect(screen.getByLabelText('Title')).toHaveValue('Truth-tree argument');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
+  expect(screen.getByLabelText('Reference explanation (optional)')).toHaveValue(
+    'PRIVATE_TREE_EXPLANATION',
   );
-  expect(screen.getByRole('region', { name: 'Truth-tree statement' })).toHaveTextContent(
-    'Conclusion: Q',
-  );
-  expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
-  expect(screen.queryByText('PRIVATE_TREE_EXPLANATION')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
   expect(onDirty).toHaveBeenCalledWith(false);
   expect(onSave).not.toHaveBeenCalled();
 });

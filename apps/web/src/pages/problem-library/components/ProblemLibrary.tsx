@@ -1,4 +1,4 @@
-import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
 import { ProblemOverview } from './ProblemOverview';
 import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import type {
@@ -162,7 +162,7 @@ export function ProblemLibrary() {
         !focusedReference &&
         (library.selected?.definition.type === 'truth_tree' ||
           (library.selected?.definition.type === 'derivation' &&
-            isProblemMethodAvailable(library.selected.definition))) &&
+            isProblemAuthoringAvailable(library.selected.definition))) &&
         !dirty &&
         !library.busy && (
           <section className="panel">
@@ -181,13 +181,11 @@ export function ProblemLibrary() {
           <section className="panel">
             <h2>Library status</h2>
             <p>
-              {library.selected.definition.type === 'truth_tree'
-                ? 'Truth tree: read-only in this view.'
-                : !isProblemMethodAvailable(library.selected.definition)
-                  ? 'Retained proof method: read-only. Restoring does not enable editing or publication.'
-                  : library.selected.archivedAt
-                    ? 'Archived: restore to edit or publish. Published versions remain available.'
-                    : 'Active: available in your private library.'}
+              {!isProblemAuthoringAvailable(library.selected.definition)
+                ? 'Retained proof method: read-only. Restoring does not enable editing or publication.'
+                : library.selected.archivedAt
+                  ? 'Archived: restore to edit or publish. Published versions remain available.'
+                  : 'Active: available in your private library.'}
             </p>
             <button disabled={library.busy || dirty} onClick={() => void library.archive()}>
               {library.selected.archivedAt ? 'Restore problem' : 'Archive problem'}

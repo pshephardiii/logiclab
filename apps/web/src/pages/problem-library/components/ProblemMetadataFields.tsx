@@ -42,6 +42,7 @@ export function ProblemMetadataFields({
         <option value="true_false">True/false</option>
         <option value="multiple_choice">Multiple choice</option>
         <option value="derivation">Derivation</option>
+        <option value="truth_tree">Truth tree</option>
       </select>
       <p className="help">
         Only the selected problem type is saved. Switching types keeps your fields until you leave

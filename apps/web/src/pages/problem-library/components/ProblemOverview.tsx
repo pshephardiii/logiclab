@@ -1,4 +1,4 @@
-import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
 import type {
   LibraryProblemDraft,
   LibraryProblemVersion,
@@ -28,7 +28,7 @@ export function ProblemOverview({
           <strong>✓ Published version {published.version}.</strong>
           <p>
             {problem.definition.type === 'truth_tree'
-              ? 'Snapshot saved. Truth trees are not yet available in assignments.'
+              ? 'Your truth-tree snapshot is published.'
               : 'Your problem is ready to add to an assignment.'}
           </p>
         </div>
@@ -36,13 +36,11 @@ export function ProblemOverview({
       <div className="problem-overview-heading">
         <h2>{version?.title ?? 'Published problem'}</h2>
         <button type="button" className="secondary" onClick={onEdit}>
-          {problem.definition.type === 'truth_tree'
-            ? 'View saved draft'
-            : !isProblemMethodAvailable(problem.definition)
-              ? 'View retained draft'
-              : problem.archivedAt
-                ? 'View archived draft'
-                : 'Edit draft'}
+          {!isProblemAuthoringAvailable(problem.definition)
+            ? 'View retained draft'
+            : problem.archivedAt
+              ? 'View archived draft'
+              : 'Edit draft'}
         </button>
       </div>
       {problem.archivedAt && (

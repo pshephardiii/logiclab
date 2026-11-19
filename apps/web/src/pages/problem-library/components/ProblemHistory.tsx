@@ -1,4 +1,4 @@
-import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
+import { isProblemAuthoringAvailable } from '../../../features/proof/helpers/method-availability';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type {
   LibraryProblemDraft,
@@ -22,15 +22,14 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
     problem.id,
   );
 
-  const unavailable = !isProblemMethodAvailable(problem.definition);
+  const unavailable = !isProblemAuthoringAvailable(problem.definition);
   return (
     <section className="panel" aria-label="Published versions" aria-busy={loading || publishing}>
       <h2>Published versions</h2>
       {unavailable ? (
         <p>
-          {problem.definition.type === 'truth_tree'
-            ? 'Truth-tree publication controls are not available in this view yet. Saved versions remain visible.'
-            : 'New publication is unavailable for this proof method. Retained versions remain available below.'}
+          New publication is unavailable for this proof method. Retained versions remain available
+          below.
         </p>
       ) : (
         <p>

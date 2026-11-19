@@ -1,3 +1,4 @@
+import type { TruthTreeDefinition } from '@logiclab/contracts/truth-tree-authoring';
 import {
   libraryProblemDefinitionSchema,
   type LibraryProblemDraft,
@@ -16,6 +17,7 @@ export type ProblemEditorFields = {
   instructions: string;
   type: LibraryProblemDefinition['type'];
   derivation: AuthoringDerivationDefinition;
+  truthTree: TruthTreeDefinition;
   derivationLabels: Record<string, string>;
   formula: string;
   question: string;
@@ -33,6 +35,19 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
     instructions: problem?.instructions ?? '',
     type: definition?.type ?? 'truth_table',
     formula: definition?.type === 'truth_table' ? definition.formula : '',
+    truthTree:
+      definition?.type === 'truth_tree'
+        ? structuredClone(definition)
+        : {
+            type: 'truth_tree',
+            definitionVersion: 1,
+            checkerVersion: 1,
+            ruleCatalogVersion: 1,
+            premises: [],
+            conclusion: '',
+            referenceTree: null,
+            explanation: null,
+          },
     derivation:
       definition?.type === 'derivation'
         ? structuredClone(definition)
@@ -75,9 +90,7 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
 
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
-  // This type has a read-only panel until its editor is ready. An injected selection must
-  // fail draft validation rather than overwrite the saved reference with another question type.
-  if (fields.type === 'truth_tree') return { type: 'truth_tree' };
+  if (fields.type === 'truth_tree') return fields.truthTree;
 
   if (fields.type === 'derivation') return fields.derivation;
 
