@@ -45,7 +45,9 @@ export const submissionReviewSchema = z
   })
   .superRefine((review, context) => {
     const hasProof = review.assignment.items.some(
-      (item) => 'content' in item && item.content.type === 'derivation',
+      (item) =>
+        'content' in item &&
+        (item.content.type === 'derivation' || item.content.type === 'truth_tree'),
     );
 
     const completion = review.attempt.result?.gradingVersion === 'proof_completion_v1';

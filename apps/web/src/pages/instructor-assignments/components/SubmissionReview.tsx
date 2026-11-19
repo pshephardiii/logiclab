@@ -7,6 +7,7 @@ import { AssignedConceptualQuestion } from '../../../features/assignment/compone
 import {
   truthTableSubmissionFeedback,
   proofSubmissionFeedback,
+  truthTreeSubmissionFeedback,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
@@ -176,6 +177,7 @@ export function SubmissionReview({
               />
             ) : item.content.type === 'truth_tree' ? (
               <AssignedTruthTree
+                report={truthTreeSubmissionFeedback(review.attempt.result, item.id)}
                 item={{ ...item, content: item.content }}
                 answer={
                   response && !Array.isArray(response) && response.type === 'truth_tree'

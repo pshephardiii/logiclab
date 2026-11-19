@@ -1,3 +1,5 @@
+import { checkTruthTree } from '@logiclab/logic-engine/truth-tree';
+import type { SavedStudentAttempt } from '@logiclab/contracts/saved-student-work';
 import {
   truthTreeWork,
   truthTreeAnswer,
@@ -640,3 +642,72 @@ test('staged mixed truth-tree practice preserves saved work read-only and reveal
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
 });
+
+test.each([false, true])(
+  'truth-tree diagnostics follow the released result projection (released: %s)',
+  async (released) => {
+    const report = checkTruthTree({
+      problem: { ruleCatalogVersion: 1, premises: [], conclusion: 'P' },
+      tree: truthTreeAnswer.tree,
+    });
+    const attempt: SavedStudentAttempt = {
+      ...saved,
+      submittedAt: submitted.submittedAt,
+      answers: { [itemB]: truthTreeAnswer },
+      gradePending: !released,
+      score: released
+        ? {
+            scoringVersion: 'points_v1',
+            items: [{ itemId: itemB, maxPoints: 10, earnedPoints: null, status: 'needs_review' }],
+            summary: {
+              status: 'needs_review',
+              maxPoints: 10,
+              earnedPoints: null,
+              percentage: null,
+            },
+          }
+        : null,
+      result: released
+        ? {
+            gradingVersion: 'proof_mixed_v1',
+            items: [
+              {
+                type: 'truth_tree',
+                evaluationVersion: 'truth_tree_v1',
+                itemId: itemB,
+                problemVersionId: itemA,
+                report,
+              },
+            ],
+            summary: {
+              objective: { correct: 0, incorrect: 0, unanswered: 0, total: 0 },
+              proofs: { accepted: 0, needsReview: 1, unassessable: 0, total: 1 },
+            },
+          }
+        : null,
+    };
+    vi.mocked(api.readAssignedWork).mockResolvedValue({
+      assignment: {
+        ...truthTreeWork,
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+        gradeReleaseTiming: 'instructor_release',
+        solutionAccess: 'never',
+        items: [truthTreeWork.items[1]!],
+      },
+      attempt,
+    });
+    render(<AssignedAttempt assignmentId={work.id} />);
+    await screen.findByRole('heading', { name: 'Problem 2: Truth-tree occurrence' });
+    if (released)
+      expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
+        report.status,
+      );
+    else
+      expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Revealed truth-tree answer' }),
+    ).not.toBeInTheDocument();
+    expect(api.readAssignedSolution).not.toHaveBeenCalled();
+  },
+);

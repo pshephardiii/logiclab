@@ -8,7 +8,7 @@ import { generateTruthTable } from '@logiclab/logic-engine';
 import { exerciseResponse } from '../../application/truth-table/exercise';
 import { assignmentSummary } from './summary';
 import { truthTreeContent } from '../../application/problem/truth-tree/authoring';
-import { assertTruthTreePracticePolicy } from '../../application/student-work/truth-tree-policy';
+import { assertTruthTreeWorkPolicy } from '../../application/student-work/truth-tree-policy';
 
 /** Shape pinned assignment content for work/review tables without embedding solutions. */
 export function savedAssignmentExercises(
@@ -21,10 +21,11 @@ export function savedAssignmentExercises(
       const stored = item.problemVersion.definition;
 
       if (stored.type === 'truth_tree') {
-        assertTruthTreePracticePolicy(assignment);
+        assertTruthTreeWorkPolicy(assignment);
         return {
           id: item.id,
           position: item.position,
+          ...(assignment.assessmentMode === 'graded' ? { maxPoints: item.maxPoints } : {}),
           title: item.problemVersion.title,
           instructions: item.problemVersion.instructions ?? null,
           content: truthTreeContent(stored),

@@ -303,8 +303,8 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
         403,
       );
       await em.nativeUpdate(db.Assignment, assignmentId, {
-        assessmentMode: db.AssessmentMode.Graded,
-        feedbackTiming: db.FeedbackTiming.OnSubmission,
+        assessmentMode: db.AssessmentMode.CompletionOnly,
+        feedbackTiming: db.FeedbackTiming.OnCheck,
       });
       assert.equal(
         (
@@ -315,7 +315,7 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
           })
         ).statusCode,
         409,
-        'A guarded tree blocks the entire mixed write.',
+        'An unsupported tree policy blocks the entire mixed write.',
       );
       const retained = await em
         .fork()

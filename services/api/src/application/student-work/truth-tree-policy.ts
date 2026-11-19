@@ -1,13 +1,15 @@
 import { StudentWorkError } from './errors';
 
-/** Temporary rollout boundary: final-submission truth-tree workflows are integrated separately. */
-export function assertTruthTreePracticePolicy(assignment: {
+/** Final-submission tree diagnostics must remain unavailable before submission. */
+export function assertTruthTreeWorkPolicy(assignment: {
   assessmentMode: string;
   feedbackTiming: string;
 }) {
   if (
-    assignment.assessmentMode !== 'ungraded_practice' ||
-    !['on_check', 'immediate'].includes(assignment.feedbackTiming)
+    !(assignment.assessmentMode === 'ungraded_practice'
+      ? ['on_check', 'immediate'].includes(assignment.feedbackTiming)
+      : ['graded', 'completion_only'].includes(assignment.assessmentMode) &&
+        assignment.feedbackTiming === 'on_submission')
   )
     throw new StudentWorkError('unsupported_policy');
 }

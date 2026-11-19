@@ -30,8 +30,8 @@ export function calculateSubmissionResult(
   if (!validAssignmentScoring(assignment, assigned))
     throw new StudentWorkError('unsupported_policy');
 
-  const containsProof = assigned.some(
-    (item) => item.problemVersion.definition.type === 'derivation',
+  const containsProof = assigned.some((item) =>
+    ['derivation', 'truth_tree'].includes(item.problemVersion.definition.type),
   );
 
   if (containsProof) assertProofWorkPolicy(assignment);

@@ -33,7 +33,7 @@ export function validatedProofWork(items: ProofSubmissionOccurrence[], input: un
 
   const assigned = items.map((item, index) => ({
     ...identities.data[index]!,
-    definition: assignedDefinition(item.definition),
+    definition: libraryProblemDefinition(item.definition),
   }));
 
   const itemIds = new Set(assigned.map((item) => item.id));
@@ -48,14 +48,12 @@ export function validatedProofWork(items: ProofSubmissionOccurrence[], input: un
     responses.set(normalized, answer);
   }
 
-  if (!assigned.some((item) => item.definition.type === 'derivation'))
+  if (
+    !assigned.some(
+      (item) => item.definition.type === 'derivation' || item.definition.type === 'truth_tree',
+    )
+  )
     throw new StudentWorkError('unsupported_policy');
 
   return { assigned, responses };
-}
-
-function assignedDefinition(value: unknown) {
-  const definition = libraryProblemDefinition(value);
-  if (definition.type === 'truth_tree') throw new StudentWorkError('unsupported_policy');
-  return definition;
 }

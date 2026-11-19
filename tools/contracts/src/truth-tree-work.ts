@@ -9,7 +9,7 @@ export const truthTreeAnswerSchema = z.strictObject({
 
 export type TruthTreeAnswer = z.infer<typeof truthTreeAnswerSchema>;
 
-/** Revisioned practice requests; assignment admission and finalization are enforced separately. */
+/** Revisioned student-work requests; assignment admission and finalization are enforced separately. */
 export const saveTruthTreeAnswersSchema = z.strictObject({
   revision: z.number().int().nonnegative().max(2147483646),
   itemId: z.uuid(),

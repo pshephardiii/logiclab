@@ -253,7 +253,7 @@ test('reveal contracts reject missing/mismatched counterexamples and foreign bra
   ).toBe(false);
 });
 
-test('owner-library admission remains separate from guarded assignment admission', () => {
+test('truth-tree library and assignment admission stay separate from natural-deduction formats', () => {
   const definition = fixture();
   expect(truthTreeDefinitionSchema.safeParse(definition).success).toBe(true);
   expect(libraryProblemDefinitionSchema.safeParse(definition).success).toBe(true);
@@ -266,7 +266,7 @@ test('owner-library admission remains separate from guarded assignment admission
       assessmentMode: 'graded',
       feedbackTiming: 'on_submission',
     }),
-  ).toThrow();
+  ).not.toThrow();
   expect(isProofFormatAvailable('truth_tree')).toBe(false);
   expect(isProofFormatAvailable('tree')).toBe(false);
 });

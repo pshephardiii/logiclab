@@ -3,7 +3,7 @@ import type { DatabaseManager } from '../transactions';
 import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { policyFor } from './validation';
-import { assertTruthTreePracticePolicy } from '../../application/student-work/truth-tree-policy';
+import { assertTruthTreeWorkPolicy } from '../../application/student-work/truth-tree-policy';
 import type { Assignment } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 // Use the caller's manager to retain assignment/enrollment locks through the operation.
@@ -71,7 +71,7 @@ export async function admittedItems(em: DatabaseManager, assignment: Assignment)
   for (const item of assigned) {
     const definition = item.problemVersion.definition;
     if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
-    if (definition.type === 'truth_tree') assertTruthTreePracticePolicy(assignment);
+    if (definition.type === 'truth_tree') assertTruthTreeWorkPolicy(assignment);
   }
   return assigned;
 }

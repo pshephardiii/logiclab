@@ -6,7 +6,7 @@ import { naturalDeductionTreeDerivationDefinitionSchema } from './natural-deduct
 import { libraryProblemVersionSchema } from './problem-library';
 import { truthTreeDefinitionSchema } from './truth-tree-authoring';
 
-/** Transport supports practice truth trees; server policy keeps final-submission modes guarded. */
+/** Assignment transport; the server enforces method, reference and assessment policy admission. */
 export const assignmentProblemDefinitionSchema = z.discriminatedUnion('type', [
   ...objectiveProblemDefinitionSchema.options,
   truthTreeDefinitionSchema,

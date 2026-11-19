@@ -10,6 +10,7 @@ import {
   type AssignmentScoringOutcome,
   AssignmentScoringError,
 } from './scoring';
+import { truthTreeScoringOutcome } from './truth-tree-scoring';
 
 /**
  * Caller supplies fresh server-computed evidence, never a client-provided result.
@@ -24,7 +25,9 @@ export function scoreProofSubmission(
   if (!parsed.success) throw new AssignmentScoringError();
 
   const result = parsed.data;
-  const objective = result.items.flatMap((item) => (item.type === 'derivation' ? [] : [item]));
+  const objective = result.items.flatMap((item) =>
+    item.type === 'derivation' || item.type === 'truth_tree' ? [] : [item],
+  );
 
   const outcomes: AssignmentScoringOutcome[] = objectiveScoringOutcomes({
     gradingVersion: 'mixed_v1',
@@ -33,6 +36,8 @@ export function scoreProofSubmission(
   });
 
   for (const item of result.items) {
+    if (item.type === 'truth_tree') outcomes.push(truthTreeScoringOutcome(item));
+
     if (item.type === 'derivation')
       outcomes.push({
         itemId: item.itemId,

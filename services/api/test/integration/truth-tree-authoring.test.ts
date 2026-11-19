@@ -21,7 +21,7 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked snapshots and keeps final-submission assignment admission closed', async () => {
+test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked snapshots and rejects unsupported final-mode feedback atomically', async () => {
   const db = await import('@logiclab/db');
   const schema = `truth_tree_authoring_${randomUUID().replaceAll('-', '')}`;
   const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -190,15 +190,15 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
           `${scope.prefix}/classes/${scope.classId}/assignments`,
           scope.cookie,
           {
-            title: 'Not enabled',
-            assessmentMode: 'graded',
-            feedbackTiming: 'on_submission',
+            title: 'Unsupported feedback',
+            assessmentMode: 'completion_only',
+            feedbackTiming: 'on_check',
             solutionAccess: 'never',
             problemVersionIds: [versions[0]!.id],
           },
         );
         assert.equal(assigned.statusCode, 409, assigned.body);
-        assert.equal(assigned.json().error.code, 'PROBLEM_DEFINITION_UNSUPPORTED');
+        assert.equal(assigned.json().error.code, 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE');
         assert.equal(assigned.body.includes('PRIVATE_TRUTH_TREE_EXPLANATION'), false);
         assert.equal(await em.fork().count(db.Assignment, { classroom: scope.classId }), before);
 
@@ -214,7 +214,12 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
           'PATCH',
           `${scope.prefix}/assignments/${assignmentId}`,
           scope.cookie,
-          { title: 'Must roll back', problemVersionIds: [versions[0]!.id] },
+          {
+            title: 'Must roll back',
+            assessmentMode: 'completion_only',
+            feedbackTiming: 'on_check',
+            problemVersionIds: [versions[0]!.id],
+          },
         );
         assert.equal(rejectedEdit.statusCode, 409, rejectedEdit.body);
         const unchanged = await request(

@@ -7,7 +7,7 @@ import {
   type TruthTreeSolution,
   type TruthTreeReferenceCheck,
 } from '@logiclab/contracts/truth-tree-authoring';
-import { checkTruthTree } from '@logiclab/logic-engine/truth-tree';
+import { checkTruthTree, isFinishedTruthTreeAttempt } from '@logiclab/logic-engine/truth-tree';
 import { TruthTreeAuthoringError, TruthTreePublicationError } from './errors';
 
 /** Retain unfinished statements/references without treating draft shape validation as certification. */
@@ -56,6 +56,25 @@ export function truthTreePublicationDefinition(value: unknown): TruthTreeDefinit
   if (check.report.status !== 'verified') throw new TruthTreePublicationError('rejected_reference');
 
   return definition;
+}
+
+/** Completion students must finish every path, so their pinned reference must do the same. */
+export function hasFinishedTruthTreeReference(value: unknown): boolean {
+  const definition = validateTruthTreeDefinition(value);
+  const check = checkTruthTreeReference(definition);
+
+  return (
+    check.status === 'checked' &&
+    check.report.status === 'verified' &&
+    isFinishedTruthTreeAttempt({
+      problem: {
+        ruleCatalogVersion: definition.ruleCatalogVersion,
+        premises: definition.premises,
+        conclusion: definition.conclusion,
+      },
+      tree: definition.referenceTree,
+    })
+  );
 }
 
 /** Explicit public projection: no reference, explanation, computed verdict or counterexample. */

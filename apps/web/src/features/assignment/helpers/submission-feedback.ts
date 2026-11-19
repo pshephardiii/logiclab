@@ -32,7 +32,9 @@ export function conceptualSubmissionFeedback(
 
   const item = result.items.find((item) => item.itemId === itemId);
 
-  return item && item.type !== 'truth_table' && item.type !== 'derivation' ? item.feedback : null;
+  return item && (item.type === 'true_false' || item.type === 'multiple_choice')
+    ? item.feedback
+    : null;
 }
 
 /** Caller supplies only the already-authorized student result projection. */
@@ -49,4 +51,20 @@ export function proofSubmissionFeedback(
   const item = result.items.find((item) => item.itemId === itemId);
 
   return item?.type === 'derivation' ? item.report : null;
+}
+
+/** Only already-authorized final results may supply student tree diagnostics. */
+export function truthTreeSubmissionFeedback(
+  result: SubmissionResult | null | undefined,
+  itemId: string,
+) {
+  if (
+    result?.gradingVersion !== 'proof_mixed_v1' &&
+    result?.gradingVersion !== 'proof_completion_v1'
+  )
+    return null;
+
+  const item = result.items.find((item) => item.itemId === itemId);
+
+  return item?.type === 'truth_tree' ? item.report : null;
 }

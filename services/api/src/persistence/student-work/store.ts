@@ -45,7 +45,7 @@ import {
   validateTruthTreeAnswer,
   evaluateTruthTreeAnswer,
 } from '../../application/student-work/truth-tree-response';
-import { assertTruthTreePracticePolicy } from '../../application/student-work/truth-tree-policy';
+import { assertTruthTreeWorkPolicy } from '../../application/student-work/truth-tree-policy';
 import {
   truthTreeContent,
   truthTreeReferenceSolution,
@@ -182,7 +182,10 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
 
         if (definition.type === 'truth_tree') {
-          assertTruthTreePracticePolicy(assignment);
+          assertTruthTreeWorkPolicy(assignment);
+
+          if (assignment.assessmentMode !== 'ungraded_practice')
+            throw new StudentWorkError('unsupported_policy');
 
           const evidence = evaluateTruthTreeAnswer(
             {
@@ -290,7 +293,7 @@ export async function createStudentWorkStore(
         const definition = item.problemVersion.definition;
 
         if (definition.type === 'truth_tree') {
-          assertTruthTreePracticePolicy(assignment);
+          assertTruthTreeWorkPolicy(assignment);
           return { itemId, solution: truthTreeReferenceSolution(definition) };
         }
 

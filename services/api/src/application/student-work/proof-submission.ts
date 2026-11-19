@@ -5,10 +5,13 @@ import {
   proofSubmissionResultSchema,
   type ProofSubmissionResult,
   type ProofSubmissionItem,
+  proofCompletionVerification,
 } from '@logiclab/contracts/proof-submission';
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
 import { evaluateObjectiveSubmission } from './mixed-evaluation';
+import { evaluateTruthTreeAnswer } from './truth-tree-response';
+import { truthTreeContent } from '../problem/truth-tree/authoring';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
 export function evaluateProofSubmission(
@@ -18,7 +21,9 @@ export function evaluateProofSubmission(
   const { assigned, responses } = validatedProofWork(items, input);
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
+    item.definition.type === 'derivation' || item.definition.type === 'truth_tree'
+      ? []
+      : [{ id: item.id, definition: item.definition }],
   );
 
   const objectiveResponses = Object.fromEntries(
@@ -40,6 +45,35 @@ export function evaluateProofSubmission(
   const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
   const results = assigned.map((item): ProofSubmissionItem => {
+    if (item.definition.type === 'truth_tree') {
+      const evidence = evaluateTruthTreeAnswer(
+        {
+          itemId: item.id,
+          problemVersionId: item.problemVersionId,
+          content: truthTreeContent(item.definition),
+        },
+        responses.get(item.id) ?? {
+          type: 'truth_tree',
+          tree: {
+            treeVersion: 1,
+            format: 'truth_tree',
+            rootBranchId: null,
+            occurrences: [],
+            branches: [],
+            expansions: [],
+          },
+        },
+      );
+      const verification = proofCompletionVerification(evidence.report);
+
+      proofs.total++;
+      if (verification === 'verified') proofs.accepted++;
+      else if (verification === 'errors_found') proofs.needsReview++;
+      else proofs.unassessable++;
+
+      return evidence;
+    }
+
     if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
 
     // Missing work needs an empty proof in its pinned format so the report records incompleteness.

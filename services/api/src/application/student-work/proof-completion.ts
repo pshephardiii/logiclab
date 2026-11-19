@@ -13,8 +13,10 @@ import { evaluateProofAnswer, validateProofAnswer } from './proof-response';
 import { evaluateObjectiveCompletion } from './mixed-evaluation';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 import { StudentWorkError } from './errors';
+import { truthTreeContent } from '../problem/truth-tree/authoring';
+import { evaluateTruthTreeCompletion } from './truth-tree-response';
 
-/** Pure staged finalization: caller authorizes and locks work; diagnostics must remain post-submission. */
+/** Pure finalization: caller authorizes and locks work; diagnostics must remain post-submission. */
 export function evaluateProofCompletion(
   items: ProofSubmissionOccurrence[],
   input: unknown,
@@ -54,7 +56,9 @@ export function evaluateProofCompletion(
   });
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
+    item.definition.type === 'derivation' || item.definition.type === 'truth_tree'
+      ? []
+      : [{ id: item.id, definition: item.definition }],
   );
 
   const objective = objectiveItems.length
@@ -84,13 +88,33 @@ export function evaluateProofCompletion(
     );
   }
 
-  // Only after every proof/objective response is complete, generate fresh feedback for retained final work.
+  // Diagnostics remain local until every item passes its completion gate and the caller commits the final.
   for (const { item, answer, content } of proofs) {
     const evidence = evaluateProofAnswer(
       { itemId: item.id, problemVersionId: item.problemVersionId, content },
       answer,
     );
     results.set(item.id, { ...evidence, completedResponses: 1, totalResponses: 1 });
+  }
+
+  for (const item of assigned) {
+    if (item.definition.type !== 'truth_tree') continue;
+
+    const answer = responses.get(item.id);
+
+    if (answer === undefined) throw new StudentWorkError('incomplete_work');
+
+    results.set(
+      item.id,
+      evaluateTruthTreeCompletion(
+        {
+          itemId: item.id,
+          problemVersionId: item.problemVersionId,
+          content: truthTreeContent(item.definition),
+        },
+        answer,
+      ),
+    );
   }
 
   const ordered = assigned.map((item) => results.get(item.id)!);

@@ -10,6 +10,7 @@ import {
   truthTableSubmissionFeedback,
   conceptualSubmissionFeedback,
   proofSubmissionFeedback,
+  truthTreeSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
@@ -222,6 +223,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             <AssignedTruthTree
               item={{ ...item, content: item.content }}
               answer={work.truthTreeAnswers[item.id]}
+              report={truthTreeSubmissionFeedback(work.attempt?.result, item.id)}
               solution={
                 currentSolution &&
                 'type' in currentSolution &&

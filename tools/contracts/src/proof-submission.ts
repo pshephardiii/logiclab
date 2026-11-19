@@ -3,15 +3,21 @@ import { objectiveGradedItemSchema } from './assignment-responses';
 import { derivationEvaluationEvidenceSchema } from './derivation-work';
 import { truthTableCheckResponseSchema } from './truth-table';
 import type { ProofCheckReport } from './proof';
+import type { TruthTreeCheckReport } from './truth-tree';
+import {
+  truthTreeEvaluationEvidenceSchema,
+  truthTreeCompletionEvidenceSchema,
+} from './truth-tree-work';
 
 export const proofSubmissionItemSchema = z.discriminatedUnion('type', [
   ...objectiveGradedItemSchema.options,
   derivationEvaluationEvidenceSchema,
+  truthTreeEvaluationEvidenceSchema,
 ]);
 
 export type ProofSubmissionItem = z.infer<typeof proofSubmissionItemSchema>;
 
-/** Staged retained evidence for proof-containing graded assignments; awarded points stay separate. */
+/** Retained natural-deduction/truth-tree evidence; awarded points stay separate. */
 export const proofSubmissionResultSchema = z
   .strictObject({
     gradingVersion: z.literal('proof_mixed_v1'),
@@ -36,11 +42,13 @@ export const proofSubmissionResultSchema = z
     const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
     for (const item of value.items) {
-      if (item.type === 'derivation') {
+      if (item.type === 'derivation' || item.type === 'truth_tree') {
         proofs.total++;
 
-        if (item.report.status === 'accepted') proofs.accepted++;
-        else if (item.report.status === 'needs_review') proofs.needsReview++;
+        const verification = proofCompletionVerification(item.report);
+
+        if (verification === 'verified') proofs.accepted++;
+        else if (verification === 'errors_found') proofs.needsReview++;
         else proofs.unassessable++;
       } else if (item.type === 'truth_table') {
         const counts = item.feedback.summary;
@@ -93,6 +101,7 @@ export const proofCompletionItemSchema = z.union([
     completedResponses: z.literal(1),
     totalResponses: z.literal(1),
   }),
+  truthTreeCompletionEvidenceSchema,
 ]);
 
 export type ProofCompletionItem = z.infer<typeof proofCompletionItemSchema>;
@@ -101,13 +110,13 @@ export type ProofCompletionVerification = 'verified' | 'errors_found' | 'verific
 
 /** Verification flags invite inspection; they neither award points nor infer student effort. */
 export function proofCompletionVerification(
-  report: Pick<ProofCheckReport, 'status'>,
+  report: Pick<ProofCheckReport | TruthTreeCheckReport, 'status'>,
 ): ProofCompletionVerification {
-  return report.status === 'accepted'
+  return report.status === 'accepted' || report.status === 'verified'
     ? 'verified'
-    : report.status === 'needs_review'
-      ? 'errors_found'
-      : 'verification_unavailable';
+    : report.status === 'unassessable'
+      ? 'verification_unavailable'
+      : 'errors_found';
 }
 
 const proofCompletionVerificationCountsSchema = z.strictObject({
@@ -122,7 +131,7 @@ export function summarizeProofCompletionVerification(items: readonly ProofComple
   const counts = { verified: 0, errorsFound: 0, unavailable: 0, total: 0 };
 
   for (const item of items) {
-    if (item.type !== 'derivation') continue;
+    if (item.type !== 'derivation' && item.type !== 'truth_tree') continue;
 
     counts.total++;
 
@@ -136,7 +145,7 @@ export function summarizeProofCompletionVerification(items: readonly ProofComple
   return counts;
 }
 
-/** Staged score-free completion. Reports are feedback, never evidence of an awarded grade. */
+/** Score-free completion. Reports are feedback, never evidence of an awarded grade. */
 export const proofCompletionSubmissionResultSchema = z
   .strictObject({
     gradingVersion: z.literal('proof_completion_v1'),
@@ -158,7 +167,7 @@ export const proofCompletionSubmissionResultSchema = z
   .superRefine((value, context) => {
     const reject = (message: string) => context.addIssue({ code: 'custom', message });
 
-    if (!value.items.some((item) => item.type === 'derivation'))
+    if (!value.items.some((item) => item.type === 'derivation' || item.type === 'truth_tree'))
       reject('Use the existing completion formats for work without proofs.');
 
     if (new Set(value.items.map((item) => item.itemId.toLowerCase())).size !== value.items.length)

@@ -1,6 +1,7 @@
 import type { ProofCheckReport } from '../proof/report.ts';
 import type { ObjectiveGradedItem } from './mixed-work.ts';
 import type { SubmissionCounts } from './work.ts';
+import type { TruthTreeEvaluationEvidence } from './truth-tree-work.ts';
 
 export interface DerivationEvaluationEvidence {
   evaluationVersion: 'derivation_v1';
@@ -11,7 +12,7 @@ export interface DerivationEvaluationEvidence {
 }
 export interface ProofSubmissionResult {
   gradingVersion: 'proof_mixed_v1';
-  items: (ObjectiveGradedItem | DerivationEvaluationEvidence)[];
+  items: (ObjectiveGradedItem | DerivationEvaluationEvidence | TruthTreeEvaluationEvidence)[];
   summary: {
     objective: SubmissionCounts;
     proofs: { accepted: number; needsReview: number; unassessable: number; total: number };
@@ -29,6 +30,7 @@ export interface ProofCompletionSubmissionResult {
         totalResponses: number;
       }
     | (DerivationEvaluationEvidence & { completedResponses: 1; totalResponses: 1 })
+    | (TruthTreeEvaluationEvidence & { completedResponses: 1; totalResponses: 1 })
   )[];
   summary: {
     completedResponses: number;
