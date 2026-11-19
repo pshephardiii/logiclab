@@ -100,9 +100,30 @@ The work budget is shared across structure, parsing and formula comparisons. Raw
 
 Validation: workspace type checks and required package builds, all 746 engine tests (49 new local-check/report cases), 64 focused API contract tests, built CommonJS/ESM step-check/report smoke and changed-file formatting/whitespace passed. Coverage includes every decomposition rule and compound substitutions, free ordering, multiplicity, initial identities/negation, accessible but false closure claims, unused errors, malformed configuration and bounded failures. No database or browser run was needed for this pure checking slice.
 
+## Slice 5 — branch completeness and argument outcomes
+
+`checkTruthTree({ problem, tree })` now returns a versioned `TruthTreeCheckReport`. It reuses the local-check stage's parsed argument, resolved structure and shared work budget. `checkTruthTreeSteps` retains its existing narrower behavior; whole-tree checking does not parse/check everything twice.
+
+Terminal branch outcomes are:
+
+- `closed`: an explicit closure claim has passed reference and formula checks. Remaining compounds on that path do not require decomposition.
+- `open_complete`: the path has no complementary pair or falsity and every compound occurrence has a valid expansion covering that path.
+- `incomplete`: at least one compound occurrence still requires expansion on that path; the report identifies those occurrences.
+- `needs_closure`: the open path already contains an exact contradiction or falsity. It must be explicitly marked closed with witnesses. It cannot supply a counterexample and is not silently treated as closed.
+
+Coverage uses occurrence identities and inherited expansion sets. An expansion before a split covers both descendants. Expanding an inherited occurrence separately on one child does not cover its sibling. Equal-text occurrences remain separate obligations. Complement discovery uses canonical parsed syntax keys, avoiding quadratic pair comparisons while preserving exact structural matching.
+
+If all entered work passes local checking and every terminal path is explicitly closed, the argument is verified **valid**. A completed consistent open path can verify the argument **invalid**, even if other branches still contain undecomposed formulas; one counterexample is sufficient. Every entered step still has to pass: an unused wrong step or an initial mismatch blocks overall verification. Other branches' incomplete/needs-closure states remain visible when a counterexample establishes invalidity. These are argument outcomes, not a settled grading/completion policy.
+
+Counterexamples assign every original argument variable, including variables absent from the chosen path. Literal constraints determine their values; unconstrained variables use a deterministic false default. Direct classical evaluation independently confirms that every original premise is true, the original conclusion is false and every formula on the chosen path is true. This verification is separate from decomposition and coverage. Failure remains unassessable, not a guessed outcome or zero grade. Explicit falsity and all 26 uppercase variables are supported; `F` stays an ordinary variable.
+
+The full report separates work status (`verified`, `incomplete`, `invalid`, `unassessable`) from argument status (`valid`, `invalid`, `undetermined`). Thus **verified invalid** means the student's tree has successfully refuted the argument; it does not mean their work is wrong. Report contracts link closed outcomes to checked closure evidence, pending formulas to occurrence evidence and counterexamples to complete open branches. Unverified work cannot claim an argument outcome or counterexample. Resource/verification failures discard partial certification.
+
+This is deterministic checking of entered trees, not proof search. No application problem/answer unions, routes, persistence, UI, demo seeds or grading policies are enabled by this slice. Authoring/reference requirements and assignment-mode semantics still need their own agreed workflow slices before new admission.
+
+Validation: workspace type checks and required package builds, all 813 engine tests (67 new whole-tree/model/report cases), 64 focused API contract tests, built CommonJS/ESM whole-tree/report round-trip smoke and formatting/whitespace passed. Forty generated completed-tree cases were compared with an independent exhaustive truth-value oracle. Other tests cover per-path occurrence coverage, sibling isolation, pending closure, incomplete versus erroneous work, constants, all 26 variables, independent premise/conclusion/path evaluation and resource/verification failures. Test-only tree construction is not a production solver. No database or browser run was needed for this checker-only slice.
+
 ## Following slices and decisions
 
-1. Structure/transport, structural validation and local logical evidence are implemented above. Next establish occurrence-level expansion coverage along each relevant path and complete branch outcomes.
-2. Check branch completeness and extract/independently verify counterexamples against the original argument. Compose argument validity/invalidity evidence from verified closures or complete open branches. Keep incomplete, erroneous and resource-limited work distinct from a verified result; `checked` local steps alone are insufficient.
-3. Settle instructor reference requirements, allowed exercise goals and grading/review/completion semantics before integrating versioned authoring, assignments and student work. Reuse authorization, explicit saves, review and independent release where semantics agree; do not assume a natural-deduction report already fits.
-4. Add practice and instructional UI/demo workflows, splitting into additional numbered branches if needed. Follow delivery with the dedicated truth-tree practice UI audit, then resume demo teaching-flow and genuine-account product audits. Confirm numbering when splitting; no additional branch or deployment is started by this plan.
+1. The standalone truth-tree checker foundation is implemented above. Settle instructor reference requirements, allowed exercise goals and grading/review/completion semantics before integrating versioned authoring, assignments and student work. Reuse authorization, explicit saves, review and independent release where semantics agree; do not assume a natural-deduction report already fits.
+2. Add practice and instructional UI/demo workflows, splitting into additional numbered branches if needed. Follow delivery with the dedicated truth-tree practice UI audit, then resume demo teaching-flow and genuine-account product audits. Confirm numbering when splitting; no additional branch or deployment is started by this plan.

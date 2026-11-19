@@ -15,6 +15,7 @@ export const truthTreeDiagnosticSchema = z.strictObject({
     'UNKNOWN_RULE',
     'RULE_MISMATCH',
     'INVALID_CLOSURE',
+    'VERIFICATION_FAILED',
   ]),
   message: z.string().min(1).max(500),
   branchId: id.optional(),

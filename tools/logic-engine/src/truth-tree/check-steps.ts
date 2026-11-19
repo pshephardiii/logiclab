@@ -20,19 +20,30 @@ import {
 } from './step-formulas';
 import { checkStepExpansions, checkStepClosures } from './step-rules';
 
+export type TruthTreeStepAnalysis = {
+  report: TruthTreeStepReport;
+  evidence: {
+    context: StepContext;
+    argument: NonNullable<ReturnType<typeof parseArgument>>;
+  } | null;
+};
+
 function stopped(
   status: 'unassessable' | 'invalid' | 'incomplete',
   diagnostics: TruthTreeDiagnostic[],
-): TruthTreeStepReport {
+): TruthTreeStepAnalysis {
   return {
-    checkerVersion: 1,
-    ruleCatalogVersion: 1,
-    status,
-    initial: 'unknown',
-    occurrences: [],
-    expansions: [],
-    closures: [],
-    diagnostics,
+    evidence: null,
+    report: {
+      checkerVersion: 1,
+      ruleCatalogVersion: 1,
+      status,
+      initial: 'unknown',
+      occurrences: [],
+      expansions: [],
+      closures: [],
+      diagnostics,
+    },
   };
 }
 
@@ -45,6 +56,14 @@ export function checkTruthTreeSteps(
   input: unknown,
   budget: TruthTreeBudget = truthTreeBudget(),
 ): TruthTreeStepReport {
+  return analyzeTruthTreeSteps(input, budget).report;
+}
+
+/** Internal evidence allows whole-tree checking to reuse parsing, structure and the same budget. */
+export function analyzeTruthTreeSteps(
+  input: unknown,
+  budget: TruthTreeBudget,
+): TruthTreeStepAnalysis {
   try {
     if (
       !record(input) ||
@@ -123,14 +142,17 @@ export function checkTruthTreeSteps(
         ? 'incomplete'
         : 'checked';
     return {
-      checkerVersion: 1,
-      ruleCatalogVersion: 1,
-      status,
-      initial,
-      occurrences,
-      expansions,
-      closures,
-      diagnostics: diagnostics.items,
+      evidence: status === 'checked' ? { context, argument } : null,
+      report: {
+        checkerVersion: 1,
+        ruleCatalogVersion: 1,
+        status,
+        initial,
+        occurrences,
+        expansions,
+        closures,
+        diagnostics: diagnostics.items,
+      },
     };
   } catch (error) {
     if (!(error instanceof TruthTreeResourceLimit)) throw error;

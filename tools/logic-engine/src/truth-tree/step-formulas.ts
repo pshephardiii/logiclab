@@ -40,11 +40,12 @@ export function parseArgument(problem: TruthTreeProblem, budget: TruthTreeBudget
     premises.set(premise.id, parseTruthTreeFormula(premise.formula));
   }
   budget.spend(problem.conclusion.length + 1);
+  const conclusion = parseTruthTreeFormula(problem.conclusion);
   const negatedConclusion: TruthTreeFormula = {
     type: 'not',
-    operand: parseTruthTreeFormula(problem.conclusion),
+    operand: conclusion,
   };
-  return { premises, negatedConclusion };
+  return { premises, conclusion, negatedConclusion };
 }
 
 export function parseStepFormulas(context: StepContext): TruthTreeStepReport['occurrences'] {

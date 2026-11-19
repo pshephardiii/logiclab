@@ -17,6 +17,18 @@ export { truthTreeStepReportSchema } from './truth-tree-step-report';
 
 export type { TruthTreeStepReport } from './truth-tree-step-report';
 
+export {
+  truthTreeBranchOutcomeSchema,
+  truthTreeCounterexampleSchema,
+  truthTreeCheckReportSchema,
+} from './truth-tree-check-report';
+
+export type {
+  TruthTreeBranchOutcome,
+  TruthTreeCounterexample,
+  TruthTreeCheckReport,
+} from './truth-tree-check-report';
+
 /** Source identity is distinct from formula text, including repeated premises or occurrences. */
 export const truthTreeOccurrenceSchema = z.strictObject({
   id,
