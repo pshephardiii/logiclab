@@ -62,7 +62,7 @@ test('concurrent provisioning is repeatable and seeds actual simulator coverage 
     assert.equal(await em.count(db.User, { demoWorkspace: id }), 2);
     assert.equal(await em.count(db.Classroom, {}), 2);
     assert.equal(await em.count(db.Enrollment, {}), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 5);
+    assert.equal(await em.count(db.ProblemVersion, {}), 7);
     assert.equal(
       await em.count(db.ClassPurchase, { status: db.PurchaseStatus.Paid, lastEventSequence: 1 }),
       1,
@@ -214,7 +214,7 @@ test('reset restores the template, clears submitted work and billing history, an
         owner: { demoWorkspace: first.workspaceId },
         title: 'Visitor changed this',
       }),
-      5,
+      7,
     );
     const reset = await service.reset(initial.sessionId);
     assert.equal(reset.actor.workspaceId, first.workspaceId);
@@ -243,7 +243,7 @@ test('reset restores the template, clears submitted work and billing history, an
         classroom: { owner: { demoWorkspace: first.workspaceId } },
         publishedAt: { $ne: null },
       }),
-      6,
+      9,
     );
     assert.equal(
       await em.count(db.Assignment, {
@@ -302,7 +302,7 @@ test('failed seed/reset rolls back all graph, credential and generation changes 
       db.DemoWorkspaceStatus.Active,
     );
     assert.equal(await em.count(db.User, { demoWorkspace: first.workspaceId }), 2);
-    assert.equal(await em.count(db.ProblemVersion, {}), 5);
+    assert.equal(await em.count(db.ProblemVersion, {}), 7);
     assert.equal(await em.count(db.ClassPurchase, {}), 1);
     assert.equal(await em.count(db.AssignmentAttempt, { submittedAt: { $ne: null } }), 1);
     const nextId = randomUUID();
@@ -497,7 +497,7 @@ test('reset cannot revive an idle-expired workspace or extend its absolute deadl
     assert.equal(await em.count(db.User, { demoWorkspace: workspace.workspaceId }), 2);
   }));
 
-test('template 8 preserves weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
+test('current template preserves weighted graded assignments and score-free private practice with pinned conceptual keys', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -575,7 +575,7 @@ test('template 8 preserves weighted graded assignments and score-free private pr
     assert.equal((await work.submit(student.id, graded.id, 0)).gradePending, false);
   }));
 
-test('template 8 certifies both available proof formats and seeds explicit practice, weighted grading and score-free completion', async () =>
+test('current template certifies both available proof formats and seeds explicit practice, weighted grading and score-free completion', async () =>
   fixture(async (orm, db) => {
     const workspace = await (await createDemoWorkspaceStore(orm, policy)).provision(randomUUID());
     const em = orm.em.fork();
@@ -886,7 +886,7 @@ test('seeded two-format practice accepts alternate routes; graded review and com
     }
   }));
 
-test('a retained tree visitor upgrades to template 8 only on reset, preserving its deadline and other visitors', async () =>
+test('a retained tree visitor upgrades to the current template only on reset, preserving its deadline and other visitors', async () =>
   fixture(async (orm, db) => {
     const store = await createDemoWorkspaceStore(orm, policy);
     const service = createDemoWorkspaceService(store);
@@ -954,7 +954,7 @@ test('a retained tree visitor upgrades to template 8 only on reset, preserving i
     assert.equal((await sessions.authenticate(reset.sessionId)).generation, 2);
     em.clear();
     const refreshed = await em.findOneOrFail(db.DemoWorkspace, first.workspaceId);
-    assert.equal(refreshed.templateVersion, 8);
+    assert.equal(refreshed.templateVersion, DEMO_TEMPLATE.version);
     assert.equal(refreshed.expiresAt.getTime(), originalDeadline);
     assert.equal(
       await em.count(db.Problem, {

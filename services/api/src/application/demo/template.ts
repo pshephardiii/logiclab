@@ -3,7 +3,17 @@ import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 /** Versioned synthetic content only; billing terms come from the saved simulator plan. */
 export const DEMO_TEMPLATE = {
-  version: 8,
+  version: 9,
+  truthTreePracticeAssignmentTitle: 'Practice truth trees: closed and open paths',
+  truthTreeGradedAssignmentTitle: 'Truth trees: separate grade and answer release',
+  truthTreeCompletionAssignmentTitle: 'Complete both truth trees',
+  truthTreePracticeInstructions:
+    'Build both trees. Check tree is explicit and does not save work. Save each problem separately; instructor references are available anytime. There is no final submission.',
+  truthTreeGradedInstructions:
+    'Each tree is worth 10 points (20 total). A verified valid argument or verified counterexample earns full credit; other attempts need instructor review. Save each problem and submit, then switch to the instructor to release grades and reveal reference answers independently.',
+  truthTreeCompletionInstructions:
+    'Finish every path in both trees and save each problem before submitting. Logical mistakes retain verification warnings without a correctness score. Reference answers remain hidden until the instructor reveals them.',
+  truthTreePoints: 10,
   proofPracticeAssignmentTitle: 'Practice Fitch and dependency proofs',
   proofGradedAssignmentTitle: 'Derivations: separate grade and answer release',
   proofCompletionAssignmentTitle: 'Complete Fitch and dependency proofs',

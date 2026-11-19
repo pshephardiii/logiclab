@@ -11,6 +11,7 @@ import { readDemoConfig } from '../../src/config/demo';
 import { truthTreeDefinitionFixture } from '../truth-tree-fixture';
 import {
   libraryProblemResponseSchema,
+  libraryProblemListResponseSchema,
   libraryProblemVersionResponseSchema,
   libraryReferenceCheckResponseSchema,
 } from '@logiclab/contracts/problem-library';
@@ -233,21 +234,17 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
       }
       const list = await request('GET', `${path}?archive=all`, scope.cookie);
       assert.equal(list.statusCode, 200, list.body);
-      assert.equal(
-        list
-          .json()
-          .problems.filter(
-            (problem: { definition: { type: string } }) => problem.definition.type === 'truth_tree',
-          ).length,
-        2,
+      const scopedIds = new Set(
+        created.filter((item) => item.prefix === scope.prefix).map((item) => item.id),
       );
-      for (const problem of list
-        .json()
-        .problems.filter(
-          (problem: { definition: { type: string } }) => problem.definition.type === 'truth_tree',
-        )) {
-        assert.equal(problem.publication.version, 2);
-        assert.equal(problem.publication.hasDraftChanges, true);
+      const authoredProblems = libraryProblemListResponseSchema
+        .parse(list.json())
+        .problems.filter((problem) => scopedIds.has(problem.id));
+      assert.equal(authoredProblems.length, 2);
+      for (const problem of authoredProblems) {
+        assert.equal(problem.definition.type, 'truth_tree');
+        assert.equal(problem.publication?.version, 2);
+        assert.equal(problem.publication?.hasDraftChanges, true);
       }
     }
 

@@ -1,3 +1,4 @@
+import { DEMO_TRUTH_TREES } from '../../application/demo/truth-tree-template';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import type { DemoWorkspace } from '@logiclab/db' with { 'resolution-mode': 'import' };
@@ -198,6 +199,57 @@ export async function seedDemoWorkspace(
     });
 
     await assignments.publish(instructor.id, proofAssignment.id);
+  }
+
+  const truthTreeVersionIds: string[] = [];
+
+  for (const example of DEMO_TRUTH_TREES) {
+    const draft = await problems.create(instructor.id, example);
+    const publication = await problems.publish(instructor.id, draft.id);
+
+    if (publication.status !== 'published') throw new Error('Demo truth-tree publication failed.');
+
+    truthTreeVersionIds.push(publication.version.id);
+  }
+
+  for (const example of [
+    {
+      title: DEMO_TEMPLATE.truthTreePracticeAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreePracticeInstructions,
+      assessmentMode: 'ungraded_practice' as const,
+      feedbackTiming: 'on_check' as const,
+      solutionAccess: 'anytime' as const,
+    },
+    {
+      title: DEMO_TEMPLATE.truthTreeGradedAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreeGradedInstructions,
+      assessmentMode: 'graded' as const,
+      feedbackTiming: 'on_submission' as const,
+      solutionAccess: 'instructor_release' as const,
+    },
+    {
+      title: DEMO_TEMPLATE.truthTreeCompletionAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreeCompletionInstructions,
+      assessmentMode: 'completion_only' as const,
+      feedbackTiming: 'on_submission' as const,
+      solutionAccess: 'instructor_release' as const,
+    },
+  ]) {
+    const treeAssignment = await assignments.create(instructor.id, funded.id, {
+      ...example,
+      ...(example.assessmentMode === 'graded'
+        ? {
+            gradeReleaseTiming: 'instructor_release' as const,
+            problemVersionIds: [],
+            items: truthTreeVersionIds.map((problemVersionId) => ({
+              problemVersionId,
+              maxPoints: DEMO_TEMPLATE.truthTreePoints,
+            })),
+          }
+        : { problemVersionIds: truthTreeVersionIds }),
+    });
+
+    await assignments.publish(instructor.id, treeAssignment.id);
   }
 
   return { instructorId: instructor.id, studentId: student.id };
