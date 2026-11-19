@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
@@ -114,7 +115,8 @@ export function usePublishedProblemChoices(includeProofs = false) {
       (version) =>
         isProblemMethodAvailable(version.definition) &&
         (includeProofs ||
-          (version.definition.type !== 'derivation' && version.definition.type !== 'truth_tree')),
+          (version.definition.type !== ProblemType.Derivation &&
+            version.definition.type !== ProblemType.TruthTree)),
     ),
     versionNext,
     versionLoading,

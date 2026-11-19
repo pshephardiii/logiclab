@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../proof/availability';
 import { libraryProblemDefinition } from '../problem/library-definition';
 import { AssignmentOperationError } from './errors';
@@ -11,7 +12,7 @@ export function supportedAssignmentDefinition(
   const definition = libraryProblemDefinition(input);
 
   if (
-    (definition.type === 'derivation' || definition.type === 'truth_tree') &&
+    (definition.type === ProblemType.Derivation || definition.type === ProblemType.TruthTree) &&
     policy.assessmentMode !== 'ungraded_practice' &&
     !(
       ['graded', 'completion_only'].includes(policy.assessmentMode) &&
@@ -30,10 +31,10 @@ export function assignmentAdmissionDefinition(
 ) {
   const definition = supportedAssignmentDefinition(input, policy);
 
-  if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
+  if (definition.type === ProblemType.Derivation) assertProofFormatAvailable(definition.format);
 
   if (
-    definition.type === 'truth_tree' &&
+    definition.type === ProblemType.TruthTree &&
     policy.assessmentMode === 'completion_only' &&
     !hasFinishedTruthTreeReference(definition)
   )

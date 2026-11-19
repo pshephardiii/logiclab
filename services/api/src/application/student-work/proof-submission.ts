@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 
 export type { ProofSubmissionOccurrence } from './proof-work';
@@ -21,7 +22,8 @@ export function evaluateProofSubmission(
   const { assigned, responses } = validatedProofWork(items, input);
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' || item.definition.type === 'truth_tree'
+    item.definition.type === ProblemType.Derivation ||
+    item.definition.type === ProblemType.TruthTree
       ? []
       : [{ id: item.id, definition: item.definition }],
   );
@@ -38,14 +40,14 @@ export function evaluateProofSubmission(
 
   const objectiveResults: ProofSubmissionItem[] =
     objective?.gradingVersion === 'truth_table_v1'
-      ? objective.items.map((item) => ({ ...item, type: 'truth_table' as const }))
+      ? objective.items.map((item) => ({ ...item, type: ProblemType.TruthTable }))
       : (objective?.items ?? []);
 
   const objectiveById = new Map(objectiveResults.map((item) => [item.itemId, item]));
   const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
   const results = assigned.map((item): ProofSubmissionItem => {
-    if (item.definition.type === 'truth_tree') {
+    if (item.definition.type === ProblemType.TruthTree) {
       const evidence = evaluateTruthTreeAnswer(
         {
           itemId: item.id,
@@ -53,7 +55,7 @@ export function evaluateProofSubmission(
           content: truthTreeContent(item.definition),
         },
         responses.get(item.id) ?? {
-          type: 'truth_tree',
+          type: ProblemType.TruthTree,
           tree: {
             treeVersion: 1,
             format: 'truth_tree',
@@ -74,13 +76,13 @@ export function evaluateProofSubmission(
       return evidence;
     }
 
-    if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
+    if (item.definition.type !== ProblemType.Derivation) return objectiveById.get(item.id)!;
 
     // Missing work needs an empty proof in its pinned format so the report records incompleteness.
     const answer = responses.has(item.id)
       ? responses.get(item.id)
       : {
-          type: 'derivation',
+          type: ProblemType.Derivation,
           proof:
             item.definition.format === 'tree'
               ? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] }

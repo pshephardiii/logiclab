@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type {
   ConceptualAnswer,
   ConceptualFeedback,
@@ -31,7 +32,7 @@ export function AssignedConceptualQuestion({
   const content = item.content;
 
   const choices =
-    content.type === 'true_false'
+    content.type === ProblemType.TrueFalse
       ? [
           { id: 'true', text: 'True' },
           { id: 'false', text: 'False' },
@@ -39,18 +40,18 @@ export function AssignedConceptualQuestion({
       : content.options;
 
   const selected =
-    current.type === 'true_false'
+    current.type === ProblemType.TrueFalse
       ? current.answer === null
         ? null
         : String(current.answer)
       : current.optionId;
 
   const expected =
-    solution?.type === 'true_false' && content.type === 'true_false'
+    solution?.type === ProblemType.TrueFalse && content.type === ProblemType.TrueFalse
       ? solution.correctAnswer
         ? 'True'
         : 'False'
-      : solution?.type === 'multiple_choice' && content.type === 'multiple_choice'
+      : solution?.type === ProblemType.MultipleChoice && content.type === ProblemType.MultipleChoice
         ? content.options.find((option) => option.id === solution.correctOptionId)?.text
         : undefined;
 
@@ -73,9 +74,9 @@ export function AssignedConceptualQuestion({
               checked={selected === choice.id}
               onChange={() =>
                 onAnswer(
-                  content.type === 'true_false'
-                    ? { type: 'true_false', answer: choice.id === 'true' }
-                    : { type: 'multiple_choice', optionId: choice.id },
+                  content.type === ProblemType.TrueFalse
+                    ? { type: ProblemType.TrueFalse, answer: choice.id === 'true' }
+                    : { type: ProblemType.MultipleChoice, optionId: choice.id },
                 )
               }
             />

@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { objectiveGradedItemSchema } from './assignment-responses';
 import { derivationEvaluationEvidenceSchema } from './derivation-work';
@@ -42,7 +43,7 @@ export const proofSubmissionResultSchema = z
     const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
     for (const item of value.items) {
-      if (item.type === 'derivation' || item.type === 'truth_tree') {
+      if (item.type === ProblemType.Derivation || item.type === ProblemType.TruthTree) {
         proofs.total++;
 
         const verification = proofCompletionVerification(item.report);
@@ -50,7 +51,7 @@ export const proofSubmissionResultSchema = z
         if (verification === 'verified') proofs.accepted++;
         else if (verification === 'errors_found') proofs.needsReview++;
         else proofs.unassessable++;
-      } else if (item.type === 'truth_table') {
+      } else if (item.type === ProblemType.TruthTable) {
         const counts = item.feedback.summary;
 
         if (counts.correct + counts.incorrect + counts.unanswered !== counts.total)
@@ -86,7 +87,7 @@ export type ProofSubmissionResult = z.infer<typeof proofSubmissionResultSchema>;
 const completedObjectiveItemSchema = z
   .strictObject({
     itemId: z.uuid(),
-    type: z.enum(['truth_table', 'true_false', 'multiple_choice']),
+    type: z.enum([ProblemType.TruthTable, ProblemType.TrueFalse, ProblemType.MultipleChoice]),
     completedResponses: z.number().int().positive().max(4096),
     totalResponses: z.number().int().positive().max(4096),
   })
@@ -131,7 +132,7 @@ export function summarizeProofCompletionVerification(items: readonly ProofComple
   const counts = { verified: 0, errorsFound: 0, unavailable: 0, total: 0 };
 
   for (const item of items) {
-    if (item.type !== 'derivation' && item.type !== 'truth_tree') continue;
+    if (item.type !== ProblemType.Derivation && item.type !== ProblemType.TruthTree) continue;
 
     counts.total++;
 
@@ -167,7 +168,11 @@ export const proofCompletionSubmissionResultSchema = z
   .superRefine((value, context) => {
     const reject = (message: string) => context.addIssue({ code: 'custom', message });
 
-    if (!value.items.some((item) => item.type === 'derivation' || item.type === 'truth_tree'))
+    if (
+      !value.items.some(
+        (item) => item.type === ProblemType.Derivation || item.type === ProblemType.TruthTree,
+      )
+    )
       reject('Use the existing completion formats for work without proofs.');
 
     if (new Set(value.items.map((item) => item.itemId.toLowerCase())).size !== value.items.length)

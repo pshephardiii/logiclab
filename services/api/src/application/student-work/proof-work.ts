@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { z } from 'zod';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { savedStudentResponsesSchema } from '@logiclab/contracts/saved-student-work';
@@ -50,7 +51,9 @@ export function validatedProofWork(items: ProofSubmissionOccurrence[], input: un
 
   if (
     !assigned.some(
-      (item) => item.definition.type === 'derivation' || item.definition.type === 'truth_tree',
+      (item) =>
+        item.definition.type === ProblemType.Derivation ||
+        item.definition.type === ProblemType.TruthTree,
     )
   )
     throw new StudentWorkError('unsupported_policy');

@@ -8,6 +8,8 @@ export * from './classroom';
 
 export * from './problem';
 
+export * from './problem-type';
+
 export * from './assignment';
 
 export * from './student-work';

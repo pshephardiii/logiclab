@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
 import {
   truthTreeAnswerSchema,
@@ -42,7 +43,7 @@ export function evaluateTruthTreeAnswer(
 ): TruthTreeEvaluationEvidence {
   return truthTreeEvaluationEvidenceSchema.parse({
     evaluationVersion: 'truth_tree_v1',
-    type: 'truth_tree',
+    type: ProblemType.TruthTree,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
     report: checkTruthTree(prepared(authoritative, value)),
@@ -59,7 +60,7 @@ export function evaluateTruthTreeCompletion(
 
   return truthTreeCompletionEvidenceSchema.parse({
     evaluationVersion: 'truth_tree_v1',
-    type: 'truth_tree',
+    type: ProblemType.TruthTree,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
     completedResponses: 1,

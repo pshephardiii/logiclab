@@ -2,7 +2,7 @@ import type { ProblemType } from './enums.ts';
 import type { TruthTree } from '../truth-tree/work.ts';
 
 export type TruthTreeDefinition = {
-  type: `${ProblemType.TruthTree}`;
+  type: typeof ProblemType.TruthTree;
   definitionVersion: 1;
   checkerVersion: 1;
   ruleCatalogVersion: 1;

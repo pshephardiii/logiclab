@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { FinalSubmissionPanel } from './FinalSubmissionPanel';
 import { AssignedProblemNavigation } from './AssignedProblemNavigation';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
@@ -44,7 +45,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
   const isProof =
     item &&
     'content' in item &&
-    (item.content.type === 'derivation' || item.content.type === 'truth_tree');
+    (item.content.type === ProblemType.Derivation || item.content.type === ProblemType.TruthTree);
   const currentFeedback = item ? work.feedback[item.id] : undefined;
   const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
@@ -58,7 +59,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           proof: (
             proofAnswer ??
             blankDerivationAnswer(
-              item && 'content' in item && item.content.type === 'derivation'
+              item && 'content' in item && item.content.type === ProblemType.Derivation
                 ? item.content.format
                 : 'fitch',
             )
@@ -134,7 +135,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           work.assignment.items.some(
             (value) =>
               'content' in value &&
-              (value.content.type === 'derivation' || value.content.type === 'truth_tree'),
+              (value.content.type === ProblemType.Derivation ||
+                value.content.type === ProblemType.TruthTree),
           ) && (
             <p>
               {work.assignment.assessmentMode === 'ungraded_practice'
@@ -222,7 +224,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeAnswer(item.id, row, column, value);
               }}
             />
-          ) : item.content.type === 'truth_tree' ? (
+          ) : item.content.type === ProblemType.TruthTree ? (
             <AssignedTruthTree
               item={{ ...item, content: item.content }}
               answer={work.truthTreeAnswers[item.id]}
@@ -247,19 +249,19 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                   ? truthTreeSubmissionFeedback(work.attempt?.result, item.id)
                   : currentFeedback &&
                       'type' in currentFeedback &&
-                      currentFeedback.type === 'truth_tree'
+                      currentFeedback.type === ProblemType.TruthTree
                     ? currentFeedback.report
                     : null
               }
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                currentSolution.type === 'truth_tree'
+                currentSolution.type === ProblemType.TruthTree
                   ? currentSolution
                   : null
               }
             />
-          ) : item.content.type === 'derivation' ? (
+          ) : item.content.type === ProblemType.Derivation ? (
             <AssignedDerivation
               onPendingChange={setEntryPending}
               key={item.id}
@@ -268,7 +270,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 proofAnswer ??
                 (submitted
                   ? blankDerivationAnswer(
-                      item && 'content' in item && item.content.type === 'derivation'
+                      item && 'content' in item && item.content.type === ProblemType.Derivation
                         ? item.content.format
                         : 'fitch',
                     )
@@ -278,7 +280,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                currentSolution.type === 'derivation'
+                currentSolution.type === ProblemType.Derivation
                   ? currentSolution
                   : null
               }
@@ -311,8 +313,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                (currentSolution.type === 'true_false' ||
-                  currentSolution.type === 'multiple_choice')
+                (currentSolution.type === ProblemType.TrueFalse ||
+                  currentSolution.type === ProblemType.MultipleChoice)
                   ? currentSolution
                   : null
               }

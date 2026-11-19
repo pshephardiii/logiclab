@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   objectiveAssignmentResponsesSchema,
   objectiveGradedSubmissionResultSchema,
@@ -59,12 +60,12 @@ function responseFor(
   if (Object.hasOwn(responses, item.id)) return responses[item.id]!;
 
   switch (item.definition.type) {
-    case 'truth_table':
+    case ProblemType.TruthTable:
       return [];
-    case 'true_false':
-      return { type: 'true_false', answer: null };
-    case 'multiple_choice':
-      return { type: 'multiple_choice', optionId: null };
+    case ProblemType.TrueFalse:
+      return { type: ProblemType.TrueFalse, answer: null };
+    case ProblemType.MultipleChoice:
+      return { type: ProblemType.MultipleChoice, optionId: null };
   }
 }
 
@@ -81,7 +82,8 @@ function truthTableOnlyWork(
 ) {
   return {
     items: items.map((item) => {
-      if (item.definition.type !== 'truth_table') throw new StudentWorkError('invalid_answer');
+      if (item.definition.type !== ProblemType.TruthTable)
+        throw new StudentWorkError('invalid_answer');
 
       return { id: item.id, formula: item.definition.formula };
     }),
@@ -98,7 +100,7 @@ export function evaluateObjectiveSubmission(
 ): TruthTableGradedSubmissionResult | ObjectiveGradedSubmissionResult {
   const work = validatedWork(items, input);
 
-  if (work.items.every((item) => item.definition.type === 'truth_table')) {
+  if (work.items.every((item) => item.definition.type === ProblemType.TruthTable)) {
     const tableWork = truthTableOnlyWork(work.items, work.responses);
 
     return evaluateTruthTableSubmission(tableWork.items, tableWork.answers);
@@ -109,7 +111,7 @@ export function evaluateObjectiveSubmission(
   const results = work.items.map((item) => {
     const answer = responseFor(item, work.responses);
 
-    if (item.definition.type === 'truth_table') {
+    if (item.definition.type === ProblemType.TruthTable) {
       const feedback = checkAssignedTruthTableAnswers(
         item.definition.formula,
         tableAnswers(answer),
@@ -119,7 +121,7 @@ export function evaluateObjectiveSubmission(
       summary.incorrect += feedback.summary.incorrect;
       summary.unanswered += feedback.summary.unanswered;
       summary.total += feedback.summary.total;
-      return { type: 'truth_table' as const, itemId: item.id, feedback };
+      return { type: ProblemType.TruthTable, itemId: item.id, feedback };
     }
 
     const feedback = checkConceptualAnswer(item.definition, answer);
@@ -143,7 +145,7 @@ export function evaluateObjectiveCompletion(
 ): TruthTableCompletionSubmissionResult | ObjectiveCompletionSubmissionResult {
   const work = validatedWork(items, input);
 
-  if (work.items.every((item) => item.definition.type === 'truth_table')) {
+  if (work.items.every((item) => item.definition.type === ProblemType.TruthTable)) {
     const tableWork = truthTableOnlyWork(work.items, work.responses);
 
     return evaluateTruthTableCompletion(tableWork.items, tableWork.answers);
@@ -154,7 +156,7 @@ export function evaluateObjectiveCompletion(
     let totalResponses: number;
     let completedResponses: number;
 
-    if (item.definition.type === 'truth_table') {
+    if (item.definition.type === ProblemType.TruthTable) {
       const validated = validateTruthTableAnswers(item.definition.formula, tableAnswers(response));
       totalResponses = validated.table.rows.length * validated.columns.length;
       completedResponses = [...validated.answers.values()].filter((value) => value !== null).length;

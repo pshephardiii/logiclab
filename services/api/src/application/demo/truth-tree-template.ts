@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeDefinition } from '@logiclab/contracts/truth-tree-authoring';
 
 // Identities belong to each pinned tree, independently from global problem/assignment rows.
@@ -23,7 +24,7 @@ export const DEMO_TRUTH_TREES: {
     instructions:
       'Test the argument P ∨ Q, ¬P ∴ Q. Start with both premises and ¬Q. Expand the disjunction on separate branches, then explicitly close each contradictory path.',
     definition: {
-      type: 'truth_tree',
+      type: ProblemType.TruthTree,
       definitionVersion: 1,
       checkerVersion: 1,
       ruleCatalogVersion: 1,
@@ -85,7 +86,7 @@ export const DEMO_TRUTH_TREES: {
     instructions:
       'Test the argument P ∨ Q ∴ P. Start with the premise and ¬P. Expand the disjunction and explicitly close contradictory paths. A fully expanded open path can refute the argument.',
     definition: {
-      type: 'truth_tree',
+      type: ProblemType.TruthTree,
       definitionVersion: 1,
       checkerVersion: 1,
       ruleCatalogVersion: 1,

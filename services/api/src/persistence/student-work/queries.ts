@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../../application/proof/availability';
 import type { DatabaseManager } from '../transactions';
 import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
@@ -70,8 +71,8 @@ export async function admittedItems(em: DatabaseManager, assignment: Assignment)
   const assigned = await items(em, assignment.id);
   for (const item of assigned) {
     const definition = item.problemVersion.definition;
-    if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
-    if (definition.type === 'truth_tree') assertTruthTreeWorkPolicy(assignment);
+    if (definition.type === ProblemType.Derivation) assertProofFormatAvailable(definition.format);
+    if (definition.type === ProblemType.TruthTree) assertTruthTreeWorkPolicy(assignment);
   }
   return assigned;
 }

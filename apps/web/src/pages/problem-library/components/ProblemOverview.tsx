@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import type {
   LibraryProblemDraft,
@@ -27,7 +28,7 @@ export function ProblemOverview({
         <div role="status" className="publication-success">
           <strong>✓ Published version {published.version}.</strong>
           <p>
-            {problem.definition.type === 'truth_tree'
+            {problem.definition.type === ProblemType.TruthTree
               ? 'Your truth-tree snapshot is published.'
               : 'Your problem is ready to add to an assignment.'}
           </p>
@@ -59,11 +60,11 @@ export function ProblemOverview({
         <>
           <p className="problem-status-badge">Published · Version {version.version}</p>
           {version.instructions && <p>{version.instructions}</p>}
-          {version.definition.type === 'truth_tree' ? (
+          {version.definition.type === ProblemType.TruthTree ? (
             <TruthTreeSummary definition={version.definition} />
-          ) : version.definition.type === 'derivation' ? (
+          ) : version.definition.type === ProblemType.Derivation ? (
             <DerivationSummary definition={version.definition} />
-          ) : version.definition.type === 'truth_table' ? (
+          ) : version.definition.type === ProblemType.TruthTable ? (
             <p>
               <code>{version.definition.formula}</code>
             </p>

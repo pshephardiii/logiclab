@@ -1,9 +1,10 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { dependencyProofSchema } from './dependency-proof';
 
 /** Student-entered dependency work only; the server supplies statement, rules and identities. */
 export const dependencyDerivationAnswerSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   proof: dependencyProofSchema,
 });
 

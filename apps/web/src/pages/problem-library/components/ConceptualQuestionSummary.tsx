@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 type Props = { definition: ConceptualQuestionDefinition };
@@ -7,7 +8,7 @@ export function ConceptualQuestionSummary({ definition }: Props) {
   return (
     <div>
       <p>{definition.question}</p>
-      {definition.type === 'multiple_choice' && (
+      {definition.type === ProblemType.MultipleChoice && (
         <ul>
           {definition.options.map((option) => (
             <li key={option.id}>
@@ -17,7 +18,7 @@ export function ConceptualQuestionSummary({ definition }: Props) {
           ))}
         </ul>
       )}
-      {definition.type === 'true_false' && (
+      {definition.type === ProblemType.TrueFalse && (
         <p>Correct answer: {definition.correctAnswer ? 'True' : 'False'}</p>
       )}
       {definition.explanation && <p>Explanation: {definition.explanation}</p>}

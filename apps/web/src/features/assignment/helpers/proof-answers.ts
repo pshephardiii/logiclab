@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { SavedDerivationAnswer as DerivationAnswer } from '@logiclab/contracts/saved-student-work';
 import type {
   SavedStudentAssignment,
@@ -9,12 +10,18 @@ export function blankDerivationAnswer(
   format: DerivationAnswer['proof']['format'] = 'fitch',
 ): DerivationAnswer {
   if (format === 'tree')
-    return { type: 'derivation', proof: { proofVersion: 1, format, rootId: null, nodes: [] } };
+    return {
+      type: ProblemType.Derivation,
+      proof: { proofVersion: 1, format, rootId: null, nodes: [] },
+    };
 
   if (format === 'dependency')
-    return { type: 'derivation', proof: { proofVersion: 1, format, steps: [] } };
+    return { type: ProblemType.Derivation, proof: { proofVersion: 1, format, steps: [] } };
 
-  return { type: 'derivation', proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] } };
+  return {
+    type: ProblemType.Derivation,
+    proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+  };
 }
 
 export function savedProofAnswers(
@@ -24,11 +31,12 @@ export function savedProofAnswers(
   const answers: Record<string, DerivationAnswer> = {};
 
   for (const item of assignment.items) {
-    if (!('content' in item) || item.content.type !== 'derivation') continue;
+    if (!('content' in item) || item.content.type !== ProblemType.Derivation) continue;
 
     const answer = attempt?.answers[item.id];
 
-    if (answer && !Array.isArray(answer) && answer.type === 'derivation') answers[item.id] = answer;
+    if (answer && !Array.isArray(answer) && answer.type === ProblemType.Derivation)
+      answers[item.id] = answer;
   }
 
   return answers;

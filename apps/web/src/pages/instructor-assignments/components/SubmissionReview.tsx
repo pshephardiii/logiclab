@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { SubmissionGradingPanel } from './SubmissionGradingPanel';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
@@ -41,10 +42,10 @@ export function SubmissionReview({
   const response = item ? review?.attempt.answers[item.id] : undefined;
 
   const proofAnswer =
-    response && !Array.isArray(response) && response.type === 'derivation'
+    response && !Array.isArray(response) && response.type === ProblemType.Derivation
       ? response
       : blankDerivationAnswer(
-          item && 'content' in item && item.content.type === 'derivation'
+          item && 'content' in item && item.content.type === ProblemType.Derivation
             ? item.content.format
             : 'fitch',
         );
@@ -175,17 +176,17 @@ export function SubmissionReview({
                 readOnly
                 onAnswer={() => {}}
               />
-            ) : item.content.type === 'truth_tree' ? (
+            ) : item.content.type === ProblemType.TruthTree ? (
               <AssignedTruthTree
                 report={truthTreeSubmissionFeedback(review.attempt.result, item.id)}
                 item={{ ...item, content: item.content }}
                 answer={
-                  response && !Array.isArray(response) && response.type === 'truth_tree'
+                  response && !Array.isArray(response) && response.type === ProblemType.TruthTree
                     ? response
                     : undefined
                 }
               />
-            ) : item.content.type === 'derivation' ? (
+            ) : item.content.type === ProblemType.Derivation ? (
               <AssignedDerivation
                 item={{ ...item, content: item.content }}
                 answer={proofAnswer}
@@ -199,7 +200,8 @@ export function SubmissionReview({
                 answer={
                   response &&
                   !Array.isArray(response) &&
-                  (response.type === 'true_false' || response.type === 'multiple_choice')
+                  (response.type === ProblemType.TrueFalse ||
+                    response.type === ProblemType.MultipleChoice)
                     ? response
                     : undefined
                 }

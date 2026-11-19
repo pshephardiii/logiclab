@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useState } from 'react';
 import type { LibraryReferenceCheckResponse } from '@logiclab/contracts/problem-library';
 import type { LibraryProblemDraft } from '@logiclab/contracts/problem-library';
@@ -58,7 +59,7 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
       {result && (
         <p role="status">
           {result.check.status === 'missing'
-            ? problem.definition.type === 'truth_tree'
+            ? problem.definition.type === ProblemType.TruthTree
               ? 'No reference tree saved.'
               : 'No reference proof saved.'
             : report && 'argumentStatus' in report && report.status === 'verified'
@@ -78,7 +79,7 @@ export function SavedReferenceCheck({ problem }: { problem: LibraryProblemDraft 
             <li key={index}>
               {'stepIndex' in diagnostic &&
                 diagnostic.stepIndex !== undefined &&
-                `${problem.definition.type === 'derivation' && problem.definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
+                `${problem.definition.type === ProblemType.Derivation && problem.definition.format === 'tree' ? 'Node' : 'Line'} ${diagnostic.stepIndex + 1}: `}
               {diagnostic.message}
             </li>
           ))}

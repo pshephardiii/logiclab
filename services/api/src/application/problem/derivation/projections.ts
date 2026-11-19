@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import { fitchContent, fitchReferenceSolution } from './fitch/authoring';
 import { dependencyContent, dependencyReferenceSolution } from './dependency/authoring';
@@ -6,7 +7,7 @@ import {
   naturalDeductionTreeReferenceSolution,
 } from './natural-deduction-tree/authoring';
 
-type Definition = Extract<LibraryProblemDefinition, { type: 'derivation' }>;
+type Definition = Extract<LibraryProblemDefinition, { type: typeof ProblemType.Derivation }>;
 
 /** Public statement only; the caller supplies the authoritative saved definition. */
 export function publicDerivationContent(definition: Definition) {

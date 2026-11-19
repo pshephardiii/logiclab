@@ -41,7 +41,9 @@ type ChangedOptionality = Assert<WithRequiredInstructions>;
 // Persisted problem kinds stay compatible with API string discriminants while
 // rejecting unsupported kinds until their definition variant is implemented.
 type DefinitionKind = ProblemDefinition['type'];
-type SupportedEnumKind = Assert<ProblemType.TruthTable extends DefinitionKind ? true : false>;
+type SupportedEnumKind = Assert<
+  typeof ProblemType.TruthTable extends DefinitionKind ? true : false
+>;
 type SupportedWireKind = Assert<'truth_table' extends DefinitionKind ? true : false>;
 type StoredDerivationKind = Assert<'derivation' extends DefinitionKind ? true : false>;
 // @ts-expect-error Adding an unsupported exercise kind must not bypass the definition model.

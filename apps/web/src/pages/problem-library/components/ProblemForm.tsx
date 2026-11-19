@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
 import { TruthTreeProblemFields } from './TruthTreeProblemFields';
@@ -52,8 +53,8 @@ export function ProblemForm({
   const [premisePending, setPremisePending] = useState(false);
   const workPending = entryPending || premisePending;
   const [authoringStep, setAuthoringStep] = useState(initialAuthoringStep);
-  const staged = fields.type === 'derivation' || fields.type === 'truth_tree';
-  const treeAuthoring = fields.type === 'truth_tree';
+  const staged = fields.type === ProblemType.Derivation || fields.type === ProblemType.TruthTree;
+  const treeAuthoring = fields.type === ProblemType.TruthTree;
   const referenceName = treeAuthoring ? 'tree' : 'proof';
   const referenceStep = staged && authoringStep === 'reference';
   const stepHeading = useRef<HTMLHeadingElement>(null);
@@ -170,7 +171,7 @@ export function ProblemForm({
     await onSave(input.data);
   }
 
-  if (unavailable && problem?.definition.type === 'derivation')
+  if (unavailable && problem?.definition.type === ProblemType.Derivation)
     return (
       <section className="panel" aria-label="Retained problem">
         <h2>{problem.title}</h2>
@@ -247,7 +248,7 @@ export function ProblemForm({
               onPremisePendingChange={setPremisePending}
               disabled={busy || Boolean(problem?.archivedAt)}
             />
-          ) : fields.type === 'derivation' ? (
+          ) : fields.type === ProblemType.Derivation ? (
             <DerivationProblemFields
               fields={fields}
               authoringStep={authoringStep}
@@ -256,7 +257,7 @@ export function ProblemForm({
               onPendingChange={setEntryPending}
               onPremisePendingChange={setPremisePending}
             />
-          ) : fields.type === 'truth_table' ? (
+          ) : fields.type === ProblemType.TruthTable ? (
             <>
               <label htmlFor="problem-formula">Formula</label>
               <input
@@ -297,7 +298,7 @@ export function ProblemForm({
           workPending ||
           (staged
             ? false
-            : fields.type === 'truth_table'
+            : fields.type === ProblemType.TruthTable
               ? !fields.formula.trim()
               : !fields.question.trim())
         }

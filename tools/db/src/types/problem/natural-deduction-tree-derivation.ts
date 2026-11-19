@@ -3,7 +3,7 @@ import type { NaturalDeductionTreeProof } from '../proof/natural-deduction-tree-
 
 /** Private tree JSON stored in owner drafts and immutable published versions. */
 export type NaturalDeductionTreeDerivationDefinition = {
-  type: `${ProblemType.Derivation}`;
+  type: typeof ProblemType.Derivation;
   definitionVersion: 1;
   format: 'tree';
   ruleCatalogVersion: 1;

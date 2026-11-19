@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { conceptualQuestionContent } from '../../application/problem/conceptual-content';
 import { validateObjectiveDefinition } from '../../application/problem/definition-support';
 import type { Assignment, AssignmentItem } from '@logiclab/db' with { 'resolution-mode': 'import' };
@@ -20,7 +21,7 @@ export function savedAssignmentExercises(
     items: items.map((item) => {
       const stored = item.problemVersion.definition;
 
-      if (stored.type === 'truth_tree') {
+      if (stored.type === ProblemType.TruthTree) {
         assertTruthTreeWorkPolicy(assignment);
         return {
           id: item.id,
@@ -32,10 +33,10 @@ export function savedAssignmentExercises(
         };
       }
 
-      if (stored.type === 'derivation') assertProofWorkPolicy(assignment);
+      if (stored.type === ProblemType.Derivation) assertProofWorkPolicy(assignment);
 
       const definition =
-        stored.type === 'derivation'
+        stored.type === ProblemType.Derivation
           ? publicDerivationContent(stored)
           : validateObjectiveDefinition(stored);
 
@@ -47,9 +48,9 @@ export function savedAssignmentExercises(
         instructions: item.problemVersion.instructions ?? null,
       };
 
-      if (definition.type === 'derivation') return { ...common, content: definition };
+      if (definition.type === ProblemType.Derivation) return { ...common, content: definition };
 
-      return definition.type === 'truth_table'
+      return definition.type === ProblemType.TruthTable
         ? {
             ...common,
             formula: definition.formula,

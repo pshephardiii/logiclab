@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { Assignment, AssignmentItem, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -30,9 +31,11 @@ export function calculateSubmissionResult(
   if (!validAssignmentScoring(assignment, assigned))
     throw new StudentWorkError('unsupported_policy');
 
-  const containsProof = assigned.some((item) =>
-    ['derivation', 'truth_tree'].includes(item.problemVersion.definition.type),
-  );
+  const containsProof = assigned.some((item) => {
+    const type = item.problemVersion.definition.type;
+
+    return type === ProblemType.Derivation || type === ProblemType.TruthTree;
+  });
 
   if (containsProof) assertProofWorkPolicy(assignment);
 

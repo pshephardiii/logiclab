@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import { assignedWorkCapabilities } from '../helpers/assigned-work-state';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
@@ -187,7 +188,7 @@ export function useAssignedAttempt(assignmentId: string) {
     if (
       !item ||
       !('content' in item) ||
-      item.content.type !== 'derivation' ||
+      item.content.type !== ProblemType.Derivation ||
       item.content.format !== snapshot.proof.format
     )
       return;
@@ -215,7 +216,7 @@ export function useAssignedAttempt(assignmentId: string) {
     if (workUnavailable || loading || action || attempt?.submittedAt) return;
 
     const item = assignment?.items.find((value) => value.id === itemId);
-    if (!item || !('content' in item) || item.content.type !== 'truth_tree') return;
+    if (!item || !('content' in item) || item.content.type !== ProblemType.TruthTree) return;
 
     cancelCheck();
     setFeedback((previous) => {
@@ -342,9 +343,9 @@ export function useAssignedAttempt(assignmentId: string) {
 
         if (
           'type' in feedback &&
-          feedback.type === 'derivation' &&
+          feedback.type === ProblemType.Derivation &&
           !Array.isArray(checkedAnswer) &&
-          checkedAnswer.type === 'derivation'
+          checkedAnswer.type === ProblemType.Derivation
         )
           setProofFeedback((previous) => ({
             ...previous,

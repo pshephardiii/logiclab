@@ -1,9 +1,10 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { ConceptualQuestionDefinition, ConceptualSolution } from '@logiclab/contracts';
 
 /** Instructor preview only: keep ordinary content separate from the privileged answer payload. */
 export function conceptualPreviewData(definition: ConceptualQuestionDefinition) {
   const content =
-    definition.type === 'true_false'
+    definition.type === ProblemType.TrueFalse
       ? {
           type: definition.type,
           definitionVersion: definition.definitionVersion,
@@ -17,7 +18,7 @@ export function conceptualPreviewData(definition: ConceptualQuestionDefinition) 
         };
 
   const solution: ConceptualSolution =
-    definition.type === 'true_false'
+    definition.type === ProblemType.TrueFalse
       ? {
           type: definition.type,
           correctAnswer: definition.correctAnswer,

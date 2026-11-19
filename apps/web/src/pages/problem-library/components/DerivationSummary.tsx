@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { proofNotation } from '../../../features/proof/helpers/proof-notation';
 import { PermittedRulesButton } from '../../../features/proof/reference/PermittedRulesButton';
 import { DerivationReferenceSummary } from './DerivationReferenceSummary';
@@ -7,7 +8,7 @@ import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-libra
 export function DerivationSummary({
   definition,
 }: {
-  definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>;
+  definition: Extract<LibraryProblemDefinition, { type: typeof ProblemType.Derivation }>;
 }) {
   return (
     <div>

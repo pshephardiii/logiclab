@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   assignmentScoreSchema,
   type AssignmentPointAllocation,
@@ -26,7 +27,7 @@ export function scoreProofSubmission(
 
   const result = parsed.data;
   const objective = result.items.flatMap((item) =>
-    item.type === 'derivation' || item.type === 'truth_tree' ? [] : [item],
+    item.type === ProblemType.Derivation || item.type === ProblemType.TruthTree ? [] : [item],
   );
 
   const outcomes: AssignmentScoringOutcome[] = objectiveScoringOutcomes({
@@ -36,9 +37,9 @@ export function scoreProofSubmission(
   });
 
   for (const item of result.items) {
-    if (item.type === 'truth_tree') outcomes.push(truthTreeScoringOutcome(item));
+    if (item.type === ProblemType.TruthTree) outcomes.push(truthTreeScoringOutcome(item));
 
-    if (item.type === 'derivation')
+    if (item.type === ProblemType.Derivation)
       outcomes.push({
         itemId: item.itemId,
         outcome: { type: item.report.status === 'accepted' ? 'full_credit' : 'needs_review' },

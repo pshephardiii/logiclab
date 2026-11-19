@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { dependencyProofSchema } from './dependency-proof';
 import {
@@ -22,7 +23,7 @@ export type DependencyDerivationDefinition = z.infer<typeof dependencyDerivation
 
 /** Caller must authorize answer reveal; schema membership alone does not grant access. */
 export const dependencyDerivationSolutionSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   definitionVersion: z.literal(1),
   format: z.literal('dependency'),
   ruleCatalogVersion: z.literal(1),

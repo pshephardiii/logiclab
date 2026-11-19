@@ -7,7 +7,7 @@ export type FitchReferenceProof = FitchProof;
 
 /** Versioned instructor JSON, shared by mutable drafts and immutable published snapshots. */
 export type FitchDerivationDefinition = {
-  type: `${ProblemType.Derivation}`;
+  type: typeof ProblemType.Derivation;
   definitionVersion: 1;
   format: 'fitch';
   ruleCatalogVersion: 1;

@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeDefinition } from '@logiclab/contracts/truth-tree-authoring';
 import {
   libraryProblemDefinitionSchema,
@@ -9,7 +10,7 @@ export type DerivationAuthoringStep = 'details' | 'reference';
 
 export type AuthoringDerivationDefinition = Extract<
   LibraryProblemDefinition,
-  { type: 'derivation' }
+  { type: typeof ProblemType.Derivation }
 >;
 
 export type ProblemEditorFields = {
@@ -33,13 +34,13 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
   return {
     title: problem?.title ?? '',
     instructions: problem?.instructions ?? '',
-    type: definition?.type ?? 'truth_table',
-    formula: definition?.type === 'truth_table' ? definition.formula : '',
+    type: definition?.type ?? ProblemType.TruthTable,
+    formula: definition?.type === ProblemType.TruthTable ? definition.formula : '',
     truthTree:
-      definition?.type === 'truth_tree'
+      definition?.type === ProblemType.TruthTree
         ? structuredClone(definition)
         : {
-            type: 'truth_tree',
+            type: ProblemType.TruthTree,
             definitionVersion: 1,
             checkerVersion: 1,
             ruleCatalogVersion: 1,
@@ -49,10 +50,10 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
             explanation: null,
           },
     derivation:
-      definition?.type === 'derivation'
+      definition?.type === ProblemType.Derivation
         ? structuredClone(definition)
         : {
-            type: 'derivation',
+            type: ProblemType.Derivation,
             definitionVersion: 1,
             format: 'fitch',
             ruleCatalogVersion: 1,
@@ -64,41 +65,48 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
             explanation: null,
           },
     derivationLabels:
-      definition?.type === 'derivation'
+      definition?.type === ProblemType.Derivation
         ? Object.fromEntries(definition.rules.map((rule) => [rule.id, rule.label]))
         : {},
     question:
-      definition && (definition.type === 'true_false' || definition.type === 'multiple_choice')
+      definition &&
+      (definition.type === ProblemType.TrueFalse || definition.type === ProblemType.MultipleChoice)
         ? definition.question
         : '',
     explanation:
-      definition && (definition.type === 'true_false' || definition.type === 'multiple_choice')
+      definition &&
+      (definition.type === ProblemType.TrueFalse || definition.type === ProblemType.MultipleChoice)
         ? (definition.explanation ?? '')
         : '',
     correctAnswer:
-      definition?.type === 'true_false' ? (definition.correctAnswer ? 'true' : 'false') : '',
+      definition?.type === ProblemType.TrueFalse
+        ? definition.correctAnswer
+          ? 'true'
+          : 'false'
+        : '',
     options:
-      definition?.type === 'multiple_choice'
+      definition?.type === ProblemType.MultipleChoice
         ? definition.options
         : [
             { id: crypto.randomUUID(), text: '' },
             { id: crypto.randomUUID(), text: '' },
           ],
-    correctOptionId: definition?.type === 'multiple_choice' ? definition.correctOptionId : '',
+    correctOptionId:
+      definition?.type === ProblemType.MultipleChoice ? definition.correctOptionId : '',
   };
 }
 
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
-  if (fields.type === 'truth_tree') return fields.truthTree;
+  if (fields.type === ProblemType.TruthTree) return fields.truthTree;
 
-  if (fields.type === 'derivation') return fields.derivation;
+  if (fields.type === ProblemType.Derivation) return fields.derivation;
 
   const common = { type: fields.type, definitionVersion: 1 };
 
-  return fields.type === 'truth_table'
+  return fields.type === ProblemType.TruthTable
     ? { ...common, formula: fields.formula }
-    : fields.type === 'true_false'
+    : fields.type === ProblemType.TrueFalse
       ? {
           ...common,
           question: fields.question,

@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
@@ -24,7 +25,7 @@ export function evaluateProofCompletion(
   const { assigned, responses } = validatedProofWork(items, input);
 
   const proofs = assigned.flatMap((item) => {
-    if (item.definition.type !== 'derivation') return [];
+    if (item.definition.type !== ProblemType.Derivation) return [];
 
     const value = responses.get(item.id);
 
@@ -56,7 +57,8 @@ export function evaluateProofCompletion(
   });
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' || item.definition.type === 'truth_tree'
+    item.definition.type === ProblemType.Derivation ||
+    item.definition.type === ProblemType.TruthTree
       ? []
       : [{ id: item.id, definition: item.definition }],
   );
@@ -80,7 +82,7 @@ export function evaluateProofCompletion(
       'completedCells' in item
         ? {
             itemId: item.itemId,
-            type: 'truth_table',
+            type: ProblemType.TruthTable,
             completedResponses: item.completedCells,
             totalResponses: item.totalCells,
           }
@@ -98,7 +100,7 @@ export function evaluateProofCompletion(
   }
 
   for (const item of assigned) {
-    if (item.definition.type !== 'truth_tree') continue;
+    if (item.definition.type !== ProblemType.TruthTree) continue;
 
     const answer = responses.get(item.id);
 

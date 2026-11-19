@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { latestSubmissionGrading } from '../submission-review/grading-state';
 import type {
   Assignment as AssignmentEntity,
@@ -122,7 +123,7 @@ export async function createStudentWorkStore(
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
           libraryProblemDefinition(definition);
         }
@@ -134,9 +135,9 @@ export async function createStudentWorkStore(
         checkRevision(attempt, input.revision);
 
         const answers =
-          definition.type === 'truth_tree'
+          definition.type === ProblemType.TruthTree
             ? validateTruthTreeAnswer(input.answers)
-            : definition.type === 'derivation'
+            : definition.type === ProblemType.Derivation
               ? validateProofAnswer(definition, input.answers)
               : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
 
@@ -181,7 +182,7 @@ export async function createStudentWorkStore(
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'truth_tree') {
+        if (definition.type === ProblemType.TruthTree) {
           assertTruthTreeWorkPolicy(assignment);
 
           if (assignment.assessmentMode !== 'ungraded_practice')
@@ -198,11 +199,11 @@ export async function createStudentWorkStore(
 
           return {
             itemId: item.id,
-            feedback: { type: 'truth_tree' as const, report: evidence.report },
+            feedback: { type: ProblemType.TruthTree, report: evidence.report },
           };
         }
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
 
           if (assignment.assessmentMode !== 'ungraded_practice')
@@ -219,7 +220,7 @@ export async function createStudentWorkStore(
 
           return {
             itemId: item.id,
-            feedback: { type: 'derivation' as const, report: evidence.report },
+            feedback: { type: ProblemType.Derivation, report: evidence.report },
           };
         }
 
@@ -292,12 +293,12 @@ export async function createStudentWorkStore(
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'truth_tree') {
+        if (definition.type === ProblemType.TruthTree) {
           assertTruthTreeWorkPolicy(assignment);
           return { itemId, solution: truthTreeReferenceSolution(definition) };
         }
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
           return { itemId, solution: derivationReferenceSolution(definition) };
         }

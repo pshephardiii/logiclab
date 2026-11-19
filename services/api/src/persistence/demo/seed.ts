@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { DEMO_TRUTH_TREES } from '../../application/demo/truth-tree-template';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { generateTruthTable } from '@logiclab/logic-engine';
@@ -54,7 +55,11 @@ export async function seedDemoWorkspace(
     owner: instructor,
     title: DEMO_TEMPLATE.problemTitle,
     instructions: DEMO_TEMPLATE.problemInstructions,
-    definition: { type: 'truth_table', definitionVersion: 1, formula: DEMO_TEMPLATE.formula },
+    definition: {
+      type: ProblemType.TruthTable,
+      definitionVersion: 1,
+      formula: DEMO_TEMPLATE.formula,
+    },
   });
 
   const version = em.create(ProblemVersion, {

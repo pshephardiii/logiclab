@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { DependencyDerivationContent } from '@logiclab/contracts/dependency-derivation';
 import {
   dependencyDerivationAnswerSchema,
@@ -33,7 +34,7 @@ export function evaluateDependencyAnswer(
 
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',
-    type: 'derivation',
+    type: ProblemType.Derivation,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
     report: checkDependencyProof({

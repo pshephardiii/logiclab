@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
 import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
@@ -42,7 +43,7 @@ export function TruthTreePracticePage() {
 
     try {
       const statement = truthTreeContentSchema.parse({
-        type: 'truth_tree',
+        type: ProblemType.TruthTree,
         definitionVersion: 1,
         checkerVersion: 1,
         ruleCatalogVersion: 1,

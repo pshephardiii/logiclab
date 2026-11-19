@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import {
   assignmentItemPointsSchema,
   assignmentPointAllocationsSchema,
@@ -70,7 +71,9 @@ export const assignmentSchema = assignmentSummarySchema
       assignment.assessmentMode === 'ungraded_practice' ||
       (['graded', 'completion_only'].includes(assignment.assessmentMode) &&
         assignment.feedbackTiming === 'on_submission') ||
-      !assignment.items.some((item) => item.problemVersion.definition.type === 'derivation'),
+      !assignment.items.some(
+        (item) => item.problemVersion.definition.type === ProblemType.Derivation,
+      ),
     'Graded and completion-only derivations require feedback at submission.',
   );
 

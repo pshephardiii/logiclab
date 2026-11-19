@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import {
   truthTreeSchema,
@@ -15,7 +16,7 @@ export const TRUTH_TREE_AUTHORING_LIMITS = Object.freeze({ explanation: 5000 });
 /** Statement-only data. Draft blanks are allowed; publication checks the actual argument. */
 export const truthTreeContentSchema = z
   .strictObject({
-    type: z.literal('truth_tree'),
+    type: z.literal(ProblemType.TruthTree),
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
     ruleCatalogVersion: z.literal(1),
@@ -62,7 +63,7 @@ export type TruthTreeReferenceCheck = z.infer<typeof truthTreeReferenceCheckSche
 /** Privileged reveal only; ordinary content never carries the reference, verdict or explanation. */
 export const truthTreeSolutionSchema = z
   .strictObject({
-    type: z.literal('truth_tree'),
+    type: z.literal(ProblemType.TruthTree),
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
     ruleCatalogVersion: z.literal(1),

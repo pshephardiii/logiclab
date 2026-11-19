@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import {
   proofSubmissionResultSchema,
   proofCompletionSubmissionResultSchema,
@@ -47,7 +48,8 @@ export const submissionReviewSchema = z
     const hasProof = review.assignment.items.some(
       (item) =>
         'content' in item &&
-        (item.content.type === 'derivation' || item.content.type === 'truth_tree'),
+        (item.content.type === ProblemType.Derivation ||
+          item.content.type === ProblemType.TruthTree),
     );
 
     const completion = review.attempt.result?.gradingVersion === 'proof_completion_v1';

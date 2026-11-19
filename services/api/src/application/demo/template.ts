@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
@@ -53,7 +54,7 @@ export const DEMO_CONCEPTUAL_QUESTIONS: {
     title: 'Recognize a contradiction',
     instructions: 'Choose True or False.',
     definition: {
-      type: 'true_false',
+      type: ProblemType.TrueFalse,
       definitionVersion: 1,
       question: 'A contradiction is true under every interpretation.',
       correctAnswer: false,
@@ -65,7 +66,7 @@ export const DEMO_CONCEPTUAL_QUESTIONS: {
     title: 'Classify a formula',
     instructions: 'Choose exactly one answer.',
     definition: {
-      type: 'multiple_choice',
+      type: ProblemType.MultipleChoice,
       definitionVersion: 1,
       question: 'What do we call a formula that is true under every interpretation?',
       options: [
@@ -88,7 +89,7 @@ const conclusionId = 'd2222222-2222-4222-8222-222222222222';
 const blockId = 'd3333333-3333-4333-8333-333333333333';
 
 const proofStatement = {
-  type: 'derivation' as const,
+  type: ProblemType.Derivation,
   definitionVersion: 1 as const,
   ruleCatalogVersion: 1 as const,
   checkerVersion: 1 as const,
@@ -105,7 +106,7 @@ const proofStatement = {
 export const DEMO_DERIVATIONS: {
   title: string;
   instructions: string;
-  definition: Extract<LibraryProblemDefinition, { type: 'derivation' }>;
+  definition: Extract<LibraryProblemDefinition, { type: typeof ProblemType.Derivation }>;
 }[] = [
   {
     title: 'Conditional identity — Fitch',

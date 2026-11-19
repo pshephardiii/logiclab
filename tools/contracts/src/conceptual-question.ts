@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 
 /** Initial authoring bounds; changes require coordinated validation and editor updates. */
@@ -55,7 +56,7 @@ const optionsSchema = z
 
 /** Instructor-owned JSON definitions; never serialize these directly to a student. */
 export const trueFalseDefinitionSchema = z.strictObject({
-  type: z.literal('true_false'),
+  type: z.literal(ProblemType.TrueFalse),
   definitionVersion: z.literal(1),
   question: questionSchema,
   correctAnswer: z.boolean(),
@@ -64,7 +65,7 @@ export const trueFalseDefinitionSchema = z.strictObject({
 
 export const multipleChoiceDefinitionSchema = z
   .strictObject({
-    type: z.literal('multiple_choice'),
+    type: z.literal(ProblemType.MultipleChoice),
     definitionVersion: z.literal(1),
     question: questionSchema,
     options: optionsSchema,
@@ -92,7 +93,7 @@ export type ConceptualQuestionDefinition = z.infer<typeof conceptualQuestionDefi
 export const conceptualQuestionContentSchema = z.discriminatedUnion('type', [
   trueFalseDefinitionSchema.omit({ correctAnswer: true, explanation: true }),
   z.strictObject({
-    type: z.literal('multiple_choice'),
+    type: z.literal(ProblemType.MultipleChoice),
     definitionVersion: z.literal(1),
     question: questionSchema,
     options: optionsSchema,
@@ -103,8 +104,11 @@ export type ConceptualQuestionContent = z.infer<typeof conceptualQuestionContent
 
 /** Null means unanswered; false is a completed true/false response. */
 export const conceptualAnswerSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('true_false'), answer: z.boolean().nullable() }),
-  z.strictObject({ type: z.literal('multiple_choice'), optionId: optionIdSchema.nullable() }),
+  z.strictObject({ type: z.literal(ProblemType.TrueFalse), answer: z.boolean().nullable() }),
+  z.strictObject({
+    type: z.literal(ProblemType.MultipleChoice),
+    optionId: optionIdSchema.nullable(),
+  }),
 ]);
 
 export type ConceptualAnswer = z.infer<typeof conceptualAnswerSchema>;
@@ -112,12 +116,12 @@ export type ConceptualAnswer = z.infer<typeof conceptualAnswerSchema>;
 /** Answer-reveal payload only; ordinary content and correctness feedback exclude these fields. */
 export const conceptualSolutionSchema = z.discriminatedUnion('type', [
   z.strictObject({
-    type: z.literal('true_false'),
+    type: z.literal(ProblemType.TrueFalse),
     correctAnswer: z.boolean(),
     explanation: z.string().max(CONCEPTUAL_QUESTION_LIMITS.explanation).nullable(),
   }),
   z.strictObject({
-    type: z.literal('multiple_choice'),
+    type: z.literal(ProblemType.MultipleChoice),
     correctOptionId: optionIdSchema,
     explanation: z.string().max(CONCEPTUAL_QUESTION_LIMITS.explanation).nullable(),
   }),
@@ -135,8 +139,8 @@ export function conceptualAnswerSchemaFor(definition: ConceptualQuestionDefiniti
         message: 'Answer type must match the question.',
       });
     } else if (
-      answer.type === 'multiple_choice' &&
-      definition.type === 'multiple_choice' &&
+      answer.type === ProblemType.MultipleChoice &&
+      definition.type === ProblemType.MultipleChoice &&
       answer.optionId !== null &&
       !definition.options.some((option) => option.id === answer.optionId)
     ) {

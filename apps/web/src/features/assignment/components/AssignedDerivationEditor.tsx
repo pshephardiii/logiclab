@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type {
   SavedStudentAssignment,
   SavedDerivationAnswer as DerivationAnswer,
@@ -6,7 +7,10 @@ import { DependencyProofEditor } from '../../proof/dependency/DependencyProofEdi
 import { NaturalDeductionTreeProofEditor } from '../../proof/natural-deduction-tree/NaturalDeductionTreeProofEditor';
 import { FitchProofEditor } from '../../proof/components/FitchProofEditor';
 
-type Item = Extract<SavedStudentAssignment['items'][number], { content: { type: 'derivation' } }>;
+type Item = Extract<
+  SavedStudentAssignment['items'][number],
+  { content: { type: typeof ProblemType.Derivation } }
+>;
 
 /** Select the pinned format; permissions and feedback remain with the assigned panel. */
 export function AssignedDerivationEditor({
@@ -35,7 +39,7 @@ export function AssignedDerivationEditor({
           onChange={(next) => {
             if (!readOnly && !disabled)
               onAnswer({
-                type: 'derivation',
+                type: ProblemType.Derivation,
                 proof: next ?? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] },
               });
           }}
@@ -49,7 +53,7 @@ export function AssignedDerivationEditor({
           onChange={(next) => {
             if (!readOnly && !disabled)
               onAnswer({
-                type: 'derivation',
+                type: ProblemType.Derivation,
                 proof: next ?? { proofVersion: 1, format: 'dependency', steps: [] },
               });
           }}
@@ -63,7 +67,7 @@ export function AssignedDerivationEditor({
           onChange={(next) => {
             if (!readOnly && !disabled)
               onAnswer({
-                type: 'derivation',
+                type: ProblemType.Derivation,
                 proof: next ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
               });
           }}

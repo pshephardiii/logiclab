@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import type {
   SavedStudentAssignment,
@@ -6,7 +7,7 @@ import type {
 
 export function blankTruthTreeAnswer(): TruthTreeAnswer {
   return {
-    type: 'truth_tree',
+    type: ProblemType.TruthTree,
     tree: {
       treeVersion: 1,
       format: 'truth_tree',
@@ -24,10 +25,11 @@ export function savedTruthTreeAnswers(
 ): Record<string, TruthTreeAnswer> {
   const answers: Record<string, TruthTreeAnswer> = {};
   for (const item of assignment.items) {
-    if (!('content' in item) || item.content.type !== 'truth_tree') continue;
+    if (!('content' in item) || item.content.type !== ProblemType.TruthTree) continue;
 
     const answer = attempt?.answers[item.id];
-    if (answer && !Array.isArray(answer) && answer.type === 'truth_tree') answers[item.id] = answer;
+    if (answer && !Array.isArray(answer) && answer.type === ProblemType.TruthTree)
+      answers[item.id] = answer;
   }
   return answers;
 }

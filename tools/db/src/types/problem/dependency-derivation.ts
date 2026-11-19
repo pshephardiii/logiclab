@@ -3,7 +3,7 @@ import type { DependencyProof } from '../proof/dependency-work.ts';
 
 /** Private dependency definition stored in owner drafts and immutable versions. */
 export type DependencyDerivationDefinition = {
-  type: `${ProblemType.Derivation}`;
+  type: typeof ProblemType.Derivation;
   definitionVersion: 1;
   format: 'dependency';
   ruleCatalogVersion: 1;

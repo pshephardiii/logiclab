@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
 import { isFinishedTruthTreeAttempt } from '@logiclab/logic-engine/truth-tree';
 import { isProofFormatAvailable } from '@logiclab/contracts';
@@ -25,7 +26,7 @@ export function assignedWorkCapabilities(
     assignment?.items.some(
       (item) =>
         'content' in item &&
-        item.content.type === 'derivation' &&
+        item.content.type === ProblemType.Derivation &&
         !isProofFormatAvailable(item.content.format),
     ),
   );
@@ -78,7 +79,7 @@ export function assignmentCompletionReady(
           ? submittedAnswers(item.exercise, answers[item.id] ?? {}).every(
               (answer) => answer.value !== null,
             )
-          : item.content.type === 'truth_tree'
+          : item.content.type === ProblemType.TruthTree
             ? isFinishedTruthTreeAttempt({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
@@ -87,7 +88,7 @@ export function assignmentCompletionReady(
                 },
                 tree: truthTreeAnswers[item.id]?.tree,
               })
-            : item.content.type === 'derivation'
+            : item.content.type === ProblemType.Derivation
               ? (item.content.format === 'tree'
                   ? isFinishedNaturalDeductionTreeProofAttempt
                   : item.content.format === 'dependency'

@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { conceptualPreviewData } from '../helpers/conceptual-preview';
 import { useState } from 'react';
 import type { ConceptualAnswer, ConceptualQuestionDefinition } from '@logiclab/contracts';
@@ -10,9 +11,9 @@ export function ConceptualProblemPreview({
   definition: ConceptualQuestionDefinition;
 }) {
   const [answer, setAnswer] = useState<ConceptualAnswer>(
-    definition.type === 'true_false'
-      ? { type: 'true_false', answer: null }
-      : { type: 'multiple_choice', optionId: null },
+    definition.type === ProblemType.TrueFalse
+      ? { type: ProblemType.TrueFalse, answer: null }
+      : { type: ProblemType.MultipleChoice, optionId: null },
   );
 
   const [revealed, setRevealed] = useState(false);

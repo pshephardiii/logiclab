@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useCallback, useState } from 'react';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
 import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
@@ -13,7 +14,10 @@ import { ProofKeyboardGuide } from '../../proof/reference/ProofKeyboardGuide';
 import { ProofDeletionPrompt } from '../../proof/components/ProofDeletionPrompt';
 
 type Props = {
-  item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'truth_tree' } }>;
+  item: Extract<
+    SavedStudentAssignment['items'][number],
+    { content: { type: typeof ProblemType.TruthTree } }
+  >;
   answer?: TruthTreeAnswer;
   /** Already-authorized retained results or the latest server check; never a local assigned-work check. */
   report?: TruthTreeCheckReport | null;
@@ -53,7 +57,7 @@ export function AssignedTruthTree({
   function start() {
     if (readOnly || disabled || !onAnswer) return;
     try {
-      onAnswer({ type: 'truth_tree', tree: initialTruthTree(item.content) });
+      onAnswer({ type: ProblemType.TruthTree, tree: initialTruthTree(item.content) });
       setError(null);
       setResetting(false);
     } catch (error) {
@@ -83,7 +87,7 @@ export function AssignedTruthTree({
             tree={answer.tree}
             disabled={disabled}
             onPendingChange={changePending}
-            onChange={(tree) => onAnswer?.({ type: 'truth_tree', tree })}
+            onChange={(tree) => onAnswer?.({ type: ProblemType.TruthTree, tree })}
           />
         )
       ) : (

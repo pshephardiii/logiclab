@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { AssignmentPolicyFields } from './AssignmentPolicyFields';
 import {
@@ -57,7 +58,8 @@ export function AssignmentForm({ assignment, busy, onDirty, onSave }: Props) {
     if (
       readOnly ||
       !isProblemMethodAvailable(version.definition) ||
-      ((version.definition.type === 'derivation' || version.definition.type === 'truth_tree') &&
+      ((version.definition.type === ProblemType.Derivation ||
+        version.definition.type === ProblemType.TruthTree) &&
         !allowsProofs)
     )
       return;

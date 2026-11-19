@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
@@ -94,11 +95,11 @@ export function PublishedProblemPicker({ disabled, allowProofs = false, onAdd }:
               {version.title} · version {version.version}
             </strong>{' '}
             <code>
-              {version.definition.type === 'truth_table'
+              {version.definition.type === ProblemType.TruthTable
                 ? version.definition.formula
-                : version.definition.type === 'truth_tree'
+                : version.definition.type === ProblemType.TruthTree
                   ? `Truth tree · ${version.definition.conclusion}`
-                  : version.definition.type === 'derivation'
+                  : version.definition.type === ProblemType.Derivation
                     ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
                     : version.definition.question}
             </code>

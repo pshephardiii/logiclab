@@ -5,13 +5,13 @@ import type { NaturalDeductionTreeDerivationDefinition } from './natural-deducti
 import type { TruthTreeDefinition } from './truth-tree.ts';
 
 export type TruthTableDefinition = {
-  type: `${ProblemType.TruthTable}`;
+  type: typeof ProblemType.TruthTable;
   definitionVersion: 1;
   formula: string;
 };
 
 export type TrueFalseDefinition = {
-  type: `${ProblemType.TrueFalse}`;
+  type: typeof ProblemType.TrueFalse;
   definitionVersion: 1;
   question: string;
   correctAnswer: boolean;
@@ -19,7 +19,7 @@ export type TrueFalseDefinition = {
 };
 
 export type MultipleChoiceDefinition = {
-  type: `${ProblemType.MultipleChoice}`;
+  type: typeof ProblemType.MultipleChoice;
   definitionVersion: 1;
   question: string;
   options: { id: string; text: string }[];

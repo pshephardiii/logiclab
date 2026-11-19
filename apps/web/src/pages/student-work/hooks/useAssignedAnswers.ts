@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   blankTruthTreeAnswer,
   savedTruthTreeAnswers,
@@ -119,9 +120,9 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     (itemId: string, tableSnapshot: Answers, response: AssignmentResponseValue) => {
       if (Array.isArray(response))
         setBaseline((previous) => ({ ...previous, [itemId]: tableSnapshot }));
-      else if (response.type === 'derivation')
+      else if (response.type === ProblemType.Derivation)
         setProofBaseline((previous) => ({ ...previous, [itemId]: response }));
-      else if (response.type === 'truth_tree')
+      else if (response.type === ProblemType.TruthTree)
         setTruthTreeBaseline((previous) => ({ ...previous, [itemId]: response }));
       else setChoiceBaseline((previous) => ({ ...previous, [itemId]: response }));
     },
@@ -134,9 +135,9 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
   ): AssignmentResponseValue {
     return 'exercise' in item
       ? submittedAnswers(item.exercise, tableSnapshot)
-      : item.content.type === 'derivation'
+      : item.content.type === ProblemType.Derivation
         ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
-        : item.content.type === 'truth_tree'
+        : item.content.type === ProblemType.TruthTree
           ? (truthTreeAnswers[item.id] ?? blankTruthTreeAnswer())
           : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));
   }

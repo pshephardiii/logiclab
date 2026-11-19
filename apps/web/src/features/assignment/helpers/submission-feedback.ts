@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { SubmissionResult as ObjectiveResult } from '@logiclab/contracts';
 import type {
   ProofSubmissionResult,
@@ -14,7 +15,7 @@ export function truthTableSubmissionFeedback(
   if (result?.gradingVersion === 'mixed_v1' || result?.gradingVersion === 'proof_mixed_v1') {
     const item = result.items.find((item) => item.itemId === itemId);
 
-    return item?.type === 'truth_table' ? item.feedback : null;
+    return item?.type === ProblemType.TruthTable ? item.feedback : null;
   }
 
   return result?.gradingVersion === 'truth_table_v1'
@@ -32,7 +33,7 @@ export function conceptualSubmissionFeedback(
 
   const item = result.items.find((item) => item.itemId === itemId);
 
-  return item && (item.type === 'true_false' || item.type === 'multiple_choice')
+  return item && (item.type === ProblemType.TrueFalse || item.type === ProblemType.MultipleChoice)
     ? item.feedback
     : null;
 }
@@ -50,7 +51,7 @@ export function proofSubmissionFeedback(
 
   const item = result.items.find((item) => item.itemId === itemId);
 
-  return item?.type === 'derivation' ? item.report : null;
+  return item?.type === ProblemType.Derivation ? item.report : null;
 }
 
 /** Only already-authorized final results may supply student tree diagnostics. */
@@ -66,5 +67,5 @@ export function truthTreeSubmissionFeedback(
 
   const item = result.items.find((item) => item.itemId === itemId);
 
-  return item?.type === 'truth_tree' ? item.report : null;
+  return item?.type === ProblemType.TruthTree ? item.report : null;
 }

@@ -1,9 +1,10 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { fitchProofSchema, proofCheckReportSchema } from './proof';
 
 /** Only student-entered work. Statements, permissions, keys and reports are never accepted here. */
 export const fitchDerivationAnswerSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   proof: fitchProofSchema,
 });
 
@@ -28,7 +29,7 @@ export type CheckFitchAnswers = z.infer<typeof checkFitchAnswersSchema>;
 /** Retain the exact bounded report separately from awarded grading and the student's proof. */
 export const derivationEvaluationEvidenceSchema = z.strictObject({
   evaluationVersion: z.literal('derivation_v1'),
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   itemId: z.uuid(),
   problemVersionId: z.uuid(),
   report: proofCheckReportSchema,
@@ -38,7 +39,7 @@ export type DerivationEvaluationEvidence = z.infer<typeof derivationEvaluationEv
 
 /** Student-specific diagnostics; no private reference or instructor explanation. */
 export const derivationCheckFeedbackSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   report: proofCheckReportSchema,
 });
 

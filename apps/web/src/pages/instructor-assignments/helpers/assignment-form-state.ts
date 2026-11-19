@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   ASSIGNMENT_POINT_LIMITS,
   type AssignmentDetail,
@@ -66,8 +67,8 @@ export function assignmentFormState(assignment: AssignmentDetail | null, values:
 
   const containsProof = values.items.some(
     (item) =>
-      item.version.definition.type === 'derivation' ||
-      item.version.definition.type === 'truth_tree',
+      item.version.definition.type === ProblemType.Derivation ||
+      item.version.definition.type === ProblemType.TruthTree,
   );
   const allowsProofs = allowsAssignmentProofs(values.policy);
 

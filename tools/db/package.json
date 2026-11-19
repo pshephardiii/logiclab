@@ -17,6 +17,7 @@
     "seed:billing": "node --env-file-if-exists=../../.env --import tsx src/seed-billing-plan.ts"
   },
   "dependencies": {
+    "@logiclab/contracts": "*",
     "@mikro-orm/core": "7.2.5",
     "@mikro-orm/decorators": "7.2.5",
     "@mikro-orm/migrations": "7.2.5",

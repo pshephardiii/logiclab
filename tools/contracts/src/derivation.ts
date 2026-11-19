@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { fitchProofSchema, proofCheckReportSchema } from './proof';
 
@@ -29,7 +30,7 @@ export type FitchDerivationDefinition = z.infer<typeof fitchDerivationDefinition
 
 /** Privileged answer-reveal payload; never include this in ordinary assigned content. */
 export const fitchDerivationSolutionSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   definitionVersion: z.literal(1),
   format: z.literal('fitch'),
   ruleCatalogVersion: z.literal(1),
