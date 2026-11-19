@@ -1,3 +1,5 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { latestSubmissionGrading } from '../submission-review/grading-state';
 import type {
   Assignment as AssignmentEntity,
@@ -41,6 +43,15 @@ import {
   objectiveSolution,
 } from '../../application/student-work/item-response';
 import { StudentWorkError } from '../../application/student-work/errors';
+import {
+  validateTruthTreeAnswer,
+  evaluateTruthTreeAnswer,
+} from '../../application/student-work/truth-tree-response';
+import { assertTruthTreeWorkPolicy } from '../../application/student-work/truth-tree-policy';
+import {
+  truthTreeContent,
+  truthTreeReferenceSolution,
+} from '../../application/problem/truth-tree/authoring';
 import { assignmentSummary } from '../assignment/summary';
 
 /** Shared assignment/enrollment locks exclude archive/removal; writes lock only this student's attempt. */
@@ -109,11 +120,11 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
-        await admittedItems(em, assignmentId);
+        await admittedItems(em, assignment);
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
           libraryProblemDefinition(definition);
         }
@@ -125,9 +136,11 @@ export async function createStudentWorkStore(
         checkRevision(attempt, input.revision);
 
         const answers =
-          definition.type === 'derivation'
-            ? validateProofAnswer(definition, input.answers)
-            : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
+          definition.type === ProblemType.TruthTree
+            ? validateTruthTreeAnswer(input.answers)
+            : definition.type === ProblemType.Derivation
+              ? validateProofAnswer(definition, input.answers)
+              : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);
 
         attempt.answers = { ...attempt.answers, [item.id]: answers };
         attempt.revision++;
@@ -166,14 +179,35 @@ export async function createStudentWorkStore(
 
         if (!item) throw new StudentWorkError('not_found');
 
-        await admittedItems(em, assignmentId);
+        await admittedItems(em, assignment);
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.TruthTree) {
+          assertTruthTreeWorkPolicy(assignment);
+
+          if (assignment.assessmentMode !== AssessmentMode.UngradedPractice)
+            throw new StudentWorkError('unsupported_policy');
+
+          const evidence = evaluateTruthTreeAnswer(
+            {
+              itemId: item.id,
+              problemVersionId: item.problemVersion.id,
+              content: truthTreeContent(definition),
+            },
+            input.answers,
+          );
+
+          return {
+            itemId: item.id,
+            feedback: { type: ProblemType.TruthTree, report: evidence.report },
+          };
+        }
+
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
 
-          if (assignment.assessmentMode !== 'ungraded_practice')
+          if (assignment.assessmentMode !== AssessmentMode.UngradedPractice)
             throw new StudentWorkError('unsupported_policy');
 
           const evidence = evaluateProofAnswer(
@@ -187,7 +221,7 @@ export async function createStudentWorkStore(
 
           return {
             itemId: item.id,
-            feedback: { type: 'derivation' as const, report: evidence.report },
+            feedback: { type: ProblemType.Derivation, report: evidence.report },
           };
         }
 
@@ -211,7 +245,7 @@ export async function createStudentWorkStore(
           student: studentId,
         });
         if (retained?.submittedAt) return response(em, retained, assignment);
-        const assigned = await admittedItems(em, assignmentId);
+        const assigned = await admittedItems(em, assignment);
         const attempt = await lockedAttempt(em, studentId, assignmentId);
 
         if (attempt.submittedAt) return response(em, attempt, assignment);
@@ -260,7 +294,12 @@ export async function createStudentWorkStore(
 
         const definition = item.problemVersion.definition;
 
-        if (definition.type === 'derivation') {
+        if (definition.type === ProblemType.TruthTree) {
+          assertTruthTreeWorkPolicy(assignment);
+          return { itemId, solution: truthTreeReferenceSolution(definition) };
+        }
+
+        if (definition.type === ProblemType.Derivation) {
           assertProofWorkPolicy(assignment);
           return { itemId, solution: derivationReferenceSolution(definition) };
         }

@@ -1,5 +1,8 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeProblemFields } from './TruthTreeProblemFields';
+import { initialTruthTree } from '../../../features/truth-tree/helpers/construction';
 import { referenceStatementError } from '../helpers/reference-statement';
 import { ProblemMetadataFields } from './ProblemMetadataFields';
 import { withFreshReference } from '../helpers/fresh-reference';
@@ -50,7 +53,9 @@ export function ProblemForm({
   const [premisePending, setPremisePending] = useState(false);
   const workPending = entryPending || premisePending;
   const [authoringStep, setAuthoringStep] = useState(initialAuthoringStep);
-  const staged = fields.type === 'derivation';
+  const staged = fields.type === ProblemType.Derivation || fields.type === ProblemType.TruthTree;
+  const treeAuthoring = fields.type === ProblemType.TruthTree;
+  const referenceName = treeAuthoring ? 'tree' : 'proof';
   const referenceStep = staged && authoringStep === 'reference';
   const stepHeading = useRef<HTMLHeadingElement>(null);
   const focusStep = useRef(false);
@@ -83,7 +88,7 @@ export function ProblemForm({
     if (!staged || busy || workPending || step === authoringStep) return;
 
     if (step === 'reference') {
-      const error = referenceStatementError(fields.derivation);
+      const error = referenceStatementError(treeAuthoring ? fields.truthTree : fields.derivation);
 
       if (error) {
         setValidationError(error);
@@ -93,8 +98,21 @@ export function ProblemForm({
 
     // Entering reference construction is explicit and local. Seed its format once, retaining
     // any existing reference identities when navigating back from statement edits.
-    if (step === 'reference' && !fields.derivation.referenceProof && !problem?.archivedAt) {
-      change({ ...fields, derivation: withFreshReference(fields.derivation) });
+    if (step === 'reference' && !problem?.archivedAt) {
+      try {
+        if (treeAuthoring && !fields.truthTree.referenceTree)
+          change({
+            ...fields,
+            truthTree: { ...fields.truthTree, referenceTree: initialTruthTree(fields.truthTree) },
+          });
+        else if (!treeAuthoring && !fields.derivation.referenceProof)
+          change({ ...fields, derivation: withFreshReference(fields.derivation) });
+      } catch (error) {
+        setValidationError(
+          error instanceof Error ? error.message : 'Could not start the reference.',
+        );
+        return;
+      }
     }
 
     focusStep.current = true;
@@ -109,7 +127,7 @@ export function ProblemForm({
     }
     if (entryPending) {
       setValidationError(
-        `${fields.derivation.format === 'tree' ? 'Add node' : 'Add line'} or Discard entry before saving or previewing.`,
+        `${treeAuthoring ? 'Complete' : fields.derivation.format === 'tree' ? 'Add node' : 'Add line'} or Discard entry before saving or previewing.`,
       );
       return null;
     }
@@ -153,7 +171,7 @@ export function ProblemForm({
     await onSave(input.data);
   }
 
-  if (unavailable && problem?.definition.type === 'derivation')
+  if (unavailable && problem?.definition.type === ProblemType.Derivation)
     return (
       <section className="panel" aria-label="Retained problem">
         <h2>{problem.title}</h2>
@@ -177,7 +195,7 @@ export function ProblemForm({
       </h2>
       {staged && (
         <nav
-          aria-label={`${fields.derivation.format === 'fitch' ? 'Fitch' : fields.derivation.format === 'tree' ? 'Tree' : 'Dependency'} authoring steps`}
+          aria-label={`${treeAuthoring ? 'Truth-tree' : fields.derivation.format === 'fitch' ? 'Fitch' : fields.derivation.format === 'tree' ? 'Tree' : 'Dependency'} authoring steps`}
           className="derivation-authoring-steps"
         >
           <button
@@ -196,7 +214,7 @@ export function ProblemForm({
             disabled={busy || workPending}
             onClick={() => goToStep('reference')}
           >
-            2. Reference proof
+            2. Reference {referenceName}
           </button>
         </nav>
       )}
@@ -220,7 +238,17 @@ export function ProblemForm({
             />
           </div>
           {/* Show only the selected type's fields; other local draft fields survive type changes. */}
-          {fields.type === 'derivation' ? (
+          {treeAuthoring ? (
+            <TruthTreeProblemFields
+              fields={fields}
+              authoringStep={authoringStep}
+              onChange={change}
+              pending={workPending}
+              onPendingChange={setEntryPending}
+              onPremisePendingChange={setPremisePending}
+              disabled={busy || Boolean(problem?.archivedAt)}
+            />
+          ) : fields.type === ProblemType.Derivation ? (
             <DerivationProblemFields
               fields={fields}
               authoringStep={authoringStep}
@@ -229,7 +257,7 @@ export function ProblemForm({
               onPendingChange={setEntryPending}
               onPremisePendingChange={setPremisePending}
             />
-          ) : fields.type === 'truth_table' ? (
+          ) : fields.type === ProblemType.TruthTable ? (
             <>
               <label htmlFor="problem-formula">Formula</label>
               <input
@@ -254,7 +282,7 @@ export function ProblemForm({
               disabled={workPending}
               onClick={() => goToStep('reference')}
             >
-              Continue to reference proof
+              Continue to reference {referenceName}
             </button>
           )}
           <button type="submit" disabled={workPending}>
@@ -268,9 +296,9 @@ export function ProblemForm({
         disabled={
           busy ||
           workPending ||
-          (fields.type === 'derivation'
+          (staged
             ? false
-            : fields.type === 'truth_table'
+            : fields.type === ProblemType.TruthTable
               ? !fields.formula.trim()
               : !fields.question.trim())
         }

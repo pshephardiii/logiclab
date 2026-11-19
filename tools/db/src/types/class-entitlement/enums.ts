@@ -2,6 +2,4 @@ export enum EntitlementSource {
   ClassPurchase = 'class_purchase',
 }
 
-export enum ClassCapability {
-  PublishAssignments = 'publish_assignments',
-}
+export { ClassCapability } from '@logiclab/contracts/billing-values';

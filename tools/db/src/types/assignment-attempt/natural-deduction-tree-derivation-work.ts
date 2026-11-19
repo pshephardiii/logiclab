@@ -1,7 +1,3 @@
-import type { NaturalDeductionTreeProof } from '../proof/natural-deduction-tree-work.ts';
+/** Stored JSON shares its schema-inferred contract type; this adds no runtime validation. */
 
-/** Staged student tree JSON. Statements, private references and checker reports are separate. */
-export type NaturalDeductionTreeDerivationAnswer = {
-  type: 'derivation';
-  proof: NaturalDeductionTreeProof;
-};
+export type { NaturalDeductionTreeDerivationAnswer } from '@logiclab/contracts/natural-deduction-tree-derivation-work';

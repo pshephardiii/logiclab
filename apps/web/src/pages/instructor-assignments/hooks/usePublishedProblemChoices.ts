@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { useResourceApi } from '../../../api/ResourceApiProvider';
 import { useCallback, useEffect, useState } from 'react';
@@ -10,7 +11,7 @@ import * as problemsApi from '../../../api/problems/api';
 import { useAbortableRequest } from '../../../hooks/useAbortableRequest';
 
 /** Paginated library choices; switching problems cancels stale version reads. */
-export function usePublishedProblemChoices(includeDerivations = false) {
+export function usePublishedProblemChoices(includeProofs = false) {
   const { listProblems, listVersions } = useResourceApi(problemsApi);
   const [problems, setProblems] = useState<LibraryProblemDraft[]>([]);
   const [problemNext, setProblemNext] = useState<number | null>(null);
@@ -113,7 +114,9 @@ export function usePublishedProblemChoices(includeDerivations = false) {
     versions: versions.filter(
       (version) =>
         isProblemMethodAvailable(version.definition) &&
-        (includeDerivations || version.definition.type !== 'derivation'),
+        (includeProofs ||
+          (version.definition.type !== ProblemType.Derivation &&
+            version.definition.type !== ProblemType.TruthTree)),
     ),
     versionNext,
     versionLoading,

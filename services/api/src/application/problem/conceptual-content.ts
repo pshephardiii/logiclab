@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   conceptualQuestionContentSchema,
   type ConceptualQuestionDefinition,
@@ -15,7 +16,7 @@ export function conceptualQuestionContent(
   };
 
   return conceptualQuestionContentSchema.parse(
-    definition.type === 'true_false'
+    definition.type === ProblemType.TrueFalse
       ? common
       : {
           ...common,

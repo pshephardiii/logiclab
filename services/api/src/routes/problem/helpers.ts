@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import type { FastifyRequest } from 'fastify';
 import type { ResourceUser } from '../resource-context';
 import { AuthError } from '../../application/auth/service';
@@ -20,7 +21,7 @@ export async function instructor(
 
   const user = await context.service.authenticate(id);
 
-  if (user.role !== 'instructor')
+  if (user.role !== UserRole.Instructor)
     throw new ProblemError(403, 'INSTRUCTOR_REQUIRED', 'An instructor account is required.');
 
   scoped.problemUser = user;

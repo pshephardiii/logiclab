@@ -1,3 +1,8 @@
+import {
+  AssessmentMode,
+  GradeReleaseTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
 import { useState } from 'react';
 import type { AssignmentDetail } from '@logiclab/contracts';
 
@@ -13,13 +18,14 @@ type Props = {
 export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props) {
   const [pending, setPending] = useState<ReleaseAction | null>(null);
 
-  if (!assignment.publishedAt || assignment.assessmentMode === 'ungraded_practice') return null;
+  if (!assignment.publishedAt || assignment.assessmentMode === AssessmentMode.UngradedPractice)
+    return null;
 
   const manualGrades =
-    assignment.assessmentMode === 'graded' &&
-    assignment.gradeReleaseTiming === 'instructor_release';
+    assignment.assessmentMode === AssessmentMode.Graded &&
+    assignment.gradeReleaseTiming === GradeReleaseTiming.InstructorRelease;
 
-  const manualAnswers = assignment.solutionAccess === 'instructor_release';
+  const manualAnswers = assignment.solutionAccess === SolutionAccess.InstructorRelease;
 
   if (!manualGrades && !manualAnswers) return null;
 
@@ -35,16 +41,18 @@ export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props
     <section
       className="panel"
       aria-label={
-        assignment.assessmentMode === 'graded' ? 'Grade release and answer reveal' : 'Answer reveal'
+        assignment.assessmentMode === AssessmentMode.Graded
+          ? 'Grade release and answer reveal'
+          : 'Answer reveal'
       }
     >
       <h2>
-        {assignment.assessmentMode === 'graded'
+        {assignment.assessmentMode === AssessmentMode.Graded
           ? 'Grade release and answer reveal'
           : 'Answer reveal'}
       </h2>
       <p>
-        {assignment.assessmentMode === 'graded'
+        {assignment.assessmentMode === AssessmentMode.Graded
           ? 'Grade release and answer reveal are independent.'
           : 'Answer reveal does not affect completion status.'}{' '}
         Release cannot be undone and applies to the whole assignment, including students who submit
@@ -52,7 +60,7 @@ export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props
       </p>
       {assignment.archivedAt && (
         <p>
-          {assignment.assessmentMode === 'graded'
+          {assignment.assessmentMode === AssessmentMode.Graded
             ? 'Restore this assignment before releasing grades or revealing answers.'
             : 'Restore this assignment before revealing answers.'}
         </p>
@@ -78,7 +86,7 @@ export function AssignmentReleaseControls({ assignment, busy, onRelease }: Props
           <p>
             {pending === 'release-grades'
               ? 'Release grades for all submitted work? Answer access will not change.'
-              : assignment.assessmentMode === 'completion_only'
+              : assignment.assessmentMode === AssessmentMode.CompletionOnly
                 ? 'Reveal correct answers to enrolled students? Completion status will not change.'
                 : 'Reveal correct answers to enrolled students? Grade release will not change.'}{' '}
             Students may still have unfinished work.

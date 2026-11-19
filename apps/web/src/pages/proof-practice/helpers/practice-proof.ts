@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { proofProblemSchema, type ProofCheckReport } from '@logiclab/contracts';
 import type {
   SavedDerivationContent,
@@ -60,7 +61,7 @@ export function practiceStatement(
   });
 
   return {
-    type: 'derivation',
+    type: ProblemType.Derivation,
     definitionVersion: 1,
     checkerVersion: 1,
     ruleCatalogVersion: 1,

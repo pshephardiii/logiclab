@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { proofProblemSchema, PROOF_LIMITS } from './proof';
 
@@ -35,7 +36,7 @@ export const derivationRuleSchema = z.strictObject({
 /** Shared fields, including staged formats; each consumer must narrow its format explicitly. */
 export const derivationStatementSchema = z
   .strictObject({
-    type: z.literal('derivation'),
+    type: z.literal(ProblemType.Derivation),
     definitionVersion: z.literal(1),
     format: z.enum(['fitch', 'dependency', 'tree']),
     ruleCatalogVersion: z.literal(1),

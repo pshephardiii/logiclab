@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import type { FastifyRequest } from 'fastify';
 import type { ResourceUser } from '../resource-context';
 import { AuthError } from '../../application/auth/service';
@@ -20,7 +21,7 @@ export async function student(
 
   const user = await context.service.authenticate(id);
 
-  if (user.role !== 'student')
+  if (user.role !== UserRole.Student)
     throw new StudentWorkRouteError(403, 'STUDENT_REQUIRED', 'A student account is required.');
 
   scoped.studentWorkUser = user;

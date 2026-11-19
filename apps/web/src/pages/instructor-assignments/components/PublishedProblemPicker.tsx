@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useAccountPath } from '../../../routing/hooks/useAccountPath';
 import { Link } from 'react-router';
 import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
@@ -6,14 +7,14 @@ import { routeDefinitions } from '../../../routing/route-definitions';
 
 type Props = {
   disabled: boolean;
-  allowDerivations?: boolean;
+  allowProofs?: boolean;
   onAdd: (version: LibraryProblemVersion) => void;
 };
 
 /** Selects immutable publications, including retained versions of archived library problems. */
-export function PublishedProblemPicker({ disabled, allowDerivations = false, onAdd }: Props) {
+export function PublishedProblemPicker({ disabled, allowProofs = false, onAdd }: Props) {
   const accountPath = useAccountPath();
-  const choices = usePublishedProblemChoices(allowDerivations);
+  const choices = usePublishedProblemChoices(allowProofs);
 
   return (
     <section aria-label="Add published problems">
@@ -25,8 +26,8 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
         create and publish it first. Save your assignment draft before leaving to keep your edits.
       </p>
       <p className="help">
-        {allowDerivations
-          ? 'Published Fitch and dependency proofs are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
+        {allowProofs
+          ? 'Published Fitch, dependency and truth-tree problems are available in all modes. Practice checks are explicit; graded and completion proof diagnostics follow result release.'
           : 'Choose feedback at submission or Ungraded practice to assign proofs.'}
       </p>
       <label htmlFor="assignment-library-problem">Library problem</label>
@@ -94,11 +95,13 @@ export function PublishedProblemPicker({ disabled, allowDerivations = false, onA
               {version.title} · version {version.version}
             </strong>{' '}
             <code>
-              {version.definition.type === 'truth_table'
+              {version.definition.type === ProblemType.TruthTable
                 ? version.definition.formula
-                : version.definition.type === 'derivation'
-                  ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
-                  : version.definition.question}
+                : version.definition.type === ProblemType.TruthTree
+                  ? `Truth tree · ${version.definition.conclusion}`
+                  : version.definition.type === ProblemType.Derivation
+                    ? `${version.definition.format === 'tree' ? 'Natural-deduction tree' : version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${version.definition.conclusion}`
+                    : version.definition.question}
             </code>
             <button type="button" disabled={disabled} onClick={() => onAdd(version)}>
               Add version {version.version}

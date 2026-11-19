@@ -1,8 +1,12 @@
 import { NavLink } from 'react-router';
-import { proofPracticePath, routeDefinitions } from '../../routing/route-definitions';
+import {
+  proofPracticePath,
+  truthTreePracticePath,
+  routeDefinitions,
+} from '../../routing/route-definitions';
 import './practice-navigation.css';
 
-/** Keep both independent-practice modes discoverable without changing their session ownership. */
+/** Keep independent-practice modes discoverable without changing their session ownership. */
 export function PracticeNavigation() {
   return (
     <nav className="practice-navigation" aria-label="Practice type">
@@ -13,6 +17,10 @@ export function PracticeNavigation() {
       <NavLink to={proofPracticePath}>
         <strong>Derivations</strong>
         <span>Fitch and dependency proofs</span>
+      </NavLink>
+      <NavLink to={truthTreePracticePath}>
+        <strong>Truth trees</strong>
+        <span>Semantic tableaux for arguments</span>
       </NavLink>
     </nav>
   );

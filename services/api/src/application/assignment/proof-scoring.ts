@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   assignmentScoreSchema,
   type AssignmentPointAllocation,
@@ -10,6 +11,7 @@ import {
   type AssignmentScoringOutcome,
   AssignmentScoringError,
 } from './scoring';
+import { truthTreeScoringOutcome } from './truth-tree-scoring';
 
 /**
  * Caller supplies fresh server-computed evidence, never a client-provided result.
@@ -24,7 +26,9 @@ export function scoreProofSubmission(
   if (!parsed.success) throw new AssignmentScoringError();
 
   const result = parsed.data;
-  const objective = result.items.flatMap((item) => (item.type === 'derivation' ? [] : [item]));
+  const objective = result.items.flatMap((item) =>
+    item.type === ProblemType.Derivation || item.type === ProblemType.TruthTree ? [] : [item],
+  );
 
   const outcomes: AssignmentScoringOutcome[] = objectiveScoringOutcomes({
     gradingVersion: 'mixed_v1',
@@ -33,7 +37,9 @@ export function scoreProofSubmission(
   });
 
   for (const item of result.items) {
-    if (item.type === 'derivation')
+    if (item.type === ProblemType.TruthTree) outcomes.push(truthTreeScoringOutcome(item));
+
+    if (item.type === ProblemType.Derivation)
       outcomes.push({
         itemId: item.itemId,
         outcome: { type: item.report.status === 'accepted' ? 'full_credit' : 'needs_review' },

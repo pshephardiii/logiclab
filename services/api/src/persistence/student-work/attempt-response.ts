@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import { releasedGradingFields } from '../submission-review/grading-state';
 import type { SubmissionGradingResponse } from '@logiclab/contracts';
 import { validateProofSubmissionScore } from '../../application/assignment/proof-scoring';
@@ -21,12 +22,12 @@ export function attemptResponse(
 ): SavedStudentAttempt {
   const submitted = Boolean(attempt.submittedAt);
 
-  if (submitted && assignment.assessmentMode === 'graded' && !attempt.score)
+  if (submitted && assignment.assessmentMode === AssessmentMode.Graded && !attempt.score)
     throw new StudentWorkError('unsupported_policy');
 
   if (
     attempt.result?.gradingVersion === 'proof_mixed_v1' &&
-    (!submitted || assignment.assessmentMode !== 'graded')
+    (!submitted || assignment.assessmentMode !== AssessmentMode.Graded)
   )
     throw new StudentWorkError('unsupported_policy');
 
@@ -41,9 +42,9 @@ export function attemptResponse(
         : null;
 
   const visible =
-    assignment.assessmentMode === 'graded'
+    assignment.assessmentMode === AssessmentMode.Graded
       ? canViewAssignmentResults({
-          assessmentMode: 'graded',
+          assessmentMode: AssessmentMode.Graded,
           submitted,
           gradeReleaseTiming: assignment.gradeReleaseTiming,
           gradesReleased: Boolean(assignment.gradesReleasedAt),
@@ -56,11 +57,11 @@ export function attemptResponse(
     answers: attempt.answers,
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
     result: visible ? (attempt.result ?? null) : null,
-    ...(assignment.assessmentMode === 'graded'
+    ...(assignment.assessmentMode === AssessmentMode.Graded
       ? visible && score
         ? releasedGradingFields(score, grading)
         : { score: null }
       : {}),
-    gradePending: submitted && assignment.assessmentMode === 'graded' && !visible,
+    gradePending: submitted && assignment.assessmentMode === AssessmentMode.Graded && !visible,
   });
 }

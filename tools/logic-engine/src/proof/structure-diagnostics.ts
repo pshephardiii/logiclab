@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { PROOF_LIMITS, type ProofDiagnostic } from '@logiclab/contracts';
 
 /** Reserve a diagnostic for overflow rather than returning a successful partial analysis. */
@@ -17,13 +18,16 @@ export function structureDiagnostics() {
       return exhausted;
     },
     get limited() {
-      return exhausted || items.some((item) => item.code === 'RESOURCE_LIMIT');
+      return exhausted || items.some((item) => item.code === CheckerDiagnosticCode.ResourceLimit);
     },
     result(): ProofDiagnostic[] {
       return exhausted
         ? [
             ...items.slice(0, PROOF_LIMITS.maxDiagnostics - 1),
-            { code: 'RESOURCE_LIMIT', message: 'Proof diagnostic limit exceeded.' },
+            {
+              code: CheckerDiagnosticCode.ResourceLimit,
+              message: 'Proof diagnostic limit exceeded.',
+            },
           ]
         : [...items];
     },

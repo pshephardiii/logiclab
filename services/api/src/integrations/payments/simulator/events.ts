@@ -1,3 +1,4 @@
+import { simulatorOutcomeSchema } from '@logiclab/contracts/billing-values';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { PaymentEvent } from '../../../application/billing/provider';
@@ -8,7 +9,7 @@ const eventSchema = z.strictObject({
   id: z.uuid(),
   sourceReference: z.uuid(),
   sequence: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
-  outcome: z.enum(['paid', 'failed', 'refunded']),
+  outcome: simulatorOutcomeSchema,
   occurredAt: z.iso.datetime(),
 });
 

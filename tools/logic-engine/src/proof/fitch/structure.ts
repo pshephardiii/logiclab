@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
 import { buildFitchLayout } from './layout';
 import { resolveFitchReferences } from './references';
@@ -10,14 +11,22 @@ export function analyzeFitchStructure(proof: FitchProof): FitchStructureResult {
     return {
       status: 'unassessable',
       diagnostics: [
-        { code: 'UNSUPPORTED_VERSION', message: 'Unsupported proof version or format.' },
+        {
+          code: CheckerDiagnosticCode.UnsupportedVersion,
+          message: 'Unsupported proof version or format.',
+        },
       ],
     };
 
   if (proof.steps.length > PROOF_LIMITS.maxSteps || proof.blocks.length > PROOF_LIMITS.maxBlocks)
     return {
       status: 'unassessable',
-      diagnostics: [{ code: 'RESOURCE_LIMIT', message: 'Proof step or block limit exceeded.' }],
+      diagnostics: [
+        {
+          code: CheckerDiagnosticCode.ResourceLimit,
+          message: 'Proof step or block limit exceeded.',
+        },
+      ],
     };
 
   const diagnostics = structureDiagnostics();

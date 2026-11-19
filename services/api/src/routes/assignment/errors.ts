@@ -14,11 +14,17 @@ export class AssignmentError extends Error {
 }
 
 const failures = {
+  truth_tree_reference_incomplete: {
+    status: 409,
+    code: 'TRUTH_TREE_COMPLETION_REFERENCE_REQUIRED',
+    message:
+      'Completion-only truth trees require a verified reference with every path finished. Publish a finished reference or choose another assessment mode.',
+  },
   proof_mode_unavailable: {
     status: 409,
     code: 'DERIVATION_ASSIGNMENT_MODE_UNAVAILABLE',
     message:
-      'Graded and completion-only derivations require feedback at submission. Choose submission-time feedback or ungraded practice.',
+      'Graded and completion-only proofs require feedback at submission. Choose submission-time feedback or ungraded practice.',
   },
   invalid_scoring: {
     status: 400,

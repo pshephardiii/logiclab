@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { fitchDerivationDefinitionSchema } from './derivation';
 import { dependencyDerivationDefinitionSchema } from './dependency-derivation';
 import { naturalDeductionTreeDerivationDefinitionSchema } from './natural-deduction-tree-derivation';
+import { truthTreeDefinitionSchema, truthTreeReferenceCheckSchema } from './truth-tree-authoring';
+import { derivationReferenceCheckResponseSchema } from './derivation';
 import {
   objectiveProblemDefinitionSchema,
   problemDraftSchema,
@@ -12,6 +14,7 @@ import {
 /** Owner-only library shapes; assignment definitions retain their separate supported union. */
 export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
   ...objectiveProblemDefinitionSchema.options,
+  truthTreeDefinitionSchema,
   z.discriminatedUnion('format', [
     fitchDerivationDefinitionSchema,
     dependencyDerivationDefinitionSchema,
@@ -20,6 +23,17 @@ export const libraryProblemDefinitionSchema = z.discriminatedUnion('type', [
 ]);
 
 export type LibraryProblemDefinition = z.infer<typeof libraryProblemDefinitionSchema>;
+
+export const libraryReferenceCheckResponseSchema = z.strictObject({
+  problemId: z.uuid(),
+  updatedAt: z.iso.datetime(),
+  check: z.union([
+    derivationReferenceCheckResponseSchema.shape.check,
+    truthTreeReferenceCheckSchema,
+  ]),
+});
+
+export type LibraryReferenceCheckResponse = z.infer<typeof libraryReferenceCheckResponseSchema>;
 
 export const libraryProblemDraftSchema = problemDraftSchema
   .omit({ definition: true })

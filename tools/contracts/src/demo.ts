@@ -1,6 +1,9 @@
+import { UserRole } from './user-role';
 import { z } from 'zod';
 
-export const demoRoleRequestSchema = z.strictObject({ role: z.enum(['instructor', 'student']) });
+export const demoRoleRequestSchema = z.strictObject({
+  role: z.enum([UserRole.Instructor, UserRole.Student]),
+});
 
 export const demoEmptyRequestSchema = z
   .strictObject({})
@@ -9,7 +12,7 @@ export const demoEmptyRequestSchema = z
 
 export const demoSessionResponseSchema = z.strictObject({
   mode: z.literal('demo'),
-  user: z.strictObject({ id: z.uuid(), role: z.enum(['instructor', 'student']) }),
+  user: z.strictObject({ id: z.uuid(), role: z.enum([UserRole.Instructor, UserRole.Student]) }),
   workspace: z.strictObject({ id: z.uuid(), generation: z.number().int().positive() }),
   notice: z.string(),
 });

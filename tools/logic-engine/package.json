@@ -9,6 +9,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./truth-tree": {
+      "types": "./dist/truth-tree/index.d.ts",
+      "default": "./dist/truth-tree/index.js"
+    },
     "./proof": {
       "types": "./dist/proof/index.d.ts",
       "default": "./dist/proof/index.js"

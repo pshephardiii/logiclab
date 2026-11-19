@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 
 export type { ProofSubmissionOccurrence } from './proof-work';
@@ -5,10 +6,13 @@ import {
   proofSubmissionResultSchema,
   type ProofSubmissionResult,
   type ProofSubmissionItem,
+  proofCompletionVerification,
 } from '@logiclab/contracts/proof-submission';
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
 import { evaluateObjectiveSubmission } from './mixed-evaluation';
+import { evaluateTruthTreeAnswer } from './truth-tree-response';
+import { truthTreeContent } from '../problem/truth-tree/authoring';
 
 /** Caller loads locked authoritative publications. This pure stage neither finalizes nor releases work. */
 export function evaluateProofSubmission(
@@ -18,7 +22,10 @@ export function evaluateProofSubmission(
   const { assigned, responses } = validatedProofWork(items, input);
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
+    item.definition.type === ProblemType.Derivation ||
+    item.definition.type === ProblemType.TruthTree
+      ? []
+      : [{ id: item.id, definition: item.definition }],
   );
 
   const objectiveResponses = Object.fromEntries(
@@ -33,20 +40,49 @@ export function evaluateProofSubmission(
 
   const objectiveResults: ProofSubmissionItem[] =
     objective?.gradingVersion === 'truth_table_v1'
-      ? objective.items.map((item) => ({ ...item, type: 'truth_table' as const }))
+      ? objective.items.map((item) => ({ ...item, type: ProblemType.TruthTable }))
       : (objective?.items ?? []);
 
   const objectiveById = new Map(objectiveResults.map((item) => [item.itemId, item]));
   const proofs = { accepted: 0, needsReview: 0, unassessable: 0, total: 0 };
 
   const results = assigned.map((item): ProofSubmissionItem => {
-    if (item.definition.type !== 'derivation') return objectiveById.get(item.id)!;
+    if (item.definition.type === ProblemType.TruthTree) {
+      const evidence = evaluateTruthTreeAnswer(
+        {
+          itemId: item.id,
+          problemVersionId: item.problemVersionId,
+          content: truthTreeContent(item.definition),
+        },
+        responses.get(item.id) ?? {
+          type: ProblemType.TruthTree,
+          tree: {
+            treeVersion: 1,
+            format: 'truth_tree',
+            rootBranchId: null,
+            occurrences: [],
+            branches: [],
+            expansions: [],
+          },
+        },
+      );
+      const verification = proofCompletionVerification(evidence.report);
+
+      proofs.total++;
+      if (verification === 'verified') proofs.accepted++;
+      else if (verification === 'errors_found') proofs.needsReview++;
+      else proofs.unassessable++;
+
+      return evidence;
+    }
+
+    if (item.definition.type !== ProblemType.Derivation) return objectiveById.get(item.id)!;
 
     // Missing work needs an empty proof in its pinned format so the report records incompleteness.
     const answer = responses.has(item.id)
       ? responses.get(item.id)
       : {
-          type: 'derivation',
+          type: ProblemType.Derivation,
           proof:
             item.definition.format === 'tree'
               ? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] }

@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { conceptualAnswerSchema } from './conceptual-question';
 import { truthTableAnswerSchema, truthTableCheckResponseSchema } from './truth-table';
@@ -27,17 +28,17 @@ export type ConceptualFeedback = z.infer<typeof conceptualFeedbackSchema>;
 
 export const objectiveGradedItemSchema = z.discriminatedUnion('type', [
   z.strictObject({
-    type: z.literal('truth_table'),
+    type: z.literal(ProblemType.TruthTable),
     itemId: z.uuid(),
     feedback: truthTableCheckResponseSchema,
   }),
   z.strictObject({
-    type: z.literal('true_false'),
+    type: z.literal(ProblemType.TrueFalse),
     itemId: z.uuid(),
     feedback: conceptualFeedbackSchema,
   }),
   z.strictObject({
-    type: z.literal('multiple_choice'),
+    type: z.literal(ProblemType.MultipleChoice),
     itemId: z.uuid(),
     feedback: conceptualFeedbackSchema,
   }),
@@ -48,6 +49,8 @@ export const objectiveGradedSubmissionResultSchema = z.strictObject({
   items: z.array(objectiveGradedItemSchema).max(50),
   summary: truthTableCheckResponseSchema.shape.summary,
 });
+
+export type ObjectiveGradedItem = z.infer<typeof objectiveGradedItemSchema>;
 
 export type ObjectiveGradedSubmissionResult = z.infer<typeof objectiveGradedSubmissionResultSchema>;
 
@@ -62,7 +65,7 @@ export const objectiveCompletionSubmissionResultSchema = z.strictObject({
     .array(
       responseCountsSchema.extend({
         itemId: z.uuid(),
-        type: z.enum(['truth_table', 'true_false', 'multiple_choice']),
+        type: z.enum([ProblemType.TruthTable, ProblemType.TrueFalse, ProblemType.MultipleChoice]),
       }),
     )
     .max(50),

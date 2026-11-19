@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import {
   fitchDerivationAnswerSchema,
@@ -32,7 +33,7 @@ export function evaluateFitchAnswer(
 
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',
-    type: 'derivation',
+    type: ProblemType.Derivation,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
     report: checkFitchProof({

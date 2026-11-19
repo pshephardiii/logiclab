@@ -1,3 +1,5 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { Assignment, AssignmentItem, AssignmentAttempt } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -30,9 +32,11 @@ export function calculateSubmissionResult(
   if (!validAssignmentScoring(assignment, assigned))
     throw new StudentWorkError('unsupported_policy');
 
-  const containsProof = assigned.some(
-    (item) => item.problemVersion.definition.type === 'derivation',
-  );
+  const containsProof = assigned.some((item) => {
+    const type = item.problemVersion.definition.type;
+
+    return type === ProblemType.Derivation || type === ProblemType.TruthTree;
+  });
 
   if (containsProof) assertProofWorkPolicy(assignment);
 
@@ -49,7 +53,7 @@ export function calculateSubmissionResult(
       definition: libraryProblemDefinition(item.problemVersion.definition),
     }));
 
-    if (assignment.assessmentMode === 'completion_only')
+    if (assignment.assessmentMode === AssessmentMode.CompletionOnly)
       return { result: evaluateProofCompletion(occurrences, answers) };
 
     const result = evaluateProofSubmission(occurrences, answers);
@@ -58,7 +62,7 @@ export function calculateSubmissionResult(
   }
 
   const evaluate =
-    assignment.assessmentMode === 'completion_only'
+    assignment.assessmentMode === AssessmentMode.CompletionOnly
       ? evaluateObjectiveCompletion
       : evaluateObjectiveSubmission;
 
@@ -72,7 +76,7 @@ export function calculateSubmissionResult(
 
   return {
     result,
-    ...(assignment.assessmentMode === 'graded'
+    ...(assignment.assessmentMode === AssessmentMode.Graded
       ? { score: scoreObjectiveSubmission(allocations, result) }
       : {}),
   };

@@ -1,13 +1,13 @@
+import {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+  solutionAccessSchema,
+  feedbackTimingSchema,
+} from './assignment-policy-values';
 import { z } from 'zod';
 
-export const solutionAccessSchema = z.enum([
-  'never',
-  'after_submission',
-  'anytime',
-  'instructor_release',
-]);
-
-export type SolutionAccess = z.infer<typeof solutionAccessSchema>;
+export { SolutionAccess, solutionAccessSchema } from './assignment-policy-values';
 
 /**
  * Supported learning rules shared by authoring and student workflows.
@@ -15,19 +15,19 @@ export type SolutionAccess = z.infer<typeof solutionAccessSchema>;
  */
 export const assignmentLearningPolicySchema = z.discriminatedUnion('assessmentMode', [
   z.strictObject({
-    assessmentMode: z.literal('graded'),
-    feedbackTiming: z.literal('on_submission'),
+    assessmentMode: z.literal(AssessmentMode.Graded),
+    feedbackTiming: z.literal(FeedbackTiming.OnSubmission),
     solutionAccess: solutionAccessSchema,
   }),
   z.strictObject({
-    assessmentMode: z.literal('completion_only'),
-    feedbackTiming: z.enum(['on_submission', 'on_check', 'immediate']),
+    assessmentMode: z.literal(AssessmentMode.CompletionOnly),
+    feedbackTiming: feedbackTimingSchema,
     solutionAccess: solutionAccessSchema,
   }),
   z.strictObject({
-    assessmentMode: z.literal('ungraded_practice'),
-    feedbackTiming: z.enum(['on_check', 'immediate']),
-    solutionAccess: z.enum(['never', 'anytime']),
+    assessmentMode: z.literal(AssessmentMode.UngradedPractice),
+    feedbackTiming: z.enum([FeedbackTiming.OnCheck, FeedbackTiming.Immediate]),
+    solutionAccess: z.enum([SolutionAccess.Never, SolutionAccess.Anytime]),
   }),
 ]);
 

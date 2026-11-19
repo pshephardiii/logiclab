@@ -9,16 +9,16 @@ export function assignmentDetail(
   assignment: Assignment,
   items: AssignmentItem[],
 ): AssignmentDetail {
-  items.forEach((item) =>
-    supportedAssignmentDefinition(item.problemVersion.definition, assignment),
-  );
   return {
     ...assignmentSummary(assignment),
     items: items.map((item) => ({
       id: item.id,
       position: item.position,
       maxPoints: item.maxPoints,
-      problemVersion: libraryProblemVersion(item.problemVersion),
+      problemVersion: {
+        ...libraryProblemVersion(item.problemVersion),
+        definition: supportedAssignmentDefinition(item.problemVersion.definition, assignment),
+      },
     })),
   };
 }

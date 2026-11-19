@@ -1,5 +1,7 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ProblemOverview } from './ProblemOverview';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import type {
   LibraryProblemListItem,
   LibraryProblemVersion,
@@ -159,12 +161,18 @@ export function ProblemLibrary() {
       )}
       {editing &&
         !focusedReference &&
-        library.selected?.definition.type === 'derivation' &&
-        isProblemMethodAvailable(library.selected.definition) &&
+        (library.selected?.definition.type === ProblemType.TruthTree ||
+          (library.selected?.definition.type === ProblemType.Derivation &&
+            isProblemMethodAvailable(library.selected.definition))) &&
         !dirty &&
         !library.busy && (
           <section className="panel">
-            <h2>Check saved derivation</h2>
+            <h2>
+              Check saved{' '}
+              {library.selected.definition.type === ProblemType.TruthTree
+                ? 'truth tree'
+                : 'derivation'}
+            </h2>
             <SavedReferenceCheck
               key={`${library.selected.id}:${library.selected.updatedAt}`}
               problem={library.selected}
@@ -206,12 +214,17 @@ export function ProblemLibrary() {
           <button className="secondary" onClick={() => setPreview(null)}>
             Close preview
           </button>
-          {preview.definition.type === 'derivation' ? (
+          {preview.definition.type === ProblemType.TruthTree ? (
+            <section className="panel" aria-label="Truth-tree version preview">
+              <h2>Truth-tree preview</h2>
+              <TruthTreeSummary definition={preview.definition} />
+            </section>
+          ) : preview.definition.type === ProblemType.Derivation ? (
             <section className="panel" aria-label="Derivation version preview">
               <h2>Derivation preview</h2>
               <DerivationSummary definition={preview.definition} />
             </section>
-          ) : preview.definition.type === 'truth_table' ? (
+          ) : preview.definition.type === ProblemType.TruthTable ? (
             <ProblemPreview key={preview.key} formula={preview.definition.formula} />
           ) : (
             <ConceptualProblemPreview key={preview.key} definition={preview.definition} />

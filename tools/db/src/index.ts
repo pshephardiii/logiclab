@@ -40,6 +40,12 @@ export {
 } from './types/assignment/enums.ts';
 
 export { ProblemType } from './types/problem/enums.ts';
+export type { TruthTreeDefinition } from './types/problem/truth-tree.ts';
+export type { TruthTree } from './types/truth-tree/work.ts';
+export type {
+  TruthTreeAnswer,
+  TruthTreeEvaluationEvidence,
+} from './types/assignment-attempt/truth-tree-work.ts';
 export type {
   FitchDerivationDefinition,
   FitchReferenceProof,
@@ -140,3 +146,5 @@ export type {
 } from './types/proof/natural-deduction-tree-work.ts';
 export type { NaturalDeductionTreeDerivationDefinition } from './types/problem/natural-deduction-tree-derivation.ts';
 export type { NaturalDeductionTreeDerivationAnswer } from './types/assignment-attempt/natural-deduction-tree-derivation-work.ts';
+
+export type { TruthTreeCheckReport } from './types/truth-tree/report.ts';

@@ -1,4 +1,4 @@
-import type { DerivationReferenceCheck } from '../../application/problem/derivation/reference-check';
+import type { LibraryReferenceCheckResponse } from '@logiclab/contracts/problem-library';
 import type { ProblemArchiveFilter } from '@logiclab/contracts';
 import type {
   CreateLibraryProblemRequest,
@@ -22,7 +22,7 @@ export interface ProblemStore {
   previewReference(
     ownerId: string,
     problemId: string,
-  ): Promise<{ problemId: string; updatedAt: string; check: DerivationReferenceCheck } | null>;
+  ): Promise<LibraryReferenceCheckResponse | null>;
   publish(ownerId: string, problemId: string): Promise<PublishProblemResult>;
   setArchived(
     ownerId: string,

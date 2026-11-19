@@ -19,7 +19,7 @@ export async function createAuthStore(
       const user = em.create(User, {
         cognitoUserPoolId: poolId,
         cognitoSubject: subject,
-        role: role === 'student' ? UserRole.Student : UserRole.Instructor,
+        role: role === UserRole.Student ? UserRole.Student : UserRole.Instructor,
         email,
       });
 

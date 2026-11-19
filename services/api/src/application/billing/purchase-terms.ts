@@ -1,3 +1,4 @@
+import { ClassCapability } from '@logiclab/contracts/billing-values';
 import type { BillingPlan } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { PurchaseTerms } from './provider';
 
@@ -15,7 +16,7 @@ export function purchaseTerms(plan: BillingPlan): PurchaseTerms {
     !plan.coverageDays ||
     plan.coverageDays < 1 ||
     plan.billingInterval != null ||
-    plan.capability !== 'publish_assignments'
+    plan.capability !== ClassCapability.PublishAssignments
   )
     throw new Error('Invalid class purchase terms.');
 

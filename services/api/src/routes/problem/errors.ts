@@ -5,6 +5,10 @@ import {
 import { mapProblemDefinitionError } from '../problem-definition-error';
 import { FormulaParseError } from '@logiclab/logic-engine';
 import { mapAuthError } from '../auth/errors';
+import {
+  TruthTreeAuthoringError,
+  TruthTreePublicationError,
+} from '../../application/problem/truth-tree/errors';
 
 export class ProblemError extends Error {
   constructor(
@@ -17,6 +21,25 @@ export class ProblemError extends Error {
 }
 
 export function mapProblemError(error: unknown) {
+  if (error instanceof TruthTreePublicationError)
+    return {
+      status: 409,
+      code:
+        error.code === 'missing_reference'
+          ? 'TRUTH_TREE_REFERENCE_REQUIRED'
+          : 'TRUTH_TREE_REFERENCE_NOT_VERIFIED',
+      message: 'Save a verified reference tree before publishing this problem.',
+    };
+
+  if (error instanceof TruthTreeAuthoringError)
+    return {
+      status: error.code === 'reference_unavailable' ? 409 : 400,
+      code:
+        error.code === 'reference_unavailable'
+          ? 'TRUTH_TREE_REFERENCE_UNAVAILABLE'
+          : 'TRUTH_TREE_DEFINITION_INVALID',
+      message: 'Check the truth-tree statement and saved reference.',
+    };
   if (error instanceof DerivationPublicationError)
     return {
       status: 409,

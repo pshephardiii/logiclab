@@ -1,9 +1,10 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { naturalDeductionTreeProofSchema } from './natural-deduction-tree';
 
 /** Student-owned tree only. The server supplies the pinned statement, rules and occurrence IDs. */
 export const naturalDeductionTreeDerivationAnswerSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   proof: naturalDeductionTreeProofSchema,
 });
 

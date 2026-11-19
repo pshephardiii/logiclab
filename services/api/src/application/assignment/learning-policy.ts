@@ -1,15 +1,20 @@
+import {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
 import { AssignmentOperationError } from './errors';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 
 /** Capabilities only: callers must still enforce enrollment, publication and attempt state. */
 export function assignmentLearningCapabilities(policy: AssignmentLearningPolicy) {
   return {
-    hasFinalSubmission: policy.assessmentMode !== 'ungraded_practice',
-    recordsCorrectnessScore: policy.assessmentMode === 'graded',
-    requiresAllAnswers: policy.assessmentMode === 'completion_only',
-    allowsExplicitCheck: policy.feedbackTiming !== 'on_submission',
-    allowsImmediateFeedback: policy.feedbackTiming === 'immediate',
-    instructorReviewsFinalSubmission: policy.assessmentMode !== 'ungraded_practice',
+    hasFinalSubmission: policy.assessmentMode !== AssessmentMode.UngradedPractice,
+    recordsCorrectnessScore: policy.assessmentMode === AssessmentMode.Graded,
+    requiresAllAnswers: policy.assessmentMode === AssessmentMode.CompletionOnly,
+    allowsExplicitCheck: policy.feedbackTiming !== FeedbackTiming.OnSubmission,
+    allowsImmediateFeedback: policy.feedbackTiming === FeedbackTiming.Immediate,
+    instructorReviewsFinalSubmission: policy.assessmentMode !== AssessmentMode.UngradedPractice,
   };
 }
 
@@ -19,18 +24,18 @@ export function canViewAssignedSolution(
   answersRevealed = false,
 ): boolean {
   return (
-    policy.solutionAccess === 'anytime' ||
-    (policy.solutionAccess === 'instructor_release' && answersRevealed) ||
-    (policy.solutionAccess === 'after_submission' && submitted)
+    policy.solutionAccess === SolutionAccess.Anytime ||
+    (policy.solutionAccess === SolutionAccess.InstructorRelease && answersRevealed) ||
+    (policy.solutionAccess === SolutionAccess.AfterSubmission && submitted)
   );
 }
 
 /** Preserve the current graded/submission-only behavior when replacing allowSolutions. */
 export function legacyAssignmentLearningPolicy(allowSolutions: boolean): AssignmentLearningPolicy {
   return {
-    assessmentMode: 'graded',
-    feedbackTiming: 'on_submission',
-    solutionAccess: allowSolutions ? 'after_submission' : 'never',
+    assessmentMode: AssessmentMode.Graded,
+    feedbackTiming: FeedbackTiming.OnSubmission,
+    solutionAccess: allowSolutions ? SolutionAccess.AfterSubmission : SolutionAccess.Never,
   };
 }
 

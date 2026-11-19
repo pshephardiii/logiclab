@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
@@ -38,10 +39,11 @@ export function ProblemMetadataFields({
           onChange({ ...fields, type: event.target.value as LibraryProblemDefinition['type'] })
         }
       >
-        <option value="truth_table">Truth table</option>
-        <option value="true_false">True/false</option>
-        <option value="multiple_choice">Multiple choice</option>
-        <option value="derivation">Derivation</option>
+        <option value={ProblemType.TruthTable}>Truth table</option>
+        <option value={ProblemType.TrueFalse}>True/false</option>
+        <option value={ProblemType.MultipleChoice}>Multiple choice</option>
+        <option value={ProblemType.Derivation}>Derivation</option>
+        <option value={ProblemType.TruthTree}>Truth tree</option>
       </select>
       <p className="help">
         Only the selected problem type is saved. Switching types keeps your fields until you leave

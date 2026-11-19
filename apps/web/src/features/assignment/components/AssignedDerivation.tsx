@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { AssignedDerivationEditor } from './AssignedDerivationEditor';
 import { ProofHelp } from '../../proof/reference/ProofHelp';
 import { proofNotation } from '../../proof/helpers/proof-notation';
@@ -14,7 +15,10 @@ import '../assignment.css';
 import { useCallback, useState } from 'react';
 
 type Props = {
-  item: Extract<SavedStudentAssignment['items'][number], { content: { type: 'derivation' } }>;
+  item: Extract<
+    SavedStudentAssignment['items'][number],
+    { content: { type: typeof ProblemType.Derivation } }
+  >;
   answer?: DerivationAnswer;
   /** The caller must capture the checked proof and enforce checking/result-release permissions. */
   feedback?: { proof: DerivationAnswer['proof']; report: ProofCheckReport } | null;

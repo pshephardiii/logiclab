@@ -10,7 +10,13 @@ import { InstructorClassesPage } from '../pages/instructor-classes/InstructorCla
 import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
-import { routeDefinitions, proofPracticePath } from './route-definitions';
+import { routeDefinitions, proofPracticePath, truthTreePracticePath } from './route-definitions';
+
+const TruthTreePracticePage = lazy(() =>
+  import('../pages/truth-tree-practice/TruthTreePracticePage').then((module) => ({
+    default: module.TruthTreePracticePage,
+  })),
+);
 
 const ProofPracticePage = lazy(() =>
   import('../pages/proof-practice/ProofPracticePage').then((module) => ({
@@ -59,6 +65,7 @@ export function AppRoutes() {
         <Route path="/demo" element={<DemoPage />} />
         <Route path={routeDefinitions.practice.path} element={<PracticePage />} />
         <Route path={proofPracticePath} element={<ProofPracticePage />} />
+        <Route path={truthTreePracticePath} element={<TruthTreePracticePage />} />
         <Route path={routeDefinitions.account.path} element={<AccountPage />} />
         {['', '/demo'].flatMap((prefix) =>
           accountPages.map(({ definition, element }) => (

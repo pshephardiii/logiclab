@@ -1,8 +1,11 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../../application/proof/availability';
 import type { DatabaseManager } from '../transactions';
 import { assignmentLearningCapabilities } from '../../application/assignment/learning-policy';
 import { StudentWorkError } from '../../application/student-work/errors';
 import { policyFor } from './validation';
+import { assertTruthTreeWorkPolicy } from '../../application/student-work/truth-tree-policy';
+import type { Assignment } from '@logiclab/db' with { 'resolution-mode': 'import' };
 
 // Use the caller's manager to retain assignment/enrollment locks through the operation.
 export async function enrolled(
@@ -64,11 +67,12 @@ export async function items(em: DatabaseManager, assignmentId: string) {
 }
 
 /** New work is all-or-nothing for mixed assignments; retained reads use items() directly. */
-export async function admittedItems(em: DatabaseManager, assignmentId: string) {
-  const assigned = await items(em, assignmentId);
+export async function admittedItems(em: DatabaseManager, assignment: Assignment) {
+  const assigned = await items(em, assignment.id);
   for (const item of assigned) {
     const definition = item.problemVersion.definition;
-    if (definition.type === 'derivation') assertProofFormatAvailable(definition.format);
+    if (definition.type === ProblemType.Derivation) assertProofFormatAvailable(definition.format);
+    if (definition.type === ProblemType.TruthTree) assertTruthTreeWorkPolicy(assignment);
   }
   return assigned;
 }

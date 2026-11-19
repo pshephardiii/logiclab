@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { readDependencyInput } from './input';
 import { analyzeDependencyStructure } from './structure';
@@ -118,11 +119,15 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
           targetMessage = `The final line “${excerpt(input.proof.steps[index]!.formula)}” does not match the requested conclusion “${excerpt(input.problem.conclusion)}”.`;
         }
       }
-    } else diagnostics.add({ code: 'INCOMPLETE_PROOF', message: 'Proof has no steps.' });
+    } else
+      diagnostics.add({
+        code: CheckerDiagnosticCode.IncompleteProof,
+        message: 'Proof has no steps.',
+      });
 
     if (target !== 'established')
       diagnostics.add({
-        code: 'TARGET_NOT_ESTABLISHED',
+        code: CheckerDiagnosticCode.TargetNotEstablished,
         message: targetMessage,
         ...(index >= 0 ? { stepIndex: index } : {}),
       });
@@ -137,7 +142,7 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 
     diagnostics.add({
-      code: 'RESOURCE_LIMIT',
+      code: CheckerDiagnosticCode.ResourceLimit,
       message: error.message,
       ...(error.position === undefined ? {} : { position: error.position }),
       ...(error.stepIndex === undefined ? {} : { stepIndex: error.stepIndex }),

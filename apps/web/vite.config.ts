@@ -13,6 +13,7 @@ export default defineConfig({
       '@logiclab/logic-engine/proof',
       '@logiclab/logic-engine/proof/rules',
       '@logiclab/logic-engine/proof/completion',
+      '@logiclab/logic-engine/truth-tree',
     ],
   },
   server: { port: 5173, proxy: { '/api': 'http://localhost:3000' } },

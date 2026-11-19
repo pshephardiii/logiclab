@@ -1,11 +1,15 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { SubmissionGradingPanel } from './SubmissionGradingPanel';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { AssignedTruthTree } from '../../../features/assignment/components/AssignedTruthTree';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import {
   truthTableSubmissionFeedback,
   proofSubmissionFeedback,
+  truthTreeSubmissionFeedback,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
@@ -39,10 +43,10 @@ export function SubmissionReview({
   const response = item ? review?.attempt.answers[item.id] : undefined;
 
   const proofAnswer =
-    response && !Array.isArray(response) && response.type === 'derivation'
+    response && !Array.isArray(response) && response.type === ProblemType.Derivation
       ? response
       : blankDerivationAnswer(
-          item && 'content' in item && item.content.type === 'derivation'
+          item && 'content' in item && item.content.type === ProblemType.Derivation
             ? item.content.format
             : 'fitch',
         );
@@ -133,7 +137,7 @@ export function SubmissionReview({
             />
           )}
           {/* Only graded submissions expose point adjustments; completion remains score-free. */}
-          {review.assignment.assessmentMode === 'graded' && review.attempt.score && (
+          {review.assignment.assessmentMode === AssessmentMode.Graded && review.attempt.score && (
             <SubmissionGradingPanel
               key={review.attempt.id}
               assignmentId={assignmentId}
@@ -173,7 +177,17 @@ export function SubmissionReview({
                 readOnly
                 onAnswer={() => {}}
               />
-            ) : item.content.type === 'derivation' ? (
+            ) : item.content.type === ProblemType.TruthTree ? (
+              <AssignedTruthTree
+                report={truthTreeSubmissionFeedback(review.attempt.result, item.id)}
+                item={{ ...item, content: item.content }}
+                answer={
+                  response && !Array.isArray(response) && response.type === ProblemType.TruthTree
+                    ? response
+                    : undefined
+                }
+              />
+            ) : item.content.type === ProblemType.Derivation ? (
               <AssignedDerivation
                 item={{ ...item, content: item.content }}
                 answer={proofAnswer}
@@ -185,7 +199,10 @@ export function SubmissionReview({
               <AssignedConceptualQuestion
                 item={{ ...item, content: item.content }}
                 answer={
-                  response && !Array.isArray(response) && response.type !== 'derivation'
+                  response &&
+                  !Array.isArray(response) &&
+                  (response.type === ProblemType.TrueFalse ||
+                    response.type === ProblemType.MultipleChoice)
                     ? response
                     : undefined
                 }

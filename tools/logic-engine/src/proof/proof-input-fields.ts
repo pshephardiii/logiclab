@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { ProofDiagnostic } from '@logiclab/contracts';
 
 export class InputFailure extends Error {
@@ -11,21 +12,33 @@ export class InputFailure extends Error {
 
 export function record(value: unknown, keys: readonly string[]): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
-    throw new InputFailure('INVALID_STRUCTURE', 'Proof input must contain plain data objects.');
+    throw new InputFailure(
+      CheckerDiagnosticCode.InvalidStructure,
+      'Proof input must contain plain data objects.',
+    );
 
   const prototype = Object.getPrototypeOf(value);
 
   if (prototype !== Object.prototype && prototype !== null)
-    throw new InputFailure('INVALID_STRUCTURE', 'Proof input must contain plain data objects.');
+    throw new InputFailure(
+      CheckerDiagnosticCode.InvalidStructure,
+      'Proof input must contain plain data objects.',
+    );
 
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== 'string' || !keys.includes(key))
-      throw new InputFailure('INVALID_STRUCTURE', 'Proof input contains unsupported fields.');
+      throw new InputFailure(
+        CheckerDiagnosticCode.InvalidStructure,
+        'Proof input contains unsupported fields.',
+      );
 
     const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
 
     if (descriptor.get || descriptor.set)
-      throw new InputFailure('INVALID_STRUCTURE', 'Proof input must not contain accessors.');
+      throw new InputFailure(
+        CheckerDiagnosticCode.InvalidStructure,
+        'Proof input must not contain accessors.',
+      );
   }
 
   return value as Record<string, unknown>;
@@ -33,20 +46,26 @@ export function record(value: unknown, keys: readonly string[]): Record<string, 
 
 export function array(value: unknown, maximum: number): unknown[] {
   if (!Array.isArray(value))
-    throw new InputFailure('INVALID_STRUCTURE', 'Expected a proof data list.');
+    throw new InputFailure(CheckerDiagnosticCode.InvalidStructure, 'Expected a proof data list.');
 
   if (value.length > maximum)
-    throw new InputFailure('RESOURCE_LIMIT', 'Proof input list limit exceeded.');
+    throw new InputFailure(CheckerDiagnosticCode.ResourceLimit, 'Proof input list limit exceeded.');
 
   if (
     Object.getPrototypeOf(value) !== Array.prototype ||
     Object.getOwnPropertySymbols(value).length
   )
-    throw new InputFailure('INVALID_STRUCTURE', 'Proof lists must be plain arrays.');
+    throw new InputFailure(
+      CheckerDiagnosticCode.InvalidStructure,
+      'Proof lists must be plain arrays.',
+    );
 
   for (const key in value) {
     if (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= value.length)
-      throw new InputFailure('INVALID_STRUCTURE', 'Proof lists contain unsupported properties.');
+      throw new InputFailure(
+        CheckerDiagnosticCode.InvalidStructure,
+        'Proof lists contain unsupported properties.',
+      );
   }
 
   const copy: unknown[] = [];
@@ -56,7 +75,7 @@ export function array(value: unknown, maximum: number): unknown[] {
 
     if (!descriptor || descriptor.get || descriptor.set)
       throw new InputFailure(
-        'INVALID_STRUCTURE',
+        CheckerDiagnosticCode.InvalidStructure,
         'Proof lists must not contain holes or accessors.',
       );
 
@@ -68,7 +87,7 @@ export function array(value: unknown, maximum: number): unknown[] {
 
 export function stringLimit(value: unknown, maximum: number): void {
   if (typeof value === 'string' && value.length > maximum)
-    throw new InputFailure('RESOURCE_LIMIT', 'Proof input text limit exceeded.');
+    throw new InputFailure(CheckerDiagnosticCode.ResourceLimit, 'Proof input text limit exceeded.');
 }
 
 export function ids(value: Record<string, unknown>, keys: readonly string[]): void {

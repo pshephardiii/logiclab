@@ -2,6 +2,8 @@
 
 These endpoints manage instructor-owned problem drafts, immutable published versions, and archive/restore actions. The instructor library UI is available at `/library`. Publishing does not grant students access.
 
+Truth-tree owner workflows are now supported through these endpoints; see [truth-tree authoring](#truth-tree-authoring). Instructor/student construction, independent practice and final-submission APIs are integrated.
+
 All operations require an instructor session. Ownership comes from the authenticated application user; clients cannot supply owner or classroom identifiers. Authorization runs before request-field validation. Foreign and missing IDs both return `404 PROBLEM_NOT_FOUND`. Responses use `Cache-Control: no-store`; mutations require the configured exact `Origin`. Account-route read/mutation rate limits apply.
 
 | Method | Path                              | Behavior                                                             |
@@ -122,3 +124,28 @@ Retained owner definitions with `format: "tree"` are validated through `@logicla
 Each branch has a nullable supporting `rootId`, `assumptionFormula` and bounded `assumptionIds` naming leaf occurrences. Empty selections express vacuous discharge. Repeated uses have distinct nodes, even when the formula/premise is the same. Array order is presentation, not proof chronology. The checker rejects duplicate identities, cycles, shared children, detached work and discharge of wrong/closed/foreign-branch assumptions. The transport still represents incomplete or incorrect historical drafts; new saves are blocked by availability policy.
 
 Retained reference certification checks the exact statement and effective permitted rules; it cannot authorize a new publication while the method is unavailable. No conversion or cached success flag can certify another format. Private owner history keeps the full immutable reference/explanation. Student content excludes them; independently authorized answer reveal uses a separate solution projection. New assignment admission and student mutations are blocked; authorized historical review remains available. See [verification and rollout](../verification/natural-deduction-trees-verification.md).
+
+## Truth-tree authoring
+
+The owner endpoints also accept a separate `type: "truth_tree"` definition, distinct from natural-deduction `type: "derivation", format: "tree"`. Its shape is defined by `@logiclab/contracts/truth-tree-authoring`:
+
+```json
+{
+  "type": "truth_tree",
+  "definitionVersion": 1,
+  "checkerVersion": 1,
+  "ruleCatalogVersion": 1,
+  "premises": [{ "id": "a1111111-1111-4111-8111-111111111111", "formula": "P" }],
+  "conclusion": "Q",
+  "referenceTree": null,
+  "explanation": null
+}
+```
+
+Draft statements/references may be incomplete. Both valid and invalid arguments are supported, but publication requires a reference that verifies the exact saved argument under its pinned versions. The example's missing reference must be filled before publication. The reference tree uses the flat version-1 [truth-tree representation](../planning/truth-trees.md#slice-2--versioned-structure-and-transport); do not supply an authored outcome or cached acceptance field. Explanations are optional, trimmed plain text up to 5,000 characters. Up to 50 distinct premise identities and 256 characters per formula are supported, subject to checker limits.
+
+`POST /api/problems/:problemId/reference-check` accepts `{}` and checks the saved owner definition, including archived drafts. Its generic library response contains `{ problemId, updatedAt, check }`, with `check` either `{ status: "missing" }` or `{ status: "checked", report }`. For truth trees, the report is a `TruthTreeCheckReport`; `status: "verified", argumentStatus: "invalid"` means a counterexample successfully refuted the argument. Local errors/incomplete work do not become an argument verdict. This response is private instructor data, not a student checking endpoint.
+
+Publication repeats that check under the saved-row lock immediately before snapshot creation. Missing references return `409 TRUTH_TREE_REFERENCE_REQUIRED`; unverified references return `409 TRUTH_TREE_REFERENCE_NOT_VERIFIED`. Invalid authoring definitions use `400 TRUTH_TREE_DEFINITION_INVALID` at the application boundary; malformed HTTP fields may instead fail shared request validation. Version lists/detail retain the private reference and explanation for their authenticated owner. Snapshot immutability, scoped pagination, archive/restore, no-store and Origin rules remain unchanged.
+
+Owner-library and assignment transport accept truth trees. Assignment composition admits practice and submission-time graded/completion-only work. Completion-only admission additionally requires a verified reference with all paths finished, returning `409 TRUTH_TREE_COMPLETION_REFERENCE_REQUIRED` without partial writes otherwise. Student APIs support saves, policy-appropriate checking/finalization, review and independent grade/answer release; see [student work](student-work-api.md#assigned-truth-trees). The library UI supports statement/reference construction, explicit local/saved checks, draft saving and authoritative publication. Statement changes preserve the existing reference until a confirmed rebuild. Supported publications appear in assignment pickers, and students use scoped assignment controls; library publication alone does not grant student access. There is no migration or demo template change; rebuild matching contracts/database-package/API/frontend outputs before use. Older applications need compatibility review before rollback once these definitions exist.

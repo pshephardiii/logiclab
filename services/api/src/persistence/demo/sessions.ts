@@ -1,3 +1,4 @@
+import type { Role } from '../../application/auth/types';
 import type { createDatabase } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import {
   demoActivityUpdate,
@@ -19,8 +20,8 @@ export async function createDemoSessionStore(
 
   const { DemoWorkspace, DemoSession, UserRole, LockMode } = await import('@logiclab/db');
 
-  const dbRole = (role: 'student' | 'instructor') =>
-    role === 'instructor' ? UserRole.Instructor : UserRole.Student;
+  const dbRole = (role: Role) =>
+    role === UserRole.Instructor ? UserRole.Instructor : UserRole.Student;
 
   const { actorFor, withSession } = await createDemoAccess(orm);
 

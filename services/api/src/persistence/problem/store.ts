@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { ProblemStore } from './types';
 import { ownedProblem, lockedProblem } from './queries';
 import { libraryProblemDraft } from './draft-response';
@@ -30,7 +31,8 @@ export async function createProblemStore(
 
       const definition = libraryProblemDefinition(problem.definition);
 
-      if (definition.type !== 'derivation') throw new UnsupportedProblemDefinitionError();
+      if (definition.type !== ProblemType.Derivation && definition.type !== ProblemType.TruthTree)
+        throw new UnsupportedProblemDefinitionError();
 
       return {
         problemId: problem.id,

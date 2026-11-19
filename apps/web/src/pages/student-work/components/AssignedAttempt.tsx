@@ -1,6 +1,13 @@
+import {
+  AssessmentMode,
+  GradeReleaseTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { FinalSubmissionPanel } from './FinalSubmissionPanel';
 import { AssignedProblemNavigation } from './AssignedProblemNavigation';
 import { AssignedDerivation } from '../../../features/assignment/components/AssignedDerivation';
+import { AssignedTruthTree } from '../../../features/assignment/components/AssignedTruthTree';
 import { blankDerivationAnswer } from '../../../features/assignment/helpers/proof-answers';
 import { AssignedConceptualQuestion } from '../../../features/assignment/components/AssignedConceptualQuestion';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -9,6 +16,7 @@ import {
   truthTableSubmissionFeedback,
   conceptualSubmissionFeedback,
   proofSubmissionFeedback,
+  truthTreeSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
@@ -39,7 +47,10 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
     );
 
   const item = work.assignment.items[position] ?? work.assignment.items[0];
-  const isProof = item && 'content' in item && item.content.type === 'derivation';
+  const isProof =
+    item &&
+    'content' in item &&
+    (item.content.type === ProblemType.Derivation || item.content.type === ProblemType.TruthTree);
   const currentFeedback = item ? work.feedback[item.id] : undefined;
   const currentSolution = item ? work.solutions[item.id] : undefined;
   const submitted = Boolean(work.attempt?.submittedAt);
@@ -53,7 +64,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           proof: (
             proofAnswer ??
             blankDerivationAnswer(
-              item && 'content' in item && item.content.type === 'derivation'
+              item && 'content' in item && item.content.type === ProblemType.Derivation
                 ? item.content.format
                 : 'fitch',
             )
@@ -97,7 +108,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
       <section className="panel">
         <h2>{work.assignment.title}</h2>
         {work.assignment.instructions && <p>{work.assignment.instructions}</p>}
-        {work.assignment.assessmentMode === 'graded' &&
+        {work.assignment.assessmentMode === AssessmentMode.Graded &&
           work.assignment.items.every((value) => value.maxPoints != null) && (
             <p>
               Total available:{' '}
@@ -119,20 +130,23 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 ? 'Truth-table and question entries are checked shortly after you stop editing. Check answers is also available. Use Save problem to persist changes.'
                 : work.allowsExplicitCheck
                   ? 'Use Save problem to persist changes. Check answers evaluates your current entries without saving them.'
-                  : work.assignment.assessmentMode === 'graded' &&
-                      work.assignment.gradeReleaseTiming === 'instructor_release'
+                  : work.assignment.assessmentMode === AssessmentMode.Graded &&
+                      work.assignment.gradeReleaseTiming === GradeReleaseTiming.InstructorRelease
                     ? 'Use Save problem to persist changes. Your grade will be available after submission when your instructor releases grades.'
                     : 'Use Save problem to persist changes. Results arrive after final submission.'}
           </p>
         )}
         {!work.workUnavailable &&
           work.assignment.items.some(
-            (value) => 'content' in value && value.content.type === 'derivation',
+            (value) =>
+              'content' in value &&
+              (value.content.type === ProblemType.Derivation ||
+                value.content.type === ProblemType.TruthTree),
           ) && (
             <p>
-              {work.assignment.assessmentMode === 'ungraded_practice'
-                ? 'Proofs are checked only when you choose Check proof. Editing never checks a proof automatically.'
-                : work.assignment.assessmentMode === 'graded'
+              {work.assignment.assessmentMode === AssessmentMode.UngradedPractice
+                ? 'Derivations and truth trees use their explicit check buttons. Editing them never checks automatically.'
+                : work.assignment.assessmentMode === AssessmentMode.Graded
                   ? 'Save your proof attempt before submitting. Verified proofs earn full points; other proofs need instructor grading. Proof diagnostics follow grade release.'
                   : 'Finish and save your proof attempt before submitting. Proof diagnostics appear after submission; logical mistakes do not remove completion credit.'}
             </p>
@@ -168,7 +182,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
           </p>
         </section>
       )}
-      {work.assignment.solutionAccess === 'instructor_release' &&
+      {work.assignment.solutionAccess === SolutionAccess.InstructorRelease &&
         !work.assignment.answersRevealedAt && (
           <p className="help">
             Correct answers are hidden until your instructor reveals them. Answer reveal is separate
@@ -192,7 +206,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             selectedId={item.id}
             position={position}
             busy={busy}
-            maxPoints={work.assignment.assessmentMode === 'graded' ? item.maxPoints : undefined}
+            maxPoints={
+              work.assignment.assessmentMode === AssessmentMode.Graded ? item.maxPoints : undefined
+            }
             onSelect={changeItem}
           />
           {/* Each problem type uses its own editor; submitted work uses retained final feedback. */}
@@ -215,7 +231,44 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 work.changeAnswer(item.id, row, column, value);
               }}
             />
-          ) : item.content.type === 'derivation' ? (
+          ) : item.content.type === ProblemType.TruthTree ? (
+            <AssignedTruthTree
+              item={{ ...item, content: item.content }}
+              answer={work.truthTreeAnswers[item.id]}
+              key={item.id}
+              readOnly={readOnly}
+              disabled={busy}
+              checking={work.checkingItem === item.id}
+              onPendingChange={setEntryPending}
+              onAnswer={(answer) => {
+                setConfirmed(false);
+                work.changeTruthTreeAnswer(item.id, answer);
+              }}
+              onCheck={
+                !readOnly &&
+                work.assignment.assessmentMode === AssessmentMode.UngradedPractice &&
+                work.allowsExplicitCheck
+                  ? () => void work.check(item.id)
+                  : undefined
+              }
+              report={
+                submitted
+                  ? truthTreeSubmissionFeedback(work.attempt?.result, item.id)
+                  : currentFeedback &&
+                      'type' in currentFeedback &&
+                      currentFeedback.type === ProblemType.TruthTree
+                    ? currentFeedback.report
+                    : null
+              }
+              solution={
+                currentSolution &&
+                'type' in currentSolution &&
+                currentSolution.type === ProblemType.TruthTree
+                  ? currentSolution
+                  : null
+              }
+            />
+          ) : item.content.type === ProblemType.Derivation ? (
             <AssignedDerivation
               onPendingChange={setEntryPending}
               key={item.id}
@@ -224,7 +277,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                 proofAnswer ??
                 (submitted
                   ? blankDerivationAnswer(
-                      item && 'content' in item && item.content.type === 'derivation'
+                      item && 'content' in item && item.content.type === ProblemType.Derivation
                         ? item.content.format
                         : 'fitch',
                     )
@@ -234,7 +287,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                currentSolution.type === 'derivation'
+                currentSolution.type === ProblemType.Derivation
                   ? currentSolution
                   : null
               }
@@ -247,7 +300,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               }}
               onCheck={
                 !readOnly &&
-                work.assignment.assessmentMode === 'ungraded_practice' &&
+                work.assignment.assessmentMode === AssessmentMode.UngradedPractice &&
                 work.allowsExplicitCheck
                   ? () => void work.check(item.id)
                   : undefined
@@ -267,7 +320,8 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               solution={
                 currentSolution &&
                 'type' in currentSolution &&
-                currentSolution.type !== 'derivation'
+                (currentSolution.type === ProblemType.TrueFalse ||
+                  currentSolution.type === ProblemType.MultipleChoice)
                   ? currentSolution
                   : null
               }

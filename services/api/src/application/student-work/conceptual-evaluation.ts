@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   conceptualAnswerSchemaFor,
   type ConceptualQuestionDefinition,
@@ -19,7 +20,7 @@ export function validateConceptualAnswer(
 }
 
 export function conceptualAnswerIsFilled(answer: ConceptualAnswer): boolean {
-  return answer.type === 'true_false' ? answer.answer !== null : answer.optionId !== null;
+  return answer.type === ProblemType.TrueFalse ? answer.answer !== null : answer.optionId !== null;
 }
 
 /** Transient/frozen correctness never includes an answer key or explanation. */
@@ -32,10 +33,10 @@ export function checkConceptualAnswer(
   if (!conceptualAnswerIsFilled(answer)) return { status: 'unanswered' };
 
   const correct =
-    definition.type === 'true_false' && answer.type === 'true_false'
+    definition.type === ProblemType.TrueFalse && answer.type === ProblemType.TrueFalse
       ? answer.answer === definition.correctAnswer
-      : definition.type === 'multiple_choice' &&
-        answer.type === 'multiple_choice' &&
+      : definition.type === ProblemType.MultipleChoice &&
+        answer.type === ProblemType.MultipleChoice &&
         answer.optionId === definition.correctOptionId;
 
   return { status: correct ? 'correct' : 'incorrect' };

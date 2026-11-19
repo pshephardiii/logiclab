@@ -1,4 +1,3 @@
-import type { FitchProof } from '../proof/work.ts';
+/** Stored JSON shares its schema-inferred contract type; this adds no runtime validation. */
 
-/** Student-owned proof draft; contains no statement, permissions, reference or checker report. */
-export type FitchDerivationAnswer = { type: 'derivation'; proof: FitchProof };
+export type { FitchDerivationAnswer } from '@logiclab/contracts/derivation-work';

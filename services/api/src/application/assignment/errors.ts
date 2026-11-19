@@ -1,4 +1,5 @@
 export type AssignmentFailure =
+  | 'truth_tree_reference_incomplete'
   | 'proof_mode_unavailable'
   | 'release_unavailable'
   | 'invalid_scoring'

@@ -1,3 +1,12 @@
+import { PurchaseStatus } from '@logiclab/contracts/billing-values';
+import {
+  SolutionAccess,
+  AssessmentMode,
+  FeedbackTiming,
+  GradeReleaseTiming,
+} from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
+import { DEMO_TRUTH_TREES } from '../../application/demo/truth-tree-template';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { generateTruthTable } from '@logiclab/logic-engine';
 import type { DemoWorkspace } from '@logiclab/db' with { 'resolution-mode': 'import' };
@@ -53,7 +62,11 @@ export async function seedDemoWorkspace(
     owner: instructor,
     title: DEMO_TEMPLATE.problemTitle,
     instructions: DEMO_TEMPLATE.problemInstructions,
-    definition: { type: 'truth_table', definitionVersion: 1, formula: DEMO_TEMPLATE.formula },
+    definition: {
+      type: ProblemType.TruthTable,
+      definitionVersion: 1,
+      formula: DEMO_TEMPLATE.formula,
+    },
   });
 
   const version = em.create(ProblemVersion, {
@@ -90,7 +103,7 @@ export async function seedDemoWorkspace(
     requestId: randomUUID(),
   });
 
-  await billing.simulate(instructor.id, checkout.purchase.id, 'paid');
+  await billing.simulate(instructor.id, checkout.purchase.id, PurchaseStatus.Paid);
 
   const assignments = await createAssignmentStore(orm, em);
 
@@ -99,9 +112,9 @@ export async function seedDemoWorkspace(
     instructions: DEMO_TEMPLATE.assignmentInstructions,
     items: [{ problemVersionId: version.id, maxPoints: DEMO_TEMPLATE.assignmentPoints }],
     problemVersionIds: [],
-    solutionAccess: 'after_submission',
-    assessmentMode: 'graded',
-    feedbackTiming: 'on_submission',
+    solutionAccess: SolutionAccess.AfterSubmission,
+    assessmentMode: AssessmentMode.Graded,
+    feedbackTiming: FeedbackTiming.OnSubmission,
   });
 
   await assignments.publish(instructor.id, assignment.id);
@@ -124,9 +137,9 @@ export async function seedDemoWorkspace(
     title: DEMO_TEMPLATE.practiceAssignmentTitle,
     instructions: DEMO_TEMPLATE.practiceAssignmentInstructions,
     problemVersionIds: mixedVersionIds,
-    assessmentMode: 'ungraded_practice',
-    feedbackTiming: 'immediate',
-    solutionAccess: 'anytime',
+    assessmentMode: AssessmentMode.UngradedPractice,
+    feedbackTiming: FeedbackTiming.Immediate,
+    solutionAccess: SolutionAccess.Anytime,
   });
 
   await assignments.publish(instructor.id, practice.id);
@@ -139,10 +152,10 @@ export async function seedDemoWorkspace(
       maxPoints: DEMO_TEMPLATE.mixedPoints[index]!,
     })),
     problemVersionIds: [],
-    assessmentMode: 'graded',
-    feedbackTiming: 'on_submission',
-    gradeReleaseTiming: 'instructor_release',
-    solutionAccess: 'instructor_release',
+    assessmentMode: AssessmentMode.Graded,
+    feedbackTiming: FeedbackTiming.OnSubmission,
+    gradeReleaseTiming: GradeReleaseTiming.InstructorRelease,
+    solutionAccess: SolutionAccess.InstructorRelease,
   });
 
   await assignments.publish(instructor.id, mixed.id);
@@ -162,31 +175,31 @@ export async function seedDemoWorkspace(
     {
       title: DEMO_TEMPLATE.proofPracticeAssignmentTitle,
       instructions: DEMO_TEMPLATE.proofPracticeInstructions,
-      assessmentMode: 'ungraded_practice' as const,
-      feedbackTiming: 'on_check' as const,
-      solutionAccess: 'anytime' as const,
+      assessmentMode: AssessmentMode.UngradedPractice,
+      feedbackTiming: FeedbackTiming.OnCheck,
+      solutionAccess: SolutionAccess.Anytime,
     },
     {
       title: DEMO_TEMPLATE.proofGradedAssignmentTitle,
       instructions: DEMO_TEMPLATE.proofGradedInstructions,
-      assessmentMode: 'graded' as const,
-      feedbackTiming: 'on_submission' as const,
-      solutionAccess: 'instructor_release' as const,
+      assessmentMode: AssessmentMode.Graded,
+      feedbackTiming: FeedbackTiming.OnSubmission,
+      solutionAccess: SolutionAccess.InstructorRelease,
     },
     {
       title: DEMO_TEMPLATE.proofCompletionAssignmentTitle,
       instructions: DEMO_TEMPLATE.proofCompletionInstructions,
-      assessmentMode: 'completion_only' as const,
-      feedbackTiming: 'on_submission' as const,
-      solutionAccess: 'instructor_release' as const,
+      assessmentMode: AssessmentMode.CompletionOnly,
+      feedbackTiming: FeedbackTiming.OnSubmission,
+      solutionAccess: SolutionAccess.InstructorRelease,
     },
   ]) {
     const proofAssignment = await assignments.create(instructor.id, funded.id, {
       ...example,
-      ...(example.assessmentMode === 'graded'
-        ? { gradeReleaseTiming: 'instructor_release' as const }
+      ...(example.assessmentMode === AssessmentMode.Graded
+        ? { gradeReleaseTiming: GradeReleaseTiming.InstructorRelease }
         : {}),
-      ...(example.assessmentMode === 'graded'
+      ...(example.assessmentMode === AssessmentMode.Graded
         ? {
             problemVersionIds: [],
             items: proofVersionIds.map((problemVersionId) => ({
@@ -198,6 +211,57 @@ export async function seedDemoWorkspace(
     });
 
     await assignments.publish(instructor.id, proofAssignment.id);
+  }
+
+  const truthTreeVersionIds: string[] = [];
+
+  for (const example of DEMO_TRUTH_TREES) {
+    const draft = await problems.create(instructor.id, example);
+    const publication = await problems.publish(instructor.id, draft.id);
+
+    if (publication.status !== 'published') throw new Error('Demo truth-tree publication failed.');
+
+    truthTreeVersionIds.push(publication.version.id);
+  }
+
+  for (const example of [
+    {
+      title: DEMO_TEMPLATE.truthTreePracticeAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreePracticeInstructions,
+      assessmentMode: AssessmentMode.UngradedPractice,
+      feedbackTiming: FeedbackTiming.OnCheck,
+      solutionAccess: SolutionAccess.Anytime,
+    },
+    {
+      title: DEMO_TEMPLATE.truthTreeGradedAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreeGradedInstructions,
+      assessmentMode: AssessmentMode.Graded,
+      feedbackTiming: FeedbackTiming.OnSubmission,
+      solutionAccess: SolutionAccess.InstructorRelease,
+    },
+    {
+      title: DEMO_TEMPLATE.truthTreeCompletionAssignmentTitle,
+      instructions: DEMO_TEMPLATE.truthTreeCompletionInstructions,
+      assessmentMode: AssessmentMode.CompletionOnly,
+      feedbackTiming: FeedbackTiming.OnSubmission,
+      solutionAccess: SolutionAccess.InstructorRelease,
+    },
+  ]) {
+    const treeAssignment = await assignments.create(instructor.id, funded.id, {
+      ...example,
+      ...(example.assessmentMode === AssessmentMode.Graded
+        ? {
+            gradeReleaseTiming: GradeReleaseTiming.InstructorRelease,
+            problemVersionIds: [],
+            items: truthTreeVersionIds.map((problemVersionId) => ({
+              problemVersionId,
+              maxPoints: DEMO_TEMPLATE.truthTreePoints,
+            })),
+          }
+        : { problemVersionIds: truthTreeVersionIds }),
+    });
+
+    await assignments.publish(instructor.id, treeAssignment.id);
   }
 
   return { instructorId: instructor.id, studentId: student.id };

@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   PROOF_LIMITS,
   type NaturalDeductionTreeProof,
@@ -31,7 +32,7 @@ export function analyzeNaturalDeductionTreeStructure(
 
   const fail = (message: string, stepIndex?: number) =>
     diagnostics.add({
-      code: 'INVALID_STRUCTURE',
+      code: CheckerDiagnosticCode.InvalidStructure,
       message,
       ...(stepIndex === undefined ? {} : { stepIndex }),
     });
@@ -42,7 +43,10 @@ export function analyzeNaturalDeductionTreeStructure(
       return {
         status: 'unassessable',
         diagnostics: [
-          { code: 'UNSUPPORTED_VERSION', message: 'Unsupported tree proof format or version.' },
+          {
+            code: CheckerDiagnosticCode.UnsupportedVersion,
+            message: 'Unsupported tree proof format or version.',
+          },
         ],
       };
 
@@ -59,7 +63,10 @@ export function analyzeNaturalDeductionTreeStructure(
       return {
         status: 'unassessable',
         diagnostics: [
-          { code: 'RESOURCE_LIMIT', message: 'Natural-deduction tree proof list limit exceeded.' },
+          {
+            code: CheckerDiagnosticCode.ResourceLimit,
+            message: 'Natural-deduction tree proof list limit exceeded.',
+          },
         ],
       };
 
@@ -131,7 +138,7 @@ export function analyzeNaturalDeductionTreeStructure(
           if (branch.rootId === null) {
             incomplete = true;
             diagnostics.add({
-              code: 'INCOMPLETE_PROOF',
+              code: CheckerDiagnosticCode.IncompleteProof,
               message: 'Discharged branch needs a supporting subtree.',
               stepIndex: index,
             });
@@ -151,7 +158,10 @@ export function analyzeNaturalDeductionTreeStructure(
 
     if (proof.rootId === null) {
       incomplete = true;
-      diagnostics.add({ code: 'INCOMPLETE_PROOF', message: 'Select a proof root.' });
+      diagnostics.add({
+        code: CheckerDiagnosticCode.IncompleteProof,
+        message: 'Select a proof root.',
+      });
     } else if (rootIndex === undefined) fail('The proof root must identify a submitted node.');
 
     if (rootIndex !== undefined && parents[rootIndex] !== 0)
@@ -206,7 +216,7 @@ export function analyzeNaturalDeductionTreeStructure(
     // Expose resolved indices only after the whole structure is safe; never certify a partial walk.
     if (diagnostics.limited) return { status: 'unassessable', diagnostics: diagnostics.result() };
 
-    if (diagnostics.items.some((item) => item.code !== 'INCOMPLETE_PROOF'))
+    if (diagnostics.items.some((item) => item.code !== CheckerDiagnosticCode.IncompleteProof))
       return { status: 'invalid', diagnostics: diagnostics.result() };
 
     if (incomplete || rootIndex === undefined)
@@ -216,7 +226,7 @@ export function analyzeNaturalDeductionTreeStructure(
   } catch (error) {
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 
-    diagnostics.add({ code: 'RESOURCE_LIMIT', message: error.message });
+    diagnostics.add({ code: CheckerDiagnosticCode.ResourceLimit, message: error.message });
     return { status: 'unassessable', diagnostics: diagnostics.result() };
   }
 }

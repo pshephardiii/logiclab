@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   isFinishedFitchProofAttempt,
   isFinishedDependencyProofAttempt,
@@ -13,8 +14,10 @@ import { evaluateProofAnswer, validateProofAnswer } from './proof-response';
 import { evaluateObjectiveCompletion } from './mixed-evaluation';
 import { validatedProofWork, type ProofSubmissionOccurrence } from './proof-work';
 import { StudentWorkError } from './errors';
+import { truthTreeContent } from '../problem/truth-tree/authoring';
+import { evaluateTruthTreeCompletion } from './truth-tree-response';
 
-/** Pure staged finalization: caller authorizes and locks work; diagnostics must remain post-submission. */
+/** Pure finalization: caller authorizes and locks work; diagnostics must remain post-submission. */
 export function evaluateProofCompletion(
   items: ProofSubmissionOccurrence[],
   input: unknown,
@@ -22,7 +25,7 @@ export function evaluateProofCompletion(
   const { assigned, responses } = validatedProofWork(items, input);
 
   const proofs = assigned.flatMap((item) => {
-    if (item.definition.type !== 'derivation') return [];
+    if (item.definition.type !== ProblemType.Derivation) return [];
 
     const value = responses.get(item.id);
 
@@ -54,7 +57,10 @@ export function evaluateProofCompletion(
   });
 
   const objectiveItems = assigned.flatMap((item) =>
-    item.definition.type === 'derivation' ? [] : [{ id: item.id, definition: item.definition }],
+    item.definition.type === ProblemType.Derivation ||
+    item.definition.type === ProblemType.TruthTree
+      ? []
+      : [{ id: item.id, definition: item.definition }],
   );
 
   const objective = objectiveItems.length
@@ -76,7 +82,7 @@ export function evaluateProofCompletion(
       'completedCells' in item
         ? {
             itemId: item.itemId,
-            type: 'truth_table',
+            type: ProblemType.TruthTable,
             completedResponses: item.completedCells,
             totalResponses: item.totalCells,
           }
@@ -84,13 +90,33 @@ export function evaluateProofCompletion(
     );
   }
 
-  // Only after every proof/objective response is complete, generate fresh feedback for retained final work.
+  // Diagnostics remain local until every item passes its completion gate and the caller commits the final.
   for (const { item, answer, content } of proofs) {
     const evidence = evaluateProofAnswer(
       { itemId: item.id, problemVersionId: item.problemVersionId, content },
       answer,
     );
     results.set(item.id, { ...evidence, completedResponses: 1, totalResponses: 1 });
+  }
+
+  for (const item of assigned) {
+    if (item.definition.type !== ProblemType.TruthTree) continue;
+
+    const answer = responses.get(item.id);
+
+    if (answer === undefined) throw new StudentWorkError('incomplete_work');
+
+    results.set(
+      item.id,
+      evaluateTruthTreeCompletion(
+        {
+          itemId: item.id,
+          problemVersionId: item.problemVersionId,
+          content: truthTreeContent(item.definition),
+        },
+        answer,
+      ),
+    );
   }
 
   const ordered = assigned.map((item) => results.get(item.id)!);

@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { ConceptualAnswerOptions } from './ConceptualAnswerOptions';
 import {
   changeConceptualOption,
@@ -21,7 +22,7 @@ export function ConceptualProblemFields({ fields, onChange }: Props) {
         value={fields.question}
         onChange={(event) => onChange({ ...fields, question: event.target.value })}
       />
-      {fields.type === 'true_false' ? (
+      {fields.type === ProblemType.TrueFalse ? (
         <>
           <label htmlFor="problem-correct-answer">Correct answer</label>
           <select

@@ -343,3 +343,9 @@ Next is `033-chore-disable-natural-deduction-trees`, preserving the underlying i
 Fitch/dependency remain active. New natural-deduction tree work is guarded in normal/demo UI and server admission; authorized retained history remains read-only, with review/release/lifecycle access preserved. Explicit module/symbol names distinguish the retained implementation from semantic tableaux. Template 8 seeds supported methods only; existing visitors upgrade on reset. See [verification](../verification/natural-deduction-tree-availability-verification.md).
 
 Next: proposed `034-feat-semantic-tableaux`, with semantics settled before implementation and delivery split if needed; then a dedicated truth-tree practice UI audit, followed by demo teaching-flow and genuine-account audits and portfolio sandbox preparation. Confirm numbering if delivery splits. No tableaux, new branch or deployment is started here.
+
+## Truth-tree foundation delivered (034)
+
+Unsigned propositional truth trees (semantic tableaux) now support instructor authoring, verified publication, assigned private practice, graded review, completion-only verification and anonymous page-session practice. Template 9 adds two branching examples across three assignment modes; existing visitors upgrade only on explicit reset. Natural-deduction trees remain separately retained and unavailable for new work. See [implementation decisions](truth-trees.md) and [verification and limits](../verification/truth-trees-verification.md).
+
+Next is proposed `035-chore-truth-tree-practice-ui-audit`, followed by the demo teaching-flow and genuine-account UI audits, then inexpensive portfolio sandbox preparation. This supersedes earlier reservations that defer tableaux beyond the target release. The current editor is a foundation, not visual sign-off. No next branch or deployment is started here.

@@ -1,3 +1,4 @@
+import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { naturalDeductionTreeProofSchema } from './natural-deduction-tree';
 import {
@@ -27,7 +28,7 @@ export type NaturalDeductionTreeDerivationDefinition = z.infer<
 
 /** Privileged reference projection; callers must authorize independent answer reveal. */
 export const naturalDeductionTreeDerivationSolutionSchema = z.strictObject({
-  type: z.literal('derivation'),
+  type: z.literal(ProblemType.Derivation),
   definitionVersion: z.literal(1),
   format: z.literal('tree'),
   ruleCatalogVersion: z.literal(1),

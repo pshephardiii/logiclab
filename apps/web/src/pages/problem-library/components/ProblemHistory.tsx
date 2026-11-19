@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 import type {
@@ -6,6 +7,7 @@ import type {
   LibraryProblemVersion,
 } from '@logiclab/contracts/problem-library';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 
 type Props = {
@@ -73,9 +75,11 @@ export function ProblemHistory({ problem, disabled, onPreview, onPublished }: Pr
               Version {version.version}: {version.title}
             </h3>
             <p>{version.instructions || 'No instructions.'}</p>
-            {version.definition.type === 'derivation' ? (
+            {version.definition.type === ProblemType.TruthTree ? (
+              <TruthTreeSummary definition={version.definition} />
+            ) : version.definition.type === ProblemType.Derivation ? (
               <DerivationSummary definition={version.definition} />
-            ) : version.definition.type === 'truth_table' ? (
+            ) : version.definition.type === ProblemType.TruthTable ? (
               <code>{version.definition.formula}</code>
             ) : (
               <ConceptualQuestionSummary definition={version.definition} />

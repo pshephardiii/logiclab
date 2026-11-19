@@ -1,8 +1,14 @@
 import {
+  AssessmentMode,
+  FeedbackTiming,
+  SolutionAccess,
+} from '@logiclab/contracts/assignment-policy-values';
+import { ProblemType } from '@logiclab/contracts/problem-type';
+import {
   ASSIGNMENT_POINT_LIMITS,
   type AssignmentDetail,
   type AssignmentLearningPolicy,
-  type GradeReleaseTiming,
+  GradeReleaseTiming,
 } from '@logiclab/contracts';
 import type { LibraryProblemVersion } from '@logiclab/contracts/problem-library';
 import { assignmentItemState } from './assignment-item-state';
@@ -18,15 +24,16 @@ type FormValues = {
 };
 
 function assignmentMetadata(assignment: AssignmentDetail | null) {
-  const gradeReleaseTiming: GradeReleaseTiming = assignment?.gradeReleaseTiming ?? 'on_submission';
+  const gradeReleaseTiming: GradeReleaseTiming =
+    assignment?.gradeReleaseTiming ?? GradeReleaseTiming.OnSubmission;
 
   return {
     title: assignment?.title ?? '',
     instructions: assignment?.instructions ?? '',
     policy: {
-      assessmentMode: assignment?.assessmentMode ?? 'graded',
-      feedbackTiming: assignment?.feedbackTiming ?? 'on_submission',
-      solutionAccess: assignment?.solutionAccess ?? 'never',
+      assessmentMode: assignment?.assessmentMode ?? AssessmentMode.Graded,
+      feedbackTiming: assignment?.feedbackTiming ?? FeedbackTiming.OnSubmission,
+      solutionAccess: assignment?.solutionAccess ?? SolutionAccess.Never,
     },
     gradeReleaseTiming,
   };
@@ -48,9 +55,11 @@ export function allowsAssignmentProofs(
   policy: Pick<AssignmentLearningPolicy, 'assessmentMode' | 'feedbackTiming'>,
 ) {
   return (
-    policy.assessmentMode === 'ungraded_practice' ||
-    (['graded', 'completion_only'].includes(policy.assessmentMode) &&
-      policy.feedbackTiming === 'on_submission')
+    policy.assessmentMode === AssessmentMode.UngradedPractice ||
+    ([AssessmentMode.Graded, AssessmentMode.CompletionOnly].some(
+      (candidate) => candidate === policy.assessmentMode,
+    ) &&
+      policy.feedbackTiming === FeedbackTiming.OnSubmission)
   );
 }
 
@@ -61,10 +70,14 @@ export function assignmentFormState(assignment: AssignmentDetail | null, values:
   const itemState = assignmentItemState(
     values.items,
     assignment?.items ?? [],
-    values.policy.assessmentMode === 'graded',
+    values.policy.assessmentMode === AssessmentMode.Graded,
   );
 
-  const containsProof = values.items.some((item) => item.version.definition.type === 'derivation');
+  const containsProof = values.items.some(
+    (item) =>
+      item.version.definition.type === ProblemType.Derivation ||
+      item.version.definition.type === ProblemType.TruthTree,
+  );
   const allowsProofs = allowsAssignmentProofs(values.policy);
 
   return {

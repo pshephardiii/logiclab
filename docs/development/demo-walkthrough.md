@@ -33,7 +33,7 @@ Try several quick edits: checking waits until you pause. **Check answers** runs 
 
 Use the **Problem** selector to open **Recognize a contradiction**. Select True to see Incorrect, then False to see Correct. This is a filled answer, not a blank. Open **Classify a formula** and try Contradiction before Tautology. **Save problem** persists only the selected occurrence; switching problems retains local edits. **Clear answer** restores an unanswered choice. **Show assigned solution** reveals the correct answer and explanation; hiding it does not change your selected answer.
 
-New visitors receive template 7. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
+New visitors receive template 9. If your current workspace predates it, explicitly reset to get the updated practice example; role switching alone preserves existing data.
 
 ## 4. Review the submission as the instructor
 
@@ -79,7 +79,7 @@ Operational limits and cleanup commands are in [local demo setup](public-demo.md
 
 Open the mixed graded assignment as instructor: its three problems carry 20, 5 and 5 points. Published allocations are locked. Choose **Duplicate as draft**, change **Points for problem 1**, and save. Verify the total updates and the saved value survives reload. Reordering carries each problem's allocation; repeated copies can have different weights. Completion-only and practice hide point controls.
 
-For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 7's starting weights and clears submissions.
+For a submitted graded example, inspect instructor final submissions and select a student: the retained total, percentage and each problem's points appear separately from correctness counts. As student, the introductory assignment shows points immediately after finalization; the mixed example withholds both correctness and earned points until **Release grades**. **Reveal answers** alone does not release its grade. Reset restores template 9's starting weights and clears submissions.
 
 ## Seeded proofs in all three formats
 
@@ -105,7 +105,7 @@ The demo includes seeded proofs. You can also author a separate disposable examp
 9. Switch to instructor and duplicate the assignment as a draft. Give the copy a distinct title, choose **Completion only** and **When I reveal answers**, then save and publish. Completion proof feedback is at submission, not immediate/manual checking.
 10. As student, open the completion copy. Start the proof. Enter a finished but incorrect attempt: use `Q` for the assumption and confirm it with **Add line**. Use its three-dot menu to close the block on the assumption line, then enter root `P -> P` with implication introduction citing that block and confirm **Add line**. This fills required fields and reaches the target, but the inference is wrong. There must be no **Check proof** or pre-submission diagnostics. Save, confirm final submission and submit.
 11. Expect score-free completion and post-submission proof diagnostics. Return as instructor, open the assignment and its final submission. Expect **Completed — errors found**, the frozen proof/report and no point score. Reference answers stay hidden from the student until you separately confirm **Reveal answers**. Switching back and refreshing answer access must not change completion or the retained diagnostics.
-12. Reset discards these owner-authored examples and student work, restoring seed template 8 while retaining the original workspace deadline, including the seeded Fitch/dependency proof journeys.
+12. Reset discards these owner-authored examples and student work, restoring seed template 9 while retaining the original workspace deadline, including the seeded Fitch/dependency proof journeys.
 
 This demonstrates checked authoring, explicit practice feedback, finished-versus-verified completion and independent reference reveal. See [student-work verification](../verification/derivation-student-work-verification.md) for evidence and limits; dependency proofs are also available; natural-deduction trees are retained for historical review only. For graded instructor review, continue below.
 
@@ -127,7 +127,7 @@ See [grading/review verification](../verification/derivation-grading-review-veri
 
 ## Optional: author a natural-deduction tree
 
-**Historical walkthrough (026–031), unavailable for new work since 033.** These steps describe the retained implementation and cannot be followed through the current authoring/practice UI. New/reset template-8 demos contain Fitch/dependency only; existing visitor trees remain read-only until explicit reset removes their workspace data. Do not substitute semantic tableaux for this old method. The historical steps below are kept for context.
+**Historical walkthrough (026–031), unavailable for new work since 033.** These steps describe the retained implementation and cannot be followed through the current authoring/practice UI. New/reset template-9 demos contain Fitch/dependency and semantic-tableau truth trees; existing visitor trees remain read-only until explicit reset removes their workspace data. Do not substitute semantic tableaux for this old method. The historical steps below are kept for context.
 
 Template 7 includes a seeded tree. This optional walkthrough creates a separate instructor-authored example.
 
@@ -139,7 +139,7 @@ Template 7 includes a seeded tree. This optional walkthrough creates a separate 
 6. Switch to student and open the assignment. Its format is fixed. Start the proof, add the assumption and discharge as above, then **Save problem**. In practice, **Check proof** checks without saving. Changing problems preserves local work; leaving/reloading protects unsaved edits.
 7. For graded work, incomplete/incorrect proofs may be submitted and require instructor review; accepted proofs receive full points. For completion-only, fill the tree and matching root before submitting; logical mistakes produce retained verification flags without a score. Graded diagnostics wait for grade release; completion diagnostics appear after submission.
 8. As instructor, review the final proof read-only. Grade/comment adjustments preserve original evidence. Reveal the reference independently from graded reports/points. See the preceding grading walkthrough for review and release controls.
-9. End/reset the demo when finished. Reset removes these authored examples and restores template 7; including the prebuilt tree examples.
+9. End/reset the demo when finished. Historically, reset restored template 7 and its natural-deduction trees; current reset restores template 9 without that unavailable method.
 
 ## Independent proof practice (no account)
 
@@ -149,3 +149,19 @@ Template 7 includes a seeded tree. This optional walkthrough creates a separate 
 4. Select **Check proof** and expect verification. Change the entered formula to `Q`: the old report disappears. Check again and expect an error. Entries are never checked automatically.
 5. Choose another format. **Stay** or Escape preserves the setup, proof and report. Repeat and choose **Discard changes**: expect an empty setup in the selected format, no premises/target/proof/feedback, and all default rules restored. **Start over** performs the same confirmed reset without changing format.
 6. Leaving or reloading entered work requests discard/unload protection where the browser supports it. Reload/remount clears page memory; no database save, browser-storage backup or official grade is created. A failed check does not search for a solution or prove that the selected goal is impossible.
+
+## Truth-tree journeys (template 9)
+
+Use a new demo visitor, or explicitly reset an existing visitor if you are ready to discard their work. These examples use truth trees/semantic tableaux, not natural-deduction trees. The editor currently supplies baseline construction controls; visual fine-tuning follows separately.
+
+1. Explore as student, open **Assigned work**, select **Demo: Introduction to Logic**, then **Practice truth trees: closed and open paths**.
+2. On the first problem choose **Start tree**. The roots are `P ∨ Q`, `¬P` and the negated conclusion `¬Q`. Select the disjunction source and **Disjunction**, enter `P` and `Q` in the two result fields, then **Add expansion**.
+3. Select **Branch 2**, use complementary closure with `¬P` and `P`, and **Close branch**. Select **Branch 3** and close it with `¬Q` and `Q`.
+4. Select **Check tree**: expect verified/valid. Select **Save problem**, then **Show assigned solution** to inspect the separate reference without replacing your entries.
+5. Select **Next problem**, then **Start tree**. Expand `P ∨ Q` into `P` and `Q`. Close the `P` child with the initial `¬P`; leave the `Q` child open. **Check tree** should report verified/invalid and a counterexample with `P = F`, `Q = T`. Save and reload the assignment to confirm both answers persist.
+6. Open **Truth trees: separate grade and answer release** and construct/save both trees again. There is no pre-submission check. Confirm final submission; expect an awaiting-grade receipt without correctness/points.
+7. Switch to instructor, select this assignment, confirm **Reveal answers**, then return to student and refresh/reopen. Reference access is available while grades remain pending. Return as instructor and separately confirm **Release grades**. Student refresh now shows verified reports and 20/20 points. Submitted work is read-only.
+8. Open **Complete both truth trees** as student. For a deliberate incorrect-but-filled attempt, start the first tree and close its root using falsity closure with the disjunction as the witness. Save. Finish the second tree correctly as in step 5, save and submit. Expect a completed, score-free result with one verification error and one verified tree. Instructor final review can inspect the incorrect submitted tree; reference reveal stays separate.
+9. Reset only when ready to discard this visitor's work. Expect the original deadline to remain, old attempts to disappear and the current seeded examples to return. Other visitors stay separate.
+
+Independent `/practice/truth-trees` instead takes your own premises/conclusion and keeps work only in the page session. **Check tree** is explicit. Start-over/navigation protects work with Stay/Discard; there is no account save or browser-storage recovery.

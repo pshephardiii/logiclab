@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   conceptualSolutionSchema,
   objectiveAssignmentResponseValueSchema,
@@ -16,7 +17,7 @@ import { validateTruthTableAnswers, checkAssignedTruthTableAnswers } from './eva
 import { validateConceptualAnswer, checkConceptualAnswer } from './conceptual-evaluation';
 import { StudentWorkError } from './errors';
 
-type TableDefinition = Extract<ObjectiveProblemDefinition, { type: 'truth_table' }>;
+type TableDefinition = Extract<ObjectiveProblemDefinition, { type: typeof ProblemType.TruthTable }>;
 
 function tableResponse(input: unknown): TruthTableAnswer[] {
   const parsed = objectiveAssignmentResponseValueSchema.safeParse(input);
@@ -43,7 +44,7 @@ export function validateObjectiveResponse(
 ): ObjectiveAssignmentResponseValue {
   const supported = validateObjectiveDefinition(definition);
 
-  if (supported.type !== 'truth_table') return validateConceptualAnswer(supported, input);
+  if (supported.type !== ProblemType.TruthTable) return validateConceptualAnswer(supported, input);
 
   const answers = tableResponse(input);
 
@@ -68,7 +69,7 @@ export function checkObjectiveResponse(
 ): TruthTableCheckResponse | ConceptualFeedback {
   const supported = validateObjectiveDefinition(definition);
 
-  if (supported.type !== 'truth_table') return checkConceptualAnswer(supported, input);
+  if (supported.type !== ProblemType.TruthTable) return checkConceptualAnswer(supported, input);
 
   return checkAssignedTruthTableAnswers(supported.formula, tableResponse(input));
 }
@@ -85,11 +86,11 @@ export function objectiveSolution(
 ): TruthTableSolutionResponse | ConceptualSolution {
   const supported = validateObjectiveDefinition(definition);
 
-  if (supported.type === 'truth_table')
+  if (supported.type === ProblemType.TruthTable)
     return truthTableSolutionResponseSchema.parse(generateTruthTable(supported.formula));
 
   return conceptualSolutionSchema.parse(
-    supported.type === 'true_false'
+    supported.type === ProblemType.TrueFalse
       ? {
           type: supported.type,
           correctAnswer: supported.correctAnswer,

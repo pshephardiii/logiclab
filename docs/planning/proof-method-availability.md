@@ -87,11 +87,13 @@ Success means the application no longer offers new natural-deduction tree work, 
 
 ## Following work
 
+Branch 034 completes the [truth-tree foundation](truth-trees.md), including checking, authoring, assigned work, independent practice and template-9 demo examples. See [verification and limits](../verification/truth-trees-verification.md); visual refinement remains next.
+
 The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass. This is not exhaustive functional/accessibility sign-off. The agreed next sequence is:
 
 1. **`033-chore-disable-natural-deduction-trees` — complete**: guards, retained-history behavior, explicit naming and focused verification are delivered; the implementation is retained for possible future inclusion.
-2. **`034-feat-semantic-tableaux`** (proposed): add truth trees as a distinct method. Settle decomposition/branching, closure, finished-open-branch counterexamples, authoring, student responses, feedback and grading before their dependent slices. Reuse suitable propositional infrastructure without repurposing natural-deduction tree semantics. Split implementation into further numbered branches if necessary rather than treating this reservation as a fixed-size commitment.
-3. **`035-chore-truth-tree-practice-ui-audit`** (proposed, after tableaux delivery): fine-tune independent truth-tree practice using a dedicated checklist, representative validity/counterexample journeys, branching/closure interactions, keyboard controls and visual/mobile QA. Do not claim the current practice checklist verifies an unimplemented method.
+2. **`034-feat-semantic-tableaux` — complete**: unsigned propositional decomposition, closure, completed open-branch counterexamples and application workflows are delivered separately from natural-deduction trees.
+3. **`035-chore-truth-tree-practice-ui-audit`** (proposed, after tableaux delivery): fine-tune independent truth-tree practice using a dedicated checklist, representative validity/counterexample journeys, branching/closure interactions, keyboard controls and visual/mobile QA. The earlier practice checklist does not establish visual sign-off for the newly implemented method.
 4. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
 
 The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This sequence does not create the next branch or authorize deployment.

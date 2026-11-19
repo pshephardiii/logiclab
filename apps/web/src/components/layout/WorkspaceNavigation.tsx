@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import { NavLink } from 'react-router';
 import { useAccountContext } from '../../features/auth/AccountProvider';
 import { DemoBanner } from '../../features/demo/DemoBanner';
@@ -32,7 +33,7 @@ export function WorkspaceNavigation() {
     <section className="account-workspace" aria-label="Account workspace">
       <div className="workspace-surface">
         <p className="workspace-title">
-          {user.role === 'instructor' ? 'Instructor' : 'Student'} workspace
+          {user.role === UserRole.Instructor ? 'Instructor' : 'Student'} workspace
         </p>
         {links}
       </div>

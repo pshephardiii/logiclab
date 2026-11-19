@@ -1,3 +1,4 @@
+import { PurchaseStatus } from '@logiclab/contracts/billing-values';
 import type { JobFinding } from '../types';
 import type { FindingKind } from '@logiclab/db' with { 'resolution-mode': 'import' };
 import type { PurchaseSnapshot, GrantSnapshot } from './types';
@@ -23,13 +24,15 @@ export function purchaseFindings(
     });
   }
 
-  if (purchase.status === 'paid' && related.length === 0) add('paid_purchase_missing_grant');
+  if (purchase.status === PurchaseStatus.Paid && related.length === 0)
+    add('paid_purchase_missing_grant');
 
   const active = related.find(
     (grant) => !grant.revokedAt && grant.startsAt <= asOf && grant.endsAt > asOf,
   );
 
-  if (purchase.status === 'refunded' && active) add('refunded_purchase_active_grant', active);
+  if (purchase.status === PurchaseStatus.Refunded && active)
+    add('refunded_purchase_active_grant', active);
 
   const mismatch = related.find(
     (grant) =>

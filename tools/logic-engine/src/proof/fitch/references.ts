@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { FitchProof } from '@logiclab/contracts';
 import type { ClosedFitchBlockSpan, FitchLayout, FitchReferenceCheck } from './types';
 import type { StructureDiagnostics } from '../structure-diagnostics';
@@ -22,7 +23,7 @@ export function resolveFitchReferences(
 
     const fail = (message: string) => {
       invalid = true;
-      diagnostics.add({ code: 'INVALID_REFERENCE', message, stepIndex });
+      diagnostics.add({ code: CheckerDiagnosticCode.InvalidReference, message, stepIndex });
     };
 
     // Ordinary lines must already exist and remain visible in the current or an ancestor box.
@@ -65,7 +66,7 @@ export function resolveFitchReferences(
       if (block.endIndex === null) {
         incomplete = true;
         diagnostics.add({
-          code: 'INCOMPLETE_PROOF',
+          code: CheckerDiagnosticCode.IncompleteProof,
           message: 'Cited subproof is not closed.',
           stepIndex,
           blockId: id,

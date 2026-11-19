@@ -1,3 +1,4 @@
+import { UserRole } from '@logiclab/contracts/user-role';
 import { encryptTokens, decryptTokens, newSessionId, sessionHash } from './crypto';
 import type { AuthStore, IdentityProvider, Role, Tokens, StoredSession } from './types';
 
@@ -53,7 +54,8 @@ export function createAuthService(
 
   return {
     async signup(email: string, password: string, role: Role) {
-      if (role !== 'student' && role !== 'instructor') throw new AuthError('ROLE_INVALID');
+      if (role !== UserRole.Student && role !== UserRole.Instructor)
+        throw new AuthError('ROLE_INVALID');
 
       const subject = await provider.signup(email, password);
 

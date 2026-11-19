@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest';
 import type { ProblemDraft } from '@logiclab/contracts';
 import { ProblemForm } from './ProblemForm';
 import { ConceptualProblemPreview } from './ConceptualProblemPreview';
+import { truthTreeDraft } from '../../../../test/truth-tree';
 
 function setup(problem: ProblemDraft | null = null) {
   const props = {
@@ -31,6 +32,28 @@ const saved: ProblemDraft = {
     explanation: 'Private explanation.',
   },
 };
+
+test('truth-tree drafts load editable private fields without creating work or becoming dirty', () => {
+  const onDirty = vi.fn();
+  const onSave = vi.fn();
+  render(
+    <ProblemForm
+      problem={truthTreeDraft}
+      busy={false}
+      onDirty={onDirty}
+      onSave={onSave}
+      onPreview={vi.fn()}
+    />,
+  );
+  expect(screen.getByLabelText('Title')).toHaveValue('Truth-tree argument');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('Q');
+  expect(screen.getByLabelText('Reference explanation (optional)')).toHaveValue(
+    'PRIVATE_TREE_EXPLANATION',
+  );
+  expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+  expect(onDirty).toHaveBeenCalledWith(false);
+  expect(onSave).not.toHaveBeenCalled();
+});
 
 test('authors true/false with an explicit false key and trimmed explanation', async () => {
   const { user, onSave } = setup();

@@ -1,3 +1,10 @@
+import { checkTruthTree } from '@logiclab/logic-engine/truth-tree';
+import type { SavedStudentAttempt } from '@logiclab/contracts/saved-student-work';
+import {
+  truthTreeWork,
+  truthTreeAnswer,
+  truthTreeSolution,
+} from '../../../../test/truth-tree-work-fixture';
 import {
   retainedNaturalDeductionTreeWork,
   naturalDeductionTreeAnswer,
@@ -611,3 +618,92 @@ test('retained mixed tree work stays navigable and read-only without save/check/
   expect(screen.queryByRole('button', { name: 'Check proof' })).not.toBeInTheDocument();
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
 });
+
+test('mixed truth-tree practice opens editable work without revealing a private reference', async () => {
+  vi.mocked(api.readAssignedWork).mockResolvedValue({
+    assignment: truthTreeWork,
+    attempt: { ...saved, answers: { [itemB]: truthTreeAnswer } },
+  });
+  vi.mocked(api.readAssignedSolution).mockResolvedValue(truthTreeSolution);
+  const { user } = await open();
+  expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
+  for (const cell of cells()) expect(cell).toBeEnabled();
+  await user.selectOptions(screen.getByLabelText('Problem'), itemB);
+  expect(screen.getByRole('region', { name: 'Assigned truth tree' })).toHaveTextContent('R');
+  expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Show assigned solution' }));
+  expect(await screen.findByText('PRIVATE_REFERENCE_EXPLANATION')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  expect(screen.queryByText('PRIVATE_REFERENCE_EXPLANATION')).not.toBeInTheDocument();
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+});
+
+test.each([false, true])(
+  'truth-tree diagnostics follow the released result projection (released: %s)',
+  async (released) => {
+    const report = checkTruthTree({
+      problem: { ruleCatalogVersion: 1, premises: [], conclusion: 'P' },
+      tree: truthTreeAnswer.tree,
+    });
+    const attempt: SavedStudentAttempt = {
+      ...saved,
+      submittedAt: submitted.submittedAt,
+      answers: { [itemB]: truthTreeAnswer },
+      gradePending: !released,
+      score: released
+        ? {
+            scoringVersion: 'points_v1',
+            items: [{ itemId: itemB, maxPoints: 10, earnedPoints: null, status: 'needs_review' }],
+            summary: {
+              status: 'needs_review',
+              maxPoints: 10,
+              earnedPoints: null,
+              percentage: null,
+            },
+          }
+        : null,
+      result: released
+        ? {
+            gradingVersion: 'proof_mixed_v1',
+            items: [
+              {
+                type: 'truth_tree',
+                evaluationVersion: 'truth_tree_v1',
+                itemId: itemB,
+                problemVersionId: itemA,
+                report,
+              },
+            ],
+            summary: {
+              objective: { correct: 0, incorrect: 0, unanswered: 0, total: 0 },
+              proofs: { accepted: 0, needsReview: 1, unassessable: 0, total: 1 },
+            },
+          }
+        : null,
+    };
+    vi.mocked(api.readAssignedWork).mockResolvedValue({
+      assignment: {
+        ...truthTreeWork,
+        assessmentMode: 'graded',
+        feedbackTiming: 'on_submission',
+        gradeReleaseTiming: 'instructor_release',
+        solutionAccess: 'never',
+        items: [truthTreeWork.items[1]!],
+      },
+      attempt,
+    });
+    render(<AssignedAttempt assignmentId={work.id} />);
+    await screen.findByRole('heading', { name: 'Problem 2: Truth-tree occurrence' });
+    if (released)
+      expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
+        report.status,
+      );
+    else
+      expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Revealed truth-tree answer' }),
+    ).not.toBeInTheDocument();
+    expect(api.readAssignedSolution).not.toHaveBeenCalled();
+  },
+);

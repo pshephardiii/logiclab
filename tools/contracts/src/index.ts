@@ -4,9 +4,13 @@ export * from './truth-table';
 
 export * from './auth';
 
+export * from './user-role';
+
 export * from './classroom';
 
 export * from './problem';
+
+export * from './problem-type';
 
 export * from './assignment';
 
@@ -16,9 +20,13 @@ export * from './submission-review';
 
 export * from './billing';
 
+export * from './billing-values';
+
 export * from './demo';
 
 export * from './assignment-learning-policy';
+
+export * from './assignment-policy-values';
 
 export * from './assignment-results-release';
 
@@ -32,8 +40,12 @@ export * from './assignment-grading';
 
 export * from './proof';
 
+export * from './checker-diagnostic-code';
+
 export * from './dependency-proof';
 
 export * from './natural-deduction-tree';
 
 export * from './proof-method-availability';
+
+export * from './truth-tree';

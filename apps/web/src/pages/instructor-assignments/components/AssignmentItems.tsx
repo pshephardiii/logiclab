@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { ASSIGNMENT_POINT_LIMITS } from '@logiclab/contracts';
 import type { SelectedProblem } from '../helpers/assignment-form-state';
 
@@ -29,11 +30,13 @@ export function AssignmentItems({ items, readOnly, graded, onPoints, onMove, onR
             </h4>
             <p>{item.version.instructions || 'No problem instructions.'}</p>
             <code>
-              {item.version.definition.type === 'truth_table'
+              {item.version.definition.type === ProblemType.TruthTable
                 ? item.version.definition.formula
-                : item.version.definition.type === 'derivation'
-                  ? `${item.version.definition.format === 'tree' ? 'Natural-deduction tree' : item.version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${item.version.definition.conclusion}`
-                  : item.version.definition.question}
+                : item.version.definition.type === ProblemType.TruthTree
+                  ? `Truth tree · ${item.version.definition.conclusion}`
+                  : item.version.definition.type === ProblemType.Derivation
+                    ? `${item.version.definition.format === 'tree' ? 'Natural-deduction tree' : item.version.definition.format === 'dependency' ? 'Dependency' : 'Fitch'} · Prove: ${item.version.definition.conclusion}`
+                    : item.version.definition.question}
             </code>
             {graded && (
               <label>

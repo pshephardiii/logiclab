@@ -1,3 +1,4 @@
+import { AssessmentMode } from '@logiclab/contracts/assignment-policy-values';
 import type { AssignmentDetail } from '@logiclab/contracts';
 
 export function assignmentActionNotice(
@@ -7,7 +8,7 @@ export function assignmentActionNotice(
   return action === 'release-grades'
     ? 'Grades released. Answer access is unchanged.'
     : action === 'reveal-answers'
-      ? assessmentMode === 'completion_only'
+      ? assessmentMode === AssessmentMode.CompletionOnly
         ? 'Answers revealed. Completion status is unchanged.'
         : 'Answers revealed. Grade release is unchanged.'
       : action === 'publish'

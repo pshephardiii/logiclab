@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import type {
   LibraryProblemDraft,
@@ -5,6 +6,7 @@ import type {
 } from '@logiclab/contracts/problem-library';
 import { useProblemHistory } from '../hooks/useProblemHistory';
 import { DerivationSummary } from './DerivationSummary';
+import { TruthTreeSummary } from '../../../features/truth-tree/components/TruthTreeSummary';
 import { ConceptualQuestionSummary } from './ConceptualQuestionSummary';
 
 /** Display the immutable published snapshot, not a potentially different editable draft. */
@@ -25,7 +27,11 @@ export function ProblemOverview({
       {published && (
         <div role="status" className="publication-success">
           <strong>✓ Published version {published.version}.</strong>
-          <p>Your problem is ready to add to an assignment.</p>
+          <p>
+            {problem.definition.type === ProblemType.TruthTree
+              ? 'Your truth-tree snapshot is published.'
+              : 'Your problem is ready to add to an assignment.'}
+          </p>
         </div>
       )}
       <div className="problem-overview-heading">
@@ -54,9 +60,11 @@ export function ProblemOverview({
         <>
           <p className="problem-status-badge">Published · Version {version.version}</p>
           {version.instructions && <p>{version.instructions}</p>}
-          {version.definition.type === 'derivation' ? (
+          {version.definition.type === ProblemType.TruthTree ? (
+            <TruthTreeSummary definition={version.definition} />
+          ) : version.definition.type === ProblemType.Derivation ? (
             <DerivationSummary definition={version.definition} />
-          ) : version.definition.type === 'truth_table' ? (
+          ) : version.definition.type === ProblemType.TruthTable ? (
             <p>
               <code>{version.definition.formula}</code>
             </p>

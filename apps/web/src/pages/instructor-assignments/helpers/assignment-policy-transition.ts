@@ -1,3 +1,8 @@
+import {
+  AssessmentMode,
+  SolutionAccess,
+  FeedbackTiming,
+} from '@logiclab/contracts/assignment-policy-values';
 import { assignmentLearningPolicySchema, type AssignmentLearningPolicy } from '@logiclab/contracts';
 
 /** Preserve immediate practice feedback and reset answer access that practice cannot use. */
@@ -6,18 +11,21 @@ export function assignmentPolicyTransition(
   assessmentMode: string,
 ) {
   const resetSolutions =
-    assessmentMode === 'ungraded_practice' && !['never', 'anytime'].includes(policy.solutionAccess);
+    assessmentMode === AssessmentMode.UngradedPractice &&
+    ![SolutionAccess.Never, SolutionAccess.Anytime].some(
+      (candidate) => candidate === policy.solutionAccess,
+    );
 
   return {
     policy: assignmentLearningPolicySchema.parse({
       assessmentMode,
       feedbackTiming:
-        assessmentMode === 'ungraded_practice'
-          ? policy.feedbackTiming === 'immediate'
-            ? 'immediate'
-            : 'on_check'
-          : 'on_submission',
-      solutionAccess: resetSolutions ? 'never' : policy.solutionAccess,
+        assessmentMode === AssessmentMode.UngradedPractice
+          ? policy.feedbackTiming === FeedbackTiming.Immediate
+            ? FeedbackTiming.Immediate
+            : FeedbackTiming.OnCheck
+          : FeedbackTiming.OnSubmission,
+      solutionAccess: resetSolutions ? SolutionAccess.Never : policy.solutionAccess,
     }),
     resetSolutions,
   };

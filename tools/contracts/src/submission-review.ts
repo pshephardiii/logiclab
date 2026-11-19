@@ -1,3 +1,5 @@
+import { AssessmentMode, FeedbackTiming } from './assignment-policy-values';
+import { ProblemType } from './problem-type';
 import {
   proofSubmissionResultSchema,
   proofCompletionSubmissionResultSchema,
@@ -45,7 +47,10 @@ export const submissionReviewSchema = z
   })
   .superRefine((review, context) => {
     const hasProof = review.assignment.items.some(
-      (item) => 'content' in item && item.content.type === 'derivation',
+      (item) =>
+        'content' in item &&
+        (item.content.type === ProblemType.Derivation ||
+          item.content.type === ProblemType.TruthTree),
     );
 
     const completion = review.attempt.result?.gradingVersion === 'proof_completion_v1';
@@ -62,9 +67,9 @@ export const submissionReviewSchema = z
         !hasProof ||
         !(completion || graded) ||
         (completion
-          ? review.assignment.assessmentMode !== 'completion_only' ||
-            review.assignment.feedbackTiming !== 'on_submission'
-          : review.assignment.assessmentMode !== 'graded') ||
+          ? review.assignment.assessmentMode !== AssessmentMode.CompletionOnly ||
+            review.assignment.feedbackTiming !== FeedbackTiming.OnSubmission
+          : review.assignment.assessmentMode !== AssessmentMode.Graded) ||
         review.attempt.gradePending !== false ||
         review.submission.id !== review.attempt.id ||
         review.submission.submittedAt !== review.attempt.submittedAt ||

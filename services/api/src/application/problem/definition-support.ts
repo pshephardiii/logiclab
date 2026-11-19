@@ -1,3 +1,4 @@
+import { ProblemType } from '@logiclab/contracts/problem-type';
 import {
   objectiveProblemDefinitionSchema,
   type ObjectiveProblemDefinition as AuthoredProblemDefinition,
@@ -15,7 +16,7 @@ export class UnsupportedProblemDefinitionError extends Error {
 }
 
 export function requireTruthTableDefinition(definition: ProblemDefinition): TruthTableDefinition {
-  if (definition.type !== 'truth_table' || definition.definitionVersion !== 1) {
+  if (definition.type !== ProblemType.TruthTable || definition.definitionVersion !== 1) {
     throw new UnsupportedProblemDefinitionError();
   }
 
@@ -28,7 +29,7 @@ export function validateObjectiveDefinition(input: unknown): AuthoredProblemDefi
 
   if (!result.success) throw new UnsupportedProblemDefinitionError();
 
-  if (result.data.type === 'truth_table') parseFormula(result.data.formula);
+  if (result.data.type === ProblemType.TruthTable) parseFormula(result.data.formula);
 
   return result.data;
 }

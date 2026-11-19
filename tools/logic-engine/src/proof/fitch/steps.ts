@@ -1,3 +1,4 @@
+import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import type { FitchProofCheckInput, ProofCheckReport, FitchProofStep } from '@logiclab/contracts';
 import { sameFormula } from '../formula-equality';
 import { checkParsedRule } from '../parsed-rule';
@@ -29,7 +30,7 @@ function localStatus(
   if (step.kind === 'premise') {
     if (step.premiseId === null) {
       diagnostics.add({
-        code: 'INCOMPLETE_PROOF',
+        code: CheckerDiagnosticCode.IncompleteProof,
         message: 'Premise declaration has no selected problem premise.',
         stepIndex,
       });
@@ -40,7 +41,7 @@ function localStatus(
 
     if (!premise?.formula) {
       diagnostics.add({
-        code: 'INVALID_REFERENCE',
+        code: CheckerDiagnosticCode.InvalidReference,
         message: 'Premise declaration must identify a supplied problem premise.',
         stepIndex,
       });
@@ -52,7 +53,7 @@ function localStatus(
     if (sameFormula(current.formula, premise.formula)) return 'valid';
 
     diagnostics.add({
-      code: 'RULE_MISMATCH',
+      code: CheckerDiagnosticCode.RuleMismatch,
       message: 'Premise formula does not match its supplied problem premise.',
       stepIndex,
     });
@@ -160,7 +161,10 @@ export function evaluateFitchSteps(
       reference?.status !== 'unassessable'
     )
       diagnostics.add({
-        code: dependencyStatus === 'invalid' ? 'INVALID_DEPENDENCY' : 'INCOMPLETE_PROOF',
+        code:
+          dependencyStatus === 'invalid'
+            ? CheckerDiagnosticCode.InvalidDependency
+            : CheckerDiagnosticCode.IncompleteProof,
         message:
           dependencyStatus === 'invalid'
             ? 'Step depends on invalid earlier work.'

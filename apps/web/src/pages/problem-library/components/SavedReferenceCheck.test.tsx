@@ -5,6 +5,7 @@ import type { DerivationReferenceCheckResponse } from '@logiclab/contracts/deriv
 import { derivationDraft } from '../../../../test/derivation';
 import * as api from '../../../api/problems/api';
 import { SavedReferenceCheck } from './SavedReferenceCheck';
+import { truthTreeDraft } from '../../../../test/truth-tree';
 
 vi.mock('../../../api/problems/api', () => ({ checkReference: vi.fn() }));
 const missing: DerivationReferenceCheckResponse = {
@@ -13,6 +14,41 @@ const missing: DerivationReferenceCheckResponse = {
   check: { status: 'missing' },
 };
 beforeEach(() => vi.resetAllMocks());
+
+test('truth-tree checks show nested step diagnostics instead of losing the reason for rejection', async () => {
+  vi.mocked(api.checkReference).mockResolvedValue({
+    problemId: truthTreeDraft.id,
+    updatedAt: truthTreeDraft.updatedAt,
+    check: {
+      status: 'checked',
+      report: {
+        checkerVersion: 1,
+        ruleCatalogVersion: 1,
+        status: 'invalid',
+        argumentStatus: 'undetermined',
+        branches: [],
+        counterexample: null,
+        diagnostics: [],
+        steps: {
+          checkerVersion: 1,
+          ruleCatalogVersion: 1,
+          status: 'invalid',
+          initial: 'invalid',
+          occurrences: [],
+          expansions: [],
+          closures: [],
+          diagnostics: [
+            { code: 'INITIAL_MISMATCH', message: 'The negated conclusion does not match.' },
+          ],
+        },
+      },
+    },
+  });
+  render(<SavedReferenceCheck problem={truthTreeDraft} />);
+  await userEvent.click(screen.getByRole('button', { name: 'Check saved reference' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Reference needs correction');
+  expect(screen.getByText('The negated conclusion does not match.')).toBeInTheDocument();
+});
 
 test('checks only on explicit action and retains recoverable errors without automatic retry', async () => {
   vi.mocked(api.checkReference)
