@@ -17,3 +17,5 @@ export type { TruthTreeStructureResult } from './structure';
 export { checkTruthTreeSteps } from './check-steps';
 
 export { checkTruthTree } from './check-tree';
+
+export { isFinishedTruthTreeAttempt } from './completeness';
