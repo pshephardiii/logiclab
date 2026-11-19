@@ -1,6 +1,7 @@
 import { TRUTH_TREE_LIMITS, type TruthTree } from '@logiclab/contracts/truth-tree';
 import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
 import { editableTree } from '../helpers/construction';
+import { branchEndingLabel, occurrenceSourceLabel } from '../helpers/display-labels';
 import './truth-tree-editor.css';
 
 /** Ordered branch segments retain their identities and show inherited sources by number. */
@@ -75,24 +76,12 @@ export function TruthTreeDisplay({
                     ) : (
                       <code>{item.formula || '(blank)'}</code>
                     )}
-                    <small>
-                      {item.origin.kind === 'premise'
-                        ? 'Premise'
-                        : item.origin.kind === 'negated_conclusion'
-                          ? 'Negated conclusion'
-                          : `${expansion?.ruleId?.replaceAll('_', ' ') ?? 'Expansion'} · source ${expansion?.sourceId ? numbers.get(expansion.sourceId) : '?'}`}
-                    </small>
+                    <small>{occurrenceSourceLabel(item, expansion, numbers)}</small>
                   </li>
                 );
               })}
             </ol>
-            <p>
-              {branch.ending.kind === 'split'
-                ? `Splits into branches ${branch.ending.childBranchIds.map((child) => branchNumbers.get(child)).join(' and ')}.`
-                : branch.ending.kind === 'closed'
-                  ? `Closed · ${branch.ending.closure?.kind === 'complement' ? branch.ending.closure.occurrenceIds.map((id) => numbers.get(id)).join(', ') : branch.ending.closure?.kind === 'falsity' ? numbers.get(branch.ending.closure.occurrenceId) : 'witnesses missing'}`
-                  : 'Open'}
-            </p>
+            <p>{branchEndingLabel(branch.ending, numbers, branchNumbers)}</p>
           </section>
         );
       })}
