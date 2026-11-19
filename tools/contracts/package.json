@@ -16,6 +16,11 @@
       "browser": "./dist/browser/truth-tree.js",
       "default": "./dist/truth-tree.js"
     },
+    "./truth-tree-authoring": {
+      "types": "./dist/truth-tree-authoring.d.ts",
+      "browser": "./dist/browser/truth-tree-authoring.js",
+      "default": "./dist/truth-tree-authoring.js"
+    },
     "./derivation": {
       "types": "./dist/derivation.d.ts",
       "browser": "./dist/browser/derivation.js",
