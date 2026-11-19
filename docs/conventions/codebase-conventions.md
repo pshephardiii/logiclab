@@ -45,6 +45,8 @@ Keep dependencies directed toward these shared capabilities. Tools must not impo
 
 The contracts package builds from one source tree into CommonJS for Node (`dist/index.js`) and ES modules for browser bundlers (`dist/browser/index.js`, selected by the package's `browser` field). Browser ES modules allow unused exports and validation-library code to be removed during production bundling. The browser output is bundler input, not a native Node entry point; declarations and declaration maps remain on the existing shared types entry.
 
+Independently runnable commands that load another workspace's runtime exports must build that prerequisite first. When adding a runtime workspace dependency, verify the affected CI/standalone command without existing workspace build outputs; an earlier aggregate build can conceal a missing prerequisite. Use an isolated source copy rather than removing a user's active build artifacts.
+
 Keep both targets in build, typecheck and development watch commands. Consumers continue importing `@logiclab/contracts`; do not alias across workspace source directories or duplicate contracts. Verify frontend production sizes and server consumers when changing package resolution. Keep chunk-size diagnostics enabled and measure emitted totals as well as individual chunks; splitting a large file alone does not prove less code is downloaded.
 
 ## Tools: file organization and readability
