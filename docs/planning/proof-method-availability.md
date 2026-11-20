@@ -87,13 +87,14 @@ Success means the application no longer offers new natural-deduction tree work, 
 
 ## Following work
 
-Branch 034 completes the [truth-tree foundation](truth-trees.md), including checking, authoring, assigned work, independent practice and template-9 demo examples. See [verification and limits](../verification/truth-trees-verification.md); visual refinement remains next.
+Branch 034 completes the [truth-tree foundation](truth-trees.md), including checking, authoring, assigned work, independent practice and template-9 demo examples. See [foundation verification](../verification/truth-trees-verification.md) and the [035 UI closeout](../verification/truth-tree-practice-ui-audit-verification.md).
 
 The user accepted the truth-table, Fitch and dependency independent-practice UI for this pass. This is not exhaustive functional/accessibility sign-off. The agreed next sequence is:
 
 1. **`033-chore-disable-natural-deduction-trees` — complete**: guards, retained-history behavior, explicit naming and focused verification are delivered; the implementation is retained for possible future inclusion.
 2. **`034-feat-semantic-tableaux` — complete**: unsigned propositional decomposition, closure, completed open-branch counterexamples and application workflows are delivered separately from natural-deduction trees.
-3. **`035-chore-truth-tree-practice-ui-audit`** (proposed, after tableaux delivery): fine-tune independent truth-tree practice using a dedicated checklist, representative validity/counterexample journeys, branching/closure interactions, keyboard controls and visual/mobile QA. The earlier practice checklist does not establish visual sign-off for the newly implemented method.
-4. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
+3. **`035-chore-truth-tree-practice-ui-audit` — ready to close**: visual branch-local construction, explicit validity verdicts, markers, feedback and focused keyboard/mobile evidence are delivered. This does not establish whole-product visual/accessibility sign-off.
+4. **`036-feat-formula-grouping-and-decomposition` — proposed next**: implement the shared [formula policy plan](formula-grouping-and-decomposition.md), including explicit boundaries and ungrouped conjunction/disjunction shortcuts, without re-enabling natural-deduction trees.
+5. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
 
 The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This sequence does not create the next branch or authorize deployment.
