@@ -25,10 +25,10 @@ test('read-only diagrams retain numbered formulas and named branch regions with 
 
   expect(within(display).getAllByRole('listitem')).toHaveLength(tree.occurrences.length);
   expect(
-    within(screen.getByRole('region', { name: 'Branch 1' })).getByText('P → Q'),
+    within(screen.getByRole('region', { name: 'Shared tree segment 1' })).getByText('P → Q'),
   ).toBeInTheDocument();
-  expect(screen.getByRole('region', { name: 'Branch 2' })).toHaveTextContent('¬P');
-  expect(screen.getByRole('region', { name: 'Branch 3' })).toHaveTextContent('Q');
+  expect(screen.getByRole('region', { name: 'Branch 1' })).toHaveTextContent('¬P');
+  expect(screen.getByRole('region', { name: 'Branch 2' })).toHaveTextContent('Q');
   expect(screen.getByRole('group', { name: 'Tree diagram' })).toHaveAttribute('tabindex', '0');
   expect(display.querySelectorAll('svg')).toHaveLength(1);
   expect(within(display).queryByRole('textbox')).not.toBeInTheDocument();
@@ -47,4 +47,12 @@ test('diagram edits retain occurrence identity, respect disabled state and leave
   expect(screen.queryByLabelText('Formula 1')).not.toBeInTheDocument();
   view.rerender(<TruthTreeDisplay tree={tree} onFormula={onFormula} disabled />);
   expect(screen.getByLabelText('Formula 3')).toBeDisabled();
+});
+
+test('formula markers distinguish applied sources from terminal literals', () => {
+  render(<TruthTreeDisplay tree={fixture()} />);
+  expect(screen.getByRole('img', { name: 'Rule applied on all paths' })).toHaveTextContent('✓');
+  expect(screen.getAllByRole('img', { name: 'Literal: no decomposition needed' })).toHaveLength(3);
+  expect(screen.getByRole('region', { name: 'Shared tree segment 1' })).toHaveTextContent('¬R');
+  expect(screen.queryByText('¬(R)')).not.toBeInTheDocument();
 });

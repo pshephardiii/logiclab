@@ -106,3 +106,16 @@ test('verdicts are never prefilled or announced before selection and changing a 
   expect(invalid).not.toBeChecked();
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
 });
+
+test('setup highlights an unsupported character in the entered conclusion and clears it on edit', async () => {
+  const user = await begin('P @ Q');
+  expect(screen.getByRole('alert')).toHaveTextContent('Conclusion · check character 3:');
+  expect(screen.getByLabelText('Character to check')).toHaveTextContent('@');
+  expect(screen.queryByText(/Unexpected character/)).not.toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Truth tree' })).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('Conclusion'));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  await user.type(screen.getByLabelText('Conclusion'), 'P -> (Q ^ R)');
+  await user.click(screen.getByRole('button', { name: 'Begin truth-tree practice' }));
+  expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬(P → (Q ∧ R))');
+});

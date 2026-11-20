@@ -45,13 +45,13 @@ test('constructs and closes separate branches, uses ancestor citations and confi
   expect(pending).toHaveBeenLastCalledWith(true);
   await user.click(screen.getByRole('button', { name: 'Add expansion' }));
   const split = changed.mock.calls.at(-1)![0] as typeof initial;
-  expect(screen.getByRole('region', { name: 'Branch 1' })).toHaveTextContent(
-    'Splits into branches 2 and 3',
+  expect(screen.getByRole('region', { name: 'Shared tree segment 1' })).toHaveTextContent(
+    'Splits into two branches.',
   );
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Add step to branch 2' })).toHaveFocus(),
+    expect(screen.getByRole('button', { name: 'Add step to branch 1' })).toHaveFocus(),
   );
-  await user.click(screen.getByRole('button', { name: 'Close branch 2' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   const sources = screen.getByLabelText('Witness 1');
   expect(within(sources).getAllByRole('option')).toHaveLength(4); // none + two ancestors + this child's result
   await user.selectOptions(screen.getByLabelText('Witness 1'), initial.occurrences[1]!.id);
@@ -103,20 +103,20 @@ test('a pending branch entry cannot be moved to another path and discard restore
   const user = userEvent.setup();
   render(<TruthTreeEditor tree={tree} onChange={changed} onPendingChange={pending} />);
 
-  await user.click(screen.getByRole('button', { name: 'Close branch 2' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   expect(changed).not.toHaveBeenCalled();
   await user.selectOptions(screen.getByLabelText('Witness 1'), initial.occurrences[1]!.id);
   expect(pending).toHaveBeenLastCalledWith(true);
-  const otherBranch = screen.getByRole('button', { name: 'Add step to branch 3' });
+  const otherBranch = screen.getByRole('button', { name: 'Add step to branch 2' });
   expect(otherBranch).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Undo last expansion' })).toBeDisabled();
   await user.click(otherBranch);
-  expect(screen.getByRole('group', { name: 'Close branch 2' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Close branch 1' })).toBeInTheDocument();
   expect(screen.getByLabelText('Witness 1')).toHaveValue(initial.occurrences[1]!.id);
 
   await user.click(screen.getByRole('button', { name: 'Discard entry' }));
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Add step to branch 2' })).toHaveFocus(),
+    expect(screen.getByRole('button', { name: 'Add step to branch 1' })).toHaveFocus(),
   );
   expect(pending).toHaveBeenLastCalledWith(false);
   expect(otherBranch).toBeEnabled();

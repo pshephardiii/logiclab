@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
+import { truthTreeFormulaProgress, truthTreeFormulaLabel } from '../helpers/formula-presentation';
 import { truthTreeLayout } from '../helpers/layout';
 import { branchEndingLabel, occurrenceSourceLabel } from '../helpers/display-labels';
 import { TruthTreeFork } from './TruthTreeFork';
@@ -42,10 +43,30 @@ export function TruthTreeDisplay({
     );
 
   const { structure, numbers, branchNumbers } = layout;
+  const progress = truthTreeFormulaProgress(tree);
+  // Reserve space for the complete formula on every path; wide trees scroll within the viewport.
+  const longest = Math.max(
+    0,
+    ...tree.occurrences.map((item) => truthTreeFormulaLabel(item.formula).length),
+  );
+  const formulaWidth = Math.max(10.5, longest * 0.7 + 3.5);
 
   return (
-    <section aria-label="Truth tree" className="truth-tree-display">
-      <TruthTreeViewport scrollable={layout.slotCount > 1} reveal={reveal}>
+    <section
+      aria-label="Truth tree"
+      className="truth-tree-display"
+      style={
+        {
+          '--truth-tree-formula-width': `${formulaWidth}rem`,
+          '--truth-tree-leaf-width': `${formulaWidth + 1.5}rem`,
+        } as CSSProperties
+      }
+    >
+      <p className="truth-tree-marker-key">
+        ✓ Applied on all paths · ◐ Applied on some paths · • No decomposition needed. Marks track
+        use, not correctness.
+      </p>
+      <TruthTreeViewport scrollable={layout.slotCount > 1 || formulaWidth > 10.5} reveal={reveal}>
         <div
           className="truth-tree-diagram"
           style={{
@@ -66,7 +87,11 @@ export function TruthTreeDisplay({
             return (
               <section
                 key={id}
-                aria-label={`Branch ${branchNumbers.get(id)}`}
+                aria-label={
+                  split
+                    ? `Shared tree segment ${structure.branchOrder.indexOf(id) + 1}`
+                    : `Branch ${branchNumbers.get(id)}`
+                }
                 className="truth-tree-segment"
               >
                 {stemRow < position.endRow && (
@@ -96,6 +121,7 @@ export function TruthTreeDisplay({
                       >
                         <TruthTreeFormula
                           occurrence={item}
+                          progress={progress.get(item.id)}
                           number={numbers.get(item.id)!}
                           source={occurrenceSourceLabel(item, expansion, numbers)}
                           disabled={disabled}
@@ -107,7 +133,7 @@ export function TruthTreeDisplay({
                 </ol>
                 {split ? (
                   <p className="truth-tree-accessible-text">
-                    {branchEndingLabel(branch.ending, numbers, branchNumbers)}
+                    {branchEndingLabel(branch.ending, numbers)}
                   </p>
                 ) : (
                   <div
@@ -120,7 +146,7 @@ export function TruthTreeDisplay({
                       </span>
                       <span>
                         <small>Branch {branchNumbers.get(id)}</small>
-                        <span>{branchEndingLabel(branch.ending, numbers, branchNumbers)}</span>
+                        <span>{branchEndingLabel(branch.ending, numbers)}</span>
                       </span>
                     </p>
                     {renderBranchActions?.(branch, branchNumbers.get(id)!)}

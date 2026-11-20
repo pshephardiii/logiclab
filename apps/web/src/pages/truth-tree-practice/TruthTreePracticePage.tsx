@@ -1,3 +1,5 @@
+import { unexpectedFormulaCharacter } from '../../features/truth-tree/helpers/formula-presentation';
+import { FormulaCharacterIssue } from '../../features/truth-tree/components/FormulaCharacterIssue';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
@@ -40,12 +42,16 @@ export function TruthTreePracticePage() {
   const [report, setReport] = useState<TruthTreeCheckReport | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [characterIssue, setCharacterIssue] = useState<
+    (NonNullable<ReturnType<typeof unexpectedFormulaCharacter>> & { label: string }) | null
+  >(null);
   useUnsavedWork(active !== null || premisePending || premises.length > 0 || conclusion.length > 0);
   const confirmDiscard = useConfirmDiscard();
 
   function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (premisePending) return;
+    setCharacterIssue(null);
 
     try {
       const statement = truthTreeContentSchema.parse({
@@ -60,6 +66,12 @@ export function TruthTreePracticePage() {
         try {
           parseTruthTreeFormula(premise.formula);
         } catch (error) {
+          const issue = unexpectedFormulaCharacter(premise.formula);
+          if (issue) {
+            setCharacterIssue({ ...issue, label: `Premise ${index + 1}` });
+            setError(null);
+            return;
+          }
           throw new Error(
             `Premise ${index + 1}: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
           );
@@ -68,6 +80,12 @@ export function TruthTreePracticePage() {
       try {
         parseTruthTreeFormula(statement.conclusion);
       } catch (error) {
+        const issue = unexpectedFormulaCharacter(statement.conclusion);
+        if (issue) {
+          setCharacterIssue({ ...issue, label: 'Conclusion' });
+          setError(null);
+          return;
+        }
         throw new Error(
           `Conclusion: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
         );
@@ -84,6 +102,7 @@ export function TruthTreePracticePage() {
   function restart() {
     confirmDiscard(() => {
       setActive(null);
+      setCharacterIssue(null);
       setPremises([]);
       setConclusion('');
       setReport(null);
@@ -107,7 +126,7 @@ export function TruthTreePracticePage() {
       </header>
       {!active ? (
         <form
-          className="panel proof-editor"
+          className="panel proof-editor truth-tree-practice-panel"
           aria-label="Truth-tree practice setup"
           onSubmit={start}
         >
@@ -115,7 +134,10 @@ export function TruthTreePracticePage() {
           <ProofPremisesEditor
             format="tree"
             premises={premises}
-            onChange={setPremises}
+            onChange={(premises) => {
+              setPremises(premises);
+              setCharacterIssue(null);
+            }}
             onPendingChange={setPremisePending}
           />
           <label htmlFor="truth-tree-practice-conclusion">Conclusion</label>
@@ -128,11 +150,19 @@ export function TruthTreePracticePage() {
             autoCapitalize="off"
             spellCheck={false}
             value={conclusion}
-            onValueChange={setConclusion}
+            onValueChange={(formula) => {
+              setConclusion(formula);
+              setCharacterIssue(null);
+            }}
           />
           {error && (
             <p role="alert" className="error">
               {error}
+            </p>
+          )}
+          {characterIssue && (
+            <p role="alert">
+              <FormulaCharacterIssue {...characterIssue} />
             </p>
           )}
           <button type="submit" disabled={premisePending}>
@@ -140,7 +170,7 @@ export function TruthTreePracticePage() {
           </button>
         </form>
       ) : (
-        <section className="panel proof-editor">
+        <section className="panel proof-editor truth-tree-practice-panel">
           <TruthTreeSummary definition={active.statement} />
           <ProofKeyboardGuide />
           <button type="button" className="secondary" onClick={restart}>
@@ -184,6 +214,7 @@ export function TruthTreePracticePage() {
 
           {report && !entryPending && (
             <TruthTreeFeedback
+              tree={active.tree}
               report={report}
               verdict={assessTruthTreeVerdict(report, verdict)}
               showArgument={verdict !== null}

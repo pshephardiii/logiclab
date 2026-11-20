@@ -3,7 +3,7 @@ import './proof-reference.css';
 export const PROOF_KEYBOARD_INPUTS = [
   { meaning: 'Sentence letters', keys: ['A–Z'], symbol: 'A–Z' },
   { meaning: 'Negation', keys: ['!', '~'], symbol: '¬' },
-  { meaning: 'Conjunction', keys: ['&'], symbol: '∧' },
+  { meaning: 'Conjunction', keys: ['&', '^'], symbol: '∧' },
   { meaning: 'Disjunction', keys: ['v', '|'], symbol: '∨' },
   { meaning: 'Conditional', keys: ['->'], symbol: '→' },
   { meaning: 'Biconditional', keys: ['<->'], symbol: '↔' },

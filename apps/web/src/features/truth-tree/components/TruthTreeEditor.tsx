@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { terminalBranchNumbers } from '../helpers/display-labels';
 import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
 import { TruthTreeDisplay } from './TruthTreeDisplay';
 import { TruthTreeExpansionFields, emptyTreeExpansion } from './TruthTreeExpansionFields';
@@ -49,7 +50,7 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
     number: tree.occurrences.findIndex((item) => item.id === id) + 1,
     formula: structure!.occurrences.get(id)!.formula,
   }));
-  const branchNumber = (structure?.branchOrder.indexOf(branchId) ?? -1) + 1;
+  const branchNumber = structure ? (terminalBranchNumbers(structure).get(branchId) ?? 0) : 0;
   const undo = undoTruthTreeExpansion(tree);
 
   useEffect(() => {

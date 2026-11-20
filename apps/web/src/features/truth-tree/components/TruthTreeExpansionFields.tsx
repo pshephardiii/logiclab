@@ -1,8 +1,8 @@
+import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
 import { TRUTH_TREE_LIMITS } from '@logiclab/contracts/truth-tree';
 import { TRUTH_TREE_RULE_CATALOG } from '@logiclab/logic-engine/truth-tree';
 import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
 import { useId } from 'react';
-import { proofNotation } from '../../proof/helpers/proof-notation';
 
 export type TreeExpansionEntry = { sourceId: string; ruleId: string; formulas: string[][] };
 export const emptyTreeExpansion = (): TreeExpansionEntry => ({
@@ -47,7 +47,7 @@ export function TruthTreeExpansionFields({
             <option value="">Choose source</option>
             {sources.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.number}. {proofNotation(item.formula) || '(blank)'}
+                {item.number}. {truthTreeFormulaLabel(item.formula)}
               </option>
             ))}
           </select>

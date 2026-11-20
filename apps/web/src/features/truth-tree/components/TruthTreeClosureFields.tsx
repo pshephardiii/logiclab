@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import type { TruthTreeClosure } from '@logiclab/contracts/truth-tree';
-import { proofNotation } from '../../proof/helpers/proof-notation';
+import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
 
 export function TruthTreeClosureFields({
   disabled,
@@ -53,7 +53,7 @@ export function TruthTreeClosureFields({
               <option value="">Choose formula</option>
               {sources.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.number}. {proofNotation(item.formula) || '(blank)'}
+                  {item.number}. {truthTreeFormulaLabel(item.formula)}
                 </option>
               ))}
             </select>

@@ -77,7 +77,10 @@ export function AssignedTruthTree({
   }
 
   return (
-    <section className="panel assigned-item proof-editor" aria-label="Assigned truth tree">
+    <section
+      className="panel assigned-item assigned-truth-tree proof-editor"
+      aria-label="Assigned truth tree"
+    >
       <h2>
         Problem {item.position}: {item.title}
       </h2>
@@ -134,6 +137,7 @@ export function AssignedTruthTree({
       )}
       {report && !pending && (
         <TruthTreeFeedback
+          tree={answer?.tree}
           report={report}
           verdict={verdictAssessment}
           showArgument={Boolean(verdictAssessment?.answer)}

@@ -35,7 +35,7 @@ test('keyboard aliases translate as typed, including partial contradiction and b
   await user.type(input, '_');
   expect(input).toHaveValue('⊥');
   await user.clear(input);
-  await user.type(input, '~P <-> !(Q v R) & V');
+  await user.type(input, '~P <-> !(Q v R) ^ V');
   expect(input).toHaveValue('¬P ↔ ¬(Q ∨ R) ∧ V');
   expect(proofNotation('P -> Q | _|_')).toBe('P → Q ∨ ⊥');
 });

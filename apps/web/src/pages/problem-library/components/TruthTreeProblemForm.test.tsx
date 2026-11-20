@@ -119,7 +119,7 @@ test('statement changes preserve the private reference until a confirmed rebuild
   await f.user.click(screen.getByRole('button', { name: 'Rebuild reference tree' }));
   await f.user.click(screen.getByRole('button', { name: 'Rebuild reference' }));
   expect(screen.queryByText(/reference starts from a different statement/)).not.toBeInTheDocument();
-  expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬(R)');
+  expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬R');
   await f.user.click(screen.getByRole('button', { name: 'Save draft' }));
   const definition = f.onSave.mock.calls.at(-1)![0].definition;
   if (definition.type !== 'truth_tree') throw new Error('Expected tree');

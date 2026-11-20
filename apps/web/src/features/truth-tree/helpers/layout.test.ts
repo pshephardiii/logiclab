@@ -66,6 +66,8 @@ test('allocates distinct terminal columns and centers an unbalanced trunk over i
   const columns = leaves.map((id) => layout.branches.get(id)!.column);
 
   expect(layout.leafCount).toBe(3);
+  expect(leaves.map((id) => layout.branchNumbers.get(id))).toEqual([1, 2, 3]);
+  expect(layout.branchNumbers.has(nested.rootBranchId!)).toBe(false);
   expect(new Set(columns).size).toBe(3);
   expect(columns).toEqual([...columns].sort((a, b) => a - b));
   expect(layout.branches.get(nested.rootBranchId!)!.column).toBe(

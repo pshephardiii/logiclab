@@ -58,11 +58,12 @@
 }
 .truth-tree-formula-line {
   position: relative;
-  padding-inline: 1.75rem;
+  padding-left: 2.6rem;
+  padding-right: 0.25rem;
 }
 .truth-tree-formula-number {
   position: absolute;
-  left: 0;
+  left: 1.15rem;
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.8rem;
@@ -74,8 +75,8 @@
 }
 .truth-tree-formula code {
   font-size: 1.05rem;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 .truth-tree-display small {
   display: block;
@@ -214,4 +215,108 @@
 }
 .truth-tree-verdict-options input {
   width: auto;
+}
+
+.truth-tree-practice-panel > .proof-keyboard-guide {
+  margin-block: 1rem 1.75rem;
+}
+.truth-tree-practice-panel > button,
+.assigned-truth-tree > button {
+  margin-block: 0.75rem 1.25rem;
+  margin-right: 0.75rem;
+}
+.truth-tree-practice-panel > input {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.truth-tree-entry-selects > div {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+.truth-tree-entry-selects label {
+  margin: 0;
+}
+.truth-tree-entry-selects {
+  padding-bottom: 0.75rem;
+}
+.truth-tree-expansion-results {
+  margin-top: 0.5rem;
+}
+.truth-tree-entry-fields {
+  margin-top: 0.5rem;
+}
+.truth-tree-formula-marker {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: #52616b;
+}
+.truth-tree-formula-marker--applied {
+  color: #176650;
+}
+.truth-tree-marker-key {
+  margin: 0 1rem 1rem;
+  font-size: 0.8rem;
+  color: #52616b;
+}
+.truth-tree-feedback {
+  margin-block: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #b4c4cc;
+  border-left-width: 4px;
+  border-radius: 0.6rem;
+  background: #f0f5f8;
+}
+.truth-tree-feedback h3 {
+  margin: 0 0 0.75rem;
+}
+.truth-tree-feedback--success {
+  border-color: #43846b;
+  background: #edf8f1;
+}
+.truth-tree-feedback--error {
+  border-color: #ad5064;
+  background: #fff1f3;
+}
+.truth-tree-path-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+.truth-tree-path-results li {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.truth-tree-closure-fields > div:not(.truth-tree-entry-selects) {
+  display: grid;
+  gap: 0.6rem;
+}
+.truth-tree-closure-fields > div:not(.truth-tree-entry-selects) > label {
+  margin: 0;
+}
+.truth-tree-closure-fields .truth-tree-entry-selects > div {
+  gap: 0.6rem;
+}
+
+.truth-tree-character-issue code {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: middle;
+  white-space: pre;
+}
+.truth-tree-character-issue mark {
+  background: #ffe0a3;
+  color: #552409;
+  border-bottom: 2px solid #923e17;
+  padding-inline: 0.1em;
 }

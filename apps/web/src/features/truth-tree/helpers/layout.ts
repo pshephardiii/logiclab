@@ -1,5 +1,6 @@
 import type { TruthTree } from '@logiclab/contracts/truth-tree';
 import { editableTree } from './construction';
+import { terminalBranchNumbers } from './display-labels';
 
 type BranchPosition = {
   column: number;
@@ -151,6 +152,6 @@ export function truthTreeLayout(tree: TruthTree, expandedBranchId?: string) {
     rowCount: Math.max(1, nextRow),
     rootStemRow: Math.max(1, initial.length),
     numbers: new Map(structure.tree.occurrences.map((item, index) => [item.id, index + 1])),
-    branchNumbers: new Map(structure.branchOrder.map((id, index) => [id, index + 1])),
+    branchNumbers: terminalBranchNumbers(structure),
   };
 }

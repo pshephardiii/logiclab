@@ -1,6 +1,6 @@
 const operators = [
   { name: 'Not', symbol: '¬', keyboard: ['!', '~'] },
-  { name: 'And', symbol: '∧', keyboard: ['&'] },
+  { name: 'And', symbol: '∧', keyboard: ['&', '^'] },
   { name: 'Or', symbol: '∨', keyboard: ['v', '|'] },
   { name: 'If … then …', symbol: '→', keyboard: ['->'] },
   { name: 'If and only if', symbol: '↔', keyboard: ['<->'] },
