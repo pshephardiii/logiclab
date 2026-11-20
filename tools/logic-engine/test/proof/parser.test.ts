@@ -21,12 +21,16 @@ test('falsity works inside compound formulas without conflating ordinary F', () 
   expect(parseProofFormula('F')).toEqual({ type: 'variable', name: 'F' });
 });
 
-test.each(['P & Q -> R <-> S', '!(P | Q)', 'P -> Q -> R', '(P <-> Q) <-> R', '[P & (Q v R)]'])(
-  'shared grammar preserves ordinary ASTs: %s',
-  (source) => {
-    expect(parseProofFormula(source)).toEqual(parseFormula(source));
-  },
-);
+test.each([
+  'P ^ Q -> R <-> S',
+  'P & Q -> R <-> S',
+  '!(P | Q)',
+  'P -> Q -> R',
+  '(P <-> Q) <-> R',
+  '[P & (Q v R)]',
+])('shared grammar preserves ordinary ASTs: %s', (source) => {
+  expect(parseProofFormula(source)).toEqual(parseFormula(source));
+});
 
 test.each<[string, object]>([
   ['P -> _|_ & Q', { type: 'binary', operator: 'implies' }],
@@ -90,6 +94,6 @@ test('ordinary table identifiers and parser errors retain their contract', () =>
   const table = generateTruthTable('P -> Q');
   expect(table.columns.some((column) => column.id === 'expr:v1:(P → Q)')).toBe(true);
   expect(() => parseFormula('⊥')).toThrow(
-    'Unexpected character "⊥"; use A–Z, ¬/!/~, ∧/&, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets (at character 1).',
+    'Unexpected character "⊥"; use A–Z, ¬/!/~, ∧/&/^, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets (at character 1).',
   );
 });

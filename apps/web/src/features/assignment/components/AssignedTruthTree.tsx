@@ -1,13 +1,17 @@
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { useCallback, useState } from 'react';
 import type { SavedStudentAssignment } from '@logiclab/contracts/saved-student-work';
-import type { TruthTreeAnswer } from '@logiclab/contracts/truth-tree-work';
+import type {
+  TruthTreeAnswer,
+  TruthTreeVerdictAssessment,
+} from '@logiclab/contracts/truth-tree-work';
 import type { TruthTreeSolution } from '@logiclab/contracts/truth-tree-authoring';
 import type { TruthTreeCheckReport } from '@logiclab/contracts/truth-tree';
 import { TruthTreeSummary } from '../../truth-tree/components/TruthTreeSummary';
 import { TruthTreeFeedback } from '../../truth-tree/components/TruthTreeFeedback';
 import { TruthTreeEditor } from '../../truth-tree/components/TruthTreeEditor';
 import { TruthTreeDisplay } from '../../truth-tree/components/TruthTreeDisplay';
+import { TruthTreeVerdict } from '../../truth-tree/components/TruthTreeVerdict';
 import { TruthTreeSolutionView } from '../../truth-tree/components/TruthTreeSolutionView';
 import { initialTruthTree } from '../../truth-tree/helpers/construction';
 import { ProofKeyboardGuide } from '../../proof/reference/ProofKeyboardGuide';
@@ -21,6 +25,7 @@ type Props = {
   answer?: TruthTreeAnswer;
   /** Already-authorized retained results or the latest server check; never a local assigned-work check. */
   report?: TruthTreeCheckReport | null;
+  verdictAssessment?: TruthTreeVerdictAssessment | null;
   solution?: TruthTreeSolution | null;
   readOnly?: boolean;
   disabled?: boolean;
@@ -36,6 +41,7 @@ export function AssignedTruthTree({
   answer,
   solution,
   report,
+  verdictAssessment,
   readOnly = true,
   disabled = false,
   checking = false,
@@ -57,7 +63,11 @@ export function AssignedTruthTree({
   function start() {
     if (readOnly || disabled || !onAnswer) return;
     try {
-      onAnswer({ type: ProblemType.TruthTree, tree: initialTruthTree(item.content) });
+      onAnswer({
+        type: ProblemType.TruthTree,
+        tree: initialTruthTree(item.content),
+        verdict: null,
+      });
       setError(null);
       setResetting(false);
     } catch (error) {
@@ -67,7 +77,10 @@ export function AssignedTruthTree({
   }
 
   return (
-    <section className="panel assigned-item proof-editor" aria-label="Assigned truth tree">
+    <section
+      className="panel assigned-item assigned-truth-tree proof-editor"
+      aria-label="Assigned truth tree"
+    >
       <h2>
         Problem {item.position}: {item.title}
       </h2>
@@ -87,11 +100,19 @@ export function AssignedTruthTree({
             tree={answer.tree}
             disabled={disabled}
             onPendingChange={changePending}
-            onChange={(tree) => onAnswer?.({ type: ProblemType.TruthTree, tree })}
+            onChange={(tree) => onAnswer?.({ ...answer, tree })}
           />
         )
       ) : (
         <p>No saved tree.</p>
+      )}
+      {answer && (
+        <TruthTreeVerdict
+          value={answer.verdict}
+          readOnly={readOnly}
+          disabled={disabled || pending}
+          onChange={(verdict) => onAnswer?.({ ...answer, verdict })}
+        />
       )}
       {!readOnly && (
         <>
@@ -114,7 +135,14 @@ export function AssignedTruthTree({
           )}
         </>
       )}
-      {report && !pending && <TruthTreeFeedback report={report} />}
+      {report && !pending && (
+        <TruthTreeFeedback
+          tree={answer?.tree}
+          report={report}
+          verdict={verdictAssessment}
+          showArgument={Boolean(verdictAssessment?.answer)}
+        />
+      )}
       {solution && <TruthTreeSolutionView solution={solution} />}
       {resetting && (
         <ProofDeletionPrompt
@@ -124,7 +152,7 @@ export function AssignedTruthTree({
         >
           <p>
             Replace this problem's tree with its starting premises and negated conclusion. Save
-            problem to keep the replacement.
+            problem to keep the replacement. The validity verdict will also be cleared.
           </p>
           <button type="button" disabled={disabled} onClick={start}>
             Replace tree

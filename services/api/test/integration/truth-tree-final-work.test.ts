@@ -226,9 +226,17 @@ for (const demo of [false, true])
       const [first, second, question] = work.assignment.items;
       assert.ok(first && second && question);
       assert.equal(first.maxPoints, 20);
-      const wrong = { type: 'truth_tree', tree: structuredClone(definitions[0]!.referenceTree!) };
+      const wrong = {
+        type: 'truth_tree',
+        verdict: 'valid',
+        tree: structuredClone(definitions[0]!.referenceTree!),
+      };
       wrong.tree.occurrences[0]!.formula = 'Q';
-      const refutation = { type: 'truth_tree', tree: definitions[1]!.referenceTree! };
+      const refutation = {
+        type: 'truth_tree',
+        verdict: 'invalid',
+        tree: definitions[1]!.referenceTree!,
+      };
       let revision = 0;
       for (const [itemId, answers] of [
         [first.id, wrong],

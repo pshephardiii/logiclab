@@ -2,11 +2,12 @@ import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
 import {
   truthTreeAnswerSchema,
-  truthTreeEvaluationEvidenceSchema,
-  truthTreeCompletionEvidenceSchema,
+  truthTreeEvaluationEvidenceV2Schema,
+  truthTreeCompletionEvidenceV2Schema,
+  assessTruthTreeVerdict,
   type TruthTreeAnswer,
-  type TruthTreeEvaluationEvidence,
-  type TruthTreeCompletionEvidence,
+  type TruthTreeEvaluationEvidenceV2,
+  type TruthTreeCompletionEvidenceV2,
 } from '@logiclab/contracts/truth-tree-work';
 import { checkTruthTree, isFinishedTruthTreeAttempt } from '@logiclab/logic-engine/truth-tree';
 import { validateTruthTreeContent } from '../problem/truth-tree/authoring';
@@ -27,12 +28,15 @@ function prepared(authoritative: AssignedTruthTree, value: unknown) {
   const content = validateTruthTreeContent(authoritative.content);
   const answer = validateTruthTreeAnswer(value);
   return {
-    problem: {
-      ruleCatalogVersion: content.ruleCatalogVersion,
-      premises: content.premises,
-      conclusion: content.conclusion,
+    answer,
+    input: {
+      problem: {
+        ruleCatalogVersion: content.ruleCatalogVersion,
+        premises: content.premises,
+        conclusion: content.conclusion,
+      },
+      tree: answer.tree,
     },
-    tree: answer.tree,
   };
 }
 
@@ -40,13 +44,16 @@ function prepared(authoritative: AssignedTruthTree, value: unknown) {
 export function evaluateTruthTreeAnswer(
   authoritative: AssignedTruthTree,
   value: unknown,
-): TruthTreeEvaluationEvidence {
-  return truthTreeEvaluationEvidenceSchema.parse({
-    evaluationVersion: 'truth_tree_v1',
+): TruthTreeEvaluationEvidenceV2 {
+  const { answer, input } = prepared(authoritative, value);
+  const report = checkTruthTree(input);
+  return truthTreeEvaluationEvidenceV2Schema.parse({
+    evaluationVersion: 'truth_tree_v2',
     type: ProblemType.TruthTree,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
-    report: checkTruthTree(prepared(authoritative, value)),
+    report,
+    verdict: assessTruthTreeVerdict(report, answer.verdict),
   });
 }
 
@@ -54,17 +61,20 @@ export function evaluateTruthTreeAnswer(
 export function evaluateTruthTreeCompletion(
   authoritative: AssignedTruthTree,
   value: unknown,
-): TruthTreeCompletionEvidence {
-  const input = prepared(authoritative, value);
-  if (!isFinishedTruthTreeAttempt(input)) throw new StudentWorkError('incomplete_work');
+): TruthTreeCompletionEvidenceV2 {
+  const { answer, input } = prepared(authoritative, value);
+  if (!answer.verdict || !isFinishedTruthTreeAttempt(input))
+    throw new StudentWorkError('incomplete_work');
 
-  return truthTreeCompletionEvidenceSchema.parse({
-    evaluationVersion: 'truth_tree_v1',
+  const report = checkTruthTree(input);
+  return truthTreeCompletionEvidenceV2Schema.parse({
+    evaluationVersion: 'truth_tree_v2',
     type: ProblemType.TruthTree,
     itemId: authoritative.itemId,
     problemVersionId: authoritative.problemVersionId,
     completedResponses: 1,
     totalResponses: 1,
-    report: checkTruthTree(input),
+    report,
+    verdict: assessTruthTreeVerdict(report, answer.verdict),
   });
 }

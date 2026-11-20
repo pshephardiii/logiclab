@@ -202,7 +202,11 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
       const publicItem = work.assignment.items[0]!;
       assert.ok('content' in publicItem && publicItem.content.type === 'truth_tree');
       assert.equal(publicItem.content.conclusion, definition.conclusion);
-      const answer = { type: 'truth_tree' as const, tree: definition.referenceTree! };
+      const answer = {
+        type: 'truth_tree' as const,
+        tree: definition.referenceTree!,
+        verdict: outcome,
+      };
       const checked = await request('POST', `${path}/check`, scope.cookie, {
         itemId: first.id,
         answers: answer,

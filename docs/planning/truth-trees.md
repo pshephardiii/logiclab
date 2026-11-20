@@ -231,3 +231,7 @@ Final checks and focused browser evidence are recorded in [foundation verificati
 ## Following work
 
 Proposed `035-chore-truth-tree-practice-ui-audit` will refine practice construction, branching/closure, keyboard guidance, responsive presentation and feedback using a dedicated checklist. Then resume demo teaching-flow and genuine-account product audits before portfolio sandbox preparation. Natural-deduction trees remain unavailable for new app work. This plan does not start another branch or authorize deployment.
+
+## Planned author-grouping and chain shortcuts (after 035)
+
+The original binary catalog/precedence behavior above remains the implementation in 035. Proposed `036-feat-formula-grouping-and-decomposition` will distinguish explicit author grouping from default association, permit individual extraction from ungrouped conjunction chains and contiguous two-way partitions of ungrouped disjunction chains, and require grouping for ambiguous mixed-operator input. Explicit groups remain boundaries. Open counterexamples must still be fully decomposed; early closed paths need not copy unused conjunction remainders. This requires checker/contract/completeness work, not merely fewer displayed parentheses. See the cross-method [feature plan](formula-grouping-and-decomposition.md), including derivations, truth tables and retained-data decisions.

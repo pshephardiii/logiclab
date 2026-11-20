@@ -10,6 +10,7 @@ import {
   truthTableSubmissionFeedback,
   proofSubmissionFeedback,
   truthTreeSubmissionFeedback,
+  truthTreeSubmissionVerdict,
   conceptualSubmissionFeedback,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
@@ -179,6 +180,7 @@ export function SubmissionReview({
               />
             ) : item.content.type === ProblemType.TruthTree ? (
               <AssignedTruthTree
+                verdictAssessment={truthTreeSubmissionVerdict(review.attempt.result, item.id)}
                 report={truthTreeSubmissionFeedback(review.attempt.result, item.id)}
                 item={{ ...item, content: item.content }}
                 answer={

@@ -65,6 +65,7 @@ test('seeds exactly the given sources, explicitly closes a reference and saves w
   const display = screen.getByRole('region', { name: 'Truth tree' });
   expect(within(display).getAllByRole('listitem')).toHaveLength(2);
   expect(display).not.toHaveTextContent('(blank)');
+  await f.user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   await f.user.selectOptions(
     screen.getByLabelText('Witness 1'),
     [...screen.getByLabelText('Witness 1').querySelectorAll('option')][1]!.value,
@@ -99,7 +100,7 @@ test('seeds exactly the given sources, explicitly closes a reference and saves w
   f.rerender(<ProblemForm {...f} saveError="Save unavailable" />);
   expect(screen.getByRole('alert')).toHaveTextContent('Save unavailable');
   expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toBeInTheDocument();
-  await f.user.click(screen.getByRole('button', { name: 'Reopen branch' }));
+  await f.user.click(screen.getByRole('button', { name: 'Reopen branch 1' }));
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
 });
 
@@ -110,7 +111,7 @@ test('statement changes preserve the private reference until a confirmed rebuild
   await f.user.type(screen.getByLabelText('Conclusion'), 'R');
   await f.user.click(screen.getByRole('button', { name: 'Continue to reference tree' }));
   expect(screen.getByText(/reference starts from a different statement/)).toBeInTheDocument();
-  expect(screen.getByLabelText('Branch')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add step to branch 1' })).toBeDisabled();
   await f.user.click(screen.getByRole('button', { name: 'Rebuild reference tree' }));
   await f.user.click(screen.getByRole('button', { name: 'Keep reference' }));
   await f.user.click(screen.getByRole('button', { name: 'Save draft' }));
@@ -118,7 +119,7 @@ test('statement changes preserve the private reference until a confirmed rebuild
   await f.user.click(screen.getByRole('button', { name: 'Rebuild reference tree' }));
   await f.user.click(screen.getByRole('button', { name: 'Rebuild reference' }));
   expect(screen.queryByText(/reference starts from a different statement/)).not.toBeInTheDocument();
-  expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬(R)');
+  expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬R');
   await f.user.click(screen.getByRole('button', { name: 'Save draft' }));
   const definition = f.onSave.mock.calls.at(-1)![0].definition;
   if (definition.type !== 'truth_tree') throw new Error('Expected tree');
@@ -129,8 +130,9 @@ test('statement changes preserve the private reference until a confirmed rebuild
 
 test('unconfirmed expansion is dirty, blocks save and survives without becoming a hidden draft field', async () => {
   const f = await start();
+  await f.user.click(screen.getByRole('button', { name: 'Add step to branch 1' }));
   await f.user.selectOptions(screen.getByLabelText('Decomposition rule'), 'conjunction');
-  await f.user.type(screen.getByLabelText('Result 1.1'), 'P');
+  await f.user.type(screen.getByLabelText('Formula 1 · Result 1.1'), 'P');
   expect(screen.getByRole('button', { name: 'Add expansion' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeDisabled();
   expect(f.onDirty).toHaveBeenLastCalledWith(true);
@@ -153,7 +155,7 @@ test('archived/busy drafts cannot change tree data and pristine trees register n
   expect(screen.getByLabelText('Conclusion')).toBeDisabled();
   await f.user.click(screen.getByRole('button', { name: '2. Reference tree' }));
   expect(screen.getByRole('button', { name: 'Rebuild reference tree' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Add expansion' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Add step to branch 1' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Check current tree' })).toBeDisabled();
   expect(f.onSave).not.toHaveBeenCalled();
   await waitFor(() => expect(f.onDirty).toHaveBeenLastCalledWith(false));

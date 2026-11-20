@@ -41,7 +41,7 @@ function fixture(outcome: 'valid' | 'invalid' = 'valid') {
     },
   };
   const answers = {
-    [tree.id]: { type: 'truth_tree' as const, tree: definition.referenceTree! },
+    [tree.id]: { type: 'truth_tree' as const, tree: definition.referenceTree!, verdict: outcome },
     [derivation.id]: { type: 'derivation' as const, proof: derivation.definition.referenceProof! },
     [question.id]: { type: 'true_false' as const, answer: false },
   };
@@ -163,6 +163,48 @@ test('completion retains finished incorrect tree diagnostics without points and 
       ...result,
       summary: {
         ...result.summary,
+        proofVerification: { verified: 2, errorsFound: 0, unavailable: 0, total: 2 },
+      },
+    }).success,
+  ).toBe(false);
+});
+
+test('a verified tree with a wrong verdict remains reviewable in graded and completion summaries', () => {
+  const f = fixture('valid');
+  const answers = {
+    ...f.answers,
+    [f.tree.id]: {
+      type: 'truth_tree',
+      tree: f.tree.definition.referenceTree!,
+      verdict: 'invalid',
+    },
+  };
+
+  const graded = evaluateProofSubmission(f.items, answers);
+  expect(graded.items[1]).toMatchObject({
+    report: { status: 'verified' },
+    verdict: { answer: 'invalid', status: 'incorrect' },
+  });
+  expect(graded.summary.proofs).toEqual({
+    accepted: 1,
+    needsReview: 1,
+    unassessable: 0,
+    total: 2,
+  });
+  expect(scoreProofSubmission(f.allocations, graded).summary.status).toBe('needs_review');
+
+  const completion = evaluateProofCompletion(f.items, answers);
+  expect(completion.summary.proofVerification).toEqual({
+    verified: 1,
+    errorsFound: 1,
+    unavailable: 0,
+    total: 2,
+  });
+  expect(
+    proofCompletionSubmissionResultSchema.safeParse({
+      ...completion,
+      summary: {
+        ...completion.summary,
         proofVerification: { verified: 2, errorsFound: 0, unavailable: 0, total: 2 },
       },
     }).success,

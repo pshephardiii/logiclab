@@ -23,7 +23,7 @@ test.each(
 });
 
 test('template adds distinct truth-tree journeys without replacing available derivations', () => {
-  expect(DEMO_TEMPLATE.version).toBe(9);
+  expect(DEMO_TEMPLATE.version).toBe(10);
   expect(
     new Set([
       DEMO_TEMPLATE.truthTreePracticeAssignmentTitle,

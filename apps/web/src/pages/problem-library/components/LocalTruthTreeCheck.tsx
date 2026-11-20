@@ -62,7 +62,7 @@ export function LocalTruthTreeCheck({
       )}
       {current?.report && (
         <>
-          <TruthTreeFeedback report={current.report} />
+          <TruthTreeFeedback tree={definition.referenceTree} report={current.report} />
           {current.report.status === 'verified' && !current.finished && (
             <p>
               Verified counterexample. Finish every remaining path to use this reference for

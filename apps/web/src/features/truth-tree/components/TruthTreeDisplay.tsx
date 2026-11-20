@@ -1,21 +1,31 @@
-import { TRUTH_TREE_LIMITS, type TruthTree } from '@logiclab/contracts/truth-tree';
-import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
-import { editableTree } from '../helpers/construction';
+import type { ReactNode, CSSProperties } from 'react';
+import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
+import { truthTreeFormulaProgress, truthTreeFormulaLabel } from '../helpers/formula-presentation';
+import { truthTreeLayout } from '../helpers/layout';
 import { branchEndingLabel, occurrenceSourceLabel } from '../helpers/display-labels';
+import { TruthTreeFork } from './TruthTreeFork';
+import { TruthTreeFormula } from './TruthTreeFormula';
+import { TruthTreeViewport, type TreeRevealRequest } from './TruthTreeViewport';
 import './truth-tree-editor.css';
 
-/** Ordered branch segments retain their identities and show inherited sources by number. */
+/** Staggered HTML formulas and decorative forks share a grid; stored work remains unchanged. */
 export function TruthTreeDisplay({
   tree,
   disabled = false,
   onFormula,
+  renderBranchActions,
+  entry,
+  reveal,
 }: {
   tree: TruthTree;
   disabled?: boolean;
   onFormula?: (id: string, formula: string) => void;
+  renderBranchActions?: (branch: TruthTreeBranch, number: number) => ReactNode;
+  entry?: { branchId: string; content: ReactNode };
+  reveal?: TreeRevealRequest;
 }) {
-  const structure = editableTree(tree);
-  if (!structure)
+  const layout = truthTreeLayout(tree, entry?.branchId);
+  if (!layout)
     return (
       <section aria-label="Saved tree formulas">
         <p role="alert">
@@ -32,59 +42,133 @@ export function TruthTreeDisplay({
       </section>
     );
 
-  const numbers = new Map(tree.occurrences.map((item, index) => [item.id, index + 1]));
-  const branchNumbers = new Map(structure.branchOrder.map((id, index) => [id, index + 1]));
-  const depths = new Map<string, number>();
+  const { structure, numbers, branchNumbers } = layout;
+  const progress = truthTreeFormulaProgress(tree);
+  // Reserve space for the complete formula on every path; wide trees scroll within the viewport.
+  const longest = Math.max(
+    0,
+    ...tree.occurrences.map((item) => truthTreeFormulaLabel(item.formula).length),
+  );
+  const formulaWidth = Math.max(10.5, longest * 0.7 + 3.5);
 
   return (
-    <section aria-label="Truth tree" className="truth-tree-display">
-      {structure.branchOrder.map((id) => {
-        const branch = structure.branches.get(id)!;
-        const depth = branch.parentId === null ? 0 : (depths.get(branch.parentId) ?? 0) + 1;
-        depths.set(id, depth);
-        return (
-          <section
-            key={id}
-            aria-label={`Branch ${branchNumbers.get(id)}`}
-            style={{ marginLeft: `${Math.min(depth, 6) * 0.75}rem` }}
-          >
-            <h3>
-              Branch {branchNumbers.get(id)}
-              {branch.parentId && ` (from branch ${branchNumbers.get(branch.parentId)})`}
-            </h3>
-            <ol>
-              {branch.occurrenceIds.map((occurrenceId) => {
-                const item = structure.occurrences.get(occurrenceId)!;
-                const expansion =
-                  item.origin.kind === 'expansion' && item.origin.expansionId
-                    ? structure.expansions.get(item.origin.expansionId)
-                    : null;
-                return (
-                  <li key={item.id} value={numbers.get(item.id)}>
-                    {onFormula && item.origin.kind === 'expansion' ? (
-                      <ProofFormulaInput
-                        aria-label={`Formula ${numbers.get(item.id)}`}
-                        value={item.formula}
-                        maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck={false}
-                        disabled={disabled}
-                        onValueChange={(formula) => onFormula(item.id, formula)}
-                      />
-                    ) : (
-                      <code>{item.formula || '(blank)'}</code>
-                    )}
-                    <small>{occurrenceSourceLabel(item, expansion, numbers)}</small>
-                  </li>
-                );
-              })}
-            </ol>
-            <p>{branchEndingLabel(branch.ending, numbers, branchNumbers)}</p>
-          </section>
-        );
-      })}
+    <section
+      aria-label="Truth tree"
+      className="truth-tree-display"
+      style={
+        {
+          '--truth-tree-formula-width': `${formulaWidth}rem`,
+          '--truth-tree-leaf-width': `${formulaWidth + 1.5}rem`,
+        } as CSSProperties
+      }
+    >
+      <p className="truth-tree-marker-key">
+        ✓ Applied on all paths · ◐ Applied on some paths · • No decomposition needed. Marks track
+        use, not correctness.
+      </p>
+      <TruthTreeViewport scrollable={layout.slotCount > 1 || formulaWidth > 10.5} reveal={reveal}>
+        <div
+          className="truth-tree-diagram"
+          style={{
+            width: `max(100%, calc(${layout.slotCount} * var(--truth-tree-leaf-width)))`,
+            gridTemplateColumns: `repeat(${layout.slotCount * 2}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${layout.rowCount + (entry ? 1 : 0)}, minmax(3rem, auto))`,
+          }}
+        >
+          {layout.forks.map((fork) => (
+            <TruthTreeFork key={fork.expansionId} {...fork} />
+          ))}
+          {structure.branchOrder.map((id) => {
+            const branch = structure.branches.get(id)!;
+            const position = layout.branches.get(id)!;
+            const stemRow = branch.parentId === null ? layout.rootStemRow : position.startRow;
+            const split = branch.ending.kind === 'split';
+
+            return (
+              <section
+                key={id}
+                aria-label={
+                  split
+                    ? `Shared tree segment ${structure.branchOrder.indexOf(id) + 1}`
+                    : `Branch ${branchNumbers.get(id)}`
+                }
+                className="truth-tree-segment"
+              >
+                {stemRow < position.endRow && (
+                  <div
+                    className="truth-tree-stem"
+                    aria-hidden="true"
+                    style={{
+                      gridColumn: position.column,
+                      gridRow: `${stemRow} / ${position.endRow}`,
+                    }}
+                  />
+                )}
+                <ol role="list" className="truth-tree-formulas">
+                  {branch.occurrenceIds.map((occurrenceId) => {
+                    const item = structure.occurrences.get(occurrenceId)!;
+                    const expansion =
+                      item.origin.kind === 'expansion' && item.origin.expansionId
+                        ? structure.expansions.get(item.origin.expansionId)
+                        : null;
+
+                    return (
+                      <li
+                        key={item.id}
+                        value={numbers.get(item.id)}
+                        className="truth-tree-formula"
+                        style={{ gridColumn: position.column, gridRow: layout.rows.get(item.id) }}
+                      >
+                        <TruthTreeFormula
+                          occurrence={item}
+                          progress={progress.get(item.id)}
+                          number={numbers.get(item.id)!}
+                          source={occurrenceSourceLabel(item, expansion, numbers)}
+                          disabled={disabled}
+                          onFormula={onFormula}
+                        />
+                      </li>
+                    );
+                  })}
+                </ol>
+                {split ? (
+                  <p className="truth-tree-accessible-text">
+                    {branchEndingLabel(branch.ending, numbers)}
+                  </p>
+                ) : (
+                  <div
+                    className="truth-tree-endpoint"
+                    style={{ gridColumn: position.column, gridRow: position.endRow }}
+                  >
+                    <p className="truth-tree-end">
+                      <span className="truth-tree-end-mark" aria-hidden="true">
+                        {branch.ending.kind === 'closed' ? '×' : '○'}
+                      </span>
+                      <span>
+                        <small>Branch {branchNumbers.get(id)}</small>
+                        <span>{branchEndingLabel(branch.ending, numbers)}</span>
+                      </span>
+                    </p>
+                    {renderBranchActions?.(branch, branchNumbers.get(id)!)}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {entry && layout.branches.has(entry.branchId) && (
+            <div
+              className="truth-tree-entry"
+              data-tree-entry={entry.branchId}
+              style={{
+                gridColumn: layout.branches.get(entry.branchId)!.column,
+                gridRow: layout.rowCount + 1,
+              }}
+            >
+              {entry.content}
+            </div>
+          )}
+        </div>
+      </TruthTreeViewport>
     </section>
   );
 }

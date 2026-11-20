@@ -8,6 +8,7 @@ import type {
 export function blankTruthTreeAnswer(): TruthTreeAnswer {
   return {
     type: ProblemType.TruthTree,
+    verdict: null,
     tree: {
       treeVersion: 1,
       format: 'truth_tree',
@@ -36,5 +37,10 @@ export function savedTruthTreeAnswers(
 
 /** Compare raw saved structures, including occurrence identities and unfinished formulas. */
 export function sameTruthTreeAnswer(left: TruthTreeAnswer, right?: TruthTreeAnswer): boolean {
-  return left === right || (right !== undefined && JSON.stringify(left) === JSON.stringify(right));
+  return (
+    left === right ||
+    (right !== undefined &&
+      JSON.stringify({ tree: left.tree, verdict: left.verdict ?? null }) ===
+        JSON.stringify({ tree: right.tree, verdict: right.verdict ?? null }))
+  );
 }

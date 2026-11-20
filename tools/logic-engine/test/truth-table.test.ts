@@ -170,3 +170,7 @@ test('biconditional keeps intermediate expressions child-first and deduplicated'
   ).toEqual(['expr:v1:(P → Q)', 'expr:v1:((P → Q) ↔ (P → Q))']);
   expect(table.rows.every((row) => row.values['expr:v1:((P → Q) ↔ (P → Q))'] === true)).toBe(true);
 });
+
+test('caret conjunction preserves all table values and structural column identities', () => {
+  expect(generateTruthTable('P -> (Q ^ R)')).toEqual(generateTruthTable('P -> (Q & R)'));
+});

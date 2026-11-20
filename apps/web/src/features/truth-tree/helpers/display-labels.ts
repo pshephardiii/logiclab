@@ -23,19 +23,26 @@ export function occurrenceSourceLabel(
   }
 }
 
+/** Number terminal paths left to right; shared trunks are segments, not additional paths. */
+export function terminalBranchNumbers(structure: {
+  branchOrder: readonly string[];
+  branches: ReadonlyMap<string, TruthTreeBranch>;
+}): Map<string, number> {
+  const leaves = structure.branchOrder.filter(
+    (id) => structure.branches.get(id)!.ending.kind !== 'split',
+  );
+  return new Map(leaves.map((id, index) => [id, index + 1]));
+}
+
 export function branchEndingLabel(
   ending: TruthTreeBranch['ending'],
   numbers: ReadonlyMap<string, number>,
-  branchNumbers: ReadonlyMap<string, number>,
 ): string {
   switch (ending.kind) {
     case 'open':
       return 'Open';
-    case 'split': {
-      const children = ending.childBranchIds.map((id) => branchNumbers.get(id)).join(' and ');
-
-      return `Splits into branches ${children}.`;
-    }
+    case 'split':
+      return 'Splits into two branches.';
     case 'closed': {
       const closure = ending.closure;
 

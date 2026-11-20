@@ -17,6 +17,7 @@ import {
   conceptualSubmissionFeedback,
   proofSubmissionFeedback,
   truthTreeSubmissionFeedback,
+  truthTreeSubmissionVerdict,
 } from '../../../features/assignment/helpers/submission-feedback';
 import { useState } from 'react';
 import { useAssignedAttempt } from '../hooks/useAssignedAttempt';
@@ -233,6 +234,15 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
             />
           ) : item.content.type === ProblemType.TruthTree ? (
             <AssignedTruthTree
+              verdictAssessment={
+                submitted
+                  ? truthTreeSubmissionVerdict(work.attempt?.result, item.id)
+                  : currentFeedback &&
+                      'type' in currentFeedback &&
+                      currentFeedback.type === ProblemType.TruthTree
+                    ? currentFeedback.verdict
+                    : null
+              }
               item={{ ...item, content: item.content }}
               answer={work.truthTreeAnswers[item.id]}
               key={item.id}

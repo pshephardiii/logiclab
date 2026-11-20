@@ -88,7 +88,8 @@ export function assignmentCompletionReady(
               (answer) => answer.value !== null,
             )
           : item.content.type === ProblemType.TruthTree
-            ? isFinishedTruthTreeAttempt({
+            ? Boolean(truthTreeAnswers[item.id]?.verdict) &&
+              isFinishedTruthTreeAttempt({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
                   premises: item.content.premises,

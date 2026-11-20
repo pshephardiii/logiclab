@@ -200,7 +200,11 @@ export async function createStudentWorkStore(
 
           return {
             itemId: item.id,
-            feedback: { type: ProblemType.TruthTree, report: evidence.report },
+            feedback: {
+              type: ProblemType.TruthTree,
+              report: evidence.report,
+              verdict: evidence.verdict,
+            },
           };
         }
 

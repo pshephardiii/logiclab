@@ -7,6 +7,7 @@ const symbols: Readonly<Record<string, TokenKind>> = {
   '~': 'not',
   '∧': 'and',
   '&': 'and',
+  '^': 'and',
   '∨': 'or',
   '|': 'or',
   v: 'or',
@@ -55,7 +56,7 @@ export function tokenize(source: string, allowContradiction = false): Token[] {
       throw new FormulaParseError(
         'INVALID_CHARACTER',
         position,
-        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!/~, ∧/&, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets${allowContradiction ? ', and ⊥/_|_' : ''}`,
+        `Unexpected character ${JSON.stringify(text)}; use A–Z, ¬/!/~, ∧/&/^, ∨/v/|, →/->, ↔/<->, parentheses, or square brackets${allowContradiction ? ', and ⊥/_|_' : ''}`,
       );
     }
 

@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { assessTruthTreeVerdict } from '@logiclab/contracts/truth-tree-work';
 import { checkTruthTree } from '@logiclab/logic-engine/truth-tree';
 import type { SavedStudentAttempt } from '@logiclab/contracts/saved-student-work';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
@@ -42,18 +43,20 @@ beforeEach(() => {
       treeItem.content.type !== 'truth_tree'
     )
       throw new Error('Expected truth-tree request');
+    const report = checkTruthTree({
+      problem: {
+        ruleCatalogVersion: 1,
+        premises: treeItem.content.premises,
+        conclusion: treeItem.content.conclusion,
+      },
+      tree: input.answers.tree,
+    });
     return {
       itemId: input.itemId,
       feedback: {
         type: 'truth_tree',
-        report: checkTruthTree({
-          problem: {
-            ruleCatalogVersion: 1,
-            premises: treeItem.content.premises,
-            conclusion: treeItem.content.conclusion,
-          },
-          tree: input.answers.tree,
-        }),
+        report,
+        verdict: assessTruthTreeVerdict(report, input.answers.verdict),
       },
     };
   });
@@ -72,6 +75,7 @@ test('starts, explicitly checks and saves current work, retains failed edits and
   expect(screen.getByRole('button', { name: 'Save problem' })).toBeEnabled();
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('radio', { name: 'Invalid' }));
   await user.click(screen.getByRole('button', { name: 'Check tree' }));
   expect(await screen.findByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
     'Argument: invalid',
@@ -89,6 +93,7 @@ test('starts, explicitly checks and saves current work, retains failed edits and
   expect(await screen.findByText('PRIVATE_REFERENCE_EXPLANATION')).toBeInTheDocument();
   expect(retained!.answers[itemB]).toEqual(studentTree);
   await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   const option = screen.getByLabelText('Witness 1').querySelectorAll('option')[1]!;
   await user.selectOptions(screen.getByLabelText('Witness 1'), option.value);
   expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
@@ -138,11 +143,12 @@ test('completion-only filled but incorrect closure is saved before finalization 
         gradingVersion: 'proof_completion_v1',
         items: [
           {
-            evaluationVersion: 'truth_tree_v1',
+            evaluationVersion: 'truth_tree_v2',
             type: 'truth_tree',
             itemId: itemB,
             problemVersionId: work.id,
             report,
+            verdict: assessTruthTreeVerdict(report, answer.verdict),
             completedResponses: 1,
             totalResponses: 1,
           },
@@ -158,12 +164,14 @@ test('completion-only filled but incorrect closure is saved before finalization 
   const user = await open();
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Start tree' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   await user.selectOptions(screen.getByLabelText('Closure type'), 'falsity');
   await user.selectOptions(
     screen.getByLabelText('Witness 1'),
     screen.getByLabelText('Witness 1').querySelectorAll('option')[1]!.value,
   );
   await user.click(screen.getByRole('button', { name: 'Close branch' }));
+  await user.click(screen.getByRole('radio', { name: 'Invalid' }));
   expect(screen.queryByRole('button', { name: 'Check tree' })).not.toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();

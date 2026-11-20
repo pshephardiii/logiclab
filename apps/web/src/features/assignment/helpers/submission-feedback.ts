@@ -69,3 +69,20 @@ export function truthTreeSubmissionFeedback(
 
   return item?.type === ProblemType.TruthTree ? item.report : null;
 }
+
+/** Retained interpretation feedback follows the same authorized result projection as tree reports. */
+export function truthTreeSubmissionVerdict(
+  result: SubmissionResult | null | undefined,
+  itemId: string,
+) {
+  if (
+    result?.gradingVersion !== 'proof_mixed_v1' &&
+    result?.gradingVersion !== 'proof_completion_v1'
+  )
+    return null;
+
+  const item = result.items.find((item) => item.itemId === itemId);
+  return item?.type === ProblemType.TruthTree && item.evaluationVersion === 'truth_tree_v2'
+    ? item.verdict
+    : null;
+}

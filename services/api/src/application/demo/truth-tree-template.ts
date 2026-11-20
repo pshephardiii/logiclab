@@ -20,9 +20,9 @@ export const DEMO_TRUTH_TREES: {
   definition: TruthTreeDefinition;
 }[] = [
   {
-    title: 'Truth tree: disjunctive syllogism',
+    title: 'Truth tree: disjunction and negation',
     instructions:
-      'Test the argument P ∨ Q, ¬P ∴ Q. Start with both premises and ¬Q. Expand the disjunction on separate branches, then explicitly close each contradictory path.',
+      'Test the argument P ∨ Q, ¬P ∴ Q. Start with both premises and ¬Q. Expand the disjunction on separate branches, then explicitly close each contradictory path. Select whether the argument is valid or invalid based on your completed tree.',
     definition: {
       type: ProblemType.TruthTree,
       definitionVersion: 1,
@@ -82,9 +82,9 @@ export const DEMO_TRUTH_TREES: {
     },
   },
   {
-    title: 'Truth tree: an open counterexample',
+    title: 'Truth tree: a disjunction premise',
     instructions:
-      'Test the argument P ∨ Q ∴ P. Start with the premise and ¬P. Expand the disjunction and explicitly close contradictory paths. A fully expanded open path can refute the argument.',
+      'Test the argument P ∨ Q ∴ P. Start with the premise and ¬P. Expand the disjunction and explicitly close contradictory paths. Select whether the argument is valid or invalid based on your completed tree.',
     definition: {
       type: ProblemType.TruthTree,
       definitionVersion: 1,

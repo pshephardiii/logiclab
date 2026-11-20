@@ -557,6 +557,14 @@ test('completion-only truth trees use finished attempts without pre-submission c
     occurrenceId: initial.occurrences[0]!.id,
   });
   act(() => result.current.changeTruthTreeAnswer(itemB, { type: 'truth_tree', tree: incorrect }));
+  expect(result.current.completionReady).toBe(false);
+  act(() =>
+    result.current.changeTruthTreeAnswer(itemB, {
+      type: 'truth_tree',
+      tree: incorrect,
+      verdict: 'invalid',
+    }),
+  );
   expect(result.current.completionReady).toBe(true);
   await act(async () => {
     await result.current.check(itemB);

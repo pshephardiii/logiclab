@@ -38,7 +38,7 @@ Variables are uppercase A–Z (up to four distinct names). Supported operators a
 | Meaning       | Symbol | Keyboard    |
 | ------------- | ------ | ----------- |
 | Negation      | ¬      | `!` or `~`  |
-| Conjunction   | ∧      | `&`         |
+| Conjunction   | ∧      | `&` or `^`  |
 | Disjunction   | ∨      | `v` or `\|` |
 | Implication   | →      | `->`        |
 | Biconditional | ↔      | `<->`       |
