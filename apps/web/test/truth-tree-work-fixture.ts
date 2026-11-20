@@ -5,6 +5,7 @@ import { work, itemB } from './assignment-work-fixture';
 
 export const truthTreeAnswer: TruthTreeAnswer = {
   type: 'truth_tree',
+  verdict: null,
   tree: {
     treeVersion: 1,
     format: 'truth_tree',

@@ -10,6 +10,11 @@ import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmD
 import { TruthTreeEditor } from '../../features/truth-tree/components/TruthTreeEditor';
 import { TruthTreeSummary } from '../../features/truth-tree/components/TruthTreeSummary';
 import { TruthTreeFeedback } from '../../features/truth-tree/components/TruthTreeFeedback';
+import { TruthTreeVerdict } from '../../features/truth-tree/components/TruthTreeVerdict';
+import {
+  assessTruthTreeVerdict,
+  type TruthTreeVerdict as Verdict,
+} from '@logiclab/contracts/truth-tree-work';
 import { initialTruthTree } from '../../features/truth-tree/helpers/construction';
 import {
   truthTreeContentSchema,
@@ -33,6 +38,7 @@ export function TruthTreePracticePage() {
     null,
   );
   const [report, setReport] = useState<TruthTreeCheckReport | null>(null);
+  const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
   useUnsavedWork(active !== null || premisePending || premises.length > 0 || conclusion.length > 0);
   const confirmDiscard = useConfirmDiscard();
@@ -69,6 +75,7 @@ export function TruthTreePracticePage() {
       setActive({ statement, tree: initialTruthTree(statement) });
       setError(null);
       setReport(null);
+      setVerdict(null);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Check the argument.');
     }
@@ -80,6 +87,7 @@ export function TruthTreePracticePage() {
       setPremises([]);
       setConclusion('');
       setReport(null);
+      setVerdict(null);
       setError(null);
       setEntryPending(false);
     });
@@ -146,6 +154,14 @@ export function TruthTreePracticePage() {
               setReport(null);
             }}
           />
+          <TruthTreeVerdict
+            value={verdict}
+            disabled={entryPending}
+            onChange={(next) => {
+              setVerdict(next);
+              setReport(null);
+            }}
+          />
           <button
             type="button"
             disabled={entryPending}
@@ -165,7 +181,14 @@ export function TruthTreePracticePage() {
           >
             Check tree
           </button>
-          {report && !entryPending && <TruthTreeFeedback report={report} />}
+
+          {report && !entryPending && (
+            <TruthTreeFeedback
+              report={report}
+              verdict={assessTruthTreeVerdict(report, verdict)}
+              showArgument={verdict !== null}
+            />
+          )}
         </section>
       )}
       <p className="help">Work is temporary; reloading clears this practice session.</p>

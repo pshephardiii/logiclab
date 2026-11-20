@@ -40,6 +40,7 @@ test('valid independent work checks explicitly, hides stale diagnostics and prot
     witnesses[2]!.getAttribute('value')!,
   );
   await user.click(screen.getByRole('button', { name: 'Close branch' }));
+  await user.click(screen.getByRole('radio', { name: 'Valid' }));
   await user.click(screen.getByRole('button', { name: 'Check tree' }));
   expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
     'Argument: valid',
@@ -60,6 +61,7 @@ test('valid independent work checks explicitly, hides stale diagnostics and prot
 
 test('a completed open counterexample refutes an argument without revealing a supplied reference', async () => {
   const user = await begin('Q');
+  await user.click(screen.getByRole('radio', { name: 'Invalid' }));
   await user.click(screen.getByRole('button', { name: 'Check tree' }));
   expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
     'Tree check: verified. Argument: invalid.',
@@ -74,4 +76,33 @@ test('invalid setup retains the entered statement without starting a malformed t
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
   expect(screen.getByLabelText('Conclusion')).toHaveValue('P ∧');
   expect(screen.queryByRole('region', { name: 'Truth tree' })).not.toBeInTheDocument();
+});
+
+test('verdicts are never prefilled or announced before selection and changing a choice clears checked feedback', async () => {
+  const user = await begin('Q');
+  const valid = screen.getByRole('radio', { name: 'Valid' });
+  const invalid = screen.getByRole('radio', { name: 'Invalid' });
+  expect(valid).not.toBeChecked();
+  expect(invalid).not.toBeChecked();
+  await user.click(screen.getByRole('button', { name: 'Check tree' }));
+  const feedback = screen.getByRole('region', { name: 'Truth-tree feedback' });
+  expect(feedback).toHaveTextContent('not answered');
+  expect(feedback).not.toHaveTextContent('Argument:');
+  expect(feedback).not.toHaveTextContent('Counterexample:');
+  await user.click(valid);
+  expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Check tree' }));
+  expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
+    'Validity verdict: incorrect.',
+  );
+  await user.click(invalid);
+  expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Check tree' }));
+  expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
+    'Validity verdict: correct.',
+  );
+  await user.click(screen.getByRole('button', { name: 'Clear verdict' }));
+  expect(valid).not.toBeChecked();
+  expect(invalid).not.toBeChecked();
+  expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
 });

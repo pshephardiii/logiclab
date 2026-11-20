@@ -105,6 +105,7 @@ test('seeded truth-tree practice, grading and completion use scoped HTTP, verifi
         for (const [index, item] of work.assignment.items.entries()) {
           const answer = {
             type: 'truth_tree' as const,
+            verdict: index === 0 ? ('valid' as const) : ('invalid' as const),
             tree: structuredClone(DEMO_TRUTH_TREES[index]!.definition.referenceTree!),
           };
           if (mode === 'completion_only' && index === 0)
@@ -277,7 +278,7 @@ test('an exact template-8 visitor keeps saved work until explicit reset loads tr
     await assert.rejects(runtime.sessions.authenticate(switched.sessionId));
     assert.equal((await runtime.sessions.authenticate(reset.sessionId)).generation, 2);
     const fresh = await em.fork().findOneOrFail(db.DemoWorkspace, first.workspaceId);
-    assert.equal(fresh.templateVersion, 9);
+    assert.equal(fresh.templateVersion, DEMO_TEMPLATE.version);
     assert.equal(fresh.expiresAt.getTime(), deadline);
     assert.equal(await em.fork().count(db.AssignmentAttempt, { id: saved.id }), 0);
     assert.equal(

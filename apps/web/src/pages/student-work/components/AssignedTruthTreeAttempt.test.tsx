@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { assessTruthTreeVerdict } from '@logiclab/contracts/truth-tree-work';
 import { checkTruthTree } from '@logiclab/logic-engine/truth-tree';
 import type { SavedStudentAttempt } from '@logiclab/contracts/saved-student-work';
 import { installDialogStub, renderWithUnsavedWork as render } from '../../../../test/unsaved-work';
@@ -42,18 +43,20 @@ beforeEach(() => {
       treeItem.content.type !== 'truth_tree'
     )
       throw new Error('Expected truth-tree request');
+    const report = checkTruthTree({
+      problem: {
+        ruleCatalogVersion: 1,
+        premises: treeItem.content.premises,
+        conclusion: treeItem.content.conclusion,
+      },
+      tree: input.answers.tree,
+    });
     return {
       itemId: input.itemId,
       feedback: {
         type: 'truth_tree',
-        report: checkTruthTree({
-          problem: {
-            ruleCatalogVersion: 1,
-            premises: treeItem.content.premises,
-            conclusion: treeItem.content.conclusion,
-          },
-          tree: input.answers.tree,
-        }),
+        report,
+        verdict: assessTruthTreeVerdict(report, input.answers.verdict),
       },
     };
   });
@@ -72,6 +75,7 @@ test('starts, explicitly checks and saves current work, retains failed edits and
   expect(screen.getByRole('button', { name: 'Save problem' })).toBeEnabled();
   expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
   expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('radio', { name: 'Invalid' }));
   await user.click(screen.getByRole('button', { name: 'Check tree' }));
   expect(await screen.findByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
     'Argument: invalid',
@@ -139,11 +143,12 @@ test('completion-only filled but incorrect closure is saved before finalization 
         gradingVersion: 'proof_completion_v1',
         items: [
           {
-            evaluationVersion: 'truth_tree_v1',
+            evaluationVersion: 'truth_tree_v2',
             type: 'truth_tree',
             itemId: itemB,
             problemVersionId: work.id,
             report,
+            verdict: assessTruthTreeVerdict(report, answer.verdict),
             completedResponses: 1,
             totalResponses: 1,
           },
@@ -166,6 +171,7 @@ test('completion-only filled but incorrect closure is saved before finalization 
     screen.getByLabelText('Witness 1').querySelectorAll('option')[1]!.value,
   );
   await user.click(screen.getByRole('button', { name: 'Close branch' }));
+  await user.click(screen.getByRole('radio', { name: 'Invalid' }));
   expect(screen.queryByRole('button', { name: 'Check tree' })).not.toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();

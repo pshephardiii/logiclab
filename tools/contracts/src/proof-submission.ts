@@ -1,13 +1,18 @@
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { objectiveGradedItemSchema } from './assignment-responses';
-import { derivationEvaluationEvidenceSchema } from './derivation-work';
+import {
+  derivationEvaluationEvidenceSchema,
+  type DerivationEvaluationEvidence,
+} from './derivation-work';
 import { truthTableCheckResponseSchema } from './truth-table';
 import type { ProofCheckReport } from './proof';
 import type { TruthTreeCheckReport } from './truth-tree';
 import {
   truthTreeEvaluationEvidenceSchema,
   truthTreeCompletionEvidenceSchema,
+  type TruthTreeEvaluationEvidence,
+  TruthTreeVerdictStatus,
 } from './truth-tree-work';
 
 export const proofSubmissionItemSchema = z.discriminatedUnion('type', [
@@ -46,7 +51,7 @@ export const proofSubmissionResultSchema = z
       if (item.type === ProblemType.Derivation || item.type === ProblemType.TruthTree) {
         proofs.total++;
 
-        const verification = proofCompletionVerification(item.report);
+        const verification = proofResponseVerification(item);
 
         if (verification === 'verified') proofs.accepted++;
         else if (verification === 'errors_found') proofs.needsReview++;
@@ -120,6 +125,20 @@ export function proofCompletionVerification(
       : 'errors_found';
 }
 
+/** New truth-tree answers include interpretation; historical evidence retains its frozen meaning. */
+export function proofResponseVerification(
+  evidence: DerivationEvaluationEvidence | TruthTreeEvaluationEvidence,
+): ProofCompletionVerification {
+  const tree = proofCompletionVerification(evidence.report);
+  if (tree !== 'verified' || evidence.evaluationVersion !== 'truth_tree_v2') return tree;
+
+  return evidence.verdict.status === TruthTreeVerdictStatus.Correct
+    ? 'verified'
+    : evidence.verdict.status === TruthTreeVerdictStatus.Unassessable
+      ? 'verification_unavailable'
+      : 'errors_found';
+}
+
 const proofCompletionVerificationCountsSchema = z.strictObject({
   verified: z.number().int().nonnegative().max(50),
   errorsFound: z.number().int().nonnegative().max(50),
@@ -136,7 +155,7 @@ export function summarizeProofCompletionVerification(items: readonly ProofComple
 
     counts.total++;
 
-    const status = proofCompletionVerification(item.report);
+    const status = proofResponseVerification(item);
 
     if (status === 'verified') counts.verified++;
     else if (status === 'errors_found') counts.errorsFound++;

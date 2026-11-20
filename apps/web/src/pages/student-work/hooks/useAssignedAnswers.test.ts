@@ -38,3 +38,16 @@ test('repeated truth-tree occurrences keep independent baselines and advancing a
   act(() => result.current.changeTruthTreeAnswers(itemB, truthTreeAnswer));
   expect(result.current.dirty).toEqual([secondId]);
 });
+
+test('validity choices have saved baselines and reverting an older omitted choice to null is clean', () => {
+  const older = { type: 'truth_tree' as const, tree: truthTreeAnswer.tree };
+  const { result } = renderHook(() => useAssignedAnswers(truthTreeWork));
+  act(() => result.current.resetAnswers(truthTreeWork, { ...saved, answers: { [itemB]: older } }));
+  act(() => result.current.changeTruthTreeAnswers(itemB, { ...older, verdict: 'valid' }));
+  expect(result.current.dirty).toEqual([itemB]);
+  act(() => result.current.markSaved(itemB, {}, older));
+  expect(result.current.truthTreeAnswers[itemB]!.verdict).toBe('valid');
+  expect(result.current.dirty).toEqual([itemB]);
+  act(() => result.current.changeTruthTreeAnswers(itemB, { ...older, verdict: null }));
+  expect(result.current.dirty).toEqual([]);
+});

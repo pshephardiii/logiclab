@@ -4,6 +4,7 @@ import {
   checkTruthTreeAnswersSchema,
   truthTreeEvaluationEvidenceSchema,
   truthTreeCompletionEvidenceSchema,
+  truthTreeEvaluationEvidenceV2Schema,
 } from '@logiclab/contracts/truth-tree-work';
 import { savedStudentResponsesSchema } from '@logiclab/contracts/saved-student-work';
 import { truthTreeDefinitionFixture, truthTreeIds } from '../../../test/truth-tree-fixture';
@@ -23,7 +24,7 @@ function fixture(outcome: 'valid' | 'invalid' = 'valid') {
   const definition = truthTreeDefinitionFixture(outcome);
   return {
     authoritative: { itemId, problemVersionId, content: truthTreeContent(definition) },
-    answer: { type: 'truth_tree' as const, tree: definition.referenceTree! },
+    answer: { type: 'truth_tree' as const, tree: definition.referenceTree!, verdict: outcome },
   };
 }
 
@@ -39,7 +40,7 @@ test.each(['valid', 'invalid'] as const)(
     expect(evidence).toMatchObject({
       itemId,
       problemVersionId,
-      evaluationVersion: 'truth_tree_v1',
+      evaluationVersion: 'truth_tree_v2',
       report: { status: 'verified', argumentStatus: outcome },
     });
     expect(JSON.stringify(evidence)).not.toContain('PRIVATE_TRUTH_TREE_EXPLANATION');
@@ -207,4 +208,77 @@ test('saved practice transport accepts truth-tree drafts but never trusts fabric
   expect(() => truthTreeScoringOutcome({ itemId, report: { status: 'verified' } })).toThrow(
     AssignmentScoringError,
   );
+});
+
+test.each(['valid', 'invalid'] as const)(
+  'a verified %s tree still needs review when its selected verdict is wrong',
+  (outcome) => {
+    const { authoritative, answer } = fixture(outcome);
+    const evidence = evaluateTruthTreeAnswer(authoritative, {
+      ...answer,
+      verdict: outcome === 'valid' ? 'invalid' : 'valid',
+    });
+    expect(evidence).toMatchObject({
+      evaluationVersion: 'truth_tree_v2',
+      report: { status: 'verified', argumentStatus: outcome },
+      verdict: { status: 'incorrect' },
+    });
+    expect(truthTreeScoringOutcome(evidence).outcome).toEqual({ type: 'needs_review' });
+    const completed = evaluateTruthTreeCompletion(authoritative, {
+      ...answer,
+      verdict: outcome === 'valid' ? 'invalid' : 'valid',
+    });
+    expect(completed.verdict.status).toBe('incorrect');
+    expect(completed).not.toHaveProperty('score');
+  },
+);
+
+test.each([null, undefined])(
+  'an unanswered verdict remains saveable but cannot earn full credit or complete work (%s)',
+  (verdict) => {
+    const { authoritative, answer } = fixture();
+    const draft = { ...answer, verdict };
+    expect(validateTruthTreeAnswer(draft).verdict ?? null).toBe(null);
+    const evidence = evaluateTruthTreeAnswer(authoritative, draft);
+    expect(evidence.verdict).toEqual({ answer: null, status: 'unanswered' });
+    expect(evidence.report.status).toBe('verified');
+    expect(truthTreeScoringOutcome(evidence).outcome).toEqual({ type: 'needs_review' });
+    expect(() => evaluateTruthTreeCompletion(authoritative, draft)).toThrow('incomplete_work');
+  },
+);
+
+test('a provisional open branch cannot establish an invalid verdict until its compounds are decomposed', () => {
+  const { authoritative, answer } = fixture();
+  authoritative.content.premises[0]!.formula = 'P v Q';
+  answer.tree.occurrences[0]!.formula = 'P v Q';
+  answer.tree.branches[0]!.ending = { kind: 'open' };
+  const evidence = evaluateTruthTreeAnswer(authoritative, { ...answer, verdict: 'invalid' });
+  expect(evidence.report).toMatchObject({ status: 'incomplete', argumentStatus: 'undetermined' });
+  expect(evidence.verdict).toEqual({ answer: 'invalid', status: 'unassessable' });
+  expect(truthTreeScoringOutcome(evidence).outcome).toEqual({ type: 'needs_review' });
+});
+
+test('verdict validation rejects unknown choices and inconsistent server assessments', () => {
+  const { authoritative, answer } = fixture();
+  for (const verdict of ['undetermined', 'Valid', true, { status: 'correct' }]) {
+    expect(() => validateTruthTreeAnswer({ ...answer, verdict })).toThrow('invalid_answer');
+  }
+  const evidence = evaluateTruthTreeAnswer(authoritative, answer);
+  expect(
+    truthTreeEvaluationEvidenceV2Schema.safeParse({
+      ...evidence,
+      verdict: { answer: 'invalid', status: 'correct' },
+    }).success,
+  ).toBe(false);
+  expect(() => validateTruthTreeAnswer({ ...answer, evaluationVersion: 'truth_tree_v1' })).toThrow(
+    'invalid_answer',
+  );
+});
+
+test('retained tree-only evidence stays readable without rewriting its original evaluation', () => {
+  const { authoritative, answer } = fixture();
+  const { verdict: _assessment, ...current } = evaluateTruthTreeAnswer(authoritative, answer);
+  const retained = { ...current, evaluationVersion: 'truth_tree_v1' };
+  expect(truthTreeEvaluationEvidenceSchema.parse(retained)).toEqual(retained);
+  expect(truthTreeScoringOutcome(retained).outcome).toEqual({ type: 'full_credit' });
 });

@@ -6,7 +6,7 @@ import {
   proofSubmissionResultSchema,
   type ProofSubmissionResult,
   type ProofSubmissionItem,
-  proofCompletionVerification,
+  proofResponseVerification,
 } from '@logiclab/contracts/proof-submission';
 import { publicDerivationContent } from '../problem/derivation/projections';
 import { evaluateProofAnswer } from './proof-response';
@@ -66,7 +66,7 @@ export function evaluateProofSubmission(
           },
         },
       );
-      const verification = proofCompletionVerification(evidence.report);
+      const verification = proofResponseVerification(evidence);
 
       proofs.total++;
       if (verification === 'verified') proofs.accepted++;
