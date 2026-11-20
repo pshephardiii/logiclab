@@ -311,6 +311,9 @@
   display: inline-block;
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.2em;
+  line-height: 1.6;
   vertical-align: middle;
   white-space: pre;
 }

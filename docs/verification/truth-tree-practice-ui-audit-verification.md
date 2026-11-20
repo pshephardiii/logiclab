@@ -26,6 +26,10 @@ Final headless Chrome reran the real frontend/engine workflow with a five-leaf a
 
 Only signed-out account restoration was stubbed. Browser construction/checking used real frontend/engine code; this was not a live resource-API or account walkthrough. PostgreSQL checks separately supplied backend workflow evidence. Ignored scripts/screenshots/results: `.codex-local/verification/truth-tree-layout/`, `truth-tree-inline/`, `truth-tree-verdict/`, `truth-tree-polish/`, `truth-tree-numbering/` and `truth-tree-expressions/` under the same verification directory. Temporary Chrome/Vite processes were stopped. Earlier [verdict-slice evidence](truth-tree-verdict-verification.md) remains historical.
 
+## Highlight-scrollbar follow-up
+
+After the final suite, a reported tiny vertical scrollbar beside character highlights was fixed by providing vertical padding/line height and explicitly hiding vertical overflow on the formula snippet. Horizontal scrolling for long snippets remains available. The local Chrome smoke was rerun with an assertion that the highlighted snippet has no vertical content overflow, alongside the existing desktop/mobile checks; it passed. CSS formatting and whitespace checks passed. Full suites were not repeated for this CSS-only follow-up. Ignored evidence: `.codex-local/verification/truth-tree-expressions/scrollbar-smoke.cjs` and its log.
+
 ## Rollout, limits and next work
 
 No migration or environment change. Rebuild matching contracts/engine/database-package/API/frontend outputs. Coordinate application rollback: old parsers do not accept caret notation and old result consumers cannot necessarily read version-2 evidence. Existing official results are not regraded. New/reset demos receive template 10.
