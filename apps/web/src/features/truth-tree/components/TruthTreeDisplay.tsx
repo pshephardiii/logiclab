@@ -1,9 +1,10 @@
-import type { TruthTree } from '@logiclab/contracts/truth-tree';
+import type { ReactNode } from 'react';
+import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
 import { truthTreeLayout } from '../helpers/layout';
 import { branchEndingLabel, occurrenceSourceLabel } from '../helpers/display-labels';
 import { TruthTreeFork } from './TruthTreeFork';
 import { TruthTreeFormula } from './TruthTreeFormula';
-import { TruthTreeViewport } from './TruthTreeViewport';
+import { TruthTreeViewport, type TreeRevealRequest } from './TruthTreeViewport';
 import './truth-tree-editor.css';
 
 /** Staggered HTML formulas and decorative forks share a grid; stored work remains unchanged. */
@@ -11,12 +12,18 @@ export function TruthTreeDisplay({
   tree,
   disabled = false,
   onFormula,
+  renderBranchActions,
+  entry,
+  reveal,
 }: {
   tree: TruthTree;
   disabled?: boolean;
   onFormula?: (id: string, formula: string) => void;
+  renderBranchActions?: (branch: TruthTreeBranch, number: number) => ReactNode;
+  entry?: { branchId: string; content: ReactNode };
+  reveal?: TreeRevealRequest;
 }) {
-  const layout = truthTreeLayout(tree);
+  const layout = truthTreeLayout(tree, entry?.branchId);
   if (!layout)
     return (
       <section aria-label="Saved tree formulas">
@@ -38,13 +45,13 @@ export function TruthTreeDisplay({
 
   return (
     <section aria-label="Truth tree" className="truth-tree-display">
-      <TruthTreeViewport scrollable={layout.leafCount > 1}>
+      <TruthTreeViewport scrollable={layout.slotCount > 1} reveal={reveal}>
         <div
           className="truth-tree-diagram"
           style={{
-            width: `max(100%, calc(${layout.leafCount} * var(--truth-tree-leaf-width)))`,
-            gridTemplateColumns: `repeat(${layout.leafCount * 2}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${layout.rowCount}, minmax(3rem, auto))`,
+            width: `max(100%, calc(${layout.slotCount} * var(--truth-tree-leaf-width)))`,
+            gridTemplateColumns: `repeat(${layout.slotCount * 2}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${layout.rowCount + (entry ? 1 : 0)}, minmax(3rem, auto))`,
           }}
         >
           {layout.forks.map((fork) => (
@@ -103,22 +110,37 @@ export function TruthTreeDisplay({
                     {branchEndingLabel(branch.ending, numbers, branchNumbers)}
                   </p>
                 ) : (
-                  <p
-                    className="truth-tree-end"
+                  <div
+                    className="truth-tree-endpoint"
                     style={{ gridColumn: position.column, gridRow: position.endRow }}
                   >
-                    <span className="truth-tree-end-mark" aria-hidden="true">
-                      {branch.ending.kind === 'closed' ? '×' : '○'}
-                    </span>
-                    <span>
-                      <small>Branch {branchNumbers.get(id)}</small>
-                      <span>{branchEndingLabel(branch.ending, numbers, branchNumbers)}</span>
-                    </span>
-                  </p>
+                    <p className="truth-tree-end">
+                      <span className="truth-tree-end-mark" aria-hidden="true">
+                        {branch.ending.kind === 'closed' ? '×' : '○'}
+                      </span>
+                      <span>
+                        <small>Branch {branchNumbers.get(id)}</small>
+                        <span>{branchEndingLabel(branch.ending, numbers, branchNumbers)}</span>
+                      </span>
+                    </p>
+                    {renderBranchActions?.(branch, branchNumbers.get(id)!)}
+                  </div>
                 )}
               </section>
             );
           })}
+          {entry && layout.branches.has(entry.branchId) && (
+            <div
+              className="truth-tree-entry"
+              data-tree-entry={entry.branchId}
+              style={{
+                gridColumn: layout.branches.get(entry.branchId)!.column,
+                gridRow: layout.rowCount + 1,
+              }}
+            >
+              {entry.content}
+            </div>
+          )}
         </div>
       </TruthTreeViewport>
     </section>

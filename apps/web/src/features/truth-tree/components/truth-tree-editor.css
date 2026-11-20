@@ -41,7 +41,8 @@
   display: contents;
 }
 .truth-tree-formula,
-.truth-tree-end {
+.truth-tree-endpoint,
+.truth-tree-entry {
   width: var(--truth-tree-formula-width);
   justify-self: start;
   transform: translateX(-50%);
@@ -86,9 +87,13 @@
   margin-top: 0.25rem;
 }
 .truth-tree-fork {
-  height: 4rem;
+  position: relative;
+  min-height: 4rem;
+  align-self: stretch;
 }
 .truth-tree-fork svg {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -109,6 +114,69 @@
   gap: 0.5rem;
   font-size: 0.85rem;
   line-height: 1.4;
+  margin: 0;
+}
+.truth-tree-branch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+.truth-tree-branch-actions button {
+  padding: 0.4rem 0.55rem;
+  font-size: 0.8rem;
+}
+.truth-tree-branch-actions [aria-expanded='true'] {
+  background: #e4f0eb;
+  border-color: #176650;
+}
+.truth-tree-entry {
+  width: min(22rem, calc(var(--truth-tree-viewport-width, 24rem) - 1rem));
+  padding: 0.9rem;
+  margin-block: 0.5rem;
+  border: 1px solid #9ab8ad;
+  border-radius: 0.6rem;
+  background: #f5faf7;
+  text-align: left;
+}
+.truth-tree-entry-fields,
+.truth-tree-expansion-results > fieldset,
+.truth-tree-closure-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.truth-tree-entry-fields > legend {
+  font-size: 0.9rem;
+  font-weight: 650;
+  padding: 0 0 0.8rem;
+}
+.truth-tree-expansion-fields {
+  display: grid;
+  gap: 0.8rem;
+}
+.truth-tree-entry-selects,
+.truth-tree-expansion-results--split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+.truth-tree-entry label {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+.truth-tree-entry select,
+.truth-tree-entry input {
+  width: 100%;
+}
+.truth-tree-expansion-results legend,
+.truth-tree-closure-fields legend {
+  font-size: 0.8rem;
+  padding: 0 0 0.4rem;
+}
+.truth-tree-entry .error {
+  margin: 0;
 }
 .truth-tree-end-mark {
   font-size: 1.6rem;

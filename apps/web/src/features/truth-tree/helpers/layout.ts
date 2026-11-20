@@ -3,8 +3,8 @@ import { editableTree } from './construction';
 
 type BranchPosition = {
   column: number;
-  firstLeaf: number;
-  lastLeaf: number;
+  firstSlot: number;
+  lastSlot: number;
   startRow: number;
   endRow: number;
 };
@@ -18,25 +18,29 @@ type ForkPosition = {
 };
 
 /** Presentation only: preserve identities, segment order and one expansion per global stage. */
-export function truthTreeLayout(tree: TruthTree) {
+export function truthTreeLayout(tree: TruthTree, expandedBranchId?: string) {
   const structure = editableTree(tree);
   if (!structure || !structure.tree.rootBranchId) return null;
 
   const branches = new Map<string, BranchPosition>();
   let leafCount = 0;
+  let slotCount = 0;
 
   // Allocate horizontal space by terminal paths, not depth: unbalanced forks cannot overlap.
   for (const id of structure.branchOrder) {
     if (structure.branches.get(id)!.ending.kind === 'split') continue;
 
+    // The active endpoint reserves room for an inline entry without covering a sibling.
+    const slots = id === expandedBranchId ? 2 : 1;
     branches.set(id, {
-      column: leafCount * 2 + 2,
-      firstLeaf: leafCount,
-      lastLeaf: leafCount,
+      column: slotCount * 2 + slots + 1,
+      firstSlot: slotCount,
+      lastSlot: slotCount + slots - 1,
       startRow: 1,
       endRow: 1,
     });
     leafCount++;
+    slotCount += slots;
   }
 
   for (const id of [...structure.branchOrder].reverse()) {
@@ -46,9 +50,9 @@ export function truthTreeLayout(tree: TruthTree) {
     const left = branches.get(branch.ending.childBranchIds[0]!)!;
     const right = branches.get(branch.ending.childBranchIds[1]!)!;
     branches.set(id, {
-      column: left.firstLeaf + right.lastLeaf + 2,
-      firstLeaf: left.firstLeaf,
-      lastLeaf: right.lastLeaf,
+      column: left.firstSlot + right.lastSlot + 2,
+      firstSlot: left.firstSlot,
+      lastSlot: right.lastSlot,
       startRow: 1,
       endRow: 1,
     });
@@ -143,6 +147,7 @@ export function truthTreeLayout(tree: TruthTree) {
     rows,
     forks,
     leafCount,
+    slotCount,
     rowCount: Math.max(1, nextRow),
     rootStemRow: Math.max(1, initial.length),
     numbers: new Map(structure.tree.occurrences.map((item, index) => [item.id, index + 1])),

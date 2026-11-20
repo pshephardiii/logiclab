@@ -113,3 +113,16 @@ test('retains blank formulas and repeated text as separate occurrences without c
     entered.occurrences.map((item) => item.formula),
   );
 });
+
+test('an inline entry reserves extra space only for its own terminal path', () => {
+  const { tree, left, right } = fixture();
+  const layout = truthTreeLayout(tree, left)!;
+
+  expect(layout.leafCount).toBe(2);
+  expect(layout.slotCount).toBe(3);
+  expect(layout.branches.get(left)!.lastSlot - layout.branches.get(left)!.firstSlot).toBe(1);
+  expect(layout.branches.get(right)!.firstSlot).toBeGreaterThan(
+    layout.branches.get(left)!.lastSlot,
+  );
+  expect(layout.rows).toEqual(truthTreeLayout(tree)!.rows);
+});

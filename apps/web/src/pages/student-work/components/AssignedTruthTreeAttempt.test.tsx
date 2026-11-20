@@ -89,6 +89,7 @@ test('starts, explicitly checks and saves current work, retains failed edits and
   expect(await screen.findByText('PRIVATE_REFERENCE_EXPLANATION')).toBeInTheDocument();
   expect(retained!.answers[itemB]).toEqual(studentTree);
   await user.click(screen.getByRole('button', { name: 'Hide assigned solution' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   const option = screen.getByLabelText('Witness 1').querySelectorAll('option')[1]!;
   await user.selectOptions(screen.getByLabelText('Witness 1'), option.value);
   expect(screen.getByRole('button', { name: 'Save problem' })).toBeDisabled();
@@ -158,6 +159,7 @@ test('completion-only filled but incorrect closure is saved before finalization 
   const user = await open();
   expect(screen.getByRole('button', { name: 'Submit final answers' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Start tree' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   await user.selectOptions(screen.getByLabelText('Closure type'), 'falsity');
   await user.selectOptions(
     screen.getByLabelText('Witness 1'),

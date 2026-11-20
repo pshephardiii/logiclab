@@ -28,6 +28,7 @@ async function begin(conclusion = 'P') {
 test('valid independent work checks explicitly, hides stale diagnostics and protects start-over without persistence', async () => {
   const user = await begin();
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
   const witnesses = within(screen.getByLabelText('Witness 1')).getAllByRole('option');
   await user.selectOptions(
     screen.getByLabelText('Witness 1'),
@@ -44,7 +45,7 @@ test('valid independent work checks explicitly, hides stale diagnostics and prot
     'Argument: valid',
   );
   expect(protectedWork()).toBe(true);
-  await user.click(screen.getByRole('button', { name: 'Reopen branch' }));
+  await user.click(screen.getByRole('button', { name: 'Reopen branch 1' }));
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Start over' }));
   await user.click(screen.getByRole('button', { name: 'Stay' }));
