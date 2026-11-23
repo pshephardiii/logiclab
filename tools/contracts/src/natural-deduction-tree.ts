@@ -47,10 +47,15 @@ export const naturalDeductionTreeProofSchema = z.strictObject({
 export type NaturalDeductionTreeProof = z.infer<typeof naturalDeductionTreeProofSchema>;
 
 /** Standalone transport only; this does not enable tree problems in live assignment workflows. */
-export const naturalDeductionTreeProofCheckInputSchema = z.strictObject({
-  problem: proofProblemSchema,
-  proof: naturalDeductionTreeProofSchema,
-});
+export const naturalDeductionTreeProofCheckInputSchema = z
+  .strictObject({
+    problem: proofProblemSchema,
+    proof: naturalDeductionTreeProofSchema,
+  })
+  .refine(
+    (input) => input.problem.ruleCatalogVersion === 1,
+    'Natural-deduction trees retain catalog 1.',
+  );
 
 export type NaturalDeductionTreeProofCheckInput = z.infer<
   typeof naturalDeductionTreeProofCheckInputSchema

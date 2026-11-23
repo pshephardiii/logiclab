@@ -1,7 +1,7 @@
 import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
-import { fitchProofSchema, proofCheckReportSchema } from './proof';
+import { fitchApplicationProofSchema, proofCheckReportSchema } from './proof';
 
 import {
   derivationStatementSchema,
@@ -23,7 +23,7 @@ export type FitchDerivationContent = z.infer<typeof fitchDerivationContentSchema
 
 /** Instructor-only authored JSON; a reference/version tag is not a cached acceptance claim. */
 export const fitchDerivationDefinitionSchema = fitchDerivationContentSchema.safeExtend({
-  referenceProof: fitchProofSchema.nullable(),
+  referenceProof: fitchApplicationProofSchema.nullable(),
   explanation,
 });
 
@@ -37,7 +37,7 @@ export const fitchDerivationSolutionSchema = z.strictObject({
   ruleCatalogVersion: z.literal(1),
   formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   checkerVersion: z.literal(1),
-  referenceProof: fitchProofSchema,
+  referenceProof: fitchApplicationProofSchema,
   explanation,
 });
 

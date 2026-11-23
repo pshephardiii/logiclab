@@ -18,6 +18,8 @@ export function isFinishedFitchProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
+  // Catalog-2 completion/submission admission remains staged with the application integration.
+  if (input.problem.ruleCatalogVersion !== 1) return false;
   const proof = input.proof;
   const last = proof.steps.at(-1);
 

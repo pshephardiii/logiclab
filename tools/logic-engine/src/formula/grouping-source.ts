@@ -13,8 +13,7 @@ export function mergeFormulaGrouping(
   maxLength: number,
 ): string {
   const pending: [Node, Node][] = [[expected.formula, actual.formula]];
-  const opens = new Map<number, number>();
-  const closes = new Map<number, number>();
+  const requiredNodes = new Set<Node>();
 
   while (pending.length) {
     budget.spend(1);
@@ -30,14 +29,33 @@ export function mergeFormulaGrouping(
       required.groups.length &&
       !entered.groups.length
     ) {
-      opens.set(entered.span.start, (opens.get(entered.span.start) ?? 0) + 1);
-      closes.set(entered.span.end, (closes.get(entered.span.end) ?? 0) + 1);
+      requiredNodes.add(result);
     }
 
     if (source.type === 'binary' && result.type === 'binary')
       pending.push([source.left, result.left], [source.right, result.right]);
     else if (source.type === 'not' && result.type === 'not')
       pending.push([source.operand, result.operand]);
+  }
+
+  return restoreFormulaGrouping(actual, requiredNodes, budget, maxLength);
+}
+
+/** Restore only selected boundaries; all positions belong to the current parsed source. */
+export function restoreFormulaGrouping(
+  actual: Syntax,
+  requiredNodes: ReadonlySet<Node>,
+  budget: { spend(units: number): void },
+  maxLength: number,
+): string {
+  const opens = new Map<number, number>();
+  const closes = new Map<number, number>();
+  for (const node of requiredNodes) {
+    budget.spend(1);
+    const entered = actual.nodes.get(node)!;
+    if (node === actual.formula || node.type !== 'binary' || entered.groups.length) continue;
+    opens.set(entered.span.start, (opens.get(entered.span.start) ?? 0) + 1);
+    closes.set(entered.span.end, (closes.get(entered.span.end) ?? 0) + 1);
   }
 
   const length =

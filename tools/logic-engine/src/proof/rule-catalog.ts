@@ -1,7 +1,7 @@
 /** Version the exact variants, not textbook labels. No rule is enabled by this catalog alone. */
 export const PROPOSITIONAL_RULE_CATALOG_VERSION = 1;
 
-/** Staged source-aware variants; existing definitions/checkers still pin catalog 1. */
+/** Source-aware variants; live application definitions still pin catalog 1. */
 export const PROPOSITIONAL_CHAIN_RULE_CATALOG_VERSION = 2;
 
 type RuleDefinition = {
@@ -182,8 +182,13 @@ export const PROPOSITIONAL_RULE_CATALOG = Object.freeze(
 
 export type PropositionalRule = (typeof PROPOSITIONAL_RULE_CATALOG)[number];
 
-export function getPropositionalRule(id: string): PropositionalRule | undefined {
-  return PROPOSITIONAL_RULE_CATALOG.find((rule) => rule.id === id);
+export function getPropositionalRule(id: string): PropositionalRule | undefined;
+export function getPropositionalRule(
+  id: string,
+  version: 1 | 2,
+): PropositionalRule | PropositionalChainRule | undefined;
+export function getPropositionalRule(id: string, version: 1 | 2 = 1) {
+  return propositionalRuleCatalog(version).find((rule) => rule.id === id);
 }
 
 /** A distinct permission: ordinary conjunction elimination keeps its exact binary pattern. */

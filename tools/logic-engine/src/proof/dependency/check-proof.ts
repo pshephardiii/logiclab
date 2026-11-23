@@ -12,13 +12,14 @@ import { sameFormula } from '../formula-equality';
 /** Standalone staged checker. Callers own authoritative statements, admission and disclosure. */
 export function checkDependencyProof(value: unknown): ProofCheckReport {
   const diagnostics = structureDiagnostics();
+  let version: 1 | 2 = 1;
 
   function finish(
     status: ProofCheckReport['status'],
     target: ProofCheckReport['target'] = 'unknown',
     steps: ProofCheckReport['steps'] = [],
   ): ProofCheckReport {
-    return finishProofReport(diagnostics, status, target, steps);
+    return finishProofReport(diagnostics, status, target, steps, version);
   }
 
   const read = readDependencyInput(value);
@@ -29,6 +30,7 @@ export function checkDependencyProof(value: unknown): ProofCheckReport {
   }
 
   const { input } = read;
+  version = input.problem.ruleCatalogVersion;
   const budget = proofBudget();
 
   try {

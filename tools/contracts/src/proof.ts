@@ -7,6 +7,7 @@ import {
   proofReferenceIdSchema as id,
   proofFormulaTextSchema as formula,
   proofRuleIdSchema as ruleId,
+  proofConjunctIndexSchema,
 } from './proof-fields';
 
 export { PROOF_LIMITS } from './proof-fields';
@@ -26,6 +27,7 @@ export const fitchProofStepSchema = z.discriminatedUnion('kind', [
     ...scope,
     kind: z.literal('inference'),
     ruleId: ruleId.nullable(),
+    conjunctIndex: proofConjunctIndexSchema,
     lineReferences: z.array(id).max(2),
     subproofReferences: z.array(id).max(2),
   }),
@@ -41,29 +43,61 @@ export const fitchProofBlockSchema = z.strictObject({
 });
 
 /** Flat tables encode nested Fitch scope without recursive untrusted JSON. */
-export const fitchProofSchema = z.strictObject({
-  proofVersion: z.literal(1),
-  format: z.literal('fitch'),
-  steps: z.array(fitchProofStepSchema).max(PROOF_LIMITS.maxSteps),
-  blocks: z.array(fitchProofBlockSchema).max(PROOF_LIMITS.maxBlocks),
-});
+export const fitchProofSchema = z
+  .strictObject({
+    proofVersion: z.union([z.literal(1), z.literal(2)]),
+    format: z.literal('fitch'),
+    steps: z.array(fitchProofStepSchema).max(PROOF_LIMITS.maxSteps),
+    blocks: z.array(fitchProofBlockSchema).max(PROOF_LIMITS.maxBlocks),
+  })
+  .superRefine((proof, context) => {
+    if (proof.proofVersion === 1 && proof.steps.some((step) => 'conjunctIndex' in step))
+      context.addIssue({
+        code: 'custom',
+        message: 'Catalog-1 proofs cannot include a conjunct selection.',
+      });
+  });
+
+/** Keep live owner/student work guarded until source-aware authoring/editors are integrated. */
+export const fitchApplicationProofSchema = fitchProofSchema.refine(
+  (proof) => proof.proofVersion === 1,
+  'Catalog-2 proofs are not enabled in application workflows yet.',
+);
 
 export type FitchProof = z.infer<typeof fitchProofSchema>;
 
-export const proofProblemSchema = z.strictObject({
-  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
-  ruleCatalogVersion: z.literal(1),
-  premises: z.array(z.strictObject({ id, formula: formula.min(1) })).max(PROOF_LIMITS.maxPremises),
-  conclusion: formula.min(1),
-  permittedRuleIds: z.array(ruleId).max(PROOF_LIMITS.maxPermittedRules),
-});
+export const proofProblemSchema = z
+  .strictObject({
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
+    premises: z
+      .array(z.strictObject({ id, formula: formula.min(1) }))
+      .max(PROOF_LIMITS.maxPremises),
+    conclusion: formula.min(1),
+    permittedRuleIds: z.array(ruleId).max(PROOF_LIMITS.maxPermittedRules),
+  })
+  .superRefine((problem, context) => {
+    if (
+      problem.ruleCatalogVersion === 2 &&
+      problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Catalog 2 requires explicit formula grouping policy 1.',
+      });
+  });
 
 export type ProofProblem = z.infer<typeof proofProblemSchema>;
 
-export const fitchProofCheckInputSchema = z.strictObject({
-  problem: proofProblemSchema,
-  proof: fitchProofSchema,
-});
+export const fitchProofCheckInputSchema = z
+  .strictObject({
+    problem: proofProblemSchema,
+    proof: fitchProofSchema,
+  })
+  .refine(
+    (input) => input.problem.ruleCatalogVersion === input.proof.proofVersion,
+    'Proof and problem catalog versions must agree.',
+  );
 
 export type FitchProofCheckInput = z.infer<typeof fitchProofCheckInputSchema>;
 
@@ -101,7 +135,7 @@ export type ProofDiagnostic = z.infer<typeof proofDiagnosticSchema>;
 export const proofCheckReportSchema = z
   .strictObject({
     checkerVersion: z.literal(1),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
     status: z.enum(['accepted', 'needs_review', 'unassessable']),
     target: z.enum(['established', 'not_established', 'unknown']),
     steps: z

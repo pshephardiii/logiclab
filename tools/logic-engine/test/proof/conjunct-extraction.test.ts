@@ -221,7 +221,7 @@ test('accepted extraction is truth-preserving for every valuation of representat
   }
 });
 
-test('catalog 2 adds one immutable distinct permission without changing existing variants or enabling live proofs', () => {
+test('catalog 2 keeps catalog-1 behavior and rejects mismatched full-proof versions', () => {
   expect(PROPOSITIONAL_RULE_CATALOG_VERSION).toBe(1);
   expect(PROPOSITIONAL_CHAIN_RULE_CATALOG_VERSION).toBe(2);
   expect(propositionalRuleCatalog(1)).toBe(PROPOSITIONAL_RULE_CATALOG);

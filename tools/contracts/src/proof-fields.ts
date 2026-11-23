@@ -16,6 +16,14 @@ export const proofReferenceIdSchema = z.uuid().transform((value) => value.toLowe
 
 export const proofFormulaTextSchema = z.string().max(PROOF_LIMITS.maxFormulaLength);
 
+export const proofConjunctIndexSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(PROOF_LIMITS.maxFormulaLength)
+  .nullable()
+  .optional();
+
 export const proofRuleIdSchema = z
   .string()
   .min(1)

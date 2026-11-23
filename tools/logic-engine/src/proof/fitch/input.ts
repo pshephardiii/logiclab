@@ -26,10 +26,17 @@ export function readFitchInput(
     const proof = record(outer.proof, ['proofVersion', 'format', 'steps', 'blocks']);
 
     if (
-      (problem.ruleCatalogVersion !== undefined && problem.ruleCatalogVersion !== 1) ||
+      (problem.ruleCatalogVersion === 2 &&
+        problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION) ||
+      (problem.ruleCatalogVersion !== undefined &&
+        proof.proofVersion !== undefined &&
+        problem.ruleCatalogVersion !== proof.proofVersion) ||
+      (problem.ruleCatalogVersion !== undefined &&
+        problem.ruleCatalogVersion !== 1 &&
+        problem.ruleCatalogVersion !== 2) ||
       (problem.formulaGroupingVersion !== undefined &&
         problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION) ||
-      (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
+      (proof.proofVersion !== undefined && proof.proofVersion !== 1 && proof.proofVersion !== 2) ||
       (proof.format !== undefined && proof.format !== 'fitch')
     )
       throw new InputFailure(
@@ -61,6 +68,7 @@ export function readFitchInput(
         'formula',
         'premiseId',
         'ruleId',
+        'conjunctIndex',
         'lineReferences',
         'subproofReferences',
       ]);
@@ -72,6 +80,19 @@ export function readFitchInput(
       stringLimit(step.kind, 16);
 
       stringLimit(step.ruleId, 64);
+
+      if (
+        step.conjunctIndex !== undefined &&
+        step.conjunctIndex !== null &&
+        (typeof step.conjunctIndex !== 'number' ||
+          !Number.isInteger(step.conjunctIndex) ||
+          step.conjunctIndex < 0 ||
+          step.conjunctIndex > PROOF_LIMITS.maxFormulaLength)
+      )
+        throw new InputFailure(
+          CheckerDiagnosticCode.InvalidStructure,
+          'Invalid conjunct selection.',
+        );
 
       for (const key of ['lineReferences', 'subproofReferences']) {
         if (step[key] !== undefined)

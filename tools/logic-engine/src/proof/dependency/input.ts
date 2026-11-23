@@ -26,10 +26,17 @@ export function readDependencyInput(
     const proof = record(outer.proof, ['proofVersion', 'format', 'steps']);
 
     if (
-      (problem.ruleCatalogVersion !== undefined && problem.ruleCatalogVersion !== 1) ||
+      (problem.ruleCatalogVersion === 2 &&
+        problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION) ||
+      (problem.ruleCatalogVersion !== undefined &&
+        proof.proofVersion !== undefined &&
+        problem.ruleCatalogVersion !== proof.proofVersion) ||
+      (problem.ruleCatalogVersion !== undefined &&
+        problem.ruleCatalogVersion !== 1 &&
+        problem.ruleCatalogVersion !== 2) ||
       (problem.formulaGroupingVersion !== undefined &&
         problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION) ||
-      (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
+      (proof.proofVersion !== undefined && proof.proofVersion !== 1 && proof.proofVersion !== 2) ||
       (proof.format !== undefined && proof.format !== 'dependency')
     )
       throw new InputFailure(
@@ -56,6 +63,7 @@ export function readDependencyInput(
         'dependencies',
         'premiseId',
         'ruleId',
+        'conjunctIndex',
         'lineReferences',
         'discharges',
       ]);
@@ -67,6 +75,19 @@ export function readDependencyInput(
       stringLimit(step.formula, PROOF_LIMITS.maxFormulaLength);
 
       stringLimit(step.ruleId, 64);
+
+      if (
+        step.conjunctIndex !== undefined &&
+        step.conjunctIndex !== null &&
+        (typeof step.conjunctIndex !== 'number' ||
+          !Number.isInteger(step.conjunctIndex) ||
+          step.conjunctIndex < 0 ||
+          step.conjunctIndex > PROOF_LIMITS.maxFormulaLength)
+      )
+        throw new InputFailure(
+          CheckerDiagnosticCode.InvalidStructure,
+          'Invalid conjunct selection.',
+        );
 
       for (const dependency of array(step.dependencies, PROOF_LIMITS.maxSteps))
         stringLimit(dependency, 36);

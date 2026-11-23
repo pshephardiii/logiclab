@@ -422,7 +422,7 @@ test('declared proof and diagnostic budgets never produce a successful partial r
 
 test('unsupported runtime proof headers fail before structural resolution', () => {
   const input = conditional();
-  Reflect.set(input, 'proofVersion', 2);
+  Reflect.set(input, 'proofVersion', 3);
   expect(analyzeFitchStructure(input)).toMatchObject({
     status: 'unassessable',
     diagnostics: [{ code: 'UNSUPPORTED_VERSION' }],

@@ -17,6 +17,8 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
+  // Catalog-2 completion/submission admission remains staged with the application integration.
+  if (input.problem.ruleCatalogVersion !== 1) return false;
   const last = input.proof.steps.at(-1);
 
   if (!last || last.kind === 'assumption') return false;

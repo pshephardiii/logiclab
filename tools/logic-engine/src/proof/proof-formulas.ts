@@ -2,13 +2,20 @@ import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-co
 import type { ProofProblem } from '@logiclab/contracts';
 import { FormulaParseError } from '../parser/errors';
 import { getPropositionalRule } from './rule-catalog';
-import { parseProofFormulaWithPolicy } from './parse-formula';
+import { parseProofFormula, parseProofFormulaWithSyntax } from './parse-formula';
+import { requireExplicitGrouping } from '../parser/grouping';
+import type { ParsedFormulaSyntax } from '../parser/syntax';
 import { ProofBudgetExceeded, type ProofBudget } from './proof-budget';
 import type { StructureDiagnostics } from './structure-diagnostics';
 import type { ProofFormula } from './types';
 
 export type ParsedProofFormula =
-  | { formula: ProofFormula; size: number; status: 'valid' }
+  | {
+      formula: ProofFormula;
+      size: number;
+      status: 'valid';
+      syntax?: ParsedFormulaSyntax<{ readonly type: 'bottom' }>;
+    }
   | { formula: null; size: 0; status: 'invalid' | 'unassessable' };
 
 export function readFormula(
@@ -30,7 +37,11 @@ export function readFormula(
   }
 
   try {
-    const formula = parseProofFormulaWithPolicy(source, formulaGroupingVersion);
+    const syntax =
+      formulaGroupingVersion === undefined
+        ? undefined
+        : requireExplicitGrouping(parseProofFormulaWithSyntax(source));
+    const formula = syntax?.formula ?? parseProofFormula(source);
     const pending = [formula];
     let size = 0;
 
@@ -45,7 +56,7 @@ export function readFormula(
       else if (node.type === 'binary') pending.push(node.left, node.right);
     }
 
-    return { formula, size, status: 'valid' };
+    return { formula, size, status: 'valid', ...(syntax ? { syntax } : {}) };
   } catch (error) {
     if (!(error instanceof FormulaParseError)) throw error;
 
@@ -101,7 +112,7 @@ export function readProblem(
         message: 'Permitted rule IDs must be unique.',
       });
 
-    if (!getPropositionalRule(rule))
+    if (!getPropositionalRule(rule, input.problem.ruleCatalogVersion))
       diagnostics.add({
         code: CheckerDiagnosticCode.UnknownRule,
         message: 'Problem permits an unsupported rule identity.',

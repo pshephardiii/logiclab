@@ -1,7 +1,7 @@
 import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
-import { dependencyProofSchema } from './dependency-proof';
+import { dependencyApplicationProofSchema } from './dependency-proof';
 import {
   derivationStatementSchema,
   derivationExplanationSchema as explanation,
@@ -16,7 +16,7 @@ export type DependencyDerivationContent = z.infer<typeof dependencyDerivationCon
 
 /** Private owner draft. Its required format and reference format cannot disagree. */
 export const dependencyDerivationDefinitionSchema = dependencyDerivationContentSchema.safeExtend({
-  referenceProof: dependencyProofSchema.nullable(),
+  referenceProof: dependencyApplicationProofSchema.nullable(),
   explanation,
 });
 
@@ -30,7 +30,7 @@ export const dependencyDerivationSolutionSchema = z.strictObject({
   ruleCatalogVersion: z.literal(1),
   formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   checkerVersion: z.literal(1),
-  referenceProof: dependencyProofSchema,
+  referenceProof: dependencyApplicationProofSchema,
   explanation,
 });
 

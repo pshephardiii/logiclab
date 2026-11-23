@@ -23,7 +23,7 @@ export type DependencyStructureResult =
 export function analyzeDependencyStructure(proof: DependencyProof): DependencyStructureResult {
   const diagnostics = structureDiagnostics();
 
-  if (proof.proofVersion !== 1 || proof.format !== 'dependency')
+  if ((proof.proofVersion !== 1 && proof.proofVersion !== 2) || proof.format !== 'dependency')
     return {
       status: 'unassessable',
       diagnostics: [

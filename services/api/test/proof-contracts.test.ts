@@ -99,7 +99,7 @@ test('duplicate and missing identities remain reportable structural errors, not 
 });
 
 test.each([
-  { ...proof, proofVersion: 2 },
+  { ...proof, proofVersion: 3 },
   { ...proof, format: 'tree' },
   { ...proof, score: 100 },
   { ...proof, steps: Array.from({ length: 201 }, () => proof.steps[0]) },
@@ -279,3 +279,100 @@ test('whole-proof checking produces consumable reports without awarded scores or
     }).success,
   ).toBe(false);
 });
+
+test.each(['fitch', 'dependency'] as const)(
+  'catalog-2 %s standalone checking does not enable owner/student workflows',
+  async (format) => {
+    const { dependencyProofCheckInputSchema } = await import('@logiclab/contracts');
+    const { dependencyDerivationAnswerSchema } =
+      await import('@logiclab/contracts/dependency-derivation-work');
+    const { fitchDerivationAnswerSchema } = await import('@logiclab/contracts/derivation-work');
+    const { fitchDerivationDefinitionSchema } = await import('@logiclab/contracts/derivation');
+    const { dependencyDerivationDefinitionSchema } =
+      await import('@logiclab/contracts/dependency-derivation');
+    const { checkDependencyProof } = await import('@logiclab/logic-engine/proof');
+    const problem = {
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      premises: [{ id: b, formula: 'P & Q & R' }],
+      conclusion: 'P',
+      permittedRuleIds: ['and_chain_elimination'],
+    };
+    const steps = [
+      {
+        kind: 'premise',
+        id: a,
+        premiseId: b,
+        formula: 'P & Q & R',
+        ...(format === 'fitch' ? { blockId: null } : { dependencies: [a] }),
+      },
+      {
+        kind: 'inference',
+        id: c,
+        formula: 'P',
+        ruleId: 'and_chain_elimination',
+        conjunctIndex: 0,
+        lineReferences: [a],
+        ...(format === 'fitch'
+          ? { blockId: null, subproofReferences: [] }
+          : { dependencies: [a], discharges: [] }),
+      },
+    ];
+    const proof = { proofVersion: 2, format, steps, ...(format === 'fitch' ? { blocks: [] } : {}) };
+    const value = { problem, proof };
+    const schema =
+      format === 'fitch' ? fitchProofCheckInputSchema : dependencyProofCheckInputSchema;
+    expect(schema.parse(value)).toEqual(value);
+    const report = (format === 'fitch' ? checkFitchProof : checkDependencyProof)(value);
+    expect(proofCheckReportSchema.parse(report)).toMatchObject({
+      status: 'accepted',
+      ruleCatalogVersion: 2,
+    });
+    expect(
+      schema.safeParse({ ...value, problem: { ...problem, formulaGroupingVersion: undefined } })
+        .success,
+    ).toBe(false);
+    expect(schema.safeParse({ ...value, proof: { ...proof, proofVersion: 1 } }).success).toBe(
+      false,
+    );
+    expect(
+      schema.safeParse({ ...value, problem: { ...problem, ruleCatalogVersion: 1 } }).success,
+    ).toBe(false);
+
+    const answerSchema =
+      format === 'fitch' ? fitchDerivationAnswerSchema : dependencyDerivationAnswerSchema;
+    expect(answerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
+    const definitionSchema =
+      format === 'fitch' ? fitchDerivationDefinitionSchema : dependencyDerivationDefinitionSchema;
+    expect(
+      definitionSchema.safeParse({
+        type: 'derivation',
+        format,
+        definitionVersion: 1,
+        checkerVersion: 1,
+        ruleCatalogVersion: 1,
+        premises: problem.premises,
+        conclusion: 'P',
+        rules: [],
+        referenceProof: proof,
+      }).success,
+    ).toBe(false);
+
+    for (const conjunctIndex of [-1, 1.5, Infinity, 257, '0', { index: 0 }]) {
+      expect(
+        schema.safeParse({
+          ...value,
+          proof: { ...proof, steps: [steps[0], { ...steps[1], conjunctIndex }] },
+        }).success,
+      ).toBe(false);
+    }
+    for (const field of ['source', 'syntax', 'derivedSource']) {
+      expect(
+        schema.safeParse({
+          ...value,
+          proof: { ...proof, steps: [steps[0], { ...steps[1], [field]: 'P & Q & R' }] },
+        }).success,
+      ).toBe(false);
+    }
+  },
+);
