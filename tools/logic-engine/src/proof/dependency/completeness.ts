@@ -4,6 +4,7 @@ import { proofBudget, ProofBudgetExceeded } from '../proof-budget';
 import { structureDiagnostics } from '../structure-diagnostics';
 import { getPropositionalRule } from '../rule-catalog';
 import { sameFormula } from '../formula-equality';
+import { filledProofConjunctSelections } from '../conjunct-completion';
 
 /**
  * A filled attempt ending at the target, not proof verification. Written support may be wrong,
@@ -17,8 +18,6 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
   if ('diagnostic' in read) return false;
 
   const { input } = read;
-  // Catalog-2 completion/submission admission remains staged with the application integration.
-  if (input.problem.ruleCatalogVersion !== 1) return false;
   const last = input.proof.steps.at(-1);
 
   if (!last || last.kind === 'assumption') return false;
@@ -50,7 +49,9 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
       if (step.kind === 'premise') {
         if (step.premiseId === null || !problem.premises.has(step.premiseId)) return false;
       } else if (step.kind === 'inference') {
-        const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
+        const rule = step.ruleId
+          ? getPropositionalRule(step.ruleId, input.problem.ruleCatalogVersion)
+          : undefined;
 
         if (
           !rule ||
@@ -91,7 +92,12 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
 
     budget.spend(2 * (final.size + problem.conclusion.size));
 
-    return sameFormula(final.formula, problem.conclusion.formula);
+    if (!sameFormula(final.formula, problem.conclusion.formula)) return false;
+
+    return (
+      input.problem.ruleCatalogVersion === 1 ||
+      filledProofConjunctSelections(input, problem.premises, budget)
+    );
   } catch (error) {
     if (!(error instanceof ProofBudgetExceeded)) throw error;
 

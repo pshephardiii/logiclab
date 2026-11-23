@@ -327,7 +327,7 @@ for (const format of ['fitch', 'dependency'] as const) {
     expect(f.check().status).toBe('accepted');
   });
 
-  test(`${format} standalone version-2 input is separate from completion admission`, () => {
+  test(`${format} standalone version-2 input supports finished-attempt checking`, () => {
     const f = fixture(format, ['P & Q & R']);
     f.given(0);
     f.infer('P', 'and_chain_elimination', [1], 0);
@@ -339,6 +339,6 @@ for (const format of ['fitch', 'dependency'] as const) {
       (format === 'fitch' ? isFinishedFitchProofAttempt : isFinishedDependencyProofAttempt)(
         f.input,
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 }
