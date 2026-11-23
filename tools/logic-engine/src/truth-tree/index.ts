@@ -1,4 +1,8 @@
-export { parseTruthTreeFormula, TRUTH_TREE_FORMULA_LIMITS } from './parse-formula';
+export {
+  parseTruthTreeFormula,
+  parseTruthTreeFormulaWithSyntax,
+  TRUTH_TREE_FORMULA_LIMITS,
+} from './parse-formula';
 
 export { TRUTH_TREE_RULE_CATALOG, TRUTH_TREE_RULE_CATALOG_VERSION } from './rule-catalog';
 

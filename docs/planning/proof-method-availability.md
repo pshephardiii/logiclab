@@ -93,8 +93,8 @@ The user accepted the truth-table, Fitch and dependency independent-practice UI 
 
 1. **`033-chore-disable-natural-deduction-trees` — complete**: guards, retained-history behavior, explicit naming and focused verification are delivered; the implementation is retained for possible future inclusion.
 2. **`034-feat-semantic-tableaux` — complete**: unsigned propositional decomposition, closure, completed open-branch counterexamples and application workflows are delivered separately from natural-deduction trees.
-3. **`035-chore-truth-tree-practice-ui-audit` — ready to close**: visual branch-local construction, explicit validity verdicts, markers, feedback and focused keyboard/mobile evidence are delivered. This does not establish whole-product visual/accessibility sign-off.
+3. **`035-chore-truth-tree-practice-ui-audit` — complete**: visual branch-local construction, explicit validity verdicts, markers, feedback and focused keyboard/mobile evidence are delivered. This does not establish whole-product visual/accessibility sign-off.
 4. **`036-feat-formula-grouping-and-decomposition` — proposed next**: implement the shared [formula policy plan](formula-grouping-and-decomposition.md), including explicit boundaries and ungrouped conjunction/disjunction shortcuts, without re-enabling natural-deduction trees.
-5. Resume the remaining [UI audit journeys](ui-ux-audit.md#remaining-audit-branches--agreed-november-12-2026): demo teaching flow, then genuine-account product review, followed by inexpensive portfolio sandbox preparation and hosted smoke checks.
+5. Follow the November 23 [practice-first release plan](practice-first-release.md): brief practice scan, explicit hosted exposure guards, practice sandbox and separate portfolio. Defer public demo/account platform exposure until their later UI audits. Full product workflows stay available locally.
 
 The former demo/account audit numbers 033/034 are superseded. Confirm unused numbering when creating each branch, particularly if tableaux implementation is split. This sequence does not create the next branch or authorize deployment.

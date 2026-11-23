@@ -1,4 +1,8 @@
-import { parseProofFormula, PROOF_FORMULA_LIMITS } from '../proof/parse-formula';
+import {
+  parseProofFormula,
+  parseProofFormulaWithSyntax,
+  PROOF_FORMULA_LIMITS,
+} from '../proof/parse-formula';
 import type { TruthTreeFormula } from './types';
 
 export const TRUTH_TREE_FORMULA_LIMITS = PROOF_FORMULA_LIMITS;
@@ -7,3 +11,6 @@ export const TRUTH_TREE_FORMULA_LIMITS = PROOF_FORMULA_LIMITS;
 export function parseTruthTreeFormula(source: string): TruthTreeFormula {
   return parseProofFormula(source);
 }
+
+/** Truth trees share the proof formula syntax, including explicit source grouping. */
+export const parseTruthTreeFormulaWithSyntax = parseProofFormulaWithSyntax;

@@ -1,6 +1,6 @@
 # Formula grouping and decomposition
 
-Status: agreed next feature after `035-chore-truth-tree-practice-ui-audit`. Proposed branch: `036-feat-formula-grouping-and-decomposition`; 036 is unused in the local branch list. This document records scope and implementation decisions to settle, not delivered behavior or permission to start the branch.
+Status: in progress on `036-feat-formula-grouping-and-decomposition`. Branch 035 is merged. The first slice adds source-derived grouping metadata without changing current evaluation/validation behavior. Later behavior and compatibility decisions below are still planned.
 
 ## Shared author intent
 
@@ -63,4 +63,12 @@ Acceptance examples must cover both explicit and omitted grouping, mixed operato
 
 ## Following sequence
 
-After this feature, resume the demo teaching-flow audit, then genuine-account product UI audit, then the inexpensive portfolio sandbox preparation. Keep their numbers unassigned until the feature's actual branch count is known. This replaces the earlier immediate transition from 035 to the demo audit; no next branch, deployment or infrastructure is started here.
+After this feature, run a brief practice UI scan, add explicit practice-only exposure guards, then prepare the inexpensive hosted practice sandbox. Full account/demo/instructor/student/billing workflows remain local until their UI audits are ready. Follow with a separate portfolio project. See the [practice-first release plan](practice-first-release.md), including deliberate promotion from main to a deployment branch. Keep later numbers unassigned. No exposure guard, deployment branch or infrastructure is created by this slice.
+
+## Slice 1 — source-derived syntax foundation
+
+Added `parseFormulaWithSyntax`, `parseProofFormulaWithSyntax` and `parseTruthTreeFormulaWithSyntax` alongside the existing entry points. Each returns the original source, the unchanged semantic formula and a node-identity map of half-open UTF-16 source spans, operator positions and explicit group ranges/delimiters in inside-out order. Parentheses around atoms are retained as syntax without creating an AST operation. The map is engine-derived runtime data, not a new transport contract, persistent ID or trusted student field.
+
+No existing caller switches to stricter validation in this slice: mixed operators still follow current precedence, conjunction/disjunction shortcuts are not enabled, and saved definitions/results are not rewritten or regraded. Existing bounded parsing, aliases, structural equality and column identifiers remain intact. The new metadata provides the distinction needed by the next policy/checker slices.
+
+Validation: all 863 engine tests, the engine type check/production build and built root/proof/truth-tree public-export smoke passed. Formatting, whitespace and changed Markdown file targets passed. The 24 new cases cover AST identity/equivalence, every-node coverage, explicit versus implicit association, chains within groups, nested delimiter/source ranges, atom/negation/falsity metadata, shared proof/tree parsing, unchanged errors/positions/limits and table values/IDs. No database, API or frontend flow was changed.
