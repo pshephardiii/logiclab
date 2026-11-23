@@ -3,7 +3,7 @@ import { readTruthTreeInput } from './step-input';
 import { truthTreeBudget, TruthTreeResourceLimit } from './structure-context';
 import { truthTreeCoverage } from './branch-coverage';
 import { TRUTH_TREE_RULE_CATALOG } from './rule-catalog';
-import { parseTruthTreeFormula } from './parse-formula';
+import { parseTruthTreeFormulaWithPolicy } from './parse-formula';
 import { decomposeTruthTreeFormula } from './decompose-formula';
 
 /** Filled attempt only. Incorrect formulas/rules/closures remain post-submission review evidence. */
@@ -56,7 +56,10 @@ export function isFinishedTruthTreeAttempt(input: unknown): boolean {
           const text = structure.occurrences.get(occurrenceId)!.formula;
           budget.spend(text.length);
           try {
-            compound = decomposeTruthTreeFormula(parseTruthTreeFormula(text)).kind === 'expansion';
+            compound =
+              decomposeTruthTreeFormula(
+                parseTruthTreeFormulaWithPolicy(text, read.formulaGroupingVersion),
+              ).kind === 'expansion';
           } catch (error) {
             if (!(error instanceof FormulaParseError)) throw error;
             // An unparseable, unprocessed open formula cannot establish a finished path.

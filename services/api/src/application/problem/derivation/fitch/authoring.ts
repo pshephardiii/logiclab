@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import { DerivationAuthoringError } from '../errors';
 import { assertDerivationConfiguration } from '../configuration';
 import type { DerivationReferenceCheck } from '../reference-check';
@@ -44,6 +45,7 @@ export function checkFitchReference(value: unknown): DerivationReferenceCheck {
     report: checkFitchProof({
       problem: {
         ruleCatalogVersion: definition.ruleCatalogVersion,
+        ...formulaGroupingPolicy(definition),
         premises: definition.premises,
         conclusion: definition.conclusion,
         permittedRuleIds: definition.rules.map((rule) => rule.id),
@@ -62,6 +64,7 @@ export function fitchContent(value: unknown): FitchDerivationContent {
     definitionVersion: definition.definitionVersion,
     format: definition.format,
     ruleCatalogVersion: definition.ruleCatalogVersion,
+    ...formulaGroupingPolicy(definition),
     checkerVersion: definition.checkerVersion,
     premises: definition.premises,
     conclusion: definition.conclusion,
@@ -82,6 +85,7 @@ export function fitchReferenceSolution(value: unknown): FitchDerivationSolution 
     definitionVersion: definition.definitionVersion,
     format: definition.format,
     ruleCatalogVersion: definition.ruleCatalogVersion,
+    ...formulaGroupingPolicy(definition),
     checkerVersion: definition.checkerVersion,
     referenceProof: definition.referenceProof,
     explanation: definition.explanation ?? null,

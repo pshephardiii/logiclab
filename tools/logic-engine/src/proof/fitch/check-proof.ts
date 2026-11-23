@@ -56,7 +56,7 @@ export function checkFitchProof(value: unknown): ProofCheckReport {
     }
 
     const formulas = input.proof.steps.map((step, index) =>
-      readFormula(step.formula, budget, diagnostics, index),
+      readFormula(step.formula, budget, diagnostics, index, input.problem.formulaGroupingVersion),
     );
 
     const steps = evaluateFitchSteps(

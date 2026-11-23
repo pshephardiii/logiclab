@@ -1,5 +1,10 @@
+import { parseProofFormulaWithSyntax } from '@logiclab/logic-engine/proof';
 import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
-import { parseFormulaWithSyntax, requireExplicitGrouping } from '@logiclab/logic-engine';
+import {
+  parseFormulaWithSyntax,
+  requireExplicitGrouping,
+  FormulaParseError,
+} from '@logiclab/logic-engine';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../proof/availability';
 import { DerivationPublicationError } from './derivation/errors';
@@ -59,10 +64,28 @@ export function editableLibraryDefinition(value: unknown): LibraryProblemDefinit
 /** New/replaced table content and newly published snapshots pin explicit grouping on the server. */
 export function authoringDefinition(value: unknown): LibraryProblemDefinition {
   const definition = editableLibraryDefinition(value);
-  if (definition.type !== ProblemType.TruthTable) return definition;
+  if (definition.type === ProblemType.TruthTable) {
+    requireExplicitGrouping(parseFormulaWithSyntax(definition.formula));
+    return { ...definition, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
+  }
 
-  requireExplicitGrouping(parseFormulaWithSyntax(definition.formula));
-  return { ...definition, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
+  if (definition.type === ProblemType.Derivation || definition.type === ProblemType.TruthTree) {
+    for (const formula of [
+      ...definition.premises.map((premise) => premise.formula),
+      definition.conclusion,
+    ]) {
+      try {
+        requireExplicitGrouping(parseProofFormulaWithSyntax(formula));
+      } catch (error) {
+        // Incomplete/malformed drafts remain saveable; publication/checking diagnoses them.
+        if (!(error instanceof FormulaParseError) || error.code === 'GROUPING_REQUIRED')
+          throw error;
+      }
+    }
+    return { ...definition, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
+  }
+
+  return definition;
 }
 
 /** Check the authoritative saved definition with its own format's checker. */

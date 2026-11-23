@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { DependencyDerivationContent } from '@logiclab/contracts/dependency-derivation';
 import {
@@ -40,6 +41,7 @@ export function evaluateDependencyAnswer(
     report: checkDependencyProof({
       problem: {
         ruleCatalogVersion: content.ruleCatalogVersion,
+        ...formulaGroupingPolicy(content),
         premises: content.premises,
         conclusion: content.conclusion,
         permittedRuleIds: content.rules.map((rule) => rule.id),

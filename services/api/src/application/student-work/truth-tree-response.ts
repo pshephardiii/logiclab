@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
 import {
@@ -32,6 +33,7 @@ function prepared(authoritative: AssignedTruthTree, value: unknown) {
     input: {
       problem: {
         ruleCatalogVersion: content.ruleCatalogVersion,
+        ...formulaGroupingPolicy(content),
         premises: content.premises,
         conclusion: content.conclusion,
       },

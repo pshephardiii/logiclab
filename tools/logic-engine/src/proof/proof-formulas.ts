@@ -2,7 +2,7 @@ import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-co
 import type { ProofProblem } from '@logiclab/contracts';
 import { FormulaParseError } from '../parser/errors';
 import { getPropositionalRule } from './rule-catalog';
-import { parseProofFormula } from './parse-formula';
+import { parseProofFormulaWithPolicy } from './parse-formula';
 import { ProofBudgetExceeded, type ProofBudget } from './proof-budget';
 import type { StructureDiagnostics } from './structure-diagnostics';
 import type { ProofFormula } from './types';
@@ -16,8 +16,9 @@ export function readFormula(
   budget: ProofBudget,
   diagnostics: StructureDiagnostics,
   stepIndex?: number,
+  formulaGroupingVersion?: ProofProblem['formulaGroupingVersion'],
 ): ParsedProofFormula {
-  budget.spend(source.length + 1);
+  budget.spend((source.length + 1) * (formulaGroupingVersion === undefined ? 1 : 2));
 
   if (!source.trim()) {
     diagnostics.add({
@@ -29,7 +30,7 @@ export function readFormula(
   }
 
   try {
-    const formula = parseProofFormula(source);
+    const formula = parseProofFormulaWithPolicy(source, formulaGroupingVersion);
     const pending = [formula];
     let size = 0;
 
@@ -79,7 +80,16 @@ export function readProblem(
         message: 'Problem premise IDs must be unique.',
       });
 
-    premises.set(premise.id, readFormula(premise.formula, budget, diagnostics));
+    premises.set(
+      premise.id,
+      readFormula(
+        premise.formula,
+        budget,
+        diagnostics,
+        undefined,
+        input.problem.formulaGroupingVersion,
+      ),
+    );
   }
 
   const rules = new Set<string>();
@@ -100,7 +110,13 @@ export function readProblem(
     rules.add(rule);
   }
 
-  const conclusion = readFormula(input.problem.conclusion, budget, diagnostics);
+  const conclusion = readFormula(
+    input.problem.conclusion,
+    budget,
+    diagnostics,
+    undefined,
+    input.problem.formulaGroupingVersion,
+  );
 
   return { premises, conclusion };
 }

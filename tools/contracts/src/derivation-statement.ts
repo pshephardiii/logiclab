@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { proofProblemSchema, PROOF_LIMITS } from './proof';
@@ -40,6 +41,7 @@ export const derivationStatementSchema = z
     definitionVersion: z.literal(1),
     format: z.enum(['fitch', 'dependency', 'tree']),
     ruleCatalogVersion: z.literal(1),
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
     checkerVersion: z.literal(1),
     premises: z.array(z.strictObject({ id, formula })).max(PROOF_LIMITS.maxPremises),
     conclusion: formula,

@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { z } from 'zod';
 import { CheckerDiagnosticCode } from './checker-diagnostic-code';
 
@@ -50,6 +51,7 @@ export const fitchProofSchema = z.strictObject({
 export type FitchProof = z.infer<typeof fitchProofSchema>;
 
 export const proofProblemSchema = z.strictObject({
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   ruleCatalogVersion: z.literal(1),
   premises: z.array(z.strictObject({ id, formula: formula.min(1) })).max(PROOF_LIMITS.maxPremises),
   conclusion: formula.min(1),

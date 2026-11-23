@@ -99,9 +99,11 @@ export function initialProblemFields(problem: LibraryProblemDraft | null): Probl
 
 /** Keep incomplete editor values local; shared contracts validate before save or preview. */
 export function editorDraftDefinition(fields: ProblemEditorFields) {
-  if (fields.type === ProblemType.TruthTree) return fields.truthTree;
+  if (fields.type === ProblemType.TruthTree)
+    return { ...fields.truthTree, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
 
-  if (fields.type === ProblemType.Derivation) return fields.derivation;
+  if (fields.type === ProblemType.Derivation)
+    return { ...fields.derivation, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
 
   const common = { type: fields.type, definitionVersion: 1 };
 

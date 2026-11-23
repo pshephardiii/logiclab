@@ -66,7 +66,13 @@ export function isFinishedFitchProofAttempt(value: unknown): boolean {
     }
 
     // Parse only the final target for this comparison; nonfinal syntax mistakes remain reviewable.
-    const final = readFormula(last.formula, budget, diagnostics);
+    const final = readFormula(
+      last.formula,
+      budget,
+      diagnostics,
+      undefined,
+      input.problem.formulaGroupingVersion,
+    );
 
     if (!final.formula) return false;
 

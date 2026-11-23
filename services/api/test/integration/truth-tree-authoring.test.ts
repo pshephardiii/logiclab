@@ -122,10 +122,10 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
 
         const saved = await request('PATCH', itemPath, scope.cookie, { definition });
         assert.equal(saved.statusCode, 200, saved.body);
-        assert.deepEqual(
-          libraryProblemResponseSchema.parse(saved.json()).problem.definition,
-          definition,
-        );
+        assert.deepEqual(libraryProblemResponseSchema.parse(saved.json()).problem.definition, {
+          ...definition,
+          formulaGroupingVersion: 1,
+        });
         const checked = await request('POST', `${itemPath}/reference-check`, scope.cookie, {});
         assert.equal(checked.statusCode, 200, checked.body);
         const reference = libraryReferenceCheckResponseSchema.parse(checked.json()).check;
@@ -144,7 +144,8 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
           return libraryProblemVersionResponseSchema.parse(response.json()).version;
         });
         assert.deepEqual(versions.map((version) => version.version).sort(), [1, 2]);
-        for (const version of versions) assert.deepEqual(version.definition, definition);
+        for (const version of versions)
+          assert.deepEqual(version.definition, { ...definition, formulaGroupingVersion: 1 });
 
         // A previous verified preview cannot authorize an edited, now-stale reference.
         const changed = await request('PATCH', itemPath, scope.cookie, {
@@ -160,11 +161,17 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
         assert.equal(history.statusCode, 200, history.body);
         assert.deepEqual(
           history.json().versions.map((version: { definition: unknown }) => version.definition),
-          [definition, definition],
+          [
+            { ...definition, formulaGroupingVersion: 1 },
+            { ...definition, formulaGroupingVersion: 1 },
+          ],
         );
         const one = await request('GET', `${itemPath}/versions/1`, scope.cookie);
         assert.equal(one.statusCode, 200, one.body);
-        assert.deepEqual(one.json().version.definition, definition);
+        assert.deepEqual(one.json().version.definition, {
+          ...definition,
+          formulaGroupingVersion: 1,
+        });
 
         const archived = await request('POST', `${itemPath}/archive`, scope.cookie, {});
         assert.equal(archived.statusCode, 200, archived.body);

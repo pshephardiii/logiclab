@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import {
@@ -20,6 +21,7 @@ export const truthTreeContentSchema = z
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
     ruleCatalogVersion: z.literal(1),
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
     premises: z.array(z.strictObject({ id, formula })).max(TRUTH_TREE_LIMITS.maxPremises),
     conclusion: formula,
   })
@@ -67,6 +69,7 @@ export const truthTreeSolutionSchema = z
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
     ruleCatalogVersion: z.literal(1),
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
     referenceTree: truthTreeSchema,
     argumentStatus: z.enum(['valid', 'invalid']),
     counterexample: truthTreeCounterexampleSchema.nullable(),

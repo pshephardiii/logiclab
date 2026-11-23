@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { z } from 'zod';
 import {
   TRUTH_TREE_LIMITS,
@@ -116,6 +117,7 @@ export type TruthTree = z.infer<typeof truthTreeSchema>;
 
 /** Authoritative argument only: the initial conclusion occurrence must contain its negation. */
 export const truthTreeProblemSchema = z.strictObject({
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   ruleCatalogVersion: z.literal(1),
   premises: z
     .array(z.strictObject({ id, formula: formula.min(1) }))

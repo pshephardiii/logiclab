@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { dependencyProofSchema } from './dependency-proof';
@@ -27,6 +28,7 @@ export const dependencyDerivationSolutionSchema = z.strictObject({
   definitionVersion: z.literal(1),
   format: z.literal('dependency'),
   ruleCatalogVersion: z.literal(1),
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   checkerVersion: z.literal(1),
   referenceProof: dependencyProofSchema,
   explanation,

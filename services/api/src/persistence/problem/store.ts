@@ -52,8 +52,14 @@ export async function createProblemStore(
         if (problem.archivedAt) return { status: 'archived' as const };
 
         const definition = publicationDefinition(problem.definition);
-        // Publishing upgrades the mutable draft and new snapshot together, never earlier versions.
-        problem.definition = structuredClone(definition);
+        // Upgrade policy only when needed; an unchanged publication must not touch draft timestamps.
+        const previousPolicy =
+          'formulaGroupingVersion' in problem.definition
+            ? problem.definition.formulaGroupingVersion
+            : undefined;
+        const nextPolicy =
+          'formulaGroupingVersion' in definition ? definition.formulaGroupingVersion : undefined;
+        if (previousPolicy !== nextPolicy) problem.definition = structuredClone(definition);
 
         const latest = await em.findOne(
           ProblemVersion,

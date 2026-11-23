@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useState } from 'react';
 import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
@@ -67,6 +68,7 @@ export function LocalReferenceCheck({
           : checkFitchProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
+          formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION,
           premises: value.premises,
           conclusion: value.conclusion,
           permittedRuleIds: value.rules.map((rule) => rule.id),

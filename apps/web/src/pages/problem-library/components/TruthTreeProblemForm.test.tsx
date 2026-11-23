@@ -160,3 +160,21 @@ test('archived/busy drafts cannot change tree data and pristine trees register n
   expect(f.onSave).not.toHaveBeenCalled();
   await waitFor(() => expect(f.onDirty).toHaveBeenLastCalledWith(false));
 });
+
+test('truth-tree statement saves pin grouping and retain rejected mixed input', async () => {
+  const f = setup();
+  await f.user.type(screen.getByLabelText('Title'), 'Grouped tree');
+  await f.user.selectOptions(screen.getByLabelText('Problem type'), 'truth_tree');
+  await f.user.type(screen.getByLabelText('Conclusion'), 'P v Q & R');
+  await f.user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(f.onSave).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Add parentheses or square brackets');
+  await f.user.clear(screen.getByLabelText('Conclusion'));
+  await f.user.type(screen.getByLabelText('Conclusion'), 'P v (Q & R)');
+  await f.user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(f.onSave).toHaveBeenCalledWith(
+    expect.objectContaining({
+      definition: expect.objectContaining({ formulaGroupingVersion: 1, conclusion: 'P ∨ (Q ∧ R)' }),
+    }),
+  );
+});

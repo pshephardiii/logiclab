@@ -260,7 +260,7 @@ test('truth-tree library and assignment admission stay separate from natural-ded
   expect(createProblemRequestSchema.safeParse({ title: 'Truth tree', definition }).success).toBe(
     false,
   );
-  expect(authoringDefinition(definition)).toEqual(definition);
+  expect(authoringDefinition(definition)).toEqual({ ...definition, formulaGroupingVersion: 1 });
   expect(() =>
     supportedAssignmentDefinition(definition, {
       assessmentMode: 'graded',

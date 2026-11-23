@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { NaturalDeductionTreeDerivationContent } from '@logiclab/contracts/natural-deduction-tree-derivation';
 import {
@@ -43,6 +44,7 @@ export function evaluateNaturalDeductionTreeAnswer(
     report: checkNaturalDeductionTreeProof({
       problem: {
         ruleCatalogVersion: content.ruleCatalogVersion,
+        ...formulaGroupingPolicy(content),
         premises: content.premises,
         conclusion: content.conclusion,
         permittedRuleIds: content.rules.map((rule) => rule.id),

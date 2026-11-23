@@ -131,7 +131,10 @@ for (const definitionFixture of [derivationDefinitionFixture, dependencyDefiniti
         await request('PATCH', `${path}/${id}`, scope.cookie, { definition });
         const published = await request('POST', `${path}/${id}/versions`, scope.cookie, {});
         assert.equal(published.statusCode, 201, published.body);
-        assert.deepEqual(published.json().version.definition, definition);
+        assert.deepEqual(published.json().version.definition, {
+          ...definition,
+          formulaGroupingVersion: 1,
+        });
         const version = published.json().version;
         await request('PATCH', `${path}/${id}`, scope.cookie, {
           definition: { ...definition, explanation: 'Changed draft', referenceProof: null },

@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 import { useState } from 'react';
 import type { TruthTreeCheckReport } from '@logiclab/contracts/truth-tree';
 import {
@@ -34,6 +35,7 @@ export function LocalTruthTreeCheck({
     const input = {
       problem: {
         ruleCatalogVersion: parsed.data.ruleCatalogVersion,
+        formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION,
         premises: parsed.data.premises,
         conclusion: parsed.data.conclusion,
       },

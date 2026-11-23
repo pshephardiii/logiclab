@@ -165,7 +165,7 @@ test('checks unsupported/incomplete statements explicitly and preserves blank re
   await user.click(screen.getByRole('button', { name: 'Check current proof' }));
   expect(screen.getByRole('status')).toHaveTextContent('could not be fully assessed');
   await user.click(screen.getByRole('button', { name: 'Save draft' }));
-  expect(onSave.mock.calls[0]![0].definition).toEqual(definition);
+  expect(onSave.mock.calls[0]![0].definition).toEqual({ ...definition, formulaGroupingVersion: 1 });
 });
 
 test('unconfirmed Fitch entries gate checking, saving and preview without saving a partial row', async () => {

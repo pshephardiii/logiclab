@@ -1,3 +1,5 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
+import { requireExplicitGrouping } from '../parser/grouping';
 import { FormulaParseError } from '../parser/errors';
 import { parseTokens } from '../parser/parse-tokens';
 import { tokenize } from '../parser/tokenizer';
@@ -13,6 +15,16 @@ export const PROOF_FORMULA_LIMITS = Object.freeze({
 /** Reuse the existing grammar with proof-only falsity atoms and variable bounds. */
 export function parseProofFormula(source: string): ProofFormula {
   return parse(source);
+}
+
+/** The authoritative definition selects grouping; keep the original one-argument parser intact. */
+export function parseProofFormulaWithPolicy(
+  source: string,
+  formulaGroupingVersion?: typeof FORMULA_GROUPING_POLICY_VERSION,
+): ProofFormula {
+  return formulaGroupingVersion === undefined
+    ? parse(source)
+    : requireExplicitGrouping(parseProofFormulaWithSyntax(source)).formula;
 }
 
 /** Same proof grammar/bounds, with source-derived explicit grouping available to future callers. */

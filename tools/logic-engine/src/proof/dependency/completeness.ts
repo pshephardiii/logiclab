@@ -77,7 +77,13 @@ export function isFinishedDependencyProofAttempt(value: unknown): boolean {
     }
 
     // Completion requires the actual last line to match the target; earlier syntax is reviewable.
-    const final = readFormula(last.formula, budget, diagnostics);
+    const final = readFormula(
+      last.formula,
+      budget,
+      diagnostics,
+      undefined,
+      input.problem.formulaGroupingVersion,
+    );
 
     if (!final.formula) return false;
 

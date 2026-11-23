@@ -1,4 +1,9 @@
-import { parseFormulaWithSyntax, requireExplicitGrouping } from '@logiclab/logic-engine';
+import { parseProofFormulaWithSyntax } from '@logiclab/logic-engine/proof';
+import {
+  parseFormulaWithSyntax,
+  requireExplicitGrouping,
+  FormulaParseError,
+} from '@logiclab/logic-engine';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
@@ -89,6 +94,7 @@ export function ProblemForm({
     if (!staged || busy || workPending || step === authoringStep) return;
 
     if (step === 'reference') {
+      if (!problem?.archivedAt && !validatedDefinition()) return;
       const error = referenceStatementError(treeAuthoring ? fields.truthTree : fields.derivation);
 
       if (error) {
@@ -151,6 +157,22 @@ export function ProblemForm({
       } catch (error) {
         setValidationError(error instanceof Error ? error.message : 'Check formula grouping.');
         return null;
+      }
+    }
+
+    if (parsed.data.type === ProblemType.Derivation || parsed.data.type === ProblemType.TruthTree) {
+      for (const formula of [
+        ...parsed.data.premises.map((premise) => premise.formula),
+        parsed.data.conclusion,
+      ]) {
+        try {
+          requireExplicitGrouping(parseProofFormulaWithSyntax(formula));
+        } catch (error) {
+          if (!(error instanceof FormulaParseError) || error.code === 'GROUPING_REQUIRED') {
+            setValidationError(error instanceof Error ? error.message : 'Check formula grouping.');
+            return null;
+          }
+        }
       }
     }
 

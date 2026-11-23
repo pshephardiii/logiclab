@@ -35,7 +35,7 @@ test('owner definitions accept incomplete derivations while assignment admission
 
 test('publication checks the exact saved configuration without trusting an old result', () => {
   const value = definition();
-  expect(publicationDefinition(value)).toEqual(value);
+  expect(publicationDefinition(value)).toEqual({ ...value, formulaGroupingVersion: 1 });
   expect(() => publicationDefinition({ ...value, referenceProof: null })).toThrow(
     DerivationPublicationError,
   );
@@ -80,7 +80,7 @@ test.each(['graded', 'completion_only', 'ungraded_practice'])(
   'published dependency definitions support %s assignment admission under the shared policy',
   (assessmentMode) => {
     const value = dependencyDefinitionFixture();
-    expect(publicationDefinition(value)).toEqual(value);
+    expect(publicationDefinition(value)).toEqual({ ...value, formulaGroupingVersion: 1 });
     expect(
       supportedAssignmentDefinition(value, {
         assessmentMode,
@@ -95,8 +95,11 @@ test('new authoring and publication reject unavailable tree work while retained 
   expect(libraryProblemDefinition(value)).toEqual(value);
   expect(() => authoringDefinition(value)).toThrow(ProofMethodUnavailableError);
   expect(() => publicationDefinition(value)).toThrow(ProofMethodUnavailableError);
-  expect(authoringDefinition(definition())).toEqual(definition());
-  expect(authoringDefinition(dependencyDefinitionFixture())).toEqual(dependencyDefinitionFixture());
+  expect(authoringDefinition(definition())).toEqual({ ...definition(), formulaGroupingVersion: 1 });
+  expect(authoringDefinition(dependencyDefinitionFixture())).toEqual({
+    ...dependencyDefinitionFixture(),
+    formulaGroupingVersion: 1,
+  });
 });
 
 test.each(['graded', 'completion_only', 'ungraded_practice'])(

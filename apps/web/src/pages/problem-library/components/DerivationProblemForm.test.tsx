@@ -222,3 +222,22 @@ test('saved dependency drafts open in their own editor without mutation', () => 
   expect(onPreview).not.toHaveBeenCalled();
   expect(saved).toEqual(before);
 });
+
+test('new proof statement saves reject mixed operators without losing unfinished work', async () => {
+  const { user, onSave } = setup();
+  await user.type(screen.getByLabelText('Title'), 'Grouped proof');
+  await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
+  await user.type(screen.getByLabelText('Conclusion'), 'P v Q & R');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Add parentheses or square brackets');
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('P ∨ Q ∧ R');
+  await user.clear(screen.getByLabelText('Conclusion'));
+  await user.type(screen.getByLabelText('Conclusion'), 'P v (Q & R)');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave).toHaveBeenCalledWith(
+    expect.objectContaining({
+      definition: expect.objectContaining({ formulaGroupingVersion: 1, conclusion: 'P ∨ (Q ∧ R)' }),
+    }),
+  );
+});

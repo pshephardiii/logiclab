@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import { type TruthTreeDiagnostic, type TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { readTruthTreeInput } from './step-input';
@@ -63,6 +64,7 @@ export function analyzeTruthTreeSteps(
     const diagnostics = structureDiagnostics();
     const context: StepContext = {
       structure: read.structure,
+      ...formulaGroupingPolicy(read),
       formulas: new Map(),
       diagnostics,
       budget,

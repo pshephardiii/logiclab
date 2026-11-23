@@ -1,3 +1,7 @@
+import {
+  formulaGroupingPolicy,
+  FORMULA_GROUPING_POLICY_VERSION,
+} from '@logiclab/contracts/formula-policy-values';
 import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   TRUTH_TREE_LIMITS,
@@ -16,6 +20,7 @@ import { parseArgument } from './step-formulas';
 type ReadResult =
   | {
       status: 'ready';
+      formulaGroupingVersion?: typeof FORMULA_GROUPING_POLICY_VERSION;
       argument: NonNullable<ReturnType<typeof parseArgument>>;
       structure: TruthTreeStructure;
     }
@@ -49,8 +54,12 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
 
   // Bound argument data before contract parsing; the structural reader bounds the tree itself.
   if (record(input.problem)) {
-    const { premises, conclusion, ruleCatalogVersion } = input.problem;
-    if (ruleCatalogVersion !== 1)
+    const { premises, conclusion, ruleCatalogVersion, formulaGroupingVersion } = input.problem;
+    if (
+      ruleCatalogVersion !== 1 ||
+      (formulaGroupingVersion !== undefined &&
+        formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION)
+    )
       return failed('unassessable', [
         {
           code: CheckerDiagnosticCode.UnsupportedVersion,
@@ -102,5 +111,10 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   const resolved = analyzeTruthTreeStructure(input.tree, budget);
   if (resolved.status !== 'resolved') return failed(resolved.status, resolved.diagnostics);
 
-  return { status: 'ready', argument, structure: resolved.structure };
+  return {
+    status: 'ready',
+    argument,
+    structure: resolved.structure,
+    ...formulaGroupingPolicy(parsed.data),
+  };
 }

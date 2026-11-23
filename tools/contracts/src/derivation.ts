@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { fitchProofSchema, proofCheckReportSchema } from './proof';
@@ -34,6 +35,7 @@ export const fitchDerivationSolutionSchema = z.strictObject({
   definitionVersion: z.literal(1),
   format: z.literal('fitch'),
   ruleCatalogVersion: z.literal(1),
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   checkerVersion: z.literal(1),
   referenceProof: fitchProofSchema,
   explanation,
