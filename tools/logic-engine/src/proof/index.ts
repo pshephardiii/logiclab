@@ -31,9 +31,21 @@ export {
   PROPOSITIONAL_RULE_CATALOG_VERSION,
   PROPOSITIONAL_RULE_CATALOG,
   getPropositionalRule,
+  propositionalRuleCatalog,
+  PROPOSITIONAL_CHAIN_RULE_CATALOG_VERSION,
+  PROPOSITIONAL_CONJUNCT_EXTRACTION_RULE,
 } from './rule-catalog';
 
 export type { PropositionalRuleId, PropositionalRule } from './rule-catalog';
+
+export type { PropositionalChainRule } from './rule-catalog';
+
+export { matchProofConjunctExtraction } from './conjunct-extraction';
+
+export type {
+  ProofConjunctExtractionInput,
+  ProofConjunctExtractionMatch,
+} from './conjunct-extraction';
 
 export { isFinishedFitchProofAttempt, isFinishedDependencyProofAttempt } from './completion';
 
