@@ -5,6 +5,7 @@ import { libraryProblemDraft } from './draft-response';
 import {
   libraryProblemDefinition,
   authoringDefinition,
+  editableLibraryDefinition,
   publicationDefinition,
   libraryReferenceCheck,
 } from '../../application/problem/library-definition';
@@ -51,6 +52,8 @@ export async function createProblemStore(
         if (problem.archivedAt) return { status: 'archived' as const };
 
         const definition = publicationDefinition(problem.definition);
+        // Publishing upgrades the mutable draft and new snapshot together, never earlier versions.
+        problem.definition = structuredClone(definition);
 
         const latest = await em.findOne(
           ProblemVersion,
@@ -192,7 +195,7 @@ export async function createProblemStore(
 
         // Check the retained and replacement definitions before changing any part of the draft.
         // Archive/restore and historical projections deliberately use separate paths.
-        authoringDefinition(problem.definition);
+        editableLibraryDefinition(problem.definition);
         const definition =
           input.definition !== undefined ? authoringDefinition(input.definition) : undefined;
 

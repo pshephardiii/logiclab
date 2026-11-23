@@ -151,6 +151,7 @@ test('type switches retain derivation fields while only the selected type is sav
     type: 'truth_table',
     definitionVersion: 1,
     formula: 'P',
+    formulaGroupingVersion: 1,
   });
   await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
   expect(screen.getByLabelText('Conclusion')).toHaveValue('¬P → Q');

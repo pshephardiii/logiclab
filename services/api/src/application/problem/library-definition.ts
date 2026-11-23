@@ -1,3 +1,5 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
+import { parseFormulaWithSyntax, requireExplicitGrouping } from '@logiclab/logic-engine';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { assertProofFormatAvailable } from '../proof/availability';
 import { DerivationPublicationError } from './derivation/errors';
@@ -48,10 +50,19 @@ export function libraryProblemDefinition(value: unknown): LibraryProblemDefiniti
 }
 
 /** New owner work uses availability policy; historical validation above remains format-complete. */
-export function authoringDefinition(value: unknown): LibraryProblemDefinition {
+export function editableLibraryDefinition(value: unknown): LibraryProblemDefinition {
   const definition = libraryProblemDefinition(value);
   if (definition.type === ProblemType.Derivation) assertProofFormatAvailable(definition.format);
   return definition;
+}
+
+/** New/replaced table content and newly published snapshots pin explicit grouping on the server. */
+export function authoringDefinition(value: unknown): LibraryProblemDefinition {
+  const definition = editableLibraryDefinition(value);
+  if (definition.type !== ProblemType.TruthTable) return definition;
+
+  requireExplicitGrouping(parseFormulaWithSyntax(definition.formula));
+  return { ...definition, formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION };
 }
 
 /** Check the authoritative saved definition with its own format's checker. */

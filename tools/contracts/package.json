@@ -95,6 +95,11 @@
       "types": "./dist/billing-values.d.ts",
       "browser": "./dist/browser/billing-values.js",
       "default": "./dist/billing-values.js"
+    },
+    "./formula-policy-values": {
+      "types": "./dist/formula-policy-values.d.ts",
+      "browser": "./dist/browser/formula-policy-values.js",
+      "default": "./dist/formula-policy-values.js"
     }
   },
   "files": [

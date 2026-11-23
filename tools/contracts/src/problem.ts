@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { trueFalseDefinitionSchema, multipleChoiceDefinitionSchema } from './conceptual-question';
@@ -7,6 +8,7 @@ export const truthTableDefinitionSchema = z.strictObject({
   type: z.literal(ProblemType.TruthTable),
   definitionVersion: z.literal(1),
   formula: z.string().min(1).max(256),
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
 });
 
 export type TruthTableDefinition = z.infer<typeof truthTableDefinitionSchema>;

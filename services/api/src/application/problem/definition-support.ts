@@ -3,7 +3,11 @@ import {
   objectiveProblemDefinitionSchema,
   type ObjectiveProblemDefinition as AuthoredProblemDefinition,
 } from '@logiclab/contracts';
-import { parseFormula } from '@logiclab/logic-engine';
+import {
+  parseFormula,
+  parseFormulaWithSyntax,
+  requireExplicitGrouping,
+} from '@logiclab/logic-engine';
 import type { ProblemDefinition, TruthTableDefinition } from '@logiclab/db' with {
   'resolution-mode': 'import',
 };
@@ -29,7 +33,11 @@ export function validateObjectiveDefinition(input: unknown): AuthoredProblemDefi
 
   if (!result.success) throw new UnsupportedProblemDefinitionError();
 
-  if (result.data.type === ProblemType.TruthTable) parseFormula(result.data.formula);
+  if (result.data.type === ProblemType.TruthTable) {
+    if (result.data.formulaGroupingVersion !== undefined)
+      requireExplicitGrouping(parseFormulaWithSyntax(result.data.formula));
+    else parseFormula(result.data.formula);
+  }
 
   return result.data;
 }

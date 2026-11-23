@@ -4,7 +4,7 @@ import {
 } from '@logiclab/contracts/problem-library';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-import { libraryProblemDefinition } from '../../../application/problem/library-definition';
+import { authoringDefinition } from '../../../application/problem/library-definition';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
 import { parseRequest } from '../../helpers/parse-request';
@@ -14,7 +14,7 @@ export function postProblemHandler(context: ProblemContext) {
     const user = await instructor(request, context);
     const input = parseRequest(createLibraryProblemRequestSchema, request.body);
 
-    libraryProblemDefinition(input.definition);
+    authoringDefinition(input.definition);
 
     const problem = await context.problems.create(user.id, input);
 

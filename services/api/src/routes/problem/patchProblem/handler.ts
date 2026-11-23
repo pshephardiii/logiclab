@@ -4,7 +4,7 @@ import {
 } from '@logiclab/contracts/problem-library';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { problemParamsSchema } from '@logiclab/contracts';
-import { libraryProblemDefinition } from '../../../application/problem/library-definition';
+import { authoringDefinition } from '../../../application/problem/library-definition';
 import { ProblemError } from '../errors';
 import type { ProblemContext } from '../context';
 import { instructor } from '../helpers';
@@ -16,7 +16,7 @@ export function patchProblemHandler(context: ProblemContext) {
     const { problemId } = parseRequest(problemParamsSchema, request.params);
     const input = parseRequest(updateLibraryProblemRequestSchema, request.body);
 
-    if (input.definition) libraryProblemDefinition(input.definition);
+    if (input.definition) authoringDefinition(input.definition);
 
     const result = await context.problems.update(user.id, problemId, input);
 

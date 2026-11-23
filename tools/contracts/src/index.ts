@@ -49,3 +49,5 @@ export * from './natural-deduction-tree';
 export * from './proof-method-availability';
 
 export * from './truth-tree';
+
+export { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';

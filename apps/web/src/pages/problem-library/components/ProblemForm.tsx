@@ -1,3 +1,4 @@
+import { parseFormulaWithSyntax, requireExplicitGrouping } from '@logiclab/logic-engine';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { isProblemMethodAvailable } from '../../../features/proof/helpers/method-availability';
 import { DerivationSummary } from './DerivationSummary';
@@ -142,6 +143,15 @@ export function ProblemForm({
           .join(' '),
       );
       return null;
+    }
+
+    if (parsed.data.type === ProblemType.TruthTable) {
+      try {
+        requireExplicitGrouping(parseFormulaWithSyntax(parsed.data.formula));
+      } catch (error) {
+        setValidationError(error instanceof Error ? error.message : 'Check formula grouping.');
+        return null;
+      }
     }
 
     setValidationError(null);

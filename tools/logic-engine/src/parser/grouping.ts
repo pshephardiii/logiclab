@@ -4,7 +4,7 @@ import type { FormulaSourceSpan, ParsedFormulaSyntax } from './syntax';
 
 type SyntaxAtom = { readonly type: 'bottom' };
 
-export const FORMULA_GROUPING_POLICY_VERSION = 1;
+export { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 
 export type FormulaGroupingIssue = {
   readonly code: 'GROUPING_REQUIRED';

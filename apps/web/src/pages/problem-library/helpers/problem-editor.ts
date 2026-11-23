@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type { TruthTreeDefinition } from '@logiclab/contracts/truth-tree-authoring';
 import {
@@ -105,7 +106,11 @@ export function editorDraftDefinition(fields: ProblemEditorFields) {
   const common = { type: fields.type, definitionVersion: 1 };
 
   return fields.type === ProblemType.TruthTable
-    ? { ...common, formula: fields.formula }
+    ? {
+        ...common,
+        formula: fields.formula,
+        formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION,
+      }
     : fields.type === ProblemType.TrueFalse
       ? {
           ...common,
