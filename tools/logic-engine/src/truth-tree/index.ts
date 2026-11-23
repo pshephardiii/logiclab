@@ -4,7 +4,11 @@ export {
   TRUTH_TREE_FORMULA_LIMITS,
 } from './parse-formula';
 
-export { TRUTH_TREE_RULE_CATALOG, TRUTH_TREE_RULE_CATALOG_VERSION } from './rule-catalog';
+export {
+  TRUTH_TREE_RULE_CATALOG,
+  TRUTH_TREE_RULE_CATALOG_VERSION,
+  truthTreeRuleCatalog,
+} from './rule-catalog';
 
 export type { TruthTreeRuleId } from './rule-catalog';
 

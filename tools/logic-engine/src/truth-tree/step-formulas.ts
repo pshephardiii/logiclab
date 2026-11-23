@@ -12,6 +12,10 @@ import type {
 
 export type StepContext = {
   structure: TruthTreeStructure;
+  problem: TruthTreeProblem;
+  authoritativeSources: Map<string, string>;
+  chainMatches: Map<string, { memberCount: number; coveredMemberIndices: readonly number[] }>;
+
   formulas: Map<string, TruthTreeFormula>;
   budget: TruthTreeBudget;
   formulaGroupingVersion?: TruthTreeProblem['formulaGroupingVersion'];

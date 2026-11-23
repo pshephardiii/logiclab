@@ -2,7 +2,7 @@ import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import {
-  truthTreeSchema,
+  truthTreeApplicationTreeSchema,
   truthTreeCheckReportSchema,
   truthTreeCounterexampleSchema,
 } from './truth-tree';
@@ -49,7 +49,7 @@ const explanation = z
 
 /** Owner-only draft JSON; expected outcomes and cached verification claims are not authored fields. */
 export const truthTreeDefinitionSchema = truthTreeContentSchema.safeExtend({
-  referenceTree: truthTreeSchema.nullable(),
+  referenceTree: truthTreeApplicationTreeSchema.nullable(),
   explanation,
 });
 
@@ -70,7 +70,7 @@ export const truthTreeSolutionSchema = z
     checkerVersion: z.literal(1),
     ruleCatalogVersion: z.literal(1),
     formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
-    referenceTree: truthTreeSchema,
+    referenceTree: truthTreeApplicationTreeSchema,
     argumentStatus: z.enum(['valid', 'invalid']),
     counterexample: truthTreeCounterexampleSchema.nullable(),
     explanation,

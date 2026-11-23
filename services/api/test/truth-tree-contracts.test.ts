@@ -201,7 +201,7 @@ test('unknown rule references survive for diagnostics; the known catalog still a
 });
 
 test.each([
-  { ...tree, treeVersion: 2 },
+  { ...tree, treeVersion: 3 },
   { ...tree, format: 'tree' },
   { ...tree, format: 'fitch' },
   { ...tree, rootBranchId: 'not-a-uuid' },
@@ -298,4 +298,32 @@ test('standalone transport does not enable assignment/problem admission', () => 
       ...problem,
     }).success,
   ).toBe(false);
+});
+
+test('catalog-2 standalone tree contracts do not enable unsupported application submissions', async () => {
+  const { truthTreeDefinitionSchema } = await import('@logiclab/contracts/truth-tree-authoring');
+  const { truthTreeAnswerSchema } = await import('@logiclab/contracts/truth-tree-work');
+  const newer = { ...tree, treeVersion: 2 };
+  expect(truthTreeSchema.safeParse(newer).success).toBe(true);
+  expect(
+    truthTreeAnswerSchema.safeParse({ type: 'truth_tree', tree: newer, verdict: 'valid' }).success,
+  ).toBe(false);
+  expect(
+    truthTreeDefinitionSchema.safeParse({
+      type: 'truth_tree',
+      definitionVersion: 1,
+      checkerVersion: 1,
+      ruleCatalogVersion: 1,
+      premises: problem.premises,
+      conclusion: problem.conclusion,
+      referenceTree: newer,
+    }).success,
+  ).toBe(false);
+  expect(
+    truthTreeProblemSchema.safeParse({
+      ...problem,
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+    }).success,
+  ).toBe(true);
 });

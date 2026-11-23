@@ -1,7 +1,7 @@
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import {
-  truthTreeSchema,
+  truthTreeApplicationTreeSchema,
   truthTreeCheckReportSchema,
   type TruthTreeCheckReport,
 } from './truth-tree';
@@ -15,7 +15,7 @@ export type TruthTreeVerdict = z.infer<typeof truthTreeVerdictSchema>;
 /** Student-entered work only; an omitted older choice is unanswered, never inferred from the tree. */
 export const truthTreeAnswerSchema = z.strictObject({
   type: z.literal(ProblemType.TruthTree),
-  tree: truthTreeSchema,
+  tree: truthTreeApplicationTreeSchema,
   verdict: truthTreeVerdictSchema.nullable().optional(),
 });
 

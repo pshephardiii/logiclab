@@ -4,16 +4,15 @@ import { FormulaParseError } from '../parser/errors';
 import type { ParsedFormulaSyntax } from '../parser/syntax';
 import { sameFormula } from '../proof/formula-equality';
 import { parseTruthTreeFormulaWithSyntax } from './parse-formula';
-import { TRUTH_TREE_LIMITS } from '@logiclab/contracts/truth-tree';
+import {
+  TRUTH_TREE_LIMITS,
+  TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION,
+  type TruthTreeChainChoice as Choice,
+} from '@logiclab/contracts/truth-tree';
 import { truthTreeBudget, TruthTreeResourceLimit, type TruthTreeBudget } from './structure-context';
 import type { TruthTreeFormula } from './types';
 
-/** Staged matching for catalog 2; existing catalog-1 full-tree checking remains unchanged. */
-export const TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION = 2;
-
-type Choice =
-  | { readonly ruleId: 'conjunct_extraction'; readonly memberIndex: number }
-  | { readonly ruleId: 'disjunction'; readonly splitIndex: number };
+export { TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION };
 
 export type TruthTreeChainExpansionInput = {
   readonly ruleCatalogVersion: typeof TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION;

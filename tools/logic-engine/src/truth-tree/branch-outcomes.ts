@@ -1,3 +1,4 @@
+import { truthTreeComponentCoverage } from './component-coverage';
 import type { TruthTreeBranchOutcome } from '@logiclab/contracts/truth-tree';
 import { decomposeTruthTreeFormula } from './decompose-formula';
 import type { StepContext } from './step-formulas';
@@ -37,7 +38,10 @@ function formulaKeys(context: StepContext) {
 export function truthTreeBranchOutcomes(context: StepContext): TruthTreeBranchOutcome[] {
   const { structure, budget } = context;
   const key = formulaKeys(context);
-  const coverage = truthTreeCoverage(structure, budget);
+  const coverage =
+    context.problem.ruleCatalogVersion === 2
+      ? truthTreeComponentCoverage(structure, context.chainMatches, budget)
+      : truthTreeCoverage(structure, budget);
   const outcomes: TruthTreeBranchOutcome[] = [];
 
   for (const branchId of structure.branchOrder) {

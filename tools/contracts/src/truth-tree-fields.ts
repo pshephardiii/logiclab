@@ -31,3 +31,19 @@ export const TRUTH_TREE_RULE_IDS = [
 export const truthTreeRuleIdSchema = z.enum(TRUTH_TREE_RULE_IDS);
 
 export type TruthTreeRuleId = z.infer<typeof truthTreeRuleIdSchema>;
+
+/** Chain decomposition is opt-in; catalog 1 retains its original binary patterns. */
+export const TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION = 2;
+
+export const truthTreeChainChoiceSchema = z.discriminatedUnion('ruleId', [
+  z.strictObject({
+    ruleId: z.literal('conjunct_extraction'),
+    memberIndex: z.number().int().min(0).max(TRUTH_TREE_LIMITS.maxFormulaLength),
+  }),
+  z.strictObject({
+    ruleId: z.literal('disjunction'),
+    splitIndex: z.number().int().min(1).max(TRUTH_TREE_LIMITS.maxFormulaLength),
+  }),
+]);
+
+export type TruthTreeChainChoice = z.infer<typeof truthTreeChainChoiceSchema>;

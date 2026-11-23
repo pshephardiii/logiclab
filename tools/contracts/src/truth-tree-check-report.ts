@@ -23,7 +23,7 @@ export type TruthTreeCounterexample = z.infer<typeof truthTreeCounterexampleSche
 export const truthTreeCheckReportSchema = z
   .strictObject({
     checkerVersion: z.literal(1),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
     status: z.enum(['verified', 'incomplete', 'invalid', 'unassessable']),
     argumentStatus: z.enum(['valid', 'invalid', 'undetermined']),
     steps: truthTreeStepReportSchema,
@@ -33,6 +33,8 @@ export const truthTreeCheckReportSchema = z
   })
   .superRefine((report, context) => {
     const reject = (message: string) => context.addIssue({ code: 'custom', message });
+    if (report.ruleCatalogVersion !== report.steps.ruleCatalogVersion)
+      reject('Whole-tree and step catalog versions must agree.');
 
     if (new Set(report.branches.map((branch) => branch.branchId)).size !== report.branches.length)
       reject('Terminal branch evidence must have distinct identities.');

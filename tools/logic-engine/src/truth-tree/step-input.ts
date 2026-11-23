@@ -7,6 +7,7 @@ import {
   TRUTH_TREE_LIMITS,
   truthTreeProblemSchema,
   type TruthTreeDiagnostic,
+  type TruthTreeProblem,
 } from '@logiclab/contracts/truth-tree';
 import { FormulaParseError } from '../parser/errors';
 import { analyzeTruthTreeStructure } from './structure';
@@ -20,6 +21,7 @@ import { parseArgument } from './step-formulas';
 type ReadResult =
   | {
       status: 'ready';
+      problem: TruthTreeProblem;
       formulaGroupingVersion?: typeof FORMULA_GROUPING_POLICY_VERSION;
       argument: NonNullable<ReturnType<typeof parseArgument>>;
       structure: TruthTreeStructure;
@@ -56,7 +58,7 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   if (record(input.problem)) {
     const { premises, conclusion, ruleCatalogVersion, formulaGroupingVersion } = input.problem;
     if (
-      ruleCatalogVersion !== 1 ||
+      (ruleCatalogVersion !== 1 && ruleCatalogVersion !== 2) ||
       (formulaGroupingVersion !== undefined &&
         formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION)
     )
@@ -111,8 +113,17 @@ export function readTruthTreeInput(input: unknown, budget: TruthTreeBudget): Rea
   const resolved = analyzeTruthTreeStructure(input.tree, budget);
   if (resolved.status !== 'resolved') return failed(resolved.status, resolved.diagnostics);
 
+  if (resolved.structure.tree.treeVersion !== parsed.data.ruleCatalogVersion)
+    return failed('unassessable', [
+      {
+        code: CheckerDiagnosticCode.UnsupportedVersion,
+        message: 'Tree and authoritative catalog versions must agree.',
+      },
+    ]);
+
   return {
     status: 'ready',
+    problem: parsed.data,
     argument,
     structure: resolved.structure,
     ...formulaGroupingPolicy(parsed.data),
