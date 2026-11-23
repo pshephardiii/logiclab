@@ -23,3 +23,10 @@ export { checkTruthTreeSteps } from './check-steps';
 export { checkTruthTree } from './check-tree';
 
 export { isFinishedTruthTreeAttempt } from './completeness';
+
+export {
+  matchTruthTreeChainExpansion,
+  TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION,
+} from './chain-expansion';
+
+export type { TruthTreeChainExpansionInput, TruthTreeChainExpansionMatch } from './chain-expansion';
