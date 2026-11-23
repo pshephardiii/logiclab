@@ -300,6 +300,22 @@
   display: grid;
   gap: 0.6rem;
 }
+
+.truth-tree-chain-choice {
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 0.75rem;
+  min-width: 0;
+}
+
+.truth-tree-chain-choice > label {
+  margin: 0;
+}
+
+.truth-tree-chain-choice > select {
+  width: 100%;
+  min-width: 0;
+}
 .truth-tree-closure-fields > div:not(.truth-tree-entry-selects) > label {
   margin: 0;
 }

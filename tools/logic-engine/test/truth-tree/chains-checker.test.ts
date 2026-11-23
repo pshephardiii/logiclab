@@ -2,6 +2,7 @@ import {
   checkTruthTree,
   isFinishedTruthTreeAttempt,
   checkTruthTreeSteps,
+  truthTreeConstructionSources,
 } from '../../src/truth-tree';
 import {
   truthTreeCheckReportSchema,
@@ -88,6 +89,25 @@ function fixture(premises: string[], conclusion: string) {
   const root = input.tree.rootBranchId!;
   return { input, root, add, extract, split, close };
 }
+
+test('construction sources preserve inherited boundaries without returning reports or mutating entered work', () => {
+  const f = fixture(['!!((P & Q) & R)'], 'S');
+  const source = f.input.tree.occurrences[0]!.id;
+  const [group] = f.add(f.root, source, 'double_negation', [['P & Q & R']]);
+  const derived = group!.occurrenceIds[0]!;
+  const before = structuredClone(f.input);
+  const sources = truthTreeConstructionSources(f.input);
+  expect(sources.get(derived)).toBe('(P & Q) & R');
+  expect([...sources.values()].every((value) => typeof value === 'string')).toBe(true);
+  expect(f.input).toEqual(before);
+
+  // Editing to a different formula cannot borrow the previous continuation's constraints.
+  f.input.tree.occurrences.find((item) => item.id === derived)!.formula = 'S';
+  expect(truthTreeConstructionSources(f.input).has(derived)).toBe(false);
+  expect(
+    truthTreeConstructionSources({ ...f.input, tree: { ...f.input.tree, treeVersion: 3 } }).size,
+  ).toBe(0);
+});
 function checked(input: TruthTreeCheckInput) {
   const before = structuredClone(input);
   const report = checkTruthTree(input);

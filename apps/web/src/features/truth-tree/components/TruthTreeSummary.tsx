@@ -13,7 +13,7 @@ export function TruthTreeSummary({ definition }: { definition: TruthTreeContent 
         <ol>
           {definition.premises.map((premise) => (
             <li key={premise.id}>
-              <code>{truthTreeFormulaLabel(premise.formula)}</code>
+              <code>{truthTreeFormulaLabel(premise.formula, definition.ruleCatalogVersion)}</code>
             </li>
           ))}
         </ol>
@@ -21,7 +21,8 @@ export function TruthTreeSummary({ definition }: { definition: TruthTreeContent 
         <p>No premises.</p>
       )}
       <p>
-        <strong>Conclusion:</strong> <code>{truthTreeFormulaLabel(definition.conclusion)}</code>
+        <strong>Conclusion:</strong>{' '}
+        <code>{truthTreeFormulaLabel(definition.conclusion, definition.ruleCatalogVersion)}</code>
       </p>
     </section>
   );

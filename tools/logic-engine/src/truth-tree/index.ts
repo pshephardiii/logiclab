@@ -28,6 +28,8 @@ export { checkTruthTree } from './check-tree';
 
 export { isFinishedTruthTreeAttempt } from './completeness';
 
+export { truthTreeConstructionSources } from './construction-sources';
+
 export {
   matchTruthTreeChainExpansion,
   TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION,

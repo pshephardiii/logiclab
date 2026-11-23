@@ -89,7 +89,8 @@ test('seeds exactly the given sources, explicitly closes a reference and saves w
   expect(
     checkTruthTree({
       problem: {
-        ruleCatalogVersion: 1,
+        ruleCatalogVersion: input.definition.ruleCatalogVersion,
+        formulaGroupingVersion: input.definition.formulaGroupingVersion,
         premises: input.definition.premises,
         conclusion: input.definition.conclusion,
       },

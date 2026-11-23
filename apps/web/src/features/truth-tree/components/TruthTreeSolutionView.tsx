@@ -1,13 +1,19 @@
-import type { TruthTreeSolution } from '@logiclab/contracts/truth-tree-authoring';
+import type { TruthTreeContent, TruthTreeSolution } from '@logiclab/contracts/truth-tree-authoring';
 import { TruthTreeDisplay } from './TruthTreeDisplay';
 
 /** Only independently authorized solution projections belong here. No student answers are changed. */
-export function TruthTreeSolutionView({ solution }: { solution: TruthTreeSolution }) {
+export function TruthTreeSolutionView({
+  solution,
+  statement,
+}: {
+  solution: TruthTreeSolution;
+  statement?: TruthTreeContent;
+}) {
   return (
     <section aria-label="Revealed truth-tree answer">
       <h3>Instructor reference tree</h3>
       <p>Argument: {solution.argumentStatus}.</p>
-      <TruthTreeDisplay tree={solution.referenceTree} />
+      <TruthTreeDisplay tree={solution.referenceTree} statement={statement} />
       {solution.counterexample && (
         <p>
           Counterexample:{' '}

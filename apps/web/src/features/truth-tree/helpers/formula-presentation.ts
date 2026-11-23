@@ -1,7 +1,8 @@
-import { FormulaParseError } from '@logiclab/logic-engine';
+import { FormulaParseError, formulaChainMembers } from '@logiclab/logic-engine';
 import type { TruthTree } from '@logiclab/contracts/truth-tree';
 import {
   parseTruthTreeFormula,
+  parseTruthTreeFormulaWithSyntax,
   decomposeTruthTreeFormula,
   type TruthTreeFormula,
 } from '@logiclab/logic-engine/truth-tree';
@@ -26,8 +27,13 @@ function formatted(formula: TruthTreeFormula, nested = false): string {
 }
 
 /** Normalize read-only notation/grouping; retain malformed drafts without repairing entered work. */
-export function truthTreeFormulaLabel(value: string): string {
+export function truthTreeFormulaLabel(value: string, version: 1 | 2 = 1): string {
   try {
+    if (version === 2) {
+      // Preserve the author's binary boundaries rather than printing the parser's left fold.
+      parseTruthTreeFormula(value);
+      return proofNotation(value).replace(/\(\s*([A-Z]|⊥)\s*\)|\[\s*([A-Z]|⊥)\s*\]/g, '$1$2');
+    }
     return formatted(parseTruthTreeFormula(value));
   } catch {
     return proofNotation(value) || '(blank)';
@@ -38,7 +44,10 @@ export type FormulaProgress =
   'applied' | 'partial' | 'literal' | 'constant' | 'pending' | 'invalid';
 
 /** Entered applications track path coverage only; they never certify a correct decomposition. */
-export function truthTreeFormulaProgress(tree: TruthTree): Map<string, FormulaProgress> {
+export function truthTreeFormulaProgress(
+  tree: TruthTree,
+  sources?: ReadonlyMap<string, string>,
+): Map<string, FormulaProgress> {
   const result = new Map<string, FormulaProgress>();
   const structure = editableTree(tree);
   if (!structure) return result;
@@ -59,14 +68,40 @@ export function truthTreeFormulaProgress(tree: TruthTree): Map<string, FormulaPr
       const applications = tree.expansions.filter(
         (expansion) => expansion.sourceId === occurrence.id,
       );
-      const covered = containing.filter((path) =>
-        applications.some((expansion) =>
+      const source = parseTruthTreeFormulaWithSyntax(
+        sources?.get(occurrence.id) ?? occurrence.formula,
+      );
+      const tracksConjuncts =
+        tree.treeVersion === 2 &&
+        source.formula.type === 'binary' &&
+        source.formula.operator === 'and';
+      const memberCount = tracksConjuncts ? formulaChainMembers(source).length : 0;
+      let used = false;
+      const covered = containing.filter((path) => {
+        const local = applications.filter((expansion) =>
           expansion.resultGroups.some((group) => group.occurrenceIds.some((id) => path.has(id))),
-        ),
-      ).length;
+        );
+        used ||= local.length > 0;
+        if (
+          !tracksConjuncts ||
+          local.some((expansion) => expansion.ruleId !== 'conjunct_extraction')
+        )
+          return local.length > 0;
+
+        // Count distinct positions, not repeated selections or work done only on a sibling path.
+        const indices = new Set(
+          local.flatMap((expansion) => {
+            const choice = expansion.chainChoice;
+            return choice?.ruleId === 'conjunct_extraction' && choice.memberIndex < memberCount
+              ? [choice.memberIndex]
+              : [];
+          }),
+        );
+        return indices.size === memberCount;
+      }).length;
       result.set(
         occurrence.id,
-        covered === 0 ? 'pending' : covered === containing.length ? 'applied' : 'partial',
+        !used ? 'pending' : covered === containing.length ? 'applied' : 'partial',
       );
     } catch {
       result.set(occurrence.id, 'invalid');

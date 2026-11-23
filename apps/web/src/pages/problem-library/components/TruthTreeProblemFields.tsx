@@ -105,6 +105,7 @@ export function TruthTreeProblemFields({
         </button>
         {reference ? (
           <TruthTreeEditor
+            statement={definition}
             disabled={disabled || mismatch}
             tree={reference}
             onPendingChange={onPendingChange}

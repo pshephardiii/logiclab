@@ -15,10 +15,10 @@ function protectedWork() {
   return event.defaultPrevented;
 }
 
-async function begin(conclusion = 'P') {
+async function begin(conclusion = 'P', premise = 'P') {
   const user = userEvent.setup();
   render(<TruthTreePracticePage />);
-  await user.type(screen.getByLabelText('New premise'), 'P');
+  await user.type(screen.getByLabelText('New premise'), premise);
   await user.click(screen.getByRole('button', { name: 'Add premise' }));
   await user.type(screen.getByLabelText('Conclusion'), conclusion);
   await user.click(screen.getByRole('button', { name: 'Begin truth-tree practice' }));
@@ -57,6 +57,43 @@ test('valid independent work checks explicitly, hides stale diagnostics and prot
   expect(protectedWork()).toBe(false);
   expect(localStorage.length).toBe(0);
   expect(sessionStorage.length).toBe(0);
+});
+
+test('new practice uses chain extraction, verifies an early closure and keeps the verdict explicit', async () => {
+  const user = await begin('P', 'P & Q & R');
+  expect(screen.getByRole('region', { name: 'Truth-tree statement' })).toHaveTextContent(
+    'P ∧ Q ∧ R',
+  );
+  await user.click(screen.getByRole('button', { name: 'Add step to branch 1' }));
+  const source = screen.getByLabelText('Source formula');
+  const first = within(source).getAllByRole('option')[1] as HTMLOptionElement;
+  await user.selectOptions(source, first.value);
+  await user.selectOptions(screen.getByLabelText('Decomposition rule'), 'conjunct_extraction');
+  await user.selectOptions(screen.getByLabelText('Conjunct to extract'), '0');
+  await user.type(screen.getByLabelText('Formula 1 · Result 1.1'), 'P');
+  await user.click(screen.getByRole('button', { name: 'Add expansion' }));
+  await user.click(screen.getByRole('button', { name: 'Close branch 1' }));
+  const witnesses = within(screen.getByLabelText('Witness 1')).getAllByRole(
+    'option',
+  ) as HTMLOptionElement[];
+  await user.selectOptions(screen.getByLabelText('Witness 1'), witnesses[2]!.value);
+  await user.selectOptions(screen.getByLabelText('Witness 2'), witnesses[3]!.value);
+  await user.click(screen.getByRole('button', { name: 'Close branch' }));
+  await user.click(screen.getByRole('radio', { name: 'Valid' }));
+  await user.click(screen.getByRole('button', { name: 'Check tree' }));
+  expect(screen.getByRole('region', { name: 'Truth-tree feedback' })).toHaveTextContent(
+    'Tree check: verified. Argument: valid.',
+  );
+});
+
+test('new practice requires explicit grouping between different binary operators', async () => {
+  const user = await begin('P v Q -> R');
+  expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
+  expect(screen.queryByRole('region', { name: 'Truth tree' })).not.toBeInTheDocument();
+  await user.clear(screen.getByLabelText('Conclusion'));
+  await user.type(screen.getByLabelText('Conclusion'), '(P v Q) -> R');
+  await user.click(screen.getByRole('button', { name: 'Begin truth-tree practice' }));
+  expect(screen.getByRole('region', { name: 'Truth tree' })).toBeInTheDocument();
 });
 
 test('a completed open counterexample refutes an argument without revealing a supplied reference', async () => {

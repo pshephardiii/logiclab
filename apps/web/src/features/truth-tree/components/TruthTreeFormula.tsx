@@ -18,6 +18,8 @@ export function TruthTreeFormula({
   source,
   disabled,
   onFormula,
+  version = 1,
+  sourceFormula,
 }: {
   occurrence: TruthTreeOccurrence;
   progress?: FormulaProgress;
@@ -25,6 +27,8 @@ export function TruthTreeFormula({
   source: string;
   disabled: boolean;
   onFormula?: (id: string, formula: string) => void;
+  version?: 1 | 2;
+  sourceFormula?: string;
 }) {
   return (
     <>
@@ -33,8 +37,16 @@ export function TruthTreeFormula({
           <span
             className={`truth-tree-formula-marker truth-tree-formula-marker--${progress}`}
             role="img"
-            aria-label={markers[progress][1]}
-            title={markers[progress][1]}
+            aria-label={
+              progress === 'partial' && version === 2
+                ? 'Components or paths remain'
+                : markers[progress][1]
+            }
+            title={
+              progress === 'partial' && version === 2
+                ? 'Components or paths remain'
+                : markers[progress][1]
+            }
           >
             {markers[progress][0]}
           </span>
@@ -53,7 +65,7 @@ export function TruthTreeFormula({
             onValueChange={(formula) => onFormula(occurrence.id, formula)}
           />
         ) : (
-          <code>{truthTreeFormulaLabel(occurrence.formula)}</code>
+          <code>{truthTreeFormulaLabel(sourceFormula ?? occurrence.formula, version)}</code>
         )}
       </div>
       <small>{source}</small>
