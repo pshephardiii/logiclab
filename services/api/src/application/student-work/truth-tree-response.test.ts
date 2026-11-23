@@ -52,7 +52,7 @@ test.each(['valid', 'invalid'] as const)(
 test('draft shape validation preserves incorrect/blank work without certifying it', () => {
   const { authoritative, answer } = fixture();
   answer.tree.occurrences[0]!.formula = '';
-  expect(validateTruthTreeAnswer(answer)).toEqual(answer);
+  expect(validateTruthTreeAnswer(answer, 1)).toEqual(answer);
   expect(evaluateTruthTreeAnswer(authoritative, answer).report.status).not.toBe('verified');
 });
 
@@ -60,7 +60,7 @@ test.each(['problem', 'referenceTree', 'report', 'score', 'argumentStatus'] as c
   'student answers cannot replace server-owned %s',
   (key) => {
     const { answer } = fixture();
-    expect(() => validateTruthTreeAnswer({ ...answer, [key]: {} })).toThrow(StudentWorkError);
+    expect(() => validateTruthTreeAnswer({ ...answer, [key]: {} }, 1)).toThrow(StudentWorkError);
   },
 );
 
@@ -238,7 +238,7 @@ test.each([null, undefined])(
   (verdict) => {
     const { authoritative, answer } = fixture();
     const draft = { ...answer, verdict };
-    expect(validateTruthTreeAnswer(draft).verdict ?? null).toBe(null);
+    expect(validateTruthTreeAnswer(draft, 1).verdict ?? null).toBe(null);
     const evidence = evaluateTruthTreeAnswer(authoritative, draft);
     expect(evidence.verdict).toEqual({ answer: null, status: 'unanswered' });
     expect(evidence.report.status).toBe('verified');
@@ -261,7 +261,7 @@ test('a provisional open branch cannot establish an invalid verdict until its co
 test('verdict validation rejects unknown choices and inconsistent server assessments', () => {
   const { authoritative, answer } = fixture();
   for (const verdict of ['undetermined', 'Valid', true, { status: 'correct' }]) {
-    expect(() => validateTruthTreeAnswer({ ...answer, verdict })).toThrow('invalid_answer');
+    expect(() => validateTruthTreeAnswer({ ...answer, verdict }, 1)).toThrow('invalid_answer');
   }
   const evidence = evaluateTruthTreeAnswer(authoritative, answer);
   expect(
@@ -270,9 +270,9 @@ test('verdict validation rejects unknown choices and inconsistent server assessm
       verdict: { answer: 'invalid', status: 'correct' },
     }).success,
   ).toBe(false);
-  expect(() => validateTruthTreeAnswer({ ...answer, evaluationVersion: 'truth_tree_v1' })).toThrow(
-    'invalid_answer',
-  );
+  expect(() =>
+    validateTruthTreeAnswer({ ...answer, evaluationVersion: 'truth_tree_v1' }, 1),
+  ).toThrow('invalid_answer');
 });
 
 test('retained tree-only evidence stays readable without rewriting its original evaluation', () => {
@@ -281,4 +281,73 @@ test('retained tree-only evidence stays readable without rewriting its original 
   const retained = { ...current, evaluationVersion: 'truth_tree_v1' };
   expect(truthTreeEvaluationEvidenceSchema.parse(retained)).toEqual(retained);
   expect(truthTreeScoringOutcome(retained).outcome).toEqual({ type: 'full_credit' });
+});
+
+test.each(['valid', 'invalid'] as const)(
+  'catalog-2 %s evidence preserves chain choices through grades, completion and saved transport',
+  (outcome) => {
+    const definition = truthTreeDefinitionFixture(outcome, 2);
+    const authoritative = { itemId, problemVersionId, content: truthTreeContent(definition) };
+    const answer = {
+      type: 'truth_tree' as const,
+      tree: definition.referenceTree!,
+      verdict: outcome,
+    };
+    const before = structuredClone({ authoritative, answer });
+    expect(validateTruthTreeAnswer(answer, 2)).toEqual(answer);
+    expect(savedStudentResponsesSchema.parse({ [itemId]: answer })).toEqual({ [itemId]: answer });
+    const evidence = evaluateTruthTreeAnswer(authoritative, answer);
+    expect(evidence).toMatchObject({
+      report: { ruleCatalogVersion: 2, status: 'verified', argumentStatus: outcome },
+      verdict: { status: 'correct' },
+    });
+    expect(truthTreeScoringOutcome(evidence).outcome).toEqual({ type: 'full_credit' });
+    expect(evaluateTruthTreeCompletion(authoritative, answer)).toMatchObject({
+      completedResponses: 1,
+      totalResponses: 1,
+      report: { ruleCatalogVersion: 2, status: 'verified' },
+    });
+    expect({ authoritative, answer }).toEqual(before);
+    expect(JSON.stringify(evidence)).not.toContain('PRIVATE_TRUTH_TREE_EXPLANATION');
+    expect(evidence).not.toHaveProperty('referenceTree');
+  },
+);
+
+test.each([1, 2] as const)(
+  'catalog-%s pinned work rejects an alternate tree version everywhere',
+  (version) => {
+    const definition = truthTreeDefinitionFixture('valid', version);
+    const authoritative = { itemId, problemVersionId, content: truthTreeContent(definition) };
+    const tree = {
+      ...definition.referenceTree!,
+      treeVersion: version === 1 ? 2 : 1,
+      expansions: [],
+    };
+    const answer = { type: 'truth_tree', tree, verdict: 'valid' };
+    expect(truthTreeAnswerSchema.safeParse(answer).success).toBe(true);
+    for (const operation of [
+      () => validateTruthTreeAnswer(answer, version),
+      () => evaluateTruthTreeAnswer(authoritative, answer),
+      () => evaluateTruthTreeCompletion(authoritative, answer),
+    ])
+      expect(operation).toThrow(expect.objectContaining({ reason: 'invalid_answer' }));
+  },
+);
+
+test('catalog-2 unfinished choices remain saveable but cannot complete or earn automatic full points', () => {
+  const definition = truthTreeDefinitionFixture('invalid', 2);
+  const authoritative = { itemId, problemVersionId, content: truthTreeContent(definition) };
+  const answer = {
+    type: 'truth_tree' as const,
+    tree: definition.referenceTree!,
+    verdict: 'invalid' as const,
+  };
+  delete answer.tree.expansions[0]!.chainChoice;
+  expect(validateTruthTreeAnswer(answer, 2)).toEqual(answer);
+  expect(truthTreeScoringOutcome(evaluateTruthTreeAnswer(authoritative, answer)).outcome).toEqual({
+    type: 'needs_review',
+  });
+  expect(() => evaluateTruthTreeCompletion(authoritative, answer)).toThrow(
+    expect.objectContaining({ reason: 'incomplete_work' }),
+  );
 });

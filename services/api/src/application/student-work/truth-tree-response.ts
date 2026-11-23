@@ -16,18 +16,22 @@ import { StudentWorkError } from './errors';
 
 type AssignedTruthTree = { itemId: string; problemVersionId: string; content: TruthTreeContent };
 
-/** Save-shape validation only: blank/incorrect work must remain retainable as a draft. */
-export function validateTruthTreeAnswer(value: unknown): TruthTreeAnswer {
+/** Match the pinned catalog without checking correctness: unfinished drafts remain saveable. */
+export function validateTruthTreeAnswer(
+  value: unknown,
+  ruleCatalogVersion: TruthTreeContent['ruleCatalogVersion'],
+): TruthTreeAnswer {
   const parsed = truthTreeAnswerSchema.safeParse(value);
 
-  if (!parsed.success) throw new StudentWorkError('invalid_answer');
+  if (!parsed.success || parsed.data.tree.treeVersion !== ruleCatalogVersion)
+    throw new StudentWorkError('invalid_answer');
 
   return parsed.data;
 }
 
 function prepared(authoritative: AssignedTruthTree, value: unknown) {
   const content = validateTruthTreeContent(authoritative.content);
-  const answer = validateTruthTreeAnswer(value);
+  const answer = validateTruthTreeAnswer(value, content.ruleCatalogVersion);
   return {
     answer,
     input: {

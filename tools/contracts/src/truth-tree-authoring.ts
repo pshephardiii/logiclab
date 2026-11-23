@@ -2,7 +2,7 @@ import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import {
-  truthTreeApplicationTreeSchema,
+  truthTreeSchema,
   truthTreeCheckReportSchema,
   truthTreeCounterexampleSchema,
 } from './truth-tree';
@@ -20,12 +20,22 @@ export const truthTreeContentSchema = z
     type: z.literal(ProblemType.TruthTree),
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
     formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
     premises: z.array(z.strictObject({ id, formula })).max(TRUTH_TREE_LIMITS.maxPremises),
     conclusion: formula,
   })
   .superRefine((content, context) => {
+    if (
+      content.ruleCatalogVersion === 2 &&
+      content.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['formulaGroupingVersion'],
+        message: 'Catalog 2 requires explicit formula grouping policy 1.',
+      });
+
     const seen = new Set<string>();
     content.premises.forEach((premise, index) => {
       if (seen.has(premise.id))
@@ -48,10 +58,19 @@ const explanation = z
   .optional();
 
 /** Owner-only draft JSON; expected outcomes and cached verification claims are not authored fields. */
-export const truthTreeDefinitionSchema = truthTreeContentSchema.safeExtend({
-  referenceTree: truthTreeApplicationTreeSchema.nullable(),
-  explanation,
-});
+export const truthTreeDefinitionSchema = truthTreeContentSchema
+  .safeExtend({ referenceTree: truthTreeSchema.nullable(), explanation })
+  .superRefine((definition, context) => {
+    if (
+      definition.referenceTree !== null &&
+      definition.referenceTree.treeVersion !== definition.ruleCatalogVersion
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['referenceTree', 'treeVersion'],
+        message: 'The reference tree must use the statement’s rule catalog.',
+      });
+  });
 
 export type TruthTreeDefinition = z.infer<typeof truthTreeDefinitionSchema>;
 
@@ -68,14 +87,31 @@ export const truthTreeSolutionSchema = z
     type: z.literal(ProblemType.TruthTree),
     definitionVersion: z.literal(1),
     checkerVersion: z.literal(1),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
     formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
-    referenceTree: truthTreeApplicationTreeSchema,
+    referenceTree: truthTreeSchema,
     argumentStatus: z.enum(['valid', 'invalid']),
     counterexample: truthTreeCounterexampleSchema.nullable(),
     explanation,
   })
   .superRefine((solution, context) => {
+    if (
+      solution.ruleCatalogVersion === 2 &&
+      solution.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['formulaGroupingVersion'],
+        message: 'Catalog 2 requires explicit formula grouping policy 1.',
+      });
+
+    if (solution.referenceTree.treeVersion !== solution.ruleCatalogVersion)
+      context.addIssue({
+        code: 'custom',
+        path: ['referenceTree', 'treeVersion'],
+        message: 'The reference tree must use the solution’s rule catalog.',
+      });
+
     if ((solution.argumentStatus === 'invalid') !== (solution.counterexample !== null))
       context.addIssue({
         code: 'custom',

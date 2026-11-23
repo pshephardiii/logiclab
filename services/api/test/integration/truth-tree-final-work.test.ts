@@ -26,8 +26,13 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-for (const demo of [false, true])
-  test(`${demo ? 'demo' : 'normal'} truth-tree finals freeze evidence, separate releases and retain completion warnings`, async () => {
+for (const [ruleCatalogVersion, demo] of [
+  [1, false],
+  [1, true],
+  [2, false],
+  [2, true],
+] as const)
+  test(`catalog-${ruleCatalogVersion} ${demo ? 'demo' : 'normal'} truth-tree finals freeze evidence, separate releases and retain completion warnings`, async () => {
     const db = await import('@logiclab/db');
     const schema = `truth_tree_final_${randomUUID().replaceAll('-', '')}`;
     const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -140,9 +145,9 @@ for (const demo of [false, true])
         }
       }
       const definitions = [
-        truthTreeDefinitionFixture(),
-        truthTreeDefinitionFixture('invalid'),
-        truthTreeShortCounterexampleFixture(),
+        truthTreeDefinitionFixture('valid', ruleCatalogVersion),
+        truthTreeDefinitionFixture('invalid', ruleCatalogVersion),
+        truthTreeShortCounterexampleFixture(ruleCatalogVersion),
       ];
       const versionIds: string[] = [];
       for (const definition of definitions) {
@@ -356,7 +361,7 @@ for (const demo of [false, true])
       const unfinished = {
         type: 'truth_tree',
         tree: {
-          treeVersion: 1,
+          treeVersion: ruleCatalogVersion,
           format: 'truth_tree',
           rootBranchId: null,
           occurrences: [],
@@ -392,7 +397,10 @@ for (const demo of [false, true])
         kind: 'closed',
         closure: {
           kind: 'complement',
-          occurrenceIds: badClosure.tree.occurrences.map((item) => item.id) as [string, string],
+          occurrenceIds: badClosure.tree.occurrences.slice(0, 2).map((item) => item.id) as [
+            string,
+            string,
+          ],
         },
       };
       assert.equal(

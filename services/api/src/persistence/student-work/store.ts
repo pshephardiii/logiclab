@@ -137,7 +137,7 @@ export async function createStudentWorkStore(
 
         const answers =
           definition.type === ProblemType.TruthTree
-            ? validateTruthTreeAnswer(input.answers)
+            ? validateTruthTreeAnswer(input.answers, definition.ruleCatalogVersion)
             : definition.type === ProblemType.Derivation
               ? validateProofAnswer(definition, input.answers)
               : validateObjectiveResponse(validateObjectiveDefinition(definition), input.answers);

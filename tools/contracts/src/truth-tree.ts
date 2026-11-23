@@ -133,12 +133,6 @@ export const truthTreeSchema = z
 
 export type TruthTree = z.infer<typeof truthTreeSchema>;
 
-/** Application authoring/student workflows stay on catalog 1 until their editors are enabled. */
-export const truthTreeApplicationTreeSchema = truthTreeSchema.refine(
-  (tree) => tree.treeVersion === 1,
-  'Catalog-2 trees are not enabled in application workflows yet.',
-);
-
 /** Authoritative argument only: the initial conclusion occurrence must contain its negation. */
 export const truthTreeProblemSchema = z
   .strictObject({

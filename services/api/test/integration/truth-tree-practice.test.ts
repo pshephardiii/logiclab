@@ -22,10 +22,13 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-test('normal/demo truth-tree practice persists occurrence-specific drafts and keeps checks transient and references private', async () => {
+async function verifyPracticeWorkflows(
+  databaseUrl: string,
+  ruleCatalogVersion: 1 | 2,
+): Promise<void> {
   const db = await import('@logiclab/db');
   const schema = `truth_tree_practice_${randomUUID().replaceAll('-', '')}`;
-  const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
+  const orm = await db.createDatabase(databaseUrl, { schema, snapshotOnMigrate: false });
   let app: ReturnType<typeof buildApp> | undefined;
   try {
     await orm.schema.create();
@@ -126,7 +129,7 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
     ]) {
       active = { id: owner.id, role: 'instructor' };
       const outcome = scope.prefix === '/api' ? 'valid' : 'invalid';
-      const definition = truthTreeDefinitionFixture(outcome);
+      const definition = truthTreeDefinitionFixture(outcome, ruleCatalogVersion);
       const created = await request('POST', `${scope.prefix}/problems`, scope.cookie, {
         title: 'Tree',
         definition,
@@ -186,7 +189,9 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
         200,
       );
       if (scope.prefix !== '/api') {
-        const switched = await request('POST', '/api/demo/role', scope.cookie, { role: 'student' });
+        const switched = await request('POST', '/api/demo/role', scope.cookie, {
+          role: 'student',
+        });
         assert.equal(switched.statusCode, 200, switched.body);
         scope.cookie = cookieFrom(switched);
         scope.studentId = switched.json().user.id;
@@ -207,6 +212,24 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
         tree: definition.referenceTree!,
         verdict: outcome,
       };
+      assert.equal(publicItem.content.ruleCatalogVersion, ruleCatalogVersion);
+      // A student cannot switch catalogs, even when the alternate tree has a valid generic shape.
+      const wrongCatalog = {
+        ...answer,
+        tree: { ...answer.tree, treeVersion: ruleCatalogVersion === 1 ? 2 : 1, expansions: [] },
+      };
+      for (const [method, suffix, extra] of [
+        ['PATCH', '/attempt', { revision: 0 }],
+        ['POST', '/check', {}],
+      ] as const) {
+        const denied = await request(method, `${path}${suffix}`, scope.cookie, {
+          ...extra,
+          itemId: first.id,
+          answers: wrongCatalog,
+        });
+        assert.equal(denied.statusCode, 400, denied.body);
+      }
+      assert.equal(await em.fork().count(db.AssignmentAttempt, { assignment: assignmentId }), 0);
       const checked = await request('POST', `${path}/check`, scope.cookie, {
         itemId: first.id,
         answers: answer,
@@ -214,6 +237,7 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
       assert.equal(checked.statusCode, 200, checked.body);
       const feedback = savedStudentCheckResponseSchema.parse(checked.json()).feedback;
       assert.ok('type' in feedback && feedback.type === 'truth_tree');
+      assert.equal(feedback.report.ruleCatalogVersion, ruleCatalogVersion);
       assert.equal(feedback.report.status, 'verified');
       assert.equal(feedback.report.argumentStatus, outcome);
       assert.equal(checked.body.includes('PRIVATE_TRUTH_TREE_EXPLANATION'), false);
@@ -274,6 +298,7 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
       assert.equal(solution.statusCode, 200, solution.body);
       const key = savedStudentSolutionResponseSchema.parse(solution.json()).solution;
       assert.ok('type' in key && key.type === 'truth_tree');
+      assert.equal(key.ruleCatalogVersion, ruleCatalogVersion);
       assert.deepEqual(key.referenceTree, definition.referenceTree);
       assert.equal(key.explanation, definition.explanation);
       assert.equal(
@@ -332,4 +357,8 @@ test('normal/demo truth-tree practice persists occurrence-specific drafts and ke
     await orm.em.execute(`drop schema if exists "${schema}" cascade`);
     await orm.close(true);
   }
-});
+}
+
+for (const ruleCatalogVersion of [1, 2] as const)
+  test(`catalog-${ruleCatalogVersion} normal/demo truth-tree practice persists drafts and keeps checks transient and references private`, () =>
+    verifyPracticeWorkflows(url, ruleCatalogVersion));

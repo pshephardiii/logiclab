@@ -14,6 +14,7 @@ import {
   truthTreePublicationDefinition,
   truthTreeContent,
   truthTreeReferenceSolution,
+  hasFinishedTruthTreeReference,
 } from './authoring';
 import { TruthTreeAuthoringError, TruthTreePublicationError } from './errors';
 import { authoringDefinition } from '../library-definition';
@@ -25,6 +26,7 @@ import type {
 import {
   truthTreeDefinitionFixture as fixture,
   truthTreeIds,
+  truthTreeShortCounterexampleFixture,
 } from '../../../../test/truth-tree-fixture';
 
 test.each(['valid', 'invalid'] as const)(
@@ -277,4 +279,57 @@ test('stored truth-tree/reference JSON types exactly round-trip through transpor
   const reference: StoredTree = transported.referenceTree!;
   expect(reference).toEqual(stored.referenceTree);
   expect(truthTreeDefinitionSchema.parse(JSON.parse(JSON.stringify(stored)))).toEqual(transported);
+});
+
+test.each(['valid', 'invalid'] as const)(
+  'catalog-2 %s references publish and reveal without changing their pinned choices',
+  (outcome) => {
+    const definition = fixture(outcome, 2);
+    const before = structuredClone(definition);
+    expect(authoringDefinition(definition)).toEqual(definition);
+    expect(truthTreePublicationDefinition(definition)).toEqual(definition);
+    const check = checkTruthTreeReference(definition);
+    expect(check).toMatchObject({
+      status: 'checked',
+      report: { ruleCatalogVersion: 2, status: 'verified', argumentStatus: outcome },
+    });
+    const content = truthTreeContent(definition);
+    expect(content).toMatchObject({ ruleCatalogVersion: 2, formulaGroupingVersion: 1 });
+    expect(content).not.toHaveProperty('referenceTree');
+    expect(content).not.toHaveProperty('explanation');
+    const solution = truthTreeReferenceSolution(definition);
+    expect(solution).toMatchObject({
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      argumentStatus: outcome,
+    });
+    expect(solution.referenceTree).toEqual(definition.referenceTree);
+    expect(definition).toEqual(before);
+  },
+);
+
+test('new explicit boundaries invalidate an old extraction without rewriting its saved reference', () => {
+  const definition = fixture('valid', 2);
+  definition.premises[0]!.formula = '(P & Q) & R';
+  // Even matching entered text cannot erase the instructor's new boundary.
+  definition.referenceTree!.occurrences[0]!.formula = 'P & Q & R';
+  expect(validateTruthTreeDefinition(definition)).toEqual(definition);
+  expect(checkTruthTreeReference(definition)).toMatchObject({
+    status: 'checked',
+    report: { status: 'invalid' },
+  });
+  expect(() => truthTreePublicationDefinition(definition)).toThrow(TruthTreePublicationError);
+  expect(() => truthTreeReferenceSolution(definition)).toThrow(TruthTreeAuthoringError);
+});
+
+test('catalog-2 disjunction references pin their split and require all paths for completion', () => {
+  const definition = truthTreeShortCounterexampleFixture(2);
+  expect(truthTreePublicationDefinition(definition)).toEqual(definition);
+  expect(hasFinishedTruthTreeReference(definition)).toBe(false);
+  expect(truthTreeReferenceSolution(definition).referenceTree.expansions[0]!.chainChoice).toEqual({
+    ruleId: 'disjunction',
+    splitIndex: 1,
+  });
+  definition.referenceTree!.expansions[0]!.chainChoice = { ruleId: 'disjunction', splitIndex: 2 };
+  expect(() => truthTreePublicationDefinition(definition)).toThrow(TruthTreePublicationError);
 });

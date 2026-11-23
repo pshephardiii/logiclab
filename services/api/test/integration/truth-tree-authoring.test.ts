@@ -22,10 +22,13 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 const origin = 'http://localhost:5173';
 
-test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked snapshots and rejects unsupported final-mode feedback atomically', async () => {
+async function verifyAuthoringWorkflows(
+  databaseUrl: string,
+  ruleCatalogVersion: 1 | 2,
+): Promise<void> {
   const db = await import('@logiclab/db');
   const schema = `truth_tree_authoring_${randomUUID().replaceAll('-', '')}`;
-  const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
+  const orm = await db.createDatabase(databaseUrl, { schema, snapshotOnMigrate: false });
   let app: ReturnType<typeof buildApp> | undefined;
   try {
     await orm.schema.create();
@@ -99,7 +102,7 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
     ]) {
       const path = `${scope.prefix}/problems`;
       for (const outcome of ['valid', 'invalid'] as const) {
-        const definition = truthTreeDefinitionFixture(outcome);
+        const definition = truthTreeDefinitionFixture(outcome, ruleCatalogVersion);
         const create = await request('POST', path, scope.cookie, {
           title: `Truth tree ${outcome}`,
           definition: { ...definition, referenceTree: null },
@@ -120,6 +123,14 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
         assert.equal(missingPublication.json().error.code, 'TRUTH_TREE_REFERENCE_REQUIRED');
         assert.equal(await em.fork().count(db.ProblemVersion, { problem: draft.id }), 0);
 
+        const wrongCatalog = await request('PATCH', itemPath, scope.cookie, {
+          definition: { ...definition, ruleCatalogVersion: ruleCatalogVersion === 1 ? 2 : 1 },
+        });
+        assert.equal(wrongCatalog.statusCode, 400, wrongCatalog.body);
+        assert.equal(
+          (await request('GET', itemPath, scope.cookie)).json().problem.definition.referenceTree,
+          null,
+        );
         const saved = await request('PATCH', itemPath, scope.cookie, { definition });
         assert.equal(saved.statusCode, 200, saved.body);
         assert.deepEqual(libraryProblemResponseSchema.parse(saved.json()).problem.definition, {
@@ -298,4 +309,8 @@ test('normal/demo truth-tree owner HTTP persists private drafts, verifies locked
     await orm.em.execute(`drop schema if exists "${schema}" cascade`);
     await orm.close(true);
   }
-});
+}
+
+for (const ruleCatalogVersion of [1, 2] as const)
+  test(`catalog-${ruleCatalogVersion} normal/demo truth-tree owner HTTP persists private drafts and verifies locked snapshots`, () =>
+    verifyAuthoringWorkflows(url, ruleCatalogVersion));
