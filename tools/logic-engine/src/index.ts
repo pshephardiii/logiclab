@@ -21,3 +21,12 @@ export type {
   FormulaNodeSyntax,
   ParsedFormulaSyntax,
 } from './parser/syntax';
+
+export {
+  FORMULA_GROUPING_POLICY_VERSION,
+  formulaGroupingIssues,
+  requireExplicitGrouping,
+  formulaChainMembers,
+} from './parser/grouping';
+
+export type { FormulaGroupingIssue } from './parser/grouping';
