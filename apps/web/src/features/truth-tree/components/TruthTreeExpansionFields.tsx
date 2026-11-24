@@ -2,7 +2,7 @@ import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
 import { TRUTH_TREE_LIMITS, type TruthTreeChainChoice } from '@logiclab/contracts/truth-tree';
 import { truthTreeRuleCatalog } from '@logiclab/logic-engine/truth-tree';
 import { truthTreeChainChoices } from '../helpers/chain-choices';
-import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { useId } from 'react';
 
 export type TreeExpansionEntry = {
@@ -153,7 +153,7 @@ export function TruthTreeExpansionFields({
             {group.map((formula, formulaIndex) => (
               <label key={formulaIndex}>
                 Formula {formulaIndex + 1}
-                <ProofFormulaInput
+                <FormulaInput
                   aria-label={`Formula ${formulaIndex + 1} · Result ${groupIndex + 1}.${formulaIndex + 1}`}
                   maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
                   autoComplete="off"

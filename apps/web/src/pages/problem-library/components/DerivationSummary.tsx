@@ -1,5 +1,5 @@
 import { ProblemType } from '@logiclab/contracts/problem-type';
-import { proofNotation } from '../../../features/proof/helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { PermittedRulesButton } from '../../../features/proof/reference/PermittedRulesButton';
 import { DerivationReferenceSummary } from './DerivationReferenceSummary';
 import type { LibraryProblemDefinition } from '@logiclab/contracts/problem-library';
@@ -25,7 +25,7 @@ export function DerivationSummary({
         <ol>
           {definition.premises.map((premise) => (
             <li key={premise.id}>
-              <code>{proofNotation(premise.formula) || '(blank)'}</code>
+              <code>{formulaNotation(premise.formula) || '(blank)'}</code>
             </li>
           ))}
         </ol>
@@ -34,7 +34,7 @@ export function DerivationSummary({
       )}
       <p>
         <strong>Conclusion:</strong>{' '}
-        <code>{proofNotation(definition.conclusion) || '(blank)'}</code>
+        <code>{formulaNotation(definition.conclusion) || '(blank)'}</code>
       </p>
       <PermittedRulesButton format={definition.format} rules={definition.rules} />
       <DerivationReferenceSummary definition={definition} />

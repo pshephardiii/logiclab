@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TRUTH_TREE_LIMITS } from '@logiclab/contracts/truth-tree';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
-import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import { ProofDeletionPrompt } from '../../../features/proof/components/ProofDeletionPrompt';
 import { TruthTreeEditor } from '../../../features/truth-tree/components/TruthTreeEditor';
@@ -52,7 +52,7 @@ export function TruthTreeProblemFields({
         />
         <label>
           Conclusion
-          <ProofFormulaInput
+          <FormulaInput
             maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
             autoComplete="off"
             autoCorrect="off"

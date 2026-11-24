@@ -1,6 +1,6 @@
 import { PROOF_LIMITS, type FitchProof, type FitchProofStep } from '@logiclab/contracts';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
-import { ProofFormulaInput } from './ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { FitchInferenceFields } from './FitchInferenceFields';
 import { fitchEntryRequirement } from '../helpers/fitch-entry-requirements';
 import { FitchPremiseFields } from './FitchPremiseFields';
@@ -66,7 +66,7 @@ export function FitchProofEntry({
         {lineNumber ?? index + 1}
       </th>
       <td className="fitch-line-formula">
-        <ProofFormulaInput
+        <FormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
           aria-describedby={requirement ? `${hint} ${requirementHint}` : hint}

@@ -1,5 +1,5 @@
 import { dependencyEntryRequirement } from './entry-requirements';
-import { ProofFormulaInput } from '../components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { useId, useRef } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
@@ -99,7 +99,7 @@ export function DependencyProofLine({
         {index + 1}
       </th>
       <td className="proof-line-formula">
-        <ProofFormulaInput
+        <FormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
           aria-describedby={requirement ? `${formulaHint} ${requirementHint}` : formulaHint}

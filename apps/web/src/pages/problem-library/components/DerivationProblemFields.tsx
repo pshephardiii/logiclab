@@ -5,7 +5,7 @@ import { ProofPremisesEditor } from '../../../features/proof/components/ProofPre
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
 import './derivation-authoring.css';
-import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { DerivationRuleFields } from './DerivationRuleFields';
@@ -129,7 +129,7 @@ export function DerivationProblemFields({
             onPendingChange={onPremisePendingChange}
           />
           <label htmlFor="derivation-conclusion">Conclusion</label>
-          <ProofFormulaInput
+          <FormulaInput
             id="derivation-conclusion"
             {...formulaInput}
             value={definition.conclusion}

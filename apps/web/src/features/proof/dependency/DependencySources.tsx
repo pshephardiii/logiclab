@@ -1,5 +1,5 @@
 import { dependencyNumbers } from './dependency-numbers';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { PROOF_LIMITS, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofDropdown } from '../components/ProofDropdown';
 
@@ -51,7 +51,7 @@ export function DependencySources({
                   })
                 }
               />
-              {positions.get(source.id)}. {proofNotation(source.formula) || '(blank)'}
+              {positions.get(source.id)}. {formulaNotation(source.formula) || '(blank)'}
             </label>
           ))}
           {missing.map((id, position) => (

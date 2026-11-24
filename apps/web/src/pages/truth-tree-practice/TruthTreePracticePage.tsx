@@ -5,7 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
 import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
 import { ProofPremisesEditor } from '../../features/proof/components/ProofPremisesEditor';
-import { ProofFormulaInput } from '../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../components/formula/FormulaInput';
 import { ProofKeyboardGuide } from '../../features/proof/reference/ProofKeyboardGuide';
 import { useUnsavedWork } from '../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -143,7 +143,7 @@ export function TruthTreePracticePage() {
             onPendingChange={setPremisePending}
           />
           <label htmlFor="truth-tree-practice-conclusion">Conclusion</label>
-          <ProofFormulaInput
+          <FormulaInput
             id="truth-tree-practice-conclusion"
             required
             maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}

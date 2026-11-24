@@ -1,6 +1,6 @@
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
-import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { propositionalRuleCatalog } from '@logiclab/logic-engine/proof/rules';
@@ -113,7 +113,7 @@ export function ProofPracticeSetup({
             <div className="proof-setup-premise" key={premise.id}>
               <label htmlFor={`practice-premise-${premise.id}`}>Premise {index + 1}</label>
               <div>
-                <ProofFormulaInput
+                <FormulaInput
                   {...formulaInput}
                   id={`practice-premise-${premise.id}`}
                   required
@@ -148,7 +148,7 @@ export function ProofPracticeSetup({
       )}
       <div className="proof-setup-conclusion">
         <label htmlFor="practice-proof-conclusion">Conclusion</label>
-        <ProofFormulaInput
+        <FormulaInput
           {...formulaInput}
           id="practice-proof-conclusion"
           required

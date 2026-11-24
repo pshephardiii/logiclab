@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import { ProofFormulaInput } from './ProofFormulaInput';
-import { proofNotation } from '../helpers/proof-notation';
+import { FormulaInput } from './FormulaInput';
+import { formulaNotation } from './formula-notation';
 
 function setup(value = '') {
   const changed = vi.fn();
   function Harness() {
     const [formula, setFormula] = useState(value);
     return (
-      <ProofFormulaInput
+      <FormulaInput
         aria-label="Formula"
         value={formula}
         onValueChange={(next) => {
@@ -37,7 +37,7 @@ test('keyboard aliases translate as typed, including partial contradiction and b
   await user.clear(input);
   await user.type(input, '~P <-> !(Q v R) ^ V');
   expect(input).toHaveValue('¬P ↔ ¬(Q ∨ R) ∧ V');
-  expect(proofNotation('P -> Q | _|_')).toBe('P → Q ∨ ⊥');
+  expect(formulaNotation('P -> Q | _|_')).toBe('P → Q ∨ ⊥');
 });
 
 test('existing ASCII work displays symbols without changing its data or calling a checker', () => {

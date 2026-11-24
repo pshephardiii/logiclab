@@ -12,7 +12,7 @@ import {
   assignmentPointAllocationsSchema,
   weightedAssignmentItemsSchema,
 } from './assignment-scoring';
-import { gradeReleaseTimingSchema } from './assignment-results-release';
+import { gradeReleaseTimingSchema } from './assignment-policy-values';
 import { z } from 'zod';
 import { assignmentLearningPolicySchema, solutionAccessSchema } from './assignment-learning-policy';
 import { assignmentProblemVersionSchema } from './assignment-problem';

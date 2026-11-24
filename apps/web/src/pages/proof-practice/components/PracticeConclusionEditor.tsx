@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { parseProofFormula, parseProofFormulaWithSyntax } from '@logiclab/logic-engine/proof';
 import { requireExplicitGrouping } from '@logiclab/logic-engine';
-import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 
 /** Only independent practice owns an editable target; applying it never rewrites the proof. */
 export function PracticeConclusionEditor({
@@ -75,7 +75,7 @@ export function PracticeConclusionEditor({
         if (event.key === 'Enter' && event.nativeEvent.isComposing) event.preventDefault();
       }}
     >
-      <ProofFormulaInput
+      <FormulaInput
         aria-label="New conclusion"
         value={draft}
         onValueChange={(value) => {

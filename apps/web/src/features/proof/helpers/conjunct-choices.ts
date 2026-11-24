@@ -1,6 +1,6 @@
 import { formulaChainMembers, requireExplicitGrouping } from '@logiclab/logic-engine';
 import { parseProofFormulaWithSyntax } from '@logiclab/logic-engine/proof';
-import { proofNotation } from './proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 
 /** Omit the field entirely: catalog 1 rejects even an undefined selection property. */
 export function withoutConjunctSelection<T extends { conjunctIndex?: number | null }>(step: T): T {
@@ -21,7 +21,7 @@ export function proofConjunctChoices(source: string | undefined) {
       const span = syntax.groups.at(-1) ?? syntax.span;
       return {
         id: String(index),
-        label: `${index + 1}. ${proofNotation(source.slice(span.start, span.end))}`,
+        label: `${index + 1}. ${formulaNotation(source.slice(span.start, span.end))}`,
       };
     });
   } catch {

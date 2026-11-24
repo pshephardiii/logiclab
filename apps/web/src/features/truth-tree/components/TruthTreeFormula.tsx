@@ -1,5 +1,5 @@
 import { TRUTH_TREE_LIMITS, type TruthTreeOccurrence } from '@logiclab/contracts/truth-tree';
-import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { truthTreeFormulaLabel, type FormulaProgress } from '../helpers/formula-presentation';
 
 const markers = {
@@ -53,7 +53,7 @@ export function TruthTreeFormula({
         )}
         <span className="truth-tree-formula-number">{number}.</span>
         {onFormula && occurrence.origin.kind === 'expansion' ? (
-          <ProofFormulaInput
+          <FormulaInput
             aria-label={`Formula ${number}`}
             value={occurrence.formula}
             maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}

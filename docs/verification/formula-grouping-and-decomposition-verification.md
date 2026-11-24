@@ -1,6 +1,7 @@
 # Formula grouping and decomposition verification
 
-Branch: `036-feat-formula-grouping-and-decomposition`  
+Branch: `036-feat-formula-grouping-and-decomposition`
+
 Final automated verification: November 24, 2026.
 
 ## Resulting behavior
@@ -22,6 +23,8 @@ Published definitions pin their policy/catalog. Save/check/finalization validate
 | Local Markdown targets             | Passed                                                                                           |
 
 The first full check found an obsolete dependency-contract fixture that treated now-supported proof version 2 as unsupported. Its unsupported-version case now uses version 3; the complete check then passed. PostgreSQL checks used isolated schemas in the configured disposable test database, with cleanup. No user development database was migrated or reset. Existing Jest VM-module advisories remain.
+
+Post-review cleanup removed the redundant internal `ProofFormulaInput`, `proof-notation` and contracts `assignment-results-release` forwarding files. Callers now import the shared formula component/notation and policy schemas directly, and shared input tests live with their implementation. Supported package exports and intentional database type/value boundaries remain intact. The full workspace check was rerun for this cleanup; PostgreSQL checks were not repeated because persistence, wire values and schema behavior did not change. The additional log is `forwarder-cleanup-check.log` in the final evidence directory.
 
 Coverage includes source spans and explicit delimiters; grouping errors/positions; unchanged AST/table IDs; chain positions and duplicate-looking members; explicit/inherited boundary erasure; ordinary rule correspondences; permissions/arity/scope/discharge/dependencies; target and unused errors; bounded malformed/resource failures; per-path completeness; immutable retries; publication and version-switch rollback; release/redaction; shared editor selection/dirty-state behavior; and demo reset/isolation.
 

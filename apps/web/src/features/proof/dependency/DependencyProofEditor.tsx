@@ -4,7 +4,7 @@ import { DependencyRangeDeletionDialog } from './DependencyRangeDeletionDialog';
 import type { ReactNode } from 'react';
 import { dependencyEntryRequirement } from './entry-requirements';
 import { createDependencyDischargeEntry } from './discharge-entry';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { DependencyProofRemovalDialog } from './DependencyProofRemovalDialog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
@@ -229,7 +229,7 @@ export function DependencyProofEditor({
               <ol>
                 {statement.premises.map((premise) => (
                   <li key={premise.id}>
-                    <code>{proofNotation(premise.formula)}</code>
+                    <code>{formulaNotation(premise.formula)}</code>
                   </li>
                 ))}
               </ol>

@@ -1,6 +1,6 @@
 import type { DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { ProofChoice } from '../components/ProofChoice';
 import { ProofConjunctChoice } from '../components/ProofConjunctChoice';
 import { withoutConjunctSelection } from '../helpers/conjunct-choices';
@@ -30,7 +30,7 @@ export function DependencyInferenceFields({
 
   const earlier = steps.slice(0, index).map((line, position) => ({
     id: line.id,
-    label: `${position + 1}. ${proofNotation(line.formula) || '(blank)'}`,
+    label: `${position + 1}. ${formulaNotation(line.formula) || '(blank)'}`,
   }));
 
   return (

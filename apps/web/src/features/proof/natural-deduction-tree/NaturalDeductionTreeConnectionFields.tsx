@@ -1,7 +1,7 @@
 import type { NaturalDeductionTreeProof } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
-import { ProofFormulaInput } from '../components/ProofFormulaInput';
-import { proofNotation } from '../helpers/proof-notation';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import type { NaturalDeductionTreeConnection } from './entry';
 
 /** Connection metadata is explicit; selecting a branch never infers which assumptions discharge. */
@@ -26,7 +26,7 @@ export function NaturalDeductionTreeConnectionFields({
         <>
           <label>
             Branch assumption formula
-            <ProofFormulaInput
+            <FormulaInput
               value={connection.assumptionFormula}
               onValueChange={(assumptionFormula) => onChange({ ...connection, assumptionFormula })}
               maxLength={PROOF_LIMITS.maxFormulaLength}
@@ -54,7 +54,7 @@ export function NaturalDeductionTreeConnectionFields({
                         })
                       }
                     />
-                    Discharge node {index + 1}: {proofNotation(node.formula) || '(blank)'}
+                    Discharge node {index + 1}: {formulaNotation(node.formula) || '(blank)'}
                   </label>
                 ),
             )}

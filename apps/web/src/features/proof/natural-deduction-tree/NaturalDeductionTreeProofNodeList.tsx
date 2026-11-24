@@ -1,5 +1,5 @@
 import type { NaturalDeductionTreeProof } from '@logiclab/contracts';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 
 /** Retained nodes keep their original numbers, including detached or malformed references. */
 export function NaturalDeductionTreeProofNodeList({
@@ -22,7 +22,7 @@ export function NaturalDeductionTreeProofNodeList({
 
         return (
           <li key={index} value={index + 1}>
-            <code>{proofNotation(node.formula) || '(blank)'}</code> —{' '}
+            <code>{formulaNotation(node.formula) || '(blank)'}</code> —{' '}
             {node.kind === 'inference' ? (
               <>
                 {node.ruleId ? (labels.get(node.ruleId) ?? 'Rule not enabled') : 'No rule selected'}
@@ -31,7 +31,7 @@ export function NaturalDeductionTreeProofNodeList({
                 {node.branches
                   .map(
                     (branch) =>
-                      `node ${position(branch.rootId)} assuming ${proofNotation(branch.assumptionFormula) || '(blank)'}; discharge nodes ${branch.assumptionIds.map(position).join(', ') || 'none'}`,
+                      `node ${position(branch.rootId)} assuming ${formulaNotation(branch.assumptionFormula) || '(blank)'}; discharge nodes ${branch.assumptionIds.map(position).join(', ') || 'none'}`,
                   )
                   .join(' / ') || 'none'}
               </>

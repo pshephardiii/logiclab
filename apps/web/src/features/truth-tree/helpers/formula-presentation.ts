@@ -6,7 +6,7 @@ import {
   decomposeTruthTreeFormula,
   type TruthTreeFormula,
 } from '@logiclab/logic-engine/truth-tree';
-import { proofNotation } from '../../proof/helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { editableTree } from './construction';
 
 const operators = { and: '∧', or: '∨', implies: '→', iff: '↔' };
@@ -32,11 +32,11 @@ export function truthTreeFormulaLabel(value: string, version: 1 | 2 = 1): string
     if (version === 2) {
       // Preserve the author's binary boundaries rather than printing the parser's left fold.
       parseTruthTreeFormula(value);
-      return proofNotation(value).replace(/\(\s*([A-Z]|⊥)\s*\)|\[\s*([A-Z]|⊥)\s*\]/g, '$1$2');
+      return formulaNotation(value).replace(/\(\s*([A-Z]|⊥)\s*\)|\[\s*([A-Z]|⊥)\s*\]/g, '$1$2');
     }
     return formatted(parseTruthTreeFormula(value));
   } catch {
-    return proofNotation(value) || '(blank)';
+    return formulaNotation(value) || '(blank)';
   }
 }
 

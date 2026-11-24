@@ -28,8 +28,6 @@ export * from './assignment-learning-policy';
 
 export * from './assignment-policy-values';
 
-export * from './assignment-results-release';
-
 export * from './conceptual-question';
 
 export * from './assignment-responses';
