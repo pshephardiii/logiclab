@@ -1,12 +1,8 @@
 import type { FitchProofCheckInput, DependencyProofCheckInput } from '@logiclab/contracts';
 import { formulaChainMembers } from '../parser/grouping';
-import { readFormula, type ParsedProofFormula } from './proof-formulas';
+import type { ParsedProofFormula } from './proof-formulas';
 import type { ProofBudget } from './proof-budget';
-import { structureDiagnostics } from './structure-diagnostics';
-import { analyzeFitchStructure } from './fitch/structure';
-import { evaluateFitchSteps } from './fitch/steps';
-import { analyzeDependencyStructure } from './dependency/structure';
-import { evaluateDependencySteps } from './dependency/steps';
+import { readProofSourceFormulas } from './source-analysis';
 
 type Input = FitchProofCheckInput | DependencyProofCheckInput;
 
@@ -20,7 +16,7 @@ export function filledProofConjunctSelections(
   premises: Map<string, ParsedProofFormula>,
   budget: ProofBudget,
 ): boolean {
-  const { problem, proof } = input;
+  const { proof } = input;
   const selections = [];
   for (const step of proof.steps) {
     budget.spend(1);
@@ -32,23 +28,8 @@ export function filledProofConjunctSelections(
   }
   if (selections.length === 0) return true;
 
-  const diagnostics = structureDiagnostics();
-  const formulas = proof.steps.map((step, index) =>
-    readFormula(step.formula, budget, diagnostics, index, problem.formulaGroupingVersion),
-  );
-
-  // Source provenance uses the same successful local patterns as checking, without requiring
-  // a valid proof. Invalid reference/support reports do not by themselves prevent completion.
-  if (proof.format === 'fitch') {
-    const structure = analyzeFitchStructure(proof);
-    if (structure.status !== 'resolved') return false;
-    evaluateFitchSteps({ problem, proof }, structure, formulas, premises, budget, diagnostics);
-  } else {
-    const structure = analyzeDependencyStructure(proof);
-    if (structure.status !== 'resolved') return false;
-    evaluateDependencySteps({ problem, proof }, structure, formulas, premises, budget, diagnostics);
-  }
-  if (diagnostics.limited) return false;
+  const formulas = readProofSourceFormulas(input, premises, budget);
+  if (!formulas) return false;
 
   const indices = new Map(proof.steps.map((step, index) => [step.id, index]));
   for (const step of selections) {

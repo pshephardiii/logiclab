@@ -3,6 +3,8 @@ import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { ProofChoice } from './ProofChoice';
 import { ProofRuleHelp } from '../reference/ProofRuleHelp';
+import { ProofConjunctChoice } from './ProofConjunctChoice';
+import { withoutConjunctSelection } from '../helpers/conjunct-choices';
 
 type InferenceStep = Extract<FitchProofStep, { kind: 'inference' }>;
 
@@ -15,6 +17,8 @@ type Props = {
   onChange: (step: InferenceStep) => void;
   compact?: boolean;
   staged?: boolean;
+  ruleCatalogVersion?: 1 | 2;
+  sourceFormulas?: ReadonlyMap<string, string>;
 };
 
 /** Preserve existing citation slots and unresolved IDs when the selected rule changes. */
@@ -27,8 +31,10 @@ export function FitchInferenceFields({
   onChange,
   compact = false,
   staged = false,
+  ruleCatalogVersion = 1,
+  sourceFormulas,
 }: Props) {
-  const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
+  const rule = step.ruleId ? getPropositionalRule(step.ruleId, ruleCatalogVersion) : undefined;
 
   return (
     <>
@@ -46,7 +52,9 @@ export function FitchInferenceFields({
         empty={compact ? 'Rule' : 'None'}
         value={step.ruleId}
         choices={rules.map((rule) => ({ id: rule.id, label: rule.label }))}
-        onChange={(ruleId) => onChange({ ...step, ruleId })}
+        onChange={(ruleId) =>
+          onChange({ ...(ruleId === step.ruleId ? step : withoutConjunctSelection(step)), ruleId })
+        }
       />
       {!compact && <ProofRuleHelp format="fitch" rules={rules} ruleId={step.ruleId} />}
       {Array.from(
@@ -63,20 +71,32 @@ export function FitchInferenceFields({
             }))}
             onChange={(id) => {
               const refs = [...step.lineReferences];
+              const next =
+                slot === 0 && id !== (step.lineReferences[0] || null)
+                  ? withoutConjunctSelection(step)
+                  : step;
 
               if (staged) {
                 for (let position = refs.length; position <= slot; position++) refs.push('');
                 refs[slot] = id ?? '';
                 while (refs.at(-1) === '') refs.pop();
-                onChange({ ...step, lineReferences: refs });
+                onChange({ ...next, lineReferences: refs });
               } else {
                 if (id) refs[slot] = id;
                 else refs.splice(slot, 1);
-                onChange({ ...step, lineReferences: refs.filter(Boolean) });
+                onChange({ ...next, lineReferences: refs.filter(Boolean) });
               }
             }}
           />
         ),
+      )}
+      {ruleCatalogVersion === 2 && step.ruleId === 'and_chain_elimination' && (
+        <ProofConjunctChoice
+          index={index}
+          value={step.conjunctIndex}
+          source={sourceFormulas?.get(step.lineReferences[0] ?? '')}
+          onChange={(conjunctIndex) => onChange({ ...step, conjunctIndex })}
+        />
       )}
       {Array.from(
         { length: Math.max(rule?.subproofReferences ?? 0, step.subproofReferences.length) },

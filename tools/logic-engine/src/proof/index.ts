@@ -69,3 +69,5 @@ export type {
 } from './natural-deduction-tree/structure';
 
 export { isFinishedNaturalDeductionTreeProofAttempt } from './natural-deduction-tree/completeness';
+
+export { proofConstructionSources } from './construction-sources';

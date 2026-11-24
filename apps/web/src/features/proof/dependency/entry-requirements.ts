@@ -1,3 +1,4 @@
+import { proofConjunctRequirement } from '../helpers/conjunct-choices';
 import type { DependencyProof } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 
@@ -6,6 +7,7 @@ export function dependencyEntryRequirement(
   proof: DependencyProof,
   index: number,
   rules: { id: string }[],
+  sources?: ReadonlyMap<string, string>,
 ): string | null {
   const step = proof.steps[index];
   if (!step || !step.formula.trim()) return 'Enter a formula.';
@@ -13,7 +15,7 @@ export function dependencyEntryRequirement(
 
   const rule =
     step.ruleId && rules.some((value) => value.id === step.ruleId)
-      ? getPropositionalRule(step.ruleId)
+      ? getPropositionalRule(step.ruleId, proof.proofVersion)
       : undefined;
   if (!rule) return 'Choose a rule.';
 
@@ -45,5 +47,5 @@ export function dependencyEntryRequirement(
     return 'Choose an available assumption and concluding line for each discharge.';
 
   // An empty dependency set can be correct, especially after discharging all assumptions.
-  return null;
+  return proofConjunctRequirement(step, sources);
 }

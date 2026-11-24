@@ -1,3 +1,4 @@
+import { proofConjunctRequirement } from './conjunct-choices';
 import type { FitchProof } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 
@@ -6,6 +7,7 @@ export function fitchEntryRequirement(
   proof: FitchProof,
   index: number,
   rules: { id: string }[],
+  sources?: ReadonlyMap<string, string>,
 ): string | null {
   const step = proof.steps[index];
   if (!step || !step.formula.trim()) return 'Enter a formula.';
@@ -13,7 +15,7 @@ export function fitchEntryRequirement(
 
   const rule =
     step.ruleId && rules.some((value) => value.id === step.ruleId)
-      ? getPropositionalRule(step.ruleId)
+      ? getPropositionalRule(step.ruleId, proof.proofVersion)
       : undefined;
   if (!rule) return 'Choose a rule.';
 
@@ -37,5 +39,5 @@ export function fitchEntryRequirement(
   const blocks = new Set(proof.blocks.map((block) => block.id));
   if (step.subproofReferences.some((id) => !blocks.has(id)))
     return 'Replace the unavailable subproof citation.';
-  return null;
+  return proofConjunctRequirement(step, sources);
 }
