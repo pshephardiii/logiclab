@@ -11,7 +11,10 @@ export function withFreshReference(
     case 'fitch':
       return { ...definition, referenceProof: startFitchProof(definition) };
     case 'dependency':
-      return { ...definition, referenceProof: startDependencyProof(definition.premises) };
+      return {
+        ...definition,
+        referenceProof: startDependencyProof(definition.premises, definition.ruleCatalogVersion),
+      };
     case 'tree':
       return {
         ...definition,

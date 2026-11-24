@@ -138,6 +138,7 @@ export function DerivationProblemFields({
         </section>
         <div className="derivation-authoring-rules">
           <DerivationRuleFields
+            ruleCatalogVersion={definition.ruleCatalogVersion}
             rules={definition.rules}
             labels={fields.derivationLabels}
             onChange={(rules, derivationLabels) =>

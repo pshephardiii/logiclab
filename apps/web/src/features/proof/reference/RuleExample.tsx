@@ -12,7 +12,9 @@ type Props = {
 /** Static examples only. Never receives or evaluates the current reference/student proof. */
 export function RuleExample({ lines, format, rules }: Props) {
   const label = (id: string) =>
-    rules.find((rule) => rule.id === id)?.label ?? getPropositionalRule(id)?.label ?? id;
+    rules.find((rule) => rule.id === id)?.label ??
+    getPropositionalRule(id, format === 'tree' ? 1 : 2)?.label ??
+    id;
 
   function tree(position: number, path: string): ReactNode {
     const line = lines[position - 1]!;
@@ -92,6 +94,7 @@ export function RuleExample({ lines, format, rules }: Props) {
                   <>
                     {label(line.rule!)}
                     {line.citations.length > 0 && ` · ${line.citations.join(', ')}`}
+                    {line.conjunctIndex !== undefined && ` · conjunct ${line.conjunctIndex + 1}`}
                     {line.discharges.length > 0 &&
                       ` · ${format === 'dependency' ? 'discharge pairs' : 'subproofs'} ${line.discharges.map(([start, end]) => `${start}–${end}`).join(', ')}`}
                   </>

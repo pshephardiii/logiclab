@@ -39,6 +39,7 @@ export function DependencyProofEditor({
     premises: { id: string; formula: string }[];
     rules: { id: string; label: string }[];
     conclusion?: string;
+    ruleCatalogVersion?: 1 | 2;
   };
   proof: DependencyProof | null;
   purpose?: 'reference' | 'student';
@@ -231,7 +232,7 @@ export function DependencyProofEditor({
             onClick={() => {
               setBefore(null);
               focusRequested.current = true;
-              change(startDependencyProof(statement.premises));
+              change(startDependencyProof(statement.premises, statement.ruleCatalogVersion));
             }}
           >
             {reference ? 'Start reference proof' : 'Start proof'}

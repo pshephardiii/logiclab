@@ -1,9 +1,15 @@
-import type { PropositionalRuleId } from '@logiclab/logic-engine/proof/rules';
+import type {
+  PropositionalRuleId,
+  PropositionalChainRule,
+} from '@logiclab/logic-engine/proof/rules';
+
+type ReferenceRuleId = PropositionalRuleId | PropositionalChainRule['id'];
 
 export type ExampleLine = {
   formula: string;
   kind: 'premise' | 'assumption' | 'inference';
-  rule?: PropositionalRuleId;
+  rule?: ReferenceRuleId;
+  conjunctIndex?: number;
   citations: number[];
   discharges: [number, number][];
   dependencies: number[];
@@ -191,6 +197,23 @@ export const RULE_REFERENCE = {
   },
 } satisfies Record<PropositionalRuleId, RuleReference>;
 
-export function getRuleReference(id: PropositionalRuleId): RuleReference {
-  return RULE_REFERENCE[id];
+const CONJUNCT_REFERENCE: RuleReference = {
+  premises: ['A ∧ B ∧ C'],
+  conclusion: 'B',
+  example: [
+    premise('P ∧ Q ∧ R', 1),
+    {
+      formula: 'Q',
+      kind: 'inference',
+      rule: 'and_chain_elimination',
+      conjunctIndex: 1,
+      citations: [1],
+      discharges: [],
+      dependencies: [1],
+    },
+  ],
+};
+
+export function getRuleReference(id: ReferenceRuleId): RuleReference {
+  return id === 'and_chain_elimination' ? CONJUNCT_REFERENCE : RULE_REFERENCE[id];
 }

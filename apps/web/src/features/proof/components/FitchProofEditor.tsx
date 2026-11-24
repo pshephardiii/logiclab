@@ -29,7 +29,8 @@ import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 import { ProofEditorHeading } from './ProofEditorHeading';
 
 type Props = {
-  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> & { conclusion?: string };
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> &
+    Partial<Pick<FitchDerivationContent, 'conclusion' | 'ruleCatalogVersion'>>;
   proof: FitchProof | null;
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
@@ -241,7 +242,12 @@ export function FitchProofEditor({
   const endpoint = proof ? fitchScopeEndpoint(proof, scope, before) : null;
 
   const { lines, lineScopes, blockChoices } = fitchEditorChoices(
-    proof ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+    proof ?? {
+      proofVersion: statement.ruleCatalogVersion ?? 1,
+      format: 'fitch',
+      steps: [],
+      blocks: [],
+    },
   );
   // Malformed drafts may contain blocks with no usable assumption-line menu.
   const attachedBlockIds = new Set(
