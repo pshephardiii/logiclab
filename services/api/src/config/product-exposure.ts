@@ -1,6 +1,6 @@
 import { resolveProductExposure } from '@logiclab/contracts/product-exposure';
 
-/** Configuration only; route registration and dependency initialization consume this later. */
+/** Resolve exposure before opening application resources or registering resource routes. */
 export function readProductExposureConfig(env: NodeJS.ProcessEnv) {
   if (env.NODE_ENV !== undefined && !['development', 'test', 'production'].includes(env.NODE_ENV))
     throw new Error(

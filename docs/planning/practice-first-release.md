@@ -44,3 +44,19 @@ Blank, misspelled, non-string or unknown explicit values never fall back to full
 This slice adds configuration readers/contracts and tests only. They are not yet called by API startup, Vite configuration or routing: setting either variable does not restrict the running application yet, and current build commands remain unchanged. Environment examples will be updated when their consumers are wired. The API guard/bootstrap slice comes next, followed by frontend routes/providers and runtime mode-mismatch handling. No environment file, deployment branch, database or hosted resource was changed.
 
 Validation: 28 focused contract/API/frontend configuration tests passed, covering local defaults, explicit choices, missing production configuration, invalid values, sanitized errors and the strict public metadata shape. Workspace type checks and contracts/API/frontend production builds passed; formatting and whitespace checked. No browser or database run was needed for these unconsumed configuration helpers.
+
+## Branch 037 — slice 2: API exposure and startup
+
+API startup now resolves `PRODUCT_EXPOSURE` before creating dependencies. Practice-only skips both normal and demo dependency factories, so account/Cognito, database, simulator/billing and demo workspace initialization do not run even if their feature flags or unused credentials are present. Full mode retains the existing feature-flag validation, initialization and shutdown behavior. Production startup rejects missing/invalid exposure before listening, with setting-only error messages.
+
+`buildApp` also gates full-product route registration independently of startup. Supplying auth/demo/classroom/problem/assignment/student-work/billing contexts cannot register those route groups in practice-only mode. Direct resource requests return 404 without authenticating or issuing cookies. The practice-only API surface is:
+
+- `POST /api/truth-tables/exercise`, `/api/truth-tables/check` and `/api/truth-tables/solution`.
+- `GET /api/health` (existing process health semantics).
+- `GET /api/product-exposure`, returning only `{ "productExposure": "practice-only" }` with `Cache-Control: no-store`; full mode reports `full`. GET routes retain Fastify's normal HEAD support.
+
+Formula/grouping validation and existing request/resource limits remain in the unchanged practice route group. Normal/demo data and operator job commands are not modified. Root/API environment examples now document the API setting; no actual `.env` file was changed.
+
+Frontend navigation, direct-URL guards, build-time enforcement and runtime mode agreement are the next slice. They are not wired yet: the current frontend can still display full-product links and request unavailable session routes against a practice-only API. Keep the complete hosted release pending that integration and the planned final checks; local API mode still defaults to full.
+
+Validation: all 1,268 API tests passed, including 33 focused route/config/startup/shutdown cases run during development. HTTP tests exercise practice-only behavior with deliberately unusable resource contexts and credential-bearing requests across normal/demo resource paths. Real subprocess tests verify production practice startup and HTTP without valid full-product configuration or a database, missing/invalid-mode refusal, full-mode dependency validation and SIGTERM cleanup. API type checks, production build, formatting and whitespace passed. Temporary API processes were cleaned up. No browser or PostgreSQL workflow rerun in this backend slice; frontend integration and broader branch verification remain pending.

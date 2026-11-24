@@ -3,6 +3,8 @@ import { createDemoDependencies } from './bootstrap/demo';
 import { buildApp } from './app';
 import { createDependencies } from './bootstrap/dependencies';
 import type { FastifyInstance } from 'fastify';
+import { ProductExposure } from '@logiclab/contracts/product-exposure';
+import { readProductExposureConfig } from './config/product-exposure';
 
 let app: FastifyInstance | undefined;
 
@@ -38,7 +40,9 @@ function shutdown() {
 /** Connects application startup/shutdown to dependency creation and shared-resource cleanup. */
 async function start() {
   try {
-    const dependencies = await createDependencies(process.env);
+    const productExposure = readProductExposureConfig(process.env);
+    const fullProduct = productExposure === ProductExposure.Full;
+    const dependencies = fullProduct ? await createDependencies(process.env) : null;
     let demo: Awaited<ReturnType<typeof createDemoDependencies>> = null;
 
     closeDependencies = async () => {
@@ -51,12 +55,13 @@ async function start() {
 
     if (stopping) return;
 
-    demo = await createDemoDependencies(process.env);
+    demo = fullProduct ? await createDemoDependencies(process.env) : null;
 
     if (stopping) return;
 
     app = buildApp({
       logger: true,
+      productExposure,
       ...(demo ? { demo: demo.runtime } : {}),
       ...(dependencies
         ? {
@@ -76,7 +81,9 @@ async function start() {
     await app.listen({ port, host });
   } catch (error) {
     console.error(
-      error instanceof Error && error.message.startsWith('Invalid auth configuration:')
+      error instanceof Error &&
+        (error.message.startsWith('Invalid auth configuration:') ||
+          error.message.startsWith('Invalid product exposure configuration:'))
         ? error.message
         : 'API startup failed. Check configuration and database connectivity.',
     );
