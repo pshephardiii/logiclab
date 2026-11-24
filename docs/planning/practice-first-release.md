@@ -29,3 +29,18 @@ Keep application code and environment configuration shared; do not accumulate a 
 ## Deferred product work
 
 After the practice release and initial portfolio work, continue the demo teaching-flow and genuine-account product UI audits before publicly enabling those areas. Keep the existing assignment list/settings/due-date backlog and wider QA findings. A practice-only portfolio release is not sign-off on the instructor platform, account/billing journeys or exhaustive browser/accessibility coverage.
+
+## Branch 037 — slice 1: exposure configuration foundation
+
+The shared contract defines `ProductExposure.Full` (`full`) and `ProductExposure.PracticeOnly` (`practice-only`), strict validation and a public metadata response containing only `productExposure`. A dedicated `@logiclab/contracts/product-exposure` entry supports API/frontend consumers without duplicating wire values.
+
+| Setting                          | Reader behavior                                                                                                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API `PRODUCT_EXPOSURE`           | Missing values default to `full` outside production; `NODE_ENV=production` requires an explicit valid choice. Unknown `NODE_ENV` values are rejected rather than treated as local development. |
+| Frontend `VITE_PRODUCT_EXPOSURE` | Missing values default to `full` when serving locally. Every build command requires an explicit valid choice, including builds using a custom Vite mode.                                       |
+
+Blank, misspelled, non-string or unknown explicit values never fall back to full. Errors identify the setting without echoing its supplied value. Auth/demo/billing flags do not choose exposure implicitly. The metadata schema rejects extra fields; credentials and service settings do not belong in the later public response.
+
+This slice adds configuration readers/contracts and tests only. They are not yet called by API startup, Vite configuration or routing: setting either variable does not restrict the running application yet, and current build commands remain unchanged. Environment examples will be updated when their consumers are wired. The API guard/bootstrap slice comes next, followed by frontend routes/providers and runtime mode-mismatch handling. No environment file, deployment branch, database or hosted resource was changed.
+
+Validation: 28 focused contract/API/frontend configuration tests passed, covering local defaults, explicit choices, missing production configuration, invalid values, sanitized errors and the strict public metadata shape. Workspace type checks and contracts/API/frontend production builds passed; formatting and whitespace checked. No browser or database run was needed for these unconsumed configuration helpers.
