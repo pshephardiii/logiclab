@@ -1,0 +1,74 @@
+# Practice samples and step-through worked examples
+
+Planned next branch: `038-feat-practice-sample-problems` (provisional; confirm numbering before creation). Implement after `037-feat-practice-only-exposure` and before the initial hosted practice sandbox. This planning update does not start implementation or deployment.
+
+## Purpose
+
+Give visitors with no formal-logic background, including recruiters, an immediate way to see what LogicLab does. They should be able to load a small usable problem, inspect its solution one meaningful step at a time or jump to the completed example without inventing formulas or knowing how to construct a proof/tree first. Sample loading, completed examples and the step-through layer belong to this single feature branch; videos are deferred.
+
+This is part of anonymous independent practice and must work in both full local mode and the practice-only hosted mode. It does not depend on accounts, demo workspaces, instructor content or a database.
+
+## Coverage
+
+| Practice experience           | Load action                                                                            | Completed example                                                                     |
+| ----------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Truth table                   | Populate a short formula and create its initial table using the existing practice API. | Reuse the existing solution display, with clear sample-oriented wording where needed. |
+| Fitch derivation              | Load premises, conclusion, rule permissions and the initial proof workspace.           | Display a verified completed Fitch proof using the existing read-only proof view.     |
+| Dependency derivation         | Load the corresponding format's statement, permissions and initial workspace.          | Display a verified proof with dependencies and any discharge visible.                 |
+| Truth tree / semantic tableau | Load premises, conclusion and initial roots, including the negated conclusion.         | Display a verified completed tree and its correct Valid/Invalid verdict.              |
+
+Provide at least one curated sample for each available experience. Fitch/dependency may use the same small argument so visitors can compare formats. Prefer short formulas, few variables and a handful of steps, with notation/grouping that matches the current policy. Choose exact examples during the first implementation slice. A second small invalid-argument tree would help demonstrate an open counterexample; include it if it keeps the feature compact rather than requiring a sample browser or catalog UI.
+
+Natural-deduction trees remain unavailable. Instructor-authored conceptual questions have no anonymous-practice page and are outside this branch's scope.
+
+## Interaction
+
+Use a prominent, clearly labeled **Load sample problem** action near setup. Recommended flow: one click opens the initialized practice workspace, without automatically revealing the solution. Once the sample is active, make **Walk through the solution** and **View completed example** easy to find, using type-specific wording where clearer. Visitors can inspect the finished result immediately or build up to it.
+
+Keep the completed proof/tree in a clearly labeled read-only example area, separate from the visitor's editable attempt. Opening/hiding it must not overwrite entered work, fill the visitor's verdict, fabricate checking feedback or mark their attempt verified. The completed truth tree explicitly states the correct argument verdict. Visitors can continue trying the sample and use the ordinary Check action on their own work.
+
+Loading/reloading a sample follows the ordinary reset and unsaved-work protections: replacing entered setup or work requires the existing discard confirmation. A visitor who stays retains their work and any pending entry. Repeated loading starts fresh sample state rather than retaining earlier feedback, answers or pending editor fields. Keep cancellation and late-response guards for table-generation requests.
+
+Bind each worked example to its exact sample statement, proof format, permitted rules and policy/catalog. Edits to those inputs must stop presenting the reference as a solution to the changed problem; the UI can offer to reload the original sample. Editing only the visitor's attempted proof/tree keeps its matching sample reference available. Format switching uses the existing reset/confirmation behavior and loads the appropriate format-specific example only through an explicit sample action.
+
+## Step-through layer
+
+Use a handful of hardcoded demonstration stages alongside each curated sample, rendered with the existing visual components. The walkthrough is a separate read-only view of the example; it does not drive the live editor or replay simulated clicks against application controls.
+
+- Provide **Back**, **Next step**, **Restart example** and an immediate **View completed example** action. Show the current step and total. Restart affects only the walkthrough position, never the visitor's attempted solution.
+- Begin by identifying the statement and initial workspace, then reveal one meaningful change per click. Fitch stages can open an assumption, add an inference or close/discharge a subproof. Dependency stages can show the next line and how its dependencies carry through or discharge. Tree stages add an entire expansion/split or close a path, with the final stage explaining the correct argument verdict.
+- For truth tables, demonstrate representative rows/columns or reveal a column at a time; avoid requiring a click for every cell. The completed table remains directly accessible.
+- Give each stage one short explanation and, where useful, visually emphasize what changed. Use brief transitions with reduced-motion support, keyboard-operable controls and accessible step announcements. Navigation remains user-controlled, with no timed autoplay requirement.
+- Intermediate stages are deliberately unfinished examples, not failed student work or verified complete solutions. Do not produce grading/checking feedback for the visitor merely by advancing the walkthrough.
+
+## Brief explanation text
+
+Use light contextual explanations. The step-through approach is agreed; exact examples and wording remain to be reviewed during implementation.
+
+- A brief introduction identifies premises as what is assumed and the conclusion as what the argument aims to establish. Familiar-language meanings for variables can make the selected example easier to understand.
+- Beside the completed example, add two or three short sentences describing its main move. For Fitch/dependency, explain the relevant assumption/discharge when used. For truth trees, explain why all paths closing establishes validity, or why a fully decomposed open path supplies a counterexample.
+- Keep detailed explanation out of the ordinary editor controls. Reuse existing visual premise/conclusion, rule-help and validity labels instead of repeating a textbook account throughout the page.
+
+## Data and correctness
+
+Hardcoded, repository-owned sample statements and completed examples are appropriate. These are intentionally public teaching content. They require no proof search, runtime AI generation, instructor reference access or database seeding.
+
+Store curated stages with their sample, using explicit structurally consistent states or a small sample-specific sequence. A tree split reveals both child branches as one stage; Fitch stages must not retain endpoints/citations to lines that have not appeared yet. Avoid blindly truncating a completed structure or building a general tutorial/playback framework.
+
+Pin the existing supported catalog/grouping versions and applicable rule permissions. Clone sample structures when loading them so editing cannot mutate the reusable fixture; keep all line/branch/assumption/citation identities consistent. Use normal initialization/reset paths and existing read-only renderers rather than constructing a separate editor or checker.
+
+Validate every stage against the applicable shape/structure rules, allowing intentional incompleteness. Test forward/back/restart ordering and ensure the final stage matches the verified completed example. Verify completed examples with the real engine in tests. Each proof must be accepted under its exact statement/rules. Each tree must be verified with the expected argument outcome and matching displayed verdict; an invalid sample must include a fully decomposed open counterexample. Table expected values/IDs come from the existing engine/API workflow and must remain consistent. No new account/demo/backend resource routes should be needed; any use of the existing stateless table endpoints must remain compatible with the practice-only allowlist.
+
+## Suggested implementation slices
+
+1. Curate sample statements, completed answers, demonstration stages, short text and pinned versions; add real-checker validation, stage consistency and immutable-fixture coverage.
+2. Add explicit load actions across table, Fitch/dependency and tree practice, preserving existing reset, pending-entry and request-cancellation behavior.
+3. Add separate completed proof/tree displays, visible tree verdicts and reference-to-statement matching. Reuse table solution controls.
+4. Add the curated step-through layer with Back/Next/Restart, step captions, change emphasis and reduced-motion support. Keep walkthrough navigation separate from the visitor's attempt.
+5. Perform focused full/practice-only desktop/mobile journeys, including load/reload, Stay/Discard, statement edits, format changes, example visibility, step navigation, final-stage agreement and explicit checking; finalize documentation and PR notes.
+
+## Acceptance and release boundary
+
+A first-time visitor should reach a representative problem and its worked example using clearly labeled actions, without typing formulas, using an account or understanding the rule catalog first. Their own work must remain intact when opening the example, advancing/backtracking or restarting the walkthrough. A visitor can follow the visual development one step at a time or jump directly to completion. All completed examples must agree with the real checker and the displayed problem.
+
+After this feature, perform its focused visual QA and proceed to reviewed inexpensive sandbox preparation and deliberate deployment promotion. Wider demo/account UI audits stay deferred before public exposure of those areas. A separate portfolio repository follows the practice sandbox. Video production remains deferred. No infrastructure or deployment is authorized by this plan.
