@@ -27,7 +27,8 @@ export const DEMO_TRUTH_TREES: {
       type: ProblemType.TruthTree,
       definitionVersion: 1,
       checkerVersion: 1,
-      ruleCatalogVersion: 1,
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
       premises: [
         { id: premise, formula: 'P ∨ Q' },
         { id: secondPremise, formula: '¬P' },
@@ -36,7 +37,7 @@ export const DEMO_TRUTH_TREES: {
       explanation:
         'The P branch contradicts premise ¬P. The Q branch contradicts the negated conclusion ¬Q. Both paths close, so the argument is valid.',
       referenceTree: {
-        treeVersion: 1,
+        treeVersion: 2,
         format: 'truth_tree',
         rootBranchId: root,
         occurrences: [
@@ -72,6 +73,7 @@ export const DEMO_TRUTH_TREES: {
             branchId: root,
             sourceId: disjunction,
             ruleId: 'disjunction',
+            chainChoice: { ruleId: 'disjunction', splitIndex: 1 },
             resultGroups: [
               { branchId: left, occurrenceIds: [p] },
               { branchId: right, occurrenceIds: [q] },
@@ -89,13 +91,14 @@ export const DEMO_TRUTH_TREES: {
       type: ProblemType.TruthTree,
       definitionVersion: 1,
       checkerVersion: 1,
-      ruleCatalogVersion: 1,
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
       premises: [{ id: premise, formula: 'P ∨ Q' }],
       conclusion: 'P',
       explanation:
         'The P branch closes against ¬P. The Q branch stays open and complete. P = F and Q = T makes the premise true and conclusion false, so the argument is invalid.',
       referenceTree: {
-        treeVersion: 1,
+        treeVersion: 2,
         format: 'truth_tree',
         rootBranchId: root,
         occurrences: [
@@ -125,6 +128,7 @@ export const DEMO_TRUTH_TREES: {
             branchId: root,
             sourceId: disjunction,
             ruleId: 'disjunction',
+            chainChoice: { ruleId: 'disjunction', splitIndex: 1 },
             resultGroups: [
               { branchId: left, occurrenceIds: [p] },
               { branchId: right, occurrenceIds: [q] },

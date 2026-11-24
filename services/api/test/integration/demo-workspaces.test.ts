@@ -1,4 +1,5 @@
 import { naturalDeductionTreeDefinitionFixture } from '../derivation-fixture';
+import { DEMO_TRUTH_TREES } from '../../src/application/demo/truth-tree-template';
 import {
   savedStudentCheckSchema,
   savedStudentAnswersSchema,
@@ -598,6 +599,13 @@ test('current template certifies both available proof formats and seeds explicit
       const detail = await assignments.findOwned(owner.id, row.id);
       assert(row.publishedAt);
       assert.equal(detail.assessmentMode, mode);
+      for (const item of detail.items) {
+        const definition = item.problemVersion.definition;
+        assert(definition.type === 'derivation');
+        assert.equal(definition.ruleCatalogVersion, 2);
+        assert.equal(definition.formulaGroupingVersion, 1);
+        assert.equal(definition.referenceProof?.proofVersion, 2);
+      }
       assert.deepEqual(
         detail.items.map((item) =>
           item.problemVersion.definition.type === 'derivation'
@@ -899,6 +907,16 @@ test('a retained tree visitor upgrades to the current template only on reset, pr
       await em.findOneOrFail(db.DemoWorkspace, first.workspaceId)
     ).expiresAt.getTime();
     const legacyTitle = 'Retained natural-deduction tree';
+    const oldProof = structuredClone(DEMO_DERIVATIONS[0]!.definition);
+    oldProof.ruleCatalogVersion = 1;
+    delete oldProof.formulaGroupingVersion;
+    oldProof.referenceProof!.proofVersion = 1;
+    const oldTree = structuredClone(DEMO_TRUTH_TREES[0]!.definition);
+    oldTree.ruleCatalogVersion = 1;
+    delete oldTree.formulaGroupingVersion;
+    oldTree.referenceTree!.treeVersion = 1;
+    for (const expansion of oldTree.referenceTree!.expansions) delete expansion.chainChoice;
+    const retainedDefinitions = [oldProof, oldTree];
     // Historical records are direct fixtures, not newly admitted authoring requests.
     for (const workspaceId of [first.workspaceId, other.workspaceId]) {
       const owner = await em.findOneOrFail(db.User, {
@@ -919,6 +937,22 @@ test('a retained tree visitor upgrades to the current template only on reset, pr
           definition: naturalDeductionTreeDefinitionFixture(),
         }),
       ]);
+      for (const [index, definition] of retainedDefinitions.entries()) {
+        const retained = em.create(db.Problem, {
+          owner,
+          title: `Retained catalog-1 example ${index}`,
+          definition,
+        });
+        em.persist([
+          retained,
+          em.create(db.ProblemVersion, {
+            problem: retained,
+            version: 1,
+            title: retained.title,
+            definition,
+          }),
+        ]);
+      }
       await em.flush();
       await em.nativeUpdate(db.DemoWorkspace, workspaceId, { templateVersion: 7 });
     }
@@ -929,6 +963,13 @@ test('a retained tree visitor upgrades to the current template only on reset, pr
     );
 
     await sessions.authenticate(session.sessionId);
+    for (const [index, definition] of retainedDefinitions.entries()) {
+      const retained = await em.fork().findOneOrFail(db.ProblemVersion, {
+        problem: { owner: { demoWorkspace: first.workspaceId } },
+        title: `Retained catalog-1 example ${index}`,
+      });
+      assert.deepEqual(retained.definition, definition);
+    }
     await assert.rejects(store.provision(first.workspaceId), /Demo workspace is unavailable/);
     assert.equal(
       (await em.fork().findOneOrFail(db.DemoWorkspace, first.workspaceId)).templateVersion,
@@ -971,6 +1012,20 @@ test('a retained tree visitor upgrades to the current template only on reset, pr
       0,
     );
     assert.equal((await em.findOneOrFail(db.DemoWorkspace, other.workspaceId)).generation, 1);
+    for (const [index, definition] of retainedDefinitions.entries()) {
+      assert.equal(
+        await em.count(db.ProblemVersion, {
+          problem: { owner: { demoWorkspace: first.workspaceId } },
+          title: `Retained catalog-1 example ${index}`,
+        }),
+        0,
+      );
+      const retained = await em.findOneOrFail(db.ProblemVersion, {
+        problem: { owner: { demoWorkspace: other.workspaceId } },
+        title: `Retained catalog-1 example ${index}`,
+      });
+      assert.deepEqual(retained.definition, definition);
+    }
     assert.equal(
       await em.count(db.Problem, {
         owner: { demoWorkspace: other.workspaceId },

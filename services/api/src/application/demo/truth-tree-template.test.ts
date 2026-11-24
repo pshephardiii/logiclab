@@ -1,6 +1,12 @@
 import { truthTreeDefinitionSchema } from '@logiclab/contracts/truth-tree-authoring';
 import { DEMO_TRUTH_TREES } from './truth-tree-template';
-import { DEMO_TEMPLATE } from './template';
+import { DEMO_TEMPLATE, DEMO_DERIVATIONS } from './template';
+import {
+  checkFitchProof,
+  checkDependencyProof,
+  isFinishedFitchProofAttempt,
+  isFinishedDependencyProofAttempt,
+} from '@logiclab/logic-engine/proof';
 import {
   truthTreePublicationDefinition,
   checkTruthTreeReference,
@@ -13,6 +19,11 @@ test.each(
     outcome: index === 0 ? 'valid' : 'invalid',
   })),
 )('$title is a publishable, all-path finished $outcome reference', ({ definition, outcome }) => {
+  expect(definition).toMatchObject({
+    ruleCatalogVersion: 2,
+    formulaGroupingVersion: 1,
+    referenceTree: { treeVersion: 2 },
+  });
   expect(truthTreeDefinitionSchema.parse(definition)).toEqual(definition);
   expect(truthTreePublicationDefinition(definition)).toEqual(definition);
   expect(checkTruthTreeReference(definition)).toMatchObject({
@@ -23,7 +34,7 @@ test.each(
 });
 
 test('template adds distinct truth-tree journeys without replacing available derivations', () => {
-  expect(DEMO_TEMPLATE.version).toBe(10);
+  expect(DEMO_TEMPLATE.version).toBe(11);
   expect(
     new Set([
       DEMO_TEMPLATE.truthTreePracticeAssignmentTitle,
@@ -35,3 +46,31 @@ test('template adds distinct truth-tree journeys without replacing available der
     ]).size,
   ).toBe(6);
 });
+
+test.each(DEMO_DERIVATIONS)(
+  '$title pins a verified, finished catalog-2 reference',
+  ({ definition }) => {
+    expect(definition).toMatchObject({
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      referenceProof: { proofVersion: 2 },
+    });
+    const input = {
+      problem: {
+        ruleCatalogVersion: definition.ruleCatalogVersion,
+        formulaGroupingVersion: definition.formulaGroupingVersion,
+        premises: definition.premises,
+        conclusion: definition.conclusion,
+        permittedRuleIds: definition.rules.map((rule) => rule.id),
+      },
+      proof: definition.referenceProof,
+    };
+    const check = definition.format === 'fitch' ? checkFitchProof : checkDependencyProof;
+    const finished =
+      definition.format === 'fitch'
+        ? isFinishedFitchProofAttempt
+        : isFinishedDependencyProofAttempt;
+    expect(check(input).status).toBe('accepted');
+    expect(finished(input)).toBe(true);
+  },
+);
