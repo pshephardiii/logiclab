@@ -11,11 +11,15 @@ import { checkFitchProof } from '@logiclab/logic-engine/proof';
 import { validateFitchContent } from '../problem/derivation/fitch/authoring';
 import { StudentWorkError } from './errors';
 
-/** Validate only bounded transport. Incorrect, unfinished and structurally invalid proofs can save. */
-export function validateFitchAnswer(value: unknown): FitchDerivationAnswer {
+/** Match the pinned catalog without checking correctness; unfinished/incorrect work stays saveable. */
+export function validateFitchAnswer(
+  value: unknown,
+  ruleCatalogVersion: 1 | 2,
+): FitchDerivationAnswer {
   const parsed = fitchDerivationAnswerSchema.safeParse(value);
 
-  if (!parsed.success) throw new StudentWorkError('invalid_answer');
+  if (!parsed.success || parsed.data.proof.proofVersion !== ruleCatalogVersion)
+    throw new StudentWorkError('invalid_answer');
 
   return parsed.data;
 }
@@ -30,7 +34,7 @@ export function evaluateFitchAnswer(
   value: unknown,
 ): DerivationEvaluationEvidence {
   const content = validateFitchContent(authoritative.content);
-  const answer = validateFitchAnswer(value);
+  const answer = validateFitchAnswer(value, content.ruleCatalogVersion);
 
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',

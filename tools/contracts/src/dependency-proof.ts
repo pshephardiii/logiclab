@@ -54,11 +54,6 @@ export const dependencyProofSchema = z
       });
   });
 
-export const dependencyApplicationProofSchema = dependencyProofSchema.refine(
-  (proof) => proof.proofVersion === 1,
-  'Catalog-2 proofs are not enabled in application workflows yet.',
-);
-
 export type DependencyProof = z.infer<typeof dependencyProofSchema>;
 
 /** Format-specific checker input; callers enforce workflow admission and authoritative statements. */

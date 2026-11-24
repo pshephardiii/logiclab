@@ -58,12 +58,6 @@ export const fitchProofSchema = z
       });
   });
 
-/** Keep live owner/student work guarded until source-aware authoring/editors are integrated. */
-export const fitchApplicationProofSchema = fitchProofSchema.refine(
-  (proof) => proof.proofVersion === 1,
-  'Catalog-2 proofs are not enabled in application workflows yet.',
-);
-
 export type FitchProof = z.infer<typeof fitchProofSchema>;
 
 export const proofProblemSchema = z

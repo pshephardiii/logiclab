@@ -296,7 +296,11 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
                     ...item,
                     content:
                       format === 'tree'
-                        ? { ...item.content, format: 'tree' as const }
+                        ? {
+                            ...item.content,
+                            format: 'tree' as const,
+                            ruleCatalogVersion: 1 as const,
+                          }
                         : { ...item.content, format: 'dependency' as const },
                   }
                 : item,

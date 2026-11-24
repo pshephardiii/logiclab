@@ -1,7 +1,7 @@
 /** Version the exact variants, not textbook labels. No rule is enabled by this catalog alone. */
 export const PROPOSITIONAL_RULE_CATALOG_VERSION = 1;
 
-/** Source-aware variants; live application definitions still pin catalog 1. */
+/** Source-aware variants; callers explicitly select a catalog rather than upgrading retained work. */
 export const PROPOSITIONAL_CHAIN_RULE_CATALOG_VERSION = 2;
 
 type RuleDefinition = {

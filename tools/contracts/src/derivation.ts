@@ -1,10 +1,12 @@
 import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
-import { fitchApplicationProofSchema, proofCheckReportSchema } from './proof';
+import { fitchProofSchema, proofCheckReportSchema } from './proof';
 
 import {
   derivationStatementSchema,
+  derivationGroupingIssues,
+  derivationReferenceVersionIssues,
   derivationExplanationSchema as explanation,
 } from './derivation-statement';
 
@@ -22,24 +24,31 @@ export const fitchDerivationContentSchema = derivationStatementSchema.safeExtend
 export type FitchDerivationContent = z.infer<typeof fitchDerivationContentSchema>;
 
 /** Instructor-only authored JSON; a reference/version tag is not a cached acceptance claim. */
-export const fitchDerivationDefinitionSchema = fitchDerivationContentSchema.safeExtend({
-  referenceProof: fitchApplicationProofSchema.nullable(),
-  explanation,
-});
+export const fitchDerivationDefinitionSchema = fitchDerivationContentSchema
+  .safeExtend({
+    referenceProof: fitchProofSchema.nullable(),
+    explanation,
+  })
+  .superRefine(derivationReferenceVersionIssues);
 
 export type FitchDerivationDefinition = z.infer<typeof fitchDerivationDefinitionSchema>;
 
 /** Privileged answer-reveal payload; never include this in ordinary assigned content. */
-export const fitchDerivationSolutionSchema = z.strictObject({
-  type: z.literal(ProblemType.Derivation),
-  definitionVersion: z.literal(1),
-  format: z.literal('fitch'),
-  ruleCatalogVersion: z.literal(1),
-  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
-  checkerVersion: z.literal(1),
-  referenceProof: fitchApplicationProofSchema,
-  explanation,
-});
+export const fitchDerivationSolutionSchema = z
+  .strictObject({
+    type: z.literal(ProblemType.Derivation),
+    definitionVersion: z.literal(1),
+    format: z.literal('fitch'),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
+    checkerVersion: z.literal(1),
+    referenceProof: fitchProofSchema,
+    explanation,
+  })
+  .superRefine((value, context) => {
+    derivationGroupingIssues(value, context);
+    derivationReferenceVersionIssues(value, context);
+  });
 
 export type FitchDerivationSolution = z.infer<typeof fitchDerivationSolutionSchema>;
 

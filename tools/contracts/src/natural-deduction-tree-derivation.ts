@@ -10,6 +10,7 @@ import {
 /** Natural-deduction tree statement used by the owner library; student assignment admission remains separate. */
 export const naturalDeductionTreeDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('tree'),
+  ruleCatalogVersion: z.literal(1),
 });
 
 export type NaturalDeductionTreeDerivationContent = z.infer<

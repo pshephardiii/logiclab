@@ -10,6 +10,10 @@ import {
   derivationDefinitionFixture,
   naturalDeductionTreeDefinitionFixture,
 } from '../derivation-fixture';
+import {
+  fitchChainDefinitionFixture,
+  dependencyChainDefinitionFixture,
+} from '../derivation-fixture';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createStudentWorkStore } from '../../src/persistence/student-work/store';
 import { createSubmissionReviewStore } from '../../src/persistence/submission-review/store';
@@ -29,12 +33,15 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
   throw new Error('Use a disposable _test database.');
 for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((mode) =>
-  [dependencyDefinitionFixture, naturalDeductionTreeDefinitionFixture].map(
-    (definitionFixture) => [mode, definitionFixture] as const,
-  ),
+  [
+    dependencyDefinitionFixture,
+    naturalDeductionTreeDefinitionFixture,
+    fitchChainDefinitionFixture,
+    dependencyChainDefinitionFixture,
+  ].map((definitionFixture) => [mode, definitionFixture] as const),
 ))
   for (const assessment of ['graded', 'completion_only'] as const) {
-    test(`${mode} ${definitionFixture().format} ${assessment} finalization freezes mixed-format evidence, isolates review and preserves independent release`, async () => {
+    test(`${mode} catalog-${definitionFixture().ruleCatalogVersion} ${definitionFixture().format} ${assessment} finalization freezes mixed-format evidence, isolates review and preserves independent release`, async () => {
       const db = await import('@logiclab/db');
       const schema = `dependency_final_${randomUUID().replaceAll('-', '')}`;
       const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -176,7 +183,11 @@ for (const [mode, definitionFixture] of (['normal', 'demo'] as const).flatMap((m
           runtime ? runtime.run(ownerSession!.sessionId, write, work) : work();
         const bad = structuredClone(primary.referenceProof!);
         const firstNode = 'steps' in bad ? bad.steps[0]! : bad.nodes[0]!;
-        firstNode.formula = 'Q';
+        if (primary.ruleCatalogVersion === 2 && 'steps' in bad) {
+          const last = bad.steps.at(-1)!;
+          if (last.kind !== 'inference') throw new Error('Expected extraction');
+          last.conjunctIndex = 1; // Real member, wrong entered result: completed but reviewable.
+        } else firstNode.formula = 'Q';
         const answers: SavedStudentResponseValue[] = [
           savedDerivationAnswerSchema.parse({ type: 'derivation', proof: primary.referenceProof }),
           savedDerivationAnswerSchema.parse({ type: 'derivation', proof: bad }),

@@ -34,16 +34,19 @@ test('saved-proof validation retains incomplete/invalid work without checking or
   answer.proof.steps[0]!.formula = 'P &';
   answer.proof.blocks[0]!.endId = null;
   const original = structuredClone(answer);
-  const parsed = validateFitchAnswer(answer);
+  const parsed = validateFitchAnswer(answer, 1);
   expect(parsed).toEqual(original);
   expect(parsed).not.toBe(answer);
   parsed.proof.steps[0]!.formula = '';
   expect(answer).toEqual(original);
   expect(
-    validateFitchAnswer({
-      type: 'derivation',
-      proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
-    }).proof.steps,
+    validateFitchAnswer(
+      {
+        type: 'derivation',
+        proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+      },
+      1,
+    ).proof.steps,
   ).toEqual([]);
 });
 
@@ -57,7 +60,7 @@ test.each([
   'explanation',
 ])('rejects injected student-owned %s fields', (field) => {
   const { answer, authoritative } = fixture();
-  expect(() => validateFitchAnswer({ ...answer, [field]: authoritative.content })).toThrow(
+  expect(() => validateFitchAnswer({ ...answer, [field]: authoritative.content }, 1)).toThrow(
     StudentWorkError,
   );
 });
@@ -124,7 +127,7 @@ test.each(['steps', 'blocks', 'formula', 'references', 'version'] as const)(
         { ...answer.proof.steps[1], lineReferences: [randomUUID(), randomUUID(), randomUUID()] },
       ];
     if (kind === 'version') proof.proofVersion = 2;
-    expect(() => validateFitchAnswer({ type: 'derivation', proof })).toThrow(StudentWorkError);
+    expect(() => validateFitchAnswer({ type: 'derivation', proof }, 1)).toThrow(StudentWorkError);
   },
 );
 

@@ -281,7 +281,7 @@ test('whole-proof checking produces consumable reports without awarded scores or
 });
 
 test.each(['fitch', 'dependency'] as const)(
-  'catalog-2 %s standalone checking does not enable owner/student workflows',
+  'catalog-2 %s owner/student transport retains pinned reference and grouping requirements',
   async (format) => {
     const { dependencyProofCheckInputSchema } = await import('@logiclab/contracts');
     const { dependencyDerivationAnswerSchema } =
@@ -341,7 +341,7 @@ test.each(['fitch', 'dependency'] as const)(
 
     const answerSchema =
       format === 'fitch' ? fitchDerivationAnswerSchema : dependencyDerivationAnswerSchema;
-    expect(answerSchema.safeParse({ type: 'derivation', proof }).success).toBe(false);
+    expect(answerSchema.safeParse({ type: 'derivation', proof }).success).toBe(true);
     const definitionSchema =
       format === 'fitch' ? fitchDerivationDefinitionSchema : dependencyDerivationDefinitionSchema;
     expect(
@@ -356,6 +356,26 @@ test.each(['fitch', 'dependency'] as const)(
         rules: [],
         referenceProof: proof,
       }).success,
+    ).toBe(false);
+    const definition = {
+      type: 'derivation',
+      format,
+      definitionVersion: 1,
+      checkerVersion: 1,
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      premises: problem.premises,
+      conclusion: 'P',
+      rules: [],
+      referenceProof: proof,
+    };
+    expect(definitionSchema.parse(definition)).toEqual(definition);
+    expect(
+      definitionSchema.safeParse({ ...definition, formulaGroupingVersion: undefined }).success,
+    ).toBe(false);
+    expect(
+      definitionSchema.safeParse({ ...definition, referenceProof: { ...proof, proofVersion: 1 } })
+        .success,
     ).toBe(false);
 
     for (const conjunctIndex of [-1, 1.5, Infinity, 257, '0', { index: 0 }]) {

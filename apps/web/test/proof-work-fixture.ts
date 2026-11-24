@@ -182,7 +182,7 @@ export const retainedNaturalDeductionTreeWork: SavedStudentAssignment = {
       title: 'Retained natural-deduction tree',
       instructions: null,
       maxPoints: 10,
-      content: { ...content, format: 'tree' },
+      content: { ...content, format: 'tree', ruleCatalogVersion: 1 },
     },
   ],
 };

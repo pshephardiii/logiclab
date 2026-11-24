@@ -13,11 +13,15 @@ import { checkDependencyProof } from '@logiclab/logic-engine/proof';
 import { validateDependencyContent } from '../problem/derivation/dependency/authoring';
 import { StudentWorkError } from './errors';
 
-/** Transport validation alone: incomplete formulas, annotations and citations remain draft work. */
-export function validateDependencyAnswer(value: unknown): DependencyDerivationAnswer {
+/** Match the pinned catalog while retaining incomplete formulas, annotations and citations. */
+export function validateDependencyAnswer(
+  value: unknown,
+  ruleCatalogVersion: 1 | 2,
+): DependencyDerivationAnswer {
   const parsed = dependencyDerivationAnswerSchema.safeParse(value);
 
-  if (!parsed.success) throw new StudentWorkError('invalid_answer');
+  if (!parsed.success || parsed.data.proof.proofVersion !== ruleCatalogVersion)
+    throw new StudentWorkError('invalid_answer');
 
   return parsed.data;
 }
@@ -31,7 +35,7 @@ export function evaluateDependencyAnswer(
   value: unknown,
 ): DerivationEvaluationEvidence {
   const content = validateDependencyContent(authoritative.content);
-  const answer = validateDependencyAnswer(value);
+  const answer = validateDependencyAnswer(value, content.ruleCatalogVersion);
 
   return derivationEvaluationEvidenceSchema.parse({
     evaluationVersion: 'derivation_v1',

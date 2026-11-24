@@ -9,6 +9,7 @@ export function naturalDeductionTreeDefinitionFixture(): NaturalDeductionTreeDer
   return {
     ...derivationDefinitionFixture(),
     format: 'tree',
+    ruleCatalogVersion: 1,
     referenceProof: {
       proofVersion: 1,
       format: 'tree',
@@ -76,6 +77,63 @@ export function dependencyDefinitionFixture(): DependencyDerivationDefinition {
           ruleId: 'implication_introduction',
           lineReferences: [],
           discharges: [{ assumptionId: a, conclusionId: a }],
+        },
+      ],
+    },
+  };
+}
+
+export function fitchChainDefinitionFixture(): FitchDerivationDefinition {
+  return {
+    ...derivationDefinitionFixture(),
+    ruleCatalogVersion: 2,
+    formulaGroupingVersion: 1,
+    premises: [{ id: a, formula: 'P & Q & R' }],
+    conclusion: 'P',
+    rules: [
+      { id: 'and_chain_elimination', label: 'Conjunct extraction' },
+      { id: 'reiteration', label: 'Copy' },
+    ],
+    referenceProof: {
+      proofVersion: 2,
+      format: 'fitch',
+      blocks: [],
+      steps: [
+        { id: b, kind: 'premise', blockId: null, premiseId: a, formula: 'P & Q & R' },
+        {
+          id: c,
+          kind: 'inference',
+          blockId: null,
+          formula: 'P',
+          ruleId: 'and_chain_elimination',
+          conjunctIndex: 0,
+          lineReferences: [b],
+          subproofReferences: [],
+        },
+      ],
+    },
+    explanation: 'PRIVATE_CHAIN_REFERENCE',
+  };
+}
+
+export function dependencyChainDefinitionFixture(): DependencyDerivationDefinition {
+  return {
+    ...fitchChainDefinitionFixture(),
+    format: 'dependency',
+    referenceProof: {
+      proofVersion: 2,
+      format: 'dependency',
+      steps: [
+        { id: b, kind: 'premise', premiseId: a, formula: 'P & Q & R', dependencies: [b] },
+        {
+          id: c,
+          kind: 'inference',
+          formula: 'P',
+          ruleId: 'and_chain_elimination',
+          conjunctIndex: 0,
+          lineReferences: [b],
+          discharges: [],
+          dependencies: [b],
         },
       ],
     },

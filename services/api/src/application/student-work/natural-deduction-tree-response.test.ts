@@ -274,8 +274,8 @@ test('tree validation stays format-specific while saved-work transport admits tr
     expect(() =>
       validateNaturalDeductionTreeAnswer({ type: 'derivation', proof: definition.referenceProof }),
     ).toThrow(StudentWorkError);
-  expect(() => validateFitchAnswer(answer)).toThrow(StudentWorkError);
-  expect(() => validateDependencyAnswer(answer)).toThrow(StudentWorkError);
+  expect(() => validateFitchAnswer(answer, 1)).toThrow(StudentWorkError);
+  expect(() => validateDependencyAnswer(answer, 1)).toThrow(StudentWorkError);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
     true,
   );

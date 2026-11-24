@@ -44,9 +44,7 @@ export function DerivationProblemFields({
   const definition = fields.derivation;
   const hideStatement = authoringStep === 'reference';
 
-  const [pendingFormat, setPendingFormat] = useState<
-    AuthoringDerivationDefinition['format'] | null
-  >(null);
+  const [pendingFormat, setPendingFormat] = useState<'fitch' | 'dependency' | null>(null);
 
   function change(
     patch: Partial<
@@ -69,9 +67,13 @@ export function DerivationProblemFields({
               disabled={entryPending}
               value={definition.format}
               onChange={(event) => {
-                const format = event.target.value as AuthoringDerivationDefinition['format'];
+                const format = event.target.value;
 
-                if (!isProofFormatAvailable(format)) return;
+                if (
+                  (format !== 'fitch' && format !== 'dependency') ||
+                  !isProofFormatAvailable(format)
+                )
+                  return;
                 setPendingFormat(null);
 
                 if (format === definition.format) return;

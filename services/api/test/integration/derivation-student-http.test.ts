@@ -17,7 +17,12 @@ import { createProblemStore } from '../../src/persistence/problem/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
 import { readDemoConfig } from '../../src/config/demo';
 import type { ResourceUser } from '../../src/routes/resource-context';
-import { derivationDefinitionFixture, dependencyDefinitionFixture } from '../derivation-fixture';
+import {
+  derivationDefinitionFixture,
+  dependencyDefinitionFixture,
+  fitchChainDefinitionFixture,
+  dependencyChainDefinitionFixture,
+} from '../derivation-fixture';
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith('_test'))
@@ -25,8 +30,13 @@ if (!url || !new URL(url).pathname.endsWith('_test'))
 const origin = 'http://localhost:5173';
 
 for (const mode of ['normal', 'demo'] as const) {
-  for (const definitionFixture of [derivationDefinitionFixture, dependencyDefinitionFixture]) {
-    test(`${mode} ${definitionFixture().format} student HTTP proof practice preserves draft privacy, transient checks, pinned references and access guards`, async () => {
+  for (const definitionFixture of [
+    derivationDefinitionFixture,
+    dependencyDefinitionFixture,
+    fitchChainDefinitionFixture,
+    dependencyChainDefinitionFixture,
+  ]) {
+    test(`${mode} catalog-${definitionFixture().ruleCatalogVersion} ${definitionFixture().format} student HTTP proof practice preserves draft privacy, transient checks, pinned references and access guards`, async () => {
       const db = await import('@logiclab/db');
       const schema = `proof_http_${randomUUID().replaceAll('-', '')}`;
       const orm = await db.createDatabase(url, { schema, snapshotOnMigrate: false });
@@ -258,6 +268,34 @@ for (const mode of ['normal', 'demo'] as const) {
         assert(!get.body.includes('referenceProof'));
         assert(!get.body.includes(definition.explanation!));
         assert.equal((await request('GET', prefix, '')).statusCode, 401);
+        // Generic proof shape is not permission to replace the pinned catalog.
+        const wrongVersion = {
+          ...valid,
+          proof: {
+            ...valid.proof,
+            proofVersion: valid.proof.proofVersion === 1 ? 2 : 1,
+            steps: valid.proof.steps.map((step) => {
+              if (step.kind !== 'inference') return step;
+              const { conjunctIndex: _selection, ...retained } = step;
+              return retained;
+            }),
+          },
+        };
+        for (const [method, suffix, extra] of [
+          ['PATCH', '/attempt', { revision: 0 }],
+          ['POST', '/check', {}],
+        ] as const) {
+          const rejected = await request(method, `${prefix}${suffix}`, cookie, {
+            ...extra,
+            itemId: first.id,
+            answers: wrongVersion,
+          });
+          assert.equal(rejected.statusCode, 400, rejected.body);
+        }
+        assert.equal(
+          await orm.em.fork().count(db.AssignmentAttempt, { assignment: assignment.id }),
+          0,
+        );
         const check = await request('POST', `${prefix}/check`, cookie, {
           itemId: first.id,
           answers: valid,
@@ -266,6 +304,7 @@ for (const mode of ['normal', 'demo'] as const) {
         const feedback = savedStudentCheckResponseSchema.parse(check.json()).feedback;
         assert('type' in feedback && feedback.type === 'derivation');
         assert.equal(feedback.report.status, 'accepted');
+        assert.equal(feedback.report.ruleCatalogVersion, definition.ruleCatalogVersion);
         assert(!check.body.includes('referenceProof'));
         assert(!check.body.includes(definition.explanation!));
         assert.equal(
@@ -319,6 +358,7 @@ for (const mode of ['normal', 'demo'] as const) {
         assert.equal(solution.statusCode, 200, solution.body);
         const revealed = savedStudentSolutionResponseSchema.parse(solution.json()).solution;
         assert('type' in revealed && revealed.type === 'derivation');
+        assert.equal(revealed.ruleCatalogVersion, definition.ruleCatalogVersion);
         assert.deepEqual(revealed.referenceProof, definition.referenceProof);
         assert.equal(revealed.explanation, definition.explanation);
         assert(!solution.body.includes('LATER_PRIVATE_REFERENCE'));
@@ -396,8 +436,13 @@ for (const mode of ['normal', 'demo'] as const) {
             type: 'derivation',
             proof:
               definition.format === 'dependency'
-                ? { proofVersion: 1, format: 'dependency', steps: [] }
-                : { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+                ? { proofVersion: definition.ruleCatalogVersion, format: 'dependency', steps: [] }
+                : {
+                    proofVersion: definition.ruleCatalogVersion,
+                    format: 'fitch',
+                    steps: [],
+                    blocks: [],
+                  },
           },
         });
         assert.equal(next.statusCode, 200, next.body);

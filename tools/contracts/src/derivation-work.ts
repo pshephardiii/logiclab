@@ -1,11 +1,11 @@
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
-import { fitchApplicationProofSchema, proofCheckReportSchema } from './proof';
+import { fitchProofSchema, proofCheckReportSchema } from './proof';
 
 /** Only student-entered work. Statements, permissions, keys and reports are never accepted here. */
 export const fitchDerivationAnswerSchema = z.strictObject({
   type: z.literal(ProblemType.Derivation),
-  proof: fitchApplicationProofSchema,
+  proof: fitchProofSchema,
 });
 
 export type FitchDerivationAnswer = z.infer<typeof fitchDerivationAnswerSchema>;
