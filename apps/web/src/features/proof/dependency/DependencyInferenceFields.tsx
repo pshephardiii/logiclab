@@ -1,3 +1,4 @@
+import { updatedCitationSlots } from '../helpers/citation-slots';
 import type { DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import { formulaNotation } from '../../../components/formula/formula-notation';
@@ -45,22 +46,15 @@ export function DependencyInferenceFields({
             value={step.lineReferences[slot] || null}
             choices={earlier}
             onChange={(id) => {
-              const refs = [...step.lineReferences];
               const next =
                 slot === 0 && id !== (step.lineReferences[0] || null)
                   ? withoutConjunctSelection(step)
                   : step;
 
-              if (staged) {
-                for (let position = refs.length; position <= slot; position++) refs.push('');
-                refs[slot] = id ?? '';
-                while (refs.at(-1) === '') refs.pop();
-                onChange({ ...next, lineReferences: refs });
-              } else {
-                if (id) refs[slot] = id;
-                else refs.splice(slot, 1);
-                onChange({ ...next, lineReferences: refs.filter(Boolean) });
-              }
+              onChange({
+                ...next,
+                lineReferences: updatedCitationSlots(step.lineReferences, slot, id, staged),
+              });
             }}
           />
         ),

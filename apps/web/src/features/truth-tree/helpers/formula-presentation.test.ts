@@ -1,10 +1,7 @@
+import { truthTreeFormulaProgress } from './formula-progress';
 import { expect, test } from 'vitest';
 import { initialTruthTree, appendTruthTreeExpansion, undoTruthTreeExpansion } from './construction';
-import {
-  truthTreeFormulaLabel,
-  truthTreeFormulaProgress,
-  unexpectedFormulaCharacter,
-} from './formula-presentation';
+import { truthTreeFormulaLabel, unexpectedFormulaCharacter } from './formula-presentation';
 
 test.each([
   ['!(P)', '¬P'],

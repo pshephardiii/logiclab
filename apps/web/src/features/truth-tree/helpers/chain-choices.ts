@@ -31,3 +31,26 @@ export function truthTreeChainChoices(source: string, ruleId: string) {
     return [];
   }
 }
+
+/** A chain selection describes required construction fields, never result correctness. */
+export function truthTreeChainSelection({
+  source,
+  ruleId,
+  version,
+  choice,
+}: {
+  source: string;
+  ruleId: string;
+  version: 1 | 2;
+  choice?: TruthTreeChainChoice;
+}) {
+  if (version !== 2 || (ruleId !== 'conjunct_extraction' && ruleId !== 'disjunction')) return null;
+
+  const choices = truthTreeChainChoices(source, ruleId);
+  const selected =
+    choice?.ruleId === 'conjunct_extraction' ? choice.memberIndex : choice?.splitIndex;
+  const filled = choices.some(
+    (option) => option.value === selected && option.choice.ruleId === choice?.ruleId,
+  );
+  return { ruleId, choices, selected, filled };
+}

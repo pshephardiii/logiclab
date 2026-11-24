@@ -12,6 +12,12 @@ import { naturalDeductionTreeDerivationDefinitionSchema } from '@logiclab/contra
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
 
+function referenceStatusTitle(status: ProofCheckReport['status']): string {
+  if (status === 'accepted') return 'Current reference accepted. Save it before publishing.';
+  if (status === 'needs_review') return 'Current reference needs correction.';
+  return 'Current reference could not be fully assessed.';
+}
+
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
 export function LocalReferenceCheck({
   definition,
@@ -96,23 +102,11 @@ export function LocalReferenceCheck({
         (definition.format === 'dependency' ? (
           <ProofFeedback
             report={current.report}
-            title={
-              current.report.status === 'accepted'
-                ? 'Current reference accepted. Save it before publishing.'
-                : current.report.status === 'needs_review'
-                  ? 'Current reference needs correction.'
-                  : 'Current reference could not be fully assessed.'
-            }
+            title={referenceStatusTitle(current.report.status)}
           />
         ) : (
           <>
-            <p role="status">
-              {current.report.status === 'accepted'
-                ? 'Current reference accepted. Save it before publishing.'
-                : current.report.status === 'needs_review'
-                  ? 'Current reference needs correction.'
-                  : 'Current reference could not be fully assessed.'}
-            </p>
+            <p role="status">{referenceStatusTitle(current.report.status)}</p>
             <ul>
               {current.report.diagnostics.map((diagnostic, index) => (
                 <li key={index}>

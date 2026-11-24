@@ -1,6 +1,7 @@
 import { TRUTH_TREE_LIMITS, type TruthTreeOccurrence } from '@logiclab/contracts/truth-tree';
 import { FormulaInput } from '../../../components/formula/FormulaInput';
-import { truthTreeFormulaLabel, type FormulaProgress } from '../helpers/formula-presentation';
+import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
+import type { FormulaProgress } from '../helpers/formula-progress';
 
 const markers = {
   applied: ['✓', 'Rule applied on all paths'],

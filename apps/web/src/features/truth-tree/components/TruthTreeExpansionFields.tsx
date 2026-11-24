@@ -1,8 +1,9 @@
 import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
-import { TRUTH_TREE_LIMITS, type TruthTreeChainChoice } from '@logiclab/contracts/truth-tree';
+import type { TruthTreeChainChoice } from '@logiclab/contracts/truth-tree';
 import { truthTreeRuleCatalog } from '@logiclab/logic-engine/truth-tree';
-import { truthTreeChainChoices } from '../helpers/chain-choices';
-import { FormulaInput } from '../../../components/formula/FormulaInput';
+import { truthTreeChainSelection } from '../helpers/chain-choices';
+import { TruthTreeChainChoiceField } from './TruthTreeChainChoiceField';
+import { TruthTreeExpansionResults } from './TruthTreeExpansionResults';
 import { useId } from 'react';
 
 export type TreeExpansionEntry = {
@@ -33,24 +34,15 @@ export function TruthTreeExpansionFields({
   const id = useId();
   const catalog = truthTreeRuleCatalog(version);
   const rule = catalog.find((rule) => rule.id === entry.ruleId);
-  const usesChain =
-    version === 2 && (entry.ruleId === 'conjunct_extraction' || entry.ruleId === 'disjunction');
-  const choices = truthTreeChainChoices(
-    sources.find((source) => source.id === entry.sourceId)?.formula ?? '',
-    entry.ruleId,
-  );
-  const selected =
-    entry.chainChoice?.ruleId === 'conjunct_extraction'
-      ? entry.chainChoice.memberIndex
-      : entry.chainChoice?.splitIndex;
-  const choiceFilled =
-    !usesChain ||
-    choices.some(
-      (option) => option.value === selected && option.choice.ruleId === entry.chainChoice?.ruleId,
-    );
+  const selection = truthTreeChainSelection({
+    version,
+    ruleId: entry.ruleId,
+    source: sources.find((source) => source.id === entry.sourceId)?.formula ?? '',
+    choice: entry.chainChoice,
+  });
   const filled = Boolean(
     entry.sourceId &&
-    choiceFilled &&
+    (!selection || selection.filled) &&
     rule &&
     entry.formulas.length === rule.resultFormulaCounts.length &&
     entry.formulas.every(
@@ -107,76 +99,15 @@ export function TruthTreeExpansionFields({
           </select>
         </div>
       </div>
-      {usesChain && (
-        <div className="truth-tree-chain-choice">
-          <label htmlFor={`${id}-choice`}>
-            {entry.ruleId === 'conjunct_extraction'
-              ? 'Conjunct to extract'
-              : 'Split between disjuncts'}
-          </label>
-          <select
-            id={`${id}-choice`}
-            value={choiceFilled ? (selected ?? '') : ''}
-            onChange={(event) =>
-              onChange({
-                ...entry,
-                chainChoice:
-                  event.target.value === ''
-                    ? undefined
-                    : choices.find((choice) => choice.value === Number(event.target.value))?.choice,
-              })
-            }
-          >
-            <option value="">
-              Choose {entry.ruleId === 'conjunct_extraction' ? 'conjunct' : 'split'}
-            </option>
-            {choices.map((choice) => (
-              <option key={choice.value} value={choice.value}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-      <div
-        className={`truth-tree-expansion-results${rule?.branching ? ' truth-tree-expansion-results--split' : ''}`}
-      >
-        {entry.formulas.map((group, groupIndex) => (
-          <fieldset key={groupIndex}>
-            <legend>
-              {rule?.branching
-                ? groupIndex === 0
-                  ? 'Left branch'
-                  : 'Right branch'
-                : 'Continue this branch'}
-            </legend>
-            {group.map((formula, formulaIndex) => (
-              <label key={formulaIndex}>
-                Formula {formulaIndex + 1}
-                <FormulaInput
-                  aria-label={`Formula ${formulaIndex + 1} · Result ${groupIndex + 1}.${formulaIndex + 1}`}
-                  maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  value={formula}
-                  onValueChange={(formula) =>
-                    onChange({
-                      ...entry,
-                      formulas: entry.formulas.map((values, i) =>
-                        i === groupIndex
-                          ? values.map((value, j) => (j === formulaIndex ? formula : value))
-                          : values,
-                      ),
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </fieldset>
-        ))}
-      </div>
+      <TruthTreeChainChoiceField
+        selection={selection}
+        onChange={(chainChoice) => onChange({ ...entry, chainChoice })}
+      />
+      <TruthTreeExpansionResults
+        formulas={entry.formulas}
+        branching={Boolean(rule?.branching)}
+        onChange={(formulas) => onChange({ ...entry, formulas })}
+      />
       <button type="button" disabled={!filled} onClick={onAdd}>
         Add expansion
       </button>

@@ -1,6 +1,6 @@
 import type { ProofProblem, ProofCheckReport } from '@logiclab/contracts';
 import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
-import { checkLocalRule } from './local-rule';
+import { checkLocalRule, type LocalRuleApplication } from './local-rule';
 import { propositionalRuleCatalog, type PropositionalRuleId } from './rule-catalog';
 import { ruleCorrespondences } from './rule-patterns';
 import { carryProofGrouping, setProofSource } from './source-grouping';
@@ -19,6 +19,35 @@ const messages = {
   [CheckerDiagnosticCode.IncompleteProof]: 'Select a rule and any required conjunct.',
   [CheckerDiagnosticCode.ResourceLimit]: 'Proof checking resource limits were reached.',
 } as const;
+
+/** Prepare source metadata only; permission, arity and matching stay with the local checker. */
+function conjunctExtractionFields(
+  problem: ProofProblem,
+  ruleId: string | null,
+  current: Extract<ParsedProofFormula, { status: 'valid' }>,
+  source: ParsedProofFormula | undefined,
+  conjunctIndex: number | null | undefined,
+): Pick<LocalRuleApplication, 'extraction'> {
+  if (
+    ruleId !== 'and_chain_elimination' ||
+    problem.ruleCatalogVersion !== 2 ||
+    !Number.isInteger(conjunctIndex) ||
+    source?.status !== 'valid' ||
+    !source.syntax ||
+    !current.syntax
+  )
+    return {};
+
+  return {
+    extraction: {
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      source: source.syntax.source,
+      conclusion: current.syntax.source,
+      memberIndex: conjunctIndex!,
+    },
+  };
+}
 
 /** Formula matching shared by structural adapters; callers resolve access and support separately. */
 export function checkParsedRule(
@@ -71,22 +100,7 @@ export function checkParsedRule(
         assumption: block.assumption.formula!,
         conclusion: block.conclusion.formula!,
       })),
-      ...(ruleId === 'and_chain_elimination' &&
-      problem.ruleCatalogVersion === 2 &&
-      Number.isInteger(conjunctIndex) &&
-      lines[0]?.status === 'valid' &&
-      lines[0].syntax &&
-      current.syntax
-        ? {
-            extraction: {
-              ruleCatalogVersion: 2 as const,
-              formulaGroupingVersion: 1 as const,
-              source: lines[0].syntax.source,
-              conclusion: current.syntax.source,
-              memberIndex: conjunctIndex!,
-            },
-          }
-        : {}),
+      ...conjunctExtractionFields(problem, ruleId, current, lines[0], conjunctIndex),
     },
     budget,
   );
