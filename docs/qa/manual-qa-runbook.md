@@ -53,7 +53,7 @@ Use separate browser **profiles** for A and B. Incognito windows in the same bro
 
 ### SET-02 — Start demo-only mode
 
-1. In the ignored root `.env`, set `DEMO_ENABLED=true`, `APP_ORIGIN=http://localhost:5173`, `AUTH_ENABLED=false`, and `BILLING_ENABLED=false`.
+1. For full-product QA, use `PRODUCT_EXPOSURE=full` in the ignored root `.env` and `VITE_PRODUCT_EXPOSURE=full` in the shell or ignored `apps/web/.env`. In the root `.env`, set `DEMO_ENABLED=true`, `APP_ORIGIN=http://localhost:5173`, `AUTH_ENABLED=false`, and `BILLING_ENABLED=false`.
 2. Leave normal lifetime/capacity defaults for the main pass. Demo billing works through its isolated runtime even with normal billing disabled.
 3. Run `npm ci` only if dependencies need installing. If strict script approval fails, follow the [reviewed installation policy](../development/dependency-installation.md), not a blanket approval; then run `npm run dev` from the repository root and leave that terminal open.
 4. Open `http://localhost:5173/` in profile A. If Vite selects a different port, stop the old conflicting process and restore 5173; do not casually change the origin while testing cookies.
@@ -67,7 +67,7 @@ Use separate browser **profiles** for A and B. Incognito windows in the same bro
 Run these separately from the repository root, recording each outcome and commit:
 
 ```sh
-npm run check
+VITE_PRODUCT_EXPOSURE=full npm run check
 npm run db:test
 npm run format:check
 ```
