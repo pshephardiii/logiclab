@@ -128,7 +128,7 @@ Student graded work displays problem allocations and total available points. Rel
 
 Graded, practice and completion-only assignments can contain pinned version-1 Fitch, dependency or tree derivations alongside tables and conceptual questions. Student routes use the proof-aware `@logiclab/contracts/saved-student-work` projections; the original objective-only student contracts are not a substitute for these responses.
 
-A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker/catalog version 1, `format: "fitch"`, `"dependency"` or `"tree"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
+A proof occurrence has ordinary item identity/text plus `content` with `type: "derivation"`, definition/checker version 1 and pinned catalog 1 or 2 (tree history remains on 1), `format: "fitch"`, `"dependency"` or `"tree"`, stable premise IDs/formulas, conclusion and effective permitted `{ id, label }` rules. It contains no `referenceProof` or explanation. The server loads the authoritative pinned version; requests cannot replace its statement, rules or labels.
 
 Save a full bounded proof response for one occurrence using the existing revision protocol:
 
@@ -210,5 +210,9 @@ Practice can check construction before a verdict is selected, but the UI withhol
 ## Pinned formula grouping
 
 Assigned derivation/truth-tree content may include `formulaGroupingVersion: 1`. The server carries it from the pinned definition into reference/submission/check/completion evaluation; a student answer cannot select or unset it. Tagged mixed-operator formulas without explicit grouping produce invalid-formula diagnostics under the normal feedback/release policy. Historical untagged content keeps precedence-based parsing. Independent reference reveal also retains the policy without releasing withheld grades.
+
+Catalog-2 Fitch/dependency answers use `proofVersion: 2`; Conjunct extraction inferences carry `ruleId: "and_chain_elimination"`, one cited line and zero-based `conjunctIndex`. Catalog-2 truth-tree answers use `treeVersion: 2` and the selected `chainChoice` described in the [library API](problem-library-api.md#catalog-2-construction-and-publication). The server requires the version pinned by the assigned definition on save/check/finalization; switching versions fails without creating an attempt or advancing its revision. Existing catalog-1 work remains supported without accepting new selection fields.
+
+Explicit/inherited inner grouping constrains later source selections. Closed tree paths need no unused conjunction remainder, but a complete open counterexample must account for every required component on that path. Completion-only predicates require meaningful filled selections rather than correct entered results, retaining post-submission verification warnings. Graded acceptance still requires the whole proof/tree to be correct, and truth trees additionally require the correct selected argument verdict; other work remains reviewable. Existing independent release, private practice, revision, score and immutable retry rules are unchanged.
 
 Completion-only work remains a filled-attempt check rather than correctness grading: finished wrong tree attempts retain verification warnings, while final proof targets still need to parse and match under the pinned policy. Reports/results remain immutable and no existing finals are regraded. Rule permissions, decomposition patterns and answer privacy are otherwise unchanged; associative-chain shortcuts are not yet enabled.

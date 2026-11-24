@@ -1,10 +1,10 @@
 # Formula grouping and decomposition
 
-Status: in progress on `036-feat-formula-grouping-and-decomposition`. Branch 035 is merged. The first slice adds source-derived grouping metadata without changing current evaluation/validation behavior. Later behavior and compatibility decisions below are still planned.
+Status: complete on `036-feat-formula-grouping-and-decomposition`, with focused user practice QA, final automated verification and local PR notes prepared. See the [verification record](../verification/formula-grouping-and-decomposition-verification.md). The slice journal below records intermediate states; earlier guarded/planned behavior is superseded by the delivered summary and final verification.
 
 ## Shared author intent
 
-Explicit grouping must constrain formula construction and rule application consistently in truth trees, derivations and truth tables. Parentheses and square brackets express the same boundaries. The current parser discards grouping nodes and uses precedence/associativity to build a binary AST; the current display makes that inferred structure explicit. Branch 035 does not change those semantics.
+Explicit grouping must constrain formula construction and rule application consistently in truth trees, derivations and truth tables. Parentheses and square brackets express the same boundaries. The semantic parser retains its binary AST and identifiers, while source-derived syntax metadata preserves explicit groups, delimiters and spans separately. New input-facing workflows enforce grouping policy 1; retained untagged data keeps its historical interpretation.
 
 Preserve a distinction between author-entered boundaries and parser-imposed association. Redundant grouping around an atom, such as `(P)`, need not impose another operation. A group may itself contain an ungrouped chain: in `(P ∨ Q ∨ R) ∨ S`, the outer disjunction is fixed, but the chain inside the left group remains flexible.
 
@@ -39,7 +39,7 @@ Apply the same grouping boundaries to statements and rule matching. Direct extra
 
 ### Truth tables
 
-Explicit grouping determines the intermediate expression structure/columns. An ungrouped chain still needs a deterministic construction policy; retaining left-to-right intermediate columns is a candidate, not an author-imposed boundary. Settle the visible columns and interaction before implementation. Preserve stable occurrence/column identities or deliberately version their replacement; do not equate a display simplification with permission to reinterpret retained answers.
+Explicit grouping determines the intermediate expression structure/columns. Ungrouped chains retain deterministic left-to-right intermediate columns and existing structural IDs. The final heading follows authored notation/grouping, while intermediate labels retain canonical structure. These display choices do not introduce another author-imposed boundary or reinterpret retained answers.
 
 ## Implementation boundaries and compatibility
 
@@ -222,3 +222,9 @@ Validation: 77 focused API/library-definition tests and 35 truth-table frontend 
 ## Practice QA follow-up — simplify the final table heading
 
 The final-column heading and corresponding accessible answer labels now use the authored formula with keyboard aliases displayed as symbols. This avoids the engine's automatically added outer wrapper while preserving intentional parentheses/brackets, nested groups and ungrouped chains. An initial wrapper-stripping approach lost intentional outer grouping; the user's follow-up exposed that distinction and the display now uses the source directly. Intermediate headings remain unchanged. This is a shared frontend presentation change; engine column IDs, supplied exercise data, answer callbacks and checking remain unchanged. Verified 188 focused table/assignment/student/review tests plus frontend type checks, formatting and whitespace. No backend/database changes or browser rerun for this small display fix.
+
+## Final closeout — November 24, 2026
+
+`npm run check` passed workspace type checks, 3,161 tests (1,133 engine, 1,241 API, 787 web) and production builds. `npm run db:test` passed 348 PostgreSQL checks (184 database, 164 API/workflow). Formatting, branch/working-tree whitespace and local Markdown targets passed. The only full-check repair updated an obsolete unsupported-version test from supported version 2 to unsupported version 3; the complete rerun passed. Focused user practice QA is complete with its fixes recorded above, without claiming exhaustive product/browser QA.
+
+The [verification record](../verification/formula-grouping-and-decomposition-verification.md) consolidates evidence, compatibility and material limits. Proposed next branch: `037-feat-practice-only-exposure`, implementing explicit frontend/backend exposure guards while retaining the full local product. Subsequent sandbox preparation/deployment promotion and separate portfolio work retain the agreed approval boundaries. No next branch, PR publication or deployment has been started.

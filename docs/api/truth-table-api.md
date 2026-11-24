@@ -43,9 +43,9 @@ Variables are uppercase A–Z (up to four distinct names). Supported operators a
 | Implication   | →      | `->`        |
 | Biconditional | ↔      | `<->`       |
 
-Use parentheses or matching square brackets for grouping. Precedence is negation, conjunction, disjunction, implication, then biconditional. Implication associates right; conjunction/disjunction associate left. Repeated biconditionals require explicit grouping: `(P ↔ Q) ↔ R` or `P ↔ (Q ↔ R)`. Ungrouped `P ↔ Q ↔ R` returns positioned `UNEXPECTED_TOKEN` with a grouping hint. `<->` and `->` must remain contiguous.
+Use parentheses or matching square brackets for grouping. These stateless practice endpoints require explicit grouping between different binary operators: `P & Q -> R` returns HTTP 400 `GROUPING_REQUIRED`; `(P & Q) -> R` and `P & (Q -> R)` are valid distinct choices. Wrapping the entire ambiguous formula does not resolve its internal boundary. Unary negation keeps its normal binding. Homogeneous conjunction/disjunction chains retain deterministic left-associated table columns; implication associates right. Repeated biconditionals require explicit grouping: `(P ↔ Q) ↔ R` or `P ↔ (Q ↔ R)`. Ungrouped `P ↔ Q ↔ R` returns positioned `UNEXPECTED_TOKEN` with a grouping hint. `<->` and `->` must remain contiguous. Retained saved assignments use their pinned policy through separate student-work endpoints.
 
-Biconditional is true when both operands have the same truth value. `~[P <-> Q]`, `![P ↔ Q]` and `¬(P ↔ Q)` produce identical columns/rows and values; canonical labels use `¬` and `↔`. Existing formulas retain their identifiers and resource limits. The practice form uses this same parser for debounced validation and its keyboard guide lists both new inputs.
+Biconditional is true when both operands have the same truth value. `~[P <-> Q]`, `![P ↔ Q]` and `¬(P ↔ Q)` produce identical columns/rows and values; canonical labels use `¬` and `↔`. Existing formulas retain their identifiers and resource limits. The practice form applies the same explicit-grouping policy after a typing pause and converts keyboard aliases into symbols while preserving cursor/composition behavior. The final heading follows authored grouping rather than adding a canonical outer wrapper; intermediate labels and all column IDs remain unchanged.
 
 ## Create an exercise
 

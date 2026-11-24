@@ -81,7 +81,7 @@ test('incomplete fields, syntax mistakes and erroneous dependency annotations re
 });
 
 test.each([
-  { ...proof, proofVersion: 2 },
+  { ...proof, proofVersion: 3 },
   { ...proof, format: 'fitch' },
   { ...proof, blocks: [] },
   { ...proof, accepted: true },

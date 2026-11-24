@@ -10,7 +10,7 @@ Agreed November 23, 2026. This supersedes the earlier requirement to finish the 
 4. Prepare the inexpensive sandbox and deploy the practice experience with a short hosted smoke check. Do not deploy until configuration/hosting costs and the concrete deployment changes have been reviewed. This plan does not itself provision infrastructure or deploy anything.
 5. Start a separate portfolio repository/deployment featuring LogicLab and authorized professional case studies. Private employer-owned repositories are not prerequisites for useful accounts of responsibilities, decisions and outcomes; do not copy private code, screenshots or confidential details without authorization.
 
-Keep later branch numbers unassigned until the actual implementation split is known. The practice scan, exposure guards and deployment preparation are distinct outcomes, not additional scope to silently accumulate in 036.
+Following branch 036 and the user-completed focused practice checklist, the proposed next branch is `037-feat-practice-only-exposure`. Keep later branch numbers unassigned until the actual implementation split is known. The practice scan, exposure guards and deployment preparation are distinct outcomes, not additional scope to silently accumulate in 036.
 
 ## Environment-controlled exposure
 

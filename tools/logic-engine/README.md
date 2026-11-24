@@ -19,7 +19,7 @@ const table = generateTruthTable('!(P & Q) -> R');
 expression  = implication [ ("↔" | "<->") implication ]
 implication = disjunction [ ("→" | "->") implication ]
 disjunction = conjunction { ("∨" | "v" | "|") conjunction }
-conjunction = unary { ("∧" | "&") unary }
+conjunction = unary { ("∧" | "&" | "^") unary }
 unary       = ("¬" | "!" | "~") unary | "(" expression ")" | "[" expression "]" | variable
 variable    = "A" … "Z"
 ```
@@ -59,7 +59,7 @@ row:v1:P=T;Q=F           Row for a named variable assignment
 
 Column IDs depend on structure, not source offsets, whitespace, aliases, or redundant parentheses. They remain stable when the same expression is reused within another formula. Row IDs contain the complete variable assignment; a different variable set produces a different row ID. A cell is addressed by its row ID and column ID within a problem version. Any future change to canonicalization or identifier rules needs an explicit version change.
 
-**Generated tables include expected answers.** They are internal engine results, not a student API response contract. The future API must omit answer values when creating an exercise and disclose solutions/feedback only through the permitted workflow.
+**Generated tables include expected answers.** They are internal engine results, not a student API response contract. The API must omit answer values when creating an exercise and disclose solutions/feedback only through the permitted workflow.
 
 From the repository root:
 
@@ -69,3 +69,9 @@ npm run build -w @logiclab/logic-engine
 ```
 
 Root `npm test`, `npm run typecheck`, and `npm run build` include this package. Build before consuming it from another workspace. Root development builds and watches the engine alongside schema, API, and web.
+
+## Explicit grouping and versioned chain rules
+
+The base parser/generator retains the precedence grammar above for stable IDs and historical data. `parseFormulaWithSyntax`, `/proof`'s `parseProofFormulaWithSyntax` and `/truth-tree`'s `parseTruthTreeFormulaWithSyntax` additionally return original text and node-indexed source spans/explicit groups. `requireExplicitGrouping` enforces policy 1 (`GROUPING_REQUIRED`); new practice/authoring workflows use it, so `P & Q -> R` requires an explicit grouping choice. `formulaChainMembers` stops at explicit descendant boundaries and keeps repeated positions distinct.
+
+Catalog 2 adds separately permitted proof `and_chain_elimination` with `conjunctIndex`, truth-tree conjunct extraction with `memberIndex` and ordered disjunction splits with `splitIndex`. Exact catalog-1 rule variants remain available. Full checkers carry authoritative/inherited source boundaries, enforce pinned version agreement and apply deterministic resource budgets. Construction-source projections share that analysis but return text only; they are not proof acceptance or grading evidence. See [contracts and application policy](../../docs/planning/formula-grouping-and-decomposition.md) and [verification](../../docs/verification/formula-grouping-and-decomposition-verification.md).
