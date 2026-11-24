@@ -4,25 +4,13 @@ import { ResourceApiProvider } from '../api/ResourceApiProvider';
 import { DemoPage } from '../pages/demo/DemoPage';
 import { InstructorBillingPage } from '../pages/instructor-billing/InstructorBillingPage';
 import { Route, Routes } from 'react-router';
-import { PracticePage } from '../pages/practice/PracticePage';
 import { AccountPage } from '../pages/account/AccountPage';
 import { InstructorClassesPage } from '../pages/instructor-classes/InstructorClassesPage';
 import { StudentClassesPage } from '../pages/student-classes/StudentClassesPage';
 import { NotFoundPage } from '../pages/not-found/NotFoundPage';
 import { ProtectedRoute } from './ProtectedRoute';
-import { routeDefinitions, proofPracticePath, truthTreePracticePath } from './route-definitions';
-
-const TruthTreePracticePage = lazy(() =>
-  import('../pages/truth-tree-practice/TruthTreePracticePage').then((module) => ({
-    default: module.TruthTreePracticePage,
-  })),
-);
-
-const ProofPracticePage = lazy(() =>
-  import('../pages/proof-practice/ProofPracticePage').then((module) => ({
-    default: module.ProofPracticePage,
-  })),
-);
+import { routeDefinitions } from './route-definitions';
+import { practicePageRoutes } from './PracticeRoutes';
 
 const ProblemLibraryPage = lazy(() =>
   import('../pages/problem-library/ProblemLibraryPage').then((module) => ({
@@ -63,9 +51,9 @@ export function AppRoutes() {
     >
       <Routes>
         <Route path="/demo" element={<DemoPage />} />
-        <Route path={routeDefinitions.practice.path} element={<PracticePage />} />
-        <Route path={proofPracticePath} element={<ProofPracticePage />} />
-        <Route path={truthTreePracticePath} element={<TruthTreePracticePage />} />
+        {practicePageRoutes.map((route) => (
+          <Route key={route.path} {...route} />
+        ))}
         <Route path={routeDefinitions.account.path} element={<AccountPage />} />
         {['', '/demo'].flatMap((prefix) =>
           accountPages.map(({ definition, element }) => (
