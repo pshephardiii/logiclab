@@ -1,6 +1,7 @@
 import type { Ref, FormEvent } from 'react';
 import { useFormulaValidation } from '../hooks/useFormulaValidation';
 import { FormulaKey } from './FormulaKey';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 
 type Props = {
   formula: string;
@@ -46,12 +47,12 @@ export function FormulaForm({
         <form onSubmit={handleSubmit}>
           <label htmlFor="formula">Propositional formula</label>
           <div className="form-row">
-            <input
+            <FormulaInput
               ref={inputRef}
               id="formula"
               name="formula"
               value={formula}
-              onChange={(event) => onFormulaChange(event.target.value)}
+              onValueChange={onFormulaChange}
               required
               maxLength={256}
               autoComplete="off"

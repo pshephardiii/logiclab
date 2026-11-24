@@ -79,6 +79,34 @@ test('rejects malformed formulas with position information', async () => {
   });
 });
 
+describe.each(['exercise', 'check', 'solution'])('%s explicit practice grouping', (route) => {
+  test.each(['P & Q -> R', 'P ∧ Q → R', 'P v Q -> R v S'])(
+    'rejects mixed operators in %s without creating or returning a table',
+    async (formula) => {
+      const response = await post(route, {
+        formula,
+        ...(route === 'check' ? { answers: [] } : {}),
+      });
+      expect(response.statusCode).toBe(400);
+      const body = truthTableErrorResponseSchema.parse(response.json());
+      expect(body.error).toMatchObject({ code: 'GROUPING_REQUIRED', position: 2 });
+      expect(body.error.message).toContain('group');
+      expect(response.json()).not.toHaveProperty('columns');
+    },
+  );
+
+  test.each(['(P & Q) -> R', 'P & (Q -> R)', '[P v Q] -> [R v S]', 'P & Q & R'])(
+    'accepts explicit grouping or a same-operator chain in %s',
+    async (formula) => {
+      const response = await post(route, {
+        formula,
+        ...(route === 'check' ? { answers: [] } : {}),
+      });
+      expect(response.statusCode).toBe(200);
+    },
+  );
+});
+
 test.each(['~[P <-> Q]', '¬(P ↔ Q)'])(
   'preview/check/solution agree on biconditional notation %s',
   async (formula) => {
