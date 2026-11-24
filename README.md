@@ -76,8 +76,8 @@ For persistence setup, see [local PostgreSQL and DBeaver](docs/development/local
 ```sh
 npm run typecheck
 npm test
-npm run build
-npm run check
+PRODUCT_EXPOSURE=full npm run build
+PRODUCT_EXPOSURE=full npm run check
 ```
 
 `check` runs type checking, engine/backend Jest tests, frontend Vitest tests, and production builds. Backend tests cover handlers directly and routes through Fastify injection without opening a network port. `npm run db:test` separately verifies migrations and PostgreSQL workflows/concurrency. Browser smoke checks have been run locally; a browser CI suite remains follow-up work. Vite is the frontend development/build tool.
@@ -90,7 +90,9 @@ After a root build, `npm start -w @logiclab/api` starts the compiled API and `np
 
 The [Cognito development foundation](docs/development/cognito-development.md) includes a reviewable CloudFormation template and backend auth/session services. Auth endpoints register when backend auth is enabled; the web app includes account screens and restores sessions through the API. Existing anonymous practice continues to work without AWS. The guide records the provisioning steps for live verification. See the [authentication API](docs/api/auth-api.md) for contracts, cookies, recovery, and limits.
 
-The initial public demo will use a low-cost hosting design still to be selected; AWS remains a possible later production destination. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
+The initial practice-only public sandbox will use a low-cost hosting design still to be selected; AWS remains a possible later production destination. The frontend produces static files in `apps/web/dist`; the backend produces runnable Node.js code in `services/api/dist` and uses environment-based configuration. Keep shared workspace dependencies available when packaging the backend.
+
+Every frontend build requires `PRODUCT_EXPOSURE=full` or `practice-only`; local serving defaults to `full`. Set it once in the root `.env` or shell; both API startup and Vite use that shared choice. Only this validated public value is injected into the frontend; other root settings stay private. API startup defaults to `full` locally and requires explicit `PRODUCT_EXPOSURE` in production. The browser verifies `/api/product-exposure` before mounting application providers; missing/invalid responses or disagreement block startup with a retry screen. The initial sandbox uses `practice-only` on both sides: only anonymous practice navigation/routes mount, and the API skips account/demo/database initialization and private resource registration. Full local behavior remains available. See the [exposure API](docs/api/product-exposure-api.md) and [practice-first release plan](docs/planning/practice-first-release.md).
 
 The production browser uses same-origin `/api` by default. Configure routing for that path to the backend. `VITE_API_URL` optionally sets an API origin at frontend build time; using a different origin will also require explicit backend CORS configuration. Never put secrets in `VITE_*` variables, which are visible in the browser.
 

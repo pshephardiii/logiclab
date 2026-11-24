@@ -1,29 +1,30 @@
-import { useAccountContext } from './features/auth/AccountProvider';
-import { AccountProvider } from './features/auth/AccountProvider';
-import { PracticeProvider } from './features/truthTable/PracticeProvider';
-import { AppRoutes } from './routing/AppRoutes';
+import { lazy, Suspense } from 'react';
+import { ProductExposure, productExposureSchema } from '@logiclab/contracts/product-exposure';
+import { ProductExposureBoundary } from './features/product-exposure/ProductExposureBoundary';
+import { PracticeOnlyApp } from './PracticeOnlyApp';
+
+const FullProductApp = lazy(() =>
+  import('./FullProductApp').then((module) => ({ default: module.FullProductApp })),
+);
+
+const exposure = productExposureSchema.parse(import.meta.env.PRODUCT_EXPOSURE);
 
 export function App() {
   return (
-    <AccountProvider>
-      <SessionPages />
-    </AccountProvider>
-  );
-}
-
-function SessionPages() {
-  const { demo, demoMode } = useAccountContext();
-  const workspaceId = demo.session?.workspace.id;
-  const generation = demo.session?.workspace.generation;
-  const userId = demo.session?.user.id;
-
-  // Reset page state when the demo workspace, reset generation, or selected user changes.
-  const demoSessionKey = `demo:${workspaceId}:${generation}:${userId}`;
-  const pageSessionKey = demoMode ? demoSessionKey : 'normal';
-
-  return (
-    <PracticeProvider key={pageSessionKey}>
-      <AppRoutes />
-    </PracticeProvider>
+    <ProductExposureBoundary expected={exposure}>
+      {exposure === ProductExposure.PracticeOnly ? (
+        <PracticeOnlyApp />
+      ) : (
+        <Suspense
+          fallback={
+            <main>
+              <p role="status">Loading LogicLab…</p>
+            </main>
+          }
+        >
+          <FullProductApp />
+        </Suspense>
+      )}
+    </ProductExposureBoundary>
   );
 }

@@ -16,6 +16,11 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run check
+        env:
+          PRODUCT_EXPOSURE: full
+      - run: npm run build -w @logiclab/web
+        env:
+          PRODUCT_EXPOSURE: practice-only
   database:
     runs-on: ubuntu-latest
     services:

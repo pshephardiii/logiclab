@@ -15,6 +15,8 @@ import { healthRoute } from './routes/health/route';
 import { truthTableRoutes } from './routes/truthTable';
 import { authRoutes } from './routes/auth';
 import type { AuthContext } from './routes/auth/context';
+import { ProductExposure, resolveProductExposure } from '@logiclab/contracts/product-exposure';
+import { productExposureRoute } from './routes/productExposure/route';
 
 /**
  * Composes HTTP route groups from supplied dependencies without opening external resources.
@@ -22,6 +24,7 @@ import type { AuthContext } from './routes/auth/context';
 export function buildApp(
   options: {
     logger?: boolean;
+    productExposure?: ProductExposure;
     demo?: DemoRuntime;
     auth?: AuthContext;
     classroom?: ClassroomContext;
@@ -31,6 +34,10 @@ export function buildApp(
     billing?: BillingContext;
   } = {},
 ) {
+  const productExposure = resolveProductExposure(options.productExposure, {
+    production: false,
+    settingName: 'productExposure',
+  });
   const app = Fastify({
     logger: options.logger
       ? {
@@ -45,21 +52,25 @@ export function buildApp(
       : false,
   });
 
-  if (options.demo) app.register(demoRoutes, options.demo);
+  // Resource routes belong only to full mode, even if a caller supplies their dependencies.
+  if (productExposure === ProductExposure.Full) {
+    if (options.demo) app.register(demoRoutes, options.demo);
 
-  if (options.billing) app.register(billingRoutes, options.billing);
+    if (options.billing) app.register(billingRoutes, options.billing);
 
-  if (options.auth) app.register(authRoutes, options.auth);
+    if (options.auth) app.register(authRoutes, options.auth);
 
-  if (options.classroom) app.register(classroomRoutes, options.classroom);
+    if (options.classroom) app.register(classroomRoutes, options.classroom);
 
-  if (options.studentWork) app.register(studentWorkRoutes, options.studentWork);
+    if (options.studentWork) app.register(studentWorkRoutes, options.studentWork);
 
-  if (options.assignment) app.register(assignmentRoutes, options.assignment);
+    if (options.assignment) app.register(assignmentRoutes, options.assignment);
 
-  if (options.problem) app.register(problemRoutes, options.problem);
+    if (options.problem) app.register(problemRoutes, options.problem);
+  }
 
   app.register(truthTableRoutes);
   app.register(healthRoute);
+  app.register(productExposureRoute, { productExposure });
   return app;
 }
