@@ -171,7 +171,7 @@ Keep expected-answer generation separate from disclosure policy: callers decide 
 
 Use existing behavior tests as the baseline. Add tests for material gaps or changed guarantees, rather than tests that only mirror helper implementation. A refactor should preserve public exports and intended behavior.
 
-- `VITE_PRODUCT_EXPOSURE=full npm run check` verifies workspace types, engine/API Jest tests, frontend Vitest tests, and production builds. Every frontend build requires an explicit exposure setting; CI also builds `practice-only`. Keep API `PRODUCT_EXPOSURE` and frontend mode aligned when running the application.
+- `PRODUCT_EXPOSURE=full npm run check` verifies workspace types, engine/API Jest tests, frontend Vitest tests, and production builds. Every frontend build requires an explicit exposure setting; CI also builds `practice-only`. Both API startup and Vite read the root `.env` setting, with shell overrides taking precedence. Restart development processes after changing it.
 - `npm run db:test` verifies real PostgreSQL behavior using a separate disposable database.
 - MikroORM `migration:check` verifies entity mappings against the database.
 

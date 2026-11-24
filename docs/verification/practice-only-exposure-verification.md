@@ -12,20 +12,20 @@ Before mounting application providers, the frontend validates public `/api/produ
 
 ## Final checks
 
-| Check                                                                | Result                                                                                     |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `VITE_PRODUCT_EXPOSURE=full npm run check`                           | Passed: workspace types, 3,220 tests (1,133 engine, 1,268 API, 819 web), production builds |
-| `VITE_PRODUCT_EXPOSURE=practice-only npm run build -w @logiclab/web` | Passed                                                                                     |
-| `npm run db:test`                                                    | Passed: 348 PostgreSQL checks (184 database, 164 API/workflow)                             |
-| `npm run format:check`                                               | Passed                                                                                     |
-| Working-tree and branch whitespace                                   | Passed                                                                                     |
-| Changed local Markdown file targets                                  | Passed                                                                                     |
+| Check                                                        | Result                                                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `PRODUCT_EXPOSURE=full npm run check`                        | Passed: workspace types, 3,222 tests (1,133 engine, 1,268 API, 821 web), production builds |
+| `npm run build -w @logiclab/web` (shared root configuration) | Passed                                                                                     |
+| `npm run db:test`                                            | Passed: 348 PostgreSQL checks (184 database, 164 API/workflow)                             |
+| `npm run format:check`                                       | Passed                                                                                     |
+| Working-tree and branch whitespace                           | Passed                                                                                     |
+| Changed local Markdown file targets                          | Passed                                                                                     |
 
 The sandbox initially denied database connections and temporary API/watcher listeners. The full check and database suite were rerun with local permissions and passed. Those initial failures were environment restrictions, not counted as passing runs. PostgreSQL workflows used the configured disposable test database and existing isolated fixtures; no application database was reset or migrated. Existing Jest VM-module advisories remain.
 
-Configuration tests cover local defaults, explicit full/restricted choices, missing production settings, invalid/blank values, unknown API environment names and sanitized errors. Actual Vite builds also rejected missing/invalid production settings and a missing custom-staging setting. HTTP tests verify the public allowlist, strict uncached metadata, existing formula/resource validation, full-mode authenticated registration and credential-bearing private requests across methods. Unusable resource contexts prove private plugins are not registered. Real startup subprocesses prove practice-only serves without valid full-product configuration or a database, production errors refuse to listen, full mode retains dependency validation and temporary processes stop.
+Configuration tests cover local defaults, explicit full/restricted choices, missing production settings, invalid/blank values, unknown API environment names and sanitized errors. Before the single-setting cleanup, actual Vite builds also rejected missing/invalid production settings and a missing custom-staging setting. After cleanup, an actual staging build rejected an invalid shared override; missing-file/build-choice behavior is covered by configuration tests. HTTP tests verify the public allowlist, strict uncached metadata, existing formula/resource validation, full-mode authenticated registration and credential-bearing private requests across methods. Unusable resource contexts prove private plugins are not registered. Real startup subprocesses prove practice-only serves without valid full-product configuration or a database, production errors refuse to listen, full mode retains dependency validation and temporary processes stop.
 
-Frontend tests cover agreement gating, both mismatches, malformed metadata, HTTP/network/JSON errors, manual retry, abort/late-response handling, anonymous routes and direct private paths without account/demo providers or session requests. The full existing web suite also passes.
+Frontend tests cover agreement gating, both mismatches, malformed metadata, HTTP/network/JSON errors, manual retry, abort/late-response handling, anonymous routes and direct private paths without account/demo providers or session requests. The full existing web suite also passes. The single-setting follow-up reran the complete workspace check and both builds; its added tests cover Node environment-file parsing, shell precedence, missing root configuration and ignoring the obsolete frontend key. Vite does not mutate the public environment with root credentials. The PostgreSQL result above predates this configuration-only follow-up and was not repeated.
 
 ## Focused browser checks
 
@@ -43,10 +43,12 @@ Temporary Chrome and HTTP/API listeners were cleaned up. Local scripts, logs and
 
 ## Rollout and limits
 
-No migration, database JSON change or new external dependency. Rebuild matching contracts/API/frontend. For the initial sandbox, set `PRODUCT_EXPOSURE=practice-only` and `NODE_ENV=production` on API startup, and `VITE_PRODUCT_EXPOSURE=practice-only` when building the frontend. Full builds use `VITE_PRODUCT_EXPOSURE=full`. Shell or ignored `apps/web/.env` configures Vite; the root API `.env` does not. Every build requires an explicit choice. Restart the API and rebuild the frontend to change modes.
+No migration, database JSON change or new external dependency. Rebuild matching contracts/API/frontend. For the initial sandbox, set `PRODUCT_EXPOSURE=practice-only` and `NODE_ENV=production` on API startup, and use that same setting when building the frontend. Full builds use `PRODUCT_EXPOSURE=full`. API startup and Vite read the same root `.env`, with shell values taking precedence. Vite injects only the validated exposure value; other root settings stay private. Every build requires an explicit choice. Restart the API and rebuild the frontend to change modes.
 
 Deploy compatible API/frontend versions: an older API without the metadata endpoint cannot start this frontend. The metadata request is a startup agreement check, not continuous polling. Server registration guards remain authoritative. The full product's client code may remain in shipped assets; runtime exclusion is not source confidentiality. Explicit operator CLI commands are outside the HTTP startup guard. Existing request/resource limits are unchanged; this work does not select hosting or add deployment-specific traffic controls.
 
 This is focused exposure verification, not exhaustive product QA or a hosted-release sign-off. No fresh clean installation, remote CI query, hosted deployment, live Cognito/email/payment verification, load/soak run or accessibility/browser matrix was performed. Matching full-product browser journeys were not repeated; existing automated full-product/API/database workflows passed. No infrastructure, deployment branch or external messages were created.
 
 Next: proposed `038-feat-practice-sample-problems`, covering curated samples, verified separate completed examples and a click-through layer before reviewed sandbox preparation. See the [sample plan](../planning/practice-sample-problems.md), [release plan](../planning/practice-first-release.md) and [exposure API](../api/product-exposure-api.md).
+
+The final shared-setting browser smoke repeated the focused checks above after building directly from root configuration, without a frontend-specific exposure override. Its logs use `single-setting-` filenames in the existing ignored evidence directory. Local exposure settings were updated at the user's request without displaying their values; the obsolete duplicate frontend setting was removed. Changing the root setting requires restarting development processes, and production frontend artifacts still require rebuilding.

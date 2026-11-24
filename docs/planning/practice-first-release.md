@@ -35,10 +35,10 @@ After the practice release and initial portfolio work, continue the demo teachin
 
 The shared contract defines `ProductExposure.Full` (`full`) and `ProductExposure.PracticeOnly` (`practice-only`), strict validation and a public metadata response containing only `productExposure`. A dedicated `@logiclab/contracts/product-exposure` entry supports API/frontend consumers without duplicating wire values.
 
-| Setting                          | Reader behavior                                                                                                                                                                                |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API `PRODUCT_EXPOSURE`           | Missing values default to `full` outside production; `NODE_ENV=production` requires an explicit valid choice. Unknown `NODE_ENV` values are rejected rather than treated as local development. |
-| Frontend `VITE_PRODUCT_EXPOSURE` | Missing values default to `full` when serving locally. Every build command requires an explicit valid choice, including builds using a custom Vite mode.                                       |
+| Setting                     | Reader behavior                                                                                                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API `PRODUCT_EXPOSURE`      | Missing values default to `full` outside production; `NODE_ENV=production` requires an explicit valid choice. Unknown `NODE_ENV` values are rejected rather than treated as local development. |
+| Frontend `PRODUCT_EXPOSURE` | Missing values default to `full` when serving locally. Every build command requires an explicit valid choice, including builds using a custom Vite mode.                                       |
 
 Blank, misspelled, non-string or unknown explicit values never fall back to full. Errors identify the setting without echoing its supplied value. Auth/demo/billing flags do not choose exposure implicitly. The metadata schema rejects extra fields; credentials and service settings do not belong in the later public response.
 
@@ -64,7 +64,7 @@ Validation: all 1,268 API tests passed, including 33 focused route/config/startu
 
 ## Branch 037 — slice 3: frontend exposure and deployment agreement
 
-Vite now consumes `VITE_PRODUCT_EXPOSURE`: local serving defaults to `full`, while every build requires an explicit `full` or `practice-only`, including custom modes such as staging. Supply it in the shell or ignored `apps/web/.env`; the frontend does not load the root API `.env`. For example, `VITE_PRODUCT_EXPOSURE=full npm run check` verifies the full product. CI explicitly builds full mode through the normal check, then also builds the practice-only frontend. Invalid explicit values never fall back to full.
+Vite now consumes `PRODUCT_EXPOSURE`: local serving defaults to `full`, while every build requires an explicit `full` or `practice-only`, including custom modes such as staging. Supply it once in the root `.env` or shell; API startup and Vite share the setting. Other root settings are not injected into the browser. For example, `PRODUCT_EXPOSURE=full npm run check` verifies the full product. CI explicitly builds full mode through the normal check, then also builds the practice-only frontend. Invalid explicit values never fall back to full.
 
 Before mounting application providers, the browser requests `/api/product-exposure` through the existing API transport. The response must pass the strict public schema and match the frontend build. Errors, malformed metadata and either mismatch direction show an unavailable/retry screen without mounting account/demo or practice providers. Retry is deliberate; obsolete/unmounted requests are aborted and their late responses ignored. An older API without this endpoint cannot start the new frontend; deploy matching versions.
 
@@ -74,6 +74,10 @@ Validation: all 819 web tests passed, including deployment agreement, failure/re
 
 ## Branch 037 — closeout
 
-The API/frontend exposure slices are complete. Final workspace checks passed 3,220 tests and matching production builds; the separate practice-only build and all 348 PostgreSQL checks passed. Focused Chrome verified real table endpoints, practice entry/navigation, Stay/Discard, private direct URLs, 390px containment and mode disagreement without account/demo requests. Formatting, whitespace and changed Markdown targets passed. See the [verification report](../verification/practice-only-exposure-verification.md) for exact coverage, evidence, rollout and limitations; earlier slice notes describe their state at that time.
+The API/frontend exposure slices are complete. Final workspace checks, including the single-setting follow-up, passed 3,222 tests and matching production builds; the separate practice-only build and all 348 PostgreSQL checks passed. Focused Chrome verified real table endpoints, practice entry/navigation, Stay/Discard, private direct URLs, 390px containment and mode disagreement without account/demo requests. Formatting, whitespace and changed Markdown targets passed. See the [verification report](../verification/practice-only-exposure-verification.md) for exact coverage, evidence, rollout and limitations; earlier slice notes describe their state at that time.
 
 No hosting, infrastructure or release-promotion branch was created. Next is the agreed sample/completed-example/click-through branch `038-feat-practice-sample-problems`, then reviewed sandbox preparation. Full product browser QA and the broader demo/account UI audits remain deferred. Local PR notes are prepared separately; this closeout does not publish a PR or create the next branch.
+
+### Single exposure setting
+
+Post-review configuration cleanup uses only root `PRODUCT_EXPOSURE` for both API startup and Vite. Shell overrides take precedence, matching Node's API environment-file behavior. Vite reads the root file with Node's parser and injects only the validated public choice; it does not add root credentials to the public environment. The obsolete separate frontend key is removed from local configuration and is no longer consumed. Local serving still defaults to full when no choice exists; production API startup and every frontend build require an explicit choice. Runtime agreement remains necessary for stale frontend artifacts or separately configured deployment processes. Restart `npm run dev` after changing the root setting.

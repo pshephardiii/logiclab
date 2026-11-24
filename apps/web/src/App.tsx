@@ -7,7 +7,7 @@ const FullProductApp = lazy(() =>
   import('./FullProductApp').then((module) => ({ default: module.FullProductApp })),
 );
 
-const exposure = productExposureSchema.parse(import.meta.env.VITE_PRODUCT_EXPOSURE);
+const exposure = productExposureSchema.parse(import.meta.env.PRODUCT_EXPOSURE);
 
 export function App() {
   return (

@@ -1,16 +1,12 @@
-import { fileURLToPath } from 'node:url';
-import { defineConfig, loadEnv } from 'vite';
-import { readWebProductExposure } from './src/config/product-exposure.ts';
+import { defineConfig } from 'vite';
+import { loadWebProductExposure } from './src/config/product-exposure.ts';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ command, mode }) => {
-  const exposure = readWebProductExposure(
-    loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), 'VITE_'),
-    command,
-  );
+export default defineConfig(({ command }) => {
+  const exposure = loadWebProductExposure(new URL('../../.env', import.meta.url), command);
 
   return {
-    define: { 'import.meta.env.VITE_PRODUCT_EXPOSURE': JSON.stringify(exposure) },
+    define: { 'import.meta.env.PRODUCT_EXPOSURE': JSON.stringify(exposure) },
     plugins: [react()],
     // Prebundle linked workspace CommonJS entry points for browser development.
     // Rebuild on startup so new workspace exports cannot reuse an old prebundle.
