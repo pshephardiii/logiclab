@@ -1,6 +1,9 @@
-import type { ReactNode, CSSProperties } from 'react';
+import { useMemo, type ReactNode, type CSSProperties } from 'react';
+import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
+import { truthTreeSourceFormulas } from '../helpers/source-formulas';
 import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
-import { truthTreeFormulaProgress, truthTreeFormulaLabel } from '../helpers/formula-presentation';
+import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
+import { truthTreeFormulaProgress } from '../helpers/formula-progress';
 import { truthTreeLayout } from '../helpers/layout';
 import { branchEndingLabel, occurrenceSourceLabel } from '../helpers/display-labels';
 import { TruthTreeFork } from './TruthTreeFork';
@@ -16,6 +19,8 @@ export function TruthTreeDisplay({
   renderBranchActions,
   entry,
   reveal,
+  sources: suppliedSources,
+  statement,
 }: {
   tree: TruthTree;
   disabled?: boolean;
@@ -23,7 +28,13 @@ export function TruthTreeDisplay({
   renderBranchActions?: (branch: TruthTreeBranch, number: number) => ReactNode;
   entry?: { branchId: string; content: ReactNode };
   reveal?: TreeRevealRequest;
+  sources?: ReadonlyMap<string, string>;
+  statement?: TruthTreeContent;
 }) {
+  const sources = useMemo(
+    () => suppliedSources ?? truthTreeSourceFormulas(tree, statement),
+    [suppliedSources, tree, statement],
+  );
   const layout = truthTreeLayout(tree, entry?.branchId);
   if (!layout)
     return (
@@ -43,11 +54,14 @@ export function TruthTreeDisplay({
     );
 
   const { structure, numbers, branchNumbers } = layout;
-  const progress = truthTreeFormulaProgress(tree);
+  const progress = truthTreeFormulaProgress(tree, sources);
   // Reserve space for the complete formula on every path; wide trees scroll within the viewport.
   const longest = Math.max(
     0,
-    ...tree.occurrences.map((item) => truthTreeFormulaLabel(item.formula).length),
+    ...tree.occurrences.map(
+      (item) =>
+        truthTreeFormulaLabel(sources.get(item.id) ?? item.formula, tree.treeVersion).length,
+    ),
   );
   const formulaWidth = Math.max(10.5, longest * 0.7 + 3.5);
 
@@ -63,8 +77,10 @@ export function TruthTreeDisplay({
       }
     >
       <p className="truth-tree-marker-key">
-        ✓ Applied on all paths · ◐ Applied on some paths · • No decomposition needed. Marks track
-        use, not correctness.
+        {tree.treeVersion === 2
+          ? '✓ All components used on all paths · ◐ Components or paths remain · • No decomposition needed.'
+          : '✓ Applied on all paths · ◐ Applied on some paths · • No decomposition needed.'}{' '}
+        Marks track use, not correctness.
       </p>
       <TruthTreeViewport scrollable={layout.slotCount > 1 || formulaWidth > 10.5} reveal={reveal}>
         <div
@@ -121,6 +137,8 @@ export function TruthTreeDisplay({
                       >
                         <TruthTreeFormula
                           occurrence={item}
+                          version={tree.treeVersion}
+                          sourceFormula={sources?.get(item.id)}
                           progress={progress.get(item.id)}
                           number={numbers.get(item.id)!}
                           source={occurrenceSourceLabel(item, expansion, numbers)}

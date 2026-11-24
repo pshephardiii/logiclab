@@ -92,14 +92,20 @@ test('private library persists scoped drafts, paginates active records, and prot
     assert.equal(edited.statusCode, 200);
     assert.equal(edited.json().problem.instructions, null);
     assert.equal(edited.json().problem.title, 'Logic');
-    assert.deepEqual(edited.json().problem.definition, definition);
+    assert.deepEqual(edited.json().problem.definition, {
+      ...definition,
+      formulaGroupingVersion: 1,
+    });
     const invalid = await request({
       method: 'PATCH',
       url: `/api/problems/${id}`,
       payload: { definition: { ...definition, formula: 'P &' } },
     });
     assert.equal(invalid.statusCode, 400);
-    assert.deepEqual((await store.findOwned(owner.id, id))!.definition, definition);
+    assert.deepEqual((await store.findOwned(owner.id, id))!.definition, {
+      ...definition,
+      formulaGroupingVersion: 1,
+    });
     active = other;
     const foreignRead = await request({ method: 'GET', url: `/api/problems/${id}` });
     const missingRead = await request({ method: 'GET', url: `/api/problems/${randomUUID()}` });

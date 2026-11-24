@@ -9,10 +9,11 @@ function failure(
   code:
     typeof CheckerDiagnosticCode.ResourceLimit | typeof CheckerDiagnosticCode.VerificationFailed,
   message: string,
+  version: 1 | 2 = 1,
 ): TruthTreeCheckReport {
   const steps: TruthTreeStepReport = {
     checkerVersion: 1,
-    ruleCatalogVersion: 1,
+    ruleCatalogVersion: version,
     status: 'unassessable',
     initial: 'unknown',
     occurrences: [],
@@ -22,7 +23,7 @@ function failure(
   };
   return {
     checkerVersion: 1,
-    ruleCatalogVersion: 1,
+    ruleCatalogVersion: version,
     status: 'unassessable',
     argumentStatus: 'undetermined',
     steps,
@@ -37,14 +38,21 @@ export function checkTruthTree(
   input: unknown,
   budget: TruthTreeBudget = truthTreeBudget(),
 ): TruthTreeCheckReport {
+  let version: 1 | 2 = 1;
   try {
     const { report: steps, evidence } = analyzeTruthTreeSteps(input, budget);
-    const base = { checkerVersion: 1 as const, ruleCatalogVersion: 1 as const, steps };
+    version = steps.ruleCatalogVersion;
+    const base = {
+      checkerVersion: 1 as const,
+      ruleCatalogVersion: steps.ruleCatalogVersion,
+      steps,
+    };
     if (!evidence) {
       if (steps.status === 'checked')
         return failure(
           CheckerDiagnosticCode.VerificationFailed,
           'Checked step evidence was not available for branch verification.',
+          version,
         );
       return {
         ...base,
@@ -74,6 +82,7 @@ export function checkTruthTree(
         return failure(
           CheckerDiagnosticCode.VerificationFailed,
           'The completed branch did not yield an independently verified counterexample.',
+          version,
         );
       return {
         ...base,
@@ -100,6 +109,6 @@ export function checkTruthTree(
     };
   } catch (error) {
     if (!(error instanceof TruthTreeResourceLimit)) throw error;
-    return failure(CheckerDiagnosticCode.ResourceLimit, error.message);
+    return failure(CheckerDiagnosticCode.ResourceLimit, error.message, version);
   }
 }

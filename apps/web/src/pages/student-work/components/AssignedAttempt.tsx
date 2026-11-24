@@ -68,6 +68,9 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
               item && 'content' in item && item.content.type === ProblemType.Derivation
                 ? item.content.format
                 : 'fitch',
+              item && 'content' in item && item.content.type === ProblemType.Derivation
+                ? item.content.ruleCatalogVersion
+                : 1,
             )
           ).proof,
           report: proofReport,
@@ -290,6 +293,7 @@ export function AssignedAttempt({ assignmentId }: { assignmentId: string }) {
                       item && 'content' in item && item.content.type === ProblemType.Derivation
                         ? item.content.format
                         : 'fitch',
+                      item.content.ruleCatalogVersion,
                     )
                   : undefined)
               }

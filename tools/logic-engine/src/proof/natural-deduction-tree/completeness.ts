@@ -65,7 +65,13 @@ export function isFinishedNaturalDeductionTreeProofAttempt(value: unknown): bool
     }
 
     // Only the selected root must parse and match the target; array order has no logical meaning.
-    const final = readFormula(root.formula, budget, diagnostics);
+    const final = readFormula(
+      root.formula,
+      budget,
+      diagnostics,
+      undefined,
+      input.problem.formulaGroupingVersion,
+    );
 
     if (!final.formula) return false;
 

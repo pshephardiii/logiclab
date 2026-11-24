@@ -4,7 +4,7 @@ import type { ConceptualQuestionDefinition } from '@logiclab/contracts';
 
 /** Versioned synthetic content only; billing terms come from the saved simulator plan. */
 export const DEMO_TEMPLATE = {
-  version: 10,
+  version: 11,
   truthTreePracticeAssignmentTitle: 'Practice truth trees: closed and open paths',
   truthTreeGradedAssignmentTitle: 'Truth trees: separate grade and answer release',
   truthTreeCompletionAssignmentTitle: 'Complete both truth trees',
@@ -91,7 +91,8 @@ const blockId = 'd3333333-3333-4333-8333-333333333333';
 const proofStatement = {
   type: ProblemType.Derivation,
   definitionVersion: 1 as const,
-  ruleCatalogVersion: 1 as const,
+  ruleCatalogVersion: 2 as const,
+  formulaGroupingVersion: 1 as const,
   checkerVersion: 1 as const,
   premises: [],
   conclusion: 'P -> P',
@@ -116,7 +117,7 @@ export const DEMO_DERIVATIONS: {
       ...proofStatement,
       format: 'fitch',
       referenceProof: {
-        proofVersion: 1,
+        proofVersion: 2,
         format: 'fitch',
         steps: [
           { kind: 'assumption', id: assumptionId, blockId, formula: 'P' },
@@ -142,7 +143,7 @@ export const DEMO_DERIVATIONS: {
       ...proofStatement,
       format: 'dependency',
       referenceProof: {
-        proofVersion: 1,
+        proofVersion: 2,
         format: 'dependency',
         steps: [
           { kind: 'assumption', id: assumptionId, formula: 'P', dependencies: [assumptionId] },

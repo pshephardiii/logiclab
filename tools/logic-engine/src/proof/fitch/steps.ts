@@ -6,6 +6,7 @@ import type { FitchReferenceCheck, FitchStructureResult } from './types';
 import type { ParsedProofFormula } from '../proof-formulas';
 import type { ProofBudget } from '../proof-budget';
 import type { StructureDiagnostics } from '../structure-diagnostics';
+import { carryProofGrouping } from '../source-grouping';
 
 type StepReport = ProofCheckReport['steps'][number];
 
@@ -50,7 +51,11 @@ function localStatus(
 
     budget.spend(2 * (premise.size + current.size));
 
-    if (sameFormula(current.formula, premise.formula)) return 'valid';
+    if (sameFormula(current.formula, premise.formula)) {
+      if (input.problem.ruleCatalogVersion === 2)
+        carryProofGrouping(current, [[current.formula, premise.formula]], [premise], budget);
+      return 'valid';
+    }
 
     diagnostics.add({
       code: CheckerDiagnosticCode.RuleMismatch,
@@ -75,6 +80,7 @@ function localStatus(
     stepIndex,
     budget,
     diagnostics,
+    step.conjunctIndex,
   );
 }
 

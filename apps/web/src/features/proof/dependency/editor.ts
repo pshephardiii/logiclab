@@ -1,8 +1,11 @@
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 
-export function startDependencyProof(premises: { id: string; formula: string }[]): DependencyProof {
+export function startDependencyProof(
+  premises: { id: string; formula: string }[],
+  ruleCatalogVersion: 1 | 2 = 1,
+): DependencyProof {
   return {
-    proofVersion: 1,
+    proofVersion: ruleCatalogVersion,
     format: 'dependency',
     steps: premises.map((premise) => {
       const id = crypto.randomUUID();

@@ -201,7 +201,7 @@ test('unknown rule references survive for diagnostics; the known catalog still a
 });
 
 test.each([
-  { ...tree, treeVersion: 2 },
+  { ...tree, treeVersion: 3 },
   { ...tree, format: 'tree' },
   { ...tree, format: 'fitch' },
   { ...tree, rootBranchId: 'not-a-uuid' },
@@ -297,5 +297,63 @@ test('standalone transport does not enable assignment/problem admission', () => 
       format: 'truth_tree',
       ...problem,
     }).success,
+  ).toBe(false);
+});
+
+test('catalog-2 owner/student transport requires pinned authoring policy and matching references', async () => {
+  const { truthTreeDefinitionSchema, truthTreeContentSchema, truthTreeSolutionSchema } =
+    await import('@logiclab/contracts/truth-tree-authoring');
+  const { truthTreeAnswerSchema } = await import('@logiclab/contracts/truth-tree-work');
+  const newer = { ...tree, treeVersion: 2 };
+  expect(truthTreeAnswerSchema.safeParse({ type: 'truth_tree', tree: newer }).success).toBe(true);
+
+  const definition = {
+    type: 'truth_tree',
+    definitionVersion: 1,
+    checkerVersion: 1,
+    ...problem,
+    ruleCatalogVersion: 2,
+    formulaGroupingVersion: 1,
+    referenceTree: newer,
+  };
+  expect(truthTreeDefinitionSchema.parse(definition)).toEqual(definition);
+  expect(truthTreeDefinitionSchema.safeParse({ ...definition, referenceTree: null }).success).toBe(
+    true,
+  );
+  expect(truthTreeDefinitionSchema.safeParse({ ...definition, referenceTree: tree }).success).toBe(
+    false,
+  );
+  expect(
+    truthTreeDefinitionSchema.safeParse({ ...definition, ruleCatalogVersion: 1 }).success,
+  ).toBe(false);
+  expect(
+    truthTreeDefinitionSchema.safeParse({ ...definition, formulaGroupingVersion: undefined })
+      .success,
+  ).toBe(false);
+  const { referenceTree, ...content } = definition;
+  expect(truthTreeContentSchema.parse(content)).toEqual(content);
+  expect(
+    truthTreeContentSchema.safeParse({ ...content, formulaGroupingVersion: undefined }).success,
+  ).toBe(false);
+
+  const solution = {
+    type: 'truth_tree',
+    definitionVersion: 1,
+    checkerVersion: 1,
+    ruleCatalogVersion: 2,
+    formulaGroupingVersion: 1,
+    referenceTree,
+    argumentStatus: 'valid',
+    counterexample: null,
+  };
+  expect(truthTreeSolutionSchema.parse(solution)).toEqual(solution);
+  expect(truthTreeSolutionSchema.safeParse({ ...solution, referenceTree: tree }).success).toBe(
+    false,
+  );
+  expect(truthTreeSolutionSchema.safeParse({ ...solution, ruleCatalogVersion: 1 }).success).toBe(
+    false,
+  );
+  expect(
+    truthTreeSolutionSchema.safeParse({ ...solution, formulaGroupingVersion: undefined }).success,
   ).toBe(false);
 });

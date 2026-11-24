@@ -8,6 +8,7 @@ import type {
 /** An explicit empty response stays distinct from never starting a proof. */
 export function blankDerivationAnswer(
   format: DerivationAnswer['proof']['format'] = 'fitch',
+  ruleCatalogVersion: 1 | 2 = 1,
 ): DerivationAnswer {
   if (format === 'tree')
     return {
@@ -16,11 +17,14 @@ export function blankDerivationAnswer(
     };
 
   if (format === 'dependency')
-    return { type: ProblemType.Derivation, proof: { proofVersion: 1, format, steps: [] } };
+    return {
+      type: ProblemType.Derivation,
+      proof: { proofVersion: ruleCatalogVersion, format, steps: [] },
+    };
 
   return {
     type: ProblemType.Derivation,
-    proof: { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+    proof: { proofVersion: ruleCatalogVersion, format: 'fitch', steps: [], blocks: [] },
   };
 }
 

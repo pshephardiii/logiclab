@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
+import { truthTreeSourceFormulas } from '../helpers/source-formulas';
 import { terminalBranchNumbers } from '../helpers/display-labels';
 import type { TruthTree, TruthTreeBranch } from '@logiclab/contracts/truth-tree';
 import { TruthTreeDisplay } from './TruthTreeDisplay';
@@ -18,6 +20,7 @@ import type { TreeRevealRequest } from './TruthTreeViewport';
 
 type Props = {
   tree: TruthTree;
+  statement?: TruthTreeContent;
   disabled?: boolean;
   onChange: (tree: TruthTree) => void;
   onPendingChange?: (pending: boolean) => void;
@@ -26,8 +29,15 @@ type Props = {
 type ActiveEntry = { branchId: string; mode: 'expand' | 'close' };
 
 /** Controlled tree data; one unconfirmed branch entry stays separate from saved work. */
-export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = false }: Props) {
+export function TruthTreeEditor({
+  tree,
+  statement,
+  onChange,
+  onPendingChange,
+  disabled = false,
+}: Props) {
   const structure = editableTree(tree);
+  const sourceFormulas = useMemo(() => truthTreeSourceFormulas(tree, statement), [tree, statement]);
   const [active, setActive] = useState<ActiveEntry | null>(null);
   const [entry, setEntry] = useState(emptyTreeExpansion);
   const [closureKind, setClosureKind] = useState<'complement' | 'falsity'>('complement');
@@ -48,7 +58,7 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
   const sources = (structure?.paths.get(branchId) ?? []).map((id) => ({
     id,
     number: tree.occurrences.findIndex((item) => item.id === id) + 1,
-    formula: structure!.occurrences.get(id)!.formula,
+    formula: sourceFormulas.get(id) ?? structure!.occurrences.get(id)!.formula,
   }));
   const branchNumber = structure ? (terminalBranchNumbers(structure).get(branchId) ?? 0) : 0;
   const undo = undoTruthTreeExpansion(tree);
@@ -131,6 +141,7 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
                   entry={entry}
                   onChange={setEntry}
                   sources={sources}
+                  version={tree.treeVersion}
                   onAdd={() =>
                     commit(
                       () =>
@@ -140,6 +151,8 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
                           entry.sourceId,
                           entry.ruleId,
                           entry.formulas,
+                          entry.chainChoice,
+                          sources.find((source) => source.id === entry.sourceId)?.formula,
                         ),
                       (next) => next.expansions.at(-1)!.resultGroups[0]!.branchId,
                     )
@@ -147,6 +160,7 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
                 />
               ) : (
                 <TruthTreeClosureFields
+                  version={tree.treeVersion}
                   disabled={false}
                   closureKind={closureKind}
                   first={first}
@@ -193,6 +207,7 @@ export function TruthTreeEditor({ tree, onChange, onPendingChange, disabled = fa
     >
       <TruthTreeDisplay
         tree={tree}
+        sources={sourceFormulas}
         disabled={disabled || pending}
         renderBranchActions={branchActions}
         entry={branchEntry}

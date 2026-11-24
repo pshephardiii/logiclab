@@ -8,10 +8,11 @@ export function finishProofReport(
   status: ProofCheckReport['status'],
   target: ProofCheckReport['target'] = 'unknown',
   steps: ProofCheckReport['steps'] = [],
+  ruleCatalogVersion: 1 | 2 = 1,
 ): ProofCheckReport {
   return proofCheckReportSchema.parse({
     checkerVersion: PROOF_CHECKER_VERSION,
-    ruleCatalogVersion: 1,
+    ruleCatalogVersion,
     status: diagnostics.limited ? 'unassessable' : status,
     target: diagnostics.limited ? 'unknown' : target,
     steps: diagnostics.limited ? [] : steps,

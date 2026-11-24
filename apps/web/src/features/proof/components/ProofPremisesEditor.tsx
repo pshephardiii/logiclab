@@ -4,7 +4,7 @@ import type { DependencyProof, FitchProof } from '@logiclab/contracts';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { FitchProofDisplay } from './FitchProofDisplay';
 import { DependencyProofDisplay } from '../dependency/DependencyProofDisplay';
-import { ProofFormulaInput } from './ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { ProofDeletionPrompt } from './ProofDeletionPrompt';
 
 type Premise = { id: string; formula: string };
@@ -87,7 +87,7 @@ export function ProofPremisesEditor({
   }
 
   const input = (
-    <ProofFormulaInput
+    <FormulaInput
       aria-label={editing ? `Premise ${index + 1}` : 'New premise'}
       placeholder="Premise"
       value={formula}

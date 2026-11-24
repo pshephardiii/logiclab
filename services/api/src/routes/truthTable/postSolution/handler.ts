@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { generateTruthTable } from '@logiclab/logic-engine';
+import { generatePracticeTruthTable } from '../../../application/truth-table/practice-table';
 import { truthTableRequestSchema, truthTableSolutionResponseSchema } from '@logiclab/contracts';
 import { badRequest } from '../errors';
 
@@ -8,5 +8,5 @@ export async function postSolutionHandler(request: FastifyRequest, reply: Fastif
 
   if (!parsed.success) return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
 
-  return truthTableSolutionResponseSchema.parse(generateTruthTable(parsed.data.formula));
+  return truthTableSolutionResponseSchema.parse(generatePracticeTruthTable(parsed.data.formula));
 }

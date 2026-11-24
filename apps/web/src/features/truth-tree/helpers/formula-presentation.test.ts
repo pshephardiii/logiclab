@@ -1,10 +1,7 @@
+import { truthTreeFormulaProgress } from './formula-progress';
 import { expect, test } from 'vitest';
 import { initialTruthTree, appendTruthTreeExpansion, undoTruthTreeExpansion } from './construction';
-import {
-  truthTreeFormulaLabel,
-  truthTreeFormulaProgress,
-  unexpectedFormulaCharacter,
-} from './formula-presentation';
+import { truthTreeFormulaLabel, unexpectedFormulaCharacter } from './formula-presentation';
 
 test.each([
   ['!(P)', '¬P'],
@@ -70,4 +67,50 @@ test('character highlights preserve exact offsets and whole Unicode characters',
   });
   expect(unexpectedFormulaCharacter('P ^ Q')).toBeNull();
   expect(unexpectedFormulaCharacter('P &')).toBeNull();
+});
+
+test('catalog-2 display preserves authored binary groups without inventing left-fold parentheses', () => {
+  expect(truthTreeFormulaLabel('P & Q & R', 2)).toBe('P ∧ Q ∧ R');
+  expect(truthTreeFormulaLabel('(P & Q) & R', 2)).toBe('(P ∧ Q) ∧ R');
+  expect(truthTreeFormulaLabel('P v [Q v R]', 2)).toBe('P ∨ [Q ∨ R]');
+  expect(truthTreeFormulaLabel('!(P)', 2)).toBe('¬P');
+  expect(truthTreeFormulaLabel('P &', 2)).toBe('P ∧');
+  expect(truthTreeFormulaLabel('P & Q & R', 1)).toBe('(P ∧ Q) ∧ R');
+});
+
+test('partial conjunct use counts distinct positions and remains local to each path', () => {
+  const initial = initialTruthTree({
+    ruleCatalogVersion: 2,
+    premises: [
+      { id: crypto.randomUUID(), formula: 'P & Q & P' },
+      { id: crypto.randomUUID(), formula: 'R v S' },
+    ],
+    conclusion: 'T',
+  });
+  const source = initial.occurrences[0]!.id;
+  const root = initial.rootBranchId!;
+  const extract = (tree: typeof initial, branch: string, memberIndex: number) =>
+    appendTruthTreeExpansion(tree, branch, source, 'conjunct_extraction', [['U']], {
+      ruleId: 'conjunct_extraction',
+      memberIndex,
+    });
+  let tree = extract(initial, root, 0);
+  expect(truthTreeFormulaProgress(tree).get(source)).toBe('partial');
+  tree = extract(tree, root, 0);
+  expect(truthTreeFormulaProgress(tree).get(source)).toBe('partial');
+  tree = appendTruthTreeExpansion(
+    tree,
+    root,
+    initial.occurrences[1]!.id,
+    'disjunction',
+    [['R'], ['S']],
+    { ruleId: 'disjunction', splitIndex: 1 },
+  );
+  const [left, right] = tree.expansions.at(-1)!.resultGroups;
+  tree = extract(extract(tree, left!.branchId, 1), left!.branchId, 2);
+  expect(truthTreeFormulaProgress(tree).get(source)).toBe('partial');
+  tree = extract(extract(tree, right!.branchId, 1), right!.branchId, 2);
+  // Even wrong result U tracks use, never correctness feedback.
+  expect(truthTreeFormulaProgress(tree).get(source)).toBe('applied');
+  expect(truthTreeFormulaProgress(undoTruthTreeExpansion(tree)!).get(source)).toBe('partial');
 });

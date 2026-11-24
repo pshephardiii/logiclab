@@ -1,7 +1,7 @@
 import { DependencyJustification } from './DependencyJustification';
 import { DependencyAssumptionGuides } from './DependencyAssumptionGuides';
 import { dependencyNumbers } from './dependency-numbers';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import type { DependencyProof } from '@logiclab/contracts';
 import './dependency-proof-display.css';
 import { dependencyAssumptionGuides } from './assumption-guides';
@@ -117,7 +117,7 @@ export function DependencyProofDisplay({
                 {assumptions && (
                   <DependencyAssumptionGuides guides={assumptions.guides} index={index} />
                 )}
-                <code>{proofNotation(step.formula) || '(blank)'}</code>
+                <code>{formulaNotation(step.formula) || '(blank)'}</code>
               </td>
               <td className="proof-line-justification">
                 <DependencyJustification step={step} labels={labels} line={line} />

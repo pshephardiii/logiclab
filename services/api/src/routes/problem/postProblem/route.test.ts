@@ -115,3 +115,27 @@ test('dependency owner HTTP round-trips drafts and versions without accepting mi
     await app.close();
   }
 });
+
+test('create/replacement HTTP rejects implicit mixed grouping before calling persistence', async () => {
+  const { context, headers, problems } = problemFixture();
+  const app = buildApp({ problem: context });
+  try {
+    for (const method of ['POST', 'PATCH'] as const) {
+      const response = await app.inject({
+        method,
+        url: method === 'POST' ? '/api/problems' : `/api/problems/${problem.id}`,
+        headers: { ...headers, cookie: `logiclab_session=${sessionId}` },
+        payload: {
+          ...draftInput,
+          definition: { type: 'truth_table', definitionVersion: 1, formula: 'P v Q -> R v Y' },
+        },
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error).toMatchObject({ code: 'GROUPING_REQUIRED', position: 2 });
+    }
+    expect(problems.create).not.toHaveBeenCalled();
+    expect(problems.update).not.toHaveBeenCalled();
+  } finally {
+    await app.close();
+  }
+});

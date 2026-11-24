@@ -1,5 +1,5 @@
 import type { FitchProof } from '@logiclab/contracts';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 
 /** Render entered block boundaries without validating or repairing their scope. */
 export function FitchScopedFormula({
@@ -20,7 +20,7 @@ export function FitchScopedFormula({
           />
         ))}
       </span>
-      <code>{proofNotation(step.formula) || '(blank)'}</code>
+      <code>{formulaNotation(step.formula) || '(blank)'}</code>
     </span>
   );
 }

@@ -6,7 +6,7 @@ import { TRUTH_TREE_LIMITS, truthTreeIdSchema as id } from './truth-tree-fields'
 export const truthTreeStepReportSchema = z
   .strictObject({
     checkerVersion: z.literal(1),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
     status: z.enum(['checked', 'incomplete', 'invalid', 'unassessable']),
     initial: z.enum(['valid', 'invalid', 'unknown']),
     occurrences: z

@@ -5,7 +5,7 @@ import { ProofPremisesEditor } from '../../../features/proof/components/ProofPre
 import { ProofKeyboardGuide } from '../../../features/proof/reference/ProofKeyboardGuide';
 import '../../../features/proof/components/proof-setup.css';
 import './derivation-authoring.css';
-import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { PROOF_LIMITS } from '@logiclab/contracts';
 import { DERIVATION_AUTHORING_LIMITS } from '@logiclab/contracts/derivation';
 import { DerivationRuleFields } from './DerivationRuleFields';
@@ -44,9 +44,7 @@ export function DerivationProblemFields({
   const definition = fields.derivation;
   const hideStatement = authoringStep === 'reference';
 
-  const [pendingFormat, setPendingFormat] = useState<
-    AuthoringDerivationDefinition['format'] | null
-  >(null);
+  const [pendingFormat, setPendingFormat] = useState<'fitch' | 'dependency' | null>(null);
 
   function change(
     patch: Partial<
@@ -69,9 +67,13 @@ export function DerivationProblemFields({
               disabled={entryPending}
               value={definition.format}
               onChange={(event) => {
-                const format = event.target.value as AuthoringDerivationDefinition['format'];
+                const format = event.target.value;
 
-                if (!isProofFormatAvailable(format)) return;
+                if (
+                  (format !== 'fitch' && format !== 'dependency') ||
+                  !isProofFormatAvailable(format)
+                )
+                  return;
                 setPendingFormat(null);
 
                 if (format === definition.format) return;
@@ -127,7 +129,7 @@ export function DerivationProblemFields({
             onPendingChange={onPremisePendingChange}
           />
           <label htmlFor="derivation-conclusion">Conclusion</label>
-          <ProofFormulaInput
+          <FormulaInput
             id="derivation-conclusion"
             {...formulaInput}
             value={definition.conclusion}
@@ -136,6 +138,7 @@ export function DerivationProblemFields({
         </section>
         <div className="derivation-authoring-rules">
           <DerivationRuleFields
+            ruleCatalogVersion={definition.ruleCatalogVersion}
             rules={definition.rules}
             labels={fields.derivationLabels}
             onChange={(rules, derivationLabels) =>

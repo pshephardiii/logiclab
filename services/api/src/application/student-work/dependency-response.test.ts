@@ -65,7 +65,7 @@ test('exact student JSON round-trips stable dependency/discharge identities with
   expect(
     checkDependencyAnswersSchema.parse({ itemId: authoritative.itemId, answers: answer }).answers,
   ).toEqual(answer);
-  const parsed = validateDependencyAnswer(answer);
+  const parsed = validateDependencyAnswer(answer, 1);
   parsed.proof.steps[0]!.formula = 'Q';
   expect(answer.proof.steps[0]!.formula).toBe('P');
 });
@@ -82,13 +82,16 @@ test('validation retains unfinished and logically invalid drafts without checkin
   step.lineReferences = [randomUUID()];
   step.discharges = [{ assumptionId: null, conclusionId: null }];
   const before = structuredClone(answer);
-  expect(validateDependencyAnswer(answer)).toEqual(before);
+  expect(validateDependencyAnswer(answer, 1)).toEqual(before);
   expect(answer).toEqual(before);
   expect(
-    validateDependencyAnswer({
-      type: 'derivation',
-      proof: { proofVersion: 1, format: 'dependency', steps: [] },
-    }).proof.steps,
+    validateDependencyAnswer(
+      {
+        type: 'derivation',
+        proof: { proofVersion: 1, format: 'dependency', steps: [] },
+      },
+      1,
+    ).proof.steps,
   ).toEqual([]);
 });
 
@@ -103,14 +106,17 @@ test.each([
   'itemId',
 ])('rejects injected %s at student answer and proof boundaries', (field) => {
   const { answer } = fixture();
-  expect(() => validateDependencyAnswer({ ...answer, [field]: 'private or forged' })).toThrow(
+  expect(() => validateDependencyAnswer({ ...answer, [field]: 'private or forged' }, 1)).toThrow(
     StudentWorkError,
   );
   expect(() =>
-    validateDependencyAnswer({
-      ...answer,
-      proof: { ...answer.proof, [field]: 'private or forged' },
-    }),
+    validateDependencyAnswer(
+      {
+        ...answer,
+        proof: { ...answer.proof, [field]: 'private or forged' },
+      },
+      1,
+    ),
   ).toThrow(StudentWorkError);
 });
 
@@ -152,7 +158,7 @@ test.each([
   if (kind === 'version') proof.proofVersion = 2;
   if (kind === 'format') proof.format = 'tree';
   if (kind === 'identity') proof.steps = [{ ...answer.proof.steps[0], id: 'bad' }];
-  expect(() => validateDependencyAnswer({ ...answer, proof })).toThrow(StudentWorkError);
+  expect(() => validateDependencyAnswer({ ...answer, proof }, 1)).toThrow(StudentWorkError);
 });
 
 test.each([-1, 0.5, 2147483647, '0', null])(
@@ -265,8 +271,8 @@ test('premise correspondence is authoritative even when student annotations and 
 test('format-specific validators stay distinct while saved-work transport accepts both formats', () => {
   const { authoritative, answer } = fixture();
   const fitch = { type: 'derivation', proof: derivationDefinitionFixture().referenceProof };
-  expect(() => validateDependencyAnswer(fitch)).toThrow(StudentWorkError);
-  expect(() => validateFitchAnswer(answer)).toThrow(StudentWorkError);
+  expect(() => validateDependencyAnswer(fitch, 1)).toThrow(StudentWorkError);
+  expect(() => validateFitchAnswer(answer, 1)).toThrow(StudentWorkError);
   expect(fitchDerivationAnswerSchema.safeParse(answer).success).toBe(false);
   expect(savedStudentResponsesSchema.safeParse({ [authoritative.itemId]: answer }).success).toBe(
     true,

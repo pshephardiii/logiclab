@@ -3,10 +3,11 @@ import {
   DERIVATION_AUTHORING_LIMITS,
   type FitchDerivationDefinition,
 } from '@logiclab/contracts/derivation';
-import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
+import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
 import type { ProblemEditorFields } from '../helpers/problem-editor';
 
 type Props = {
+  ruleCatalogVersion?: 1 | 2;
   rules: FitchDerivationDefinition['rules'];
   labels: ProblemEditorFields['derivationLabels'];
   onChange: (
@@ -16,15 +17,16 @@ type Props = {
 };
 
 /** Preserve label drafts for disabled rules; the parent retains the full authored definition. */
-export function DerivationRuleFields({ rules, labels, onChange }: Props) {
+export function DerivationRuleFields({ ruleCatalogVersion = 1, rules, labels, onChange }: Props) {
   return (
     <ProofRulePicker
+      ruleCatalogVersion={ruleCatalogVersion}
       selected={rules.map((rule) => rule.id)}
       onChange={(ids) =>
         onChange(
           ids.map((id) => ({
             id,
-            label: labels[id] ?? PROPOSITIONAL_RULE_CATALOG.find((rule) => rule.id === id)!.label,
+            label: labels[id] ?? getPropositionalRule(id, ruleCatalogVersion)!.label,
           })),
           labels,
         )

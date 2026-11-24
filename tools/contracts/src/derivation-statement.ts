@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { proofProblemSchema, PROOF_LIMITS } from './proof';
@@ -33,19 +34,61 @@ export const derivationRuleSchema = z.strictObject({
     ),
 });
 
+export function derivationGroupingIssues(
+  value: {
+    ruleCatalogVersion: 1 | 2;
+    formulaGroupingVersion?: 1;
+  },
+  context: z.RefinementCtx,
+) {
+  if (
+    value.ruleCatalogVersion === 2 &&
+    value.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION
+  )
+    context.addIssue({
+      code: 'custom',
+      path: ['formulaGroupingVersion'],
+      message: 'Catalog 2 requires explicit formula grouping policy 1.',
+    });
+}
+
+export function derivationReferenceVersionIssues(
+  value: {
+    ruleCatalogVersion: 1 | 2;
+    referenceProof: { proofVersion: 1 | 2 } | null;
+  },
+  context: z.RefinementCtx,
+) {
+  if (value.referenceProof && value.referenceProof.proofVersion !== value.ruleCatalogVersion)
+    context.addIssue({
+      code: 'custom',
+      path: ['referenceProof', 'proofVersion'],
+      message: 'The reference proof must use the statement’s rule catalog.',
+    });
+}
+
 /** Shared fields, including staged formats; each consumer must narrow its format explicitly. */
 export const derivationStatementSchema = z
   .strictObject({
     type: z.literal(ProblemType.Derivation),
     definitionVersion: z.literal(1),
     format: z.enum(['fitch', 'dependency', 'tree']),
-    ruleCatalogVersion: z.literal(1),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
     checkerVersion: z.literal(1),
     premises: z.array(z.strictObject({ id, formula })).max(PROOF_LIMITS.maxPremises),
     conclusion: formula,
     rules: z.array(derivationRuleSchema).max(PROOF_LIMITS.maxPermittedRules),
   })
   .superRefine((value, context) => {
+    derivationGroupingIssues(value, context);
+    if (value.format === 'tree' && value.ruleCatalogVersion !== 1)
+      context.addIssue({
+        code: 'custom',
+        path: ['ruleCatalogVersion'],
+        message: 'Natural-deduction trees retain catalog 1.',
+      });
+
     const premises = new Set<string>();
 
     value.premises.forEach((premise, index) => {

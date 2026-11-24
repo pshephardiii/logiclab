@@ -2,7 +2,7 @@ import { ProofRuleChoice } from './ProofRuleChoice';
 import { coreGroups, categories } from './proof-rule-groups';
 import './proof-rules-dialog.css';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
+import { propositionalRuleCatalog } from '@logiclab/logic-engine/proof/rules';
 
 /** Settings apply immediately, including when Escape closes the dialog. */
 export function ProofRulesDialog({
@@ -10,12 +10,15 @@ export function ProofRulesDialog({
   onChange,
   onClose,
   renderDetails,
+  ruleCatalogVersion = 1,
 }: {
   selected: string[];
   onChange: (ids: string[]) => void;
   onClose: () => void;
-  renderDetails?: (rule: (typeof PROPOSITIONAL_RULE_CATALOG)[number]) => ReactNode;
+  ruleCatalogVersion?: 1 | 2;
+  renderDetails?: (rule: ReturnType<typeof propositionalRuleCatalog>[number]) => ReactNode;
 }) {
+  const catalog = propositionalRuleCatalog(ruleCatalogVersion);
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
@@ -75,7 +78,7 @@ export function ProofRulesDialog({
           <button
             type="button"
             className="text-button"
-            onClick={() => onChange(PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id))}
+            onClick={() => onChange(catalog.map((rule) => rule.id))}
           >
             Select all
           </button>
@@ -89,8 +92,9 @@ export function ProofRulesDialog({
             {coreGroups.map((group) => (
               <fieldset className="proof-rule-category" key={group.label}>
                 <legend>{group.label}</legend>
-                {PROPOSITIONAL_RULE_CATALOG.filter((rule) => group.ids.includes(rule.id)).map(
-                  (rule) => (
+                {catalog
+                  .filter((rule) => group.ids.includes(rule.id))
+                  .map((rule) => (
                     <ProofRuleChoice
                       key={rule.id}
                       rule={rule}
@@ -98,8 +102,7 @@ export function ProofRulesDialog({
                       onChange={onChange}
                       renderDetails={renderDetails}
                     />
-                  ),
-                )}
+                  ))}
               </fieldset>
             ))}
           </div>
@@ -108,8 +111,9 @@ export function ProofRulesDialog({
           {categories.map((category) => (
             <fieldset className="proof-rule-category" key={category.id}>
               <legend>{category.label}</legend>
-              {PROPOSITIONAL_RULE_CATALOG.filter((rule) => rule.category === category.id).map(
-                (rule) => (
+              {catalog
+                .filter((rule) => rule.category === category.id)
+                .map((rule) => (
                   <ProofRuleChoice
                     key={rule.id}
                     rule={rule}
@@ -117,8 +121,7 @@ export function ProofRulesDialog({
                     onChange={onChange}
                     renderDetails={renderDetails}
                   />
-                ),
-              )}
+                ))}
             </fieldset>
           ))}
         </div>

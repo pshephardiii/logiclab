@@ -12,13 +12,14 @@ import { finishProofReport } from '../report';
 /** Deterministic Fitch checking of bounded plain data; no proof search, grades or disclosure policy. */
 export function checkFitchProof(value: unknown): ProofCheckReport {
   const diagnostics = structureDiagnostics();
+  let version: 1 | 2 = 1;
 
   function finish(
     status: ProofCheckReport['status'],
     target: ProofCheckReport['target'] = 'unknown',
     steps: ProofCheckReport['steps'] = [],
   ): ProofCheckReport {
-    return finishProofReport(diagnostics, status, target, steps);
+    return finishProofReport(diagnostics, status, target, steps, version);
   }
 
   const read = readFitchInput(value);
@@ -29,6 +30,7 @@ export function checkFitchProof(value: unknown): ProofCheckReport {
   }
 
   const { input } = read;
+  version = input.problem.ruleCatalogVersion;
   const budget = proofBudget();
 
   try {
@@ -56,7 +58,7 @@ export function checkFitchProof(value: unknown): ProofCheckReport {
     }
 
     const formulas = input.proof.steps.map((step, index) =>
-      readFormula(step.formula, budget, diagnostics, index),
+      readFormula(step.formula, budget, diagnostics, index, input.problem.formulaGroupingVersion),
     );
 
     const steps = evaluateFitchSteps(

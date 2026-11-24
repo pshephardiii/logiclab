@@ -136,7 +136,8 @@ export function useAssignedAnswers(assignment: StudentAssignment | null) {
     return 'exercise' in item
       ? submittedAnswers(item.exercise, tableSnapshot)
       : item.content.type === ProblemType.Derivation
-        ? (proofAnswers[item.id] ?? blankDerivationAnswer(item.content.format))
+        ? (proofAnswers[item.id] ??
+          blankDerivationAnswer(item.content.format, item.content.ruleCatalogVersion))
         : item.content.type === ProblemType.TruthTree
           ? (truthTreeAnswers[item.id] ?? blankTruthTreeAnswer())
           : (choiceAnswers[item.id] ?? blankConceptualAnswer({ content: item.content }));

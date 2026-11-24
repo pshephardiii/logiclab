@@ -1,7 +1,7 @@
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import { AssignedDerivationEditor } from './AssignedDerivationEditor';
 import { ProofHelp } from '../../proof/reference/ProofHelp';
-import { proofNotation } from '../../proof/helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import type {
@@ -98,7 +98,7 @@ export function AssignedDerivation({
               <ol>
                 {item.content.premises.map((premise) => (
                   <li key={premise.id}>
-                    <code>{proofNotation(premise.formula)}</code>
+                    <code>{formulaNotation(premise.formula)}</code>
                   </li>
                 ))}
               </ol>
@@ -106,7 +106,7 @@ export function AssignedDerivation({
           )}
           <p className="proof-goal" aria-label="Proof conclusion">
             <span>Conclusion</span>
-            <code>{proofNotation(item.content.conclusion)}</code>
+            <code>{formulaNotation(item.content.conclusion)}</code>
           </p>
           <ProofHelp format={item.content.format} rules={item.content.rules} />
         </>

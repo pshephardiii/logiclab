@@ -12,6 +12,7 @@ export function TruthTreeClosureFields({
   onFirstChange,
   onSecondChange,
   onClose,
+  version = 1,
 }: {
   disabled: boolean;
   closureKind: TruthTreeClosure['kind'];
@@ -22,6 +23,7 @@ export function TruthTreeClosureFields({
   onFirstChange: (id: string) => void;
   onSecondChange: (id: string) => void;
   onClose: () => void;
+  version?: 1 | 2;
 }) {
   const id = useId();
 
@@ -53,7 +55,7 @@ export function TruthTreeClosureFields({
               <option value="">Choose formula</option>
               {sources.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.number}. {truthTreeFormulaLabel(item.formula)}
+                  {item.number}. {truthTreeFormulaLabel(item.formula, version)}
                 </option>
               ))}
             </select>

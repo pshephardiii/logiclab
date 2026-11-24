@@ -28,8 +28,6 @@ export * from './assignment-learning-policy';
 
 export * from './assignment-policy-values';
 
-export * from './assignment-results-release';
-
 export * from './conceptual-question';
 
 export * from './assignment-responses';
@@ -49,3 +47,5 @@ export * from './natural-deduction-tree';
 export * from './proof-method-availability';
 
 export * from './truth-tree';
+
+export { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';

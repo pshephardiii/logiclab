@@ -1,6 +1,7 @@
 import { FormulaParseError } from './errors';
 import { FORMULA_LIMITS } from './limits';
 import type { FormulaNode, Token } from './types';
+import type { FormulaNodeSyntax } from './syntax';
 
 type ParseOptions<Atom> = {
   limits: { maxNesting: number; maxVariables: number };
@@ -12,11 +13,28 @@ type ParseOptions<Atom> = {
 export function parseTokens<Atom = never>(
   tokens: readonly Token[],
   options?: ParseOptions<Atom>,
+  syntax?: Map<FormulaNode<Atom>, FormulaNodeSyntax>,
 ): FormulaNode<Atom> {
   const limits = options?.limits ?? FORMULA_LIMITS;
   const variables = new Set<string>();
   let cursor = 0;
   const current = (): Token => tokens[cursor]!;
+
+  function record(
+    node: FormulaNode<Atom>,
+    start: number,
+    operatorPosition?: number,
+  ): FormulaNode<Atom> {
+    if (syntax) {
+      const last = tokens[cursor - 1]!;
+      syntax.set(node, {
+        span: { start, end: last.position + last.text.length },
+        groups: [],
+        ...(operatorPosition === undefined ? {} : { operatorPosition }),
+      });
+    }
+    return node;
+  }
 
   function checkDepth(depth: number): void {
     if (depth > limits.maxNesting) {
@@ -29,10 +47,12 @@ export function parseTokens<Atom = never>(
   }
 
   function parseBiconditional(depth: number): FormulaNode<Atom> {
+    const start = current().position;
     const left = parseImplication(depth);
 
     if (current().kind !== 'iff') return left;
 
+    const operatorPosition = current().position;
     cursor++;
 
     const right = parseImplication(depth);
@@ -45,20 +65,22 @@ export function parseTokens<Atom = never>(
       );
     }
 
-    return { type: 'binary', operator: 'iff', left, right };
+    return record({ type: 'binary', operator: 'iff', left, right }, start, operatorPosition);
   }
 
   function parseImplication(depth: number): FormulaNode<Atom> {
     checkDepth(depth);
 
+    const start = current().position;
     const left = parseDisjunction(depth);
 
     if (current().kind === 'implies') {
+      const operatorPosition = current().position;
       cursor++;
 
       // Recursive right-hand parsing makes implication right-associative.
       const right = parseImplication(depth + 1);
-      return { type: 'binary', operator: 'implies', left, right };
+      return record({ type: 'binary', operator: 'implies', left, right }, start, operatorPosition);
     }
 
     return left;
@@ -66,11 +88,14 @@ export function parseTokens<Atom = never>(
 
   function parseDisjunction(depth: number): FormulaNode<Atom> {
     // Repeatedly replacing the left side makes disjunction left-associative.
+    const start = current().position;
     let left = parseConjunction(depth);
 
     while (current().kind === 'or') {
+      const operatorPosition = current().position;
       cursor++;
-      left = { type: 'binary', operator: 'or', left, right: parseConjunction(depth) };
+      const right = parseConjunction(depth);
+      left = record({ type: 'binary', operator: 'or', left, right }, start, operatorPosition);
     }
 
     return left;
@@ -78,11 +103,14 @@ export function parseTokens<Atom = never>(
 
   function parseConjunction(depth: number): FormulaNode<Atom> {
     // Conjunction binds more tightly than disjunction, and associates left.
+    const start = current().position;
     let left = parseUnary(depth);
 
     while (current().kind === 'and') {
+      const operatorPosition = current().position;
       cursor++;
-      left = { type: 'binary', operator: 'and', left, right: parseUnary(depth) };
+      const right = parseUnary(depth);
+      left = record({ type: 'binary', operator: 'and', left, right }, start, operatorPosition);
     }
 
     return left;
@@ -95,7 +123,8 @@ export function parseTokens<Atom = never>(
 
     if (token.kind === 'not') {
       cursor++;
-      return { type: 'not', operand: parseUnary(depth + 1) };
+      const operand = parseUnary(depth + 1);
+      return record({ type: 'not', operand }, token.position, token.position);
     }
 
     if (token.kind === 'open') return parseGroup(depth, token);
@@ -106,7 +135,7 @@ export function parseTokens<Atom = never>(
 
     if (atom !== undefined) {
       cursor++;
-      return atom;
+      return record(atom, token.position);
     }
 
     throw new FormulaParseError(
@@ -130,6 +159,22 @@ export function parseTokens<Atom = never>(
       );
     }
 
+    // Grouping annotates the existing semantic node rather than creating an AST operation.
+    if (syntax) {
+      const previous = syntax.get(expression)!;
+      syntax.set(expression, {
+        ...previous,
+        groups: [
+          ...previous.groups,
+          {
+            start: openingToken.position,
+            end: current().position + current().text.length,
+            delimiter: openingToken.text === '[' ? 'brackets' : 'parentheses',
+          },
+        ],
+      });
+    }
+
     cursor++;
     return expression;
   }
@@ -146,7 +191,7 @@ export function parseTokens<Atom = never>(
     }
 
     cursor++;
-    return { type: 'variable', name: token.text };
+    return record({ type: 'variable', name: token.text }, token.position);
   }
 
   const expression = parseBiconditional(0);

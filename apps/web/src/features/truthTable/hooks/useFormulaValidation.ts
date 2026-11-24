@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { FormulaParseError, parseFormula } from '@logiclab/logic-engine';
+import {
+  FormulaParseError,
+  parseFormulaWithSyntax,
+  requireExplicitGrouping,
+} from '@logiclab/logic-engine';
 
 export const FORMULA_VALIDATION_DELAY_MS = 500;
 
@@ -16,7 +20,7 @@ export function useFormulaValidation(formula: string) {
 
     const timer = setTimeout(() => {
       try {
-        parseFormula(formula);
+        requireExplicitGrouping(parseFormulaWithSyntax(formula));
         setResult({
           formula,
           valid: true,

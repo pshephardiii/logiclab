@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import {
   truthTreeContentSchema,
   truthTreeDefinitionSchema,
@@ -38,6 +39,7 @@ export function checkTruthTreeReference(value: unknown): TruthTreeReferenceCheck
     report: checkTruthTree({
       problem: {
         ruleCatalogVersion: definition.ruleCatalogVersion,
+        ...formulaGroupingPolicy(definition),
         premises: definition.premises,
         conclusion: definition.conclusion,
       },
@@ -69,6 +71,7 @@ export function hasFinishedTruthTreeReference(value: unknown): boolean {
     isFinishedTruthTreeAttempt({
       problem: {
         ruleCatalogVersion: definition.ruleCatalogVersion,
+        ...formulaGroupingPolicy(definition),
         premises: definition.premises,
         conclusion: definition.conclusion,
       },
@@ -86,6 +89,7 @@ export function truthTreeContent(value: unknown): TruthTreeContent {
     definitionVersion: definition.definitionVersion,
     checkerVersion: definition.checkerVersion,
     ruleCatalogVersion: definition.ruleCatalogVersion,
+    ...formulaGroupingPolicy(definition),
     premises: definition.premises,
     conclusion: definition.conclusion,
   });
@@ -104,6 +108,7 @@ export function truthTreeReferenceSolution(value: unknown): TruthTreeSolution {
     definitionVersion: definition.definitionVersion,
     checkerVersion: definition.checkerVersion,
     ruleCatalogVersion: definition.ruleCatalogVersion,
+    ...formulaGroupingPolicy(definition),
     referenceTree: definition.referenceTree,
     argumentStatus: check.report.argumentStatus,
     counterexample: check.report.counterexample,

@@ -3,19 +3,22 @@ import {
   TRUTH_TREE_LIMITS,
   type TruthTree,
   type TruthTreeClosure,
+  type TruthTreeChainChoice,
 } from '@logiclab/contracts/truth-tree';
 import type { TruthTreeContent } from '@logiclab/contracts/truth-tree-authoring';
 import {
   analyzeTruthTreeStructure,
   parseTruthTreeFormula,
-  TRUTH_TREE_RULE_CATALOG,
+  truthTreeRuleCatalog,
 } from '@logiclab/logic-engine/truth-tree';
 import { sameFormula } from '@logiclab/logic-engine/proof';
+import { truthTreeChainChoices } from './chain-choices';
+
+type Statement = Pick<TruthTreeContent, 'premises' | 'conclusion'> &
+  Partial<Pick<TruthTreeContent, 'ruleCatalogVersion'>>;
 
 /** Fresh initial sources only; no decomposition, closure or expected outcome is supplied. */
-export function initialTruthTree(
-  statement: Pick<TruthTreeContent, 'premises' | 'conclusion'>,
-): TruthTree {
+export function initialTruthTree(statement: Statement): TruthTree {
   const root = crypto.randomUUID();
   const occurrences: TruthTree['occurrences'] = statement.premises.map((premise) => ({
     id: crypto.randomUUID(),
@@ -29,7 +32,7 @@ export function initialTruthTree(
   });
 
   return boundedTree({
-    treeVersion: 1,
+    treeVersion: statement.ruleCatalogVersion ?? 1,
     format: 'truth_tree',
     rootBranchId: root,
     occurrences,
@@ -70,10 +73,9 @@ export function editableTree(tree: TruthTree) {
 }
 
 /** Statement changes never silently delete or rewrite a private reference. */
-export function truthTreeInitialMatches(
-  statement: Pick<TruthTreeContent, 'premises' | 'conclusion'>,
-  tree: TruthTree,
-): boolean {
+export function truthTreeInitialMatches(statement: Statement, tree: TruthTree): boolean {
+  if (tree.treeVersion !== (statement.ruleCatalogVersion ?? 1)) return false;
+
   const initial = tree.occurrences.filter((item) => item.origin.kind !== 'expansion');
 
   if (initial.length !== statement.premises.length + 1) return false;
@@ -115,9 +117,11 @@ export function appendTruthTreeExpansion(
   sourceId: string,
   ruleId: string,
   formulas: string[][],
+  chainChoice?: TruthTreeChainChoice,
+  sourceFormula?: string,
 ): TruthTree {
   const structure = editableTree(tree);
-  const rule = TRUTH_TREE_RULE_CATALOG.find((rule) => rule.id === ruleId);
+  const rule = truthTreeRuleCatalog(tree.treeVersion).find((rule) => rule.id === ruleId);
   const branch = structure?.branches.get(branchId);
 
   if (
@@ -133,6 +137,24 @@ export function appendTruthTreeExpansion(
     )
   )
     throw new Error('Choose an open branch, source, rule and every resulting formula.');
+
+  const usesChain =
+    tree.treeVersion === 2 && (ruleId === 'conjunct_extraction' || ruleId === 'disjunction');
+  const choices = usesChain
+    ? truthTreeChainChoices(sourceFormula ?? structure.occurrences.get(sourceId)!.formula, ruleId)
+    : [];
+  const selectedChoice =
+    chainChoice &&
+    choices.some(
+      (option) =>
+        option.choice.ruleId === chainChoice.ruleId &&
+        option.value ===
+          (chainChoice.ruleId === 'conjunct_extraction'
+            ? chainChoice.memberIndex
+            : chainChoice.splitIndex),
+    );
+  if (usesChain ? !selectedChoice : chainChoice !== undefined)
+    throw new Error('Choose the conjunct or disjunction split for this source.');
 
   if (rule.branching) {
     let depth = 0;
@@ -172,7 +194,14 @@ export function appendTruthTreeExpansion(
       expansionId: id,
       childBranchIds: groups.map((group) => group.branchId),
     };
-  next.expansions.push({ id, branchId, sourceId, ruleId, resultGroups: groups });
+  next.expansions.push({
+    id,
+    branchId,
+    sourceId,
+    ruleId,
+    resultGroups: groups,
+    ...(chainChoice ? { chainChoice } : {}),
+  });
 
   return boundedTree(next);
 }

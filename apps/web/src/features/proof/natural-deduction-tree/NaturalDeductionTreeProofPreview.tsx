@@ -1,4 +1,4 @@
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import type { NaturalDeductionTreeProof, NaturalDeductionTreeProofNode } from '@logiclab/contracts';
 import type { ReactNode } from 'react';
 import { naturalDeductionTreePreviewLayout } from './editor';
@@ -45,8 +45,8 @@ export function NaturalDeductionTreeProofPreview({
       <>
         <code>
           {node.kind === 'assumption'
-            ? `[${proofNotation(node.formula) || '(blank)'}]`
-            : proofNotation(node.formula) || '(blank)'}
+            ? `[${formulaNotation(node.formula) || '(blank)'}]`
+            : formulaNotation(node.formula) || '(blank)'}
         </code>
         <small>
           Node {index + 1} ·{' '}
@@ -72,7 +72,8 @@ export function NaturalDeductionTreeProofPreview({
                 <div key={`branch-${slot}`}>
                   {child(branch.rootId)}
                   <small>
-                    Assuming {proofNotation(branch.assumptionFormula) || '(blank)'}; discharge nodes{' '}
+                    Assuming {formulaNotation(branch.assumptionFormula) || '(blank)'}; discharge
+                    nodes{' '}
                     {branch.assumptionIds.map((id) => positions.get(id) ?? '?').join(', ') ||
                       'none'}
                   </small>
@@ -150,7 +151,7 @@ export function NaturalDeductionTreeProofPreview({
                   aria-pressed={selectedId === node.id}
                   onClick={() => onSelect(node.id)}
                 >
-                  <code>{proofNotation(node.formula) || '(blank)'}</code>
+                  <code>{formulaNotation(node.formula) || '(blank)'}</code>
                   <small>
                     Node {positions.get(node.id)} · {node.kind}
                   </small>

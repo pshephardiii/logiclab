@@ -4,6 +4,7 @@ import {
   proofReferenceIdSchema as id,
   proofFormulaTextSchema as formula,
   proofRuleIdSchema as ruleId,
+  proofConjunctIndexSchema,
 } from './proof-fields';
 import { proofProblemSchema } from './proof';
 
@@ -30,6 +31,7 @@ export const dependencyProofStepSchema = z.discriminatedUnion('kind', [
     ...fields,
     kind: z.literal('inference'),
     ruleId: ruleId.nullable(),
+    conjunctIndex: proofConjunctIndexSchema,
     lineReferences: z.array(id).max(2),
     discharges: z.array(dependencyDischargeSchema).max(2),
   }),
@@ -38,18 +40,31 @@ export const dependencyProofStepSchema = z.discriminatedUnion('kind', [
 export type DependencyProofStep = z.infer<typeof dependencyProofStepSchema>;
 
 /** Flat dependency proofs have no implicit box scope or global assumption-closing operation. */
-export const dependencyProofSchema = z.strictObject({
-  proofVersion: z.literal(1),
-  format: z.literal('dependency'),
-  steps: z.array(dependencyProofStepSchema).max(PROOF_LIMITS.maxSteps),
-});
+export const dependencyProofSchema = z
+  .strictObject({
+    proofVersion: z.union([z.literal(1), z.literal(2)]),
+    format: z.literal('dependency'),
+    steps: z.array(dependencyProofStepSchema).max(PROOF_LIMITS.maxSteps),
+  })
+  .superRefine((proof, context) => {
+    if (proof.proofVersion === 1 && proof.steps.some((step) => 'conjunctIndex' in step))
+      context.addIssue({
+        code: 'custom',
+        message: 'Catalog-1 proofs cannot include a conjunct selection.',
+      });
+  });
 
 export type DependencyProof = z.infer<typeof dependencyProofSchema>;
 
 /** Format-specific checker input; callers enforce workflow admission and authoritative statements. */
-export const dependencyProofCheckInputSchema = z.strictObject({
-  problem: proofProblemSchema,
-  proof: dependencyProofSchema,
-});
+export const dependencyProofCheckInputSchema = z
+  .strictObject({
+    problem: proofProblemSchema,
+    proof: dependencyProofSchema,
+  })
+  .refine(
+    (input) => input.problem.ruleCatalogVersion === input.proof.proofVersion,
+    'Proof and problem catalog versions must agree.',
+  );
 
 export type DependencyProofCheckInput = z.infer<typeof dependencyProofCheckInputSchema>;

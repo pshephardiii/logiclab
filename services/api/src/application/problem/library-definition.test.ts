@@ -35,7 +35,7 @@ test('owner definitions accept incomplete derivations while assignment admission
 
 test('publication checks the exact saved configuration without trusting an old result', () => {
   const value = definition();
-  expect(publicationDefinition(value)).toEqual(value);
+  expect(publicationDefinition(value)).toEqual({ ...value, formulaGroupingVersion: 1 });
   expect(() => publicationDefinition({ ...value, referenceProof: null })).toThrow(
     DerivationPublicationError,
   );
@@ -51,7 +51,7 @@ test('publication checks the exact saved configuration without trusting an old r
   );
 });
 
-test('existing truth-table and conceptual publication checks retain their behavior', () => {
+test('new table publication pins grouping while conceptual publication is unchanged', () => {
   const table = { type: 'truth_table', definitionVersion: 1, formula: 'P' };
   const question = {
     type: 'true_false',
@@ -59,7 +59,7 @@ test('existing truth-table and conceptual publication checks retain their behavi
     question: 'Always?',
     correctAnswer: false,
   };
-  expect(publicationDefinition(table)).toEqual(table);
+  expect(publicationDefinition(table)).toEqual({ ...table, formulaGroupingVersion: 1 });
   expect(publicationDefinition(question)).toEqual(question);
   expect(() => publicationDefinition({ ...table, formula: 'P &' })).toThrow();
 });
@@ -80,7 +80,7 @@ test.each(['graded', 'completion_only', 'ungraded_practice'])(
   'published dependency definitions support %s assignment admission under the shared policy',
   (assessmentMode) => {
     const value = dependencyDefinitionFixture();
-    expect(publicationDefinition(value)).toEqual(value);
+    expect(publicationDefinition(value)).toEqual({ ...value, formulaGroupingVersion: 1 });
     expect(
       supportedAssignmentDefinition(value, {
         assessmentMode,
@@ -95,8 +95,11 @@ test('new authoring and publication reject unavailable tree work while retained 
   expect(libraryProblemDefinition(value)).toEqual(value);
   expect(() => authoringDefinition(value)).toThrow(ProofMethodUnavailableError);
   expect(() => publicationDefinition(value)).toThrow(ProofMethodUnavailableError);
-  expect(authoringDefinition(definition())).toEqual(definition());
-  expect(authoringDefinition(dependencyDefinitionFixture())).toEqual(dependencyDefinitionFixture());
+  expect(authoringDefinition(definition())).toEqual({ ...definition(), formulaGroupingVersion: 1 });
+  expect(authoringDefinition(dependencyDefinitionFixture())).toEqual({
+    ...dependencyDefinitionFixture(),
+    formulaGroupingVersion: 1,
+  });
 });
 
 test.each(['graded', 'completion_only', 'ungraded_practice'])(
@@ -115,3 +118,22 @@ test.each(['graded', 'completion_only', 'ungraded_practice'])(
     );
   },
 );
+
+test('table authoring pins grouping while retained precedence definitions remain readable', () => {
+  const old = { type: 'truth_table', definitionVersion: 1, formula: 'P v Q -> R v Y' };
+  expect(libraryProblemDefinition(old)).toEqual(old);
+  expect(() => authoringDefinition(old)).toThrow(
+    expect.objectContaining({ code: 'GROUPING_REQUIRED', position: 2 }),
+  );
+  expect(() => publicationDefinition(old)).toThrow(
+    expect.objectContaining({ code: 'GROUPING_REQUIRED' }),
+  );
+  expect(() => libraryProblemDefinition({ ...old, formulaGroupingVersion: 1 })).toThrow(
+    expect.objectContaining({ code: 'GROUPING_REQUIRED' }),
+  );
+  const corrected = { ...old, formula: '(P v Q) -> (R v Y)' };
+  expect(authoringDefinition(corrected)).toEqual({ ...corrected, formulaGroupingVersion: 1 });
+  expect(publicationDefinition(corrected)).toEqual({ ...corrected, formulaGroupingVersion: 1 });
+  for (const formulaGroupingVersion of [0, 2, '1', null])
+    expect(() => authoringDefinition({ ...corrected, formulaGroupingVersion })).toThrow();
+});

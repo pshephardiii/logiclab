@@ -9,19 +9,21 @@ export const truthTreeIds = {
 
 export function truthTreeDefinitionFixture(
   outcome: 'valid' | 'invalid' = 'valid',
+  ruleCatalogVersion: 1 | 2 = 1,
 ): TruthTreeDefinition {
   const { premise, root, premiseOccurrence, conclusionOccurrence } = truthTreeIds;
-  const conclusion = outcome === 'valid' ? 'P' : 'Q';
-  return {
+  const conclusion = outcome === 'valid' ? 'P' : ruleCatalogVersion === 1 ? 'Q' : 'S';
+  const definition: TruthTreeDefinition = {
     type: 'truth_tree',
     definitionVersion: 1,
     checkerVersion: 1,
-    ruleCatalogVersion: 1,
+    ruleCatalogVersion,
+    ...(ruleCatalogVersion === 2 ? { formulaGroupingVersion: 1 as const } : {}),
     premises: [{ id: premise, formula: 'P' }],
     conclusion,
     explanation: 'PRIVATE_TRUTH_TREE_EXPLANATION',
     referenceTree: {
-      treeVersion: 1,
+      treeVersion: ruleCatalogVersion,
       format: 'truth_tree',
       rootBranchId: root,
       occurrences: [
@@ -52,14 +54,52 @@ export function truthTreeDefinitionFixture(
       ],
     },
   };
+
+  if (ruleCatalogVersion === 1) return definition;
+
+  // Validity needs only P to close; invalidity needs every conjunct accounted for on the open path.
+  const tree = definition.referenceTree!;
+  definition.premises[0]!.formula = 'P & Q & R';
+  tree.occurrences[0]!.formula = 'P & Q & R';
+  const results = outcome === 'valid' ? ['P'] : ['P', 'Q', 'R'];
+  for (const [memberIndex, formula] of results.entries()) {
+    const expansionId = `e555555${memberIndex}-5555-4555-8555-555555555555`;
+    const occurrenceId = `f666666${memberIndex}-6666-4666-8666-666666666666`;
+    tree.occurrences.push({
+      id: occurrenceId,
+      formula,
+      origin: { kind: 'expansion', expansionId },
+    });
+    tree.branches[0]!.occurrenceIds.push(occurrenceId);
+    tree.expansions.push({
+      id: expansionId,
+      branchId: root,
+      sourceId: premiseOccurrence,
+      ruleId: 'conjunct_extraction',
+      chainChoice: { ruleId: 'conjunct_extraction', memberIndex },
+      resultGroups: [{ branchId: root, occurrenceIds: [occurrenceId] }],
+    });
+    if (outcome === 'valid')
+      tree.branches[0]!.ending = {
+        kind: 'closed',
+        closure: { kind: 'complement', occurrenceIds: [occurrenceId, conclusionOccurrence] },
+      };
+  }
+
+  return definition;
 }
 
 /** One complete counterexample path suffices to refute, while the sibling remains unfinished. */
-export function truthTreeShortCounterexampleFixture(): TruthTreeDefinition {
+export function truthTreeShortCounterexampleFixture(
+  ruleCatalogVersion: 1 | 2 = 1,
+): TruthTreeDefinition {
   const definition = truthTreeDefinitionFixture('invalid');
+  definition.ruleCatalogVersion = ruleCatalogVersion;
+  if (ruleCatalogVersion === 2) definition.formulaGroupingVersion = 1;
   definition.premises[0]!.formula = 'P v (Q & R)';
   definition.conclusion = 'S';
   const tree = definition.referenceTree!;
+  tree.treeVersion = ruleCatalogVersion;
   tree.occurrences[0]!.formula = definition.premises[0]!.formula;
   tree.occurrences[1]!.formula = '!S';
   const expansionId = 'e5555555-5555-4555-8555-555555555555';
@@ -91,6 +131,9 @@ export function truthTreeShortCounterexampleFixture(): TruthTreeDefinition {
     branchId: truthTreeIds.root,
     sourceId: truthTreeIds.premiseOccurrence,
     ruleId: 'disjunction',
+    ...(ruleCatalogVersion === 2
+      ? { chainChoice: { ruleId: 'disjunction' as const, splitIndex: 1 } }
+      : {}),
     resultGroups: [
       { branchId: left, occurrenceIds: [leftOccurrence] },
       { branchId: right, occurrenceIds: [rightOccurrence] },

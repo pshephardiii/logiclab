@@ -1,9 +1,12 @@
 import { PROOF_LIMITS, type FitchProof } from '@logiclab/contracts';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
 
-export function startFitchProof(statement: Pick<FitchDerivationContent, 'premises'>): FitchProof {
+export function startFitchProof(
+  statement: Pick<FitchDerivationContent, 'premises'> &
+    Partial<Pick<FitchDerivationContent, 'ruleCatalogVersion'>>,
+): FitchProof {
   return {
-    proofVersion: 1,
+    proofVersion: statement.ruleCatalogVersion ?? 1,
     format: 'fitch',
     blocks: [],
     steps: statement.premises.map((premise) => ({

@@ -2,7 +2,7 @@ import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-co
 import type { TruthTreeProblem, TruthTreeStepReport } from '@logiclab/contracts/truth-tree';
 import { FormulaParseError } from '../parser/errors';
 import { sameFormula } from '../proof/formula-equality';
-import { parseTruthTreeFormula } from './parse-formula';
+import { parseTruthTreeFormulaWithPolicy } from './parse-formula';
 import type { TruthTreeFormula } from './types';
 import type {
   TruthTreeBudget,
@@ -12,8 +12,13 @@ import type {
 
 export type StepContext = {
   structure: TruthTreeStructure;
+  problem: TruthTreeProblem;
+  authoritativeSources: Map<string, string>;
+  chainMatches: Map<string, { memberCount: number; coveredMemberIndices: readonly number[] }>;
+
   formulas: Map<string, TruthTreeFormula>;
   budget: TruthTreeBudget;
+  formulaGroupingVersion?: TruthTreeProblem['formulaGroupingVersion'];
   diagnostics: ReturnType<typeof structureDiagnostics>;
 };
 
@@ -36,12 +41,22 @@ export function sameStepFormula(
 export function parseArgument(problem: TruthTreeProblem, budget: TruthTreeBudget) {
   const premises = new Map<string, TruthTreeFormula>();
   for (const premise of problem.premises) {
-    budget.spend(premise.formula.length + 1);
+    budget.spend(
+      (premise.formula.length + 1) * (problem.formulaGroupingVersion === undefined ? 1 : 2),
+    );
     if (premises.has(premise.id)) return null;
-    premises.set(premise.id, parseTruthTreeFormula(premise.formula));
+    premises.set(
+      premise.id,
+      parseTruthTreeFormulaWithPolicy(premise.formula, problem.formulaGroupingVersion),
+    );
   }
-  budget.spend(problem.conclusion.length + 1);
-  const conclusion = parseTruthTreeFormula(problem.conclusion);
+  budget.spend(
+    (problem.conclusion.length + 1) * (problem.formulaGroupingVersion === undefined ? 1 : 2),
+  );
+  const conclusion = parseTruthTreeFormulaWithPolicy(
+    problem.conclusion,
+    problem.formulaGroupingVersion,
+  );
   const negatedConclusion: TruthTreeFormula = {
     type: 'not',
     operand: conclusion,
@@ -51,7 +66,9 @@ export function parseArgument(problem: TruthTreeProblem, budget: TruthTreeBudget
 
 export function parseStepFormulas(context: StepContext): TruthTreeStepReport['occurrences'] {
   return context.structure.tree.occurrences.map((occurrence) => {
-    context.budget.spend(occurrence.formula.length + 1);
+    context.budget.spend(
+      (occurrence.formula.length + 1) * (context.formulaGroupingVersion === undefined ? 1 : 2),
+    );
     if (!occurrence.formula.trim()) {
       context.diagnostics.add({
         code: CheckerDiagnosticCode.IncompleteTree,
@@ -61,7 +78,10 @@ export function parseStepFormulas(context: StepContext): TruthTreeStepReport['oc
       return { occurrenceId: occurrence.id, status: 'incomplete' };
     }
     try {
-      context.formulas.set(occurrence.id, parseTruthTreeFormula(occurrence.formula));
+      context.formulas.set(
+        occurrence.id,
+        parseTruthTreeFormulaWithPolicy(occurrence.formula, context.formulaGroupingVersion),
+      );
       return { occurrenceId: occurrence.id, status: 'valid' };
     } catch (error) {
       if (!(error instanceof FormulaParseError)) throw error;

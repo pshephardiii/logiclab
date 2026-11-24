@@ -2,8 +2,11 @@ import { FormulaParseError } from '../parser/errors';
 import { readTruthTreeInput } from './step-input';
 import { truthTreeBudget, TruthTreeResourceLimit } from './structure-context';
 import { truthTreeCoverage } from './branch-coverage';
-import { TRUTH_TREE_RULE_CATALOG } from './rule-catalog';
-import { parseTruthTreeFormula } from './parse-formula';
+import { truthTreeRuleCatalog } from './rule-catalog';
+import { analyzeTruthTreeSteps } from './check-steps';
+import { filledChainChoices } from './chain-completeness';
+import { truthTreeComponentCoverage } from './component-coverage';
+import { parseTruthTreeFormulaWithPolicy } from './parse-formula';
 import { decomposeTruthTreeFormula } from './decompose-formula';
 
 /** Filled attempt only. Incorrect formulas/rules/closures remain post-submission review evidence. */
@@ -32,7 +35,9 @@ export function isFinishedTruthTreeAttempt(input: unknown): boolean {
     // Require every field of the selected rule, not a logically correct choice of that rule.
     for (const expansion of structure.expansions.values()) {
       budget.spend();
-      const rule = TRUTH_TREE_RULE_CATALOG.find((rule) => rule.id === expansion.ruleId);
+      const rule = truthTreeRuleCatalog(read.problem.ruleCatalogVersion).find(
+        (rule) => rule.id === expansion.ruleId,
+      );
       if (
         !rule ||
         expansion.resultGroups.length !== rule.resultFormulaCounts.length ||
@@ -43,7 +48,16 @@ export function isFinishedTruthTreeAttempt(input: unknown): boolean {
         return false;
     }
 
-    const coverage = truthTreeCoverage(structure, budget);
+    let coverage: Map<string, Set<string>>;
+    if (read.problem.ruleCatalogVersion === 2) {
+      // Diagnostics remain private. This context supplies inherited boundaries; filled-choice
+      // coverage intentionally does not require logically correct result formulas or closures.
+      const context = analyzeTruthTreeSteps(input, budget).context;
+      if (!context) return false;
+      const choices = filledChainChoices(context);
+      if (!choices) return false;
+      coverage = truthTreeComponentCoverage(structure, choices, budget);
+    } else coverage = truthTreeCoverage(structure, budget);
     const compounds = new Map<string, boolean>();
     for (const branch of structure.branches.values()) {
       if (branch.ending.kind !== 'open') continue;
@@ -56,7 +70,10 @@ export function isFinishedTruthTreeAttempt(input: unknown): boolean {
           const text = structure.occurrences.get(occurrenceId)!.formula;
           budget.spend(text.length);
           try {
-            compound = decomposeTruthTreeFormula(parseTruthTreeFormula(text)).kind === 'expansion';
+            compound =
+              decomposeTruthTreeFormula(
+                parseTruthTreeFormulaWithPolicy(text, read.formulaGroupingVersion),
+              ).kind === 'expansion';
           } catch (error) {
             if (!(error instanceof FormulaParseError)) throw error;
             // An unparseable, unprocessed open formula cannot establish a finished path.

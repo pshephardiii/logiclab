@@ -14,7 +14,7 @@ test.each(['fitch', 'dependency', 'tree'] as const)(
       format === 'fitch'
         ? startFitchProof(statement)
         : format === 'dependency'
-          ? startDependencyProof(statement.premises)
+          ? startDependencyProof(statement.premises, statement.ruleCatalogVersion)
           : {
               proofVersion: 1,
               format: 'tree',
@@ -38,6 +38,8 @@ test.each([
   [[premise, premise], 'P', [], /identities must be distinct/],
   [[premise], 'P', ['reiteration', 'reiteration'], /only once/],
   [[premise], 'P', ['custom_rule'], /supported propositional catalog/],
+  [[{ ...premise, formula: 'P & Q -> R' }], 'P', [], /Premise 1:.*group/],
+  [[premise], 'P v Q -> R', [], /Conclusion:.*group/],
 ] as const)(
   'invalid setup does not become a practice statement',
   (premises, conclusion, rules, message) => {
@@ -88,4 +90,46 @@ test('proof setup uses the proof grammar and bounds rather than truth-table vari
     practiceStatement('tree', [], '[(P <-> ~Q) & (R v S)] -> (T -> _|_)', []).conclusion,
   ).toContain('T');
   expect(() => practiceStatement('fitch', [], 'P'.repeat(257), [])).toThrow();
+});
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s new practice pins catalog 2 and permits source-aware extraction',
+  (format) => {
+    const statement = practiceStatement(format, [{ ...premise, formula: 'P & Q & R' }], 'P', [
+      'and_chain_elimination',
+    ]);
+    expect(statement).toMatchObject({ ruleCatalogVersion: 2, formulaGroupingVersion: 1 });
+    const proof =
+      format === 'fitch'
+        ? startFitchProof(statement)
+        : startDependencyProof(statement.premises, statement.ruleCatalogVersion);
+    const step = {
+      kind: 'inference' as const,
+      id: nodeId,
+      formula: 'P',
+      ruleId: 'and_chain_elimination',
+      conjunctIndex: 0,
+      lineReferences: [proof.steps[0]!.id],
+    };
+    if (proof.format === 'fitch')
+      proof.steps.push({ ...step, blockId: null, subproofReferences: [] });
+    else proof.steps.push({ ...step, dependencies: [proof.steps[0]!.id], discharges: [] });
+    expect(checkPracticeProof(statement, proof).status).toBe('accepted');
+    expect(checkPracticeProof(statement, { ...proof, proofVersion: 1 }).status).toBe(
+      'unassessable',
+    );
+  },
+);
+
+test('retained catalog-1 practice remains checkable without adopting new grouping requirements', () => {
+  const statement = {
+    ...practiceStatement('fitch', [premise], 'P', []),
+    ruleCatalogVersion: 1 as const,
+    premises: [{ ...premise, formula: 'P v Q -> R' }],
+    conclusion: 'P v Q -> R',
+  };
+  delete statement.formulaGroupingVersion;
+  const proof = startFitchProof(statement);
+  expect(proof.proofVersion).toBe(1);
+  expect(checkPracticeProof(statement, proof).status).toBe('accepted');
 });

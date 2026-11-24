@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 /** Keep the target beside the working proof rather than in a separate statement panel. */
 export function ProofEditorHeading({
   title,
@@ -17,7 +17,7 @@ export function ProofEditorHeading({
         <div className="proof-conclusion-controls">
           <p className="proof-goal" aria-label="Proof conclusion">
             <span>Conclusion</span>
-            <code>{proofNotation(goal) || '(blank)'}</code>
+            <code>{formulaNotation(goal) || '(blank)'}</code>
           </p>
           {goalActions}
         </div>

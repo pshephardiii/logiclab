@@ -1,6 +1,6 @@
 import { indexSubmittedAnswers, buildFeedback } from '../../../application/truth-table/checking';
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { generateTruthTable } from '@logiclab/logic-engine';
+import { generatePracticeTruthTable } from '../../../application/truth-table/practice-table';
 import { truthTableCheckRequestSchema, truthTableCheckResponseSchema } from '@logiclab/contracts';
 import { badRequest } from '../errors';
 
@@ -14,7 +14,7 @@ export async function postCheckHandler(request: FastifyRequest, reply: FastifyRe
     return badRequest(reply, 'INVALID_REQUEST', parsed.error.message);
   }
 
-  const table = generateTruthTable(parsed.data.formula);
+  const table = generatePracticeTruthTable(parsed.data.formula);
   const answerColumns = table.columns.filter((column) => column.kind === 'answer');
   const indexed = indexSubmittedAnswers(table, answerColumns, parsed.data.answers);
 

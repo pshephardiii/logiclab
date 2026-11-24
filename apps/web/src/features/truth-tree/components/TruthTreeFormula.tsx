@@ -1,6 +1,7 @@
 import { TRUTH_TREE_LIMITS, type TruthTreeOccurrence } from '@logiclab/contracts/truth-tree';
-import { ProofFormulaInput } from '../../proof/components/ProofFormulaInput';
-import { truthTreeFormulaLabel, type FormulaProgress } from '../helpers/formula-presentation';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
+import { truthTreeFormulaLabel } from '../helpers/formula-presentation';
+import type { FormulaProgress } from '../helpers/formula-progress';
 
 const markers = {
   applied: ['✓', 'Rule applied on all paths'],
@@ -18,6 +19,8 @@ export function TruthTreeFormula({
   source,
   disabled,
   onFormula,
+  version = 1,
+  sourceFormula,
 }: {
   occurrence: TruthTreeOccurrence;
   progress?: FormulaProgress;
@@ -25,6 +28,8 @@ export function TruthTreeFormula({
   source: string;
   disabled: boolean;
   onFormula?: (id: string, formula: string) => void;
+  version?: 1 | 2;
+  sourceFormula?: string;
 }) {
   return (
     <>
@@ -33,15 +38,23 @@ export function TruthTreeFormula({
           <span
             className={`truth-tree-formula-marker truth-tree-formula-marker--${progress}`}
             role="img"
-            aria-label={markers[progress][1]}
-            title={markers[progress][1]}
+            aria-label={
+              progress === 'partial' && version === 2
+                ? 'Components or paths remain'
+                : markers[progress][1]
+            }
+            title={
+              progress === 'partial' && version === 2
+                ? 'Components or paths remain'
+                : markers[progress][1]
+            }
           >
             {markers[progress][0]}
           </span>
         )}
         <span className="truth-tree-formula-number">{number}.</span>
         {onFormula && occurrence.origin.kind === 'expansion' ? (
-          <ProofFormulaInput
+          <FormulaInput
             aria-label={`Formula ${number}`}
             value={occurrence.formula}
             maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
@@ -53,7 +66,7 @@ export function TruthTreeFormula({
             onValueChange={(formula) => onFormula(occurrence.id, formula)}
           />
         ) : (
-          <code>{truthTreeFormulaLabel(occurrence.formula)}</code>
+          <code>{truthTreeFormulaLabel(sourceFormula ?? occurrence.formula, version)}</code>
         )}
       </div>
       <small>{source}</small>

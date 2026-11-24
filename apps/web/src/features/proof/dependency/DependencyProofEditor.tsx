@@ -1,9 +1,10 @@
+import { proofSourceFormulas } from '../helpers/source-formulas';
 import { ProofRangeSelectionHelp } from '../components/ProofRangeSelectionHelp';
 import { DependencyRangeDeletionDialog } from './DependencyRangeDeletionDialog';
 import type { ReactNode } from 'react';
 import { dependencyEntryRequirement } from './entry-requirements';
 import { createDependencyDischargeEntry } from './discharge-entry';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { DependencyProofRemovalDialog } from './DependencyProofRemovalDialog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
@@ -39,6 +40,8 @@ export function DependencyProofEditor({
     premises: { id: string; formula: string }[];
     rules: { id: string; label: string }[];
     conclusion?: string;
+    ruleCatalogVersion?: 1 | 2;
+    formulaGroupingVersion?: 1;
   };
   proof: DependencyProof | null;
   purpose?: 'reference' | 'student';
@@ -73,6 +76,7 @@ export function DependencyProofEditor({
     const index = found < 0 ? proof.steps.length : found;
     return { base: proof, draft: insertDependencyStep(proof, index, 'inference'), index };
   }, [proof, safe, before]);
+  const sourceFormulas = useMemo(() => proofSourceFormulas(proof, statement), [proof, statement]);
   const current = entry ?? idle;
   const fieldsProof = selected && !entry ? proof : current?.draft;
   const fieldsIndex = selected && !entry ? selectedIndex : current?.index;
@@ -187,7 +191,12 @@ export function DependencyProofEditor({
       setError('The proof changed while this entry was open. Discard entry and try again.');
       return;
     }
-    const requirement = dependencyEntryRequirement(current.draft, current.index, statement.rules);
+    const requirement = dependencyEntryRequirement(
+      current.draft,
+      current.index,
+      statement.rules,
+      sourceFormulas,
+    );
     if (requirement) {
       setError(requirement);
       return;
@@ -220,7 +229,7 @@ export function DependencyProofEditor({
               <ol>
                 {statement.premises.map((premise) => (
                   <li key={premise.id}>
-                    <code>{proofNotation(premise.formula)}</code>
+                    <code>{formulaNotation(premise.formula)}</code>
                   </li>
                 ))}
               </ol>
@@ -231,7 +240,7 @@ export function DependencyProofEditor({
             onClick={() => {
               setBefore(null);
               focusRequested.current = true;
-              change(startDependencyProof(statement.premises));
+              change(startDependencyProof(statement.premises, statement.ruleCatalogVersion));
             }}
           >
             {reference ? 'Start reference proof' : 'Start proof'}
@@ -318,6 +327,7 @@ export function DependencyProofEditor({
                 entry={
                   !rangeStart && fieldsProof && fieldsIndex !== undefined && fieldsStep ? (
                     <DependencyProofLine
+                      sourceFormulas={sourceFormulas}
                       key={fieldsStep.id}
                       proof={fieldsProof}
                       index={fieldsIndex}

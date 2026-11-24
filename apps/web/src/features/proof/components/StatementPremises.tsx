@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ProofDropdown } from './ProofDropdown';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import './statement-premises.css';
 
 /** Statement sources are an ordered list, not proof nodes or dependency annotations. */
@@ -27,7 +27,7 @@ export function StatementPremises({
         {premises.map((premise, index) => (
           <li key={premise.id} data-proof-premise={premise.id}>
             <div className={selectedId === premise.id ? 'selected-statement-premise' : undefined}>
-              <code>{proofNotation(premise.formula) || '(blank)'}</code>
+              <code>{formulaNotation(premise.formula) || '(blank)'}</code>
               <ProofDropdown
                 label={`Actions for premise ${index + 1}`}
                 trigger={<span aria-hidden="true">⋯</span>}

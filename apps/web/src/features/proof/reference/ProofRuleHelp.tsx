@@ -14,7 +14,7 @@ export function ProofRuleReference({
   format: ProofHelpFormat;
 }) {
   const enabled = rules.find((rule) => rule.id === ruleId);
-  const rule = enabled && getPropositionalRule(enabled.id);
+  const rule = enabled && getPropositionalRule(enabled.id, format === 'tree' ? 1 : 2);
   if (!rule) return null;
 
   const guide = getRuleReference(rule.id);
@@ -58,7 +58,7 @@ export function ProofRuleHelp({
 }) {
   const [open, setOpen] = useState(false);
   const rule = rules.find((rule) => rule.id === ruleId);
-  if (!rule || !getPropositionalRule(rule.id)) return null;
+  if (!rule || !getPropositionalRule(rule.id, format === 'tree' ? 1 : 2)) return null;
   return (
     <details className="proof-rule-help" onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>Rule help: {rule.label}</summary>

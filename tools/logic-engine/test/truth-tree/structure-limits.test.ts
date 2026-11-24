@@ -14,7 +14,7 @@ test.each([
 });
 
 test.each([
-  { ...splitTree(), treeVersion: 2 },
+  { ...splitTree(), treeVersion: 3 },
   { ...splitTree(), format: 'tree' },
 ])('unsupported methods/versions do not reach graph checking: %#', (input) => {
   const result = expectStatus(input, 'unassessable');

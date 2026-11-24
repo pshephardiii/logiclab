@@ -290,10 +290,9 @@ test('reverting problem edits removes protection without saving', async () => {
   expect(api.saveProblem).not.toHaveBeenCalled();
 });
 
-test('new-problem formula save errors are visible in the editor and retain the draft for correction', async () => {
+test('new-problem formula syntax errors are visible locally and retain the draft for correction', async () => {
   const user = userEvent.setup();
   const message = 'Expected a variable, negation, or grouped expression (at character 4).';
-  vi.mocked(api.saveProblem).mockRejectedValueOnce(new Error(message));
   render(<ProblemLibrary />);
   await user.type(screen.getByLabelText('Title'), 'My new problem');
   await user.type(screen.getByLabelText('Instructions'), 'Keep these instructions');
@@ -312,6 +311,7 @@ test('new-problem formula save errors are visible in the editor and retain the d
   await user.click(screen.getByRole('button', { name: 'New problem' }));
   await user.click(screen.getByRole('button', { name: 'Stay' }));
   expect(screen.getByRole('alert')).toHaveTextContent(message);
+  expect(api.saveProblem).not.toHaveBeenCalled();
   await user.type(screen.getByLabelText('Formula'), ' Q');
   vi.mocked(api.saveProblem).mockResolvedValue({
     ...draft,

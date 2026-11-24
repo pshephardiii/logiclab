@@ -50,3 +50,18 @@ export const TRUTH_TREE_RULE_CATALOG = Object.freeze(
     }),
   ),
 );
+
+const chainRules = Object.freeze([
+  ...TRUTH_TREE_RULE_CATALOG,
+  Object.freeze({
+    id: 'conjunct_extraction' as const,
+    label: 'Extract conjunct',
+    branching: false,
+    resultFormulaCounts: Object.freeze([1]),
+  }),
+]);
+
+/** Existing consumers default to catalog 1; new callers must explicitly request catalog 2. */
+export function truthTreeRuleCatalog(version: 1 | 2) {
+  return version === 2 ? chainRules : TRUTH_TREE_RULE_CATALOG;
+}

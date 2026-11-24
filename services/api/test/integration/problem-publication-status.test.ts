@@ -59,3 +59,74 @@ test('library publication summaries distinguish drafts, latest publications and 
     await orm.close(true);
   }
 });
+
+test('table grouping is pinned on new content without changing retained versions or failed writes', async () => {
+  const { createDatabase, User, UserRole, Problem, ProblemVersion } = await import('@logiclab/db');
+  const schema = `formula_grouping_${randomUUID().replaceAll('-', '')}`;
+  const orm = await createDatabase(url, { schema, snapshotOnMigrate: false });
+  try {
+    await orm.schema.create();
+    const em = orm.em.fork();
+    const owner = em.create(User, {
+      cognitoUserPoolId: schema,
+      cognitoSubject: 'owner',
+      role: UserRole.Instructor,
+    });
+    const old = {
+      type: 'truth_table' as const,
+      definitionVersion: 1 as const,
+      formula: 'P & Q v R',
+    };
+    const problem = em.create(Problem, { owner, title: 'Retained', definition: old });
+    const version = em.create(ProblemVersion, {
+      problem,
+      title: 'Retained',
+      version: 1,
+      definition: structuredClone(old),
+    });
+    em.persist([owner, problem, version]);
+    await em.flush();
+    const store = await createProblemStore(orm);
+    assert.deepEqual((await store.findVersion(owner.id, problem.id, 1))!.definition, old);
+    await assert.rejects(() => store.create(owner.id, { title: 'Bad', definition: old }), {
+      code: 'GROUPING_REQUIRED',
+    });
+    await store.update(owner.id, problem.id, { title: 'Metadata edit' });
+    assert.deepEqual((await store.findOwned(owner.id, problem.id))!.definition, old);
+    await assert.rejects(() => store.publish(owner.id, problem.id), { code: 'GROUPING_REQUIRED' });
+    assert.equal((await store.listVersions(owner.id, problem.id, 20, 0))!.length, 1);
+    const corrected = { ...old, formula: '(P & Q) v R' };
+    await store.update(owner.id, problem.id, { definition: corrected });
+    const pinned = { ...corrected, formulaGroupingVersion: 1 };
+    assert.deepEqual((await store.findOwned(owner.id, problem.id))!.definition, pinned);
+    const published = await store.publish(owner.id, problem.id);
+    assert.equal(published.status, 'published');
+    if (published.status === 'published') assert.deepEqual(published.version.definition, pinned);
+    assert.equal((await store.list(owner.id, 20, 0))[0]!.publication?.hasDraftChanges, false);
+    await assert.rejects(
+      () => store.update(owner.id, problem.id, { title: 'Must roll back', definition: old }),
+      { code: 'GROUPING_REQUIRED' },
+    );
+    assert.equal((await store.findOwned(owner.id, problem.id))!.title, 'Metadata edit');
+    assert.deepEqual((await store.findOwned(owner.id, problem.id))!.definition, pinned);
+    assert.deepEqual((await store.findVersion(owner.id, problem.id, 1))!.definition, old);
+    // A pre-policy draft with explicit syntax is upgraded atomically with its new snapshot.
+    const retained = em.create(Problem, {
+      owner,
+      title: 'Publish old explicit draft',
+      definition: corrected,
+    });
+    em.persist(retained);
+    await em.flush();
+    await store.publish(owner.id, retained.id);
+    assert.deepEqual((await store.findOwned(owner.id, retained.id))!.definition, pinned);
+    assert.equal(
+      (await store.list(owner.id, 20, 0)).find((row) => row.id === retained.id)!.publication
+        ?.hasDraftChanges,
+      false,
+    );
+  } finally {
+    await orm.em.getConnection().execute(`drop schema if exists "${schema}" cascade`);
+    await orm.close(true);
+  }
+});

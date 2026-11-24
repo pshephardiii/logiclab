@@ -94,9 +94,10 @@ export function AssignedTruthTree({
       )}
       {answer ? (
         readOnly ? (
-          <TruthTreeDisplay tree={answer.tree} />
+          <TruthTreeDisplay tree={answer.tree} statement={item.content} />
         ) : (
           <TruthTreeEditor
+            statement={item.content}
             tree={answer.tree}
             disabled={disabled}
             onPendingChange={changePending}
@@ -143,7 +144,7 @@ export function AssignedTruthTree({
           showArgument={Boolean(verdictAssessment?.answer)}
         />
       )}
-      {solution && <TruthTreeSolutionView solution={solution} />}
+      {solution && <TruthTreeSolutionView solution={solution} statement={item.content} />}
       {resetting && (
         <ProofDeletionPrompt
           modal

@@ -1,7 +1,10 @@
+import { updatedCitationSlots } from '../helpers/citation-slots';
 import type { DependencyProofStep } from '@logiclab/contracts';
 import { getPropositionalRule } from '@logiclab/logic-engine/proof/rules';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { ProofChoice } from '../components/ProofChoice';
+import { ProofConjunctChoice } from '../components/ProofConjunctChoice';
+import { withoutConjunctSelection } from '../helpers/conjunct-choices';
 
 type Inference = Extract<DependencyProofStep, { kind: 'inference' }>;
 
@@ -12,6 +15,8 @@ export function DependencyInferenceFields({
   onChange,
   onStartAssumption,
   staged = false,
+  ruleCatalogVersion = 1,
+  sourceFormulas,
 }: {
   step: Inference;
   index: number;
@@ -19,12 +24,14 @@ export function DependencyInferenceFields({
   onChange: (step: Inference) => void;
   onStartAssumption?: () => void;
   staged?: boolean;
+  ruleCatalogVersion?: 1 | 2;
+  sourceFormulas?: ReadonlyMap<string, string>;
 }) {
-  const rule = step.ruleId ? getPropositionalRule(step.ruleId) : undefined;
+  const rule = step.ruleId ? getPropositionalRule(step.ruleId, ruleCatalogVersion) : undefined;
 
   const earlier = steps.slice(0, index).map((line, position) => ({
     id: line.id,
-    label: `${position + 1}. ${proofNotation(line.formula) || '(blank)'}`,
+    label: `${position + 1}. ${formulaNotation(line.formula) || '(blank)'}`,
   }));
 
   return (
@@ -39,21 +46,26 @@ export function DependencyInferenceFields({
             value={step.lineReferences[slot] || null}
             choices={earlier}
             onChange={(id) => {
-              const refs = [...step.lineReferences];
+              const next =
+                slot === 0 && id !== (step.lineReferences[0] || null)
+                  ? withoutConjunctSelection(step)
+                  : step;
 
-              if (staged) {
-                for (let position = refs.length; position <= slot; position++) refs.push('');
-                refs[slot] = id ?? '';
-                while (refs.at(-1) === '') refs.pop();
-                onChange({ ...step, lineReferences: refs });
-              } else {
-                if (id) refs[slot] = id;
-                else refs.splice(slot, 1);
-                onChange({ ...step, lineReferences: refs.filter(Boolean) });
-              }
+              onChange({
+                ...next,
+                lineReferences: updatedCitationSlots(step.lineReferences, slot, id, staged),
+              });
             }}
           />
         ),
+      )}
+      {ruleCatalogVersion === 2 && step.ruleId === 'and_chain_elimination' && (
+        <ProofConjunctChoice
+          index={index}
+          value={step.conjunctIndex}
+          source={sourceFormulas?.get(step.lineReferences[0] ?? '')}
+          onChange={(conjunctIndex) => onChange({ ...step, conjunctIndex })}
+        />
       )}
       {Array.from(
         { length: Math.max(rule?.subproofReferences ?? 0, step.discharges.length) },

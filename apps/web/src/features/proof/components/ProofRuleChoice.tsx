@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import type { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
+import type { propositionalRuleCatalog } from '@logiclab/logic-engine/proof/rules';
 
-type Rule = (typeof PROPOSITIONAL_RULE_CATALOG)[number];
+type Rule = ReturnType<typeof propositionalRuleCatalog>[number];
 
 export function ProofRuleChoice({
   rule,

@@ -1,14 +1,24 @@
-import { useLayoutEffect, useRef, useState, type InputHTMLAttributes } from 'react';
-import { proofNotation } from '../helpers/proof-notation';
+import {
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type Ref,
+  type InputHTMLAttributes,
+} from 'react';
+import { formulaNotation } from './formula-notation';
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
+  ref?: Ref<HTMLInputElement>;
   value: string;
   onValueChange: (value: string) => void;
 };
 
 /** Translate keyboard aliases without parsing, checking, losing the caret or interrupting IME. */
-export function ProofFormulaInput({ value, onValueChange, ...props }: Props) {
+export function FormulaInput({ ref, value, onValueChange, ...props }: Props) {
   const input = useRef<HTMLInputElement>(null);
+  useImperativeHandle(ref, () => input.current!, []);
+
   const [composing, setComposing] = useState(false);
   const caret = useRef<{ value: string; start: number; end: number } | null>(null);
 
@@ -25,16 +35,16 @@ export function ProofFormulaInput({ value, onValueChange, ...props }: Props) {
       return;
     }
     const raw = element.value;
-    const next = proofNotation(raw);
+    const next = formulaNotation(raw);
     caret.current = {
       value: next,
       start: Math.min(
         next.length,
-        proofNotation(raw.slice(0, element.selectionStart ?? raw.length)).length,
+        formulaNotation(raw.slice(0, element.selectionStart ?? raw.length)).length,
       ),
       end: Math.min(
         next.length,
-        proofNotation(raw.slice(0, element.selectionEnd ?? raw.length)).length,
+        formulaNotation(raw.slice(0, element.selectionEnd ?? raw.length)).length,
       ),
     };
     onValueChange(next);
@@ -44,7 +54,7 @@ export function ProofFormulaInput({ value, onValueChange, ...props }: Props) {
     <input
       {...props}
       ref={input}
-      value={composing ? value : proofNotation(value)}
+      value={composing ? value : formulaNotation(value)}
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={(event) => {
         setComposing(false);

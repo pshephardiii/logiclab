@@ -7,6 +7,7 @@ import { checkParsedRule } from '../parsed-rule';
 import type { ParsedProofFormula } from '../proof-formulas';
 import type { ProofBudget } from '../proof-budget';
 import type { StructureDiagnostics } from '../structure-diagnostics';
+import { carryProofGrouping } from '../source-grouping';
 
 type StepReport = ProofCheckReport['steps'][number];
 
@@ -49,7 +50,11 @@ function sourceStatus(
 
   budget.spend(2 * (current.size + premise.size));
 
-  if (sameFormula(current.formula, premise.formula)) return 'valid';
+  if (sameFormula(current.formula, premise.formula)) {
+    if (input.problem.ruleCatalogVersion === 2)
+      carryProofGrouping(current, [[current.formula, premise.formula]], [premise], budget);
+    return 'valid';
+  }
 
   diagnostics.add({
     code: CheckerDiagnosticCode.RuleMismatch,
@@ -142,6 +147,7 @@ export function evaluateDependencySteps(
         stepIndex,
         budget,
         diagnostics,
+        step.conjunctIndex,
       );
     }
 

@@ -1,3 +1,4 @@
+import { formulaGroupingPolicy } from '@logiclab/contracts/formula-policy-values';
 import {
   AssessmentMode,
   FeedbackTiming,
@@ -92,6 +93,7 @@ export function assignmentCompletionReady(
               isFinishedTruthTreeAttempt({
                 problem: {
                   ruleCatalogVersion: item.content.ruleCatalogVersion,
+                  ...formulaGroupingPolicy(item.content),
                   premises: item.content.premises,
                   conclusion: item.content.conclusion,
                 },
@@ -105,6 +107,7 @@ export function assignmentCompletionReady(
                     : isFinishedFitchProofAttempt)({
                   problem: {
                     ruleCatalogVersion: item.content.ruleCatalogVersion,
+                    ...formulaGroupingPolicy(item.content),
                     premises: item.content.premises,
                     conclusion: item.content.conclusion,
                     permittedRuleIds: item.content.rules.map((rule) => rule.id),

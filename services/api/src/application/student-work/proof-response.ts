@@ -1,4 +1,5 @@
 import type { SavedDerivationContent } from '@logiclab/contracts/saved-student-work';
+import { StudentWorkError } from './errors';
 import { validateFitchAnswer, evaluateFitchAnswer } from './derivation-response';
 import { validateDependencyAnswer, evaluateDependencyAnswer } from './dependency-response';
 import {
@@ -8,14 +9,17 @@ import {
 
 /** The pinned server format selects validation, never a student-controlled replacement format. */
 export function validateProofAnswer(
-  content: Pick<SavedDerivationContent, 'format'>,
+  content: Pick<SavedDerivationContent, 'format' | 'ruleCatalogVersion'>,
   value: unknown,
 ) {
-  if (content.format === 'tree') return validateNaturalDeductionTreeAnswer(value);
+  if (content.format === 'tree') {
+    if (content.ruleCatalogVersion !== 1) throw new StudentWorkError('invalid_answer');
+    return validateNaturalDeductionTreeAnswer(value);
+  }
 
   return content.format === 'dependency'
-    ? validateDependencyAnswer(value)
-    : validateFitchAnswer(value);
+    ? validateDependencyAnswer(value, content.ruleCatalogVersion)
+    : validateFitchAnswer(value, content.ruleCatalogVersion);
 }
 
 export function evaluateProofAnswer(

@@ -2,7 +2,12 @@ import { DerivationPublicationError } from '../../src/application/problem/deriva
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { derivationDefinitionFixture, dependencyDefinitionFixture } from '../derivation-fixture';
+import {
+  derivationDefinitionFixture,
+  dependencyDefinitionFixture,
+  fitchChainDefinitionFixture,
+  dependencyChainDefinitionFixture,
+} from '../derivation-fixture';
 import { createProblemStore } from '../../src/persistence/problem/store';
 import { createAssignmentStore } from '../../src/persistence/assignment/store';
 import { createDemoRuntime } from '../../src/bootstrap/demo';
@@ -35,8 +40,13 @@ async function fixture(
   }
 }
 
-for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixture]) {
-  const format = definition().format;
+for (const definition of [
+  derivationDefinitionFixture,
+  dependencyDefinitionFixture,
+  fitchChainDefinitionFixture,
+  dependencyChainDefinitionFixture,
+]) {
+  const format = `catalog-${definition().ruleCatalogVersion} ${definition().format}`;
   const checkReference = (value: unknown) => {
     const parsed = libraryProblemDefinition(value);
     if (parsed.type !== 'derivation') throw new Error('Expected proof');
@@ -87,7 +97,7 @@ for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixtu
       const first = await store.publish(owner.id, draft.id);
       assert.equal(first.status, 'published');
       if (first.status !== 'published') throw new Error('Expected publication');
-      assert.deepEqual(first.version.definition, definition());
+      assert.deepEqual(first.version.definition, { ...definition(), formulaGroupingVersion: 1 });
       await store.update(owner.id, draft.id, {
         title: 'Changed draft',
         definition: {
@@ -96,7 +106,10 @@ for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixtu
           referenceProof: null,
         },
       });
-      assert.deepEqual((await store.findVersion(owner.id, draft.id, 1))!.definition, definition());
+      assert.deepEqual((await store.findVersion(owner.id, draft.id, 1))!.definition, {
+        ...definition(),
+        formulaGroupingVersion: 1,
+      });
       assert.equal((await store.listVersions(owner.id, draft.id, 20, 0))!.length, 1);
       await store.setArchived(owner.id, draft.id, true);
       assert.equal((await store.publish(owner.id, draft.id)).status, 'archived');
@@ -108,7 +121,10 @@ for (const definition of [derivationDefinitionFixture, dependencyDefinitionFixtu
       assert.equal((await store.list(owner.id, 20, 0, 'active')).length, 0);
       assert.equal((await store.list(owner.id, 20, 0, 'archived')).length, 1);
       await store.setArchived(owner.id, draft.id, false);
-      assert.deepEqual((await store.findVersion(owner.id, draft.id, 1))!.definition, definition());
+      assert.deepEqual((await store.findVersion(owner.id, draft.id, 1))!.definition, {
+        ...definition(),
+        formulaGroupingVersion: 1,
+      });
       assert.equal(await store.findOwned(foreign.id, draft.id), null);
       assert.equal(await store.previewReference(foreign.id, draft.id), null);
       assert.equal(await store.findVersion(foreign.id, draft.id, 1), null);

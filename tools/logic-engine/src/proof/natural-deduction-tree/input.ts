@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-code';
 import {
   PROOF_LIMITS,
@@ -17,6 +18,7 @@ export function readNaturalDeductionTreeInput(
 
     const problem = record(outer.problem, [
       'ruleCatalogVersion',
+      'formulaGroupingVersion',
       'premises',
       'conclusion',
       'permittedRuleIds',
@@ -26,6 +28,8 @@ export function readNaturalDeductionTreeInput(
 
     if (
       (problem.ruleCatalogVersion !== undefined && problem.ruleCatalogVersion !== 1) ||
+      (problem.formulaGroupingVersion !== undefined &&
+        problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION) ||
       (proof.proofVersion !== undefined && proof.proofVersion !== 1) ||
       (proof.format !== undefined && proof.format !== 'tree')
     )

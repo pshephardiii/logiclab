@@ -1,6 +1,6 @@
 import type { FitchProof } from '@logiclab/contracts';
 import { fitchLineRange } from '../helpers/fitch-line-range';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 import { ProofDeletionPrompt } from './ProofDeletionPrompt';
 
 export function FitchRangeDeletionDialog({
@@ -40,7 +40,7 @@ export function FitchRangeDeletionDialog({
           <ol className="fitch-range-preview" start={range.start + 1}>
             {range.steps.map((step) => (
               <li key={step.id}>
-                <code>{proofNotation(step.formula) || '(blank)'}</code>
+                <code>{formulaNotation(step.formula) || '(blank)'}</code>
               </li>
             ))}
           </ol>

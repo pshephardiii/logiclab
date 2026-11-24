@@ -33,7 +33,7 @@ export function analyzeTruthTreeStructure(
       const unsupported =
         input !== null &&
         typeof input === 'object' &&
-        (('treeVersion' in input && input.treeVersion !== 1) ||
+        (('treeVersion' in input && input.treeVersion !== 1 && input.treeVersion !== 2) ||
           ('format' in input && input.format !== 'truth_tree'));
       return {
         status: 'unassessable',

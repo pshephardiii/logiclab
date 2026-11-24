@@ -69,6 +69,52 @@ async function open() {
   return user;
 }
 
+test('catalog-2 assigned work starts in its pinned version and explicitly saves selected conjuncts', async () => {
+  if (!('content' in treeItem) || treeItem.content.type !== 'truth_tree')
+    throw new Error('Expected tree');
+  const item = {
+    ...treeItem,
+    content: {
+      ...treeItem.content,
+      ruleCatalogVersion: 2 as const,
+      formulaGroupingVersion: 1 as const,
+      premises: [{ id: crypto.randomUUID(), formula: 'P & Q & R' }],
+      conclusion: 'P',
+    },
+  };
+  vi.mocked(api.readAssignedWork).mockImplementation(async () => ({
+    assignment: { ...truthTreeWork, feedbackTiming: 'on_check', items: [item] },
+    attempt: retained,
+  }));
+  const user = await open();
+  await user.click(screen.getByRole('button', { name: 'Start tree' }));
+  await user.click(screen.getByRole('button', { name: 'Add step to branch 1' }));
+  const source = screen.getByLabelText('Source formula').querySelectorAll('option')[1]!.value;
+  await user.selectOptions(screen.getByLabelText('Source formula'), source);
+  await user.selectOptions(screen.getByLabelText('Decomposition rule'), 'conjunct_extraction');
+  await user.selectOptions(screen.getByLabelText('Conjunct to extract'), '0');
+  await user.type(screen.getByLabelText('Formula 1 · Result 1.1'), 'P');
+  expect(api.saveAssignedAnswers).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Add expansion' }));
+  expect(api.checkAssignedAnswers).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Save problem' }));
+  const answer = vi.mocked(api.saveAssignedAnswers).mock.calls.at(-1)![1].answers;
+  expect(answer).toMatchObject({
+    type: 'truth_tree',
+    verdict: null,
+    tree: {
+      treeVersion: 2,
+      expansions: [
+        {
+          ruleId: 'conjunct_extraction',
+          chainChoice: { ruleId: 'conjunct_extraction', memberIndex: 0 },
+        },
+      ],
+    },
+  });
+  expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+});
+
 test('starts, explicitly checks and saves current work, retains failed edits and keeps reference reveal independent', async () => {
   const user = await open();
   await user.click(screen.getByRole('button', { name: 'Start tree' }));

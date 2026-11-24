@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { ProblemType } from './problem-type';
 import { z } from 'zod';
 import { naturalDeductionTreeProofSchema } from './natural-deduction-tree';
@@ -9,6 +10,7 @@ import {
 /** Natural-deduction tree statement used by the owner library; student assignment admission remains separate. */
 export const naturalDeductionTreeDerivationContentSchema = derivationStatementSchema.safeExtend({
   format: z.literal('tree'),
+  ruleCatalogVersion: z.literal(1),
 });
 
 export type NaturalDeductionTreeDerivationContent = z.infer<
@@ -32,6 +34,7 @@ export const naturalDeductionTreeDerivationSolutionSchema = z.strictObject({
   definitionVersion: z.literal(1),
   format: z.literal('tree'),
   ruleCatalogVersion: z.literal(1),
+  formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
   checkerVersion: z.literal(1),
   referenceProof: naturalDeductionTreeProofSchema,
   explanation,

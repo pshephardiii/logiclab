@@ -1,4 +1,4 @@
-import { ProofFormulaInput } from '../components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import {
   PROOF_LIMITS,
   type NaturalDeductionTreeProof,
@@ -41,7 +41,7 @@ export function NaturalDeductionTreeProofNodeFields({
       </h4>
       <label>
         Formula for node {index + 1}
-        <ProofFormulaInput
+        <FormulaInput
           data-proof-formula="true"
           maxLength={PROOF_LIMITS.maxFormulaLength}
           aria-describedby={formulaHint}

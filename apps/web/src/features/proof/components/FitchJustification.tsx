@@ -21,6 +21,10 @@ export function FitchJustification({
         <>
           {step.ruleId ? (labels.get(step.ruleId) ?? 'Unavailable rule') : 'No rule selected'}
           {step.lineReferences.length > 0 && ` · ${step.lineReferences.map(line).join(', ')}`}
+          {step.ruleId === 'and_chain_elimination' &&
+            (step.conjunctIndex == null
+              ? ' · no conjunct selected'
+              : ` · conjunct ${step.conjunctIndex + 1}`)}
           {step.subproofReferences.length > 0 &&
             ` · subproof ${step.subproofReferences
               .map((id) => {

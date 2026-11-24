@@ -1,11 +1,20 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from './formula-policy-values';
 import { z } from 'zod';
 import {
+  truthTreeChainChoiceSchema,
   TRUTH_TREE_LIMITS,
   truthTreeIdSchema as id,
   truthTreeFormulaTextSchema as formula,
 } from './truth-tree-fields';
 
 export { TRUTH_TREE_LIMITS, TRUTH_TREE_RULE_IDS, truthTreeRuleIdSchema } from './truth-tree-fields';
+
+export {
+  TRUTH_TREE_CHAIN_RULE_CATALOG_VERSION,
+  truthTreeChainChoiceSchema,
+} from './truth-tree-fields';
+
+export type { TruthTreeChainChoice } from './truth-tree-fields';
 
 export type { TruthTreeRuleId } from './truth-tree-fields';
 
@@ -81,6 +90,7 @@ export const truthTreeExpansionSchema = z.strictObject({
   branchId: id,
   sourceId: id.nullable(),
   ruleId: ruleReference.nullable(),
+  chainChoice: truthTreeChainChoiceSchema.optional(),
   resultGroups: z.array(z.strictObject({ branchId: id, occurrenceIds: z.array(id).max(2) })).max(2),
 });
 
@@ -89,7 +99,7 @@ export type TruthTreeExpansion = z.infer<typeof truthTreeExpansionSchema>;
 /** Flat bounded draft transport. Graph/reference correctness belongs to the deterministic checker. */
 export const truthTreeSchema = z
   .strictObject({
-    treeVersion: z.literal(1),
+    treeVersion: z.union([z.literal(1), z.literal(2)]),
     format: z.literal('truth_tree'),
     rootBranchId: id.nullable(),
     occurrences: z.array(truthTreeOccurrenceSchema).max(TRUTH_TREE_LIMITS.maxOccurrences),
@@ -97,6 +107,15 @@ export const truthTreeSchema = z
     expansions: z.array(truthTreeExpansionSchema).max(TRUTH_TREE_LIMITS.maxExpansions),
   })
   .superRefine((tree, context) => {
+    if (
+      tree.treeVersion === 1 &&
+      tree.expansions.some((expansion) => expansion.chainChoice !== undefined)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Catalog-1 trees cannot include chain choices.',
+      });
+
     // Bound aggregate references too: per-branch limits alone permit quadratic payload growth.
     const membershipCount = tree.branches.reduce(
       (total, branch) => total + branch.occurrenceIds.length,
@@ -115,13 +134,25 @@ export const truthTreeSchema = z
 export type TruthTree = z.infer<typeof truthTreeSchema>;
 
 /** Authoritative argument only: the initial conclusion occurrence must contain its negation. */
-export const truthTreeProblemSchema = z.strictObject({
-  ruleCatalogVersion: z.literal(1),
-  premises: z
-    .array(z.strictObject({ id, formula: formula.min(1) }))
-    .max(TRUTH_TREE_LIMITS.maxPremises),
-  conclusion: formula.min(1),
-});
+export const truthTreeProblemSchema = z
+  .strictObject({
+    formulaGroupingVersion: z.literal(FORMULA_GROUPING_POLICY_VERSION).optional(),
+    ruleCatalogVersion: z.union([z.literal(1), z.literal(2)]),
+    premises: z
+      .array(z.strictObject({ id, formula: formula.min(1) }))
+      .max(TRUTH_TREE_LIMITS.maxPremises),
+    conclusion: formula.min(1),
+  })
+  .superRefine((problem, context) => {
+    if (
+      problem.ruleCatalogVersion === 2 &&
+      problem.formulaGroupingVersion !== FORMULA_GROUPING_POLICY_VERSION
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Chain decomposition requires explicit grouping policy.',
+      });
+  });
 
 export type TruthTreeProblem = z.infer<typeof truthTreeProblemSchema>;
 

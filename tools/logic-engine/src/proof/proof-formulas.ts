@@ -2,13 +2,20 @@ import { CheckerDiagnosticCode } from '@logiclab/contracts/checker-diagnostic-co
 import type { ProofProblem } from '@logiclab/contracts';
 import { FormulaParseError } from '../parser/errors';
 import { getPropositionalRule } from './rule-catalog';
-import { parseProofFormula } from './parse-formula';
+import { parseProofFormula, parseProofFormulaWithSyntax } from './parse-formula';
+import { requireExplicitGrouping } from '../parser/grouping';
+import type { ParsedFormulaSyntax } from '../parser/syntax';
 import { ProofBudgetExceeded, type ProofBudget } from './proof-budget';
 import type { StructureDiagnostics } from './structure-diagnostics';
 import type { ProofFormula } from './types';
 
 export type ParsedProofFormula =
-  | { formula: ProofFormula; size: number; status: 'valid' }
+  | {
+      formula: ProofFormula;
+      size: number;
+      status: 'valid';
+      syntax?: ParsedFormulaSyntax<{ readonly type: 'bottom' }>;
+    }
   | { formula: null; size: 0; status: 'invalid' | 'unassessable' };
 
 export function readFormula(
@@ -16,8 +23,9 @@ export function readFormula(
   budget: ProofBudget,
   diagnostics: StructureDiagnostics,
   stepIndex?: number,
+  formulaGroupingVersion?: ProofProblem['formulaGroupingVersion'],
 ): ParsedProofFormula {
-  budget.spend(source.length + 1);
+  budget.spend((source.length + 1) * (formulaGroupingVersion === undefined ? 1 : 2));
 
   if (!source.trim()) {
     diagnostics.add({
@@ -29,7 +37,11 @@ export function readFormula(
   }
 
   try {
-    const formula = parseProofFormula(source);
+    const syntax =
+      formulaGroupingVersion === undefined
+        ? undefined
+        : requireExplicitGrouping(parseProofFormulaWithSyntax(source));
+    const formula = syntax?.formula ?? parseProofFormula(source);
     const pending = [formula];
     let size = 0;
 
@@ -44,7 +56,7 @@ export function readFormula(
       else if (node.type === 'binary') pending.push(node.left, node.right);
     }
 
-    return { formula, size, status: 'valid' };
+    return { formula, size, status: 'valid', ...(syntax ? { syntax } : {}) };
   } catch (error) {
     if (!(error instanceof FormulaParseError)) throw error;
 
@@ -79,7 +91,16 @@ export function readProblem(
         message: 'Problem premise IDs must be unique.',
       });
 
-    premises.set(premise.id, readFormula(premise.formula, budget, diagnostics));
+    premises.set(
+      premise.id,
+      readFormula(
+        premise.formula,
+        budget,
+        diagnostics,
+        undefined,
+        input.problem.formulaGroupingVersion,
+      ),
+    );
   }
 
   const rules = new Set<string>();
@@ -91,7 +112,7 @@ export function readProblem(
         message: 'Permitted rule IDs must be unique.',
       });
 
-    if (!getPropositionalRule(rule))
+    if (!getPropositionalRule(rule, input.problem.ruleCatalogVersion))
       diagnostics.add({
         code: CheckerDiagnosticCode.UnknownRule,
         message: 'Problem permits an unsupported rule identity.',
@@ -100,7 +121,13 @@ export function readProblem(
     rules.add(rule);
   }
 
-  const conclusion = readFormula(input.problem.conclusion, budget, diagnostics);
+  const conclusion = readFormula(
+    input.problem.conclusion,
+    budget,
+    diagnostics,
+    undefined,
+    input.problem.formulaGroupingVersion,
+  );
 
   return { premises, conclusion };
 }

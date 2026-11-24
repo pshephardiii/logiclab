@@ -197,3 +197,28 @@ test('conceptual preview is interactive and reveals the explanation only on requ
   await user.click(screen.getByRole('button', { name: 'Hide preview answer' }));
   expect(screen.queryByText('Private explanation.')).not.toBeInTheDocument();
 });
+
+test('table saves and previews require explicit mixed-operator grouping and retain failed input', async () => {
+  const { user, onSave, onPreview } = setup();
+  await user.type(screen.getByLabelText('Title'), 'Grouped table');
+  await user.type(screen.getByLabelText('Formula'), 'P v Q -> R v Y');
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Add parentheses or square brackets');
+  await user.click(screen.getByRole('button', { name: 'Preview draft' }));
+  expect(onPreview).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('Formula')).toHaveValue('P v Q -> R v Y');
+  await user.clear(screen.getByLabelText('Formula'));
+  await user.type(screen.getByLabelText('Formula'), '(P v Q) -> (R v Y)');
+  await user.click(screen.getByRole('button', { name: 'Preview draft' }));
+  expect(onPreview).toHaveBeenLastCalledWith({
+    type: 'truth_table',
+    definitionVersion: 1,
+    formula: '(P v Q) -> (R v Y)',
+    formulaGroupingVersion: 1,
+  });
+  await user.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(onSave).toHaveBeenCalledWith(
+    expect.objectContaining({ definition: expect.objectContaining({ formulaGroupingVersion: 1 }) }),
+  );
+});

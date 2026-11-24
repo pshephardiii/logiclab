@@ -50,6 +50,9 @@ export function SubmissionReview({
           item && 'content' in item && item.content.type === ProblemType.Derivation
             ? item.content.format
             : 'fitch',
+          item && 'content' in item && item.content.type === ProblemType.Derivation
+            ? item.content.ruleCatalogVersion
+            : 1,
         );
 
   const proofReport = item ? proofSubmissionFeedback(review?.attempt.result, item.id) : null;

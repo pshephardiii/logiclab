@@ -1,10 +1,11 @@
 import { dependencyEntryRequirement } from './entry-requirements';
-import { ProofFormulaInput } from '../components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { useId, useRef } from 'react';
 import { PROOF_LIMITS, type DependencyProof, type DependencyProofStep } from '@logiclab/contracts';
 import { ProofChoice } from '../components/ProofChoice';
 import { DependencyInferenceFields } from './DependencyInferenceFields';
 import { DependencySources } from './DependencySources';
+import { withoutConjunctSelection } from '../helpers/conjunct-choices';
 
 type Inference = Extract<DependencyProofStep, { kind: 'inference' }>;
 type Assumption = Extract<DependencyProofStep, { kind: 'assumption' }>;
@@ -20,6 +21,7 @@ export function DependencyProofLine({
   onDiscard,
   pending,
   fixedPremiseSource = false,
+  sourceFormulas,
 }: {
   proof: DependencyProof;
   index: number;
@@ -31,6 +33,7 @@ export function DependencyProofLine({
   allowKindChange: boolean;
   pending: boolean;
   fixedPremiseSource?: boolean;
+  sourceFormulas?: ReadonlyMap<string, string>;
   onConfirm: () => void;
   onDiscard: () => void;
 }) {
@@ -38,7 +41,7 @@ export function DependencyProofLine({
   const formulaHint = useId();
   const requirementHint = useId();
   const requirement = allowKindChange
-    ? dependencyEntryRequirement(proof, index, statement.rules)
+    ? dependencyEntryRequirement(proof, index, statement.rules, sourceFormulas)
     : null;
   const cached = useRef<{ inference?: Inference; assumption?: Assumption }>({});
 
@@ -54,7 +57,7 @@ export function DependencyProofLine({
         formula: step.formula,
       });
     } else {
-      onChange({
+      const next: Inference = {
         ...(cached.current.inference ?? {
           kind: 'inference',
           dependencies: [],
@@ -64,7 +67,10 @@ export function DependencyProofLine({
         id: step.id,
         formula: step.formula,
         ruleId: value || null,
-      });
+      };
+      onChange(
+        step.kind === 'inference' && value === step.ruleId ? next : withoutConjunctSelection(next),
+      );
     }
   }
 
@@ -93,7 +99,7 @@ export function DependencyProofLine({
         {index + 1}
       </th>
       <td className="proof-line-formula">
-        <ProofFormulaInput
+        <FormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
           aria-describedby={requirement ? `${formulaHint} ${requirementHint}` : formulaHint}
@@ -150,6 +156,8 @@ export function DependencyProofLine({
           )}
           {step.kind === 'inference' && (
             <DependencyInferenceFields
+              ruleCatalogVersion={proof.proofVersion}
+              sourceFormulas={sourceFormulas}
               step={step}
               index={index}
               steps={proof.steps}

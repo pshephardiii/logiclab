@@ -5,7 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
 import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
 import { ProofPremisesEditor } from '../../features/proof/components/ProofPremisesEditor';
-import { ProofFormulaInput } from '../../features/proof/components/ProofFormulaInput';
+import { FormulaInput } from '../../components/formula/FormulaInput';
 import { ProofKeyboardGuide } from '../../features/proof/reference/ProofKeyboardGuide';
 import { useUnsavedWork } from '../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../features/unsaved-work/hooks/useConfirmDiscard';
@@ -27,7 +27,8 @@ import {
   type TruthTree,
   type TruthTreeCheckReport,
 } from '@logiclab/contracts/truth-tree';
-import { checkTruthTree, parseTruthTreeFormula } from '@logiclab/logic-engine/truth-tree';
+import { checkTruthTree, parseTruthTreeFormulaWithSyntax } from '@logiclab/logic-engine/truth-tree';
+import { requireExplicitGrouping } from '@logiclab/logic-engine';
 import '../../features/proof/components/proof-setup.css';
 
 /** Anonymous page-session work; no account API, expected reference, points or browser storage. */
@@ -58,13 +59,14 @@ export function TruthTreePracticePage() {
         type: ProblemType.TruthTree,
         definitionVersion: 1,
         checkerVersion: 1,
-        ruleCatalogVersion: 1,
+        ruleCatalogVersion: 2,
+        formulaGroupingVersion: 1,
         premises,
         conclusion,
       });
       for (const [index, premise] of statement.premises.entries()) {
         try {
-          parseTruthTreeFormula(premise.formula);
+          requireExplicitGrouping(parseTruthTreeFormulaWithSyntax(premise.formula));
         } catch (error) {
           const issue = unexpectedFormulaCharacter(premise.formula);
           if (issue) {
@@ -78,7 +80,7 @@ export function TruthTreePracticePage() {
         }
       }
       try {
-        parseTruthTreeFormula(statement.conclusion);
+        requireExplicitGrouping(parseTruthTreeFormulaWithSyntax(statement.conclusion));
       } catch (error) {
         const issue = unexpectedFormulaCharacter(statement.conclusion);
         if (issue) {
@@ -141,7 +143,7 @@ export function TruthTreePracticePage() {
             onPendingChange={setPremisePending}
           />
           <label htmlFor="truth-tree-practice-conclusion">Conclusion</label>
-          <ProofFormulaInput
+          <FormulaInput
             id="truth-tree-practice-conclusion"
             required
             maxLength={TRUTH_TREE_LIMITS.maxFormulaLength}
@@ -178,6 +180,7 @@ export function TruthTreePracticePage() {
           </button>
           <TruthTreeEditor
             tree={active.tree}
+            statement={active.statement}
             onPendingChange={setEntryPending}
             onChange={(tree) => {
               setActive({ ...active, tree });
@@ -201,6 +204,7 @@ export function TruthTreePracticePage() {
                   checkTruthTree({
                     problem: {
                       ruleCatalogVersion: active.statement.ruleCatalogVersion,
+                      formulaGroupingVersion: active.statement.formulaGroupingVersion,
                       premises: active.statement.premises,
                       conclusion: active.statement.conclusion,
                     },

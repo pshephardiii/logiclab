@@ -1,4 +1,4 @@
-import { ProofFormulaInput } from '../components/ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import type {
   NaturalDeductionTreeProof,
   NaturalDeductionTreeProofNode,
@@ -97,7 +97,7 @@ export function NaturalDeductionTreeInferenceFields({
               />
               <label>
                 Node {index + 1} branch {slot + 1} assumption formula
-                <ProofFormulaInput
+                <FormulaInput
                   maxLength={PROOF_LIMITS.maxFormulaLength}
                   autoComplete="off"
                   autoCorrect="off"

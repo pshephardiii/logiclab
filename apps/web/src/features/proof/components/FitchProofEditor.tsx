@@ -1,3 +1,4 @@
+import { proofSourceFormulas } from '../helpers/source-formulas';
 import { FitchEntryControls } from './FitchEntryControls';
 import { ProofRangeSelectionHelp } from './ProofRangeSelectionHelp';
 import { FitchRangeDeletionDialog } from './FitchRangeDeletionDialog';
@@ -29,7 +30,10 @@ import { ProofRuleHelp } from '../reference/ProofRuleHelp';
 import { ProofEditorHeading } from './ProofEditorHeading';
 
 type Props = {
-  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> & { conclusion?: string };
+  statement: Pick<FitchDerivationContent, 'premises' | 'rules'> &
+    Partial<
+      Pick<FitchDerivationContent, 'conclusion' | 'ruleCatalogVersion' | 'formulaGroupingVersion'>
+    >;
   proof: FitchProof | null;
   purpose: 'reference' | 'student';
   onChange: (proof: FitchProof | null) => void;
@@ -77,6 +81,7 @@ export function FitchProofEditor({
   const selected = proof?.steps[selectedIndex];
   const pending = entry !== null;
   const safe = !proof || uniqueFitchProofIds(proof);
+  const sourceFormulas = useMemo(() => proofSourceFormulas(proof, statement), [proof, statement]);
 
   // An untouched row is a visual draft only. Invalid scopes remain available for repair.
   const idle = useMemo(() => {
@@ -148,7 +153,12 @@ export function FitchProofEditor({
       return;
     }
 
-    const requirement = fitchEntryRequirement(current.draft, current.index, statement.rules);
+    const requirement = fitchEntryRequirement(
+      current.draft,
+      current.index,
+      statement.rules,
+      sourceFormulas,
+    );
     if (requirement) {
       setError(requirement);
       return;
@@ -241,7 +251,12 @@ export function FitchProofEditor({
   const endpoint = proof ? fitchScopeEndpoint(proof, scope, before) : null;
 
   const { lines, lineScopes, blockChoices } = fitchEditorChoices(
-    proof ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
+    proof ?? {
+      proofVersion: statement.ruleCatalogVersion ?? 1,
+      format: 'fitch',
+      steps: [],
+      blocks: [],
+    },
   );
   // Malformed drafts may contain blocks with no usable assumption-line menu.
   const attachedBlockIds = new Set(
@@ -382,6 +397,7 @@ export function FitchProofEditor({
                 renderLine={(step, index, lineActions, lineNumber) =>
                   step.id === selected?.id && (
                     <FitchProofEntry
+                      sourceFormulas={sourceFormulas}
                       key={step.id}
                       proof={proof}
                       index={index}
@@ -423,6 +439,7 @@ export function FitchProofEditor({
                 entry={
                   !selected && !rangeStart && current ? (
                     <FitchProofEntry
+                      sourceFormulas={sourceFormulas}
                       key={entryStep!.id}
                       proof={current.draft}
                       index={current.index}

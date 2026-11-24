@@ -18,9 +18,10 @@ import { getRuleReference, RULE_REFERENCE, type ExampleLine } from './rule-refer
 const id = (value: number) => `${value.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`;
 
 /** Test adapters validate the displayed instructional data without adding runtime checking to help. */
-function problem(lines: ExampleLine[]) {
+function problem(lines: ExampleLine[], version: 1 | 2 = 1) {
   return {
-    ruleCatalogVersion: 1 as const,
+    ruleCatalogVersion: version,
+    ...(version === 2 ? { formulaGroupingVersion: 1 as const } : {}),
     premises: lines.flatMap((line, index) =>
       line.kind === 'premise' ? [{ id: id(index + 101), formula: line.formula }] : [],
     ),
@@ -29,9 +30,9 @@ function problem(lines: ExampleLine[]) {
   };
 }
 
-function fitch(lines: ExampleLine[]): FitchProof {
+function fitch(lines: ExampleLine[], version: 1 | 2 = 1): FitchProof {
   return {
-    proofVersion: 1,
+    proofVersion: version,
     format: 'fitch',
     steps: lines.map((line, index) => {
       const base = { id: id(index + 1), formula: line.formula };
@@ -46,6 +47,7 @@ function fitch(lines: ExampleLine[]): FitchProof {
         ruleId: line.rule!,
         lineReferences: line.citations.map(id),
         subproofReferences: line.discharges.map(([start]) => id(500 + start)),
+        ...(line.conjunctIndex !== undefined ? { conjunctIndex: line.conjunctIndex } : {}),
       };
     }),
     blocks: lines.flatMap((line, index) =>
@@ -67,9 +69,9 @@ function fitch(lines: ExampleLine[]): FitchProof {
   };
 }
 
-function dependency(lines: ExampleLine[]): DependencyProof {
+function dependency(lines: ExampleLine[], version: 1 | 2 = 1): DependencyProof {
   return {
-    proofVersion: 1,
+    proofVersion: version,
     format: 'dependency',
     steps: lines.map((line, index) => {
       const base = {
@@ -83,6 +85,7 @@ function dependency(lines: ExampleLine[]): DependencyProof {
         ...base,
         kind: 'inference',
         ruleId: line.rule!,
+        ...(line.conjunctIndex !== undefined ? { conjunctIndex: line.conjunctIndex } : {}),
         lineReferences: line.citations.map(id),
         discharges: line.discharges.map(([start, end]) => ({
           assumptionId: id(start),
@@ -133,6 +136,19 @@ test('reference content covers exactly the versioned catalog', () => {
     PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id).sort(),
   );
 });
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s: conjunct extraction reference is accepted under catalog 2 only',
+  (format) => {
+    const lines = getRuleReference('and_chain_elimination').example;
+    const proof = format === 'fitch' ? fitch(lines, 2) : dependency(lines, 2);
+    const check = format === 'fitch' ? checkFitchProof : checkDependencyProof;
+    const report = check({ problem: problem(lines, 2), proof });
+    expect(report.status).toBe('accepted');
+    expect(report.diagnostics).toEqual([]);
+    expect(check({ problem: problem(lines), proof }).status).not.toBe('accepted');
+  },
+);
 
 test.each(PROPOSITIONAL_RULE_CATALOG)(
   '$id abstract pattern matches its catalog rule and citation counts',

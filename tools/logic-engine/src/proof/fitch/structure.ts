@@ -7,7 +7,7 @@ import type { FitchStructureResult } from './types';
 
 /** Analyze transport-validated Fitch data; this does not parse formulas or accept a proof. */
 export function analyzeFitchStructure(proof: FitchProof): FitchStructureResult {
-  if (proof.proofVersion !== 1 || proof.format !== 'fitch')
+  if ((proof.proofVersion !== 1 && proof.proofVersion !== 2) || proof.format !== 'fitch')
     return {
       status: 'unassessable',
       diagnostics: [

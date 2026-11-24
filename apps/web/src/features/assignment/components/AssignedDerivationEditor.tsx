@@ -1,3 +1,4 @@
+import { blankDerivationAnswer } from '../helpers/proof-answers';
 import { ProblemType } from '@logiclab/contracts/problem-type';
 import type {
   SavedStudentAssignment,
@@ -38,10 +39,11 @@ export function AssignedDerivationEditor({
           purpose="student"
           onChange={(next) => {
             if (!readOnly && !disabled)
-              onAnswer({
-                type: ProblemType.Derivation,
-                proof: next ?? { proofVersion: 1, format: 'tree', rootId: null, nodes: [] },
-              });
+              onAnswer(
+                next
+                  ? { type: ProblemType.Derivation, proof: next }
+                  : blankDerivationAnswer(statement.format, statement.ruleCatalogVersion),
+              );
           }}
         />
       ) : statement.format === 'dependency' ? (
@@ -52,10 +54,11 @@ export function AssignedDerivationEditor({
           purpose="student"
           onChange={(next) => {
             if (!readOnly && !disabled)
-              onAnswer({
-                type: ProblemType.Derivation,
-                proof: next ?? { proofVersion: 1, format: 'dependency', steps: [] },
-              });
+              onAnswer(
+                next
+                  ? { type: ProblemType.Derivation, proof: next }
+                  : blankDerivationAnswer(statement.format, statement.ruleCatalogVersion),
+              );
           }}
         />
       ) : (
@@ -66,10 +69,11 @@ export function AssignedDerivationEditor({
           purpose="student"
           onChange={(next) => {
             if (!readOnly && !disabled)
-              onAnswer({
-                type: ProblemType.Derivation,
-                proof: next ?? { proofVersion: 1, format: 'fitch', steps: [], blocks: [] },
-              });
+              onAnswer(
+                next
+                  ? { type: ProblemType.Derivation, proof: next }
+                  : blankDerivationAnswer(statement.format, statement.ruleCatalogVersion),
+              );
           }}
         />
       )}

@@ -3,6 +3,8 @@ import { expect, test } from 'vitest';
 import { useAssignedAnswers } from './useAssignedAnswers';
 import { truthTreeWork, truthTreeAnswer } from '../../../../test/truth-tree-work-fixture';
 import { saved, itemB } from '../../../../test/assignment-work-fixture';
+import { proofWork } from '../../../../test/proof-work-fixture';
+import { derivationDefinition } from '../../../../test/derivation';
 
 test('loaded truth-tree structures stay separate from conceptual drafts and retain all saved identities', () => {
   const { result } = renderHook(() => useAssignedAnswers(truthTreeWork));
@@ -51,3 +53,34 @@ test('validity choices have saved baselines and reverting an older omitted choic
   act(() => result.current.changeTruthTreeAnswers(itemB, { ...older, verdict: null }));
   expect(result.current.dirty).toEqual([]);
 });
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s unstarted responses preserve each occurrence catalog without creating dirty work',
+  (format) => {
+    const assignment = {
+      ...proofWork,
+      items: ([1, 2] as const).map((version, index) => ({
+        id: crypto.randomUUID(),
+        position: index + 1,
+        title: 'Proof',
+        instructions: null,
+        maxPoints: 10,
+        content: {
+          ...derivationDefinition,
+          format,
+          ruleCatalogVersion: version,
+          ...(version === 2 ? { formulaGroupingVersion: 1 as const } : {}),
+        },
+      })),
+    };
+    const { result } = renderHook(() => useAssignedAnswers(assignment));
+    for (const item of assignment.items) {
+      expect(result.current.responseFor(item)).toMatchObject({
+        type: 'derivation',
+        proof: { format, proofVersion: item.content.ruleCatalogVersion, steps: [] },
+      });
+    }
+    expect(result.current.proofAnswers).toEqual({});
+    expect(result.current.dirty).toEqual([]);
+  },
+);

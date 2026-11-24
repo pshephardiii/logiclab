@@ -1,6 +1,6 @@
 import { PROOF_LIMITS, type FitchProof, type FitchProofStep } from '@logiclab/contracts';
 import type { FitchDerivationContent } from '@logiclab/contracts/derivation';
-import { ProofFormulaInput } from './ProofFormulaInput';
+import { FormulaInput } from '../../../components/formula/FormulaInput';
 import { FitchInferenceFields } from './FitchInferenceFields';
 import { fitchEntryRequirement } from '../helpers/fitch-entry-requirements';
 import { FitchPremiseFields } from './FitchPremiseFields';
@@ -21,6 +21,7 @@ export function FitchProofEntry({
   actions,
   lineNumber,
   fixedPremiseSource = false,
+  sourceFormulas,
 }: {
   proof: FitchProof;
   index: number;
@@ -31,6 +32,7 @@ export function FitchProofEntry({
   actions?: ReactNode;
   lineNumber?: ReactNode;
   fixedPremiseSource?: boolean;
+  sourceFormulas?: ReadonlyMap<string, string>;
   premises?: FitchDerivationContent['premises'];
   onChange: (step: FitchProofStep) => void;
   onConfirm: () => void;
@@ -39,7 +41,7 @@ export function FitchProofEntry({
   const step = proof.steps[index]!;
   const hint = useId();
   const requirementHint = useId();
-  const requirement = editing ? null : fitchEntryRequirement(proof, index, rules);
+  const requirement = editing ? null : fitchEntryRequirement(proof, index, rules, sourceFormulas);
 
   return (
     <tr
@@ -64,7 +66,7 @@ export function FitchProofEntry({
         {lineNumber ?? index + 1}
       </th>
       <td className="fitch-line-formula">
-        <ProofFormulaInput
+        <FormulaInput
           data-proof-formula="true"
           aria-label={`Formula for line ${index + 1}`}
           aria-describedby={requirement ? `${hint} ${requirementHint}` : hint}
@@ -87,6 +89,8 @@ export function FitchProofEntry({
             <FitchInferenceFields
               compact
               staged={!editing}
+              ruleCatalogVersion={proof.proofVersion}
+              sourceFormulas={sourceFormulas}
               step={step}
               index={index}
               steps={proof.steps}

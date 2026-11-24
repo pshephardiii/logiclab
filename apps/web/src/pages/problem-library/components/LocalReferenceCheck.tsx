@@ -1,3 +1,4 @@
+import { FORMULA_GROUPING_POLICY_VERSION } from '@logiclab/contracts/formula-policy-values';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useState } from 'react';
 import { fitchDerivationDefinitionSchema } from '@logiclab/contracts/derivation';
@@ -10,6 +11,12 @@ import {
 import { naturalDeductionTreeDerivationDefinitionSchema } from '@logiclab/contracts/natural-deduction-tree-derivation';
 import { dependencyDerivationDefinitionSchema } from '@logiclab/contracts/dependency-derivation';
 import type { AuthoringDerivationDefinition } from '../helpers/problem-editor';
+
+function referenceStatusTitle(status: ProofCheckReport['status']): string {
+  if (status === 'accepted') return 'Current reference accepted. Save it before publishing.';
+  if (status === 'needs_review') return 'Current reference needs correction.';
+  return 'Current reference could not be fully assessed.';
+}
 
 /** A local report is only valid for the exact unsaved definition that was explicitly checked. */
 export function LocalReferenceCheck({
@@ -67,6 +74,7 @@ export function LocalReferenceCheck({
           : checkFitchProof)({
         problem: {
           ruleCatalogVersion: value.ruleCatalogVersion,
+          formulaGroupingVersion: FORMULA_GROUPING_POLICY_VERSION,
           premises: value.premises,
           conclusion: value.conclusion,
           permittedRuleIds: value.rules.map((rule) => rule.id),
@@ -94,23 +102,11 @@ export function LocalReferenceCheck({
         (definition.format === 'dependency' ? (
           <ProofFeedback
             report={current.report}
-            title={
-              current.report.status === 'accepted'
-                ? 'Current reference accepted. Save it before publishing.'
-                : current.report.status === 'needs_review'
-                  ? 'Current reference needs correction.'
-                  : 'Current reference could not be fully assessed.'
-            }
+            title={referenceStatusTitle(current.report.status)}
           />
         ) : (
           <>
-            <p role="status">
-              {current.report.status === 'accepted'
-                ? 'Current reference accepted. Save it before publishing.'
-                : current.report.status === 'needs_review'
-                  ? 'Current reference needs correction.'
-                  : 'Current reference could not be fully assessed.'}
-            </p>
+            <p role="status">{referenceStatusTitle(current.report.status)}</p>
             <ul>
               {current.report.diagnostics.map((diagnostic, index) => (
                 <li key={index}>

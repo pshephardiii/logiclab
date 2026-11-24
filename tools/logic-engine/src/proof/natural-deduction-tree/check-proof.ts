@@ -57,13 +57,19 @@ export function checkNaturalDeductionTreeProof(value: unknown): ProofCheckReport
 
     // Read every submitted formula, including branch assumptions, before propagating support.
     const formulas = input.proof.nodes.map((node, index) =>
-      readFormula(node.formula, budget, diagnostics, index),
+      readFormula(node.formula, budget, diagnostics, index, input.problem.formulaGroupingVersion),
     );
 
     const branchFormulas = input.proof.nodes.map((node, index) =>
       node.kind === 'inference'
         ? node.branches.map((branch) =>
-            readFormula(branch.assumptionFormula, budget, diagnostics, index),
+            readFormula(
+              branch.assumptionFormula,
+              budget,
+              diagnostics,
+              index,
+              input.problem.formulaGroupingVersion,
+            ),
           )
         : [],
     );

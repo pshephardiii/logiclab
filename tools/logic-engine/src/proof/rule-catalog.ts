@@ -1,6 +1,9 @@
 /** Version the exact variants, not textbook labels. No rule is enabled by this catalog alone. */
 export const PROPOSITIONAL_RULE_CATALOG_VERSION = 1;
 
+/** Source-aware variants; callers explicitly select a catalog rather than upgrading retained work. */
+export const PROPOSITIONAL_CHAIN_RULE_CATALOG_VERSION = 2;
+
 type RuleDefinition = {
   id: string;
   label: string;
@@ -179,6 +182,35 @@ export const PROPOSITIONAL_RULE_CATALOG = Object.freeze(
 
 export type PropositionalRule = (typeof PROPOSITIONAL_RULE_CATALOG)[number];
 
-export function getPropositionalRule(id: string): PropositionalRule | undefined {
-  return PROPOSITIONAL_RULE_CATALOG.find((rule) => rule.id === id);
+export function getPropositionalRule(id: string): PropositionalRule | undefined;
+export function getPropositionalRule(
+  id: string,
+  version: 1 | 2,
+): PropositionalRule | PropositionalChainRule | undefined;
+export function getPropositionalRule(id: string, version: 1 | 2 = 1) {
+  return propositionalRuleCatalog(version).find((rule) => rule.id === id);
+}
+
+/** A distinct permission: ordinary conjunction elimination keeps its exact binary pattern. */
+export const PROPOSITIONAL_CONJUNCT_EXTRACTION_RULE = Object.freeze({
+  id: 'and_chain_elimination',
+  label: 'Conjunct extraction',
+  aliases: Object.freeze(['Chain simplification', 'Chain ∧E']),
+  category: 'derived',
+  lineReferences: 1,
+  subproofReferences: 0,
+} as const satisfies RuleDefinition);
+
+export type PropositionalChainRule = typeof PROPOSITIONAL_CONJUNCT_EXTRACTION_RULE;
+
+const chainCatalog = Object.freeze([
+  ...PROPOSITIONAL_RULE_CATALOG,
+  PROPOSITIONAL_CONJUNCT_EXTRACTION_RULE,
+]);
+
+/** Opt-in inventory only; listing a variant does not enable it in a problem or full checker. */
+export function propositionalRuleCatalog(version: 1 | 2) {
+  if (version === 1) return PROPOSITIONAL_RULE_CATALOG;
+  if (version === 2) return chainCatalog;
+  throw new RangeError('Unsupported propositional rule catalog version.');
 }

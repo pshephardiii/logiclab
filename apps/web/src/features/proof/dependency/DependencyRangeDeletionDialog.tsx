@@ -1,6 +1,6 @@
 import type { DependencyProof } from '@logiclab/contracts';
 import { ProofDeletionPrompt } from '../components/ProofDeletionPrompt';
-import { proofNotation } from '../helpers/proof-notation';
+import { formulaNotation } from '../../../components/formula/formula-notation';
 
 /** Delete only the selected interval; surviving dependency/citation IDs deliberately remain unresolved. */
 export function DependencyRangeDeletionDialog({
@@ -38,7 +38,7 @@ export function DependencyRangeDeletionDialog({
           <ol className="dependency-range-preview" start={start + 1}>
             {selected.map((step) => (
               <li key={step.id}>
-                <code>{proofNotation(step.formula) || '(blank)'}</code>
+                <code>{formulaNotation(step.formula) || '(blank)'}</code>
               </li>
             ))}
           </ol>

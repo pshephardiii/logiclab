@@ -122,6 +122,7 @@ export function ProofPractice() {
             conclusionActions={
               statement.format !== 'tree' ? (
                 <PracticeConclusionEditor
+                  formulaGroupingVersion={statement.formulaGroupingVersion}
                   conclusion={statement.conclusion}
                   onEditingChange={setConclusionEditing}
                   onApply={(conclusion) => {
