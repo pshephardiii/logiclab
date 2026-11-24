@@ -3,7 +3,7 @@ import { ProofPremisesEditor } from '../../../features/proof/components/ProofPre
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 import { useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
-import { PROPOSITIONAL_RULE_CATALOG } from '@logiclab/logic-engine/proof/rules';
+import { propositionalRuleCatalog } from '@logiclab/logic-engine/proof/rules';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
 import { useConfirmDiscard } from '../../../features/unsaved-work/hooks/useConfirmDiscard';
 import { ProofRulePicker } from '../../../features/proof/components/ProofRulePicker';
@@ -19,6 +19,8 @@ const formulaInput = {
   spellCheck: false,
 } as const;
 
+const practiceRules = propositionalRuleCatalog(2);
+
 /** Setup is page-local; only a syntactically valid statement becomes an active practice session. */
 export function ProofPracticeSetup({
   onStart,
@@ -33,16 +35,14 @@ export function ProofPracticeSetup({
   );
   const [premises, setPremises] = useState<PracticeStatement['premises']>([]);
   const [conclusion, setConclusion] = useState('');
-  const [ruleIds, setRuleIds] = useState<string[]>(
-    PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id),
-  );
+  const [ruleIds, setRuleIds] = useState<string[]>(practiceRules.map((rule) => rule.id));
   const [premisePending, setPremisePending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useUnsavedWork(
     premisePending ||
       premises.length > 0 ||
       conclusion.length > 0 ||
-      ruleIds.length !== PROPOSITIONAL_RULE_CATALOG.length,
+      ruleIds.length !== practiceRules.length,
   );
 
   function changeFormat(next: PracticeStatement['format']) {
@@ -52,7 +52,7 @@ export function ProofPracticeSetup({
       setFormat(next);
       setPremises([]);
       setConclusion('');
-      setRuleIds(PROPOSITIONAL_RULE_CATALOG.map((rule) => rule.id));
+      setRuleIds(practiceRules.map((rule) => rule.id));
       setError(null);
     });
   }
@@ -162,7 +162,7 @@ export function ProofPracticeSetup({
         </p>
       )}
       <div className="proof-setup-actions">
-        <ProofRulePicker selected={ruleIds} onChange={setRuleIds} />
+        <ProofRulePicker ruleCatalogVersion={2} selected={ruleIds} onChange={setRuleIds} />
         <button type="submit" disabled={premisePending}>
           Begin proof practice
         </button>

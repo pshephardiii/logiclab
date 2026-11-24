@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { PROOF_LIMITS } from '@logiclab/contracts';
-import { parseProofFormula } from '@logiclab/logic-engine/proof';
+import { parseProofFormula, parseProofFormulaWithSyntax } from '@logiclab/logic-engine/proof';
+import { requireExplicitGrouping } from '@logiclab/logic-engine';
 import { ProofFormulaInput } from '../../../features/proof/components/ProofFormulaInput';
 
 /** Only independent practice owns an editable target; applying it never rewrites the proof. */
@@ -8,10 +9,12 @@ export function PracticeConclusionEditor({
   conclusion,
   onApply,
   onEditingChange,
+  formulaGroupingVersion,
 }: {
   conclusion: string;
   onApply: (conclusion: string) => void;
   onEditingChange: (editing: boolean) => void;
+  formulaGroupingVersion?: 1;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(conclusion);
@@ -46,7 +49,8 @@ export function PracticeConclusionEditor({
       if (!next) throw new Error('Enter a conclusion.');
       if (next.length > PROOF_LIMITS.maxFormulaLength)
         throw new Error(`Use at most ${PROOF_LIMITS.maxFormulaLength} characters.`);
-      parseProofFormula(next);
+      if (formulaGroupingVersion === 1) requireExplicitGrouping(parseProofFormulaWithSyntax(next));
+      else parseProofFormula(next);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Enter a well-formed conclusion.');
       form.current?.querySelector('input')?.focus();

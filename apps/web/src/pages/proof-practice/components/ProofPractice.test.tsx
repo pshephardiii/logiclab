@@ -7,15 +7,15 @@ import { installDialogStub, renderWithUnsavedWork } from '../../../../test/unsav
 
 installDialogStub();
 
-async function enterProblem(format = 'fitch', configure?: () => Promise<void>) {
+async function enterProblem(format = 'fitch', configure?: () => Promise<void>, premise = 'P') {
   renderWithUnsavedWork(<ProofPractice />);
   fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: format } });
   if (format === 'dependency') {
-    fireEvent.change(screen.getByLabelText('New premise'), { target: { value: 'P' } });
+    fireEvent.change(screen.getByLabelText('New premise'), { target: { value: premise } });
     fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
   } else {
     fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
-    fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: 'P' } });
+    fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: premise } });
   }
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P' } });
   await configure?.();
@@ -23,6 +23,51 @@ async function enterProblem(format = 'fitch', configure?: () => Promise<void>) {
   if (rules) fireEvent.click(within(rules).getByRole('button', { name: 'Done' }));
   fireEvent.click(screen.getByRole('button', { name: 'Begin proof practice' }));
 }
+
+test.each(['fitch', 'dependency'])(
+  '%s new practice supports explicit chain extraction end to end',
+  async (format) => {
+    await enterProblem(format, undefined, 'P & Q & R');
+    fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'P' } });
+    fireEvent.change(screen.getByLabelText('Rule for line 2'), {
+      target: { value: 'and_chain_elimination' },
+    });
+    const citation = screen.getByLabelText('Line 2 citation 1');
+    const source = within(citation).getByRole('option', { name: /^1\./ }) as HTMLOptionElement;
+    fireEvent.change(citation, { target: { value: source.value } });
+    expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Conjunct for line 2'), { target: { value: '0' } });
+    if (format === 'dependency') {
+      fireEvent.click(screen.getByRole('button', { name: 'Dependencies for line 2' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: /1\. P/ }));
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+    expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+    expect(screen.getByRole('region', { name: 'Proof feedback' })).toHaveTextContent(
+      'Proof verified.',
+    );
+  },
+);
+
+test('editing a new-practice conclusion requires explicit mixed grouping and retains proof work', async () => {
+  await enterProblem();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  const field = screen.getByLabelText('New conclusion');
+  await user.clear(field);
+  await user.type(field, 'P v Q -> R');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByRole('alert')).toHaveTextContent(/group/);
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P');
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+  await user.clear(field);
+  await user.type(field, '(P v Q) -> R');
+  await user.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('(P ∨ Q) → R');
+  expect(screen.getByRole('region', { name: 'Entered Fitch proof' })).toHaveTextContent('P');
+  expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
+});
 
 test.each(['fitch', 'dependency'])(
   '%s practice starts locally and checks only on request',
@@ -101,7 +146,7 @@ test.each([
   ['dependency', 'fitch'],
 ])('%s → %s requires consent and resets the entire practice session', async (from, to) => {
   await enterProblem(from, async () => {
-    fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
+    fireEvent.click(screen.getByText('Permitted rules (20 selected)'));
     await screen.findByRole('dialog', { name: 'Permitted rules' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
   });
@@ -130,7 +175,7 @@ test.each([
   expect(screen.getByLabelText('Proof format')).toHaveValue(to);
   expect(screen.getByLabelText('Conclusion')).toHaveValue('');
   expect(screen.queryByLabelText('Premise 1')).not.toBeInTheDocument();
-  expect(screen.getByText('Permitted rules (19 selected)')).toBeInTheDocument();
+  expect(screen.getByText('Permitted rules (20 selected)')).toBeInTheDocument();
   expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Start proof' })).not.toBeInTheDocument();
   const unload = new Event('beforeunload', { cancelable: true });
@@ -169,7 +214,7 @@ test('changing format during setup protects fields, selected rules and validatio
   fireEvent.click(screen.getByRole('button', { name: 'Add premise' }));
   fireEvent.change(screen.getByLabelText('Premise 1'), { target: { value: 'P' } });
   fireEvent.change(screen.getByLabelText('Conclusion'), { target: { value: 'P ∧' } });
-  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
+  fireEvent.click(screen.getByText('Permitted rules (20 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
   fireEvent.click(screen.getByRole('button', { name: 'Done' }));
@@ -182,7 +227,7 @@ test('changing format during setup protects fields, selected rules and validatio
   expect(screen.getByLabelText('Conclusion')).toHaveValue('P ∧');
   expect(screen.getByLabelText('Premise 1')).toHaveValue('P');
   expect(screen.getByRole('alert')).toHaveTextContent('Conclusion:');
-  fireEvent.click(screen.getByText('Permitted rules (18 selected)'));
+  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Done' }));
@@ -195,7 +240,7 @@ test('changing format during setup protects fields, selected rules and validatio
   expect(screen.getByLabelText('Conclusion')).toHaveValue('');
   expect(screen.queryByLabelText('Premise 1')).not.toBeInTheDocument();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
+  fireEvent.click(screen.getByText('Permitted rules (20 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).toBeChecked();
 });
@@ -206,14 +251,14 @@ test('an untouched setup changes format freely, but rule-only edits require conf
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
 
-  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
+  fireEvent.click(screen.getByText('Permitted rules (20 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   fireEvent.click(screen.getByRole('checkbox', { name: 'Reiteration' }));
   fireEvent.click(screen.getByRole('button', { name: 'Done' }));
   fireEvent.change(screen.getByLabelText('Proof format'), { target: { value: 'fitch' } });
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Stay' }));
   expect(screen.getByLabelText('Proof format')).toHaveValue('dependency');
-  fireEvent.click(screen.getByText('Permitted rules (18 selected)'));
+  fireEvent.click(screen.getByText('Permitted rules (19 selected)'));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   expect(screen.getByRole('checkbox', { name: 'Reiteration' })).not.toBeChecked();
 });
@@ -268,7 +313,7 @@ test('checked active work still requests an unload warning and does not persist 
 
 test('rules are organized in a modal and Escape retains choices without starting or checking a proof', async () => {
   renderWithUnsavedWork(<ProofPractice />);
-  fireEvent.click(screen.getByRole('button', { name: 'Permitted rules (19 selected)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Permitted rules (20 selected)' }));
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   const dialog = screen.getByRole('dialog', { name: 'Permitted rules' });
   expect(within(dialog).getByRole('group', { name: 'Core rules' })).toBeInTheDocument();
@@ -306,7 +351,7 @@ test('beginning dependency practice puts the conclusion beside the proof without
 test('closing rule settings returns keyboard focus to its opener', async () => {
   const user = userEvent.setup();
   renderWithUnsavedWork(<ProofPractice />);
-  const opener = screen.getByRole('button', { name: 'Permitted rules (19 selected)' });
+  const opener = screen.getByRole('button', { name: 'Permitted rules (20 selected)' });
   await user.click(opener);
   await screen.findByRole('dialog', { name: 'Permitted rules' });
   await user.click(screen.getByRole('button', { name: 'Done' }));
@@ -316,10 +361,10 @@ test('closing rule settings returns keyboard focus to its opener', async () => {
 
 test('opening the rules modal leaves all rules selected; only a fresh checkbox click changes them', async () => {
   renderWithUnsavedWork(<ProofPractice />);
-  fireEvent.click(screen.getByRole('button', { name: 'Permitted rules (19 selected)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Permitted rules (20 selected)' }));
   const dialog = await screen.findByRole('dialog', { name: 'Permitted rules' });
   const checkboxes = within(dialog).getAllByRole('checkbox');
-  expect(checkboxes).toHaveLength(19);
+  expect(checkboxes).toHaveLength(20);
   expect(checkboxes.every((input) => (input as HTMLInputElement).checked)).toBe(true);
   for (const operator of [
     'Conjunction',

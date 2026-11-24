@@ -48,6 +48,8 @@ test('creates and retains an incomplete Fitch draft without default rule permiss
   expect(value.definition).toMatchObject({
     type: 'derivation',
     format: 'fitch',
+    ruleCatalogVersion: 2,
+    formulaGroupingVersion: 1,
     conclusion: '',
     premises: [{ id: expect.any(String), formula: 'P ∧' }],
     rules: [],
@@ -58,6 +60,51 @@ test('creates and retains an incomplete Fitch draft without default rule permiss
   await user.click(screen.getByRole('button', { name: 'Preview draft' }));
   expect(onPreview).toHaveBeenCalledWith(value.definition);
 });
+
+test.each(['fitch', 'dependency'] as const)(
+  'new %s authoring builds and saves a checked catalog-2 reference',
+  async (format) => {
+    const { user, onSave } = setup();
+    await user.type(screen.getByLabelText('Title'), 'Extract a conjunct');
+    await user.selectOptions(screen.getByLabelText('Problem type'), 'derivation');
+    await user.selectOptions(screen.getByLabelText('Proof format'), format);
+    await user.type(screen.getByLabelText('New premise'), 'P & Q & R');
+    await user.click(screen.getByRole('button', { name: 'Add premise' }));
+    await user.type(screen.getByLabelText('Conclusion'), 'P');
+    await openRules(user);
+    await user.click(screen.getByRole('checkbox', { name: 'Conjunct extraction' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: 'Continue to reference proof' }));
+    await user.type(screen.getByLabelText('Formula for line 2'), 'P');
+    await user.selectOptions(screen.getByLabelText('Rule for line 2'), 'and_chain_elimination');
+    const citation = screen.getByLabelText('Line 2 citation 1') as HTMLSelectElement;
+    const source = [...citation.options].find((option) => option.text.startsWith('1.'))!;
+    await user.selectOptions(citation, source.value);
+    await user.selectOptions(screen.getByLabelText('Conjunct for line 2'), '0');
+    if (format === 'dependency') {
+      await user.click(screen.getByRole('button', { name: 'Dependencies for line 2' }));
+      await user.click(screen.getByRole('checkbox', { name: /1\. P/ }));
+    }
+    await user.click(screen.getByRole('button', { name: 'Add line' }));
+    await user.click(screen.getByRole('button', { name: 'Check current proof' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Current reference accepted');
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(onSave.mock.calls[0]![0].definition).toMatchObject({
+      format,
+      ruleCatalogVersion: 2,
+      formulaGroupingVersion: 1,
+      rules: [{ id: 'and_chain_elimination' }],
+      referenceProof: {
+        proofVersion: 2,
+        steps: [
+          { kind: 'premise' },
+          { kind: 'inference', ruleId: 'and_chain_elimination', conjunctIndex: 0 },
+        ],
+      },
+    });
+  },
+);
 
 test('premise edits/reorders preserve identity and reference citations; re-added premises get fresh IDs', async () => {
   const first = '11111111-1111-4111-8111-111111111111';
