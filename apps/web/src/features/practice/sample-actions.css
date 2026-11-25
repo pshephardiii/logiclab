@@ -17,3 +17,28 @@
   background: #edf6f2;
   border-radius: 0.35rem;
 }
+
+.sample-stage {
+  animation: sample-stage-reveal 220ms ease-out;
+  border-radius: 0.35rem;
+}
+@keyframes sample-stage-reveal {
+  from {
+    box-shadow: 0 0 0 3px #b9d9cb;
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+.sample-table-value {
+  font-weight: 600;
+}
+th.sample-column-change,
+td.sample-column-change {
+  background: #e4f1eb;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sample-stage {
+    animation: none;
+  }
+}

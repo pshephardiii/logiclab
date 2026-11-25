@@ -109,3 +109,33 @@ test('switching tree samples requires consent, closes the old example and leaves
     'Sample argument: invalid.',
   );
 });
+
+test.each(['valid', 'invalid'] as const)(
+  '%s tree walkthrough keeps the sample verdict for its final stage and preserves the visitor choice',
+  (verdict) => {
+    renderWithUnsavedWork(<TruthTreePracticePage />);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: verdict === 'valid' ? 'Load sample problem' : 'Load invalid-argument sample',
+      }),
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'Invalid' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+    const walkthrough = screen.getByRole('region', { name: 'Sample walkthrough' });
+    for (let index = 0; index < 4; index++) {
+      expect(within(walkthrough).getByRole('status')).toHaveTextContent(`Step ${index + 1} of 4`);
+      expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+      expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+      if (index < 3) {
+        expect(within(walkthrough).queryByText(/Sample argument:/)).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+      }
+    }
+    expect(walkthrough).toHaveTextContent(`Sample argument: ${verdict}.`);
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(within(walkthrough).queryByText(/Sample argument:/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
+    expect(walkthrough).toHaveTextContent('Step 1 of 4');
+    expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+  },
+);

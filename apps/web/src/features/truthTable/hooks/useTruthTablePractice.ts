@@ -20,6 +20,7 @@ import type { Answers } from '../types';
  * Edits cancel pending work so superseded responses cannot restore stale exercise state.
  */
 export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
+  const [sampleGeneration, setSampleGeneration] = useState(0);
   const [sampleFormula, setSampleFormula] = useState<string | null>(null);
   const [formula, setFormula] = useState(initialFormula);
   const [exercise, setExercise] = useState<TruthTableExerciseResponse | null>(null);
@@ -88,6 +89,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   function loadSample(value: string) {
+    setSampleGeneration((generation) => generation + 1);
     setSampleFormula(value);
     return createTable(value);
   }
@@ -154,6 +156,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   return {
+    sampleGeneration,
     sampleActive: sampleFormula !== null && sampleFormula === formula,
     loadSample,
     hasWorkToReplace: formula !== initialFormula || exercise !== null || loading,

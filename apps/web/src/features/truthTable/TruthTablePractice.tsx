@@ -1,3 +1,4 @@
+import { TableSampleWalkthrough } from '../practice/components/TableSampleWalkthrough';
 import { TableSampleControl } from './components/TableSampleControl';
 import './truth-table.css';
 import { useEffect, useRef } from 'react';
@@ -67,6 +68,9 @@ export function TruthTablePractice() {
         total={practice.total}
         onAnswer={practice.changeAnswer}
       />
+      {practice.sampleActive && practice.exercise && (
+        <TableSampleWalkthrough key={practice.sampleGeneration} />
+      )}
       <p className="footnote">
         Independent practice · Work stays in this page and is cleared on reload.
       </p>

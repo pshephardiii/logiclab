@@ -161,3 +161,47 @@ test.each(['fitch', 'dependency'] as const)(
     expect(screen.getByText(/The statement has changed/)).toBeInTheDocument();
   },
 );
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s walkthrough advances the real curated proof while leaving pending work intact',
+  (format) => {
+    load(format);
+    fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'R' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+    const walkthrough = screen.getByRole('region', { name: 'Sample walkthrough' });
+    const counts = format === 'fitch' ? [1, 2, 3, 4, 4, 5] : [1, 2, 3, 4, 5];
+    for (const [index, count] of counts.entries()) {
+      expect(within(walkthrough).getByRole('status')).toHaveTextContent(
+        `Step ${index + 1} of ${counts.length}`,
+      );
+      expect(within(walkthrough).getAllByRole('row')).toHaveLength(count + 1);
+      expect(within(walkthrough).queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
+      expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+      expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+      if (index < counts.length - 1)
+        fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+    }
+    expect(screen.getByRole('button', { name: 'Next step' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(within(walkthrough).getByRole('status')).toHaveTextContent(
+      `Step ${counts.length - 1} of`,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
+    expect(within(walkthrough).getAllByRole('row')).toHaveLength(2);
+    expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    expect(screen.getByRole('region', { name: 'Completed sample example' })).toHaveTextContent(
+      'P → (P ∧ Q)',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(
+      screen.queryByRole('region', { name: 'Completed sample example' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+    expect(screen.getByRole('region', { name: 'Sample walkthrough' })).toHaveTextContent(
+      `Step 1 of ${counts.length}`,
+    );
+  },
+);

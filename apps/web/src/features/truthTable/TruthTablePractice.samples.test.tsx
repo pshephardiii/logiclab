@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { installDialogStub } from '../../../test/unsaved-work';
 import { PracticeProvider } from './PracticeProvider';
@@ -100,4 +100,37 @@ test('completed table example preserves entries and disappears as a sample actio
   fireEvent.change(screen.getByLabelText('Propositional formula'), { target: { value: 'R' } });
   expect(screen.queryByRole('button', { name: 'View completed example' })).not.toBeInTheDocument();
   expect(screen.queryByRole('note')).not.toBeInTheDocument();
+});
+
+test('table walkthrough reveals columns separately without filling entries or requesting a solution', async () => {
+  vi.mocked(getSolution).mockClear();
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  await screen.findByRole('button', { name: 'Walk through the solution' });
+  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'F' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+  const walkthrough = screen.getByRole('region', { name: 'Sample walkthrough' });
+  expect(within(walkthrough).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(8);
+  fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(4);
+  fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+  expect(within(walkthrough).queryByText('—')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next step' })).toBeDisabled();
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  expect(screen.getByText('1 / 8 cells filled')).toBeInTheDocument();
+  expect(getSolution).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(8);
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByRole('region', { name: 'Sample walkthrough' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByRole('button', { name: 'Walk through the solution' });
+  expect(screen.queryByRole('region', { name: 'Sample walkthrough' })).not.toBeInTheDocument();
 });
