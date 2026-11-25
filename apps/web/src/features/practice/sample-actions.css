@@ -4,3 +4,16 @@
   gap: 0.75rem;
   margin-block: 1.25rem;
 }
+
+.completed-sample {
+  margin-block: 1.5rem;
+}
+.completed-sample-content {
+  margin-top: 1rem;
+  border-left: 3px solid #176650;
+}
+.sample-verdict {
+  padding: 0.75rem;
+  background: #edf6f2;
+  border-radius: 0.35rem;
+}

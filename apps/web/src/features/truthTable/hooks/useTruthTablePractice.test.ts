@@ -157,3 +157,24 @@ test('a failed replacement retains the new formula and manual creation retries t
   expect(result.current.error).toBeNull();
   expect(result.current.exercise).toEqual(exercise);
 });
+
+test('sample identity is explicit and is cleared by formula edits, even when manually recreating the same text', async () => {
+  vi.mocked(createExercise).mockReset().mockResolvedValue(exercise);
+  const { result } = renderHook(() => useTruthTablePractice());
+  await act(async () => {
+    await result.current.createTable('(P ∧ Q) → P');
+  });
+  expect(result.current.sampleActive).toBe(false);
+  await act(async () => {
+    await result.current.loadSample('(P ∧ Q) → P');
+  });
+  expect(result.current.sampleActive).toBe(true);
+  act(() => result.current.changeAnswer('row:v1:P=T', 'expr:v1:P', true));
+  expect(result.current.sampleActive).toBe(true);
+  act(() => result.current.changeFormula('R'));
+  expect(result.current.sampleActive).toBe(false);
+  await act(async () => {
+    await result.current.createTable('(P ∧ Q) → P');
+  });
+  expect(result.current.sampleActive).toBe(false);
+});

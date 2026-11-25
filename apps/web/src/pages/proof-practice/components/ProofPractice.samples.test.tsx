@@ -88,3 +88,76 @@ test.each(['fitch', 'dependency'] as const)(
     expect(screen.getByRole('button', { name: 'Check proof' })).toBeEnabled();
   },
 );
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s completed example is read-only and preserves pending work and checking state',
+  (format) => {
+    load(format);
+    fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'R' } });
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    const example = screen.getByRole('region', { name: 'Completed sample example' });
+    expect(within(example).getByRole('heading', { name: 'Completed example' })).toHaveFocus();
+    expect(within(example).getAllByRole('row')).toHaveLength(6); // Header plus five completed lines.
+    expect(within(example).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(example).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(example).queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
+    expect(screen.getByRole('button', { name: 'Check proof' })).toBeDisabled();
+    expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide completed example' }));
+    expect(
+      screen.queryByRole('region', { name: 'Completed sample example' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+    expect(screen.getByRole('region', { name: 'Completed sample example' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(
+      screen.queryByRole('region', { name: 'Completed sample example' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Formula for line 2')).toHaveValue('');
+  },
+);
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s changing the conclusion stops advertising the old completed example',
+  (format) => {
+    load(format);
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+    expect(
+      screen.queryByRole('region', { name: 'Completed sample example' }),
+    ).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('New conclusion'), { target: { value: 'R' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+    expect(
+      screen.queryByRole('button', { name: 'View completed example' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/The statement has changed/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(screen.getByRole('button', { name: 'View completed example' })).toBeInTheDocument();
+  },
+);
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s committed premise edits also invalidate the completed reference',
+  (format) => {
+    load(format);
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for line 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit line 1' }));
+    fireEvent.change(screen.getByLabelText('Formula for line 1'), { target: { value: 'R' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Done editing' }));
+    expect(
+      screen.queryByRole('region', { name: 'Completed sample example' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'View completed example' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/The statement has changed/)).toBeInTheDocument();
+  },
+);

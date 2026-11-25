@@ -8,6 +8,7 @@ import type { Ref } from 'react';
 import { TruthTable } from './TruthTable';
 
 type Props = {
+  sample?: boolean;
   panelRef?: Ref<HTMLElement>;
   feedback: TruthTableCheckResponse | null;
   solution: TruthTableSolutionResponse | null;
@@ -28,6 +29,7 @@ type Props = {
  * Presents exercise progress, check/solution controls, request feedback, and the truth table.
  */
 export function ExercisePanel({
+  sample = false,
   panelRef,
   exercise,
   formula,
@@ -53,8 +55,10 @@ export function ExercisePanel({
     </>
   );
 
+  const showLabel = sample ? 'View completed example' : 'Show solution';
+  const hideLabel = sample ? 'Hide completed example' : 'Hide solution';
   const solutionLabel =
-    action === 'solution' ? 'Loading solution…' : solution ? 'Hide solution' : 'Show solution';
+    action === 'solution' ? 'Loading solution…' : solution ? hideLabel : showLabel;
 
   return (
     <section
@@ -92,7 +96,10 @@ export function ExercisePanel({
       )}
       {solution && (
         <p role="status" className="help">
-          Solution shown alongside your answers. Your entries are preserved.
+          {sample
+            ? 'Completed sample shown alongside your answers.'
+            : 'Solution shown alongside your answers.'}{' '}
+          Your entries are preserved.
         </p>
       )}
       {actionError && (

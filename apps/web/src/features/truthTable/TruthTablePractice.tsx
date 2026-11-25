@@ -40,7 +40,7 @@ export function TruthTablePractice() {
       </header>
       <TableSampleControl
         hasWork={practice.hasWorkToReplace}
-        onLoad={(formula) => void practice.createTable(formula)}
+        onLoad={(formula) => void practice.loadSample(formula)}
       />
       <FormulaForm
         formula={practice.formula}
@@ -51,6 +51,7 @@ export function TruthTablePractice() {
         onCreate={practice.createTable}
       />
       <ExercisePanel
+        sample={practice.sampleActive}
         panelRef={tablePanelRef}
         exercise={practice.exercise}
         formula={practice.formula}

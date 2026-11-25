@@ -174,3 +174,6 @@ export function createDependencySample() {
     completed: structuredClone(proof),
   };
 }
+
+export type ProofSample =
+  ReturnType<typeof createFitchSample> | ReturnType<typeof createDependencySample>;

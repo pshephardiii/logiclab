@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import { installDialogStub, renderWithUnsavedWork } from '../../../test/unsaved-work';
 import { TruthTreePracticePage } from './TruthTreePracticePage';
@@ -52,4 +52,60 @@ test('reload clears tree feedback, verdict and pending construction only on Disc
   expect(screen.getByRole('radio', { name: 'Invalid' })).not.toBeChecked();
   expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Check tree' })).toBeEnabled();
+});
+
+test.each(['valid', 'invalid'] as const)(
+  '%s completed tree shows its verdict separately without answering or changing the attempt',
+  (verdict) => {
+    renderWithUnsavedWork(<TruthTreePracticePage />);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: verdict === 'valid' ? 'Load sample problem' : 'Load invalid-argument sample',
+      }),
+    );
+    fireEvent.click(screen.getByRole('radio', { name: 'Invalid' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add step to branch 1' }));
+    const source = screen.getByLabelText('Source formula');
+    const choice = within(source).getAllByRole('option')[1] as HTMLOptionElement;
+    fireEvent.change(source, { target: { value: choice.value } });
+    expect(screen.getByRole('button', { name: 'Check tree' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+    const example = screen.getByRole('region', { name: 'Completed sample example' });
+    expect(example).toHaveTextContent(`Sample argument: ${verdict}.`);
+    if (verdict === 'invalid') expect(example).toHaveTextContent('P and Q can both be false');
+    expect(
+      screen.getByRole('region', { name: 'Completed example truth tree' }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Source formula')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Check tree' })).toBeDisabled();
+    expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
+    expect(within(example).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(example).queryByRole('textbox')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Hide completed example' }));
+    expect(screen.getByLabelText('Source formula')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+  },
+);
+
+test('switching tree samples requires consent, closes the old example and leaves the new verdict unanswered', () => {
+  renderWithUnsavedWork(<TruthTreePracticePage />);
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Load invalid-argument sample' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByRole('region', { name: 'Completed sample example' })).toHaveTextContent(
+    'Sample argument: valid.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load invalid-argument sample' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(
+    screen.queryByRole('region', { name: 'Completed sample example' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: 'Valid' })).not.toBeChecked();
+  expect(screen.getByRole('radio', { name: 'Invalid' })).not.toBeChecked();
+  fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+  expect(screen.getByRole('region', { name: 'Completed sample example' })).toHaveTextContent(
+    'Sample argument: invalid.',
+  );
 });

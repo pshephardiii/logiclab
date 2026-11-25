@@ -3,12 +3,13 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { installDialogStub } from '../../../test/unsaved-work';
 import { PracticeProvider } from './PracticeProvider';
 import { TruthTablePractice } from './TruthTablePractice';
-import { createExercise } from '../../api/truth-tables/api';
+import { createExercise, getSolution } from '../../api/truth-tables/api';
 import { createTruthTableSample } from '../practice/samples/truth-table';
 
 vi.mock('../../api/truth-tables/api', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../api/truth-tables/api')>()),
   createExercise: vi.fn(),
+  getSolution: vi.fn(),
 }));
 installDialogStub();
 const originalScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
@@ -19,6 +20,12 @@ beforeEach(() => {
   });
   vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
   const table = createTruthTableSample().completed;
+  vi.mocked(getSolution).mockResolvedValue({
+    ...table,
+    variables: [...table.variables],
+    columns: [...table.columns],
+    rows: table.rows.map((row) => ({ id: row.id, values: { ...row.values } })),
+  });
   vi.mocked(createExercise).mockResolvedValue({
     ...table,
     variables: [...table.variables],
@@ -47,7 +54,7 @@ test('one click loads the sample through the existing API; Stay preserves answer
     </PracticeProvider>,
   );
   fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
-  await screen.findByRole('button', { name: 'Show solution' });
+  await screen.findByRole('button', { name: 'View completed example' });
   expect(createExercise).toHaveBeenLastCalledWith(
     createTruthTableSample().formula,
     expect.any(AbortSignal),
@@ -70,4 +77,27 @@ test('one click loads the sample through the existing API; Stay preserves answer
   fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
   await waitFor(() => expect(screen.getAllByRole('combobox')[0]).toHaveValue(''));
   expect(createExercise).toHaveBeenCalledTimes(requests + 1);
+});
+
+test('completed table example preserves entries and disappears as a sample action after formula edits', async () => {
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  await screen.findByRole('button', { name: 'View completed example' });
+  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'F' } });
+  fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+  await screen.findByRole('button', { name: 'Hide completed example' });
+  expect(screen.getAllByRole('note')).toHaveLength(8);
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  expect(screen.getByText('1 / 8 cells filled')).toBeInTheDocument();
+  expect(screen.queryByText(/correct ·/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Hide completed example' }));
+  expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  fireEvent.change(screen.getByLabelText('Propositional formula'), { target: { value: 'R' } });
+  expect(screen.queryByRole('button', { name: 'View completed example' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('note')).not.toBeInTheDocument();
 });

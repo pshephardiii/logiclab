@@ -1,4 +1,7 @@
+import { CompletedProofSample } from '../../../features/practice/components/CompletedProofSample';
+import { matchesSampleStatement } from '../../../features/practice/samples/matching';
 import {
+  type ProofSample,
   createFitchSample,
   createDependencySample,
 } from '../../../features/practice/samples/derivations';
@@ -23,6 +26,7 @@ import '../proof-practice.css';
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
   const confirmDiscard = useConfirmDiscard();
+  const [sample, setSample] = useState<ProofSample | null>(null);
   const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [setupFormat, setSetupFormat] = useState<PracticeStatement['format']>('fitch');
   const [statement, setStatement] = useState<PracticeStatement | null>(null);
@@ -34,6 +38,7 @@ export function ProofPractice() {
 
   function begin(next: PracticeStatement) {
     if (!isProofFormatAvailable(next.format)) return;
+    setSample(null);
     setStatement(next);
     setProof(startPracticeProof(next));
     setReport(null);
@@ -44,9 +49,9 @@ export function ProofPractice() {
 
   function loadSample(format: PracticeStatement['format']) {
     if (!isProofFormatAvailable(format)) return;
-    begin(
-      format === 'dependency' ? createDependencySample().statement : createFitchSample().statement,
-    );
+    const next = format === 'dependency' ? createDependencySample() : createFitchSample();
+    begin(next.statement);
+    setSample(next);
   }
 
   function changeProof(next: PracticeProof | null) {
@@ -58,6 +63,7 @@ export function ProofPractice() {
     if (!isProofFormatAvailable(format)) return;
     confirmDiscard(() => {
       setSetupFormat(format);
+      setSample(null);
       setStatement(null);
       setProof(null);
       setReport(null);
@@ -89,7 +95,10 @@ export function ProofPractice() {
       {!statement ? (
         <ProofPracticeSetup initialFormat={setupFormat} onStart={begin} onLoadSample={loadSample} />
       ) : (
-        <section key={workspaceVersion} className="panel proof-editor practice-workspace">
+        <section
+          key={`attempt:${workspaceVersion}`}
+          className="panel proof-editor practice-workspace"
+        >
           <div className="practice-workspace-tools">
             <div>
               <label htmlFor="active-practice-format">Change proof format</label>
@@ -165,6 +174,17 @@ export function ProofPractice() {
           )}
         </section>
       )}
+      {sample &&
+        statement &&
+        (matchesSampleStatement(statement, sample.statement) ? (
+          !conclusionEditing && (
+            <CompletedProofSample key={`example:${workspaceVersion}`} sample={sample} />
+          )
+        ) : (
+          <p className="help" role="status">
+            The statement has changed. Load the sample again to view its completed example.
+          </p>
+        ))}
       <p className="help practice-session-note">
         Work is temporary; reloading clears this practice session.
       </p>

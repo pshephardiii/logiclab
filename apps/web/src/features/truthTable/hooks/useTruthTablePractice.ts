@@ -20,6 +20,7 @@ import type { Answers } from '../types';
  * Edits cancel pending work so superseded responses cannot restore stale exercise state.
  */
 export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
+  const [sampleFormula, setSampleFormula] = useState<string | null>(null);
   const [formula, setFormula] = useState(initialFormula);
   const [exercise, setExercise] = useState<TruthTableExerciseResponse | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
@@ -40,6 +41,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   function changeFormula(value: string) {
+    setSampleFormula(null);
     cancelRequest();
 
     resetFeedback();
@@ -83,6 +85,11 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
+  }
+
+  function loadSample(value: string) {
+    setSampleFormula(value);
+    return createTable(value);
   }
 
   const total = exercise
@@ -147,6 +154,8 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   return {
+    sampleActive: sampleFormula !== null && sampleFormula === formula,
+    loadSample,
     hasWorkToReplace: formula !== initialFormula || exercise !== null || loading,
     feedback,
     solution,
