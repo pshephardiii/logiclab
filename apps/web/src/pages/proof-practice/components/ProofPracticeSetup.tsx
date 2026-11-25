@@ -1,3 +1,4 @@
+import '../../../features/practice/sample-actions.css';
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
 import { FormulaInput } from '../../../components/formula/FormulaInput';
@@ -24,9 +25,11 @@ const practiceRules = propositionalRuleCatalog(2);
 /** Setup is page-local; only a syntactically valid statement becomes an active practice session. */
 export function ProofPracticeSetup({
   onStart,
+  onLoadSample,
   initialFormat = 'fitch',
 }: {
   onStart: (statement: PracticeStatement) => void;
+  onLoadSample: (format: PracticeStatement['format']) => void;
   initialFormat?: PracticeStatement['format'];
 }) {
   const confirmDiscard = useConfirmDiscard();
@@ -83,6 +86,15 @@ export function ProofPracticeSetup({
       onSubmit={submit}
     >
       <h2>Set up a proof</h2>
+      <div className="practice-sample-actions">
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => confirmDiscard(() => onLoadSample(format))}
+        >
+          Load sample problem
+        </button>
+      </div>
       <div className="proof-setup-toolbar">
         <div>
           <label htmlFor="practice-proof-format">Proof format</label>

@@ -101,3 +101,59 @@ test.each(['resolve', 'reject'] as const)(
     expect(result.current.exercise).toEqual(exercise);
   },
 );
+
+test('loading a replacement formula aborts checking and clears answers without accepting late feedback', async () => {
+  vi.mocked(createExercise).mockReset().mockResolvedValue(exercise);
+  const { result } = renderHook(() => useTruthTablePractice());
+  expect(result.current.hasWorkToReplace).toBe(false);
+  await act(async () => {
+    await result.current.createTable();
+  });
+  act(() => result.current.changeAnswer('row:v1:P=T', 'expr:v1:P', true));
+  let resolve!: (response: TruthTableCheckResponse) => void;
+  vi.mocked(checkAnswers).mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  let checking!: Promise<void>;
+  act(() => {
+    checking = result.current.check();
+  });
+  const signal = vi.mocked(checkAnswers).mock.calls.at(-1)![1];
+  await act(async () => {
+    await result.current.createTable('(P ∧ Q) → P');
+  });
+  expect(signal.aborted).toBe(true);
+  expect(createExercise).toHaveBeenLastCalledWith('(P ∧ Q) → P', expect.any(AbortSignal));
+  expect(result.current.formula).toBe('(P ∧ Q) → P');
+  expect(result.current.answers).toEqual({});
+  expect(result.current.feedback).toBeNull();
+  expect(result.current.solution).toBeNull();
+  expect(result.current.hasWorkToReplace).toBe(true);
+  await act(async () => {
+    resolve({ cells: [], summary: { correct: 1, incorrect: 0, unanswered: 0, total: 1 } });
+    await checking;
+  });
+  expect(result.current.feedback).toBeNull();
+});
+
+test('a failed replacement retains the new formula and manual creation retries that exact formula', async () => {
+  vi.mocked(createExercise).mockReset().mockRejectedValueOnce(new Error('Offline'));
+  const { result } = renderHook(() => useTruthTablePractice());
+  await act(async () => {
+    await result.current.createTable('(P ∧ Q) → P');
+  });
+  expect(result.current.formula).toBe('(P ∧ Q) → P');
+  expect(result.current.exercise).toBeNull();
+  expect(result.current.error).toMatch(/connection/);
+  expect(result.current.loading).toBe(false);
+  vi.mocked(createExercise).mockResolvedValueOnce(exercise);
+  await act(async () => {
+    await result.current.createTable();
+  });
+  expect(createExercise).toHaveBeenLastCalledWith('(P ∧ Q) → P', expect.any(AbortSignal));
+  expect(result.current.error).toBeNull();
+  expect(result.current.exercise).toEqual(exercise);
+});

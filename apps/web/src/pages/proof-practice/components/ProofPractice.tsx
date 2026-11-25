@@ -1,3 +1,7 @@
+import {
+  createFitchSample,
+  createDependencySample,
+} from '../../../features/practice/samples/derivations';
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import { useState } from 'react';
 import type { ProofCheckReport } from '@logiclab/contracts';
@@ -19,6 +23,7 @@ import '../proof-practice.css';
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
   const confirmDiscard = useConfirmDiscard();
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [setupFormat, setSetupFormat] = useState<PracticeStatement['format']>('fitch');
   const [statement, setStatement] = useState<PracticeStatement | null>(null);
   const [proof, setProof] = useState<PracticeProof | null>(null);
@@ -26,6 +31,23 @@ export function ProofPractice() {
   const [entryPending, setEntryPending] = useState(false);
   const [conclusionEditing, setConclusionEditing] = useState(false);
   useUnsavedWork(statement !== null);
+
+  function begin(next: PracticeStatement) {
+    if (!isProofFormatAvailable(next.format)) return;
+    setStatement(next);
+    setProof(startPracticeProof(next));
+    setReport(null);
+    setEntryPending(false);
+    setConclusionEditing(false);
+    setWorkspaceVersion((version) => version + 1);
+  }
+
+  function loadSample(format: PracticeStatement['format']) {
+    if (!isProofFormatAvailable(format)) return;
+    begin(
+      format === 'dependency' ? createDependencySample().statement : createFitchSample().statement,
+    );
+  }
 
   function changeProof(next: PracticeProof | null) {
     setProof(next);
@@ -65,17 +87,9 @@ export function ProofPractice() {
         {!statement && <p>Choose your premises and conclusion.</p>}
       </header>
       {!statement ? (
-        <ProofPracticeSetup
-          initialFormat={setupFormat}
-          onStart={(next) => {
-            if (!isProofFormatAvailable(next.format)) return;
-            setStatement(next);
-            setProof(startPracticeProof(next));
-            setReport(null);
-          }}
-        />
+        <ProofPracticeSetup initialFormat={setupFormat} onStart={begin} onLoadSample={loadSample} />
       ) : (
-        <section className="panel proof-editor practice-workspace">
+        <section key={workspaceVersion} className="panel proof-editor practice-workspace">
           <div className="practice-workspace-tools">
             <div>
               <label htmlFor="active-practice-format">Change proof format</label>
@@ -96,6 +110,13 @@ export function ProofPractice() {
             <p id="practice-reset-description" className="proof-control-label">
               Changing format or starting over clears this practice session after confirmation.
             </p>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => confirmDiscard(() => loadSample(statement.format))}
+            >
+              Load sample problem
+            </button>
             <button type="button" className="secondary" onClick={() => restart(statement.format)}>
               Start over
             </button>

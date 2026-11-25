@@ -1,3 +1,5 @@
+import { createTruthTreeSample } from '../../features/practice/samples/truth-trees';
+import '../../features/practice/sample-actions.css';
 import { unexpectedFormulaCharacter } from '../../features/truth-tree/helpers/formula-presentation';
 import { FormulaCharacterIssue } from '../../features/truth-tree/components/FormulaCharacterIssue';
 import { ProblemType } from '@logiclab/contracts/problem-type';
@@ -33,6 +35,7 @@ import '../../features/proof/components/proof-setup.css';
 
 /** Anonymous page-session work; no account API, expected reference, points or browser storage. */
 export function TruthTreePracticePage() {
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [premises, setPremises] = useState<TruthTreeContent['premises']>([]);
   const [conclusion, setConclusion] = useState('');
   const [premisePending, setPremisePending] = useState(false);
@@ -101,6 +104,22 @@ export function TruthTreePracticePage() {
     }
   }
 
+  function loadSample() {
+    confirmDiscard(() => {
+      const statement = createTruthTreeSample().statement;
+      setActive({ statement, tree: initialTruthTree(statement) });
+      setPremises([]);
+      setConclusion('');
+      setPremisePending(false);
+      setEntryPending(false);
+      setReport(null);
+      setVerdict(null);
+      setError(null);
+      setCharacterIssue(null);
+      setWorkspaceVersion((version) => version + 1);
+    });
+  }
+
   function restart() {
     confirmDiscard(() => {
       setActive(null);
@@ -126,6 +145,11 @@ export function TruthTreePracticePage() {
           </p>
         )}
       </header>
+      <div className="practice-sample-actions">
+        <button type="button" className="secondary" onClick={loadSample}>
+          Load sample problem
+        </button>
+      </div>
       {!active ? (
         <form
           className="panel proof-editor truth-tree-practice-panel"
@@ -172,7 +196,7 @@ export function TruthTreePracticePage() {
           </button>
         </form>
       ) : (
-        <section className="panel proof-editor truth-tree-practice-panel">
+        <section key={workspaceVersion} className="panel proof-editor truth-tree-practice-panel">
           <TruthTreeSummary definition={active.statement} />
           <ProofKeyboardGuide />
           <button type="button" className="secondary" onClick={restart}>

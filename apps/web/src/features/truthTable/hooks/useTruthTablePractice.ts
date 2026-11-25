@@ -51,18 +51,19 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
     setLoading(false);
   }
 
-  async function createTable() {
+  async function createTable(nextFormula = formula) {
     const signal = startRequest();
 
     resetFeedback();
 
+    setFormula(nextFormula);
     setLoading(true);
     setError(null);
     setExercise(null);
     setAnswers({});
 
     try {
-      const result = await createExercise(formula, signal);
+      const result = await createExercise(nextFormula, signal);
 
       if (!signal.aborted) setExercise(result);
     } catch (caught) {
@@ -146,6 +147,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   return {
+    hasWorkToReplace: formula !== initialFormula || exercise !== null || loading,
     feedback,
     solution,
     action,

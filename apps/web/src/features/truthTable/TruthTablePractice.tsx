@@ -1,3 +1,4 @@
+import { TableSampleControl } from './components/TableSampleControl';
 import './truth-table.css';
 import { useEffect, useRef } from 'react';
 import { usePracticeContext } from './PracticeProvider';
@@ -37,6 +38,10 @@ export function TruthTablePractice() {
           Build a truth table, then fill in the intermediate and final expressions with T or F.
         </p>
       </header>
+      <TableSampleControl
+        hasWork={practice.hasWorkToReplace}
+        onLoad={(formula) => void practice.createTable(formula)}
+      />
       <FormulaForm
         formula={practice.formula}
         loading={practice.loading}
