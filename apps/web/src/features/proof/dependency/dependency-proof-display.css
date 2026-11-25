@@ -89,6 +89,9 @@
 .dependency-proof-display > p {
   margin: 0;
 }
+.dependency-proof-display > .dependency-proof-empty {
+  margin-top: 0.75rem;
+}
 
 .dependency-proof-display .proof-line-action > .proof-dropdown-trigger {
   border: 0;

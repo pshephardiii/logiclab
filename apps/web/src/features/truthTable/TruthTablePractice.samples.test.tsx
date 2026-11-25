@@ -1,0 +1,202 @@
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { installDialogStub } from '../../../test/unsaved-work';
+import { PracticeProvider } from './PracticeProvider';
+import { TruthTablePractice } from './TruthTablePractice';
+import { createExercise, getSolution } from '../../api/truth-tables/api';
+import { createTruthTableSample } from '../practice/samples/truth-table';
+
+vi.mock('../../api/truth-tables/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../api/truth-tables/api')>()),
+  createExercise: vi.fn(),
+  getSolution: vi.fn(),
+}));
+installDialogStub();
+const originalScroll = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
+beforeEach(() => {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    configurable: true,
+    value: vi.fn(),
+  });
+  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
+  const table = createTruthTableSample().completed;
+  vi.mocked(getSolution).mockResolvedValue({
+    ...table,
+    variables: [...table.variables],
+    columns: [...table.columns],
+    rows: table.rows.map((row) => ({ id: row.id, values: { ...row.values } })),
+  });
+  vi.mocked(createExercise).mockResolvedValue({
+    ...table,
+    variables: [...table.variables],
+    columns: [...table.columns],
+    rows: table.rows.map((row) => ({
+      id: row.id,
+      values: Object.fromEntries(
+        table.columns
+          .filter((column) => column.kind === 'given')
+          .map((column) => [column.id, row.values[column.id]!]),
+      ),
+    })),
+  });
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+  if (originalScroll)
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', originalScroll);
+  else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+});
+
+test('one click loads the sample through the existing API; Stay preserves answers and Discard reloads blanks', async () => {
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  await screen.findByRole('button', { name: 'View completed example' });
+  expect(createExercise).toHaveBeenLastCalledWith(
+    createTruthTableSample().formula,
+    expect.any(AbortSignal),
+  );
+  expect(screen.getByLabelText('Propositional formula')).toHaveValue(
+    createTruthTableSample().formula,
+  );
+  expect(screen.getAllByRole('combobox')).toHaveLength(8);
+  expect(
+    screen.getAllByRole('combobox').every((field) => (field as HTMLSelectElement).value === ''),
+  ).toBe(true);
+  expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'T' } });
+  const requests = vi.mocked(createExercise).mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('T');
+  expect(createExercise).toHaveBeenCalledTimes(requests);
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await waitFor(() => expect(screen.getAllByRole('combobox')[0]).toHaveValue(''));
+  expect(createExercise).toHaveBeenCalledTimes(requests + 1);
+});
+
+test('completed table example preserves entries and disappears as a sample action after formula edits', async () => {
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  await screen.findByRole('button', { name: 'View completed example' });
+  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'F' } });
+  fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+  await screen.findByRole('button', { name: 'Hide completed example' });
+  expect(screen.getAllByRole('note')).toHaveLength(8);
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  expect(screen.getByText('1 / 8 cells filled')).toBeInTheDocument();
+  expect(screen.queryByText(/correct ·/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Hide completed example' }));
+  expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  fireEvent.change(screen.getByLabelText('Propositional formula'), { target: { value: 'R' } });
+  expect(screen.queryByRole('button', { name: 'View completed example' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('note')).not.toBeInTheDocument();
+});
+
+test('table walkthrough reveals columns separately without filling entries or requesting a solution', async () => {
+  vi.mocked(getSolution).mockClear();
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  await screen.findByRole('button', { name: 'Walk through the solution' });
+  fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'F' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+  const walkthrough = screen.getByRole('region', { name: 'Sample walkthrough' });
+  expect(within(walkthrough).queryByRole('combobox')).not.toBeInTheDocument();
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(8);
+  fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(4);
+  fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+  expect(within(walkthrough).queryByText('—')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next step' })).toBeDisabled();
+  expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+  expect(screen.getByText('1 / 8 cells filled')).toBeInTheDocument();
+  expect(getSolution).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
+  expect(within(walkthrough).getAllByText('—')).toHaveLength(8);
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+  expect(screen.getByRole('region', { name: 'Sample walkthrough' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  await screen.findByRole('button', { name: 'Walk through the solution' });
+  expect(screen.queryByRole('region', { name: 'Sample walkthrough' })).not.toBeInTheDocument();
+});
+
+test('table exit preserves work on Stay and restores the original editor from solution and walkthrough states', async () => {
+  render(
+    <PracticeProvider>
+      <TruthTablePractice />
+    </PracticeProvider>,
+  );
+  const original = (screen.getByLabelText('Propositional formula') as HTMLInputElement).value;
+  for (const mode of ['workspace', 'completed', 'walkthrough'] as const) {
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    await screen.findByRole('button', { name: 'Walk through the solution' });
+    fireEvent.change(screen.getAllByRole('combobox')[0]!, { target: { value: 'F' } });
+    if (mode === 'completed') {
+      fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+      await screen.findByRole('button', { name: 'Hide completed example' });
+    }
+    if (mode === 'walkthrough')
+      fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+    const label = mode === 'walkthrough' ? 'Exit sample' : 'Create your own problem';
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+    expect(screen.getAllByRole('combobox')[0]).toHaveValue('F');
+    if (mode === 'completed') expect(screen.getAllByRole('note')).toHaveLength(8);
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(screen.getByLabelText('Propositional formula')).toHaveValue(original);
+    expect(screen.getByLabelText('Propositional formula')).toHaveFocus();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Create your own problem' }),
+    ).not.toBeInTheDocument();
+  }
+});
+
+test.each(['pending', 'failed'] as const)(
+  'a %s sample request still offers an exit and cannot restore the sample afterward',
+  async (mode) => {
+    let resolve!: () => void;
+    if (mode === 'pending')
+      vi.mocked(createExercise).mockImplementationOnce(
+        () =>
+          new Promise((done) => {
+            resolve = () => done({ variables: [], columns: [], rows: [] });
+          }),
+      );
+    else vi.mocked(createExercise).mockRejectedValueOnce(new Error('Offline'));
+    render(
+      <PracticeProvider>
+        <TruthTablePractice />
+      </PracticeProvider>,
+    );
+    const original = (screen.getByLabelText('Propositional formula') as HTMLInputElement).value;
+    fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    if (mode === 'failed') await screen.findByRole('alert');
+    fireEvent.click(screen.getByRole('button', { name: 'Create your own problem' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    if (mode === 'pending') await act(async () => resolve());
+    expect(screen.getByLabelText('Propositional formula')).toHaveValue(original);
+    expect(screen.queryByRole('button', { name: 'Check answers' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Create your own problem' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  },
+);

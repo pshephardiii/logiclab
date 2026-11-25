@@ -1,5 +1,12 @@
+import { CompletedProofSample } from '../../../features/practice/components/CompletedProofSample';
+import { matchesSampleStatement } from '../../../features/practice/samples/matching';
+import {
+  type ProofSample,
+  createFitchSample,
+  createDependencySample,
+} from '../../../features/practice/samples/derivations';
 import { isProofFormatAvailable } from '@logiclab/contracts';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -19,6 +26,10 @@ import '../proof-practice.css';
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
   const confirmDiscard = useConfirmDiscard();
+  const root = useRef<HTMLDivElement>(null);
+  const focusSetup = useRef(false);
+  const [sample, setSample] = useState<ProofSample | null>(null);
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [setupFormat, setSetupFormat] = useState<PracticeStatement['format']>('fitch');
   const [statement, setStatement] = useState<PracticeStatement | null>(null);
   const [proof, setProof] = useState<PracticeProof | null>(null);
@@ -26,6 +37,24 @@ export function ProofPractice() {
   const [entryPending, setEntryPending] = useState(false);
   const [conclusionEditing, setConclusionEditing] = useState(false);
   useUnsavedWork(statement !== null);
+
+  function begin(next: PracticeStatement) {
+    if (!isProofFormatAvailable(next.format)) return;
+    setSample(null);
+    setStatement(next);
+    setProof(startPracticeProof(next));
+    setReport(null);
+    setEntryPending(false);
+    setConclusionEditing(false);
+    setWorkspaceVersion((version) => version + 1);
+  }
+
+  function loadSample(format: PracticeStatement['format']) {
+    if (!isProofFormatAvailable(format)) return;
+    const next = format === 'dependency' ? createDependencySample() : createFitchSample();
+    begin(next.statement);
+    setSample(next);
+  }
 
   function changeProof(next: PracticeProof | null) {
     setProof(next);
@@ -35,12 +64,29 @@ export function ProofPractice() {
   function restart(format: PracticeStatement['format']) {
     if (!isProofFormatAvailable(format)) return;
     confirmDiscard(() => {
+      focusSetup.current = true;
+      setEntryPending(false);
+      setConclusionEditing(false);
       setSetupFormat(format);
+      setSample(null);
       setStatement(null);
       setProof(null);
       setReport(null);
     });
   }
+
+  useEffect(() => {
+    if (statement || !focusSetup.current) return;
+    focusSetup.current = false;
+    root.current?.querySelector<HTMLSelectElement>('#practice-proof-format')?.focus();
+  }, [statement]);
+
+  function exitSample() {
+    if (statement) restart(statement.format);
+  }
+
+  const sampleMatches = sample && statement && matchesSampleStatement(statement, sample.statement);
+  const showSampleExample = sampleMatches && !conclusionEditing;
 
   const checkAction = (
     <button
@@ -58,24 +104,38 @@ export function ProofPractice() {
   );
 
   return (
-    <div className="proof-practice">
+    <div ref={root} className="proof-practice">
       <header>
         <p className="eyebrow">LogicLab / Independent practice</p>
         <h1>Practice a derivation.</h1>
         {!statement && <p>Choose your premises and conclusion.</p>}
       </header>
-      {!statement ? (
-        <ProofPracticeSetup
-          initialFormat={setupFormat}
-          onStart={(next) => {
-            if (!isProofFormatAvailable(next.format)) return;
-            setStatement(next);
-            setProof(startPracticeProof(next));
-            setReport(null);
-          }}
+      {sample && statement && !sampleMatches && (
+        <p className="help" role="status">
+          The statement has changed. Load the sample again to view its completed example.
+        </p>
+      )}
+      {sample && statement && !showSampleExample && (
+        <div className="practice-sample-actions">
+          <button type="button" className="secondary" onClick={exitSample}>
+            Create your own problem
+          </button>
+        </div>
+      )}
+      {sample && showSampleExample && (
+        <CompletedProofSample
+          key={`example:${workspaceVersion}`}
+          sample={sample}
+          onExitSample={exitSample}
         />
+      )}
+      {!statement ? (
+        <ProofPracticeSetup initialFormat={setupFormat} onStart={begin} onLoadSample={loadSample} />
       ) : (
-        <section className="panel proof-editor practice-workspace">
+        <section
+          key={`attempt:${workspaceVersion}`}
+          className="panel proof-editor practice-workspace"
+        >
           <div className="practice-workspace-tools">
             <div>
               <label htmlFor="active-practice-format">Change proof format</label>
@@ -96,9 +156,18 @@ export function ProofPractice() {
             <p id="practice-reset-description" className="proof-control-label">
               Changing format or starting over clears this practice session after confirmation.
             </p>
-            <button type="button" className="secondary" onClick={() => restart(statement.format)}>
-              Start over
+            <button
+              type="button"
+              className="sample-action"
+              onClick={() => confirmDiscard(() => loadSample(statement.format))}
+            >
+              Load sample problem
             </button>
+            {!sample && (
+              <button type="button" className="secondary" onClick={() => restart(statement.format)}>
+                Start over
+              </button>
+            )}
           </div>
           <PracticeProofEditor
             statement={statement}

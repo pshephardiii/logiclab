@@ -1,3 +1,4 @@
+import { ProofViewport } from '../components/ProofViewport';
 import { DependencyJustification } from './DependencyJustification';
 import { DependencyAssumptionGuides } from './DependencyAssumptionGuides';
 import { dependencyNumbers } from './dependency-numbers';
@@ -63,7 +64,11 @@ export function DependencyProofDisplay({
     start >= 0 && end >= 0 && index >= Math.min(start, end) && index <= Math.max(start, end);
 
   return (
-    <div className="dependency-proof-display" role="region" aria-label={label} tabIndex={0}>
+    <ProofViewport
+      className="dependency-proof-display"
+      label={label}
+      hasContent={proof.steps.length > 0 || Boolean(entry)}
+    >
       <table
         style={
           { '--dependency-guide-width': `${(assumptions?.lanes ?? 0) * 0.6}rem` } as CSSProperties
@@ -146,7 +151,7 @@ export function DependencyProofDisplay({
         </tbody>
         {!readOnly && entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
       </table>
-      {!proof.steps.length && <p>No proof lines entered yet.</p>}
-    </div>
+      {!proof.steps.length && <p className="dependency-proof-empty">No proof lines entered yet.</p>}
+    </ProofViewport>
   );
 }

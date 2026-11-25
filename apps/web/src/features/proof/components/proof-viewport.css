@@ -1,0 +1,15 @@
+.proof-viewport {
+  min-width: 0;
+  max-width: 100%;
+}
+.proof-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  color: #465b65;
+  font-size: 0.85rem;
+}
+.proof-scroll-hint + [role='region'] {
+  margin-top: 0.35rem;
+}

@@ -15,14 +15,28 @@ type Props = {
   exercise: TruthTableExerciseResponse;
   formula: string;
   answers: Answers;
-  onAnswer: (rowId: string, columnId: string, value: boolean | null) => void;
-};
+  highlightColumnId?: string;
+  label?: string;
+} & (
+  | { readOnly: true; onAnswer?: never }
+  | { readOnly?: false; onAnswer: (rowId: string, columnId: string, value: boolean | null) => void }
+);
 
 /**
- * Composes deterministic rows and columns, with fixed given values and editable answer cells.
+ * Composes deterministic rows with editable answers or read-only example values.
  * Associates check results and solution values with structural row/column IDs.
  */
-export function TruthTable({ exercise, formula, answers, onAnswer, feedback, solution }: Props) {
+export function TruthTable({
+  exercise,
+  formula,
+  answers,
+  onAnswer,
+  feedback,
+  solution,
+  readOnly,
+  highlightColumnId,
+  label = 'Truth table, scroll horizontally for more columns',
+}: Props) {
   // Canonical labels include generated parentheses; the final heading follows authored grouping.
   const columns = exercise.columns.map((column) => ({
     ...column,
@@ -35,12 +49,7 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
   const solutionRows = new Map(solution?.rows.map((row) => [row.id, row.values]));
 
   return (
-    <div
-      className="table-scroll"
-      role="region"
-      aria-label="Truth table, scroll horizontally for more columns"
-      tabIndex={0}
-    >
+    <div className="table-scroll" role="region" aria-label={label} tabIndex={0}>
       <table>
         <caption>Truth table for {formula}</caption>
         <thead>
@@ -50,7 +59,14 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
               <th
                 scope="col"
                 key={column.id}
-                className={column.isFinal ? 'final-column' : undefined}
+                className={
+                  [
+                    column.isFinal ? 'final-column' : '',
+                    column.id === highlightColumnId ? 'sample-column-change' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined
+                }
               >
                 <span className="formula-label">{column.label}</span>
                 <span className="column-kind">
@@ -85,6 +101,7 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
                       className={
                         [
                           column.isFinal ? 'final-column' : '',
+                          column.id === highlightColumnId ? 'sample-column-change' : '',
                           column.kind === 'answer' && status ? `answer-${status}` : '',
                         ]
                           .filter(Boolean)
@@ -93,6 +110,13 @@ export function TruthTable({ exercise, formula, answers, onAnswer, feedback, sol
                     >
                       {column.kind === 'given' ? (
                         <span className="given-value">{row.values[column.id] ? 'T' : 'F'}</span>
+                      ) : readOnly ? (
+                        <span
+                          className="sample-table-value"
+                          aria-label={value == null ? 'Not revealed' : undefined}
+                        >
+                          {value == null ? '—' : value ? 'T' : 'F'}
+                        </span>
                       ) : (
                         <AnswerCell
                           label={`Row ${index + 1}, ${given}: ${column.label}`}

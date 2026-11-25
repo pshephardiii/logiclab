@@ -14,6 +14,7 @@ import './truth-tree-editor.css';
 /** Staggered HTML formulas and decorative forks share a grid; stored work remains unchanged. */
 export function TruthTreeDisplay({
   tree,
+  label = 'Truth tree',
   disabled = false,
   onFormula,
   renderBranchActions,
@@ -23,6 +24,7 @@ export function TruthTreeDisplay({
   statement,
 }: {
   tree: TruthTree;
+  label?: string;
   disabled?: boolean;
   onFormula?: (id: string, formula: string) => void;
   renderBranchActions?: (branch: TruthTreeBranch, number: number) => ReactNode;
@@ -67,7 +69,7 @@ export function TruthTreeDisplay({
 
   return (
     <section
-      aria-label="Truth tree"
+      aria-label={label}
       className="truth-tree-display"
       style={
         {

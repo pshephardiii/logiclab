@@ -20,6 +20,8 @@ import type { Answers } from '../types';
  * Edits cancel pending work so superseded responses cannot restore stale exercise state.
  */
 export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
+  const [sampleGeneration, setSampleGeneration] = useState(0);
+  const [sampleFormula, setSampleFormula] = useState<string | null>(null);
   const [formula, setFormula] = useState(initialFormula);
   const [exercise, setExercise] = useState<TruthTableExerciseResponse | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
@@ -40,6 +42,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   function changeFormula(value: string) {
+    setSampleFormula(null);
     cancelRequest();
 
     resetFeedback();
@@ -51,18 +54,19 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
     setLoading(false);
   }
 
-  async function createTable() {
+  async function createTable(nextFormula = formula) {
     const signal = startRequest();
 
     resetFeedback();
 
+    setFormula(nextFormula);
     setLoading(true);
     setError(null);
     setExercise(null);
     setAnswers({});
 
     try {
-      const result = await createExercise(formula, signal);
+      const result = await createExercise(nextFormula, signal);
 
       if (!signal.aborted) setExercise(result);
     } catch (caught) {
@@ -82,6 +86,12 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
     } finally {
       if (!signal.aborted) setLoading(false);
     }
+  }
+
+  function loadSample(value: string) {
+    setSampleGeneration((generation) => generation + 1);
+    setSampleFormula(value);
+    return createTable(value);
   }
 
   const total = exercise
@@ -146,6 +156,11 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   return {
+    resetPractice: () => changeFormula(initialFormula),
+    sampleGeneration,
+    sampleActive: sampleFormula !== null && sampleFormula === formula,
+    loadSample,
+    hasWorkToReplace: formula !== initialFormula || exercise !== null || loading,
     feedback,
     solution,
     action,

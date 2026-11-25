@@ -1,7 +1,12 @@
+import { SampleInvitation } from '../../features/practice/components/SampleInvitation';
+import { CompletedTruthTreeSample } from '../../features/practice/components/CompletedTruthTreeSample';
+import { matchesSampleStatement } from '../../features/practice/samples/matching';
+import { createTruthTreeSample } from '../../features/practice/samples/truth-trees';
+import '../../features/practice/sample-actions.css';
 import { unexpectedFormulaCharacter } from '../../features/truth-tree/helpers/formula-presentation';
 import { FormulaCharacterIssue } from '../../features/truth-tree/components/FormulaCharacterIssue';
 import { ProblemType } from '@logiclab/contracts/problem-type';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
 import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
 import { ProofPremisesEditor } from '../../features/proof/components/ProofPremisesEditor';
@@ -15,6 +20,7 @@ import { TruthTreeFeedback } from '../../features/truth-tree/components/TruthTre
 import { TruthTreeVerdict } from '../../features/truth-tree/components/TruthTreeVerdict';
 import {
   assessTruthTreeVerdict,
+  TruthTreeVerdict as VerdictChoice,
   type TruthTreeVerdict as Verdict,
 } from '@logiclab/contracts/truth-tree-work';
 import { initialTruthTree } from '../../features/truth-tree/helpers/construction';
@@ -33,6 +39,10 @@ import '../../features/proof/components/proof-setup.css';
 
 /** Anonymous page-session work; no account API, expected reference, points or browser storage. */
 export function TruthTreePracticePage() {
+  const setup = useRef<HTMLFormElement>(null);
+  const focusSetup = useRef(false);
+  const [sample, setSample] = useState<ReturnType<typeof createTruthTreeSample> | null>(null);
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [premises, setPremises] = useState<TruthTreeContent['premises']>([]);
   const [conclusion, setConclusion] = useState('');
   const [premisePending, setPremisePending] = useState(false);
@@ -92,6 +102,7 @@ export function TruthTreePracticePage() {
           `Conclusion: ${error instanceof Error ? error.message : 'Invalid formula.'}`,
         );
       }
+      setSample(null);
       setActive({ statement, tree: initialTruthTree(statement) });
       setError(null);
       setReport(null);
@@ -101,8 +112,29 @@ export function TruthTreePracticePage() {
     }
   }
 
+  function loadSample(verdict: Verdict = VerdictChoice.Valid) {
+    confirmDiscard(() => {
+      const next = createTruthTreeSample(verdict);
+      const statement = next.statement;
+      setSample(next);
+      setActive({ statement, tree: initialTruthTree(statement) });
+      setPremises([]);
+      setConclusion('');
+      setPremisePending(false);
+      setEntryPending(false);
+      setReport(null);
+      setVerdict(null);
+      setError(null);
+      setCharacterIssue(null);
+      setWorkspaceVersion((version) => version + 1);
+    });
+  }
+
   function restart() {
     confirmDiscard(() => {
+      focusSetup.current = true;
+      setPremisePending(false);
+      setSample(null);
       setActive(null);
       setCharacterIssue(null);
       setPremises([]);
@@ -113,6 +145,27 @@ export function TruthTreePracticePage() {
       setEntryPending(false);
     });
   }
+
+  useEffect(() => {
+    if (active || !focusSetup.current) return;
+    focusSetup.current = false;
+    setup.current?.querySelector<HTMLInputElement>('input')?.focus();
+  }, [active]);
+
+  const sampleActions = (
+    <>
+      <button type="button" className="sample-action" onClick={() => loadSample()}>
+        Load sample problem
+      </button>
+      <button
+        type="button"
+        className="sample-action-secondary"
+        onClick={() => loadSample(VerdictChoice.Invalid)}
+      >
+        Load invalid-argument sample
+      </button>
+    </>
+  );
 
   return (
     <Page>
@@ -127,7 +180,25 @@ export function TruthTreePracticePage() {
         )}
       </header>
       {!active ? (
+        <SampleInvitation
+          title="Try a sample problem"
+          description="Load an argument, then explore how its truth tree is built."
+        >
+          {sampleActions}
+        </SampleInvitation>
+      ) : (
+        <div className="practice-sample-actions">{sampleActions}</div>
+      )}
+      {sample && active && matchesSampleStatement(active.statement, sample.statement) && (
+        <CompletedTruthTreeSample
+          key={`example:${workspaceVersion}`}
+          sample={sample}
+          onExitSample={restart}
+        />
+      )}
+      {!active ? (
         <form
+          ref={setup}
           className="panel proof-editor truth-tree-practice-panel"
           aria-label="Truth-tree practice setup"
           onSubmit={start}
@@ -172,12 +243,17 @@ export function TruthTreePracticePage() {
           </button>
         </form>
       ) : (
-        <section className="panel proof-editor truth-tree-practice-panel">
+        <section
+          key={`attempt:${workspaceVersion}`}
+          className="panel proof-editor truth-tree-practice-panel"
+        >
           <TruthTreeSummary definition={active.statement} />
           <ProofKeyboardGuide />
-          <button type="button" className="secondary" onClick={restart}>
-            Start over
-          </button>
+          {!sample && (
+            <button type="button" className="secondary" onClick={restart}>
+              Start over
+            </button>
+          )}
           <TruthTreeEditor
             tree={active.tree}
             statement={active.statement}
