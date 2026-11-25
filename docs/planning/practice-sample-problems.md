@@ -1,6 +1,6 @@
 # Practice samples and step-through worked examples
 
-Planned next branch: `038-feat-practice-sample-problems` (provisional; confirm numbering before creation). Implement after `037-feat-practice-only-exposure` and before the initial hosted practice sandbox. This planning update does not start implementation or deployment.
+Current branch: `038-feat-practice-sample-problems`, following `037-feat-practice-only-exposure` and before the initial hosted practice sandbox. Implementation proceeds in the slices below; no deployment is authorized.
 
 ## Purpose
 
@@ -72,3 +72,19 @@ Validate every stage against the applicable shape/structure rules, allowing inte
 A first-time visitor should reach a representative problem and its worked example using clearly labeled actions, without typing formulas, using an account or understanding the rule catalog first. Their own work must remain intact when opening the example, advancing/backtracking or restarting the walkthrough. A visitor can follow the visual development one step at a time or jump directly to completion. All completed examples must agree with the real checker and the displayed problem.
 
 After this feature, perform its focused visual QA and proceed to reviewed inexpensive sandbox preparation and deliberate deployment promotion. Wider demo/account UI audits stay deferred before public exposure of those areas. A separate portfolio repository follows the practice sandbox. Video production remains deferred. No infrastructure or deployment is authorized by this plan.
+
+## Slice 1 — curated content foundation
+
+Public factories under `apps/web/src/features/practice/samples/` provide fresh data for each load and independent walkthrough snapshots. They pin catalog 2 and grouping policy 1 where applicable. No UI actions, account/demo dependencies, persistence or walkthrough navigation are added in this slice.
+
+| Experience         | Sample                             | Walkthrough                                                                                                           |
+| ------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Truth table        | `(P ∧ Q) → P`                      | Given truth combinations, conjunction column, final conditional column.                                               |
+| Fitch              | From `P → Q`, derive `P → (P ∧ Q)` | Given premise, assume P, infer Q, combine P/Q, close the subproof, discharge it.                                      |
+| Dependency         | Same statement as Fitch            | Track premise/assumption dependencies through each line; discharge the temporary assumption on the final conditional. |
+| Valid truth tree   | `P → Q`, `P`; conclusion Q         | Start with the negated conclusion, split the conditional, close each contradictory path.                              |
+| Invalid truth tree | `P → Q`; conclusion Q              | Split the conditional, close the Q/¬Q path, identify the fully decomposed open path with P=false and Q=false.         |
+
+The rain/wet-ground interpretation connects the proof/tree captions to familiar language. The truth table uses rain/cold for its conjunction. Only the three inference rules needed by the proof examples are enabled. Stable public identities preserve citations across stages; sample factories and cloned stage snapshots prevent edits from mutating reusable examples. The table uses the existing engine's IDs and expected values rather than a separate answer algorithm.
+
+Ten focused tests use real contracts, structure analyzers and checkers to verify accepted final proofs, both argument verdicts, the counterexample's actual truth values, local validity at each intermediate stage, the intentionally open Fitch block, exact table values/reveal order, final-stage agreement and independent reloads/snapshots. All web tests and a production web build also passed. No browser or PostgreSQL run is needed for this unconnected data foundation. Next: explicit sample-load actions with ordinary pending-entry, reset, cancellation and discard behavior.
