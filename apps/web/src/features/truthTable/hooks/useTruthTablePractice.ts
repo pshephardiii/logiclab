@@ -156,6 +156,7 @@ export function useTruthTablePractice(initialFormula = '(P ∧ Q) → R') {
   }
 
   return {
+    resetPractice: () => changeFormula(initialFormula),
     sampleGeneration,
     sampleActive: sampleFormula !== null && sampleFormula === formula,
     loadSample,

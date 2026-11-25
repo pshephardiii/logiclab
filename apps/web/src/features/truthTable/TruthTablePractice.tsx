@@ -1,7 +1,8 @@
+import { DiscardChangesDialog } from '../unsaved-work/components/DiscardChangesDialog';
 import { TableSampleWalkthrough } from '../practice/components/TableSampleWalkthrough';
 import { TableSampleControl } from './components/TableSampleControl';
 import './truth-table.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePracticeContext } from './PracticeProvider';
 import { FormulaForm } from './components/FormulaForm';
 import { ExercisePanel } from './components/ExercisePanel';
@@ -11,6 +12,9 @@ import { ExercisePanel } from './components/ExercisePanel';
  */
 export function TruthTablePractice() {
   const practice = usePracticeContext();
+  const [exitingSample, setExitingSample] = useState(false);
+  const focusSetup = useRef(false);
+  const sampleInvitationRef = useRef<HTMLDivElement>(null);
   const tablePanelRef = useRef<HTMLElement>(null);
   const previousExercise = useRef(practice.exercise);
 
@@ -24,11 +28,28 @@ export function TruthTablePractice() {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    tablePanelRef.current?.scrollIntoView({
+    const target = sampleInvitationRef.current ?? tablePanelRef.current;
+    target?.scrollIntoView({
       behavior: reducedMotion ? 'instant' : 'smooth',
       block: 'start',
     });
   }, [practice.exercise]);
+
+  useEffect(() => {
+    if (!focusSetup.current || practice.sampleActive) return;
+    focusSetup.current = false;
+    practice.inputRef.current?.focus();
+  }, [practice.sampleActive, practice.inputRef]);
+
+  function exitSample() {
+    setExitingSample(true);
+  }
+
+  function confirmExit() {
+    setExitingSample(false);
+    focusSetup.current = true;
+    practice.resetPractice();
+  }
 
   return (
     <>
@@ -41,6 +62,7 @@ export function TruthTablePractice() {
       </header>
       <TableSampleControl
         hasWork={practice.hasWorkToReplace}
+        onCreateOwn={practice.sampleActive && !practice.exercise ? exitSample : undefined}
         onLoad={(formula) => void practice.loadSample(formula)}
       />
       <FormulaForm
@@ -51,6 +73,11 @@ export function TruthTablePractice() {
         onFormulaChange={practice.changeFormula}
         onCreate={practice.createTable}
       />
+      {practice.sampleActive && practice.exercise && (
+        <div ref={sampleInvitationRef}>
+          <TableSampleWalkthrough key={practice.sampleGeneration} onExitSample={exitSample} />
+        </div>
+      )}
       <ExercisePanel
         sample={practice.sampleActive}
         panelRef={tablePanelRef}
@@ -68,8 +95,8 @@ export function TruthTablePractice() {
         total={practice.total}
         onAnswer={practice.changeAnswer}
       />
-      {practice.sampleActive && practice.exercise && (
-        <TableSampleWalkthrough key={practice.sampleGeneration} />
+      {exitingSample && (
+        <DiscardChangesDialog onStay={() => setExitingSample(false)} onDiscard={confirmExit} />
       )}
       <p className="footnote">
         Independent practice · Work stays in this page and is cleared on reload.

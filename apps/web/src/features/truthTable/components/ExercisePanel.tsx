@@ -83,7 +83,11 @@ export function ExercisePanel({
           <button disabled={action !== null} onClick={() => void onCheck()}>
             {action === 'check' ? 'Checking…' : 'Check answers'}
           </button>
-          <button className="secondary" disabled={action !== null} onClick={onToggleSolution}>
+          <button
+            className={sample && !solution ? 'sample-action' : 'secondary'}
+            disabled={action !== null}
+            onClick={onToggleSolution}
+          >
             {solutionLabel}
           </button>
         </div>

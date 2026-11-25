@@ -1,3 +1,4 @@
+import { SampleInvitation } from '../../features/practice/components/SampleInvitation';
 import { CompletedTruthTreeSample } from '../../features/practice/components/CompletedTruthTreeSample';
 import { matchesSampleStatement } from '../../features/practice/samples/matching';
 import { createTruthTreeSample } from '../../features/practice/samples/truth-trees';
@@ -5,7 +6,7 @@ import '../../features/practice/sample-actions.css';
 import { unexpectedFormulaCharacter } from '../../features/truth-tree/helpers/formula-presentation';
 import { FormulaCharacterIssue } from '../../features/truth-tree/components/FormulaCharacterIssue';
 import { ProblemType } from '@logiclab/contracts/problem-type';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Page } from '../../components/layout/Page';
 import { PracticeNavigation } from '../../features/practice/PracticeNavigation';
 import { ProofPremisesEditor } from '../../features/proof/components/ProofPremisesEditor';
@@ -38,6 +39,8 @@ import '../../features/proof/components/proof-setup.css';
 
 /** Anonymous page-session work; no account API, expected reference, points or browser storage. */
 export function TruthTreePracticePage() {
+  const setup = useRef<HTMLFormElement>(null);
+  const focusSetup = useRef(false);
   const [sample, setSample] = useState<ReturnType<typeof createTruthTreeSample> | null>(null);
   const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [premises, setPremises] = useState<TruthTreeContent['premises']>([]);
@@ -129,6 +132,8 @@ export function TruthTreePracticePage() {
 
   function restart() {
     confirmDiscard(() => {
+      focusSetup.current = true;
+      setPremisePending(false);
       setSample(null);
       setActive(null);
       setCharacterIssue(null);
@@ -140,6 +145,27 @@ export function TruthTreePracticePage() {
       setEntryPending(false);
     });
   }
+
+  useEffect(() => {
+    if (active || !focusSetup.current) return;
+    focusSetup.current = false;
+    setup.current?.querySelector<HTMLInputElement>('input')?.focus();
+  }, [active]);
+
+  const sampleActions = (
+    <>
+      <button type="button" className="sample-action" onClick={() => loadSample()}>
+        Load sample problem
+      </button>
+      <button
+        type="button"
+        className="sample-action-secondary"
+        onClick={() => loadSample(VerdictChoice.Invalid)}
+      >
+        Load invalid-argument sample
+      </button>
+    </>
+  );
 
   return (
     <Page>
@@ -153,20 +179,26 @@ export function TruthTreePracticePage() {
           </p>
         )}
       </header>
-      <div className="practice-sample-actions">
-        <button type="button" className="secondary" onClick={() => loadSample()}>
-          Load sample problem
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => loadSample(VerdictChoice.Invalid)}
+      {!active ? (
+        <SampleInvitation
+          title="Try a sample problem"
+          description="Load an argument, then explore how its truth tree is built."
         >
-          Load invalid-argument sample
-        </button>
-      </div>
+          {sampleActions}
+        </SampleInvitation>
+      ) : (
+        <div className="practice-sample-actions">{sampleActions}</div>
+      )}
+      {sample && active && matchesSampleStatement(active.statement, sample.statement) && (
+        <CompletedTruthTreeSample
+          key={`example:${workspaceVersion}`}
+          sample={sample}
+          onExitSample={restart}
+        />
+      )}
       {!active ? (
         <form
+          ref={setup}
           className="panel proof-editor truth-tree-practice-panel"
           aria-label="Truth-tree practice setup"
           onSubmit={start}
@@ -217,9 +249,11 @@ export function TruthTreePracticePage() {
         >
           <TruthTreeSummary definition={active.statement} />
           <ProofKeyboardGuide />
-          <button type="button" className="secondary" onClick={restart}>
-            Start over
-          </button>
+          {!sample && (
+            <button type="button" className="secondary" onClick={restart}>
+              Start over
+            </button>
+          )}
           <TruthTreeEditor
             tree={active.tree}
             statement={active.statement}
@@ -267,9 +301,6 @@ export function TruthTreePracticePage() {
             />
           )}
         </section>
-      )}
-      {sample && active && matchesSampleStatement(active.statement, sample.statement) && (
-        <CompletedTruthTreeSample key={`example:${workspaceVersion}`} sample={sample} />
       )}
       <p className="help">Work is temporary; reloading clears this practice session.</p>
     </Page>

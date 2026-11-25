@@ -1,12 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import type { TruthTableExerciseResponse, TruthTableCheckResponse } from '@logiclab/contracts';
-import { createExercise, checkAnswers } from '../../../api/truth-tables/api';
+import { createExercise, checkAnswers, getSolution } from '../../../api/truth-tables/api';
 import { useTruthTablePractice } from './useTruthTablePractice';
 
 vi.mock('../../../api/truth-tables/api', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../../api/truth-tables/api')>();
-  return { ...original, createExercise: vi.fn(), checkAnswers: vi.fn() };
+  return { ...original, createExercise: vi.fn(), checkAnswers: vi.fn(), getSolution: vi.fn() };
 });
 const exercise: TruthTableExerciseResponse = {
   variables: ['P'],
@@ -178,3 +178,52 @@ test('sample identity is explicit and is cleared by formula edits, even when man
   });
   expect(result.current.sampleActive).toBe(false);
 });
+
+test.each(['creation', 'solution'] as const)(
+  'leaving a sample cancels pending %s and ignores its late response',
+  async (kind) => {
+    const { result } = renderHook(() => useTruthTablePractice());
+    const original = result.current.formula;
+    let resolve!: (value: TruthTableExerciseResponse) => void;
+    const response = new Promise<TruthTableExerciseResponse>((done) => {
+      resolve = done;
+    });
+    let signal: AbortSignal;
+    if (kind === 'creation') {
+      vi.mocked(createExercise)
+        .mockReset()
+        .mockImplementationOnce((_formula, abort) => {
+          signal = abort;
+          return response;
+        });
+      act(() => {
+        void result.current.loadSample('(P ∧ Q) → P');
+      });
+    } else {
+      vi.mocked(createExercise).mockReset().mockResolvedValueOnce(exercise);
+      await act(async () => {
+        await result.current.loadSample('(P ∧ Q) → P');
+      });
+      vi.mocked(getSolution).mockImplementationOnce((_formula, abort) => {
+        signal = abort;
+        return response;
+      });
+      act(() => result.current.toggleSolution());
+    }
+    act(() => result.current.resetPractice());
+    expect(signal!.aborted).toBe(true);
+    await act(async () => {
+      resolve(exercise);
+      await response;
+    });
+    expect(result.current.formula).toBe(original);
+    expect(result.current.sampleActive).toBe(false);
+    expect(result.current.exercise).toBeNull();
+    expect(result.current.solution).toBeNull();
+    expect(result.current.feedback).toBeNull();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.action).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.hasWorkToReplace).toBe(false);
+  },
+);

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { SampleExample } from './SampleExample';
 
 const stages = [1, 2, 3].map((number) => ({ caption: `Stage ${number}`, work: number }));
@@ -48,3 +48,53 @@ test('keyboard opening, bounded navigation, restart and direct completion announ
   fireEvent.click(screen.getByRole('button', { name: 'Hide walkthrough' }));
   expect(screen.queryByRole('region')).not.toBeInTheDocument();
 });
+
+test.each([false, true])(
+  'opening scrolls once with reduced motion=%s, without scrolling during step navigation',
+  (reducedMotion) => {
+    const previous = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView');
+    const scroll = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scroll,
+    });
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: reducedMotion }));
+
+    try {
+      render(
+        <SampleExample
+          title="Example"
+          introduction="A short example."
+          stages={stages}
+          renderWork={(work) => <p>{work}</p>}
+        />,
+      );
+      expect(scroll).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+      const heading = within(screen.getByRole('region', { name: 'Sample walkthrough' })).getByRole(
+        'heading',
+        { name: 'Sample walkthrough' },
+      );
+      expect(heading).toHaveFocus();
+      expect(scroll).toHaveBeenCalledExactlyOnceWith({
+        behavior: reducedMotion ? 'instant' : 'smooth',
+        block: 'start',
+      });
+      expect(scroll.mock.contexts[0]).toBe(heading);
+      fireEvent.click(screen.getByRole('button', { name: 'Next step' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
+      expect(scroll).toHaveBeenCalledTimes(1);
+      fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+      expect(scroll).toHaveBeenCalledTimes(1);
+      fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+      expect(scroll).toHaveBeenCalledTimes(2);
+      fireEvent.click(screen.getByRole('button', { name: 'Hide walkthrough' }));
+      expect(scroll).toHaveBeenCalledTimes(2);
+    } finally {
+      if (previous) Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', previous);
+      else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+      vi.unstubAllGlobals();
+    }
+  },
+);

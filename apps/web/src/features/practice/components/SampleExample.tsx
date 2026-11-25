@@ -1,3 +1,4 @@
+import { SampleInvitation } from './SampleInvitation';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { SampleStage } from '../samples/stage';
 import '../sample-actions.css';
@@ -9,12 +10,14 @@ export function SampleExample<Work>({
   stages,
   renderWork,
   showCompletedAction = true,
+  onExitSample,
 }: {
   title: string;
   introduction: string;
   stages: readonly SampleStage<Work>[];
   renderWork: (work: Work, final: boolean) => ReactNode;
   showCompletedAction?: boolean;
+  onExitSample?: () => void;
 }) {
   const [view, setView] = useState<'completed' | 'walkthrough' | null>(null);
   const [step, setStep] = useState(0);
@@ -25,7 +28,18 @@ export function SampleExample<Work>({
   const final = index === stages.length - 1;
 
   useEffect(() => {
-    if (view) heading.current?.focus();
+    if (!view || !heading.current) return;
+
+    const target = heading.current;
+    // Focus alone is the fallback when scrolling APIs are unavailable.
+    if (view !== 'walkthrough' || typeof target.scrollIntoView !== 'function') {
+      target.focus();
+      return;
+    }
+
+    target.focus({ preventScroll: true });
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
   }, [view]);
 
   function startWalkthrough() {
@@ -38,10 +52,13 @@ export function SampleExample<Work>({
 
   return (
     <div className="completed-sample">
-      <div className="practice-sample-actions">
+      <SampleInvitation
+        title="Walk through a solution, step by step"
+        description="See how the example takes shape, one move at a time."
+      >
         <button
           type="button"
-          className="secondary"
+          className={view === 'walkthrough' ? 'secondary' : 'sample-action'}
           aria-expanded={view === 'walkthrough'}
           aria-controls={id}
           onClick={startWalkthrough}
@@ -51,7 +68,7 @@ export function SampleExample<Work>({
         {showCompletedAction && (
           <button
             type="button"
-            className="secondary"
+            className={view === 'completed' ? 'secondary' : 'sample-action'}
             aria-expanded={view === 'completed'}
             aria-controls={id}
             onClick={() => setView(view === 'completed' ? null : 'completed')}
@@ -59,16 +76,28 @@ export function SampleExample<Work>({
             {view === 'completed' ? 'Hide completed example' : 'View completed example'}
           </button>
         )}
-      </div>
+        {onExitSample && (
+          <button type="button" className="secondary" onClick={onExitSample}>
+            Create your own problem
+          </button>
+        )}
+      </SampleInvitation>
       {view && (
         <section
           id={id}
           className="panel completed-sample-content"
           aria-label={view === 'completed' ? 'Completed sample example' : 'Sample walkthrough'}
         >
-          <h2 ref={heading} tabIndex={-1}>
-            {view === 'completed' ? 'Completed example' : 'Sample walkthrough'}
-          </h2>
+          <div className="sample-example-heading">
+            <h2 ref={heading} tabIndex={-1}>
+              {view === 'completed' ? 'Completed example' : 'Sample walkthrough'}
+            </h2>
+            {onExitSample && (
+              <button type="button" className="secondary" onClick={onExitSample}>
+                Exit sample
+              </button>
+            )}
+          </div>
           <h3>{title}</h3>
           <p>{introduction}</p>
           <p className="help">This example is separate from your work.</p>

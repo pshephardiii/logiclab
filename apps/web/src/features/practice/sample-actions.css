@@ -1,3 +1,29 @@
+/* Deep teal emphasizes sample discovery within the existing green palette. */
+button.sample-action,
+button.sample-action-secondary {
+  min-height: 44px;
+  font-weight: 700;
+  border: 1px solid #115e59;
+}
+button.sample-action {
+  color: white;
+  background: #115e59;
+  box-shadow: 0 2px 4px #103e3826;
+}
+button.sample-action:hover:not(:disabled) {
+  background: #0d4743;
+  border-color: #0d4743;
+}
+button.sample-action-secondary {
+  color: #115e59;
+  background: #e6f4f1;
+  border-color: #7eb5aa;
+}
+button.sample-action-secondary:hover:not(:disabled) {
+  background: #d7ece7;
+  border-color: #115e59;
+}
+
 .practice-sample-actions {
   display: flex;
   flex-wrap: wrap;
@@ -41,4 +67,50 @@ td.sample-column-change {
   .sample-stage {
     animation: none;
   }
+}
+
+.sample-invitation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #8bb7ac;
+  border-left: 4px solid #115e59;
+  border-radius: 0.55rem;
+  background: #e6f4f1;
+}
+.sample-invitation-copy {
+  flex: 1 1 17rem;
+  min-width: 0;
+}
+.sample-invitation-copy p {
+  margin: 0;
+}
+.sample-invitation-copy .sample-invitation-title {
+  color: #103e38;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.sample-invitation-copy p + p {
+  margin-top: 0.35rem;
+  color: #294b43;
+}
+.sample-invitation > .practice-sample-actions {
+  max-width: 100%;
+  margin: 0;
+}
+
+.sample-example-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.sample-example-heading h2 {
+  margin: 0;
 }

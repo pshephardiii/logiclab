@@ -1,3 +1,4 @@
+import { SampleInvitation } from '../../../features/practice/components/SampleInvitation';
 import '../../../features/practice/sample-actions.css';
 import { isProofFormatAvailable } from '@logiclab/contracts';
 import { ProofPremisesEditor } from '../../../features/proof/components/ProofPremisesEditor';
@@ -86,15 +87,18 @@ export function ProofPracticeSetup({
       onSubmit={submit}
     >
       <h2>Set up a proof</h2>
-      <div className="practice-sample-actions">
+      <SampleInvitation
+        title="Try a sample problem"
+        description="Load a ready-to-try proof in your selected format, then explore its solution."
+      >
         <button
           type="button"
-          className="secondary"
+          className="sample-action"
           onClick={() => confirmDiscard(() => onLoadSample(format))}
         >
           Load sample problem
         </button>
-      </div>
+      </SampleInvitation>
       <div className="proof-setup-toolbar">
         <div>
           <label htmlFor="practice-proof-format">Proof format</label>

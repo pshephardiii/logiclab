@@ -1,3 +1,4 @@
+import { ProofViewport } from './ProofViewport';
 import { FitchLineActions } from './FitchLineActions';
 import type { ReactNode } from 'react';
 import type { FitchProof } from '@logiclab/contracts';
@@ -71,7 +72,11 @@ export function FitchProofDisplay({
   const premiseBoundary = firstDerived === -1 ? proof.steps.length - 1 : firstDerived - 1;
 
   return (
-    <div className="fitch-proof-display" role="region" aria-label={label} tabIndex={0}>
+    <ProofViewport
+      className="fitch-proof-display"
+      label={label}
+      hasContent={proof.steps.length > 0 || Boolean(entry)}
+    >
       <table>
         <caption>Entered proof</caption>
         <thead>
@@ -191,6 +196,6 @@ export function FitchProofDisplay({
         {!readOnly && entry && <tfoot aria-label={entryLabel}>{entry}</tfoot>}
       </table>
       {!proof.steps.length && <p>No proof lines entered yet.</p>}
-    </div>
+    </ProofViewport>
   );
 }

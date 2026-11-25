@@ -19,6 +19,7 @@ test.each(['fitch', 'dependency'] as const)(
       .mockRejectedValue(new Error('Unexpected request'));
     load(format);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start over' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Change proof format')).toHaveValue(format);
     expect(screen.getByLabelText('Proof conclusion')).toHaveTextContent('P → (P ∧ Q)');
     expect(
@@ -98,7 +99,8 @@ test.each(['fitch', 'dependency'] as const)(
     const example = screen.getByRole('region', { name: 'Completed sample example' });
     expect(within(example).getByRole('heading', { name: 'Completed example' })).toHaveFocus();
     expect(within(example).getAllByRole('row')).toHaveLength(6); // Header plus five completed lines.
-    expect(within(example).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(example).getAllByRole('button')).toHaveLength(1);
+    expect(within(example).getByRole('button', { name: 'Exit sample' })).toBeInTheDocument();
     expect(within(example).queryByRole('textbox')).not.toBeInTheDocument();
     expect(within(example).queryByRole('combobox')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
@@ -205,3 +207,54 @@ test.each(['fitch', 'dependency'] as const)(
     );
   },
 );
+
+test.each(['fitch', 'dependency'] as const)(
+  '%s can leave a sample from its workspace or any example view without losing work on Stay',
+  (format) => {
+    load(format);
+    for (const mode of ['workspace', 'completed', 'walkthrough'] as const) {
+      if (mode === 'completed')
+        fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+      if (mode === 'walkthrough')
+        fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+      fireEvent.change(screen.getByLabelText('Formula for line 2'), { target: { value: 'R' } });
+      const label = mode === 'workspace' ? 'Create your own problem' : 'Exit sample';
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+      expect(screen.getByLabelText('Formula for line 2')).toHaveValue('R');
+      if (mode !== 'workspace')
+        expect(
+          screen.getByRole('region', {
+            name: mode === 'completed' ? 'Completed sample example' : 'Sample walkthrough',
+          }),
+        ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      expect(screen.getByRole('form', { name: 'Proof practice setup' })).toBeInTheDocument();
+      expect(screen.getByLabelText('Proof format')).toHaveValue(format);
+      expect(screen.getByLabelText('Proof format')).toHaveFocus();
+      expect(screen.getByLabelText('Conclusion')).toHaveValue('');
+      expect(screen.queryByRole('region', { name: 'Sample walkthrough' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Create your own problem' }),
+      ).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
+    }
+  },
+);
+
+test('a completed attempt with an edited statement retains an exit even when its reference is unavailable', () => {
+  load('fitch');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit conclusion' }));
+  expect(screen.getByRole('button', { name: 'Create your own problem' })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('New conclusion'), { target: { value: 'P → Q' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Apply conclusion' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Check proof' }));
+  expect(screen.getByRole('region', { name: 'Proof feedback' })).toHaveTextContent(
+    'Proof verified.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Create your own problem' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+  expect(screen.getByLabelText('Conclusion')).toHaveValue('');
+  expect(screen.queryByRole('region', { name: 'Proof feedback' })).not.toBeInTheDocument();
+});

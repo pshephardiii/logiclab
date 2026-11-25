@@ -5,9 +5,16 @@ import { FitchProofDisplay } from '../../proof/components/FitchProofDisplay';
 import { DependencyProofDisplay } from '../../proof/dependency/DependencyProofDisplay';
 import { SampleExample } from './SampleExample';
 
-export function CompletedProofSample({ sample }: { sample: ProofSample }) {
+export function CompletedProofSample({
+  sample,
+  onExitSample,
+}: {
+  sample: ProofSample;
+  onExitSample: () => void;
+}) {
   return (
     <SampleExample<FitchProof | DependencyProof>
+      onExitSample={onExitSample}
       title={sample.title}
       introduction={sample.introduction}
       stages={sample.stages}

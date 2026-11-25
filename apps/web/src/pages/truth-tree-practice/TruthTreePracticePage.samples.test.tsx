@@ -14,6 +14,7 @@ test('tree sample loads initial sources without expansions, a verdict or automat
   renderWithUnsavedWork(<TruthTreePracticePage />);
   fireEvent.click(screen.getByRole('button', { name: 'Load sample problem' }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Start over' })).not.toBeInTheDocument();
   expect(screen.getByRole('region', { name: 'Truth-tree statement' })).toHaveTextContent('P → Q');
   expect(screen.getByRole('region', { name: 'Truth tree' })).toHaveTextContent('¬Q');
   expect(screen.getAllByRole('button', { name: /^Add step to branch/ })).toHaveLength(1);
@@ -80,7 +81,8 @@ test.each(['valid', 'invalid'] as const)(
     expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Check tree' })).toBeDisabled();
     expect(screen.queryByRole('region', { name: 'Truth-tree feedback' })).not.toBeInTheDocument();
-    expect(within(example).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(example).getAllByRole('button')).toHaveLength(1);
+    expect(within(example).getByRole('button', { name: 'Exit sample' })).toBeInTheDocument();
     expect(within(example).queryByRole('textbox')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Hide completed example' }));
     expect(screen.getByLabelText('Source formula')).toBeInTheDocument();
@@ -137,5 +139,35 @@ test.each(['valid', 'invalid'] as const)(
     fireEvent.click(screen.getByRole('button', { name: 'Restart example' }));
     expect(walkthrough).toHaveTextContent('Step 1 of 4');
     expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+  },
+);
+
+test.each(['valid', 'invalid'] as const)(
+  '%s sample exits from incomplete, completed and walkthrough views to an empty setup',
+  (verdict) => {
+    renderWithUnsavedWork(<TruthTreePracticePage />);
+    const loadName = verdict === 'valid' ? 'Load sample problem' : 'Load invalid-argument sample';
+    for (const mode of ['workspace', 'completed', 'walkthrough'] as const) {
+      fireEvent.click(screen.getByRole('button', { name: loadName }));
+      fireEvent.click(screen.getByRole('radio', { name: 'Invalid' }));
+      if (mode === 'completed')
+        fireEvent.click(screen.getByRole('button', { name: 'View completed example' }));
+      if (mode === 'walkthrough')
+        fireEvent.click(screen.getByRole('button', { name: 'Walk through the solution' }));
+      const label = mode === 'workspace' ? 'Create your own problem' : 'Exit sample';
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      fireEvent.click(screen.getByRole('button', { name: 'Stay' }));
+      expect(screen.getByRole('radio', { name: 'Invalid' })).toBeChecked();
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      expect(screen.getByRole('form', { name: 'Truth-tree practice setup' })).toBeInTheDocument();
+      expect(screen.getByLabelText('New premise')).toHaveValue('');
+      expect(screen.getByLabelText('New premise')).toHaveFocus();
+      expect(screen.getByLabelText('Conclusion')).toHaveValue('');
+      expect(screen.queryByRole('region', { name: 'Sample walkthrough' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Create your own problem' }),
+      ).not.toBeInTheDocument();
+    }
   },
 );

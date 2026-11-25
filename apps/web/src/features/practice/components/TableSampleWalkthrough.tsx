@@ -5,7 +5,7 @@ import { createTruthTableSample } from '../samples/truth-table';
 import { SampleExample } from './SampleExample';
 
 /** Reveal public example columns; visitor inputs and API solution state remain independent. */
-export function TableSampleWalkthrough() {
+export function TableSampleWalkthrough({ onExitSample }: { onExitSample: () => void }) {
   const sample = useMemo(createTruthTableSample, []);
   const exercise = {
     variables: [...sample.completed.variables],
@@ -15,6 +15,7 @@ export function TableSampleWalkthrough() {
 
   return (
     <SampleExample
+      onExitSample={onExitSample}
       title={sample.title}
       introduction="Follow the given truth values through the conjunction and then the conditional. Unrevealed example cells are shown as dashes."
       stages={sample.stages}

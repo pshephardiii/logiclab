@@ -5,11 +5,14 @@ import { SampleExample } from './SampleExample';
 
 export function CompletedTruthTreeSample({
   sample,
+  onExitSample,
 }: {
   sample: ReturnType<typeof createTruthTreeSample>;
+  onExitSample: () => void;
 }) {
   return (
     <SampleExample
+      onExitSample={onExitSample}
       title={sample.title}
       introduction={sample.introduction}
       stages={sample.stages}

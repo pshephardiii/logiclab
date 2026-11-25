@@ -6,7 +6,7 @@ import {
   createDependencySample,
 } from '../../../features/practice/samples/derivations';
 import { isProofFormatAvailable } from '@logiclab/contracts';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ProofCheckReport } from '@logiclab/contracts';
 import { ProofFeedback } from '../../../features/proof/components/ProofFeedback';
 import { useUnsavedWork } from '../../../features/unsaved-work/hooks/useUnsavedWork';
@@ -26,6 +26,8 @@ import '../proof-practice.css';
 /** Self-created practice belongs to this page session, independently from saved classroom work. */
 export function ProofPractice() {
   const confirmDiscard = useConfirmDiscard();
+  const root = useRef<HTMLDivElement>(null);
+  const focusSetup = useRef(false);
   const [sample, setSample] = useState<ProofSample | null>(null);
   const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [setupFormat, setSetupFormat] = useState<PracticeStatement['format']>('fitch');
@@ -62,6 +64,9 @@ export function ProofPractice() {
   function restart(format: PracticeStatement['format']) {
     if (!isProofFormatAvailable(format)) return;
     confirmDiscard(() => {
+      focusSetup.current = true;
+      setEntryPending(false);
+      setConclusionEditing(false);
       setSetupFormat(format);
       setSample(null);
       setStatement(null);
@@ -69,6 +74,19 @@ export function ProofPractice() {
       setReport(null);
     });
   }
+
+  useEffect(() => {
+    if (statement || !focusSetup.current) return;
+    focusSetup.current = false;
+    root.current?.querySelector<HTMLSelectElement>('#practice-proof-format')?.focus();
+  }, [statement]);
+
+  function exitSample() {
+    if (statement) restart(statement.format);
+  }
+
+  const sampleMatches = sample && statement && matchesSampleStatement(statement, sample.statement);
+  const showSampleExample = sampleMatches && !conclusionEditing;
 
   const checkAction = (
     <button
@@ -86,12 +104,31 @@ export function ProofPractice() {
   );
 
   return (
-    <div className="proof-practice">
+    <div ref={root} className="proof-practice">
       <header>
         <p className="eyebrow">LogicLab / Independent practice</p>
         <h1>Practice a derivation.</h1>
         {!statement && <p>Choose your premises and conclusion.</p>}
       </header>
+      {sample && statement && !sampleMatches && (
+        <p className="help" role="status">
+          The statement has changed. Load the sample again to view its completed example.
+        </p>
+      )}
+      {sample && statement && !showSampleExample && (
+        <div className="practice-sample-actions">
+          <button type="button" className="secondary" onClick={exitSample}>
+            Create your own problem
+          </button>
+        </div>
+      )}
+      {sample && showSampleExample && (
+        <CompletedProofSample
+          key={`example:${workspaceVersion}`}
+          sample={sample}
+          onExitSample={exitSample}
+        />
+      )}
       {!statement ? (
         <ProofPracticeSetup initialFormat={setupFormat} onStart={begin} onLoadSample={loadSample} />
       ) : (
@@ -121,14 +158,16 @@ export function ProofPractice() {
             </p>
             <button
               type="button"
-              className="secondary"
+              className="sample-action"
               onClick={() => confirmDiscard(() => loadSample(statement.format))}
             >
               Load sample problem
             </button>
-            <button type="button" className="secondary" onClick={() => restart(statement.format)}>
-              Start over
-            </button>
+            {!sample && (
+              <button type="button" className="secondary" onClick={() => restart(statement.format)}>
+                Start over
+              </button>
+            )}
           </div>
           <PracticeProofEditor
             statement={statement}
@@ -174,17 +213,6 @@ export function ProofPractice() {
           )}
         </section>
       )}
-      {sample &&
-        statement &&
-        (matchesSampleStatement(statement, sample.statement) ? (
-          !conclusionEditing && (
-            <CompletedProofSample key={`example:${workspaceVersion}`} sample={sample} />
-          )
-        ) : (
-          <p className="help" role="status">
-            The statement has changed. Load the sample again to view its completed example.
-          </p>
-        ))}
       <p className="help practice-session-note">
         Work is temporary; reloading clears this practice session.
       </p>
